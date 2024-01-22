@@ -2,10 +2,10 @@ steps:
   # build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
-      ["build", "-t", "gcr.io/easuavez/esv-frontend:${SHORT_SHA}", "/Dockerfile.easuavez"]
+      ["build", "-f", "Dockerfile.$PROJECT_ID", "-t", "gcr.io/$PROJECT_ID/esv-frontend:${SHORT_SHA}", "."]
     # push the container image to Container Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/easuavez/esv-frontend:${SHORT_SHA}"]
+    args: ["push", "gcr.io/$PROJECT_ID/esv-frontend:${SHORT_SHA}"]
     # deploy container image to Cloud Run
   - name: "gcr.io/cloud-builders/gcloud"
     args:
@@ -15,15 +15,15 @@ steps:
         "deploy",
         "esv-frontend",
         "--image",
-        "gcr.io/easuavez/esv-frontend:${SHORT_SHA}",
+        "gcr.io/$PROJECT_ID/esv-frontend:${SHORT_SHA}",
         "--region",
         "us-central1",
         "--allow-unauthenticated",
       ]
     env:
       - "PORT=8080"
-      - "LOCATION=br"
+      - "LOCATION=cl"
       - "NODE_ENV=prod"
       - "PROJECT_ID=easuavez"
 images:
-  - gcr.io/easuavez/esv-frontend
+  - gcr.io/$PROJECT_ID/esv-frontend
