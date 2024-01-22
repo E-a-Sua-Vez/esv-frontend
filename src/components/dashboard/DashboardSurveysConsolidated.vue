@@ -133,8 +133,8 @@ export default {
             avg: npsScorePercentage(state.calculatedSurveyMetricsYear.countNPS, state.calculatedSurveyMetricsYear.totalPromoters)
           },
           neutrals: {
-            counter: state.calculatedSurveyMetricsYear.totalNeutrals || 0,
-            avg: npsScorePercentage(state.calculatedSurveyMetricsYear.countNPS, state.calculatedSurveyMetricsYear.totalNeutrals)
+            counter: state.calculatedSurveyMetricsYear.totalNeutral || 0,
+            avg: npsScorePercentage(state.calculatedSurveyMetricsYear.countNPS, state.calculatedSurveyMetricsYear.totalNeutral)
           }
         };
         state.csatScore = {
