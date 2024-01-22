@@ -88,10 +88,10 @@ export const changePassword = async (email, userType) => {
     user = await getAdministratorByEmail(email);
     user = await changeAdministratorPassword(user.id);
   } else if (userType === 'master') {
-    return 'error';
+    return new Error('Action not permited to this user');
   }
   if (user === undefined) {
-    return 'error';
+    return new Error('Type of user not detected');
   }
   return { user };
 }
