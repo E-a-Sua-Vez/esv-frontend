@@ -199,7 +199,7 @@ export default {
           <span>{{ $t("loginData.actions.2.title.1") }}</span>
           <div class="d-grid gap-2">
             <a
-              class="mb-3"
+              class="mb-3 link"
               data-bs-toggle="modal"
               data-bs-target="#modalPassword"
               @click="$event => closeMenu()">
@@ -252,5 +252,8 @@ export default {
   position: relative;
   top: 0;
   right: 0;
+}
+.link {
+  cursor: pointer;
 }
 </style>

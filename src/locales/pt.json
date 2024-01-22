@@ -549,7 +549,7 @@
         "2": "Você deve validar que não é um robô",
         "3": "Usuário não registrado ou senha inválida",
         "4": "Você deve inserir um e-mail válido",
-        "5": "SVocê só pode solicitar a alteração de sua senha uma vez hoje. Valide se o e-mail está cadastrado em nosso sistema ou tente novamente mais tarde",
+        "5": "Você só pode solicitar a alteração de sua senha uma vez hoje. Valide se o e-mail está cadastrado em nosso sistema ou tente novamente mais tarde",
         "6": "Usuário não ativo. Contate ao administrador."
       }
     }

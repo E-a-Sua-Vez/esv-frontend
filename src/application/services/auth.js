@@ -1,6 +1,6 @@
 import { login, register, logout, invited } from '../firebase';
-import { getCollaboratorByEmail, registerCollaboratorToken, changeCollaboratorPassword } from './collaborator';
-import { getAdministratorByEmail, getMasterAdministratorByEmail, registerAdministratorToken, changeAdministratorPassword } from './administrator';
+import { getCollaboratorByEmail, getCollaboratorByEmailNotToken, registerCollaboratorToken, changeCollaboratorPassword } from './collaborator';
+import { getAdministratorByEmail, getAdministratorByEmailNotToken, getMasterAdministratorByEmail, registerAdministratorToken, changeAdministratorPassword } from './administrator';
 import { getRolByName } from './rol';
 
 export const signIn = async (email, password, userType) => {
@@ -82,10 +82,10 @@ export const signInInvited = async () => {
 export const changePassword = async (email, userType) => {
   let user = undefined;
   if (userType === 'collaborator') {
-    user = await getCollaboratorByEmail(email);
+    user = await getCollaboratorByEmailNotToken(email);
     user = await changeCollaboratorPassword(user.id);
   } else if (userType === 'business') {
-    user = await getAdministratorByEmail(email);
+    user = await getAdministratorByEmailNotToken(email);
     user = await changeAdministratorPassword(user.id);
   } else if (userType === 'master') {
     return new Error('Action not permited to this user');

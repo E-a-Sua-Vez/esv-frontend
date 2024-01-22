@@ -15,6 +15,15 @@ export const getCollaboratorByEmail = async email => {
   return user;
 }
 
+export const getCollaboratorByEmailNotToken = async email => {
+  const store = globalStore();
+  const user = (await requestBackend.get(`/collaborator/email/${email}`)).data;
+  if(user.permissions) {
+    await store.setCurrentPermissions(user.permissions);
+  }
+  return user;
+}
+
 export const getCollaboratorsByCommerceId = async commerceId => {
   return (await requestBackend.get(`/collaborator/commerceId/${commerceId}`, await getHeaders())).data;
 }

@@ -15,6 +15,15 @@ export const getAdministratorByEmail = async email => {
   return user;
 }
 
+export const getAdministratorByEmailNotToken = async email => {
+  const store = globalStore();
+  const user = (await requestBackend.get(`/administrator/email/${email}`)).data;
+  if(user.permissions) {
+    await store.setCurrentPermissions(user.permissions);
+  }
+  return user;
+}
+
 export const getMasterAdministratorByEmail = async email => {
   const store = globalStore();
   const user = (await requestBackend.get(`/administrator/email/${email}/master`, await getHeaders())).data;
