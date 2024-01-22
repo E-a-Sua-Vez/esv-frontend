@@ -8,6 +8,7 @@ node_modules
 .env.*.local
 env.sh
 env_br.sh
+env_net.sh
 
 # Log files
 npm-debug.log*
