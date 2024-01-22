@@ -1,0 +1,42 @@
+<script>
+import { globalStore } from '../../stores/index';
+import LogoSkeleton from '../../components/skeletons/LogoSkeleton.vue';
+
+export default {
+  name: 'CommerceLogo',
+  components: { LogoSkeleton },
+  props: {
+    src: { type: String, default: undefined },
+    loading: { type: Boolean, default: false }
+  },
+  data() {
+    const store = globalStore();
+    return {
+      store,
+    }
+  }
+}
+</script>
+<template>
+  <div id="commerce-logo">
+    <LogoSkeleton v-if="loading && src === undefined"></LogoSkeleton>
+    <img v-else class="rounded img-fluid mx-auto logo" :alt="this.$t('logoAlt')" :src="src === undefined ? this.$t('logo') : src" >
+  </div>
+</template>
+<style scoped>
+.logo {
+  display: flex;
+  max-width: 300px;
+  max-height: 280px;
+  background-repeat: no-repeat;
+  background-size: 100%;
+  margin: .5rem;
+  cursor: pointer;
+}
+@media (min-width: 1024px) {
+  .logo {
+    width: 600px;
+    background-position: center;
+  }
+}
+</style>

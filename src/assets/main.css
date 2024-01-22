@@ -1,0 +1,274 @@
+@import './base.css';
+
+#app {
+  min-height: 100vh;
+  line-height: 1.8;
+  font-family: 'Raleway', sans-serif;
+}
+.masthead { }
+.divider-custom {
+  margin: 0rem 0 0rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.divider-custom .divider-custom-line {
+  width: 100%;
+  max-width: 7rem;
+  height: 0.2rem;
+  background-color: var(--color-text);
+  border-radius: 2rem;
+  color: var(--color-text);
+}
+.divider-custom .divider-custom-line:first-child {
+  margin-right: 1rem;
+}
+.divider-custom .divider-custom-line:last-child {
+  margin-left: 1rem;
+}
+.divider-custom .divider-custom-icon {
+  color: var(--azul-es);
+  font-size: 2rem;
+}
+.divider-custom .divider-custom-icon-dark {
+  color: var(--color-text);
+  font-size: 2rem;
+}
+.divider-custom.divider-light .divider-custom-line {
+  background-color: var(--color-background);
+}
+.divider-custom.divider-light .divider-custom-icon {
+  color: var(--azul-es);
+}
+.page-section .page-section-heading {
+  font-size: 2.25rem;
+  line-height: 2rem;
+}
+@media (min-width: 992px) {
+  .page-section .page-section-heading {
+    font-size: 3rem;
+    line-height: 2.5rem;
+  }
+}
+.content {
+  padding: 0 2rem 0 2rem;
+  background: rgb(195,218,246);
+  background: linear-gradient(0deg, rgba(195,218,246,0) 6%, rgba(255,255,255,0.894016981792717) 43%, rgba(255,255,255,1) 100%);
+}
+.welcome {
+  padding: .1rem;
+  font-size: 2rem;
+  line-height: 2rem;
+  font-weight: 700;
+}
+.welcome-user {
+  padding: .5rem;
+  font-size: 1.2rem;
+  line-height: 2rem;
+  font-weight: 700;
+}
+.its-your-turn {
+  padding: .1rem;
+  font-size: 2rem;
+  line-height: 2rem;
+  font-weight: 900;
+  color: var(--verde-tu);
+}
+.actions {
+  font-size: .9rem;
+  font-weight: 400;
+  text-align: left;
+  margin-left: .5rem;
+  line-height: 1.1rem;
+}
+.btn-size {
+  font-size: small !important;
+  margin-left: .5rem;
+  margin-right: .5rem;
+}
+.your-attention {
+  padding-bottom: .5rem;
+  font-size: .9rem;
+  line-height: 1.2rem;
+  font-weight: 700;
+  margin-left: .5rem;
+  margin-right: .5rem;
+}
+.to-goal {
+  padding-bottom: 1rem;
+  font-size: .9rem;
+  font-weight: 400;
+}
+.dark {
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: pointer;
+  font-size: .8rem;
+  --popper-theme-background-color: var(--gris-tooltip);
+  --popper-theme-background-color-hover: var(--gris-tooltip);
+  --popper-theme-text-color: var(--color-background);
+  --popper-theme-border-width: 0px;
+  --popper-theme-border-radius: 6px;
+  --popper-theme-padding: .6rem;
+  --popper-theme-box-shadow: 0 6px 30px -6px rgba(0, 0, 0, 0.25);
+}
+.blue-icon {
+  color: var(--azul-turno);
+}
+.green-icon {
+  color: var(--verde-tu);
+}
+.yellow-icon {
+  color: var(--amarillo-star);
+}
+.red-icon {
+  color: var(--rojo-warning);
+}
+.orange-icon {
+  color: var(--orange-no-device);
+}
+.whatsapp-button {
+  background-color: var(--whatsapp) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-background) !important;
+}
+.facebook-button {
+  background-color: var(--facebook) !important;
+  color: var(--color-background) !important;
+  border-color: var(--color-background) !important;
+}
+.instagram-button {
+  background-color: var(--instagram) !important;
+  color: var(--color-background) !important;
+  border-color: var(--color-background) !important;
+}
+.twitter-button {
+  background-color: var(--twitter) !important;
+  color: var(--color-background) !important;
+  border-color: var(--color-background) !important;
+}
+.recaptcha-area {
+  position: relative;
+  z-index: 5;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+  display: flex;
+  justify-content: center;
+}
+.centered {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+.lefted {
+  display: flex !important;
+  justify-content: left !important;
+  align-items: center !important;
+}
+.upgrade {
+  padding: .2rem;
+  padding-left: .5rem;
+  padding-right: .5rem;
+  font-size: .8rem;
+  border: .5px solid var(--rojo-warning);
+  color: var(--rojo-warning);
+  border-radius: .5rem;
+  background-color: #fac0bb;
+  cursor: pointer;
+}
+.carousel-indicators li {
+  width: 20px;
+  height: 20px;
+  margin: 5px;
+  border-radius: 100%;
+  border-color: var(--azul-turno);
+  background-color: #669966;
+}
+.carousel-indicators {
+  bottom: -50px;
+}
+.divider-custom .divider-custom-line {
+  width: 100%;
+  max-width: 50rem;
+  height: 0.05rem;
+  background-color: var(--gris-default);
+  border-radius: 2rem;
+  color: var(--gris-default);
+  margin-top: .5rem;
+}
+.divider-custom .divider-custom-line:first-child {
+  margin-right: 1rem;
+}
+.divider-custom .divider-custom-line:last-child {
+  margin-left: 1rem;
+}
+.divider-custom .divider-custom-icon {
+  color: var(--azul-es);
+  font-size: 2rem;
+}
+.divider-custom .divider-custom-icon-dark {
+  color: var(--color-text);
+  font-size: 2rem;
+}
+.divider-custom.divider-light .divider-custom-line {
+  background-color: #fff;
+}
+.divider-custom.divider-light .divider-custom-icon {
+  color: var(--azul-es);
+}
+.select {
+  border-radius: .5rem;
+  border: 1.5px solid var(--gris-default);
+}
+.pdf-details {
+  font-size:.8rem;
+  color:gray;
+  text-align:right;
+  margin-top:3rem;
+}
+.btn-selected {
+  --bs-btn-bg: var(--gris-default) !important;
+  --bs-btn-border-color: var(--gris-default) !important;
+  --bs-btn-active-bg: var(--gris-default) !important;
+  border-color: var(--gris-default) !important;
+}
+.green-area {
+  background-color: var(--verde-tu) !important;
+}
+.yellow-area {
+  background-color: var(--amarillo-star) !important;
+}
+.red-area {
+  background-color: var(--rojo-warning) !important;
+}
+.yellow-0-area {
+  background-color: #fcfbf2 !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}
+.yellow-1-area {
+  background-color: #fffacf !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}
+.yellow-2-area {
+  background-color: #fff5a3 !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}
+.yellow-3-area {
+  background-color: #faea66 !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}
+.yellow-4-area {
+  background-color: #fcca26 !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}
+.yellow-5-area {
+  background-color: #fac107 !important;
+  color: var(--color-text) !important;
+  font-weight: 700 !important;
+}

@@ -1,0 +1,38 @@
+:root {
+  --azul-es: #00c4cc;
+  --verde-tu: #00c2cb;
+  --azul-turno: #004aad;
+  --color-text: #000000;
+  --color-background: #FFFFFF;
+  --gris-default: #a9a9a9;
+  --azul-qr: #00008b;
+  --rojo-warning: #a52a2a;
+  --amarillo-star: #f9c322;
+  --gris-tooltip: #333333;
+  --orange-no-device: #de6425;
+  --gris-clear: #edeef0;
+  --whatsapp: #25d366;
+  --facebook: 	#3b5998;
+  --instagram: 	#cd486b;
+  --twitter: #1dcaff;
+  --amarillo-light: #f8f1db;
+  --rojo-ligth: #fdf0ee;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  height: auto;
+}
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  background-color: var(--color-background);
+  font-family: 'Raleway', sans-serif;
+}
+
+hr {
+  margin: .5rem !important;
+}

@@ -1,0 +1,1958 @@
+{
+  "logo": "/images/logo_horizontal_transparente_en.png",
+  "logoAlt": "It's your turn",
+  "homeTitle": "It's your turn {'|'} Service of attention lines 100% digital",
+  "email": "hola{'@'}estuturno.app",
+  "blog": "https://blog.estuturno.app",
+  "backToInit": "Back to init",
+  "poweredBy": "Powered By",
+  "logoPoweredBy": "/images/itsyourturn_logo_powered.png",
+  "enableAll": "¡Enable more the capabilities!",
+  "curious": "Curious?",
+  "wantToKnowMore": "I Want to know More!",
+  "titleEnterUser": "Please select a type of income according to your profile:",
+  "titleEnterMaster": "If you are a master user, ",
+  "enterMaster": "Enter here",
+  "enterCommerce": "Login Commerce",
+  "enterCollaborator": "Login Collaborator",
+  "welcome": "Welcome!",
+  "logout": "Logout",
+  "capacities": "What I'm able to do?",
+  "upgrade": "Upgrade your plan to get more benefits.",
+  "logoValues": "/images/es_tu_turno_values.png",
+  "logoValuesAlt": "It's your turn",
+  "searcher": "Search",
+  "close": "Close",
+  "noResults": "😓 No Results",
+  "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
+  "refresh": "Reload",
+  "yes": "Yes",
+  "no": "No",
+  "page": "Page",
+  "of": "of",
+  "countries": {
+    "br": "🇧🇷 Brazil",
+    "cl": "🇨🇱 Chile",
+    "us": "🇺🇸 USA",
+    "ve": "🇻🇪 Venezuela"
+  },
+  "days": {
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat",
+    "7": "Dom"
+  },
+  "periodicities": {
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "biannual": "Biannual",
+    "annual": "Annual"
+  },
+  "categories": {
+    "beauty": "👠 Beauty",
+    "entertaiment": "🎭 Entertaiment",
+    "health": "🏥 Health",
+    "shop": "🛍️ Shop",
+    "pharmacy": "💊 Pharmacy",
+    "services": "💧 Services",
+    "restaurant": "🍽️ Restaurant",
+    "supermarket": "🛒 Supermarket"
+  },
+  "surveys": {
+    "types": {
+      "SIMPLE_CSAT": "Only CSAT and Comment",
+      "SIMPLE_NPS": "Only NPS and Comment",
+      "SIMPLE_CSAT_NPS": "CSAT, NPS and Comment",
+      "PERSONALIZED_SURVEY": "Personalized"
+    },
+    "question_types": {
+      "RATING_TO_5": "⭐️ 0-5",
+      "RATING_TO_10": "🔢 1-10",
+      "YES_OR_NOT": "👍 Yes/No",
+      "OPEN_WRITING": "✏️ Open",
+      "OPEN_OPTIONS": "👆 Select N",
+      "CHOOSE_OPTION": "☝️ Select 1"
+    }
+  },
+  "configuration": {
+    "whatsapp-notify-now": {
+      "title": "Notification Whatsapp É a sua vez",
+      "description": "Message via whatsapp when the user's turn arrives."
+    },
+    "whatsapp-notify-five": {
+      "title": "Notification Whatsapp 5 left",
+      "description": "Message via whatsapp when the client has 5 users ahead."
+    },
+    "only-survey": {
+      "title": "Just Survey Mode",
+      "description": "The attentions of the commerce are just survey mode."
+    },
+    "whatsapp-notify-one": {
+      "title": "Notification Whatsapp 1 left",
+      "description": "Message via whatsapp when the client has 1 user ahead."
+    },
+    "get-number-remote": {
+      "title": "Get remote number",
+      "description": "Get a service number from anywhere"
+    },
+    "attention-user-name": {
+      "title": "Attention Request Name",
+      "description": "Request the name of the user to obtain service number"
+    },
+    "attention-user-lastName": {
+      "title": "Attention Request LastName",
+      "description": "Request the last name of the user to obtain service number"
+    },
+    "attention-user-phone": {
+      "title": "Attention Request Phone",
+      "description": "Request the phone of the user to obtain service number"
+    },
+    "attention-user-email": {
+      "title": "Attention Request Email",
+      "description": "Request the email of the user to obtain service number"
+    },
+    "attention-user-idNumber": {
+      "title": "Attention Request Id",
+      "description": "Request the Id of the user to obtain service number"
+    },
+    "close-commerce-by-service-hours": {
+      "title": "Close commerce out of time",
+      "description": "Minisite does not allow generating new attentions for commerce outside of business hours"
+    },
+    "email-notify-now": {
+      "title": "Email It's your turn",
+      "description": "Email notification when the client's turn arrives"
+    },
+    "email-attention": {
+      "title": "Email Turn",
+      "description": "Email with turn's number and link to access to the site"
+    },
+    "email-csat": {
+      "title": "Email CSAT",
+      "description": "Email that remembers the client to complete the CSAT survey"
+    },
+    "whatsapp-csat": {
+      "title": "Whatsapp CSAT",
+      "description": "Message that remembers the client to complete the CSAT survey"
+    },
+    "email-monthly-commerce-statistics": {
+      "title": "Email Monthly Statistics",
+      "description": "Email to notify monthly statistics"
+    }
+  },
+  "paymentMethods": {
+    "wireTransfer": "Wire Transfer",
+    "cashDeposit": "Cash Deposit",
+    "freePeriod": "Free Period"
+  },
+  "enterSearcher": "🔍 Type at least 3 characters",
+  "alert": {
+    "message": {
+      "1": "There's an error,",
+      "2": "please refresh the page and retry.",
+      "3": "Thanks for report the error.",
+      "4": "Access token expired,",
+      "5": "please logout and enter again.",
+      "6": "This register already exists",
+      "7": "please take a look and retry.",
+      "8": "Service Unavailable",
+      "9": "please try again later."
+    },
+    "action": "Report error"
+  },
+  "footer": {
+    "copyright": "Copyright \u00A9 2024, It's your Turn. All rigths reserved.",
+    "contactUs": "Contact us",
+    "mailbox": "Actions",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "email": "Report by email",
+    "emailDir": "hola{'@'}estuturno.app"
+  },
+  "actions": {
+    "title": "Actions",
+    "subtitle": {
+      "1": {
+        "1": "Suggestions?",
+        "2": "Send us an email with your suggestions, we will be happy to receive them."
+      }
+    },
+    "actions": {
+      "1": "Report by email"
+    }
+  },
+  "notificationConditions": {
+    "title": "Data Policy",
+    "subtitle": {
+      "1": "Read carefully",
+      "2": "our data policy."
+    },
+    "action": "Ok"
+  },
+  "commerceQueuesView": {
+    "welcome": "Welcome!",
+    "choose": "Choose the attention type:",
+    "data": "We need to know more about you:",
+    "name": "Name",
+    "lastName": "LastName",
+    "idNumber": "Id/Passport",
+    "phone": "Cellphone/Phone",
+    "phoneCode": "Country",
+    "email": "Email",
+    "message": {
+      "title": "Oh no!",
+      "content": "At this time there are no service queues. Please approach a collaborator to request help."
+    },
+    "message2": {
+      "title": "¡Ups, we are closed!",
+      "content": "This commerce is not available at the moment. ¡Come back later!"
+    },
+    "validate": {
+      "name": "Should set your name",
+      "lastName": "Should set your lastname",
+      "idNumber": "Should set your id",
+      "phone": "Should set your phone",
+      "email": "Should set your valid email",
+      "phoneCode": "Should select the country code"
+    }
+  },
+  "attentionNumber": {
+    "details": {
+      "title": "User Data",
+      "name": "Name:",
+      "lastName": "LastName:",
+      "idNumber": "Id:",
+      "phone": "Phone:",
+      "email": "Email:"
+    }
+  },
+  "commerceQRSetup": {
+    "welcome": "Welcome!",
+    "scan": "Scan the QR code to be attended!",
+    "youllReceive": "You'll receive your turn number on your phone.",
+    "request": "If you cannot scan the QR code, click on the following button:",
+    "action": "I want a service number",
+    "commerce": "Select a commerce:",
+    "services": "Services",
+    "contact": "Contact",
+    "location": "Location",
+    "attentionHours": "Attention Hours: ",
+    "from": "from ",
+    "to": "to ",
+    "hrs": "hrs.",
+    "menu": "Service Menu",
+    "category": "Category: ",
+    "phones": "Phone(s): ",
+    "web": "Web Site",
+    "email": "Email",
+    "address": "Address: ",
+    "message1": {
+      "title": "Too much people? Don't worry!, You don't have to wait here.",
+      "content": "Leave us your number or your email, and we will notify you when it is your turn to be attended."
+    },
+    "message2": {
+      "title": "Don't have a mobile device?",
+      "content": "Reach out to a commerce associate for help."
+    },
+    "message3": {
+      "title": "Ups!",
+      "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+    },
+    "message4": {
+      "title": "¡Ups, we are closed!",
+      "content": "This commerce is not available at the moment. Please check the business hours clicking the button 'Services'. ¡Come back later!"
+    }
+  },
+  "userQueueAttention": {
+    "hello": "Hello!",
+    "itsYourTurn": "🚨 It's your Turn! 🚨",
+    "youWereAttended": "Your were attended!",
+    "thanks": "Thanks for prefer us.",
+    "yourNumber": "Your attention number is:",
+    "toGoal": {
+      "1": "People in front of you",
+      "2": "people in front of you."
+    },
+    "yourAttention": "When your turn comes, present this QR code to the collaborator to validate your service:",
+    "rateYourAttention": "¿How was our service? Rate your attention to help us to offer a better service:",
+    "willBeAttendedShortly": "You will be attended shortly.",
+    "estimatedTime": "Estimated Time",
+    "estimatedTimeInit": "01:00",
+    "itsYourAttention": "Present this QR code to the collaborator to validate your service:",
+    "getClose": "Get close to module:",
+    "attendedBy": "You'll be attended by:",
+    "module": "Unique",
+    "collaborator": "N/A",
+    "message": {
+      "1": {
+        "title": "You are late!",
+        "content": "Your attention was skipped. Please get a new number attention or tell a collaborator."
+      },
+      "2": {
+        "title": "Remember to rate us!",
+        "content": "At the end of your turn, you'll be able to rate the attention on this screen."
+      }
+    },
+    "actions": {
+      "1": {
+        "title": {
+          "1": "You don't want to wait, do you?",
+          "2": "Go for a walk:"
+        },
+        "action": "Notify me when my turn comes"
+      },
+      "2": {
+        "title": {
+          "1": "Take a screenshot in case your browser closes and you forget your number.",
+          "2": "Don't forget!"
+        },
+        "action": "Save a screenshot"
+      },
+      "3": {
+        "action": "Save"
+      },
+      "4": {
+        "action": "Go to our website"
+      },
+      "5": {
+        "action": "Back to queues"
+      },
+      "6": {
+        "title": {
+          "1": " Turn on the bell! ",
+          "2": " Bell active! ",
+          "3": "You will hear a sound when it's your turn. Check the volume of your device.",
+          "4": "How it sounds?"
+        }
+      },
+      "7": {
+        "action": "I want to receive my turn via Email"
+      }
+    }
+  },
+  "clientNotifyData": {
+    "message": {
+      "title": "Ok!",
+      "content": "You'll be notified when your turn comes."
+    },
+    "accept": {
+      "1": "Accept our",
+      "2": "terms of use."
+    },
+    "action": "Ok",
+    "phoneTitle1": "Leave your Whatsapp number!",
+    "phoneTitle2": "When your turn comes, you'll receive a message.",
+    "emailTitle1": "Receive your turn by email!",
+    "emailTitle2": "So if you close the browser, you can access your shift details again.",
+    "phonePlaceholder": "Number",
+    "validate": {
+      "cellphone": {
+        "1": "Cellphone number must be valid",
+        "2": "Cellphone must have just numbers",
+        "example": "Select country and type your number",
+        "examples": {
+          "58": "Type just the number, Ex: 🇻🇪 4141112233",
+          "56": "Type just the number, Ex: 🇨🇱 911112222",
+          "55": "Type just the number, Ex: 🇧🇷 11922223333",
+          "1": "Type just the number, Ex: 🇺🇸 4081234444",
+          "xx": "Type Country Code + Number (Just Numbers)"
+        }
+      },
+      "email": {
+        "1": "Email must have at least 10 characters"
+      },
+      "common": {
+        "1": "Should set a valid cellphone number",
+        "2": "Should accept terms of use",
+        "3": "Should validate that you are not a robot"
+      }
+    }
+  },
+  "collaboratorAttentionValidate": {
+    "hello": "Hello!",
+    "hello-user": "Hello",
+    "yourNumber": "You're processing the attention number:",
+    "toGoal": {
+      "1": "There's",
+      "2": "users waiting."
+    },
+    "next": {
+      "1": "The number of the",
+      "2": "next attention is:"
+    },
+    "actions": {
+      "1": {
+        "action": "Mark as attended"
+      }
+    },
+    "comment": {
+      "label": "Any comments on the attention? (Optional):",
+      "placeholder": "User was nice. Left a tip."
+    },
+    "message": {
+      "1": {
+        "title": "Good job!",
+        "content": "There's not more pending attentions."
+      },
+      "2": {
+        "title": "Well done!",
+        "content": "This user was attended already."
+      },
+      "3": {
+        "title": "Got it!",
+        "content": "The attention was skipped."
+      },
+      "4": {
+        "title": "Not so fast!",
+        "content": "You can not attend this turn. Go back to the line and attend the previous numbers in order."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Attend",
+          "finish": "Set an attention as Attended",
+          "skip": "Skip Attention"
+        },
+        "module": {
+          "update": "Update attention Module"
+        }
+      }
+    }
+  },
+  "collaboratorQueuesView": {
+    "welcome": "Welcome!",
+    "welcome-user": "Welcome",
+    "choose": "Choose the line that you'll attend:",
+    "module": "Your module of attention is:",
+    "attentions": "In queue",
+    "attending": "Attending",
+    "message": {
+      "1": {
+        "title": "Oh no!",
+        "content": "At this time there are no service queues. Please approach to your administrator to request help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service modules. Please approach to your administrator to request help."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Attend",
+          "finish": "Set an attention as Attended",
+          "skip": "Skip Attention"
+        },
+        "module": {
+          "update": "Update attention Module"
+        }
+      }
+    }
+  },
+  "queueAttentionDetails": {
+    "requested": "Attentions requested",
+    "pending": "Attentions pending",
+    "terminated": "Attentions finished"
+  },
+  "collaboratorQueueAttentions": {
+    "hello": "Hello!",
+    "hello-user": "Hello",
+    "yourNumber": "The next attention number is:",
+    "toGoal": {
+      "1": "There's",
+      "2": "people waiting."
+    },
+    "actions": {
+      "1": {
+        "title": {
+          "1": "Did the person show up?"
+        },
+        "action": "Attend"
+      },
+      "2": {
+        "title": {
+          "1": "Didn't?"
+        },
+        "action": "Skip"
+      },
+      "3": {
+        "action": "Back to queues"
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Good job!",
+        "content": "There's not more pending attentions."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Attend",
+          "finish": "Set an attention as Attended",
+          "skip": "Skip Attention"
+        },
+        "module": {
+          "update": "Update attention Module"
+        }
+      }
+    }
+  },
+  "businessLogin": {
+    "welcome": "Welcome Administrator!",
+    "login": "Enter your user and password"
+  },
+  "collaboratorLogin": {
+    "welcome": "Welcome Collaborator!",
+    "login": "Enter your user and password"
+  },
+  "masterLogin": {
+    "welcome": "Welcome Master!",
+    "login": "Enter your user and password"
+  },
+  "loginData": {
+    "email": {
+      "placeholder": "yourname{'@'}tumail.com"
+    },
+    "password": {
+      "placeholder": "Password"
+    },
+    "actions": {
+      "1": {
+        "action": "Login"
+      },
+      "2": {
+        "title": {
+          "1": "Forgot your username and/or password?"
+        },
+        "action": "Manage access"
+      }
+    },
+    "validate": {
+      "password": {
+        "1": "Password must have 8 characters"
+      },
+      "email": {
+        "1": "Email must have at least 10 characters"
+      },
+      "common": {
+        "1": "You must enter email and password",
+        "2": "You must validate that you are not a robot",
+        "3": "Unregistered user and/or invalid password",
+        "4": "You must enter an valid email",
+        "5": "You can only request to change your password once today. Validate that the email is registered in our system or try again later",
+        "6": "User is not active. Please, contact the administrator."
+      }
+    }
+  },
+  "accessAdmin": {
+    "title": "Manage Access",
+    "subtitle": {
+      "1": "Recover Password",
+      "2": "Enter your email address. You will receive an email with the instructions to recover your password."
+    },
+    "actions": {
+      "1": {
+        "action": "Recover"
+      },
+      "2": {
+        "action": "Got It"
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Ready!",
+        "content": "We send an email with a link so you can update your password. Once you've done that, you can go back to the system and log in."
+      }
+    }
+  },
+  "attentionSurvey": {
+    "rateYourAttention": "¿How was our service? Rate your attention to help us to offer a better service:",
+    "other": "Other",
+    "survey": {
+      "label": "Any comments on our attention? (Optional):",
+      "placeholder": "The collaborator was really nice."
+    },
+    "nps": {
+      "title": "On a scale of 1 to 10, how likely are you to recommend us to family, friends or acquaintances?",
+      "subtitle": "1: unlikely, 10: very likely"
+    },
+    "to5": {
+      "subtitle": "1: very unsatisfied, 5: very satisfied"
+    },
+    "agree": {
+      "subtitle": "1: not agree, 10: completely agree"
+    },
+    "like": {
+      "subtitle": "No, Yes"
+    },
+    "writing": {
+      "placeholder": "Tell us"
+    },
+    "message": {
+      "1": {
+        "title": "Thanks!",
+        "content": "Your comments will help us to offer a better service."
+      },
+      "2": {
+        "title": "Thanks!",
+        "content": "Hope to see you soon."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Save"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "attentions": "Attentions",
+    "commerce": "Commerce: ",
+    "refresh": "Search",
+    "return": "Return",
+    "indicators": "Indicators",
+    "graph": "Trends",
+    "details": "Details",
+    "surveys": "Surveys",
+    "surveys-management": "Surveys (Details)",
+    "surveys-consolidated": "Surveys (Consolidated)",
+    "seconds": "In Minutes",
+    "keyWords": "Key Words: What are your clients talking about?",
+    "sentiment": "Sentiment analysis of customer feedback. Bad: -1 to 0.1, Fair: 0.1 to 0.7, Good: 0.5 to 1.",
+    "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",
+    "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "lastThreeMonths": "3 Months",
+    "showAll": "Show all",
+    "aditionalFilters": "Aditional filters",
+    "contacted": "Contacted",
+    "contactable": "Contactable",
+    "keyWord": "Key Words",
+    "search": "🔎 Name, Phone or Email",
+    "detractor": "Detractor",
+    "neutral": "Neutral",
+    "promoter": "Promoter",
+    "queue": "Select Line or Service:",
+    "resume": "Summary",
+    "consolidated": "Consolidated",
+    "day": "Day",
+    "month": "Month",
+    "year": "Year",
+    "dates": {
+      "from": "From",
+      "to": "to"
+    },
+    "comment": "Comment:",
+    "entities": "Key Words:",
+    "items": {
+      "attentions": {
+        "1": "Number of attentions",
+        "2": "Time of attention (Avg.)",
+        "3": "Rating of Client Satisfaction (CSAT)",
+        "4": "Line with more attentions",
+        "5": "Manual Attentions (%)",
+        "6": "Sent Notifications",
+        "7": "Quealified Attentions",
+        "8": "Max. Qualification",
+        "9": "Min. Qualification",
+        "10": "Whatsapp",
+        "11": "Email",
+        "12": "Turn",
+        "13": "5 left",
+        "14": "1 left",
+        "15": "It's your Turn",
+        "16": "Standard",
+        "17": "Manual",
+        "18": "Survey Only",
+        "19": "Notified",
+        "20": "Top of Collaborators",
+        "21": "Feeling Analysis",
+        "22": "Variation in relation to the same period of the previous month.",
+        "23": "Reach of this month in relation to the previous month.",
+        "24": "Net Promoter Score (NPS)",
+        "25": "Survey",
+        "26": "This is how your clients see you",
+        "graph": {
+          "1": "Attentions Evolution",
+          "2": "Attentions by Queue",
+          "3": "Attentions Flow",
+          "4": "Attention-duration Evolution (prom/min)",
+          "5": "Attention Distribution (By Hour)",
+          "6": "Survey-duration Evolution (prom/min)",
+          "7": "Survey Flow",
+          "8": "NPS Evolution",
+          "9": "CSAT Evolution"
+        }
+      },
+      "surveys": {
+        "yes": "Yes",
+        "no": "No"
+      },
+      "trends": {
+        "attention-number-evolution": {
+          "1": " Period",
+          "2": "In this period you have",
+          "3": "attention(s).",
+          "4": "This makes a difference",
+          "5": "compared to the previous period",
+          "6": " Current Month",
+          "7": "In this month you carry",
+          "8": "Last month you got",
+          "9": "This represents a difference of",
+          "10": "With an average of",
+          "11": "daily attentions."
+        },
+        "attention-flow": {
+          "1": "Funnel",
+          "2": "In this period they were requested",
+          "3": "attention(s), of which were successfully completed",
+          "4": "This represents a rate of",
+          "5": " conversion",
+          "6": "of",
+          "7": "and a rate of",
+          "8": " leak"
+        },
+        "survey-flow": {
+          "1": "Funnel",
+          "2": "In this period they were requested",
+          "3": "survey(s), of which were successfully completed",
+          "4": "This represents a rate of",
+          "5": " conversion",
+          "6": "of",
+          "7": "and a rate of",
+          "8": " leak"
+        },
+        "attention-duration-evolution": {
+          "1": "Time",
+          "2": "In this period the average attention time in minutes is",
+          "3": "The",
+          "4": " peak",
+          "5": "was from",
+          "6": "minutes and the",
+          "7": " minimum",
+          "8": " minutes."
+        },
+        "attention-rate-duration-evolution": {
+          "1": "Time",
+          "2": "In this period the average surveys time in minutes is",
+          "3": "The",
+          "4": " peak",
+          "5": "was from",
+          "6": "minutes and the",
+          "7": " minimum",
+          "8": " minutes."
+        },
+        "attention-hour-distribution": {
+          "1": "Hours",
+          "2": "In this period the time of day with the most attention was",
+          "3": "with",
+          "4": "attentions."
+        }
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      } ,
+      "2": {
+        "title": "Ups!",
+        "content": "There's not data to show, please validate the filter and try again."
+      },
+      "3": {
+        "title": "Ups!",
+        "content": "At the moment there's not commerces."
+      }
+    },
+    "reports": {
+      "surveys": {
+        "title": "Survey Report (Summary)",
+        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+      },
+      "indicators": {
+        "title": "Indicators Report",
+        "description": "Download PDF file with the results of the indicators in the selected date range"
+      },
+      "graphs": {
+        "title": "Trends Report",
+        "description": "Download PDF file with the results of the graphs in the selected date range"
+      },
+      "surveys-management": {
+        "title": "Survey Report (Details)",
+        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+      },
+      "surveys-consolidated": {
+        "title": "Survey Report (Consolidated)",
+        "description": "Download PDF file with the results of the surveys consolidated"
+      }
+    },
+    "capacitiesList": {
+      "dashboard": {
+        "attention-number": {
+          "view": "Number of attentions"
+        },
+        "attention-time-avg": {
+          "view": "Average time of attention"
+        },
+        "attention-rating-avg": {
+          "view": "Average qualification of attention"
+        },
+        "attention-queue": {
+          "view": "Line with more attentions"
+        },
+        "attention-no-device": {
+          "view": "Manual Attentions (%)"
+        },
+        "attention-notification": {
+          "view": "Sent Notifications"
+        },
+        "attention-number-evolution": {
+          "view": "Attentions Evolution"
+        },
+        "attention-duration-evolution": {
+          "view": "Survey-Duration Evolution (prom/min)"
+        },
+        "attention-rate-duration-evolution": {
+          "view": "Attention-Duration Evolution (prom/min)"
+        },
+        "attention-number-queue": {
+          "view": "Attentions by Queue"
+        },
+        "attention-flow": {
+          "view": "Attentions Flow"
+        },
+        "survey-flow": {
+          "view": "Survey Flow"
+        },
+        "indicators": {
+          "view": "See Indicators"
+        },
+        "graphs": {
+          "view": "See Trends"
+        },
+        "surveys": {
+          "view": "See Surveys (Summary)"
+        },
+        "surveys-management": {
+          "view": "See Surveys (Details)"
+        },
+        "surveys-consolidated": {
+          "view": "See Surveys (Consolidated)"
+        },
+        "attention-hour-distribution": {
+          "view": "Attention Distribution (By Hour)"
+        },
+        "surveys-consolidated-nps-evolution": {
+          "view": "NPS Evolution"
+        },
+        "surveys-consolidated-csat-evolution": {
+          "view": "CSAT Evolution"
+        },
+        "reports": {
+          "surveys": "Surveys Report (Summary)",
+          "indicators": "Indicators Report",
+          "graphs": "Trends Report",
+          "surveys-management": "Surveys Report (Details)",
+          "surveys-consolidated": "Surveys Report (Consolidated)"
+        }
+      }
+    }
+  },
+  "resumeAttention": {
+    "subtitle": {
+      "1": {
+        "1": "Resume attention",
+        "2": "Enter the attention number that you want to resume:"
+      }
+    },
+    "actions": {
+      "1": "Attend"
+    },
+    "validate": {
+      "number": "You must enter the attention number",
+      "resume": "The attention number does not exist, was terminated or was resumed already."
+    }
+  },
+  "noDeviceAttention": {
+    "subtitle": {
+      "1": {
+        "1": "Attention without Device",
+        "2": "Enter the user complete name:"
+      }
+    },
+    "actions": {
+      "1": "Get attention number"
+    },
+    "validate": {
+      "name": "You must enter the user complete name"
+    },
+    "message": {
+      "1": {
+        "title": "Remember!",
+        "content": "Tell the attention number to the user and that he must wait until being called by name or number."
+      }
+    }
+  },
+  "suggestions": {
+    "type": "Comment Type:",
+    "comment": {
+      "label": "Details:",
+      "placeholder": "You could make an improvement..."
+    },
+    "subtitle": {
+      "1": {
+        "1": "Suggestions",
+        "2": "Leave us your comments, we will be happy to assist you:"
+      }
+    },
+    "actions": {
+      "1": "Send"
+    },
+    "types": {
+      "1": "😓 Something went wrong...",
+      "2": "🤓 I have a new idea...",
+      "3": "🤔 You could impove...",
+      "4": "🫶 I wanted to say that..."
+    },
+    "validate": {
+      "type": "Should select the type",
+      "comment": "Should write a comment",
+      "captcha": "Should validate that you are not a robot"
+    },
+    "message": {
+      "title": "Ready!",
+      "content": "Thanks so much for your comment. It help us to continue improving."
+    }
+  },
+  "businessMenu": {
+    "welcome": "Welcome!",
+    "welcome-user": "Welcome",
+    "choose": "What do you want to do today?",
+    "dashboard": "Dashboard",
+    "commerce-admin": "Commerces",
+    "queues-admin": "Queues",
+    "configuration": "Settings",
+    "reports": "Reports",
+    "your-plan": "Your Plan",
+    "collaborators-admin": "Collaborators",
+    "modules-admin": "Modules",
+    "business-resume": "System State",
+    "surveys-admin": "Surveys",
+    "manage-admin": "Manage",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At the moment there's not options to manage. Please verify that your plan is active or go ahead to us."
+      }
+    },
+    "capacitiesList": {
+      "business": {
+        "main-menu": {
+          "business-resume": "System State",
+          "dashboard": "Dashboard",
+          "reports": "Reports",
+          "commerce-admin": "Commerce Settings",
+          "modules-admin": "Modules Settings",
+          "queues-admin": "Queues Settings",
+          "collaborators-admin": "Collaborator Settings",
+          "configuration": "Settings",
+          "your-plan": "Your Plan",
+          "surveys-admin": "Surveys Settings",
+          "manage-admin": "Manage Artifacts"
+        }
+      }
+    }
+  },
+  "masterMenu": {
+    "welcome": "Welcome!",
+    "welcome-user": "Welcome",
+    "choose": "What do you want to do today?",
+    "business": "Select a business:",
+    "business-master-admin": "Business Settings",
+    "business-master-resume": "System State",
+    "dashboard": "Dashboard",
+    "commerce-master-admin": "Commerces",
+    "queues-master-admin": "Queues",
+    "configuration": "Settings",
+    "reports": "Reports",
+    "your-plan": "Your Plan",
+    "plans-master-admin": "Plans Settings",
+    "collaborators-master-admin": "Collaborators",
+    "modules-master-admin": "Modules",
+    "surveys-master-admin": "Surveys",
+    "features-master-admin": "Features Settings",
+    "plan-activations-admin": "Plan Activations",
+    "surveys-admin": "Surveys",
+    "manage-master-admin": "Manage"
+  },
+  "businessSectionAtWorkView": {
+    "welcome": "Welcome!",
+    "welcome-user": "Welcome",
+    "return": "Return",
+    "message": {
+      "1": {
+        "title": "Hey!",
+        "content": "We are working in this section for you, we'll be back with news to you soon."
+      }
+    }
+  },
+  "businessQueuesAdmin": {
+    "title": "Queues",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "limit": "Limit:",
+    "order": "Order:",
+    "active": "Active:",
+    "estimated": "Estimated time (min):",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "service": "Service",
+    "attentionHour": "Attention Hours:",
+    "attentionDays": "Attention Days:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service queues."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Queues. To add more queues, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "queues": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Queues",
+          "edit": "Edit the Queues",
+          "update": "Update the Queues",
+          "add": "Add Queues",
+          "limit": "Limit amount of Queues",
+          "queue-limit": "Limit per Queue"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "limit": "You should enter the limit",
+      "order": "You should enter the order",
+      "estimatedTime": "You should enter the estimated time"
+    }
+  },
+  "businessModulesAdmin": {
+    "title": "Modules",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "active": "Active:",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service modules."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of modules. To add more modules, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "modules": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Modules",
+          "edit": "Edit the Modules",
+          "update": "Update the Modules",
+          "add": "Add Modules",
+          "limit": "Limit amount of Modules"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name"
+    }
+  },
+  "businessCollaboratorsAdmin": {
+    "title": "Collaborators",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "alias": "Alias (Optional):",
+    "email": "Email:",
+    "phone": "Phone:",
+    "active": "Active:",
+    "bot": "Is Bot:",
+    "module": "Module:",
+    "update": "Update",
+    "add": "Add",
+    "aliasHelp": "Short identifier of the collaborator used in the digital product.",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service collaborators."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of collaborators. To add more collaborators, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "collaborators": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Collaborators",
+          "edit": "Edit the Collaborators",
+          "update": "Update the Collaborators",
+          "add": "Add Collaborators",
+          "limit": "Limit amount of Collaborators"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "phone": "You should enter the phone",
+      "email": "You should enter the email",
+      "module": "You should select the module"
+    }
+  },
+  "businessCommercesAdmin": {
+    "title": "Commerces",
+    "return": "Return",
+    "name": "Name:",
+    "keyName": "Web Name:",
+    "tag": "Alias:",
+    "email": "Email:",
+    "phone": "Phone:",
+    "url": "Web Site:",
+    "active": "Active:",
+    "update": "Update",
+    "location": "Location",
+    "country": "Country:",
+    "language": "Language:",
+    "timezone": "Timezone:",
+    "address": "Address:",
+    "addressLat": "Latitude:",
+    "addressLng": "Longitude:",
+    "contact": "Contact",
+    "phone2": "Phone 2:",
+    "whatsapp": "Whatsapp:",
+    "twitter": "Twitter:",
+    "instagram": "Instagram:",
+    "facebook": "Facebook:",
+    "service": "Service",
+    "serviceUrl": "URL:",
+    "category": "Category:",
+    "logo": "Logo",
+    "attentionHour": "Attention Hours:",
+    "attentionDays": "Attention Days:",
+    "add": "Add",
+    "keyNameHelp": "Identifier used for the URL of the minisite.",
+    "tagHelp": "Short identifier of the commerce used in the digital product.",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service commerces."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of commerces. To add more commerces, change your plan or contact us."
+      }
+    },
+    "capacitiesList": {
+      "commerces": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Commerces",
+          "edit": "Edit the Commerces",
+          "update": "Update the Commerces",
+          "add": "Add Commerces",
+          "limit": "Limit amount of Commerces"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "phone": "You should enter the phone",
+      "email": "You should enter the email",
+      "keyName": "You should enter the web name",
+      "tag": "You should enter the fantasy name",
+      "url": "You should enter the web site",
+      "address": "You should enter the address"
+    }
+  },
+  "businessReports": {
+    "title": "Reports",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no reports."
+      },
+      "3": {
+        "title": "Ups!",
+        "content": "At the moment there's not commerces."
+      }
+    },
+    "items": {
+      "reports": {
+        "1": {
+          "name": "Attentions Report",
+          "description": "List of Attentions of the commerce between the selected dates."
+        },
+        "2": {
+          "name": "Notifications Report",
+          "description": "List of Notifications of the commerce between the selected dates."
+        },
+        "3": {
+          "name": "Qualifications Report",
+          "description": "List of Qualifications of the commerce between the selected dates."
+        }
+      }
+    },
+    "capacitiesList": {
+      "reports": {
+        "admin": {
+          "view": "Get to this section",
+          "attentions": "Attentions Report",
+          "notifications": "Notifications Report",
+          "surveys": "Qualifications Report"
+        }
+      }
+    }
+  },
+  "businessExecutiveReport": {
+    "title": "System State",
+    "return": "Return",
+    "resume": "Resume",
+    "activity": "Activity",
+    "attentions": "Attentions",
+    "notifications": "Notifications",
+    "enquetes": "Qualifications",
+    "commerces": "Commerces",
+    "modules": "Modules",
+    "queues": "Queues",
+    "collaborators": "Collaborators",
+    "resumeByCommerce": "Resume by Commerce",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no reports."
+      }
+    },
+    "items": {
+      "reports": {
+        "1": {
+          "name": "System State",
+          "description": "System State of the commerce between the selected dates."
+        }
+      }
+    },
+    "capacitiesList": {
+      "executive": {
+        "admin": {
+          "view": "Get to this section",
+          "download": "System State Report"
+        }
+      }
+    }
+  },
+  "businessAdmin": {
+    "title": "Businesses",
+    "return": "Return",
+    "name": "Name:",
+    "keyName": "Web Name:",
+    "tag": "Alias:",
+    "email": "Email:",
+    "phone": "Phone:",
+    "url": "Web Site:",
+    "active": "Active:",
+    "update": "Update",
+    "location": "Location",
+    "country": "Country:",
+    "language": "Language:",
+    "timezone": "Timezone:",
+    "address": "Address:",
+    "addressLat": "Latitude:",
+    "addressLng": "Longitude:",
+    "contact": "Contact",
+    "phone2": "Phone 2:",
+    "whatsapp": "Whatsapp:",
+    "twitter": "Twitter:",
+    "instagram": "Instagram:",
+    "facebook": "Facebook:",
+    "service": "Service",
+    "serviceUrl": "URL:",
+    "category": "Category: ",
+    "logo": "Logo:",
+    "attentionHour": "Attention Hours:",
+    "attentionDays": "Attention Days:",
+    "add": "Add",
+    "keyNameHelp": "Identifier used for the URL of the minisite.",
+    "tagHelp": "Short identifier of the business used in the digital product.",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service businesses."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of businesses. To add more businesses, change your plan or contact us."
+      }
+    },
+    "capacitiesList": {
+      "businesses": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Businesses",
+          "edit": "Edit the Businesses",
+          "update": "Update the Businesses",
+          "add": "Add Businesses",
+          "limit": "Limit amount of Businesses"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "phone": "You should enter the phone",
+      "email": "You should enter the email",
+      "keyName": "You should enter the web name",
+      "tag": "You should enter the fantasy name",
+      "url": "You should enter the web site",
+      "address": "You should enter the address",
+      "category": "You should enter the caterogy",
+      "country": "You should enter the country"
+    }
+  },
+  "businessConfiguration": {
+    "title": "Configurations",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "listResult": "Results:",
+    "feature": "Configuration:",
+    "add": "Add",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no configurations."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "configuration": {
+        "admin": {
+          "view": "Get to this section",
+          "edit": "Edit the Configurations",
+          "add": "Add Configurations",
+          "whatsapp-notify-now": "Edit Notification Whatsapp It's your Turn",
+          "whatsapp-notify-five": "Edit Notification Whatsapp 5 left",
+          "only-survey": "Edit Just Survey Mode",
+          "whatsapp-notify-one": "Edit Notification Whatsapp 1 left",
+          "get-number-remote": "Edit Get remote number"
+        }
+      }
+    },
+    "validate": {
+      "feature": "Should select a configuration"
+    }
+  },
+  "businessPermissionsAdmin": {
+    "title": "Permissions",
+    "commerce": "Select a role:",
+    "plan": "Select a plan:",
+    "return": "Back",
+    "listResult": "Results:",
+    "permission": "Permission:",
+    "type": "Type:",
+    "roles": "Roles",
+    "plans": "Plans",
+    "add": "Add",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no permissions."
+      }
+    },
+    "capacitiesList": {
+      "roles": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Permissions",
+          "edit": "Edit the Permissions",
+          "update": "Update the Permissions",
+          "add": "Add Permissions"
+        }
+      },
+      "permissions": {
+        "admin": {
+          "roles": "See the Roles Permissions",
+          "plans": "See the Plans Permissions"
+        }
+      }
+    },
+    "validate": {
+      "permission": "Should add a permission"
+    }
+  },
+  "businessPlansAdmin": {
+    "title": "Plans",
+    "return": "Return",
+    "name": "Name:",
+    "description": "Description:",
+    "order": "Order:",
+    "periodicity": "Periodicity:",
+    "price": "Price:",
+    "country": "Country:",
+    "active": "Active:",
+    "online": "Online:",
+    "onlinePrice": "Online price:",
+    "saving": "Saving:",
+    "onlineSaving": "Online saving:",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service plans."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of plan. To add more plans, change your plan or contact us."
+      }
+    },
+    "capacitiesList": {
+      "plans": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Plans",
+          "edit": "Edit the Plans",
+          "update": "Update the Plans",
+          "add": "Add Plans",
+          "limit": "Limit amount of Plans"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "description": "You should enter the description",
+      "order": "You should enter the order",
+      "periodicity": "You should enter the periodicity",
+      "price": "You should enter the price"
+    }
+  },
+  "businessPlan": {
+    "title": "Your Plan",
+    "return": "Back",
+    "planActive": "Active",
+    "planInactive": "Inactive",
+    "planValidated": "Validated",
+    "planPending": "Pending",
+    "benefits": "Benefits",
+    "yourPlan": "Your current plan is:",
+    "yourPurchase": "Your purchase",
+    "startDate": "Start date: ",
+    "endDate": "End date: ",
+    "purchaseDate": "Purchase date: ",
+    "paymentValue": "Amount: ",
+    "consult": "Ask us",
+    "request": "You requested the Plan:",
+    "paymentMethod": "Payment method: ",
+    "validatedAt": "Payment validated on: ",
+    "plan": "Plan",
+    "iwantit": "I want it!",
+    "selectAPlan": {
+      "1": "Get the best benefits!",
+      "2": "Select the plan that better fit your business:"
+    },
+    "upgradePlan": {
+      "1": "Do you need more capacities? Upgrade now!",
+      "2": "Select the plan that better fit your business:"
+    },
+    "acceptData": {
+      "1": "Accept our",
+      "2": "use conditions."
+    },
+    "acceptPurchase": {
+      "1": "and our",
+      "2": "service conditions."
+    },
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there you have not Plan. Soon you'll be able to manage your Plan in this section. Reach out to us to have more info."
+      },
+      "3": {
+        "title": "Hey!",
+        "content": "At the moment you have a Plan pending for validation. If you already pay the plan, it will be available pretty soon."
+      }
+    },
+    "capacitiesList": {
+      "plan": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Plan",
+          "edit": "Edit the Plan",
+          "update": "Update the Plan",
+          "add": "Add Plan"
+        }
+      }
+    },
+    "validate": {
+      "plan": "Should select a Plan"
+    }
+  },
+  "planSelection": {
+    "title": "Just one step away...",
+    "subtitle": {
+      "1": "Verify your purchase and press send.",
+      "2": "Later you will have 24hrs. to realize the payment."
+    },
+    "canPayWays": "You can pay trough the following ways:",
+    "wantContact": "If you can not make the payment through the methods available, please select I want to be contacted.",
+    "action": "Send",
+    "wireTransfer": "Wire Transfer",
+    "cashDeposit": "Cash Deposit",
+    "contact": "I want to be contacted",
+    "bank": "Bank:",
+    "accountType": "Account type:",
+    "accountNumber": "Account number:",
+    "id": "Id:"
+  },
+  "businessPlanActivationAdmin": {
+    "title": "Plan Activation",
+    "return": "Back",
+    "validated": "Validate",
+    "desactivate": "Desactivate",
+    "paymentMethod": "Payment method:",
+    "amount": "Amount:",
+    "number": "Id. TRX:",
+    "bank": "Bank:",
+    "paymentDate": "Payment date:",
+    "listResult": "Results:",
+    "historic": "History:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no Plan to activate."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "At the moment there's not Plans to activate to show."
+      }
+    },
+    "capacitiesList": {
+      "activations": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Plans",
+          "edit": "Edit the Plans",
+          "update": "Update the Plan",
+          "add": "Add Plans",
+          "validate": "Validate plan to activate",
+          "desactivate": "Desactivate plan to activate"
+        }
+      }
+    },
+    "validate": {
+      "paymentNumber": "Should enter the transaction number",
+      "paymentAmount": "Should enter the amount",
+      "method": "Should enter the payment method",
+      "bank": "Should enter the bank",
+      "paymentDate": "Should enter the payment date"
+    }
+  },
+  "planStatus": {
+    "title": {
+      "desactivate": "Your plan expired!",
+      "attention": "Your plan is about to expire!"
+    },
+    "subtitle": {
+      "desactivate": "You stopped to enjoy the benefits of your plan the ",
+      "attention": "You'll stop to enjoy the benefits of your plan the "
+    },
+    "itsYourTurn": "It's your Turn of renew your plan!",
+    "action": {
+      "1": "Renew your plan now!",
+      "2": "Admin your plan now!"
+    }
+  },
+  "businessSurveysAdmin": {
+    "title": "Surveys",
+    "commerce": "Select a commerce:",
+    "return": "Back",
+    "type": "Type:",
+    "attentionDefault": "Default:",
+    "active": "Active:",
+    "csat": "CSAT:",
+    "nps": "NPS:",
+    "question": "Question:",
+    "comment": "General comment:",
+    "update": "Update",
+    "add_question": "Add Question",
+    "delete_question": "Delete Question",
+    "order": "Order:",
+    "add": "Add",
+    "options": "Options:",
+    "queue": "Queue:",
+    "link": "URL Web:",
+    "go": "Go",
+    "other": "Other",
+    "otherOption": "'Other' Option:",
+    "otherOpen": "'Other' Open:",
+    "optionsHelp": "List of answer options splitted by comma, without spaces.",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service surveys."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of surveys. To add more surveys, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no surveys. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "surveys": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Surveys",
+          "edit": "Edit the Surveys",
+          "update": "Update the Surveys",
+          "add": "Add Surveys",
+          "limit": "Limit amount of Surveys"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el name",
+      "phone": "Debes ingresar el phone",
+      "email": "Debes ingresar el email",
+      "module": "Debes seleccionar un module"
+    }
+  },
+  "permissions": {
+    "activations": {
+      "admin": {
+        "view": "Get to Section - Section Plan Activation",
+        "read": "Read data - Section Plan Activation",
+        "add": "Add Plan Activation - Section Plan Activation",
+        "desactivate": "Desactivate Plan - Section Plan Activation",
+        "validate": "Validate plan activation - Section Plan Activation"
+      }
+    },
+    "client": {
+      "notify": {
+        "whatsapp": "Field of Number Whatsapp para notifications",
+        "email": "Field of email para notifications"
+      }
+    },
+    "businesses": {
+      "admin": {
+        "view": "Get to this Section - Manage Business",
+        "read": "Read data - Section Manage Business",
+        "edit": "Edit data - Section Manage Business",
+        "update": "Update data - Section Manage Business",
+        "add": "Add data - Section Manage Businesss",
+        "limit": "Limit of data - Section Manage Business"
+      }
+    },
+    "business": {
+      "main-menu": {
+        "business-resume": "Enable Estado del Sistema - Main Menu Business",
+        "dashboard": "Enable Dashboard - Main Menu Business",
+        "reports": "Enable Reportes - Main Menu Business",
+        "commerce-admin": "Enable Manage Commerces - Main Menu Business",
+        "modules-admin": "Enable Manage Modules - Main Menu Business",
+        "queues-admin": "Enable Manage Queues - Main Menu Business",
+        "collaborators-admin": "Enable Manage Collaborators - Main Menu Business",
+        "configuration": "Enable Manage Configurations - Main Menu Business",
+        "your-plan": "Enable Tu Plan - Main Menu Business",
+        "surveys-admin": "Enable Surveys - Main Menu Business",
+        "manage-admin": "Enable Artifacts Admin - Main Menu Business"
+      }
+    },
+    "collaborators": {
+      "admin": {
+        "view": "Get to this Section - Manage Collaborators",
+        "read": "Read data - Section Manage Collaborators",
+        "edit": "Edit data - Section Manage Collaborators",
+        "update": "Update data - Section Manage Collaborators",
+        "add": "Add data Section - Manage Collaborators",
+        "limit": "Limit of data Section - Manage Collaborators"
+      }
+    },
+    "commerces": {
+      "admin": {
+        "view": "Get to this Section - Manage Commerces",
+        "read": "Read data - Section Manage Commerces",
+        "edit": "Edit data - Section Manage Commerces",
+        "update": "Update data - Section Manage Commerces",
+        "add": "Add data - Section Manage Commerces",
+        "limit": "Limit of data - Section Manage Commerces"
+      }
+    },
+    "surveys": {
+      "admin": {
+        "view": "Get to this Section - Manage Surveys",
+        "read": "Read data - Section Manage Surveys",
+        "edit": "Edit data - Section Manage Surveys",
+        "update": "Update data - Section Manage Surveys",
+        "add": "Add data Section - Manage Surveys",
+        "limit": "Limit of data Section - Manage Surveys"
+      }
+    },
+    "configuration": {
+      "admin": {
+        "view": "Get to this Section - Manage Configurations",
+        "read": "Read data - Section Manage Configurations",
+        "edit": "Edit data - Section Manage Configurations",
+        "add": "Add data - Section Manage Configurations",
+        "whatsapp-notify-now": "Edit configuración Notificación Whatsapp Es tu Turno",
+        "whatsapp-notify-five": "Edit configuración Notificación Whatsapp Faltan 5",
+        "only-survey": "Edit configuración Modo Encuesta",
+        "whatsapp-notify-one": "Edit configuración Notificación Whatsapp Falta 1",
+        "get-number-remote": "Edit configuration get remote number"
+      }
+    },
+    "dashboard": {
+      "indicators": {
+        "view": "Get to the Indicadores - Section Dashboard"
+      },
+      "graphs": {
+        "view": "Get to the Gráficos - Section Dashboard"
+      },
+      "attention-number": {
+        "view": "Get to the Number of Attentions - Section Dashboard"
+      },
+      "attention-time-avg": {
+        "view": "Get to the Tiempo promedio of atención - Section Dashboard"
+      },
+      "attention-rating-avg": {
+        "view": "Get to the Calificación promedio Section - Dashboard"
+      },
+      "attention-queue": {
+        "view": "Get to the La Fila con más attentions - Section Dashboard"
+      },
+      "attention-no-device": {
+        "view": "Get to the Number of attentions manuales - Section Dashboard"
+      },
+      "attention-notification": {
+        "view": "Get to the Number of notifications - Section Dashboard"
+      },
+      "attention-number-evolution": {
+        "view": "Get to the Evolution of attentions - Section Dashboard"
+      },
+      "attention-number-queue": {
+        "view": "Get to the Attentions por filas - Section Dashboard"
+      },
+      "attention-duration-evolution": {
+        "view": "Get to the Evolution duration of attentions - Section Dashboard"
+      },
+      "attention-rate-duration-evolution": {
+        "view": "Get to the Evolution duration of surveys - Section Dashboard"
+      },
+      "attention-flow": {
+        "view": "Get to Attentions Flow - Section Dashboard"
+      },
+      "survey-flow": {
+        "view": "Get to Surveys Flow - Section Dashboard"
+      },
+      "surveys": {
+        "view": "Get to the Surveys (Resume) - Section Dashboard"
+      },
+      "surveys-management": {
+        "view": "Get to the Surveys (Details) - Section Dashboard"
+      },
+      "surveys-consolidated": {
+        "view": "Get to the Surveys (Consolidated) - Section Dashboard"
+      },
+      "attention-hour-distribution": {
+        "view": "Get to attention's hour-distribution - Seção Dashboard"
+      },
+      "surveys-consolidated-nps-evolution": {
+        "view": "Get to the NPS Evolution - Section Dashboard"
+      },
+      "surveys-consolidated-csat-evolution": {
+        "view": "Get to the CSAT Evolution - Section Dashboard"
+      },
+      "reports": {
+        "surveys": "Download Report Surveys (Summary) Section Dashboard",
+        "indicators": "Download Report Indicators Section Dashboard",
+        "graphs": "Download Report de Trends Section Dashboard",
+        "surveys-management": "Download Report Surveys (Details) Section Dashboard",
+        "surveys-consolidated": "Download Report Surveys (Consolidated) Section Dashboard"
+      }
+    },
+    "executive": {
+      "admin": {
+        "view": "Get to this Section - Estado del Sistema",
+        "download": "Download Estado del Sistema"
+      }
+    },
+    "modules": {
+      "admin": {
+        "view": "Get to this Section -- Manage Modules",
+        "read": "Read data - Section Manage Modules",
+        "edit": "Edit data - Section Manage Modules",
+        "update": "Update data - Section Manage Modules",
+        "add": "Add data - Section Manage Modules",
+        "limit": "Limit of data - Section Manage Modules"
+      }
+    },
+    "queues": {
+      "admin": {
+        "view": "Get to this Section - Manage Queues",
+        "read": "Read data - Section Manage Queues",
+        "edit": "Edit data - Section Manage Queues",
+        "update": "Update data - Section Manage Queues",
+        "add": "Add data - Section Manage Queues",
+        "limit": "Limit of data - Section Manage Queues",
+        "queue-limit": "Limit of attentions daily of the Queues"
+      }
+    },
+    "reports": {
+      "admin": {
+        "view": "Get to this Section - Reportes",
+        "attentions": "Download Inform of Attentions",
+        "notifications": "Download Inform of notifications",
+        "surveys": "Download Inform of Encuestas"
+      }
+    },
+    "collaborator": {
+      "module": {
+        "update": "Update module - Section Attentions of the Collaborator"
+      },
+      "attention": {
+        "attend": "Atender - Section Attentions of the Collaborator",
+        "finish": "Marcar atención como atendida - Section Attentions of the Collaborator",
+        "skip": "Saltar atención - Section Attentions of the Collaborator"
+      }
+    },
+    "roles": {
+      "admin": {
+        "view": "Get to this Section - Manage Permisos",
+        "read": "Read data - Section Manage Permisos",
+        "edit": "Edit data - Section Manage Permisos",
+        "update": "Update data - Section Manage Permisos",
+        "add": "Add data - Section Manage Permisos"
+      }
+    },
+    "user": {
+      "notification": {
+        "add": "Add notification - Attention of Usuario"
+      }
+    },
+    "plans": {
+      "admin": {
+        "view": "Get to this Section - Manage Plans",
+        "read": "Read data - Section Manage Plans",
+        "edit": "Edit data - Section Manage Plans",
+        "update": "Update data - Section Manage Plans",
+        "add": "Add data - Section Manage Plans",
+        "limit": "Limit of data - Section Manage Plans"
+      }
+    },
+    "plan": {
+      "admin": {
+        "view": "Get to this Section - Manage Plan",
+        "read": "Read data - Section Manage Plan",
+        "edit": "Edit data - Section Manage Plan",
+        "update": "Update data - Section Manage Plan",
+        "add": "Add data - Section Manage Plan"
+      }
+    },
+    "permissions": {
+      "admin": {
+        "plans": "Get to the Plans permissions",
+        "roles": "Get to the Roles permissions"
+      }
+    }
+  }
+}

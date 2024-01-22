@@ -1,0 +1,202 @@
+<script>
+import { ref, watch, reactive, onBeforeMount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { getAttentionDetailsByNumber, getAttentionDetailsByQueue } from '../../application/services/attention';
+import { getCommerceById } from '../../application/services/commerce';
+import { getQueueById } from '../../application/services/queue';
+import { globalStore } from '../../stores/index';
+import { attend } from '../../application/services/attention';
+import { updatedQueues } from '../../application/firebase';
+import { getPermissions } from '../../application/services/permissions';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import QueueName from '../../components/common/QueueName.vue';
+import AttentionNumber from'../../components/common/AttentionNumber.vue';
+import Message from '../../components/common/Message.vue';
+import PoweredBy from '../../components/common/PoweredBy.vue';
+import Spinner from '../../components/common/Spinner.vue';
+import Alert from '../../components/common/Alert.vue';
+
+export default {
+  name: 'CollaboratorQueueAttentions',
+  components: { Message, PoweredBy, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities },
+  async setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const { id } = route.params;
+
+    let loading = ref(true);
+    let alertError = ref('');
+
+    const store = globalStore();
+
+    const state = reactive({
+      currentUser: {},
+      queue: {},
+      commerce: {},
+      attention: {},
+      user: {},
+      toggles: {},
+      queuePendingDetails: [],
+      queueProcessingDetails: []
+    });
+
+    onBeforeMount(async () => {
+      try {
+        loading.value = true;
+        state.currentUser = await store.getCurrentUser;
+        const queue = await getQueueById(id);
+        await getQueueValues(queue, {});
+        state.toggles = await getPermissions('collaborator');
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    })
+
+    let queues = ref([]);
+    queues = updatedQueues(id);
+
+    const getQueueValues = async (queue, oldQueue) => {
+      state.queue = queue;
+      store.setCurrentQueue(queue);
+      if (queue !== undefined && queue.id !== undefined) {
+        if (queue.currentAttentionNumber) {
+          state.attention = await getAttentionDetailsByNumber(queue.id, queue.currentAttentionNumber, 'PENDING');
+          state.queuePendingDetails = await getAttentionDetailsByQueue(queue.id, 'PENDING');
+          state.queueProcessingDetails = await getAttentionDetailsByQueue(queue.id, 'PROCESSING');
+          if (state.attention.user) {
+            state.user = state.attention.user;
+          }
+        }
+        if (state.attention.commerce) {
+          state.commerce = state.attention.commerce;
+        } else {
+          if (queue.commerceId !== oldQueue.commerceId) {
+            state.commerce = await getCommerceById(state.queue.commerceId);
+          }
+        }
+      } else {
+        router.push({ path: `/not-found` })
+      }
+    }
+
+    watch(
+      queues,
+      async (newValue, oldQueue) => {
+        await getQueueValues(newValue[0], oldQueue);
+      }
+    )
+
+    const isEmptyQueue = () => {
+      const flag = state.queue.currentAttentionNumber - 1;
+      return (state.queue.currentNumber === 0 || state.queue.currentNumber === flag) && (state.attention.id === undefined || state.attention.status !== 'PROCESSING');
+    }
+
+    const beforeCurrent = () => {
+      if(state.queue.currentNumber === 0){
+        return 0;
+      }
+      return state.queue.currentNumber - state.queue.currentAttentionNumber + 1;
+    }
+
+    const collaboratorQueues = () => {
+      router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` })
+    }
+
+    const attendAttention = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        const body = { queueId: state.queue.id, collaboratorId: state.currentUser.id , commerceLanguage: state.commerce.localeInfo ? state.commerce.localeInfo.language : 'sp'};
+        state.attention = await attend(state.queue.currentAttentionNumber, body);
+        router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/validar` }).then(() => { router.go() });
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    };
+
+    return {
+      id,
+      state,
+      loading,
+      alertError,
+      isEmptyQueue,
+      beforeCurrent,
+      collaboratorQueues,
+      attendAttention
+    }
+  }
+}
+</script>
+<template>
+  <div>
+    <div class="content text-center">
+      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+      <QueueName
+        :queue="state.queue"
+        :queuePendingDetails="state.queuePendingDetails"
+        :queueProcessingDetails="state.queueProcessingDetails"
+        :details="true">
+      </QueueName>
+      <div id="page-header" class="text-center mt-4">
+        <div id="welcome">
+          <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorQueueAttentions.hello") }}</span>
+          <span v-else class="welcome-user">¡{{ $t("collaboratorQueueAttentions.hello-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
+        </div>
+      </div>
+      <ToggleCapabilities
+        :toggles="state.toggles"
+        componentName="collaboratorQueueAttentions"
+      ></ToggleCapabilities>
+      <Spinner :show="loading"></Spinner>
+      <Alert :show="loading" :stack="alertError"></Alert>
+      <div v-if="isEmptyQueue()" class="mt-2">
+        <Message
+          :title="$t('collaboratorQueueAttentions.message.1.title')"
+          :content="$t('collaboratorQueueAttentions.message.1.content')"
+          :icon="'bi bi-emoji-smile'">
+        </Message>
+      </div>
+      <div v-else id="attention">
+        <div class="your-attention mt-2">
+          <span>{{ $t("collaboratorQueueAttentions.yourNumber") }}</span>
+        </div>
+        <AttentionNumber
+          :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+          :number="state.queue.currentAttentionNumber"
+          :data="state.user"
+        ></AttentionNumber>
+        <div class="to-goal">
+          <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ beforeCurrent() }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
+        </div>
+        <div class="d-grid gap-2 my-2">
+          <button
+            class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+            @click="attendAttention()"
+            :disabled="!state.toggles['collaborator.attention.attend'] || loading">
+            {{ $t("collaboratorQueueAttentions.actions.1.action") }} <i class="bi bi-qr-code-scan"></i>
+          </button>
+        </div>
+      </div>
+      <div class="d-grid gap-2 my-2">
+        <button
+          class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+          @click="collaboratorQueues()"
+          :disabled="loading"
+          >
+          {{ $t("collaboratorQueueAttentions.actions.3.action") }} <i class="bi bi-arrow-left-circle"></i>
+        </button>
+      </div>
+    </div>
+    <PoweredBy :name="state.commerce.name" />
+  </div>
+</template>
+
+<style scoped>
+</style>

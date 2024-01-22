@@ -1,0 +1,270 @@
+<script>
+import { ref, reactive, onBeforeMount, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { getCommerceById } from '../../application/services/commerce';
+import { getActiveModulesByCommerceId, getModuleById } from '../../application/services/module';
+import { getCollaboratorById, updateModule } from '../../application/services/collaborator';
+import { VueRecaptcha } from 'vue-recaptcha';
+import { globalStore } from '../../stores';
+import { getPermissions } from '../../application/services/permissions';
+import { updatedQueuesByCommerce } from '../../application/firebase';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
+import Message from '../../components/common/Message.vue';
+import PoweredBy from '../../components/common/PoweredBy.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import Spinner from '../../components/common/Spinner.vue';
+import Alert from '../../components/common/Alert.vue';
+
+export default {
+  name: 'CollaboratorQueuesView',
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities },
+  async setup() {
+    const router = useRouter();
+    const route = useRoute();
+
+    const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
+    const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
+
+    const { id } = route.params;
+
+    let loading = ref(false);
+    let alertError = ref('');
+
+    const store = globalStore();
+
+    const state = reactive({
+      currentUser: {},
+      queue: {},
+      queues: [],
+      commerce: {},
+      collaborator: {},
+      modules: ref({}),
+      module: {},
+      activeCommerce: false,
+      captcha: false,
+      toggles: {}
+    });
+
+    onBeforeMount(async () => {
+      try {
+        loading.value = true;
+        state.currentUser = await store.getCurrentUser;
+        state.commerce = await getCommerceById(state.currentUser.commerceId);
+        state.queues = state.commerce.queues;
+        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
+        state.collaborator = await getCollaboratorById(state.currentUser.id);
+        state.module = await getModuleById(state.collaborator.moduleId);
+        store.setCurrentCommerce(state.commerce);
+        store.setCurrentQueue(undefined);
+        state.toggles = await getPermissions('collaborator');
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    })
+
+    let queues = ref([]);
+    queues = updatedQueuesByCommerce(id);
+
+    const isActiveCommerce = () => {
+      return state.commerce && state.commerce.active === true && state.commerce.queues.length > 0;
+    };
+    const isActiveModules = () => {
+      return state.module && state.modules.length > 0
+    }
+    const getLineAttentions = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        store.setCurrentQueue(state.queue);
+        router.push({ path: `/interno/colaborador/fila/${state.queue.id}/atenciones` });
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+        alertError.value = error.message;
+      }
+    };
+    const getQueue = async (queueIn) => {
+      state.queue = queueIn;
+      store.setCurrentQueue(state.queue);
+      if (captchaEnabled) {
+       await validateCaptchaOk(true);
+      }
+    }
+    const validateCaptchaOk = async (response) => {
+      if(response) {
+        state.captcha = true;
+        getLineAttentions();
+      }
+    };
+    const validateCaptchaError = () => {
+      state.captcha = false;
+    };
+    const moduleSelect = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        const id = state.collaborator.id;
+        const body = { module: state.module.id };
+        await updateModule(id, body);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    }
+    const beforeCurrentQueue = (queue) => {
+      if(queue.currentNumber === 0){
+        return 0;
+      }
+      return queue.currentNumber - queue.currentAttentionNumber + 1;
+    }
+
+    const getQueueValues = async (queues) => {
+      state.queues = queues;
+    }
+
+    watch(
+      queues,
+      async () => {
+        await getQueueValues(queues)
+      }
+    )
+
+    return {
+      siteKey,
+      state,
+      captchaEnabled,
+      loading,
+      alertError,
+      getQueue,
+      beforeCurrentQueue,
+      isActiveCommerce,
+      getLineAttentions,
+      validateCaptchaOk,
+      validateCaptchaError,
+      moduleSelect,
+      isActiveModules
+    }
+  }
+}
+</script>
+<template>
+  <div>
+    <div class="content text-center">
+      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+      <div id="page-header" class="text-center mt-4">
+        <div class="welcome">
+          <div id="welcome">
+            <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorQueuesView.welcome") }}</span>
+            <span v-else class="welcome-user">¡{{ $t("collaboratorQueuesView.welcome-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
+          </div>
+        </div>
+        <ToggleCapabilities
+          :toggles="state.toggles"
+          componentName="collaboratorQueuesView"
+        ></ToggleCapabilities>
+        <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
+        <div id="module-selector" class="mb-3 mt-2" v-if="isActiveModules()">
+          <span>{{ $t("collaboratorQueuesView.module") }} </span>
+          <select
+            class="btn btn-md btn-light fw-bold text-dark m-2 select"
+            v-model="state.module"
+            id="modules"
+            :disabled="!state.toggles['collaborator.module.update'] || !state.commerce.active"
+            @change="moduleSelect()">
+            <option v-for="mod in state.modules" :key="mod.name" :value="mod">{{ mod.name }}</option>
+          </select>
+        </div>
+        <div v-if="!isActiveModules() && !loading">
+          <Message
+            :title="$t('collaboratorQueuesView.message.2.title')"
+            :content="$t('collaboratorQueuesView.message.2.content')" />
+        </div>
+        <div v-if="isActiveCommerce()" class="choose-attention">
+          <span>{{ $t("collaboratorQueuesView.choose") }}</span>
+        </div>
+      </div>
+      <div id="queues">
+        <div class="row" v-if="isActiveCommerce()">
+          <div
+            v-for="queue in state.queues"
+            :key="queue.id"
+            class="d-grid btn-group btn-group-justified">
+            <div v-if="captchaEnabled === true">
+              <VueRecaptcha
+                :sitekey="siteKey"
+                @verify="validateCaptchaOk"
+                @error="validateCaptchaError">
+                <button
+                  v-if="queue.active"
+                  type="button"
+                  class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                  @click="getQueue(queue)"
+                  :disabled="loading"
+                  >
+                  <div class="row centered">
+                    <div class="col-8">
+                      {{ queue.name }}
+                    </div>
+                    <div class="col-2">
+                      <span :class="`badge rounded-pill m-0 indicator ${beforeCurrentQueue(queue) === 0 ? 'text-bg-success': 'text-bg-primary'}`">
+                        <i class="bi bi-person-fill"></i>
+                        {{ beforeCurrentQueue(queue) }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              </VueRecaptcha>
+            </div>
+            <div v-else>
+              <button
+                  v-if="queue.active"
+                  type="button"
+                  class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                  @click="getQueue(queue)"
+                  :disabled="loading"
+                  >
+                  <div class="row centered">
+                    <div class="col-8">
+                      {{ queue.name }}
+                    </div>
+                    <div class="col-2">
+                      <span :class="`badge rounded-pill m-0 indicator ${beforeCurrentQueue(queue) === 0 ? 'text-bg-success': 'text-bg-primary'}`">
+                        <i class="bi bi-person-fill"></i>
+                        {{ beforeCurrentQueue(queue) }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+            </div>
+          </div>
+        </div>
+        <div v-if="!isActiveCommerce() && !loading">
+          <Message
+            :title="$t('collaboratorQueuesView.message.1.title')"
+            :content="$t('collaboratorQueuesView.message.1.content')" />
+        </div>
+      </div>
+    </div>
+    <PoweredBy :name="state.commerce.name" />
+  </div>
+</template>
+<style scoped>
+.choose-attention {
+  padding-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.select {
+  border-radius: .5rem;
+  border: 1.5px solid var(--gris-default);
+}
+.indicator {
+  font-size: .7rem;
+}
+</style>

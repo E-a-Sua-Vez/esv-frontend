@@ -1,0 +1,531 @@
+<script>
+import { ref, reactive, onBeforeMount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { getCommerceByKeyName } from '../application/services/commerce';
+import { getQueueById } from '../application/services/queue';
+import { createAttention } from '../application/services/attention';
+import { VueRecaptcha } from 'vue-recaptcha';
+import { globalStore } from '../stores';
+import { validateEmail } from '../shared/utils/email';
+import Message from '../components/common/Message.vue';
+import PoweredBy from '../components/common/PoweredBy.vue';
+import CommerceLogo from '../components/common/CommerceLogo.vue';
+import Spinner from '../components/common/Spinner.vue';
+import Alert from '../components/common/Alert.vue';
+import Warning from '../components/common/Warning.vue';
+import NotificationConditions from '../components/domain/NotificationConditions.vue';
+
+export default {
+  name: 'CommerceQueuesView',
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, Warning, NotificationConditions },
+  async setup() {
+    const router = useRouter();
+    const route = useRoute();
+    const store = globalStore();
+    const { keyName, queueId } = route.params;
+    const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
+    const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
+    let captcha = false;
+
+    let loading = ref(false);
+    let alertError = ref('');
+
+    const state = reactive({
+      commerce: {},
+      queues: [],
+      queue: {},
+      currentChannel: 'QR',
+      newUser: {},
+      errorsAdd: [],
+      phone: '',
+      phoneCode: '',
+      nameError: false,
+      lastNameError: false,
+      phoneError: false,
+      phoneCodeError: false,
+      emailError: false,
+      idNumberError: false,
+      accept: false,
+      phoneCodes: [
+        { id: 've', label: '🇻🇪', code: '58' },
+        { id: 'br', label: '🇧🇷', code: '55' },
+        { id: 'cl', label: '🇨🇱', code: '56' },
+        { id: 'us', label: '🇺🇸', code: '1' },
+        { id: 'xx', label: '🏴', code: 'xx' }
+      ],
+    });
+
+    onBeforeMount(async () => {
+      try {
+        loading.value = true;
+        if (keyName) {
+          state.commerce = await getCommerceByKeyName(keyName);
+          store.setCurrentCommerce(state.commerce);
+          if (queueId) {
+            state.queue = await getQueueById(queueId);
+            state.queues = [state.queue];
+            await getAttention();
+          } else {
+            const queues = state.commerce.queues;
+            state.queues = queues;
+            if (queues.length === 1) {
+              state.queue = queues[0];
+              await getAttention();
+            }
+          }
+          if (state.commerce.localeInfo && state.commerce.localeInfo.country) {
+            state.phoneCode = findPhoneCode(state.commerce.localeInfo.country);
+          }
+        }
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+      }
+    })
+
+    const isActiveCommerce = (commerce) => {
+      return commerce.active === true &&
+        commerce.queues.length > 0
+    };
+
+    const isActiveQueues = (commerce) => {
+      return commerce !== undefined && commerce.queues.length > 0;
+    };
+
+    const getFeature = (commerce, name) => {
+      const features = commerce.features;
+      const feature = features.find(feat => { return feat.name === name });
+      return feature || {};
+    }
+
+    const isAvailableCommerce = (commerce) => {
+      const feature = getFeature(state.commerce, 'close-commerce-by-service-hours');
+      if (feature.active === undefined || feature.active === false) {
+        return true;
+      }
+      const timeZone = commerce.localeInfo.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const clientCurrentDate = new Date().toLocaleString("en-US", { timeZone });
+      let clientDayOfweek = new Date(clientCurrentDate).getDay();
+      const clientHour = new Date(clientCurrentDate).getHours();
+      let isInDays = false;
+      let isInHours = false;
+      if (clientDayOfweek === 0) {
+        clientDayOfweek = 7;
+      }
+      if (commerce.serviceInfo.attentionDays.includes(clientDayOfweek)) {
+        isInDays = true;
+      }
+      if (commerce.serviceInfo.attentionHourFrom ===
+        commerce.serviceInfo.attentionHourTo) {
+          isInHours = true;
+      } else if (commerce.serviceInfo.attentionHourTo <
+        commerce.serviceInfo.attentionHourFrom) {
+          if (clientHour >= commerce.serviceInfo.attentionHourFrom ||
+          clientHour <= commerce.serviceInfo.attentionHourTo) {
+            isInHours = true;
+          }
+      } else {
+        if (clientHour >= commerce.serviceInfo.attentionHourFrom
+          && clientHour <= commerce.serviceInfo.attentionHourTo) {
+          isInHours = true;
+        }
+      }
+      if (isInDays && isInHours) {
+        return true;
+      }
+    }
+
+    const isDataActive = (commerce) => {
+      let active = false;
+      let features = [];
+      if (commerce !== undefined && commerce.features.length > 0) {
+        features = commerce.features.filter(feature => feature.type === 'USER' && feature.active === true);
+        if (features.length > 0) {
+          active = true;
+        }
+      }
+      if (!active) {
+        state.accept = true;
+      }
+      return active;
+    };
+
+    const getDataActive = (commerce, name) => {
+      let active = false;
+      let features = [];
+      if (commerce !== undefined && commerce.features.length > 0) {
+        features = commerce.features.filter(feature => feature.type === 'USER' && feature.name === name);
+        if (features.length > 0) {
+          return features[0].active;
+        }
+      }
+      return active;
+    }
+
+    const showConditions = () => {
+      if(
+        getDataActive(state.commerce, 'attention-user-name') ||
+        getDataActive(state.commerce, 'attention-user-lastName') ||
+        getDataActive(state.commerce, 'attention-user-idNumber') ||
+        getDataActive(state.commerce, 'attention-user-phone') ||
+        getDataActive(state.commerce, 'attention-user-email')
+      ) {
+        //state.accept = true;
+        return true;
+      }
+      state.accept = false;
+      return false;
+    }
+
+    const validate = (user) => {
+      state.errorsAdd = [];
+      if (getDataActive(state.commerce, 'attention-user-name')) {
+        if(!user.name || user.name.length === 0) {
+          state.nameError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.name');
+        } else {
+          state.nameError = false;
+        }
+      }
+      if (getDataActive(state.commerce, 'attention-user-lastName')) {
+        if(!user.lastName || user.lastName.length === 0) {
+          state.lastNameError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.lastName');
+        } else {
+          state.lastNameError = false;
+        }
+      }
+      if (getDataActive(state.commerce, 'attention-user-idNumber')) {
+        if(!user.idNumber || user.idNumber.length === 0) {
+          state.idNumberError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.idNumber');
+        } else {
+          state.idNumberError = false;
+        }
+      }
+      if (getDataActive(state.commerce, 'attention-user-phone')) {
+        if(!state.phoneCode || state.phoneCode.length === 0) {
+          state.phoneCodeError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
+        } else {
+          if (state.phoneCode === 'xx') {
+            state.phoneCode = '';
+          }
+          user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+          state.phoneCodeError = false;
+        }
+        if(!state.phone || state.phone.length === 0) {
+          state.phoneError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.phone');
+        } else {
+          state.phoneError = false;
+        }
+      }
+      if (getDataActive(state.commerce, 'attention-user-email')) {
+        if(!user.email || user.email.length === 0 || !validateEmail(user.email)) {
+          state.emailError = true;
+          state.errorsAdd.push('commerceQueuesView.validate.email');
+        } else {
+          state.emailError = false;
+        }
+      }
+      if (showConditions()) {
+        if (!state.accept) {
+          state.errorsAdd.push('commerceQueuesView.validate.accept');
+        }
+      }
+      if(state.errorsAdd.length === 0) {
+        return true;
+      }
+      return false;
+    }
+
+    const getAttention = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        if (validate(state.newUser)) {
+          state.currentChannel = await store.getCurrentAttentionChannel;
+          let newUser = undefined;
+          if (isDataActive(state.commerce)) {
+            newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+          }
+          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser }
+          const attention = await createAttention(body);
+          router.push({ path: `/interno/fila/${state.queue.id}/atencion/${attention.id}` });
+        }
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+        alertError.value = error.message;
+      }
+    };
+
+    const getQueue = async (queueIn) => {
+      state.queue = queueIn;
+      if (captchaEnabled) {
+       await validateCaptchaOk(true);
+      }
+    }
+
+    const findPhoneCode = (codeIn) => {
+      const search = state.phoneCodes.find(code => code.id === codeIn);
+      if (search) {
+        return search.code;
+      }
+      return '';
+    }
+
+    const validateCaptchaOk = async (response) => {
+      if(response) {
+        captcha = true;
+        await getAttention(state.queue);
+      }
+    };
+
+    const validateCaptchaError = () => {
+      captcha = false;
+    };
+
+    const goBack = () => {
+      router.back()
+    }
+
+    return {
+      state,
+      siteKey,
+      captchaEnabled,
+      keyName,
+      loading,
+      alertError,
+      isDataActive,
+      getDataActive,
+      isActiveCommerce,
+      isAvailableCommerce,
+      isActiveQueues,
+      goBack,
+      getQueue,
+      getAttention,
+      validateCaptchaOk,
+      validateCaptchaError,
+      showConditions
+    }
+  }
+}
+</script>
+<template>
+  <div>
+    <div  class="content text-center">
+      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+      <div id="page-header" class="text-center mt-4">
+        <div class="welcome">
+          <span>{{ $t("commerceQueuesView.welcome") }}</span>
+        </div>
+      </div>
+      <Spinner :show="loading"></Spinner>
+      <Alert :show="loading" :stack="alertError"></Alert>
+      <div v-if="isActiveCommerce(state.commerce) && !loading">
+        <div v-if="isAvailableCommerce(state.commerce)">
+          <div id="data" v-if="isDataActive(state.commerce)">
+            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-4">
+              <span>{{ $t("commerceQueuesView.data") }}</span>
+            </div>
+            <div class="row g-1">
+              <div class="col col-md-10 offset-md-1 data-card">
+                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-name')">
+                  <div class="col form-floating">
+                    <input
+                      id="attention-name-input-add"
+                      maxlength="30"
+                      type="text"
+                      class="form-control form-control-solid"
+                      v-model="state.newUser.name"
+                      placeholder="Ex. Jhon">
+                      <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
+                  </div>
+                </div>
+                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-lastName')">
+                  <div class="col form-floating">
+                    <input
+                      id="attention-lastname-input-add"
+                      maxlength="20"
+                      type="text"
+                      class="form-control form-control-solid"
+                      v-model="state.newUser.lastName"
+                      placeholder="Ex. Pérez">
+                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
+                  </div>
+                </div>
+                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-idNumber')">
+                  <div class="col form-floating">
+                    <input
+                      id="attention-idnumber-input-add"
+                      maxlength="20"
+                      type="text"
+                      class="form-control"
+                      v-model="state.newUser.idNumber"
+                      v-bind:class="{ 'is-invalid': state.idNumberError }"
+                      placeholder="Ex. 112223334">
+                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
+                  </div>
+                </div>
+                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-email')">
+                  <div class="col form-floating">
+                    <input
+                      id="attention-email-input-add"
+                      maxlength="50"
+                      type="email"
+                      class="form-control"
+                      v-model="state.newUser.email"
+                      placeholder="Ex. jhon@user.com">
+                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
+                  </div>
+                </div>
+                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-phone')">
+                  <div class="col-3 form-floating">
+                    <select
+                      class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
+                      v-model="state.phoneCode"
+                      id="attention-phoneCode-input-add">
+                      <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">{{ code.label }}</option>
+                    </select>
+                    <label for="attention-phoneCode-input-add"> {{ $t("commerceQueuesView.phoneCode") }}</label>
+                  </div>
+                  <div class="col-9 form-floating">
+                    <input
+                      id="attention-phone-input-add"
+                      maxlength="15"
+                      type="tel"
+                      class="form-control"
+                      v-model="state.phone"
+                      placeholder="Ex.: 56233445533">
+                      <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
+                  </div>
+                  <label v-if="!state.phoneCode" class="examples mt-2"> {{ $t('clientNotifyData.validate.cellphone.example') }} </label>
+                  <label v-else class="examples mt-2"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.phoneCode}`) }} </label>
+                </div>
+                <div class="recaptcha-area form-check form-check-inline" v-if="showConditions()">
+                  <input type="checkbox" class="form-check-input" id="conditions" v-model="state.accept">
+                  <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }} <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a></label>
+                </div>
+                <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                  <Warning>
+                    <template v-slot:message>
+                      <li v-for="(error, index) in state.errorsAdd" :key="index">
+                        {{ $t(error) }}
+                      </li>
+                    </template>
+                  </Warning>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading">
+            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
+              <span>{{ $t("commerceQueuesView.choose") }}</span>
+            </div>
+            <div class="row g-1" v-if="isActiveQueues(state.commerce)">
+              <div
+                v-for="queue in state.queues"
+                :key="queue.id"
+                class="d-grid btn-group btn-group-justified">
+                <div v-if="captchaEnabled === true">
+                  <VueRecaptcha
+                    :sitekey="siteKey"
+                    @verify="validateCaptchaOk"
+                    @error="validateCaptchaError">
+                    <button
+                      v-if="queue.active"
+                      type="button"
+                      class=" btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                      @click="getQueue(queue)"
+                      :disabled="!state.accept">
+                      {{ queue.name }}
+                    </button>
+                  </VueRecaptcha>
+                </div>
+                <div v-else>
+                  <button
+                    v-if="queue.active"
+                    type="button"
+                    class=" btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    @click="getQueue(queue)"
+                    :disabled="!state.accept">
+                    {{ queue.name }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('commerceQueuesView.message.title')"
+                :content="$t('commerceQueuesView.message.content')">
+              </Message>
+              <div class="col">
+                <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessSectionAtWorkView.return") }} <i class="bi bi-arrow-left"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <Message
+            :title="$t('commerceQueuesView.message2.title')"
+            :content="$t('commerceQueuesView.message2.content')"
+            :icon="'bi bi-emoji-frown'">
+          </Message>
+        </div>
+      </div>
+      <div v-if="!isActiveCommerce(state.commerce) && !loading">
+        <Message
+          :title="$t('commerceQRSetup.message3.title')"
+          :content="$t('commerceQRSetup.message3.content')"
+          :icon="'bi bi-emoji-smile'">
+        </Message>
+      </div>
+    </div>
+    <PoweredBy :name="state.commerce.name" />
+    <!-- Modal Conditions -->
+    <div class="modal fade" id="conditionsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0"><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body text-center pb-5">
+              <NotificationConditions></NotificationConditions>
+              <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4" data-bs-toggle="modal" data-bs-target="#conditionsModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<style scoped>
+.choose-attention {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.data-card {
+  background-color: var(--color-background);
+  padding: .5rem;
+  margin-bottom: 1rem;
+  border-radius: .5rem;
+  border: .5px solid var(--gris-default);
+  align-items: left;
+}
+.form-floating > label {
+  text-align: center !important;
+  transform-origin: center center !important;
+  font-weight: 700;
+  font-size: .9rem;
+}
+.form-control {
+  border: 1.75px solid #ced4da !important;
+  border-radius: 1rem !important;
+  text-align: center;
+  line-height: 1.5rem;
+}
+.examples {
+  font-size: .8rem;
+  line-height: 1rem;
+  color: .5px solid var(--gris-default);
+}
+</style>

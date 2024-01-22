@@ -1,0 +1,1962 @@
+{
+  "logo": "/images/logo_horizontal_transparente_br.png",
+  "logoAlt": "E a sua vez",
+  "homeTitle": "É a sua vez {'|'} Serviço de linhas 100% digital",
+  "backToInit": "Ir para começar",
+  "email": "ola{'@'}easuavez.com",
+  "blog": "https://blog.easuavez.com",
+  "poweredBy": "Powered By",
+  "logoPoweredBy": "/images/easuavez_logo_powered.png",
+  "enableAll": "¡Ative mais recursos!",
+  "curious": "Curioso?",
+  "wantToKnowMore": "Quero saber mais!",
+  "titleEnterUser": "Selecione um tipo de login de acordo com seu perfil:",
+  "titleEnterMaster": "Se você é um usuário master, ",
+  "enterMaster": "Login aqui",
+  "enterCommerce": "Login do Comércio",
+  "enterCollaborator": "Login do Colaborador",
+  "welcome": "Bem-vindo!",
+  "logout": "Sair",
+  "capacities": "O que posso fazer?",
+  "upgrade": "Faça Upgrade do seu plano para obter mais benefícios.",
+  "searcher": "Pesquisar",
+  "noResults": "😓 Sem Resultados",
+  "sureAction": "Você tem certeza de realizar esta ação",
+  "logoValues": "/images/es_tu_turno_values_br.png",
+  "logoValuesAlt": "E a sua vez",
+  "close": "Fechar",
+  "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
+  "refresh": "Reload",
+  "yes": "Sim",
+  "no": "Não",
+  "page": "Página",
+  "of": "de",
+  "countries": {
+    "br": "🇧🇷 Brazil",
+    "cl": "🇨🇱 Chile",
+    "us": "🇺🇸 USA",
+    "ve": "🇻🇪 Venezuela"
+  },
+  "days": {
+    "1": "Seg",
+    "2": "Ter",
+    "3": "Qua",
+    "4": "Qui",
+    "5": "Sex",
+    "6": "Sab",
+    "7": "Dom"
+  },
+  "periodicities": {
+    "weekly": "Semanal",
+    "monthly": "Mensal",
+    "quarterly": "Trimestral",
+    "biannual": "Semestral",
+    "annual": "Anual"
+  },
+  "categories": {
+    "beauty": "👠 Beleza",
+    "entertaiment": "🎭 Entertaiment",
+    "health": "🏥 Saúde",
+    "shop": "🛍️ Compras",
+    "pharmacy": "💊 Farmacia",
+    "services": "💧 Serviços",
+    "restaurant": "🍽️ Restaurant",
+    "supermarket": "🛒 Supermercado"
+  },
+  "surveys": {
+    "types": {
+      "SIMPLE_CSAT": "Só CSAT e Comentário",
+      "SIMPLE_NPS": "Só NPS e Comentário",
+      "SIMPLE_CSAT_NPS": "CSAT, NPS e Comentário",
+      "PERSONALIZED_SURVEY": "Personalizado"
+    },
+    "question_types": {
+      "RATING_TO_5": "⭐️ 0-5",
+      "RATING_TO_10": "🔢 1-10",
+      "YES_OR_NOT": "👍 Sim/Nao",
+      "OPEN_WRITING": "✏️ Aberta",
+      "OPEN_OPTIONS": "👆 Selecione N",
+      "CHOOSE_OPTION": "☝️ Selecione 1"
+    }
+  },
+  "configuration": {
+    "whatsapp-notify-now": {
+      "title": "Notificação Whatsapp É a sua vez",
+      "description": "Mensagem via whatsapp quando chegar a vez do usuário."
+    },
+    "whatsapp-notify-five": {
+      "title": "Notificação Whatsapp Faltam 5",
+      "description": "Mensagem via whatsapp quando o usuário tem 5 usuários na frente."
+    },
+    "only-survey": {
+      "title": "Modo Só Pesquisa",
+      "description": "As atenções para o comércio são enquete só."
+    },
+    "whatsapp-notify-one": {
+      "title": "Notificação Whatsapp Falta 1",
+      "description": "Mensagem via whatsapp quando o usuário tem 1 usuário na frente."
+    },
+    "get-number-remote": {
+      "title": "Obter número remoto",
+      "description": "Obtenha o número de serviço de qualquer lugar"
+    },
+    "attention-user-name": {
+      "title": "Atenção requer Nome",
+      "description": "Solicite o nome do usuário para obter o número do serviço"
+    },
+    "attention-user-lastName": {
+      "title": "Atenção requer Sobrenome",
+      "description": "Solicite o sobrenome do usuário para obter o número do serviço"
+    },
+    "attention-user-phone": {
+      "title": "Atenção requer Telefone",
+      "description": "Solicite o telefone do usuário para obter o número do serviço"
+    },
+    "attention-user-email": {
+      "title": "Atenção requer Email",
+      "description": "Solicite o email do usuário para obter o número do serviçor"
+    },
+    "attention-user-idNumber": {
+      "title": "Atenção requer Id",
+      "description": "Solicite o Id do usuário para obter o número do serviço"
+    },
+    "close-commerce-by-service-hours": {
+      "title": "Fechar comércio fora do tempo",
+      "description": "Minisite não permite gerar novas atenções para o comércio fora do horário comercial"
+    },
+    "email-notify-now": {
+      "title": "Email É a sua Vez",
+      "description": "Email É a sua Vez"
+    },
+    "email-attention": {
+      "title": "Email Turno",
+      "description": "Email com o numero do turno e link de aceso ao site"
+    },
+    "email-csat": {
+      "title": "Email CSAT",
+      "description": "Email para o cliente preencher o enquete CSAT"
+    },
+    "whatsapp-csat": {
+      "title": "Whatsapp CSAT",
+      "description": "Mensagem para o cliente preencher o enquete CSAT"
+    },
+    "email-monthly-commerce-statistics": {
+      "title": "Email Statisticas Mensais",
+      "description": "Email pra enviar statisticas mensais"
+    }
+  },
+  "paymentMethods": {
+    "wireTransfer": "Transferência bancária",
+    "cashDeposit": "Depósito em dinheiro",
+    "freePeriod": "Período de graça"
+  },
+  "enterSearcher": "🔍 Digite ao menos 3 letras",
+  "alert": {
+    "message": {
+      "1": "Houve um erro,",
+      "2": "por favor atualize a página e tente novamente.",
+      "3": "Obrigado por relatar o bug.",
+      "4": "Token do aceso expirado,",
+      "5": "por favor saia e faça login novamente.",
+      "6": "Esse dado ja existe",
+      "7": "por favor revise e tente novamente.",
+      "8": "Serviço indisponível",
+      "9": "por favor tente logo."
+    },
+    "action": "Relatar bug"
+  },
+  "footer": {
+    "copyright": "Copyright \u00A9 2024, É a sua Vez. Todos os dereitos reservados.",
+    "contactUs": "Contate-nos",
+    "mailbox": "Ações",
+    "blog": "Blog",
+    "faq": "Perguntas frequentes",
+    "email": "Denuncie por e-mail",
+    "emailDir": "ola{'@'}easuavez.com"
+  },
+  "actions": {
+    "title": "Ações",
+    "subtitle": {
+      "1": {
+        "1": "Sugestões?",
+        "2": "Envie-nos um e-mail com suas sugestões, teremos o maior prazer em atendê-los."
+      }
+    },
+    "actions": {
+      "1": "Denuncie por e-mail"
+    }
+  },
+  "notificationConditions": {
+    "title": "Política de Dados",
+    "subtitle": {
+      "1": "Leia cuidadosamente",
+      "2": "nossa política de dados."
+    },
+    "action": "Entendido"
+  },
+  "commerceQueuesView": {
+    "welcome": "Bem-vindo!",
+    "choose": "Escolha o tipo de atendimento:",
+    "data": "Precisamos saber mais sobre você:",
+    "name": "Nome",
+    "lastName": "Sobrenome",
+    "idNumber": "Id/CPF/Passaporte",
+    "phone": "Celular/Telefone",
+    "phoneCode": "Pais",
+    "email": "Email",
+    "message": {
+      "title": "Oh não!",
+      "content": "Neste momento não há linhas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
+    },
+    "message2": {
+      "title": "¡Ups, tamos fechados!",
+      "content": "O comércio não está disponível no momento. Esperamos por você mais tarde!"
+    },
+    "validate": {
+      "name": "Deve digitar seu nome",
+      "lastName": "Deve digitar seu sobrenome",
+      "idNumber": "Deve digitar seu Id",
+      "phone": "Deve digitar seu telefone",
+      "email": "Deve digitar seu email válido",
+      "phoneCode": "Deve selecionar o codigo do pais"
+    }
+  },
+  "attentionNumber": {
+    "details": {
+      "title": "Dados do Usuário",
+      "name": "Nome:",
+      "lastName": "Sobrenome:",
+      "idNumber": "Id:",
+      "phone": "Telefone:",
+      "email": "Email:"
+    }
+  },
+  "commerceQRSetup": {
+    "welcome": "Bem-vindo!",
+    "scan": "Escaneie o código QR para ser atendido!",
+    "youllReceive": "Você receberá seu número de turno em seu telefone.",
+    "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
+    "action": "Quero um número de atenção",
+    "commerce": "Selecione um comércio:",
+    "services": "Serviços",
+    "contact": "Contato",
+    "location": "Localização",
+    "attentionHours": "Horas de atenção: ",
+    "from": "de ",
+    "to": "até ",
+    "hrs": "hrs.",
+    "menu": "Cardápio",
+    "category": "Categoria: ",
+    "phones": "Telefone(s): ",
+    "web": "Site",
+    "email": "Email",
+    "address": "Endereço: ",
+    "message1": {
+      "title": "Muitas pessoas? Não se preocupe!, Você não tem que esperar aqui!",
+      "content": "Deixe-nos o seu whatsapp, e iremos avisá-lo quando for a sua vez de ser atendido."
+    },
+    "message2": {
+      "title": "Não tem um dispositivo móvel?",
+      "content": "Entre em contato com um colaborador para obter ajuda."
+    },
+    "message3": {
+      "title": "Oh não!",
+      "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+    },
+    "message4": {
+      "title": "¡Ups, tamos fechados!",
+      "content": "O comércio não está disponível no momento. Verifique o horário de funcionamento no botão ‘Serviços’. Esperamos por você mais tarde!"
+    }
+  },
+  "userQueueAttention": {
+    "hello": "Olá!",
+    "itsYourTurn": "🚨 É a sua vez! 🚨",
+    "yourNumber": "Seu número de atenção é:",
+    "youWereAttended": "Você foi atendido!",
+    "thanks": "Obrigado por escolher-nos.",
+    "toGoal": {
+      "1": "Pessoas na sua frente",
+      "2": "pessoas na sua frente."
+    },
+    "yourAttention": "Quando chegar a sua vez, apresente este QR code ao colaborador para validar o seu serviço:",
+    "rateYourAttention": "¿Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "willBeAttendedShortly": "Você será atendido em breve.",
+    "estimatedTime": "Tempo estimado",
+    "estimatedTimeInit": "01:00",
+    "itsYourAttention": "Apresente este QR code ao colaborador para validar o seu serviço:",
+    "getClose": "Acesse o módulo:",
+    "attendedBy": "Você será atendido por:",
+    "module": "Único",
+    "collaborator": "N/A",
+    "message": {
+      "1": {
+        "title": "Você chegou tarde!",
+        "content": "Seu atenção foi ignorada. Por favor solicite um novo número de atenção ou diga a um colaborador."
+      },
+      "2": {
+        "title": "Não se esqueça de nos qualificar!",
+        "content": "Ao final da sua vez, poderá qualificar a atenção nesta tela."
+      }
+    },
+    "actions": {
+      "1": {
+        "title": {
+          "1": "Você não quer esperar, certo?",
+          "2": "Ir dar uma volta:"
+        },
+        "action": "Avise-me quando chegar a minha vez"
+      },
+      "2": {
+        "title": {
+          "1": "Faça uma captura de tela caso seu navegador feche e você esqueça seu número.",
+          "2": "Não esqueça!"
+        },
+        "action": "Salva uma captura!"
+      },
+      "3": {
+        "action": "Salvar"
+      },
+      "4": {
+        "action": "Vá para o nosso site"
+      },
+      "5": {
+        "action": "Voltar as linhas"
+      },
+      "6": {
+        "title": {
+          "1": " Ative  sino! ",
+          "2": " Sino ativo! ",
+          "3": "Você ouvirá um som quando for a sua vez. Verifique também o volume do seu dispositivo.",
+          "4": "Como soa?"
+        }
+      },
+      "7": {
+        "action": "Quero receber minha vez por e-mail"
+      }
+    }
+  },
+  "clientNotifyData": {
+    "message": {
+      "title": "Ok!",
+      "content": "Você será notificado quando chegar a sua vez."
+    },
+    "accept": {
+      "1": "Aceite nossos",
+      "2": "termos de uso."
+    },
+    "action": "Ok",
+    "phoneTitle1": "Digite seu número de Whatsapp!",
+    "phoneTitle2": "Quando chegar a sua vez, você será notificado.",
+    "emailTitle1": "Receba sua vez por e-mail!",
+    "emailTitle2": "Então, se você fechar o navegador, poderá acessar os detalhes do seu turno novamente.",
+    "phonePlaceholder": "Número",
+    "validate": {
+      "cellphone": {
+        "1": "O número do celular deve ser válido",
+        "2": "O número do celular deve ter só números",
+        "example": "Selecione pais e digite seu número",
+        "examples": {
+          "58": "Digite só seu número, Ex: 🇻🇪 4141112233",
+          "56": "Digite só seu número, Ex: 🇨🇱 911112222",
+          "55": "Digite só seu número, Ex: 🇧🇷 11922223333",
+          "1": "Digite só seu número, Ex: 🇺🇸 4081234444",
+          "xx": "Digite o código do pais + número (Só números)"
+        }
+      },
+      "email": {
+        "1": "O e-mail deve ter no mínimo 10 caracteres"
+      },
+      "common": {
+        "1": "Deve definir número de telefone celular válido",
+        "2": "Você deve aceitar os termos de uso",
+        "3": "Você deve validar que não é um robô"
+      }
+    }
+  },
+  "collaboratorAttentionValidate": {
+    "hello": "Olá!",
+    "hello-user": "Olá",
+    "yourNumber": "Você está processando o número de atenção:",
+    "toGoal": {
+      "1": "Há",
+      "2": "pessoas esperando."
+    },
+    "next": {
+      "1": "O número da",
+      "2": "próxima atenção e:"
+    },
+    "actions": {
+      "1": {
+        "action": "Marcar como atendido"
+      },
+      "2": {
+        "action": "Voltar para a linha"
+      }
+    },
+    "comment": {
+      "label": "Algum comentário na atenção? (Opcional):",
+      "placeholder": "O usuário foi gentil. Deixou uma gorjeta."
+    },
+    "message": {
+      "1": {
+        "title": "Bom trabalho!",
+        "content": "Não há mais atenções pendentes."
+      },
+      "2": {
+        "title": "Bem feito!",
+        "content": "O usuário já foi atendido."
+      },
+      "3": {
+        "title": "Entendido!",
+        "content": "Atençao foi ignorada."
+      },
+      "4": {
+        "title": "Não tao rápido!",
+        "content": "Você ainda não pode atender este turno. Retorneas linhas para atender os turnos por ordem de chegada."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Atender",
+          "finish": "Marcar atenção como atendida",
+          "skip": "Saltar atenção"
+        },
+        "module": {
+          "update": "Atualizar o modulo de atenção"
+        }
+      }
+    }
+  },
+  "queueAttentionDetails": {
+    "requested": "Atenções geradas",
+    "pending": "Atenções pendentes",
+    "terminated": "Atenções fechadas"
+  },
+  "collaboratorQueuesView": {
+    "welcome": "Bem-vindo!",
+    "welcome-user": "Bem-vindo",
+    "choose": "Escolha a linha que você vai atender:",
+    "module": "Seu módulo de atenção é:",
+    "attentions": "Na linha",
+    "attending": "Atendiendo",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "Neste momento não há linhas de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há módulos de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Atender",
+          "finish": "Marcar atenção como atendida",
+          "skip": "Saltar atenção"
+        },
+        "module": {
+          "update": "Atualizar o modulo de atenção"
+        }
+      }
+    }
+  },
+  "collaboratorQueueAttentions": {
+    "hello": "Olá!",
+    "hello-user": "Olá",
+    "yourNumber": "O próximo numero de atenção e:",
+    "toGoal": {
+      "1": "Há",
+      "2": "pessoas esperando."
+    },
+    "actions": {
+      "1": {
+        "title": {
+          "1": "A pessoa chegou?"
+        },
+        "action": "Atender"
+      },
+      "2": {
+        "title": {
+          "1": "Não?"
+        },
+        "action": "Saltar"
+      },
+      "3": {
+        "action": "Voltar as linhas"
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Bom trabalho!",
+        "content": "Não há mais atenções pendentes."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Atender",
+          "finish": "Marcar atenção como atendida",
+          "skip": "Saltar atenção"
+        },
+        "module": {
+          "update": "Atualizar o modulo de atenção"
+        }
+      }
+    }
+  },
+  "businessLogin": {
+    "welcome": "Bem-vindo Administrador!",
+    "login": "Digite seu usuário e password"
+  },
+  "collaboratorLogin": {
+    "welcome": "Bem-vindo Colaborador!",
+    "login": "Digite seu usuário e password"
+  },
+  "masterLogin": {
+    "welcome": "Bem-vindo Master!",
+    "login": "Digite seu usuário e password"
+  },
+  "loginData": {
+    "email": {
+      "placeholder": "teunome{'@'}tumail.com"
+    },
+    "password": {
+      "placeholder": "Senha"
+    },
+    "actions": {
+      "1": {
+        "action": "Entrar"
+      },
+      "2": {
+        "title": {
+          "1": "¿Esqueceu seu nome de usuário e/ou senha?"
+        },
+        "action": "Gerenciar acesso"
+      }
+    },
+    "validate": {
+      "password": {
+        "1": "A senha deve ter 8 caracteres"
+      },
+      "email": {
+        "1": "O e-mail deve ter no mínimo 10 caracteress"
+      },
+      "common": {
+        "1": "Você deve inserir e-mail e senha",
+        "2": "Você deve validar que não é um robô",
+        "3": "Usuário não registrado ou senha inválida",
+        "4": "Você deve inserir um e-mail válido",
+        "5": "SVocê só pode solicitar a alteração de sua senha uma vez hoje. Valide se o e-mail está cadastrado em nosso sistema ou tente novamente mais tarde",
+        "6": "Usuário não ativo. Contate ao administrador."
+      }
+    }
+  },
+  "accessAdmin": {
+    "title": "Gerenciar acesso",
+    "subtitle": {
+      "1": "Recuperar Senha",
+      "2": "Insira o seu endereço de email. Você receberá um e-mail com as instruções para recuperar sua senha."
+    },
+    "actions": {
+      "1": {
+        "action": "Recuperar"
+      },
+      "2": {
+        "action": "Entendido"
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Tamos!",
+        "content": "Enviamos um e-mail com um link para que você possa atualizar sua senha. Depois de fazer isso, você pode voltar ao sistema e fazer login."
+      }
+    }
+  },
+  "attentionSurvey": {
+    "rateYourAttention": "¿Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "other": "Outro",
+    "survey": {
+      "label": "Algum comentário na atenção? (Opcional):",
+      "placeholder": "O colaborador foi gentil."
+    },
+    "nps": {
+      "title": "Em uma escala de 1 a 10, qual a probabilidade de você nos recomendar para familiares, amigos ou conhecidos?",
+      "subtitle": "1: improvável, 10: muito provável"
+    },
+    "to5": {
+      "subtitle": "1: muito insatisfeito, 5: muito satisfeito"
+    },
+    "agree": {
+      "subtitle": "1: em desacordo, 10: totalmente em acordo"
+    },
+    "like": {
+      "subtitle": "Nao, Sim"
+    },
+    "writing": {
+      "placeholder": "Fala conosco"
+    },
+    "message": {
+      "1": {
+        "title": "Obrigado!",
+        "content": "Seu feedback ajudará a ofrecer-lhe um serviço melhor."
+      },
+      "2": {
+        "title": "Obrigado!",
+        "content": "Volte sempre, esperamos você."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Salvar"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "attentions": "Atenções",
+    "commerce": "Comércio",
+    "refresh": "Pesquisar",
+    "return": "Voltar",
+    "indicators": "Indicadores",
+    "graph": "Tendências",
+    "surveys": "Pesquisas",
+    "surveys-management": "Pesquisas (Detalhes)",
+    "surveys-consolidated": "Pesquisas (Consolidado)",
+    "details": "Detalhes",
+    "seconds": "Em Minutos",
+    "keyWords": "Palavras chave: Sobre o que seus clientes falam?",
+    "sentiment": "Análise de sentimento do feedback do cliente. Ruim: -1 a 0.1, Regular: 0.1 a 0.5, Bom: 0.5 a 1.",
+    "rating": "Classificação de satisfação do cliente. Ruim: 0 a 2,5, Regular: 2,5 a 4, Bom: 4 a 5.",
+    "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
+    "thisMonth": "Esse Mês",
+    "lastMonth": "Mês Passado",
+    "lastThreeMonths": "3 Meses",
+    "showAll": "Mostrar tudo",
+    "aditionalFilters": "Filtros adicionais",
+    "contacted": "Contatado",
+    "contactable": "Contactável",
+    "keyWord": "Palavras Chave",
+    "search": "🔎 Nome, Telefone ou Email",
+    "detractor": "Detrator",
+    "neutral": "Neutro",
+    "promoter": "Promotor",
+    "queue": "Selecione Fila ou Serviço:",
+    "resume": "Sumário",
+    "consolidated": "Consolidado",
+    "day": "Dia",
+    "month": "Mês",
+    "year": "Ano",
+    "dates": {
+      "from": "Do",
+      "to": "a"
+    },
+    "comment": "Comentário:",
+    "entities": "Palavras chave:",
+    "items": {
+      "attentions": {
+        "1": "Número de atenções",
+        "2": "Tempo de atenção (Méd.)",
+        "3": "Qualificação do Cliente Satisfeito (CSAT)",
+        "4": "Linha com mais atenções",
+        "5": "Atenções manuais (%)",
+        "6": "Notificações Enviadas",
+        "7": "Atenções Qualificadas",
+        "8": "Qualificação Maior",
+        "9": "Qualificação Menor",
+        "10": "Whatsapp",
+        "11": "Email",
+        "12": "Sua Vez",
+        "13": "Quedam 5",
+        "14": "Quedam 1",
+        "15": "É a sua Vez",
+        "16": "Standard",
+        "17": "Manual",
+        "18": "Pesquisa só",
+        "19": "Notificadas",
+        "20": "Principais Colaboradores",
+        "21": "Análise de Sentimento",
+        "22": "Variação em relação ao mesmo período do mês anterior.",
+        "23": "Alcance deste mês em relação ao mês anterior.",
+        "24": "Qualificação Cliente Promotor (NPS)",
+        "25": "Pesquisa",
+        "26": "É assim que seus clientes veem você",
+        "graph": {
+          "1": "Evolução das Atenções",
+          "2": "Atenções por Linha",
+          "3": "Fluxo de Atenções",
+          "4": "Evolução Duração de Atenções (prom/min)",
+          "5": "Distribução de Atenções (Hora)",
+          "6": "Evolução Duração de Pesquisas (prom/min)",
+          "7": "Fluxo de Pesquisas",
+          "8": "Evolução de NPS",
+          "9": "Evolução de CSAT"
+        }
+      },
+      "surveys": {
+        "yes": "Sim",
+        "no": "Nao"
+      },
+      "trends": {
+        "attention-number-evolution": {
+          "1": " Período",
+          "2": "Neste período você tem",
+          "3": "atenção(ões).",
+          "4": "Isso faz a diferença",
+          "5": "em comparação com o período anterior",
+          "6": " Mês Atual",
+          "7": "Neste mês você carrega",
+          "8": "Mês passado você conseguiu",
+          "9": "Isso representa uma diferença de",
+          "10": "Com um promedio de",
+          "11": "atenções diarias."
+        },
+        "attention-flow": {
+          "1": "Funil",
+          "2": "Neste período foram solicitados",
+          "3": "atenção(ões), das quais foram concluídas com sucesso",
+          "4": "Isto representa uma taxa de",
+          "5": " conversão",
+          "6": "de",
+          "7": "e uma taxa de",
+          "8": " vazamento"
+        },
+        "survey-flow": {
+          "1": "Funil",
+          "2": "Neste período foram solicitadas",
+          "3": "pesquisa(s), das quais foram concluídas com sucesso",
+          "4": "Isto representa uma taxa de",
+          "5": " conversão",
+          "6": "de",
+          "7": "e uma taxa de",
+          "8": " vazamento"
+        },
+        "attention-duration-evolution": {
+          "1": "Tempo",
+          "2": "Neste período o tempo médio de atenção em minutos é",
+          "3": "O",
+          "4": " pico",
+          "5": "era de",
+          "6": "minutos e o",
+          "7": " mínimo",
+          "8": " minutos."
+        },
+        "attention-rate-duration-evolution": {
+          "1": "Tempo",
+          "2": "Neste período o tempo médio de pesquisa em minutos é",
+          "3": "O",
+          "4": " pico",
+          "5": "era de",
+          "6": "minutos e o",
+          "7": " mínimo",
+          "8": " minutos."
+        },
+        "attention-hour-distribution": {
+          "1": "Horas",
+          "2": "Neste período o horário do dia com maior atenção foi",
+          "3": "com",
+          "4": "atenções."
+        }
+      }
+    },
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "No momento, não há opções para gerenciar. Verifique se o seu plano está ativo ou entre em contato conosco."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "Não temos data, verifique os filtros e tente novamente."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Neste momento não há comércios."
+      }
+    },
+    "reports": {
+      "surveys": {
+        "title": "Relatório de Pesquisa (Sumário)",
+        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+      },
+      "indicators": {
+        "title": "Relatório de Indicadores",
+        "description": "Baixar arquivo PDF com os resultados dos indicadores no intervalo de datas selecionado"
+      },
+      "graphs": {
+        "title": "Relatório Tendências",
+        "description": "Baixar arquivo PDF com os resultados dos gráficos no intervalo de datas selecionado"
+      },
+      "surveys-management": {
+        "title": "Relatório de Pesquisa (Detalhes)",
+        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+      },
+      "surveys-consolidated": {
+        "title": "Relatório de Pesquisa (Consolidado)",
+        "description": "Baixar arquivo PDF com os resultados das pesquisas consolidado"
+      }
+    },
+    "capacitiesList": {
+      "dashboard": {
+        "attention-number": {
+          "view": "Número de atenções"
+        },
+        "attention-time-avg": {
+          "view": "Tempo médio de atenção"
+        },
+        "attention-rating-avg": {
+          "view": "Qualificação médio de atenção"
+        },
+        "attention-queue": {
+          "view": "Linha com mais atençõess"
+        },
+        "attention-no-device": {
+          "view": "Atenções manuais (%)"
+        },
+        "attention-notification": {
+          "view": "Notificações Enviadas"
+        },
+        "attention-number-evolution": {
+          "view": "Evolução das Atenções"
+        },
+        "attention-duration-evolution": {
+          "view": "Evolução da duração Atenções (prom/min)"
+        },
+        "attention-rate-duration-evolution": {
+          "view": "Evolução da duração Pesquisas (prom/min)"
+        },
+        "attention-number-queue": {
+          "view": "Atenções por Linha"
+        },
+        "attention-flow": {
+          "view": "Fluxo de Atenções"
+        },
+        "survey-flow": {
+          "view": "Fluxo de Pesquisas"
+        },
+        "indicators": {
+          "view": "Ver Indicadores"
+        },
+        "graphs": {
+          "view": "Ver Tendências"
+        },
+        "surveys": {
+          "view": "Ver Pesquisas (Resumen)"
+        },
+        "surveys-management": {
+          "view": "Ver Pesquisas (Detalhes)"
+        },
+        "surveys-consolidated": {
+          "view": "Ver Pesquisas (Consolidado)"
+        },
+        "attention-hour-distribution": {
+          "view": "Distribução de Atenções (Hora)"
+        },
+        "surveys-consolidated-nps-evolution": {
+          "view": "Evolução de NPS"
+        },
+        "surveys-consolidated-csat-evolution": {
+          "view": "Evolução de CSAT"
+        },
+        "reports": {
+          "surveys": "Relatório de Pesquisas (Sumário)",
+          "indicators": "Relatório de Indicadores",
+          "graphs": "Relatório de Tendências",
+          "surveys-management": "Relatório de Pesquisas (Detalhes)",
+          "surveys-consolidated": "Relatório de Pesquisas (Consolidado)"
+        }
+      }
+    }
+  },
+  "resumeAttention": {
+    "subtitle": {
+      "1": {
+        "1": "Retomar a atenção",
+        "2": "Digite o número de atenção que deseja atender:"
+      }
+    },
+    "actions": {
+      "1": "Atender"
+    },
+    "validate": {
+      "number": "Você deve digitar o número de atenção",
+      "resume": "O número de atenção não existe, já foi finalizado ou já foi retomado."
+    }
+  },
+  "noDeviceAttention": {
+    "subtitle": {
+      "1": {
+        "1": "Atençao sem Dispositivo",
+        "2": "Digite o nome do usuário:"
+      }
+    },
+    "actions": {
+      "1": "Obter número de atenção"
+    },
+    "validate": {
+      "name": "Você deve digitar o nome do usuário"
+    },
+    "message": {
+      "1": {
+        "title": "Lembre-se!",
+        "content": "Diga ao usuário seu número de atenção e que espere sua vez até que seja chamado por nome ou número."
+      }
+    }
+  },
+  "suggestions": {
+    "type": "Tipo de comentário:",
+    "comment": {
+      "label": "Detalhes:",
+      "placeholder": "Vocês poderiam fazer uma melhoria..."
+    },
+    "subtitle": {
+      "1": {
+        "1": "Sugestões",
+        "2": "Deixe-nos seus comentários, teremos o maior prazer em atendê-lo:"
+      }
+    },
+    "actions": {
+      "1": "Enviar"
+    },
+    "types": {
+      "1": "😓 Algo deu errado...",
+      "2": "🤓 Tenho uma nova ideia...",
+      "3": "🤔 Talvez possam melhorar...",
+      "4": "🫶 Queria-lhes dizer que..."
+    },
+    "validate": {
+      "type": "Você deve selecionar o tipo",
+      "comment": "Você deve inserir um comentário",
+      "captcha": "Você deve validar que não é um robô"
+    },
+    "message": {
+      "title": "Tamos!",
+      "content": "Muito obrigado por seu comentário. Isso nos ajuda a continuar melhorando."
+    }
+  },
+  "businessMenu": {
+    "welcome": "Bem-vindo!",
+    "welcome-user": "Bem-vindo",
+    "choose": "O que você quer fazer hoje?",
+    "dashboard": "Dashboard",
+    "commerce-admin": "Comércios",
+    "queues-admin": "Linhas",
+    "configuration": "Configurações",
+    "reports": "Relatórios",
+    "your-plan": "Seu Plano",
+    "collaborators-admin": "Colaboradores",
+    "modules-admin": "Módulos",
+    "business-resume": "Estado do Sistema",
+    "surveys-admin": "Pesquisas",
+    "manage-admin": "Gerenciar",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "No momento, não há opções para gerenciar. Verifique se o seu plano está ativo ou entre em contato conosco."
+      }
+    },
+    "capacitiesList": {
+      "business": {
+        "main-menu": {
+          "business-resume": "Estado do Sistema",
+          "dashboard": "Dashboard",
+          "reports": "Relatórios",
+          "commerce-admin": "Gerenciar Comércios",
+          "modules-admin": "Gerenciar Módulos",
+          "queues-admin": "Gerenciar Linhas",
+          "collaborators-admin": "Gerenciar Colaboradores",
+          "configuration": "Configurações",
+          "your-plan": "Seu Plano",
+          "surveys-admin": "Gerenciar Pesquisas",
+          "manage-admin": "Gerenciar Artefatos"
+        }
+      }
+    }
+  },
+  "masterMenu": {
+    "welcome": "Bem-vindo!",
+    "welcome-user": "Bem-vindo",
+    "choose": "O que você quer fazer hoje?",
+    "business": "Selecione um negócio:",
+    "business-master-admin": "Gerenciar Negócios",
+    "business-master-resume": "Estado do Sistema",
+    "dashboard": "Dashboard",
+    "commerce-master-admin": "Comércios",
+    "queues-master-admin": "Linhas",
+    "configuration": "Configurações",
+    "reports": "Relatórios",
+    "your-plan": "Seu Plano",
+    "plans-master-admin": "Gerenciar Planos",
+    "collaborators-master-admin": "Colaboradores",
+    "features-master-admin": "Gerenciar Permissões",
+    "modules-master-admin": "Módulos",
+    "surveys-master-admin": "Pesquisas",
+    "plan-activations-admin": "Activação de Planos",
+    "surveys-admin": "Gerenciar Pesquisas",
+    "manage-master-admin": "Gerenciar"
+  },
+  "businessSectionAtWorkView": {
+    "welcome": "Bem-vindo!",
+    "welcome-user": "Bem-vindo",
+    "return": "Voltar",
+    "message": {
+      "1": {
+        "title": "Olá!",
+        "content": "Estamos trabalhando nesta seção para você, em breve traremos novidades."
+      }
+    }
+  },
+  "businessQueuesAdmin": {
+    "title": "Linhas",
+    "commerce": "Selecione um comércio:",
+    "name": "Nome:",
+    "return": "Voltar",
+    "limit": "Limite:",
+    "order": "Ordem:",
+    "active": "Ativo:",
+    "estimated": "Tempo estimado (min):",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "service": "Serviço",
+    "attentionHour": "Horas Atenção:",
+    "attentionDays": "Dias Atenção:",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há linhas de atendimento."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de linhas. Para adicionar mais linhas, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "queues": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver as Linhas",
+          "edit": "Editar as Linhas",
+          "update": "Atualizar as Linhas",
+          "add": "Adicionar Linhas",
+          "limit": "Número limite de Linhas",
+          "queue-limit": "Limite de Linhas"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "limit": "Você deve digitar o límite",
+      "order": "Você deve digitar o ordem",
+      "estimatedTime": "Você deve digitar o tempo estimado"
+    }
+  },
+  "businessModulesAdmin": {
+    "title": "Módulos",
+    "commerce": "Selecione um comércio:",
+    "name": "Nome:",
+    "return": "Voltar",
+    "active": "Ativo:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há módulos de atendimento."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de módulos. Para adicionar mais módulos, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "modules": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Módulos",
+          "edit": "Editar os Módulos",
+          "update": "Atualizar os Módulos",
+          "add": "Adicionar Módulos",
+          "limit": "Número limite de Módulos"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome"
+    }
+  },
+  "businessCollaboratorsAdmin": {
+    "title": "Colaboradores",
+    "commerce": "Selecione um comércio:",
+    "return": "Voltar",
+    "name": "Nome:",
+    "alias": "Apelido (Opcional):",
+    "email": "Email:",
+    "phone": "Fono:",
+    "bot": "É Bot:",
+    "active": "Ativo:",
+    "module": "Módulo:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "aliasHelp": "Identificador abreviado do colaborador utilizado no produto digital.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há colaboradores."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de colaboradores. Para adicionar mais colaboradores, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "collaborators": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Colaboradores",
+          "edit": "Editar os Colaboradores",
+          "update": "Atualizar os Colaboradores",
+          "add": "Adicionar Colaboradores",
+          "limit": "Número limite de Colaboradores"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "phone": "Você deve digitar o telefone",
+      "email": "Você deve digitar o email",
+      "module": "Você deve selecionar um módulo"
+    }
+  },
+  "businessCommercesAdmin": {
+    "title": "Comércios",
+    "return": "Voltar",
+    "name": "Nome:",
+    "keyName": "Nome web:",
+    "tag": "Apelido:",
+    "email": "Email:",
+    "phone": "Fono:",
+    "url": "Web Site:",
+    "active": "Ativo:",
+    "update": "Atualizar",
+    "location": "Localização",
+    "country": "Pais:",
+    "language": "Linguagem:",
+    "timezone": "Fuso Horário:",
+    "address": "Endereço:",
+    "addressLat": "Latitude:",
+    "addressLng": "Longitude:",
+    "contact": "Contato",
+    "phone2": "Telefone 2:",
+    "whatsapp": "Whatsapp:",
+    "twitter": "Twitter:",
+    "instagram": "Instagram:",
+    "facebook": "Facebook:",
+    "service": "Serviço",
+    "logo": "Logo",
+    "serviceUrl": "URL:",
+    "attentionHour": "Horas Atenção:",
+    "attentionDays": "Dias Atenção:",
+    "category": "Categoria:",
+    "add": "Adicionar",
+    "keyNameHelp": "Identificador usado para a URL do minisite.",
+    "tagHelp": "Identificador abreviado do comércio utilizada no produto digital.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há comércios."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de comércios. Para adicionar mais comércios, mude de plano ou entre em contato conosco."
+      }
+    },
+    "capacitiesList": {
+      "commerces": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Comércios",
+          "edit": "Editar os Comércios",
+          "update": "Atualizar os Comércios",
+          "add": "Adicionar Comércios",
+          "limit": "Número limite de Comércios"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "phone": "Você deve digitar o telefone",
+      "email": "Você deve digitar o email",
+      "keyName": "Você deve digitar o nome web",
+      "tag": "Você deve digitar o nome fantasia",
+      "url": "Você deve digitar o web site",
+      "address": "Você deve digitar o endereço"
+    }
+  },
+  "businessReports": {
+    "title": "Relatórios",
+    "commerce": "Selecione um comércio:",
+    "return": "Voltar",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há relatórios."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Neste momento não há comércios."
+      }
+    },
+    "items": {
+      "reports": {
+        "1": {
+          "name": "Relatório de Atenções",
+          "description": "Lista de Atenções do comércio entre as datas selecionadas."
+        },
+        "2": {
+          "name": "Relatório de Notificações",
+          "description": "Lista de Notificações do comércio entre as datas selecionadas."
+        },
+        "3": {
+          "name": "Relatório de Qualificações",
+          "description": "Lista de Qualificações do comércio entre as datas selecionadas."
+        }
+      }
+    },
+    "capacitiesList": {
+      "reports": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "attentions": "Relatório de Atenções",
+          "notifications": "Relatório de Notificações",
+          "surveys": "Relatório de Qualificações"
+        }
+      }
+    }
+  },
+  "businessExecutiveReport": {
+    "title": "Estado do Sistema",
+    "return": "Voltar",
+    "resume": "Sumário",
+    "activity": "Atividade",
+    "attentions": "Atenções",
+    "notifications": "Notificações",
+    "enquetes": "Pesquisas",
+    "commerces": "Comércios",
+    "modules": "Módulos",
+    "queues": "Linhas",
+    "collaborators": "Colaboradores",
+    "resumeByCommerce": "Sumário por Comércio",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há relatórios."
+      }
+    },
+    "items": {
+      "reports": {
+        "1": {
+          "name": "Estado do Sistema",
+          "description": "Estado do Sistema do comércio entre as datas selecionadas."
+        }
+      }
+    },
+    "capacitiesList": {
+      "executive": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "download": "Estado do Sistema"
+        }
+      }
+    }
+  },
+  "businessAdmin": {
+    "title": "Negócios",
+    "return": "Voltar",
+    "name": "Nome:",
+    "keyName": "Nome web:",
+    "tag": "Apelido:",
+    "email": "Email:",
+    "phone": "Fono:",
+    "url": "Web Site:",
+    "active": "Ativo:",
+    "update": "Atualizar",
+    "location": "Localização",
+    "country": "Pais:",
+    "language": "Linguagem:",
+    "timezone": "Fuso Horário:",
+    "address": "Endereço:",
+    "addressLat": "Latitude:",
+    "addressLng": "Longitude:",
+    "contact": "Contato",
+    "phone2": "Telefone 2:",
+    "whatsapp": "Whatsapp:",
+    "twitter": "Twitter:",
+    "instagram": "Instagram:",
+    "facebook": "Facebook:",
+    "service": "Serviço",
+    "serviceUrl": "URL:",
+    "category": "Categoria: ",
+    "logo": "Logo:",
+    "attentionHour": "Horas Atenção:",
+    "attentionDays": "Dias Atenção:",
+    "add": "Adicionar",
+    "keyNameHelp": "Identificador usado para a URL do minisite.",
+    "tagHelp": "Identificador abreviado do comércio utilizada no produto digital.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há negócios."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de negócios. Para adicionar mais negócios, mude de plano ou entre em contato conosco."
+      }
+    },
+    "capacitiesList": {
+      "businesses": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Negócios",
+          "edit": "Editar os Negócios",
+          "update": "Atualizar os Negócios",
+          "add": "Adicionar Negócios",
+          "limit": "Número limite de Negócios"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "phone": "Você deve digitar o telefone",
+      "email": "Você deve digitar o email",
+      "keyName": "Você deve digitar o nome web",
+      "tag": "Você deve digitar o nome fantasia",
+      "url": "Você deve digitar o web site",
+      "address": "Você deve digitar o endereço",
+      "category": "Você deve digitar a categoría",
+      "country": "Você deve digitar o pais"
+    }
+  },
+  "businessConfiguration": {
+    "title": "Configurações",
+    "commerce": "Selecione um comércio:",
+    "return": "Voltar",
+    "listResult": "Registros:",
+    "feature": "Configuração:",
+    "add": "Adicionar",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há configurações."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "configuration": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "edit": "Editar as Configurações",
+          "add": "Adicionar Configurações",
+          "whatsapp-notify-now": "Editar Notificação Whatsapp É a sua Vez",
+          "whatsapp-notify-five": "Editar Notificação Whatsapp Faltam 5",
+          "only-survey": "Editar Modo Só Pesquisa",
+          "whatsapp-notify-one": "Editar Notificação Whatsapp Falta 1",
+          "get-number-remote": "Editar Obter número remoto"
+        }
+      }
+    },
+    "validate": {
+      "feature": "Você deve selecionar uma configuração"
+    }
+  },
+  "businessPermissionsAdmin": {
+    "title": "Permissões",
+    "commerce": "Selecione um rol:",
+    "plan": "Selecione um plano:",
+    "return": "Voltar",
+    "listResult": "Registros:",
+    "permission": "Permissão:",
+    "add": "Adicionar",
+    "type": "Tipo:",
+    "roles": "Roles",
+    "plans": "Planos",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há configurações."
+      }
+    },
+    "capacitiesList": {
+      "roles": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Permissões",
+          "edit": "Editar os Permissões",
+          "update": "Atualizar os Permissões",
+          "add": "Adicionar Permissões"
+        }
+      },
+      "permissions": {
+        "admin": {
+          "roles": "Ver os Permissões dos Roles",
+          "plans": "Ver os Permissões dos Planos"
+        }
+      }
+    },
+    "validate": {
+      "permission": "Você deve adicionar o permissão"
+    }
+  },
+  "businessPlansAdmin": {
+    "title": "Planos",
+    "name": "Nome:",
+    "description": "Descrição:",
+    "order": "Ordem:",
+    "periodicity": "Periodicidade:",
+    "price": "Price:",
+    "country": "Country:",
+    "online": "Online:",
+    "onlinePrice": "Preço online:",
+    "saving": "Poupança:",
+    "onlineSaving": "Poupança online:",
+    "return": "Voltar",
+    "active": "Ativo:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Planos."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de planos. Para adicionar mais planos, mude de plano ou entre em contato conosco."
+      }
+    },
+    "capacitiesList": {
+      "plans": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Planos",
+          "edit": "Editar os Planos",
+          "update": "Atualizar os Planos",
+          "add": "Adicionar Planos",
+          "limit": "Número limite de Planos"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "description": "Você deve digitar a descrição",
+      "order": "Você deve digitar o nome ordem",
+      "periodicity": "Você deve digitar a periodicade",
+      "price": "Você deve digitar o preço"
+    }
+  },
+  "businessPlan": {
+    "title": "Seu Plano",
+    "return": "Voltar",
+    "planActive": "Ativo",
+    "planInactive": "Inactivo",
+    "planValidated": "Validado",
+    "planPending": "Pendente",
+    "benefits": "Benefícios",
+    "yourPlan": "Seu plano atual é:",
+    "yourPurchase": "Sua Compra",
+    "startDate": "Data do Início: ",
+    "endDate": "Data de Fechamento: ",
+    "purchaseDate": "Data de compra: ",
+    "paymentValue": "Valor: ",
+    "request": "Você fez a solicitude do plano:",
+    "consult": "Consulte com a gente",
+    "paymentMethod": "Meio de pagamento: ",
+    "validatedAt": "Pagamento validado em: ",
+    "plan": "Plano",
+    "iwantit": "Quero isso agora!",
+    "selectAPlan": {
+      "1": "Tehna melhores benefícios!",
+      "2": "Selecione o plano que melhor adapta-se ao seu negócio:"
+    },
+    "upgradePlan": {
+      "1": "Necesita mais capacidades? Faça um Upgrade!",
+      "2": "Selecione o plano que melhor adapta-se ao seu negócio:"
+    },
+    "acceptData": {
+      "1": "Aceite nossas",
+      "2": "condiçoes de uso."
+    },
+    "acceptPurchase": {
+      "1": "e nicas",
+      "2": "condiçoes de serviço."
+    },
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não tem plano. Entre em contato conosco para ativar o melhor plano para você."
+      },
+      "3": {
+        "title": "Olá!",
+        "content": "Neste momento você tem uma solicitude de Plano pendente por validar. Se você já pagou, em breve seu Plano ficará ativo."
+      }
+    },
+    "capacitiesList": {
+      "plan": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver o Plano",
+          "edit": "Editar o Plano",
+          "update": "Atualizar o Plano",
+          "add": "Adicionar Plano"
+        }
+      }
+    },
+    "validate": {
+      "plano": "Deve selecionar um plano"
+    }
+  },
+  "planSelection": {
+    "title": "Você está a apenas um passo...",
+    "subtitle": {
+      "1": "Verifique sua compra e clique em enviar.",
+      "2": "Então você terá 24 horas. fazer o pagamento correspondente."
+    },
+    "canPayWays": "Você pode pagar pelos meios seguintes:",
+    "wantContact": "Caso não consiga efetuar o pagamento através dos meios disponíveis, selecione Desejo ser contactado.",
+    "action": "Enviar",
+    "wireTransfer": "Transferência bancária",
+    "cashDeposit": "Depósito em dinheiro",
+    "contact": "Desejo ser contactado",
+    "bank": "Banco:",
+    "accountType": "Tipo de conta:",
+    "accountNumber": "Número de conta:",
+    "id": "Id:"
+  },
+  "businessPlanActivationAdmin": {
+    "title": "Ativação do planos",
+    "return": "Voltar",
+    "validated": "Validar",
+    "desactivate": "Desativar",
+    "paymentMethod": "Meio de pagamento:",
+    "amount": "Valor:",
+    "number": "Id. TRX:",
+    "bank": "Banco:",
+    "paymentDate": "Data de pagamento:",
+    "listResult": "Registros:",
+    "historic": "História:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há planos para ativar."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Neste momento não há história de planos ativados."
+      }
+    },
+    "capacitiesList": {
+      "activations": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Planos",
+          "edit": "Editar os Planos",
+          "update": "Atualizar os Planos",
+          "add": "Adicionar Planos",
+          "validate": "Validar Ativação de Planos",
+          "desactivate": "Desativar Ativação de Planos"
+        }
+      }
+    },
+    "validate": {
+      "paymentNumber": "Deve digitar o número de transação",
+      "paymentAmount": "Deve digitar o valor",
+      "method": "Deve digitar o meio de pagamento",
+      "bank": "Deve selecionar o banco",
+      "paymentDate": "Deve digitar a data de pagamento"
+    }
+  },
+  "planStatus": {
+    "title": {
+      "desactivate": "Seu plano já fechou!",
+      "attention": "Seu plano já vai fechar!"
+    },
+    "subtitle": {
+      "desactivate": "Você deixou de ter os benefícios de seu plano no dia ",
+      "attention": "Você deixará de ter os benefícios de seu plano no dia "
+    },
+    "itsYourTurn": "É a sua Vez de renovar seu plano!",
+    "action": {
+      "1": "Faça a renovaçao de seu plano agora!",
+      "2": "Administre seu plano agora!"
+    }
+  },
+  "businessSurveysAdmin": {
+    "title": "Pesquisas",
+    "commerce": "Selecione um comércio:",
+    "return": "Voltar",
+    "type": "Tipo:",
+    "attentionDefault": "Default:",
+    "active": "Ativo:",
+    "csat": "CSAT:",
+    "nps": "NPS:",
+    "question": "Pergunta:",
+    "comment": "Comentário Geral:",
+    "add_question": "Adicionar Pergunta",
+    "delete_question": "Eliminar Pregunta",
+    "order": "Ordem:",
+    "options": "Opções:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "queue": "Fila:",
+    "link": "URL Web:",
+    "go": "Ir",
+    "other": "Outro",
+    "otherOption": "Opção 'Outro':",
+    "otherOpen": "'Outro' Aberto:",
+    "optionsHelp": "Lista de opções de reposta separados por vírgula, sem espaços.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há pesquisas."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de pesquisas. Para adicionar mais pesquisas, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há pesquisas. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "surveys": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Pesquisas",
+          "edit": "Editar os Pesquisas",
+          "update": "Atualizar os Pesquisas",
+          "add": "Adicionar Pesquisas",
+          "limit": "Número limite de Pesquisas"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "phone": "Você deve digitar o telefone",
+      "email": "Você deve digitar o email",
+      "module": "Você deve selecionar um módulo"
+    }
+  },
+  "permissions": {
+    "activations": {
+      "admin": {
+        "view": "Acessar Seção - Seção Activaçao de Planos",
+        "read": "Ler dados - Seção Activaçao de Planos",
+        "add": "Adicionar Activaçao de Plano - Seção Activaçao de Planos",
+        "desactivate": "Desativar Plano - Seção Activaçao de Planos",
+        "validate": "Validar Activaçao de Planos - Seção Activaçao de Planos"
+      }
+    },
+    "client": {
+      "notify": {
+        "whatsapp": "Campo de número Whatsapp para notificaciones",
+        "email": "Campo de email para notificaciones"
+      }
+    },
+    "businesses": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Negócios",
+        "read": "Ver dados - Seção Gerenciar Negócios",
+        "edit": "Editar dados - Seção Gerenciar Negócios",
+        "update": "Atualizar dados - Seção Gerenciar Negócios",
+        "add": "Adicionar dados - Seção Gerenciar Negócios",
+        "limit": "Límite de dados - Seção Gerenciar Negócios"
+      }
+    },
+    "business": {
+      "main-menu": {
+        "business-resume": "Habilitar Estado del Sistema - Menú Principal Negócio",
+        "dashboard": "Habilitar Dashboard - Menú Principal Negócio",
+        "reports": "Habilitar Reportes - Menú Principal Negócio",
+        "commerce-admin": "Habilitar Gerenciar Comercios - Menú Principal Negócio",
+        "modules-admin": "Habilitar Gerenciar Módulos - Menú Principal Negócio",
+        "queues-admin": "Habilitar Gerenciar Filas - Menú Principal Negócio",
+        "collaborators-admin": "Habilitar Gerenciar Colaboradores - Menú Principal Negócio",
+        "configuration": "Habilitar Gerenciar Configurações - Menú Principal Negócio",
+        "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
+        "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
+        "manage-admin": "Habilitar Gerenciar Artefatos - Menú Principal Negócio"
+      }
+    },
+    "collaborators": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Colaboradores",
+        "read": "Ver dados - Seção Gerenciar Colaboradores",
+        "edit": "Editar dados - Seção Gerenciar Colaboradores",
+        "update": "Atualizar dados - Seção Gerenciar Colaboradores",
+        "add": "Adicionar dados Seção - Gerenciar Colaboradores",
+        "limit": "Límite de dados Seção - Gerenciar Colaboradores"
+      }
+    },
+    "commerces": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Comercios",
+        "read": "Ver dados - Seção Gerenciar Comercios",
+        "edit": "Editar dados - Seção Gerenciar Comercios",
+        "update": "Atualizar dados - Seção Gerenciar Comercios",
+        "add": "Adicionar dados - Seção Gerenciar Comercios",
+        "limit": "Límite de dados - Seção Gerenciar Comercios"
+      }
+    },
+    "surveys": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Pesquisas",
+        "read": "Ver dados - Seção Gerenciar Pesquisas",
+        "edit": "Editar dados - Seção Gerenciar Pesquisas",
+        "update": "Atualizar dados - Seção Gerenciar Pesquisas",
+        "add": "Adicionar dados Seção - Gerenciar Pesquisas",
+        "limit": "Límite de dados Seção - Gerenciar Pesquisas"
+      }
+    },
+    "configuration": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Configurações",
+        "read": "Ver dados - Seção Gerenciar Configurações",
+        "edit": "Editar dados - Seção Gerenciar Configurações",
+        "add": "Adicionar dados - Seção Gerenciar Configurações",
+        "whatsapp-notify-now": "Editar configuração Notificación Whatsapp Es tu Turno",
+        "whatsapp-notify-five": "Editar configuração Notificación Whatsapp Faltan 5",
+        "only-survey": "Editar configuração Modo Pesquisa",
+        "whatsapp-notify-one": "Editar configuração Notificación Whatsapp Falta 1",
+        "get-number-remote": "Editar configurações obter número remoto"
+      }
+    },
+    "dashboard": {
+      "indicators": {
+        "view": "Ver Indicadores - Seção Dashboard"
+      },
+      "graphs": {
+        "view": "Ver Tendências - Seção Dashboard"
+      },
+      "attention-number": {
+        "view": "Ver Número de Atenções - Seção Dashboard"
+      },
+      "attention-time-avg": {
+        "view": "Ver Tiempo promedio de atencão - Seção Dashboard"
+      },
+      "attention-rating-avg": {
+        "view": "Ver Calificación promedio Seção - Dashboard"
+      },
+      "attention-queue": {
+        "view": "Ver La Fila con más atenções - Seção Dashboard"
+      },
+      "attention-no-device": {
+        "view": "Ver Número de atenções manuales - Seção Dashboard"
+      },
+      "attention-notification": {
+        "view": "Ver Número de notificaciones - Seção Dashboard"
+      },
+      "attention-number-evolution": {
+        "view": "Ver evoluçao de atenções - Seção Dashboard"
+      },
+      "attention-number-queue": {
+        "view": "Ver Atenções por filas - Seção Dashboard"
+      },
+      "attention-duration-evolution": {
+        "view": "Ver evoluçao duraçao de atenções - Seção Dashboard"
+      },
+      "attention-rate-duration-evolution": {
+        "view": "Ver evoluçao duraçao de pesquisas - Seção Dashboard"
+      },
+      "attention-flow": {
+        "view": "Ver Flujo de Atenções - Seção Dashboard"
+      },
+      "survey-flow": {
+        "view": "Ver Flujo de Pesquisas - Seção Dashboard"
+      },
+      "surveys": {
+        "view": "Ver Pesquisas (Sumário) - Seção Dashboard"
+      },
+      "surveys-management": {
+        "view": "Ver Pesquisas (Detalhes) - Seção Dashboard"
+      },
+      "surveys-consolidated": {
+        "view": "Ver Pesquisas (Consolidado) - Seção Dashboard"
+      },
+      "attention-hour-distribution": {
+        "view": "Ver Distribuçao de horas de atenções - Seção Dashboard"
+      },
+      "surveys-consolidated-nps-evolution": {
+        "view": "Ver evoluçao de NPS - Seção Dashboard"
+      },
+      "surveys-consolidated-csat-evolution": {
+        "view": "Ver evoluçao de CSAT - Seção Dashboard"
+      },
+      "reports": {
+        "surveys": "Download Relatório Pesquisas (Sumário) Seção Dashboard",
+        "indicators": "Download Relatório Indicadores Seção Dashboard",
+        "graphs": "Download Relatório de Tendências Seção Dashboard",
+        "surveys-management": "Download Relatório Pesquisas (Detalhes) Seção Dashboard",
+        "surveys-consolidated": "Download Relatório Pesquisas (Consolidado) Seção Dashboard"
+      }
+    },
+    "executive": {
+      "admin": {
+        "view": "Acessar Seção - Estado del Sistema",
+        "download": "Descargar Estado del Sistema"
+      }
+    },
+    "modules": {
+      "admin": {
+        "view": "Acessar Seção -- Gerenciar Módulos",
+        "read": "Ver dados - Seção Gerenciar Módulos",
+        "edit": "Editar dados - Seção Gerenciar Módulos",
+        "update": "Atualizar dados - Seção Gerenciar Módulos",
+        "add": "Adicionar dados - Seção Gerenciar Módulos",
+        "limit": "Límite de dados - Seção Gerenciar Módulos"
+      }
+    },
+    "queues": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Filas",
+        "read": "Ver dados - Seção Gerenciar Filas",
+        "edit": "Editar dados - Seção Gerenciar Filas",
+        "update": "Atualizar dados - Seção Gerenciar Filas",
+        "add": "Adicionar dados - Seção Gerenciar Filas",
+        "limit": "Límite de dados - Seção Gerenciar Filas",
+        "queue-limit": "Límite de atenções diarias de las Filas"
+      }
+    },
+    "reports": {
+      "admin": {
+        "view": "Acessar Seção - Reportes",
+        "attentions": "Descargar Reporte de Atenções",
+        "notifications": "Descargar Reporte de Notificaciones",
+        "surveys": "Descargar Reporte de Pesquisas"
+      }
+    },
+    "collaborator": {
+      "module": {
+        "update": "Atualizar módulo - Seção Atenções del Colaborador"
+      },
+      "attention": {
+        "attend": "Atender - Seção Atenções del Colaborador",
+        "finish": "Marcar atencão como atendida - Seção Atenções del Colaborador",
+        "skip": "Saltar atencão - Seção Atenções del Colaborador"
+      }
+    },
+    "roles": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Permisos",
+        "read": "Ver dados - Seção Gerenciar Permisos",
+        "edit": "Editar dados - Seção Gerenciar Permisos",
+        "update": "Atualizar dados - Seção Gerenciar Permisos",
+        "add": "Adicionar dados - Seção Gerenciar Permisos"
+      }
+    },
+    "user": {
+      "notification": {
+        "add": "Adicionar notificación - Atencão de Usuario"
+      }
+    },
+    "plans": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Planos",
+        "read": "Ver dados - Seção Gerenciar Planos",
+        "edit": "Editar dados - Seção Gerenciar Planos",
+        "update": "Atualizar dados - Seção Gerenciar Planos",
+        "add": "Adicionar dados - Seção Gerenciar Planos",
+        "limit": "Límite de dados - Seção Gerenciar Planos"
+      }
+    },
+    "plan": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Plano",
+        "read": "Ver dados - Seção Gerenciar Plano",
+        "edit": "Editar dados - Seção Gerenciar Plano",
+        "update": "Atualizar dados - Seção Gerenciar Plano",
+        "add": "Adicionar dados - Seção Gerenciar Plano"
+      }
+    },
+    "permissions": {
+      "admin": {
+        "plans": "Ver los permisos de los Planos",
+        "roles": "Ver los permisos de los Roles"
+      }
+    }
+  }
+}
