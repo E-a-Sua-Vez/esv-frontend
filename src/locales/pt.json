@@ -1676,7 +1676,7 @@
     "options": "Opções:",
     "update": "Atualizar",
     "add": "Adicionar",
-    "queue": "Fila:",
+    "queue": "Fila/Serviço:",
     "link": "URL Web:",
     "go": "Ir",
     "other": "Outro",
@@ -1822,7 +1822,7 @@
         "view": "Ver Calificación promedio Seção - Dashboard"
       },
       "attention-queue": {
-        "view": "Ver La Fila con más atenções - Seção Dashboard"
+        "view": "Ver la Fila com mais atenções - Seção Dashboard"
       },
       "attention-no-device": {
         "view": "Ver Número de atenções manuales - Seção Dashboard"
