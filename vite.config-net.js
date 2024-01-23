@@ -20,6 +20,6 @@ export default defineConfig(({ command, mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       }
     },
-    envDir: 'cl'
+    envDir: 'net'
   }
 })

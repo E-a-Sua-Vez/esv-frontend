@@ -2,9 +2,9 @@
   "name": "ett-frontend",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite --config vite.config.js",
+    "dev": "vite --config vite.config-net.js",
     "dev:br": "vite --config vite.config-br.js",
-    "build:cl": "vite --config vite.config.js build --base=/",
+    "build:net": "vite --config vite.config-net.js build --base=/",
     "build:br": "vite --config vite.config-br.js build --base=/",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
