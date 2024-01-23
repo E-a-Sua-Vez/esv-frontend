@@ -573,7 +573,7 @@
   },
   "attentionSurvey": {
     "rateYourAttention": "¿How was our service? Rate your attention to help us to offer a better service:",
-    "other": "Other",
+    "other": "OTHER",
     "survey": {
       "label": "Any comments on our attention? (Optional):",
       "placeholder": "The collaborator was really nice."

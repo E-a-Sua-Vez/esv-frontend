@@ -578,7 +578,7 @@
   },
   "attentionSurvey": {
     "rateYourAttention": "¿Cómo te atendimos? Calificar la atención nos ayuda a mejorar nuestro servicio:",
-    "other": "Otro",
+    "other": "OTRO",
     "nps": {
       "title": "En la escala del 1 al 10, ¿Qué tan probable es que nos recomiendes con familiares, amigos o conocidos?",
       "subtitle": "1: poco probable, 10: muy probable"

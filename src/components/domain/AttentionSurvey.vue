@@ -194,7 +194,7 @@ export default {
                   :id="`option-${index}`"
                   @click="checkOption($event, index, 'OTHER')"
                   >
-                <label class="form-check-label" for="option">{{ 'OTHER'.toUpperCase().trim() }}</label>
+                <label class="form-check-label" for="option">{{ $t("attentionSurvey.other") }}</label>
               </div>
             </div>
           </div>

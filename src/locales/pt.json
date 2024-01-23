@@ -577,7 +577,7 @@
   },
   "attentionSurvey": {
     "rateYourAttention": "¿Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
-    "other": "Outro",
+    "other": "OUTRO",
     "survey": {
       "label": "Algum comentário na atenção? (Opcional):",
       "placeholder": "O colaborador foi gentil."
@@ -593,7 +593,7 @@
       "subtitle": "1: em desacordo, 10: totalmente em acordo"
     },
     "like": {
-      "subtitle": "Nao, Sim"
+      "subtitle": "Não, Sim"
     },
     "writing": {
       "placeholder": "Fala conosco"
