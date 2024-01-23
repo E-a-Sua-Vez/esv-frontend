@@ -1255,8 +1255,8 @@
           "description": "Lista de Notificações do comércio entre as datas selecionadas."
         },
         "3": {
-          "name": "Relatório de Qualificações",
-          "description": "Lista de Qualificações do comércio entre as datas selecionadas."
+          "name": "Relatório de Pesquisas",
+          "description": "Lista de Pesquisas do comércio entre as datas selecionadas."
         }
       }
     },
@@ -1266,7 +1266,7 @@
           "view": "Acessar esta seçao",
           "attentions": "Relatório de Atenções",
           "notifications": "Relatório de Notificações",
-          "surveys": "Relatório de Qualificações"
+          "surveys": "Relatório de Pesquisas"
         }
       }
     }
