@@ -1,7 +1,7 @@
 {
   "logo": "/images/logo_horizontal_transparente_br.png",
   "logoAlt": "E a sua vez",
-  "homeTitle": "É a sua vez {'|'} Serviço de linhas 100% digital",
+  "homeTitle": "É a sua vez {'|'} Serviço de Filas 100% digital",
   "backToInit": "Ir para começar",
   "email": "ola{'@'}easuavez.com",
   "blog": "https://blog.easuavez.com",
@@ -206,7 +206,7 @@
     "email": "Email",
     "message": {
       "title": "Oh não!",
-      "content": "Neste momento não há linhas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
+      "content": "Neste momento não há Filas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
     },
     "message2": {
       "title": "¡Ups, tamos fechados!",
@@ -320,7 +320,7 @@
         "action": "Vá para o nosso site"
       },
       "5": {
-        "action": "Voltar as linhas"
+        "action": "Voltar as Filas"
       },
       "6": {
         "title": {
@@ -412,7 +412,7 @@
       },
       "4": {
         "title": "Não tao rápido!",
-        "content": "Você ainda não pode atender este turno. Retorneas linhas para atender os turnos por ordem de chegada."
+        "content": "Você ainda não pode atender este turno. Retorneas Filas para atender os turnos por ordem de chegada."
       }
     },
     "capacitiesList": {
@@ -443,7 +443,7 @@
     "message": {
       "1": {
         "title": "Oh não!",
-        "content": "Neste momento não há linhas de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
+        "content": "Neste momento não há Filas de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
       },
       "2": {
         "title": "Oh não!",
@@ -485,7 +485,7 @@
         "action": "Saltar"
       },
       "3": {
-        "action": "Voltar as linhas"
+        "action": "Voltar as Filas"
       }
     },
     "message": {
@@ -941,7 +941,7 @@
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
     "commerce-admin": "Comércios",
-    "queues-admin": "Linhas",
+    "queues-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
     "your-plan": "Seu Plano",
@@ -964,7 +964,7 @@
           "reports": "Relatórios",
           "commerce-admin": "Gerenciar Comércios",
           "modules-admin": "Gerenciar Módulos",
-          "queues-admin": "Gerenciar Linhas",
+          "queues-admin": "Gerenciar Filas",
           "collaborators-admin": "Gerenciar Colaboradores",
           "configuration": "Configurações",
           "your-plan": "Seu Plano",
@@ -983,7 +983,7 @@
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
     "commerce-master-admin": "Comércios",
-    "queues-master-admin": "Linhas",
+    "queues-master-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
     "your-plan": "Seu Plano",
@@ -1008,7 +1008,7 @@
     }
   },
   "businessQueuesAdmin": {
-    "title": "Linhas",
+    "title": "Filas / Serviços",
     "commerce": "Selecione um comércio:",
     "name": "Nome:",
     "return": "Voltar",
@@ -1029,11 +1029,11 @@
       },
       "2": {
         "title": "Oh não!",
-        "content": "Neste momento não há linhas de atendimento."
+        "content": "Neste momento não há Filas de atendimento."
       },
       "3": {
         "title": "Oh não!",
-        "content": "Você já atingiu o limite de linhas. Para adicionar mais linhas, mude de plano ou entre em contato conosco."
+        "content": "Você já atingiu o limite de Filas. Para adicionar mais Filas, mude de plano ou entre em contato conosco."
       },
       "4": {
         "title": "Oh não!",
@@ -1044,12 +1044,12 @@
       "queues": {
         "admin": {
           "view": "Acessar esta seçao",
-          "read": "Ver as Linhas",
-          "edit": "Editar as Linhas",
-          "update": "Atualizar as Linhas",
-          "add": "Adicionar Linhas",
-          "limit": "Número limite de Linhas",
-          "queue-limit": "Limite de Linhas"
+          "read": "Ver as Filas",
+          "edit": "Editar as Filas",
+          "update": "Atualizar as Filas",
+          "add": "Adicionar Filas",
+          "limit": "Número limite de Filas",
+          "queue-limit": "Limite de Filas"
         }
       }
     },
@@ -1281,7 +1281,7 @@
     "enquetes": "Pesquisas",
     "commerces": "Comércios",
     "modules": "Módulos",
-    "queues": "Linhas",
+    "queues": "Filas",
     "collaborators": "Colaboradores",
     "resumeByCommerce": "Sumário por Comércio",
     "message": {
@@ -1754,7 +1754,7 @@
         "reports": "Habilitar Reportes - Menú Principal Negócio",
         "commerce-admin": "Habilitar Gerenciar Comercios - Menú Principal Negócio",
         "modules-admin": "Habilitar Gerenciar Módulos - Menú Principal Negócio",
-        "queues-admin": "Habilitar Gerenciar Filas - Menú Principal Negócio",
+        "queues-admin": "Habilitar Gerenciar Filas/Serviços - Menú Principal Negócio",
         "collaborators-admin": "Habilitar Gerenciar Colaboradores - Menú Principal Negócio",
         "configuration": "Habilitar Gerenciar Configurações - Menú Principal Negócio",
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
