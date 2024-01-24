@@ -197,7 +197,7 @@ export default {
       <div id="survey-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
-          <div v-if="surveys && surveys.length > 0">
+          <div>
             <SimpleDownloadCard
               :download="toggles['dashboard.reports.surveys-management']"
               :title="$t('dashboard.reports.surveys-management.title')"
@@ -290,50 +290,52 @@ export default {
               <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ this.counter }} </span>
               <span class="badge bg-secondary px-3 py-2 m-1"> {{ $t("page") }} {{ this.page }} {{ $t("of") }} {{ this.totalPages }} </span>
             </div>
-            <div class="row" v-for="(survey, index) in surveys" :key="`survey-${index}`">
-              <SurveyDetailsCard
-                :show="true"
-                :survey="survey"
-              >
-              </SurveyDetailsCard>
+            <div v-if="surveys && surveys.length > 0">
+              <div class="row" v-for="(survey, index) in surveys" :key="`survey-${index}`">
+                <SurveyDetailsCard
+                  :show="true"
+                  :survey="survey"
+                >
+                </SurveyDetailsCard>
+              </div>
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1">
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item" v-for="pag in totalPages" :key="`page-${pag}`">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 m-0"
+                        @click="setPage(pag)"
+                        :disabled="pag === page">
+                        {{ pag }}
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages">
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
             </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1">
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item" v-for="pag in totalPages" :key="`page-${pag}`">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 m-0"
-                      @click="setPage(pag)"
-                      :disabled="pag === page">
-                      {{ pag }}
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages">
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+            <div v-else>
+              <Message
+                :icon="'bi-graph-up-arrow'"
+                :title="$t('dashboard.message.2.title')"
+                :content="$t('dashboard.message.2.content')" />
             </div>
-          </div>
-          <div v-else>
-            <Message
-              :icon="'bi-graph-up-arrow'"
-              :title="$t('dashboard.message.2.title')"
-              :content="$t('dashboard.message.2.content')" />
           </div>
         </div>
       </div>
