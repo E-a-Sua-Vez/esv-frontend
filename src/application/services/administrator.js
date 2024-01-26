@@ -15,6 +15,11 @@ export const getAdministratorByEmail = async email => {
   return user;
 }
 
+export const getAdministratorByEmailSimple = async email => {
+  const user = (await requestBackend.get(`/administrator/email/${email}`, await getHeaders())).data;
+  return user;
+}
+
 export const getAdministratorByEmailNotToken = async email => {
   const store = globalStore();
   const user = (await requestBackend.get(`/administrator/email/${email}`)).data;
@@ -53,4 +58,8 @@ export const getAdministratorsByBusinessId = async businessId => {
 
 export const updateAdministrator = async (id, administrator) => {
   return (await requestBackend.patch(`/administrator/${id}`, administrator, await getHeaders())).data;
+}
+
+export const updateAdministratorPermission = async (id, permission) => {
+  return (await requestBackend.patch(`/administrator/${id}/permission`, permission, await getHeaders())).data;
 }

@@ -158,10 +158,11 @@
       "3": "Obrigado por relatar o bug.",
       "4": "Token do aceso expirado,",
       "5": "por favor saia e faça login novamente.",
-      "6": "Esse dado ja existe",
+      "6": "Esse dado já existe",
       "7": "por favor revise e tente novamente.",
       "8": "Serviço indisponível",
-      "9": "por favor tente logo."
+      "9": "por favor tente logo.",
+      "10": "Esse dado não existe"
     },
     "action": "Relatar bug"
   },
@@ -1487,6 +1488,8 @@
     "type": "Tipo:",
     "roles": "Roles",
     "plans": "Planos",
+    "users": "Usuários",
+    "email": "Email:",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1510,12 +1513,14 @@
       "permissions": {
         "admin": {
           "roles": "Ver os Permissões dos Roles",
-          "plans": "Ver os Permissões dos Planos"
+          "plans": "Ver os Permissões dos Planos",
+          "users": "Ver os Permissões dos Usuários"
         }
       }
     },
     "validate": {
-      "permission": "Você deve adicionar o permissão"
+      "permission": "Você deve adicionar o permissão",
+      "email": "Você deve adicionar o email"
     }
   },
   "businessPlansAdmin": {

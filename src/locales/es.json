@@ -162,7 +162,8 @@
       "6": "Este registro ya existe",
       "7": "por favor revisa e intenta nuevamente.",
       "8": "Servicio indisponible",
-      "9": "por favor intenta más tarde."
+      "9": "por favor intenta más tarde.",
+      "10": "Este registro no existe"
     },
     "action": "Reportar error"
   },
@@ -1489,6 +1490,8 @@
     "add": "Agregar",
     "roles": "Roles",
     "plans": "Planes",
+    "users": "Usuarios",
+    "email": "Email:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1512,12 +1515,14 @@
       "permissions": {
         "admin": {
           "roles": "Ver los permisos de los Roles",
-          "plans": "Ver los permisos de los Planes"
+          "plans": "Ver los permisos de los Planes",
+          "users": "Ver los permisos de los Usuarios"
         }
       }
     },
     "validate": {
-      "permission": "Debes agregar un permiso"
+      "permission": "Debes agregar un permiso",
+      "email": "Debes ingresar el email"
     }
   },
   "businessPlansAdmin": {

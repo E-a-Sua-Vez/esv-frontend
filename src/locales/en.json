@@ -160,7 +160,8 @@
       "6": "This register already exists",
       "7": "please take a look and retry.",
       "8": "Service Unavailable",
-      "9": "please try again later."
+      "9": "please try again later.",
+      "10": "This register does not exist"
     },
     "action": "Report error"
   },
@@ -1485,6 +1486,8 @@
     "roles": "Roles",
     "plans": "Plans",
     "add": "Add",
+    "users": "Users",
+    "email": "Email:",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1508,12 +1511,14 @@
       "permissions": {
         "admin": {
           "roles": "See the Roles Permissions",
-          "plans": "See the Plans Permissions"
+          "plans": "See the Plans Permissions",
+          "users": "See the Users Permissions"
         }
       }
     },
     "validate": {
-      "permission": "Should add a permission"
+      "permission": "Should add a permission",
+      "email": "Should add an email"
     }
   },
   "businessPlansAdmin": {
