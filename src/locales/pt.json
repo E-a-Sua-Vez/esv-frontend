@@ -989,6 +989,7 @@
     "your-plan": "Seu Plano",
     "plans-master-admin": "Gerenciar Planos",
     "collaborators-master-admin": "Colaboradores",
+    "administrators-master-admin": "Administradores",
     "features-master-admin": "Gerenciar Permissões",
     "modules-master-admin": "Módulos",
     "surveys-master-admin": "Pesquisas",
@@ -1101,6 +1102,59 @@
     },
     "validate": {
       "name": "Você deve digitar o nome"
+    }
+  },
+  "businessAdministratorAdmin": {
+    "title": "Administradores",
+    "commerce": "Selecione um comércio:",
+    "return": "Voltar",
+    "name": "Nome:",
+    "alias": "Apelido (Opcional):",
+    "email": "Email:",
+    "phone": "Fono:",
+    "bot": "É Bot:",
+    "active": "Ativo:",
+    "module": "Módulo:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "commerces": "Comércios:",
+    "aliasHelp": "Identificador abreviado do administrador utilizado no produto digital.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há administradores."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de administradores. Para adicionar mais administradores, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "administrators": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Administradores",
+          "edit": "Editar os Administradores",
+          "update": "Atualizar os Administradores",
+          "add": "Adicionar Administradores",
+          "limit": "Número limite de Administradores"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "phone": "Você deve digitar o telefone",
+      "email": "Você deve digitar o email",
+      "module": "Você deve selecionar um módulo"
     }
   },
   "businessCollaboratorsAdmin": {
@@ -1770,6 +1824,16 @@
         "update": "Atualizar dados - Seção Gerenciar Colaboradores",
         "add": "Adicionar dados Seção - Gerenciar Colaboradores",
         "limit": "Límite de dados Seção - Gerenciar Colaboradores"
+      }
+    },
+    "administrators": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Administradores",
+        "read": "Ver dados - Seção Gerenciar Administradores",
+        "edit": "Editar dados - Seção Gerenciar Administradores",
+        "update": "Atualizar dados - Seção Gerenciar Administradores",
+        "add": "Adicionar dados Seção - Gerenciar Administradores",
+        "limit": "Límite de dados Seção - Gerenciar Administradores"
       }
     },
     "commerces": {

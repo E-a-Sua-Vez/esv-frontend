@@ -1,0 +1,491 @@
+<script>
+import { ref, reactive, onBeforeMount } from 'vue';
+import { useRouter } from 'vue-router';
+import { globalStore } from '../../stores';
+import { getBusinessById } from '../../application/services/business';
+import { getCommercesByBusinessId } from '../../application/services/commerce';
+import { getAdministratorsByBusinessId, updateAdministrator, addAdministrator } from '../../application/services/administrator';
+import { getPermissions } from '../../application/services/permissions';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
+import CollaboratorName from '../../components/common/CollaboratorName.vue';
+import Toggle from '@vueform/toggle';
+import Message from '../../components/common/Message.vue';
+import PoweredBy from '../../components/common/PoweredBy.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import Spinner from '../../components/common/Spinner.vue';
+import Alert from '../../components/common/Alert.vue';
+import Warning from '../../components/common/Warning.vue';
+import Popper from "vue3-popper";
+
+export default {
+  name: 'BusinessAdministratorsAdmin',
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, ToggleCapabilities, Warning, Popper },
+  async setup() {
+    const router = useRouter();
+    const store = globalStore();
+
+    let loading = ref(false);
+    let alertError = ref('');
+
+    const state = reactive({
+      currentUser: {},
+      business: {},
+      activeBusiness: false,
+      commerces: ref({}),
+      administrators: ref({}),
+      commerce: {},
+      showAdd: false,
+      newAdministrator: {},
+      extendedEntity: undefined,
+      errorsAdd: [],
+      errorsUpdate: [],
+      nameError: false,
+      emailError: false,
+      toggles: {}
+    });
+
+    onBeforeMount(async () => {
+      try {
+        loading.value = true;
+        state.currentUser = await store.getCurrentUser;
+        state.business = await store.getCurrentBusiness;
+        if (state.currentUser.businessId) {
+          state.business = await getBusinessById(state.currentUser.businessId);
+        }
+        store.setCurrentBusiness(state.business);
+        state.commerces = await getCommercesByBusinessId(state.business.id);
+        const administrators = await getAdministratorsByBusinessId(state.business.id);
+        state.administrators = administrators;
+        state.toggles = await getPermissions('administrators', 'admin');
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    })
+
+    const isActiveBusiness = () => {
+      return state.business && state.business.active === true;
+    };
+
+    const goBack = () => {
+      router.back();
+    }
+
+    const validateAdd = (administrator) => {
+      state.errorsAdd = [];
+      if(!administrator.name || administrator.name.length === 0) {
+        state.nameError = true;
+        state.errorsAdd.push('businessAdministratorAdmin.validate.name');
+      } else {
+        state.nameError = false;
+      }
+      if(!administrator.email || administrator.email.length < 10) {
+        state.emailError = true;
+        state.errorsAdd.push('businessAdministratorAdmin.validate.email');
+      } else {
+        state.emailError = false;
+      }
+      if(state.errorsAdd.length === 0) {
+        return true;
+      }
+      return false;
+    }
+
+    const validateUpdate = (administrator) => {
+      state.errorsUpdate = [];
+      if(administrator.bot === true) {
+        return true;
+      }
+      if(state.errorsUpdate.length === 0) {
+        return true;
+      }
+      return false;
+    }
+
+    const update = async (administrator) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(administrator)) {
+          await updateAdministrator(administrator.id, administrator);
+          const administrators = await getAdministratorsByBusinessId(state.business.id);
+          state.administrators = administrators;
+        }
+        state.commerce = undefined;
+        state.extendedEntity = undefined;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    }
+
+    const showAdd = () => {
+      state.showAdd = !state.showAdd;
+      const commercesId = [];
+      if (state.commerces && state.commerces.length === 1) {
+        commercesId.push(state.commerces[0].id)
+      }
+      state.newAdministrator = {
+        commercesId
+      }
+    }
+
+    const add = async () => {
+      try {
+        loading.value = true;
+        if (validateAdd(state.newAdministrator)) {
+          state.newAdministrator.businessId = state.business.id;
+          await addAdministrator(state.newAdministrator);
+          const administrators = await getAdministratorsByBusinessId(state.business.id);
+          state.administrators = administrators;
+          state.showAdd = false;
+          state.newAdministrator = {}
+          state.commerce = undefined;
+        }
+        state.extendedEntity = undefined;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    }
+
+    const selectCommerce = async (administrator, commerce) => {
+      if (administrator.commercesId && administrator.commercesId.length >= 0) {
+        if (!administrator.commercesId.includes(commerce.id)) {
+          administrator.commercesId.push(commerce.id);
+        }
+      }
+    }
+
+    const showCommerce = (commerceId) => {
+      if (state.commerces && state.commerces.length >= 1) {
+        const commerce = state.commerces.find(com => com.id === commerceId);
+        if (commerce) {
+          return commerce.tag;
+        }
+      }
+    }
+
+    const deleteCommerce = (administrator, commerceId) => {
+      if (administrator.commercesId && administrator.commercesId.length >= 0) {
+        if (administrator.commercesId.includes(commerceId)) {
+          const filtered = administrator.commercesId.filter(com => com !== commerceId);
+          administrator.commercesId = filtered;
+        }
+      }
+    }
+
+    const showUpdateForm = (index) => {
+      state.extendedEntity = state.extendedEntity !== index ? index : undefined;
+    }
+
+    return {
+      state,
+      loading,
+      alertError,
+      showUpdateForm,
+      update,
+      showAdd,
+      add,
+      goBack,
+      isActiveBusiness,
+      selectCommerce,
+      showCommerce,
+      deleteCommerce
+    }
+  }
+}
+</script>
+
+<template>
+  <div>
+    <div class="content text-center">
+      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+      <div class="col">
+        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessAdministratorAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
+      </div>
+      <div id="page-header" class="text-center mt-4">
+        <span class="welcome-user">{{ $t("businessAdministratorAdmin.title") }}</span>
+        <ToggleCapabilities
+          :toggles="state.toggles"
+          componentName="businessAdministratorAdmin"
+        ></ToggleCapabilities>
+        <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
+      </div>
+      <div id="businessAdministratorAdmin">
+        <div v-if="isActiveBusiness && state.toggles['administrators.admin.view']">
+          <div v-if="!loading" id="businessAdministratorAdmin-result" class="mt-4">
+            <div>
+              <div v-if="state.administrators.length === 0">
+                <Message
+                  :title="$t('businessAdministratorAdmin.message.2.title')"
+                  :content="$t('businessAdministratorAdmin.message.2.content')" />
+              </div>
+              <div v-if="state.commerce" class="row mb-2">
+                <div class="col-8 text-labe">
+                  <span>{{ $t("businessAdministratorAdmin.listResult") }}</span>
+                  <span class="fw-bold m-2">{{ state.administrators.length }}</span>
+                </div>
+                <div class="col-4">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                    @click="showAdd(administrator)"
+                    :disabled="!state.toggles['administrators.admin.add']">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="add-administrator" class="administrator-card mb-4" v-if="state.showAdd && state.toggles['administrators.admin.add']">
+                <div v-if="state.administrators.length < state.toggles['administrators.admin.limit']">
+                  <div class="row g-1">
+                    <div id="administrator-name-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.name") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="state.newAdministrator.name"
+                          v-bind:class="{ 'is-invalid': state.nameError }"
+                          placeholder="Jhon Pérez">
+                      </div>
+                    </div>
+                    <div id="administrator-email-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.email") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="10"
+                          type="email"
+                          class="form-control"
+                          v-model="state.newAdministrator.email"
+                          v-bind:class="{ 'is-invalid': state.emailError }"
+                          placeholder="name@email.com">
+                      </div>
+                    </div>
+                    <div id="administrator-commerces-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.commerces") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(state.newAdministrator, state.commerce)" id="commerces">
+                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if=" state.newAdministrator.commercesId &&  state.newAdministrator.commercesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newAdministrator.commercesId" :key="com.id">
+                            {{ showCommerce(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(state.newAdministrator, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="add(state.newAdministrator)">
+                        {{ $t("businessAdministratorAdmin.add") }} <i class="bi bi-save"></i>
+                      </button>
+                    </div>
+                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                      <Warning>
+                        <template v-slot:message>
+                          <li v-for="(error, index) in state.errorsAdd" :key="index">
+                            {{ $t(error) }}
+                          </li>
+                        </template>
+                      </Warning>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessAdministratorAdmin.message.3.title')"
+                    :content="$t('businessAdministratorAdmin.message.3.content')" />
+                </div>
+              </div>
+              <div v-for="(administrator, index) in state.administrators" :key="index" class="administrator-card">
+                <div class="row">
+                  <div class="col-10">
+                    <CollaboratorName :name="administrator.name" :email="administrator.email" :active="administrator.active"></CollaboratorName>
+                  </div>
+                  <div class="col-2">
+                    <a
+                      href="#"
+                      @click.prevent="showUpdateForm(index)">
+                      <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                    </a>
+                  </div>
+                </div>
+                <div v-if="state.toggles['administrators.admin.read']"
+                  :class="{ show: state.extendedEntity === index }"
+                  class="detailed-data transition-slow"
+                  >
+                  <div class="row g-1">
+                    <div id="administrator-name-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.name") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :disabled="true"
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="administrator.name"
+                          placeholder="Jhon Pérez">
+                      </div>
+                    </div>
+                    <div id="administrator-email-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.email") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :disabled="true"
+                          min="10"
+                          type="email"
+                          class="form-control"
+                          v-model="administrator.email"
+                          placeholder="name@email.com">
+                      </div>
+                    </div>
+                    <div id="administrator-commerces-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.commerces") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(administrator, state.commerce)" id="commerces">
+                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if=" administrator.commercesId &&  administrator.commercesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in administrator.commercesId" :key="com.id">
+                            {{ showCommerce(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(administrator, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="administrator-active-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessAdministratorAdmin.active") }}
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="administrator.active"
+                          :disabled="!state.toggles['administrators.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="administrator-id-form" class="row -2 mb-g3">
+                      <div class="row administrator-details-container">
+                        <div class="col">
+                          <span><strong>Id:</strong> {{ administrator.id }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="update(administrator)"
+                        :disabled="!state.toggles['administrators.admin.update']">
+                        {{ $t("businessAdministratorAdmin.update") }} <i class="bi bi-save"></i>
+                      </button>
+                    </div>
+                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
+                      <Warning>
+                        <template v-slot:message>
+                          <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                            {{ $t(error) }}
+                          </li>
+                        </template>
+                      </Warning>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="(!isActiveBusiness() || !state.toggles['administrators.admin.read']) && !loading">
+                  <Message
+                    :title="$t('businessAdministratorAdmin.message.1.title')"
+                    :content="$t('businessAdministratorAdmin.message.1.content')" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="(!isActiveBusiness() || !state.toggles['administrators.admin.view']) && !loading">
+          <Message
+            :title="$t('businessAdministratorAdmin.message.1.title')"
+            :content="$t('businessAdministratorAdmin.message.1.content')" />
+        </div>
+      </div>
+    </div>
+    <PoweredBy :name="state.business.name" />
+  </div>
+</template>
+
+<style scoped>
+.select {
+  border-radius: .5rem;
+  border: 1px solid var(--gris-default);
+}
+.text-label {
+  line-height: 1.2rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+.administrator-card {
+  background-color: var(--color-background);
+  padding: .5rem;
+  margin-bottom: 1rem;
+  border-radius: .5rem;
+  border: .5px solid var(--gris-default);
+  align-items: left;
+}
+.control-box {
+  background-color: var(--color-background);
+  padding: .5rem;
+  margin: .1rem;
+  border-radius: .5rem;
+  border: 1.5px solid var(--gris-default);
+}
+.administrator-details-container {
+  font-size: .8rem;
+  margin-left: .5rem;
+  margin-right: .5rem;
+  margin-top: .5rem;
+  margin-bottom: 0;
+}
+.is-disabled {
+  opacity: 0.5;
+}
+.show {
+  padding: 10px;
+  max-height: 400px !important;
+  overflow-y: auto;
+}
+.detailed-data {
+  width: 100%;
+  max-height: 0px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px auto auto;
+}
+.errors {
+  font-size: small;
+  color: var(--rojo-warning);
+}
+.btn-close {
+  height: 0em !important;
+}
+</style>

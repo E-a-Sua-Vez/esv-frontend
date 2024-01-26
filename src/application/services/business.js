@@ -22,7 +22,7 @@ export const addBusiness = async (business) => {
   const newAdministrator = {
     name: newBusiness.name,
     businessId: newBusiness.id,
-    commerceIds: [],
+    commercesId: [],
     email: newBusiness.email
   };
   await addAdministrator(newAdministrator);

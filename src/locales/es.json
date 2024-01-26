@@ -992,6 +992,7 @@
     "surveys-admin": "Administrar Encuestas",
     "plans-master-admin": "Administrar Planes",
     "collaborators-master-admin": "Colaboradores",
+    "administrators-master-admin": "Administradores",
     "surveys-master-admin": "Encuestas",
     "features-master-admin": "Administrar Permisos",
     "modules-master-admin": "Módulos",
@@ -1103,6 +1104,59 @@
     },
     "validate": {
       "name": "Debes ingresar el nombre"
+    }
+  },
+  "businessAdministratorAdmin": {
+    "title": "Administradores",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "name": "Nombre:",
+    "alias": "Alias (Opcional):",
+    "email": "Email:",
+    "phone": "Teléfono:",
+    "active": "Activo:",
+    "module": "Módulo:",
+    "bot": "Es Bot:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "commerces": "Comercios:",
+    "aliasHelp": "Identificador del administrador usado en el producto digital.",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay administradores."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de administradores. Para agregar más administradores cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay comercios. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "administrators": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Administradores",
+          "edit": "Editar las Administradores",
+          "update": "Actualizar las Administradores",
+          "add": "Agregar Administradores",
+          "limit": "Cantidad límite de Administradores"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "phone": "Debes ingresar el teléfono",
+      "email": "Debes ingresar el email",
+      "module": "Debes seleccionar un módulo"
     }
   },
   "businessCollaboratorsAdmin": {
@@ -1773,6 +1827,16 @@
         "update": "Actualizar datos - Sección Administrar Colaboradores",
         "add": "Agregar datos Sección - Administrar Colaboradores",
         "limit": "Límite de datos Sección - Administrar Colaboradores"
+      }
+    },
+    "administrators": {
+      "admin": {
+        "view": "Ver Sección - Administrar Administradores",
+        "read": "Leer datos - Sección Administrar Administradores",
+        "edit": "Editar datos - Sección Administrar Administradores",
+        "update": "Actualizar datos - Sección Administrar Administradores",
+        "add": "Agregar datos Sección - Administrar Administradores",
+        "limit": "Límite de datos Sección - Administrar Administradores"
       }
     },
     "commerces": {

@@ -942,6 +942,7 @@
     "reports": "Reports",
     "your-plan": "Your Plan",
     "collaborators-admin": "Collaborators",
+    "administrators-admin": "Administrators",
     "modules-admin": "Modules",
     "business-resume": "System State",
     "surveys-admin": "Surveys",
@@ -962,6 +963,7 @@
           "modules-admin": "Modules Settings",
           "queues-admin": "Queues Settings",
           "collaborators-admin": "Collaborator Settings",
+          "administrators-admin": "Administrator Settings",
           "configuration": "Settings",
           "your-plan": "Your Plan",
           "surveys-admin": "Surveys Settings",
@@ -985,6 +987,7 @@
     "your-plan": "Your Plan",
     "plans-master-admin": "Plans Settings",
     "collaborators-master-admin": "Collaborators",
+    "administrators-master-admin": "Administrators",
     "modules-master-admin": "Modules",
     "surveys-master-admin": "Surveys",
     "features-master-admin": "Features Settings",
@@ -1141,6 +1144,59 @@
           "update": "Update the Collaborators",
           "add": "Add Collaborators",
           "limit": "Limit amount of Collaborators"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "phone": "You should enter the phone",
+      "email": "You should enter the email",
+      "module": "You should select the module"
+    }
+  },
+  "businessAdministratorAdmin": {
+    "title": "Administrators",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "alias": "Alias (Optional):",
+    "email": "Email:",
+    "phone": "Phone:",
+    "active": "Active:",
+    "bot": "Is Bot:",
+    "module": "Module:",
+    "update": "Update",
+    "commerces": "Commerces:",
+    "add": "Add",
+    "aliasHelp": "Short identifier of the administrator used in the digital product.",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service administrators."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of administrators. To add more administrators, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "administrators": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Administrators",
+          "edit": "Edit the Administrators",
+          "update": "Update the Administrators",
+          "add": "Add Administrators",
+          "limit": "Limit amount of Administrators"
         }
       }
     },
@@ -1752,10 +1808,21 @@
         "modules-admin": "Enable Manage Modules - Main Menu Business",
         "queues-admin": "Enable Manage Queues - Main Menu Business",
         "collaborators-admin": "Enable Manage Collaborators - Main Menu Business",
+        "administrators-admin": "Enable Manage Administrators - Main Menu Business",
         "configuration": "Enable Manage Configurations - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
         "manage-admin": "Enable Artifacts Admin - Main Menu Business"
+      }
+    },
+    "administrators": {
+      "admin": {
+        "view": "Get to this Section - Manage Administrators",
+        "read": "Read data - Section Manage Administrators",
+        "edit": "Edit data - Section Manage Administrators",
+        "update": "Update data - Section Manage Administrators",
+        "add": "Add data Section - Manage Administrators",
+        "limit": "Limit of data Section - Manage Administrators"
       }
     },
     "collaborators": {

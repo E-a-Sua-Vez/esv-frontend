@@ -2,6 +2,7 @@ import MasterMenu from '../../views/master/MasterMenu.vue';
 import BusinessSectionAtWorkView from '../../views/business/BusinessSectionAtWorkView.vue';
 import BusinessQueuesAdmin from '../../views/business/BusinessQueuesAdmin.vue';
 import BusinessModulesAdmin from '../../views/business/BusinessModulesAdmin.vue';
+import BusinessAdministratorsAdmin from '../../views/business/BusinessAdministratorAdmin.vue';
 import BusinessCollaboratorsAdmin from '../../views/business/BusinessCollaboratorAdmin.vue';
 import BusinessCommerceAdmin from '../../views/business/BusinessCommerceAdmin.vue';
 import BusinessReports from '../../views/business/BusinessReports.vue';
@@ -60,6 +61,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/your-plan',
     name: 'business-master-your-plan',
     component: BusinessPlan
+  },
+  {
+    path: '/interno/master/administrators-master-admin',
+    name: 'business-administrators-master-admin',
+    component: BusinessAdministratorsAdmin
   },
   {
     path: '/interno/master/collaborators-master-admin',

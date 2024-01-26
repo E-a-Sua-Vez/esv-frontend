@@ -46,3 +46,11 @@ export const addAdministrator = async (newAdministrator) => {
   await signUp(administrator.email, administrator.email);
   return administrator;
 }
+
+export const getAdministratorsByBusinessId = async businessId => {
+  return (await requestBackend.get(`/administrator/businessId/${businessId}`, await getHeaders())).data;
+}
+
+export const updateAdministrator = async (id, administrator) => {
+  return (await requestBackend.patch(`/administrator/${id}`, administrator, await getHeaders())).data;
+}

@@ -43,6 +43,7 @@ export default {
         'commerce-master-admin',
         'modules-master-admin',
         'queues-master-admin',
+        'administrators-master-admin',
         'collaborators-master-admin',
         'surveys-master-admin',
       ]
