@@ -22,7 +22,7 @@ export default {
       router.push('/');
     }
 
-    const commerceQueuesUrl = `/interno/commerce/:id/colaborador/filas`;
+    const commerceQueuesUrl = `/interno/colaborador/menu`;
 
     return {
       commerceQueuesUrl,

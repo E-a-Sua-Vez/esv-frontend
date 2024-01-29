@@ -147,7 +147,7 @@ export default {
       <div id="page-header" class="text-center mt-4">
         <div id="welcome">
           <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorQueueAttentions.hello") }}</span>
-          <span v-else class="welcome-user">¡{{ $t("collaboratorQueueAttentions.hello-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
+          <span v-else class="welcome-user">{{ $t("collaboratorQueueAttentions.hello-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
         </div>
       </div>
       <ToggleCapabilities

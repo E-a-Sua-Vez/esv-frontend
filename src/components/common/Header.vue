@@ -1,16 +1,18 @@
 <script>
-import { reactive, onBeforeMount, watch } from 'vue';
+import { ref, reactive, onBeforeMount, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
 import LocaleSelector from './LocaleSelector.vue';
+import Spinner from '../../components/common/Spinner.vue';
 
 export default {
-  components: { LocaleSelector },
+  components: { LocaleSelector, Spinner },
   name: 'Header',
   async setup() {
     const router = useRouter();
     let store = globalStore();
+    let loading = ref(false);
 
     const state = reactive({
       userName: '',
@@ -54,24 +56,32 @@ export default {
     }
 
     const logout = async () => {
-      const currentUser = await store.getCurrentUser;
-      const currentUserType = await store.getCurrentUserType;
-      await signOut(currentUser.email, currentUserType);
-      await store.resetSession();
-      let path = '/';
-      if (currentUserType === 'business') {
-        path = '/publico/negocio/login';
-      } else if (currentUserType === 'collaborator') {
-        path = '/publico/colaborador/login';
-      } else if (currentUserType === 'master') {
-        path = '/publico/master/login';
+      try {
+        loading.value = true;
+        console.log('aqui')
+        const currentUser = await store.getCurrentUser;
+        const currentUserType = await store.getCurrentUserType;
+        await signOut(currentUser.email, currentUserType);
+        await store.resetSession();
+        let path = '/';
+        if (currentUserType === 'business') {
+          path = '/publico/negocio/login';
+        } else if (currentUserType === 'collaborator') {
+          path = '/publico/colaborador/login';
+        } else if (currentUserType === 'master') {
+          path = '/publico/master/login';
+        }
+        loading.value = false;
+        router.push({ path, replace: true }).then(() => { router.go() });
+      } catch (error) {
+        loading.value = false;
       }
-      router.push({ path, replace: true }).then(() => { router.go() });
     }
 
     return {
       state,
       store,
+      loading,
       logout,
       loginInvited,
       getUser
@@ -84,12 +94,19 @@ export default {
   <div class="row">
     <div class="row masthead ett-nav py-2">
       <div class="container-fluid col-8">
-        <div v-if="state.currentUser && state.currentUser.name !== 'invitado' && (state.currentUserType === 'collaborator' || state.currentUserType === 'business' || state.currentUserType === 'master') ">
-          <div class="user-name">
-            <span class="fw-bold"><i class="bi bi-person-circle"></i> {{ state.userName }}</span>
+        <div v-if="!loading">
+          <div v-if="state.currentUser && state.currentUser.name !== 'invitado' && (state.currentUserType === 'collaborator' || state.currentUserType === 'business' || state.currentUserType === 'master') ">
+            <div class="user-name">
+              <span class="fw-bold"><i class="bi bi-person-circle"></i> {{ state.userName }}</span>
+            </div>
+            <div class="">
+              <a class="logout btn-light rounded-pill my-0 px-4" @click="logout()" > {{ $t("logout") }} <i class="bi bi-box-arrow-right"></i> </a>
+            </div>
           </div>
-          <div class="">
-            <a class="logout btn-light rounded-pill my-0 px-4" @click="logout()" > {{ $t("logout") }} <i class="bi bi-box-arrow-right"></i> </a>
+        </div>
+        <div v-else>
+          <div class="container-fluid col-8 text-left">
+            <Spinner :show="loading" :ligth="true"></Spinner>
           </div>
         </div>
       </div>

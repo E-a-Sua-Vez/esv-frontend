@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
+import { getCommerceById } from '../../application/services/commerce';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -13,7 +14,7 @@ import Alert from '../../components/common/Alert.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
 
 export default {
-  name: 'BusinessMenu',
+  name: 'CollaboratorMenu',
   components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanStatus, ToggleCapabilities },
   async setup() {
     const router = useRouter();
@@ -25,22 +26,11 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      business: {},
+      commerce: {},
       manageSubMenuOption: false,
-      menuOptions: [
+      collaboratorOptions: [
+        'queue-manage',
         'dashboard',
-        'reports',
-        'manage-admin',
-        'configuration',
-        'your-plan',
-        'business-resume',
-      ],
-      manageSubMenuOptions: [
-        'commerce-admin',
-        'modules-admin',
-        'queues-admin',
-        'collaborators-admin',
-        'surveys-admin',
       ],
       currentPlanActivation: {},
       toggles: {}
@@ -50,13 +40,13 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getActualBusiness();
-        state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.business.id, true) || {};
-        state.toggles = await getPermissions('business', 'main-menu');
+        state.commerce = await getCommerceById(state.currentUser.commerceId);
+        state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.commerce.id, true) || {};
+        state.toggles = await getPermissions('collaborator', 'main-menu');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status;
+        alertError.value = error.response.status || 500;
         loading.value = false;
       }
     })
@@ -66,10 +56,10 @@ export default {
         loading.value = true;
         alertError.value = '';
         if (option) {
-          if (option === 'manage-admin') {
-            state.manageSubMenuOption = !state.manageSubMenuOption;
-          } else {
-            router.push({ path: `/interno/negocio/${option}` });
+          if (option === 'queue-manage') {
+            router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` });
+          } else if (option === 'dashboard') {
+            router.push({ path: `/interno/colaborador/dashboard` });
           }
         }
         loading.value = false;
@@ -79,7 +69,7 @@ export default {
       }
     };
     const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
+      return state.commerce && state.commerce.active === true;
     };
 
     return {
@@ -95,17 +85,17 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
           <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("businessMenu.welcome") }}</span>
-            <span v-else class="welcome-user">{{ $t("businessMenu.welcome-user") }}, {{ state.currentUser.name }}!</span>
+            <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorMenu.welcome") }}</span>
+            <span v-else class="welcome-user">{{ $t("collaboratorMenu.welcome-user") }}, {{ state.currentUser.name }}!</span>
           </div>
         </div>
         <ToggleCapabilities
             :toggles="state.toggles"
-            componentName="businessMenu"
+            componentName="collaboratorMenu"
           ></ToggleCapabilities>
         <Spinner :show="loading"></Spinner>
         <PlanStatus
@@ -114,13 +104,13 @@ export default {
           :canAdmin="true">
         </PlanStatus>
         <div class="choose-attention">
-          <span>{{ $t("businessMenu.choose") }}</span>
+          <span>{{ $t("collaboratorMenu.choose") }}</span>
         </div>
       </div>
       <div id="menu">
         <div class="row">
           <div
-            v-for="option in state.menuOptions"
+            v-for="option in state.collaboratorOptions"
             :key="option"
             class="d-grid btn-group btn-group-justified">
             <div>
@@ -128,9 +118,9 @@ export default {
                   type="button"
                   class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
                   @click="goToOption(option)"
-                  :disabled="!state.toggles[`business.main-menu.${option}`]"
+                  :disabled="!state.toggles[`collaborator.main-menu.${option}`]"
                   >
-                  {{ $t(`businessMenu.${option}`) }}
+                  {{ $t(`collaboratorMenu.${option}`) }}
                   <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
                 </button>
                 <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
@@ -143,7 +133,7 @@ export default {
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
                         @click="goToOption(opt)"
                         >
-                        {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        {{ $t(`collaboratorMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
                       </button>
                     </div>
                 </div>
@@ -152,14 +142,14 @@ export default {
         </div>
         <div v-if="!isActiveBusiness() && !loading">
           <Message
-            :title="$t('businessMenu.message.1.title')"
-            :content="$t('businessMenu.message.1.content')"
+            :title="$t('collaboratorMenu.message.1.title')"
+            :content="$t('collaboratorMenu.message.1.content')"
             :icon="'bi bi-emoji-dizzy'">
           </Message>
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
+    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 <style scoped>

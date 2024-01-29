@@ -425,6 +425,10 @@
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Gerenciar Filas"
         }
       }
     }
@@ -435,12 +439,12 @@
     "terminated": "Atenções fechadas"
   },
   "collaboratorQueuesView": {
-    "welcome": "Bem-vindo!",
-    "welcome-user": "Bem-vindo",
+    "welcome": "Gerenciamento de Filas",
     "choose": "Escolha a linha que você vai atender:",
     "module": "Seu módulo de atenção é:",
     "attentions": "Na linha",
     "attending": "Atendiendo",
+    "return": "Voltar",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -460,6 +464,10 @@
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Gerenciar Filas"
         }
       }
     }
@@ -504,6 +512,10 @@
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Gerenciar Filas"
         }
       }
     }
@@ -997,6 +1009,27 @@
     "plan-activations-admin": "Activação de Planos",
     "surveys-admin": "Gerenciar Pesquisas",
     "manage-master-admin": "Gerenciar"
+  },
+  "collaboratorMenu": {
+    "welcome": "Bem-vindo!",
+    "welcome-user": "Bem-vindo",
+    "choose": "O que você quer fazer hoje?",
+    "dashboard": "Dashboard",
+    "queue-manage": "Gerenciar Filas",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "No momento, não há opções para gerenciar. Verifique se o seu plano está ativo ou entre em contato conosco."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "main-menu": {
+          "dashboard": "Gestionar Dashboard",
+          "queue-manage": "Gestionar Filas"
+        }
+      }
+    }
   },
   "businessSectionAtWorkView": {
     "welcome": "Bem-vindo!",
@@ -1829,6 +1862,10 @@
         "update": "Atualizar dados - Seção Gerenciar Colaboradores",
         "add": "Adicionar dados Seção - Gerenciar Colaboradores",
         "limit": "Límite de dados Seção - Gerenciar Colaboradores"
+      },
+      "main-menu": {
+        "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
+        "queue-manage": "Habilitar Gerenciar Filas - Menú Principal Colaborador"
       }
     },
     "administrators": {

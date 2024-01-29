@@ -377,7 +377,7 @@
   },
   "collaboratorAttentionValidate": {
     "hello": "¡Hola!",
-    "hello-user": "Hola",
+    "hello-user": "¡Hola",
     "yourNumber": "Estás procesando la atención número:",
     "toGoal": {
       "1": "Hay",
@@ -426,17 +426,21 @@
         },
         "module": {
           "update": "Actualizar módulo de atención"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Administrar Filas"
         }
       }
     }
   },
   "collaboratorQueuesView": {
-    "welcome": "¡Bienvenido!",
-    "welcome-user": "Bienvenido",
+    "welcome": "Gestión de Filas",
     "choose": "Elige la fila que atenderás:",
     "module": "Tu módulo de atención es:",
     "attentions": "En fila",
     "attending": "Atendiendo",
+    "return": "Volver",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -456,6 +460,10 @@
         },
         "module": {
           "update": "Actualizar módulo de atención"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Administrar Filas"
         }
       }
     }
@@ -467,7 +475,7 @@
   },
   "collaboratorQueueAttentions": {
     "hello": "¡Hola!",
-    "hello-user": "Hola",
+    "hello-user": "¡Hola",
     "yourNumber": "El próximo número de atención es:",
     "toGoal": {
       "1": "Hay",
@@ -505,6 +513,10 @@
         },
         "module": {
           "update": "Actualizar módulo de atención"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Administrar Filas"
         }
       }
     }
@@ -940,7 +952,7 @@
   },
   "businessMenu": {
     "welcome": "¡Bienvenido!",
-    "welcome-user": "Bienvenido",
+    "welcome-user": "¡Bienvenido",
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
     "commerce-admin": "Sucursales",
@@ -979,7 +991,7 @@
   },
   "masterMenu": {
     "welcome": "¡Bienvenido!",
-    "welcome-user": "Bienvenido",
+    "welcome-user": "¡Bienvenido",
     "choose": "¿Qué quieres hacer hoy?",
     "business": "Selecciona un negocio:",
     "business-master-admin": "Administrar Negocios",
@@ -999,6 +1011,27 @@
     "modules-master-admin": "Módulos",
     "plan-activations-admin": "Activación de Planes",
     "manage-master-admin": "Administrar"
+  },
+  "collaboratorMenu": {
+    "welcome": "¡Bienvenido!",
+    "welcome-user": "¡Bienvenido",
+    "choose": "¿Qué quieres hacer hoy?",
+    "dashboard": "Dashboard",
+    "queue-manage": "Gestionar Filas",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "main-menu": {
+          "dashboard": "Gestionar Dashboard",
+          "queue-manage": "Gestionar Filas"
+        }
+      }
+    }
   },
   "businessSectionAtWorkView": {
     "welcome": "¡Bienvenido!",
@@ -1832,6 +1865,10 @@
         "update": "Actualizar datos - Sección Administrar Colaboradores",
         "add": "Agregar datos Sección - Administrar Colaboradores",
         "limit": "Límite de datos Sección - Administrar Colaboradores"
+      },
+      "main-menu": {
+        "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
+        "queue-manage": "Habilitar Gestionar Filas - Menú Principal Colaborador"
       }
     },
     "administrators": {

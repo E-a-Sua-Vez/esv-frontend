@@ -1,7 +1,7 @@
 {
   "logo": "/images/logo_horizontal_transparente_en.png",
   "logoAlt": "It's your turn",
-  "homeTitle": "It's your turn {'|'} Service of attention lines 100% digital",
+  "homeTitle": "It's your turn {'|'} Service of attention queues 100% digital",
   "email": "hola{'@'}estuturno.app",
   "blog": "https://blog.estuturno.app",
   "backToInit": "Back to init",
@@ -409,7 +409,7 @@
       },
       "4": {
         "title": "Not so fast!",
-        "content": "You can not attend this turn. Go back to the line and attend the previous numbers in order."
+        "content": "You can not attend this turn. Go back to the queue and attend the previous numbers in order."
       }
     },
     "capacitiesList": {
@@ -421,17 +421,21 @@
         },
         "module": {
           "update": "Update attention Module"
+        },
+        "main-menu": {
+          "dashboard": "Go to Dashboard",
+          "queue-manage": "Manage Queues"
         }
       }
     }
   },
   "collaboratorQueuesView": {
-    "welcome": "Welcome!",
-    "welcome-user": "Welcome",
-    "choose": "Choose the line that you'll attend:",
+    "welcome": "Queue Attention",
+    "choose": "Choose the queue that you'll attend:",
     "module": "Your module of attention is:",
     "attentions": "In queue",
     "attending": "Attending",
+    "return": "Back",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -451,6 +455,10 @@
         },
         "module": {
           "update": "Update attention Module"
+        },
+        "main-menu": {
+          "dashboard": "Go to Dashboard",
+          "queue-manage": "Manage Queues"
         }
       }
     }
@@ -500,6 +508,10 @@
         },
         "module": {
           "update": "Update attention Module"
+        },
+        "main-menu": {
+          "dashboard": "Go to Dashboard",
+          "queue-manage": "Manage Queues"
         }
       }
     }
@@ -640,7 +652,7 @@
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promoter",
-    "queue": "Select Line or Service:",
+    "queue": "Select Queue or Service:",
     "resume": "Summary",
     "consolidated": "Consolidated",
     "day": "Day",
@@ -657,7 +669,7 @@
         "1": "Number of attentions",
         "2": "Time of attention (Avg.)",
         "3": "Rating of Client Satisfaction (CSAT)",
-        "4": "Line with more attentions",
+        "4": "Queue with more attentions",
         "5": "Manual Attentions (%)",
         "6": "Sent Notifications",
         "7": "Quealified Attentions",
@@ -806,7 +818,7 @@
           "view": "Average qualification of attention"
         },
         "attention-queue": {
-          "view": "Line with more attentions"
+          "view": "Queue with more attentions"
         },
         "attention-no-device": {
           "view": "Manual Attentions (%)"
@@ -969,6 +981,27 @@
           "your-plan": "Your Plan",
           "surveys-admin": "Surveys Settings",
           "manage-admin": "Manage Artifacts"
+        }
+      }
+    }
+  },
+  "collaboratorMenu": {
+    "welcome": "Welcome!",
+    "welcome-user": "Welcome",
+    "choose": "What do you want to do today?",
+    "dashboard": "Dashboard",
+    "queue-manage": "Manage Queues",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At the moment there's not options to manage. Please verify that your plan is active or go ahead to us."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "main-menu": {
+          "dashboard": "Manage Dashboard",
+          "queue-manage": "Manage Queues"
         }
       }
     }
@@ -1838,6 +1871,10 @@
         "update": "Update data - Section Manage Collaborators",
         "add": "Add data Section - Manage Collaborators",
         "limit": "Limit of data Section - Manage Collaborators"
+      },
+      "main-menu": {
+        "dashboard": "Enable Dashboard - Main Menu Collaborators",
+        "queue-manage": "Enable Queue Management - Main Menu Collaborators"
       }
     },
     "commerces": {

@@ -119,7 +119,7 @@ export const globalStore = defineStore('globalStore', {
       const currentUser = this.getCurrentUser;
       commerces = commercesIn;
       if (!commerces) {
-        commerces = await getCommercesByBusinessId(state.business.id);
+        commerces = await getCommercesByBusinessId(currentUser.businessId);
       }
       if (currentUser && currentUser.commercesId) {
         if (currentUser.commercesId.length > 0) {

@@ -500,6 +500,7 @@ export default {
 </template>
 <style scoped>
 .choose-attention {
+  padding-bottom: 1rem;
   font-size: 1rem;
   font-weight: 700;
 }

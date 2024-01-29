@@ -49,7 +49,10 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.commerce = await getCommerceById(state.currentUser.commerceId);
+        state.commerce = await store.getCurrentCommerce;
+        if (!state.commerce) {
+          state.commerce = await getCommerceById(state.currentUser.commerceId);
+        }
         state.queues = state.commerce.queues;
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         state.collaborator = await getCollaboratorById(state.currentUser.id);
@@ -127,6 +130,10 @@ export default {
       state.queues = queues;
     }
 
+    const goBack = () => {
+      router.push({ path: `/interno/colaborador/menu` });
+    }
+
     watch(
       queues,
       async () => {
@@ -147,7 +154,8 @@ export default {
       validateCaptchaOk,
       validateCaptchaError,
       moduleSelect,
-      isActiveModules
+      isActiveModules,
+      goBack
     }
   }
 }
@@ -156,11 +164,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+      <div class="col">
+        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("collaboratorQueuesView.return") }} <i class="bi bi-arrow-left"></i></a>
+      </div>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
           <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorQueuesView.welcome") }}</span>
-            <span v-else class="welcome-user">¡{{ $t("collaboratorQueuesView.welcome-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
+            <span class="welcome-user">{{ $t("collaboratorQueuesView.welcome") }} </span>
           </div>
         </div>
         <ToggleCapabilities

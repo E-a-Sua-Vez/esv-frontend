@@ -62,7 +62,7 @@ export default {
         <div class="welcome">
           <div id="welcome">
             <span v-if="!state.currentUser" class="welcome">{{ $t("businessSectionAtWorkView.welcome") }}</span>
-            <span v-else class="welcome-user">¡{{ $t("businessSectionAtWorkView.welcome-user") }}, {{ state.currentUser.name }}!</span>
+            <span v-else class="welcome-user">{{ $t("businessSectionAtWorkView.welcome-user") }}, {{ state.currentUser.name }}!</span>
           </div>
         </div>
         <Spinner :show="loading"></Spinner>
