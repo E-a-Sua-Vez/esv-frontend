@@ -106,10 +106,10 @@ export const globalStore = defineStore('globalStore', {
       this.currentPermissions = undefined;
     },
     async getActualBusiness() {
-      const business = await this.getCurrentBusiness || undefined;
+      let business = await this.getCurrentBusiness || undefined;
       const currentUser = this.getCurrentUser;
       if (!business && currentUser.businessId) {
-        business = await getBusinessById(state.currentUser.businessId);
+        business = await getBusinessById(currentUser.businessId);
       }
       this.setCurrentBusiness(business);
       return business;

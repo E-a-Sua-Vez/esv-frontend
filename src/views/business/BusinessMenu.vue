@@ -56,6 +56,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ onBeforeMount ~ error:", error);
         alertError.value = error.response.status;
         loading.value = false;
       }
@@ -97,7 +98,7 @@ export default {
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
+        <div class="welcome-user">
           <div id="welcome">
             <span v-if="!state.currentUser" class="welcome">{{ $t("businessMenu.welcome") }}</span>
             <span v-else class="welcome-user">{{ $t("businessMenu.welcome-user") }}, {{ state.currentUser.name }}!</span>

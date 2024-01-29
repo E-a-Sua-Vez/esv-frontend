@@ -105,8 +105,8 @@ export default {
           </div>
         </div>
         <div v-else>
-          <div class="container-fluid col-8 text-left">
-            <Spinner :show="loading" :ligth="true"></Spinner>
+          <div class="col-8 lefted">
+            <Spinner :show="!loading" :ligth="true"></Spinner>
           </div>
         </div>
       </div>
