@@ -2,8 +2,6 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
-import { getCommercesByBusinessId } from '../../application/services/commerce';
 import { getAttentions, getNotifications, getSurveys} from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
@@ -42,12 +40,8 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
-        state.commerces = await getCommercesByBusinessId(state.business.id);
+        state.business = await store.getActualBusiness();
+        state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.toggles = await getPermissions('reports', 'admin');
         alertError.value = '';

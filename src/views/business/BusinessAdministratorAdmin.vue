@@ -2,8 +2,6 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
-import { getCommercesByBusinessId } from '../../application/services/commerce';
 import { getAdministratorsByBusinessId, updateAdministrator, addAdministrator } from '../../application/services/administrator';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -29,9 +27,9 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      business: {},
+      business: undefined,
       activeBusiness: false,
-      commerces: ref({}),
+      commerces: ref(undefined),
       administrators: ref({}),
       commerce: {},
       showAdd: false,
@@ -48,18 +46,15 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
-        state.commerces = await getCommercesByBusinessId(state.business.id);
+        state.business = await store.getActualBusiness();
+        state.commerces = await store.getAvailableCommerces(state.business.commerces);
         const administrators = await getAdministratorsByBusinessId(state.business.id);
         state.administrators = administrators;
         state.toggles = await getPermissions('administrators', 'admin');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ onBeforeMount ~ error:", error);
         alertError.value = error.response.status;
         loading.value = false;
       }

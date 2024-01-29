@@ -1,7 +1,6 @@
 <script>
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-import { getBusinessById } from '../../application/services/business';
 import { globalStore } from '../../stores';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -30,7 +29,7 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.currentUserType = await store.getCurrentUserType;
-        state.business = await getBusinessById(state.currentUser.businessId);
+        state.business = await store.getActualBusiness();
         store.setCurrentBusiness(state.business);
         loading.value = false;
       } catch (error) {

@@ -100,7 +100,7 @@ export default {
           </div>
             <span class="fw-bold px-2">
               <i :class="`bi bi-qr-code blue-icon`"></i>
-              {{ calculatedMetrics['attention.created'].attentionQueues.datasets[0] || 0 }}
+              {{ calculatedMetrics['attention.created'] ? calculatedMetrics['attention.created'].attentionQueues.datasets[0] : 0 }}
             </span>
         </div>
         <div class="col metric-card">
@@ -121,7 +121,7 @@ export default {
           <div>
             <span class="fw-bold px-2">
               <i class="bi bi-stop-circle green-icon"></i>
-              {{ calculatedMetrics['attention.created'].attentionFlow.datasets[2] || 0 }}
+              {{ calculatedMetrics['attention.created'] ? calculatedMetrics['attention.created'].attentionFlow.datasets[2] : 0 }}
             </span>
           </div>
         </div>

@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
 import { getBusinessExecutiveReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
@@ -41,11 +40,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
+        state.business = await store.getActualBusiness();
         const { calculatedReports } = await getBusinessExecutiveReport(state.business.id, state.startDate, state.endDate);
         state.reports = calculatedReports;
         state.toggles = await getPermissions('executive', 'admin');

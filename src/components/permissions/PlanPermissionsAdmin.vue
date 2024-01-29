@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
 import { getPlans, updatePlanPermission } from '../../application/services/plan';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../common/ToggleCapabilities.vue';
@@ -47,11 +46,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
+        state.business = await store.getActualBusiness();
         state.plans = await getPlans();
         await selectPlan(state.planSelectedIndex);
         state.toggles = await getPermissions('plans', 'admin');

@@ -2,12 +2,10 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
-import { getCommercesByBusinessId } from '../../application/services/commerce';
 import { getQueueByCommerce, updateQueue, addQueue } from '../../application/services/queue';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
-import QueueName from '../../components/common/QueueName.vue';
+import QueueSimpleName from '../../components/common/QueueSimpleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -18,7 +16,7 @@ import Warning from '../../components/common/Warning.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueName, Toggle, ToggleCapabilities, Warning },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -52,12 +50,8 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
-        state.commerces = await getCommercesByBusinessId(state.business.id);
+        state.business = await store.getActualBusiness();
+        state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
           const commerce = await getQueueByCommerce(state.commerce.id);
@@ -475,7 +469,7 @@ export default {
               <div v-for="(queue, index) in state.queues" :key="index" class="queue-card">
                 <div class="row">
                   <div class="col-10">
-                    <QueueName :queue="queue"></QueueName>
+                    <QueueSimpleName :queue="queue"></QueueSimpleName>
                   </div>
                   <div class="col-2">
                     <a

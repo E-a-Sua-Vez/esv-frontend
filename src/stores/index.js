@@ -1,5 +1,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
+import { getCommercesByBusinessId } from '../application/services/commerce';
+import { getBusinessById } from '../application/services/business';
 
 export const globalStore = defineStore('globalStore', {
   state: () => ({
@@ -62,7 +64,7 @@ export const globalStore = defineStore('globalStore', {
     async setCurrentUser(value) {
       const val = value ? JSON.stringify(value) : value;
       await localStorage.setItem('currentUser', val);
-      this.currentUser = val;
+      this.$state.currentUser = val;
     },
     async setCurrentPermissions(value) {
       const val = value ? JSON.stringify(value) : value;
@@ -102,6 +104,33 @@ export const globalStore = defineStore('globalStore', {
       this.currentUser = undefined;
       this.currentQueue = undefined;
       this.currentPermissions = undefined;
+    },
+    async getActualBusiness() {
+      const business = await this.getCurrentBusiness || undefined;
+      const currentUser = this.getCurrentUser;
+      if (!business && currentUser.businessId) {
+        business = await getBusinessById(state.currentUser.businessId);
+      }
+      this.setCurrentBusiness(business);
+      return business;
+    },
+    async getAvailableCommerces(commercesIn) {
+      let commerces = undefined;
+      const currentUser = this.getCurrentUser;
+      commerces = commercesIn;
+      if (!commerces) {
+        commerces = await getCommercesByBusinessId(state.business.id);
+      }
+      if (currentUser && currentUser.commercesId) {
+        if (currentUser.commercesId.length > 0) {
+          const availablesIds = currentUser.commercesId;
+          const availableCommerces = commerces.filter(com => availablesIds.includes(com.id));
+          if (availableCommerces && availableCommerces.length > 0) {
+            commerces = availableCommerces;
+          }
+        }
+      }
+      return commerces;
     }
   },
 });

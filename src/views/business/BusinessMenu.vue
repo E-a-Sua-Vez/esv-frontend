@@ -1,7 +1,6 @@
 <script>
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-import { getBusinessById } from '../../application/services/business';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
@@ -51,11 +50,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
+        state.business = await store.getActualBusiness();
         state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.business.id, true) || {};
         state.toggles = await getPermissions('business', 'main-menu');
         alertError.value = '';

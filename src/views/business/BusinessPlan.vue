@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getBusinessById } from '../../application/services/business';
 import { getPlans, getPlanById } from '../../application/services/plan';
 import { addPlanActivation, getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
 import { getPermissions } from '../../application/services/permissions';
@@ -50,11 +49,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getCurrentBusiness;
-        if (state.currentUser.businessId) {
-          state.business = await getBusinessById(state.currentUser.businessId);
-        }
-        store.setCurrentBusiness(state.business);
+        state.business = await store.getActualBusiness();
         if (state.business.planId) {
           state.plan = await getPlanById(state.business.planId);
           const benefits = state.plan.description.split('-');
