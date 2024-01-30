@@ -5,7 +5,7 @@ import Warning from '../../components/common/Warning.vue';
 import NoDeviceAttentionNumber from '../../components/common/NoDeviceAttentionNumber.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import Message from '../../components/common/Message.vue';
-import { createAttention, setNoDevice } from '../../application/services/attention';
+import { createAttention } from '../../application/services/attention';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 
