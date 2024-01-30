@@ -223,6 +223,14 @@ export default {
       }
     })
 
+    const getDate = (date) => {
+      if (date) {
+        const dateCorrected = new Date(date);
+        return dateCorrected.toISOString();
+      }
+      return 'N/I'
+    }
+
     return {
       state,
       loading,
@@ -235,7 +243,8 @@ export default {
       showAdd,
       refresh,
       clear,
-      search
+      search,
+      getDate
     }
   }
 }
@@ -293,7 +302,11 @@ export default {
           </div>
           <div class="col mt-2" v-if="state.user">
             <hr>
-            <span class="fw-bold"> <i class="bi bi-person-fill"></i>  {{ state.user ? state.user.name : '' }}</span>
+            <div class="my-3">
+              <span class="fw-bold h5"> <i class="bi bi-person-fill"></i>  {{ state.user ? state.user.name : '' }} {{ state.user ? state.user.active ? '🟢' : '🔴' : '' }}</span> <br>
+              <span> <i class="bi bi-envelope-fill"></i>  {{ state.user ? state.user.email : '' }}</span><br>
+              <span> <i class="bi bi-calendar-check fw-bold"> Last Sign In: </i> {{ state.user ? getDate(state.user.lastSignIn) : 'N/I' }} </span><br>
+            </div>
             <div class="row g-1">
               <input
                 min="1"
