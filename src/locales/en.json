@@ -1055,6 +1055,8 @@
     "service": "Service",
     "attentionHour": "Attention Hours:",
     "attentionDays": "Attention Days:",
+    "link": "URL Web:",
+    "go": "Minisite",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1272,6 +1274,8 @@
     "attentionHour": "Attention Hours:",
     "attentionDays": "Attention Days:",
     "add": "Add",
+    "link": "URL Web:",
+    "go": "Minisite",
     "keyNameHelp": "Identifier used for the URL of the minisite.",
     "tagHelp": "Short identifier of the commerce used in the digital product.",
     "listResult": "Results:",

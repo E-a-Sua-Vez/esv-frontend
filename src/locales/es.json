@@ -1059,6 +1059,8 @@
     "attentionHour": "Horas Atención:",
     "attentionDays": "Días Atención:",
     "listResult": "Registros:",
+    "link": "URL Web:",
+    "go": "Minisite",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1276,6 +1278,8 @@
     "category": "Categoría:",
     "add": "Agregar",
     "logo": "Logo",
+    "link": "URL Web:",
+    "go": "Minisite",
     "keyNameHelp": "Identificador usado para la URL del ministe.",
     "tagHelp": "Identificador corto de la sucursal utilizado en el producto digital.",
     "listResult": "Registros:",

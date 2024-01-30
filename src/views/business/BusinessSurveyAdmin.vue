@@ -262,7 +262,10 @@ export default {
     const getSurveyLink = (survey) => {
       const commerceKeyName = state.commerce.keyName;
       const queueId = survey.queueId;
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
+      if (queueId) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
+      }
+      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
     }
 
     const copyLink = (survey) => {

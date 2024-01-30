@@ -27,7 +27,7 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      business: undefined,
+      business: {},
       activeBusiness: false,
       commerces: ref(undefined),
       administrators: ref({}),
@@ -54,7 +54,6 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ onBeforeMount ~ error:", error);
         alertError.value = error.response.status;
         loading.value = false;
       }
@@ -157,6 +156,17 @@ export default {
       }
     }
 
+    const selectCommerceIndex = async (index, commerce) => {
+      if (!state.administrators[index].commercesId) {
+        state.administrators[index].commercesId = []
+      }
+      if (state.administrators[index].commercesId && state.administrators[index].commercesId.length >= 0) {
+        if (!state.administrators[index].commercesId.includes(commerce.id)) {
+          state.administrators[index].commercesId.push(commerce.id);
+        }
+      }
+    }
+
     const showCommerce = (commerceId) => {
       if (state.commerces && state.commerces.length >= 1) {
         const commerce = state.commerces.find(com => com.id === commerceId);
@@ -191,7 +201,8 @@ export default {
       isActiveBusiness,
       selectCommerce,
       showCommerce,
-      deleteCommerce
+      deleteCommerce,
+      selectCommerceIndex
     }
   }
 }
@@ -222,7 +233,7 @@ export default {
                   :title="$t('businessAdministratorAdmin.message.2.title')"
                   :content="$t('businessAdministratorAdmin.message.2.content')" />
               </div>
-              <div v-if="state.commerce" class="row mb-2">
+              <div v-if="state.commerces" class="row mb-2">
                 <div class="col-8 text-labe">
                   <span>{{ $t("businessAdministratorAdmin.listResult") }}</span>
                   <span class="fw-bold m-2">{{ state.administrators.length }}</span>
@@ -355,15 +366,15 @@ export default {
                           placeholder="name@email.com">
                       </div>
                     </div>
-                    <div id="administrator-commerces-form-add" class="row g-1">
+                    <div id="administrator-commerces-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessAdministratorAdmin.commerces") }}
                       </div>
                       <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(administrator, state.commerce)" id="commerces">
+                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerceIndex(index, state.commerce)" id="commerces">
                           <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                         </select>
-                        <div class="select p-1" v-if=" administrator.commercesId &&  administrator.commercesId.length > 0">
+                        <div class="select p-1" v-if="administrator.commercesId &&  administrator.commercesId.length > 0">
                           <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in administrator.commercesId" :key="com.id">
                             {{ showCommerce(com) }}
                             <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(administrator, com)"></button>

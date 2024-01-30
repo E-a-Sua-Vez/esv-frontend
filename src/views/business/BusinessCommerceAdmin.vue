@@ -232,6 +232,16 @@ export default {
       }
     }
 
+    const getCommerceLink = (commerce) => {
+      const commerceKeyName = commerce.keyName;
+      return `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}`;
+    }
+
+    const copyLink = (commerce) => {
+      const textToCopy = getSurveyLink(commerce);
+      navigator.clipboard.writeText(textToCopy);
+    }
+
     return {
       state,
       loading,
@@ -243,7 +253,9 @@ export default {
       goBack,
       isActiveBusiness,
       dayChecked,
-      checkDay
+      checkDay,
+      getCommerceLink,
+      copyLink
     }
   }
 }
@@ -756,6 +768,22 @@ export default {
                   class="detailed-data transition-slow"
                   >
                   <div class="row g-1">
+                    <div id="commerce-link-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCommercesAdmin.link") }}
+                      </div>
+                      <div class="col-8">
+                        <a class="btn copy-icon"
+                          @click="copyLink(commerce)">
+                          <i class="bi bi-file-earmark-spreadsheet"></i>
+                        </a>
+                        <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                            :href="`${getCommerceLink(commerce)}`"
+                            target="_blank">
+                          <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessCommercesAdmin.go") }}
+                        </a>
+                      </div>
+                    </div>
                     <div id="commerce-name-form-add" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessCommercesAdmin.name") }}
@@ -1275,5 +1303,10 @@ export default {
 .errors {
   font-size: small;
   color: var(--rojo-warning);
+}
+.copy-icon {
+  color: var(--gris-default);
+  cursor: pointer;
+  margin: .5rem;
 }
 </style>

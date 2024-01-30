@@ -110,16 +110,18 @@ export const globalStore = defineStore('globalStore', {
       const currentUser = this.getCurrentUser;
       if (!business && currentUser.businessId) {
         business = await getBusinessById(currentUser.businessId);
+        this.setCurrentBusiness(business);
       }
-      this.setCurrentBusiness(business);
       return business;
     },
     async getAvailableCommerces(commercesIn) {
       let commerces = undefined;
-      const currentUser = this.getCurrentUser;
+      const currentUser = await this.getCurrentUser;
       commerces = commercesIn;
       if (!commerces) {
-        commerces = await getCommercesByBusinessId(currentUser.businessId);
+        const business = await this.getCurrentBusiness;
+        const businessId = currentUser.businessId || business.id;
+        commerces = await getCommercesByBusinessId(businessId);
       }
       if (currentUser && currentUser.commercesId) {
         if (currentUser.commercesId.length > 0) {

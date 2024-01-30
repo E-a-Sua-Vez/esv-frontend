@@ -93,9 +93,9 @@ router.beforeEach(async (to, from, next) => {
   if (rootViews.includes(to.name)) {
     if (!userNotExists && !getSessionIsNotAlive(currentUser)) {
       if (currentUserType === 'collaborator') {
-        next({ name: 'collaborator-queues', replace: true, params: { id: currentUser.commerceId } });
+        next({ name: 'collaborator-menu', replace: true, params: { id: currentUser.commerceId } });
         return;
-      } if (currentUserType === 'business') {
+      } else if (currentUserType === 'business') {
         next({ name: 'business-menu', replace: true });
         return;
       } else if (currentUserType === 'master') {

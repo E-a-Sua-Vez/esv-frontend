@@ -218,6 +218,20 @@ export default {
       }
     }
 
+    const getQueueLink = (queue) => {
+      const commerceKeyName = state.commerce.keyName;
+      const queueId = queue.id;
+      if (queueId) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
+      }
+      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
+    }
+
+    const copyLink = (queue) => {
+      const textToCopy = getSurveyLink(queue);
+      navigator.clipboard.writeText(textToCopy);
+    }
+
     return {
       state,
       loading,
@@ -230,7 +244,9 @@ export default {
       isActiveBusiness,
       selectCommerce,
       dayChecked,
-      checkDay
+      checkDay,
+      getQueueLink,
+      copyLink
     }
   }
 }
@@ -484,11 +500,27 @@ export default {
                   class="detailed-data transition-slow"
                   >
                   <div class="row g-1">
+                    <div id="queue-link-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.link") }}
+                      </div>
+                      <div class="col-8">
+                        <a class="btn copy-icon"
+                          @click="copyLink(queue)">
+                          <i class="bi bi-file-earmark-spreadsheet"></i>
+                        </a>
+                        <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                            :href="`${getQueueLink(queue)}`"
+                            target="_blank">
+                          <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessQueuesAdmin.go") }}
+                        </a>
+                      </div>
+                    </div>
                     <div id="queue-limit-form" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.limit") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           :disabled="!state.toggles['queues.admin.edit']"
                           min="1"
@@ -501,10 +533,10 @@ export default {
                       </div>
                     </div>
                     <div id="queue-order-form" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.order") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           :disabled="!state.toggles['queues.admin.edit']"
                           min="1"
@@ -517,10 +549,10 @@ export default {
                       </div>
                     </div>
                     <div id="queue-estimated-form" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.estimated") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           :disabled="!state.toggles['queues.admin.edit']"
                           min="1"
@@ -532,10 +564,10 @@ export default {
                       </div>
                     </div>
                     <div id="queue-active-form" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.active") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <Toggle
                           v-model="queue.active"
                           :disabled="!state.toggles['queues.admin.edit']"
@@ -725,5 +757,10 @@ export default {
   height: auto;
   overflow: hidden;
   margin: 0px auto auto;
+}
+.copy-icon {
+  color: var(--gris-default);
+  cursor: pointer;
+  margin: .5rem;
 }
 </style>

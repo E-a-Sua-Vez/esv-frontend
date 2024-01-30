@@ -272,3 +272,8 @@
   color: var(--color-text) !important;
   font-weight: 700 !important;
 }
+.copy-icon {
+  color: var(--gris-default);
+  cursor: pointer;
+  margin: .5rem;
+}

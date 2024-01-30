@@ -23,7 +23,7 @@ export default {
     const state = reactive({
       currentUser: {},
       businesses: {},
-      business: undefined,
+      business: {},
       manageSubMenuOption: false,
       masterMenuOptions: [
         'business-master-admin',
