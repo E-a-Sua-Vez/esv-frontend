@@ -963,6 +963,7 @@
     "business-resume": "Estado do Sistema",
     "surveys-admin": "Pesquisas",
     "manage-admin": "Gerenciar",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1008,7 +1009,8 @@
     "surveys-master-admin": "Pesquisas",
     "plan-activations-admin": "Activação de Planos",
     "surveys-admin": "Gerenciar Pesquisas",
-    "manage-master-admin": "Gerenciar"
+    "manage-master-admin": "Gerenciar",
+    "go-minisite": "Minisite"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",

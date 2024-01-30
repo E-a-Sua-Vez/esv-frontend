@@ -38,6 +38,7 @@ export default {
         'configuration',
         'your-plan',
         'business-master-resume',
+        'go-minisite'
       ],
       manageSubMenuOptions: [
         'commerce-master-admin',
@@ -96,13 +97,19 @@ export default {
       store.setCurrentBusiness(undefined);
     }
 
+    const getBusinessLink = () => {
+      const businessKeyName = state.business.keyName;
+      return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
+    }
+
     return {
       state,
       loading,
       alertError,
       goToOption,
       selectBusiness,
-      closeBusiness
+      closeBusiness,
+      getBusinessLink
     }
   }
 }
@@ -164,7 +171,16 @@ export default {
                   v-for="option in state.businessMenuOptions"
                   :key="option"
                   class="d-grid btn-group btn-group-justified">
-                  <div>
+                  <div v-if="option === 'go-minisite'" class="centered">
+                    <a
+                      type="button"
+                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
+                      :href="`${getBusinessLink()}`"
+                      target="_blank">
+                      {{ $t(`masterMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                  </div>
+                  <div v-else>
                     <button
                       type="button"
                       class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"

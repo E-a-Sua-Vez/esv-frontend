@@ -58,7 +58,6 @@ export default {
     const logout = async () => {
       try {
         loading.value = true;
-        console.log('aqui')
         const currentUser = await store.getCurrentUser;
         const currentUserType = await store.getCurrentUserType;
         await signOut(currentUser.email, currentUserType);

@@ -960,6 +960,7 @@
     "business-resume": "System State",
     "surveys-admin": "Surveys",
     "manage-admin": "Manage",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1027,7 +1028,8 @@
     "features-master-admin": "Features Settings",
     "plan-activations-admin": "Plan Activations",
     "surveys-admin": "Surveys",
-    "manage-master-admin": "Manage"
+    "manage-master-admin": "Manage",
+    "go-minisite": "Minisite"
   },
   "businessSectionAtWorkView": {
     "welcome": "Welcome!",

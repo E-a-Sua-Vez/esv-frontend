@@ -965,6 +965,7 @@
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
     "manage-admin": "Administrar",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1010,7 +1011,8 @@
     "features-master-admin": "Administrar Permisos",
     "modules-master-admin": "Módulos",
     "plan-activations-admin": "Activación de Planes",
-    "manage-master-admin": "Administrar"
+    "manage-master-admin": "Administrar",
+    "go-minisite": "Minisite"
   },
   "collaboratorMenu": {
     "welcome": "¡Bienvenido!",
