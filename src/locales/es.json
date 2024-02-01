@@ -772,6 +772,15 @@
           "6": "de",
           "7": "y una tasa de",
           "8": " fuga"
+        },
+        "surveys-consolidated-csat-evolution": {
+          "1": "CSAT",
+          "2": "En este período tu CSAT está promediando",
+          "3": "El mes con mejor desempeño es ",
+          "4": " promediando ",
+          "5": " y el mes con peor desempeño es ",
+          "6": "NPS",
+          "7": "En este período tu NPS está promediando"
         }
       }
     },

@@ -51,7 +51,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getActualBusiness();
+        state.business = await store.renewActualBusiness();
         state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.business.id, true) || {};
         state.toggles = await getPermissions('business', 'main-menu');
         alertError.value = '';

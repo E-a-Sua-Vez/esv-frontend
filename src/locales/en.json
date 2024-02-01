@@ -767,6 +767,15 @@
           "2": "In this period the time of day with the most attention was",
           "3": "with",
           "4": "attentions."
+        },
+        "surveys-consolidated-csat-evolution": {
+          "1": "CSAT",
+          "2": "In this period your CSAT avg is",
+          "3": "The month with better avg is ",
+          "4": " with ",
+          "5": " the worst month avg is ",
+          "6": "NPS",
+          "7": "In this period your NPS avg is"
         }
       }
     },

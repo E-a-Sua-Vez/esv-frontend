@@ -74,7 +74,11 @@ export default {
       extendedCsatEntity: false,
       npsScore: [],
       npsDistribution: [],
-      csatScore: []
+      csatScore: [],
+      maxCsat: {},
+      minCsat: {},
+      maxNps: {},
+      minNps: {}
     });
 
     onBeforeMount(async () => {
@@ -208,20 +212,36 @@ export default {
     }
 
     const surveysConsolidatedNPSEvolution = computed(() => {
+      getMaxAvgNPS();
+      getMinAvgNPS();
       const data = state.evolution;
       if (data && data.labels) {
         return {
         labels: data.labels || [],
         datasets: [
           {
+            label: 'Promedio',
+            boxWidth: 10,
+            borderColor: '#2f407a',
+            backgroundColor: '#2f407a',
+            borderDash: [2, 2],
+            data: data.labels.map(
+              label => +state.calculatedSurveyMetricsYear.nps
+            ),
+            fill: false,
+            tension: .1,
+            radius: 0,
+            type: 'line'
+          },
+          {
             label: 'NPS',
             boxWidth: 10,
             borderColor: '#a52a2a',
-            backgroundColor: '#a52a2a',
+            backgroundColor: "rgba(255, 99, 71, 0.2)",
             borderDash: [2, 2],
             data: !data.datasets ? [] : data.datasets.map(data => data.nps),
-            fill: false,
-            radius: 3,
+            fill: true,
+            radius: 5,
             tension: .2,
             type: 'line'
           }
@@ -236,20 +256,36 @@ export default {
     const { barChartProps: surveysConsolidatedNPSEvolutionProps } = useBarChart({ chartData: surveysConsolidatedNPSEvolution });
 
     const surveysConsolidatedCSATEvolution = computed(() => {
+      getMaxAvgCSAT();
+      getMinAvgCSAT();
       const data = state.evolution;
       if (data && data.labels) {
         return {
         labels: data.labels || [],
         datasets: [
           {
+            label: 'Promedio',
+            boxWidth: 10,
+            borderColor: '#a52a2a',
+            backgroundColor: '#a52a2a',
+            borderDash: [2, 2],
+            data: data.labels.map(
+              label => +state.calculatedSurveyMetricsYear.avgRating
+            ),
+            fill: false,
+            tension: .1,
+            radius: 0,
+            type: 'line'
+          },
+          {
             label: 'CSAT',
             boxWidth: 10,
             borderColor: '#2f407a',
-            backgroundColor: '#2f407a',
+            backgroundColor: "rgba(127, 134, 255, 0.6)",
             borderDash: [2, 2],
             data: !data.datasets ? [] : data.datasets.map(data => data.rating),
-            fill: false,
-            radius: 3,
+            fill: true,
+            radius: 5,
             tension: .2,
             type: 'line'
           }
@@ -296,6 +332,66 @@ export default {
       state.extendedCsatEntity = !state.extendedCsatEntity;
     }
 
+    const getMaxAvgCSAT = () => {
+      const arr = state.evolution.datasets.map(obj => +obj.rating) || [];
+      if (arr && arr.length > 0) {
+        const result = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+        const index = arr.findIndex(val => val === result);
+        if (index >= 0) {
+          state.maxCsat = {
+            label: state.evolution.labels[index],
+            value: parseFloat(result.toFixed(2), 2) || 0
+          }
+        }
+      }
+      return { label: 'N/I', value: 0 };
+    }
+
+    const getMinAvgCSAT = () => {
+      const arr = state.evolution.datasets.map(obj => +obj.rating) || [];
+      if (arr && arr.length > 0) {
+        const result = arr.reduce((a, b) => Math.min(a, b), 100000000);
+        const index = arr.findIndex(val => val === result);
+        if (index >= 0) {
+          state.minCsat = {
+            label: state.evolution.labels[index],
+            value: parseFloat(result.toFixed(2), 2) || 0
+          }
+        }
+      }
+      return { label: 'N/I', value: 0 };
+    }
+
+    const getMaxAvgNPS = () => {
+      const arr = state.evolution.datasets.map(obj => obj.nps) || [];
+      if (arr && arr.length > 0) {
+        const result = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+        const index = arr.findIndex(val => val === result);
+        if (index >= 0) {
+          state.maxNps = {
+            label: state.evolution.labels[index],
+            value: parseFloat(result.toFixed(2), 2) || 0
+          }
+        }
+      }
+      return { label: 'N/I', value: 0 };
+    }
+
+    const getMinAvgNPS = () => {
+      const arr = state.evolution.datasets.map(obj => obj.nps) || [];
+      if (arr && arr.length > 0) {
+        const result = arr.reduce((a, b) => Math.min(a,b), 100000000);
+        const index = arr.findIndex(val => val === result);
+        if (index >= 0) {
+          state.minNps = {
+            label: state.evolution.labels[index],
+            value: parseFloat(result.toFixed(2), 2) || 0
+          }
+        }
+      }
+      return { label: 'N/I', value: 0 };
+    }
+
     watch (
       changeData,
       async () => {
@@ -322,6 +418,10 @@ export default {
       clear,
       showFilters,
       exportToPDF,
+      getMaxAvgCSAT,
+      getMinAvgCSAT,
+      getMaxAvgNPS,
+      getMinAvgNPS
     }
   }
 }
@@ -468,6 +568,29 @@ export default {
                   <div class="row">
                     <LineChart class="centered" v-bind="surveysConsolidatedNPSEvolutionProps" />
                     <div class="metric-conclusion mt-3">
+                      <div class="row centered">
+                        <div class="col-12 col-md-2 m-1 centered">
+                          <i class="bi bi-star-fill blue-icon"> {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.6') }} </i>
+                        </div>
+                        <div class="col-12 col-md-4 m-1 centered">
+                          <span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.7') }}
+                              <span class="fw-bold"> {{ parseFloat((+state.calculatedSurveyMetricsYear.nps || 0).toFixed(2), 2) }} </span>.
+                          </span>
+                        </div>
+                        <div class="col-12 col-md-4 m-1 centered">
+                          <span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3') }}
+                              <i class="bi bi-arrow-up-circle-fill green-icon"> {{ state.maxNps.label }} </i>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
+                              <span class="fw-bold"> {{ state.maxNps.value }} </span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5') }}
+                              <i class="bi bi-arrow-down-circle-fill red-icon">{{ state.minNps.label }} </i>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
+                              <span class="fw-bold"> {{ state.minNps.value }} </span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -489,6 +612,29 @@ export default {
                   <div class="row">
                     <LineChart class="centered" v-bind="surveysConsolidatedCSATEvolutionProps" />
                     <div class="metric-conclusion mt-3">
+                      <div class="row centered">
+                        <div class="col-12 col-md-2 m-1 centered">
+                          <i class="bi bi-star-fill blue-icon"> {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.1') }} </i>
+                        </div>
+                        <div class="col-12 col-md-4 m-1 centered">
+                          <span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.2') }}
+                              <span class="fw-bold"> {{ parseFloat((+state.calculatedSurveyMetricsYear.avgRating || 0).toFixed(2), 2) }} </span>.
+                          </span>
+                        </div>
+                        <div class="col-12 col-md-4 m-1 centered">
+                          <span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3') }}
+                              <i class="bi bi-arrow-up-circle-fill green-icon"> {{ state.maxCsat.label }} </i>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
+                              <span class="fw-bold"> {{ state.maxCsat.value }} </span>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5') }}
+                              <i class="bi bi-arrow-down-circle-fill red-icon">{{ state.minCsat.label }} </i>
+                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
+                              <span class="fw-bold"> {{ state.minCsat.value }} </span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -554,5 +700,11 @@ export default {
   margin-bottom: .5rem;
   border-radius: .5rem;
   border: 1.5px solid var(--gris-default);
+}
+.metric-conclusion {
+  padding: .5rem;
+  margin: .5rem;
+  font-size: .8rem;
+  line-height: .9rem;
 }
 </style>

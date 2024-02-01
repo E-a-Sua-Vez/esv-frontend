@@ -114,6 +114,15 @@ export const globalStore = defineStore('globalStore', {
       }
       return business;
     },
+    async renewActualBusiness() {
+      let business = await this.getCurrentBusiness || undefined;
+      const currentUser = this.getCurrentUser;
+      if (currentUser.businessId) {
+        business = await getBusinessById(currentUser.businessId);
+        this.setCurrentBusiness(business);
+      }
+      return business;
+    },
     async getAvailableCommerces(commercesIn) {
       let commerces = undefined;
       const currentUser = await this.getCurrentUser;

@@ -771,6 +771,15 @@
           "2": "Neste período o horário do dia com maior atenção foi",
           "3": "com",
           "4": "atenções."
+        },
+        "surveys-consolidated-csat-evolution": {
+          "1": "CSAT",
+          "2": "Neste período teu CSAT tem um promédio de",
+          "3": "O mês com melhor desempenho é ",
+          "4": " com ",
+          "5": " o pior mês é ",
+          "6": "NPS",
+          "7": "Neste período teu NPS tem um promédio de"
         }
       }
     },
