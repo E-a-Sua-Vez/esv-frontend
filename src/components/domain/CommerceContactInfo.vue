@@ -48,7 +48,7 @@ export default {
         <div class="row col-11 col-md-12 justify-content-center">
           <div class="col-4" v-if="commerce.serviceInfo">
             <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill"
+              class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
               data-bs-toggle="collapse"
               href="#service-info">
               {{ $t("commerceQRSetup.services") }} <br> <i class="bi bi-info-circle"></i>
@@ -56,7 +56,7 @@ export default {
           </div>
           <div class="col-4" v-if="commerce.contactInfo && commerce.contactInfo.phone">
             <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill"
+              class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
               data-bs-toggle="collapse"
               href="#contact-info">
               {{ $t("commerceQRSetup.contact") }} <br> <i class="bi bi-telephone-fill"></i>
@@ -64,7 +64,7 @@ export default {
           </div>
           <div class="col-4" v-if="commerce.localeInfo && commerce.localeInfo.address">
             <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill"
+              class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
               data-bs-toggle="collapse"
               href="#map-info">
               {{ $t("commerceQRSetup.location") }} <br> <i class="bi bi-pin-map"></i>

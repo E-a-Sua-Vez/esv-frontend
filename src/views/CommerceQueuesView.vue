@@ -1,9 +1,10 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
 import { createAttention } from '../application/services/attention';
+import { createBooking } from '../application/services/booking';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
@@ -29,6 +30,16 @@ export default {
 
     let loading = ref(false);
     let alertError = ref('');
+    let dateMask = ref({
+      modelValue: 'YYYY-MM-DD',
+    });
+    let disabledDates = ref([
+      {
+        repeat: {
+          weekdays: [],
+        }
+      }
+    ]);
 
     const state = reactive({
       commerce: {},
@@ -46,6 +57,9 @@ export default {
       emailError: false,
       idNumberError: false,
       accept: false,
+      date: undefined,
+      locale: 'es',
+      minDate: (new Date()).setDate(new Date().getDate() + 1),
       phoneCodes: [
         { id: 've', label: '🇻🇪', code: '58' },
         { id: 'br', label: '🇧🇷', code: '55' },
@@ -60,6 +74,7 @@ export default {
         loading.value = true;
         if (keyName) {
           state.commerce = await getCommerceByKeyName(keyName);
+          state.locale = state.commerce.localeInfo.language;
           store.setCurrentCommerce(state.commerce);
           if (queueId) {
             state.queue = await getQueueById(queueId);
@@ -150,11 +165,11 @@ export default {
       return active;
     };
 
-    const getDataActive = (commerce, name) => {
+    const getDataActive = (commerce, name, type) => {
       let active = false;
       let features = [];
       if (commerce !== undefined && commerce.features.length > 0) {
-        features = commerce.features.filter(feature => feature.type === 'USER' && feature.name === name);
+        features = commerce.features.filter(feature => feature.type === type && feature.name === name);
         if (features.length > 0) {
           return features[0].active;
         }
@@ -164,13 +179,12 @@ export default {
 
     const showConditions = () => {
       if(
-        getDataActive(state.commerce, 'attention-user-name') ||
-        getDataActive(state.commerce, 'attention-user-lastName') ||
-        getDataActive(state.commerce, 'attention-user-idNumber') ||
-        getDataActive(state.commerce, 'attention-user-phone') ||
-        getDataActive(state.commerce, 'attention-user-email')
+        getDataActive(state.commerce, 'attention-user-name', 'USER') ||
+        getDataActive(state.commerce, 'attention-user-lastName', 'USER') ||
+        getDataActive(state.commerce, 'attention-user-idNumber', 'USER') ||
+        getDataActive(state.commerce, 'attention-user-phone', 'USER') ||
+        getDataActive(state.commerce, 'attention-user-email', 'USER')
       ) {
-        //state.accept = true;
         return true;
       }
       state.accept = false;
@@ -179,7 +193,7 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      if (getDataActive(state.commerce, 'attention-user-name')) {
+      if (getDataActive(state.commerce, 'attention-user-name', 'USER')) {
         if(!user.name || user.name.length === 0) {
           state.nameError = true;
           state.errorsAdd.push('commerceQueuesView.validate.name');
@@ -187,7 +201,7 @@ export default {
           state.nameError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-lastName')) {
+      if (getDataActive(state.commerce, 'attention-user-lastName', 'USER')) {
         if(!user.lastName || user.lastName.length === 0) {
           state.lastNameError = true;
           state.errorsAdd.push('commerceQueuesView.validate.lastName');
@@ -195,7 +209,7 @@ export default {
           state.lastNameError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-idNumber')) {
+      if (getDataActive(state.commerce, 'attention-user-idNumber', 'USER')) {
         if(!user.idNumber || user.idNumber.length === 0) {
           state.idNumberError = true;
           state.errorsAdd.push('commerceQueuesView.validate.idNumber');
@@ -203,7 +217,7 @@ export default {
           state.idNumberError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-phone')) {
+      if (getDataActive(state.commerce, 'attention-user-phone', 'USER')) {
         if(!state.phoneCode || state.phoneCode.length === 0) {
           state.phoneCodeError = true;
           state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
@@ -221,7 +235,7 @@ export default {
           state.phoneError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-email')) {
+      if (getDataActive(state.commerce, 'attention-user-email', 'USER')) {
         if(!user.email || user.email.length === 0 || !validateEmail(user.email)) {
           state.emailError = true;
           state.errorsAdd.push('commerceQueuesView.validate.email');
@@ -261,8 +275,47 @@ export default {
       }
     };
 
+    const getBooking = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        if (validate(state.newUser)) {
+          state.currentChannel = await store.getCurrentAttentionChannel;
+          let newUser = undefined;
+          if (isDataActive(state.commerce)) {
+            newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+          }
+          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date) }
+          const booking = await createBooking(body);
+          router.push({ path: `/interno/booking/${booking.id}` });
+        }
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+        alertError.value = error.message;
+      }
+    };
+
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
+      if (state.queue.id) {
+        let disabled = [1, 2, 3, 4, 5, 6, 7];
+        if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+          const availableDays = state.queue.serviceInfo.attentionDays;
+          if (availableDays.length < 7) {
+            const forDeletion = [];
+            availableDays.forEach(day => {
+              if (day === 7) {
+                forDeletion.push(1);
+              } else {
+                forDeletion.push(7 - day);
+              }
+            })
+            disabled = disabled.filter(item => !forDeletion.includes(item));
+            disabledDates.value[0].repeat.weekdays.push(...disabled);
+          }
+        }
+      }
       if (captchaEnabled) {
        await validateCaptchaOk(true);
       }
@@ -279,9 +332,23 @@ export default {
     const validateCaptchaOk = async (response) => {
       if(response) {
         captcha = true;
-        await getAttention(state.queue);
+        if (!getDataActive(state.commerce, 'booking-active', 'PRODUCT')) {
+          await getAttention();
+        }
       }
     };
+
+    const setDate = (date) => {
+      if (state.queue.id) {
+        state.date = date;
+      }
+    }
+
+    const formattedDate = (date) => {
+      if (date) {
+        return new Date(date).toISOString().slice(0,10);
+      }
+    }
 
     const validateCaptchaError = () => {
       captcha = false;
@@ -298,6 +365,9 @@ export default {
       keyName,
       loading,
       alertError,
+      dateMask,
+      disabledDates,
+      formattedDate,
       isDataActive,
       getDataActive,
       isActiveCommerce,
@@ -308,7 +378,9 @@ export default {
       getAttention,
       validateCaptchaOk,
       validateCaptchaError,
-      showConditions
+      showConditions,
+      setDate,
+      getBooking
     }
   }
 }
@@ -332,7 +404,7 @@ export default {
             </div>
             <div class="row g-1">
               <div class="col col-md-10 offset-md-1 data-card">
-                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-name')">
+                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-name', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-name-input-add"
@@ -344,7 +416,7 @@ export default {
                       <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
                   </div>
                 </div>
-                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-lastName')">
+                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-lastName', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-lastname-input-add"
@@ -356,7 +428,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
                   </div>
                 </div>
-                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-idNumber')">
+                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-idNumber', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-idnumber-input-add"
@@ -369,7 +441,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
                   </div>
                 </div>
-                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-email')">
+                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-email', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-email-input-add"
@@ -381,7 +453,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
                   </div>
                 </div>
-                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-phone')">
+                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-phone', 'USER')">
                   <div class="col-3 form-floating">
                     <select
                       class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
@@ -437,7 +509,8 @@ export default {
                     <button
                       v-if="queue.active"
                       type="button"
-                      class=" btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                      class="btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1 mb-2"
+                      :class="queue.id === state.queue.id ? 'btn-primary': 'btn-dark'"
                       @click="getQueue(queue)"
                       :disabled="!state.accept">
                       {{ queue.name }}
@@ -448,7 +521,8 @@ export default {
                   <button
                     v-if="queue.active"
                     type="button"
-                    class=" btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1 mb-2"
+                    :class="queue.id === state.queue.id ? 'btn-primary': 'btn-dark'"
                     @click="getQueue(queue)"
                     :disabled="!state.accept">
                     {{ queue.name }}
@@ -463,6 +537,53 @@ export default {
               </Message>
               <div class="col">
                 <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessSectionAtWorkView.return") }} <i class="bi bi-arrow-left"></i></a>
+              </div>
+            </div>
+          </div>
+          <div id="date" v-if="getDataActive(state.commerce, 'booking-active', 'PRODUCT')">
+            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
+              <span> {{ $t("commerceQueuesView.when") }} </span>
+            </div>
+            <div class="row g-1" v-if="isActiveQueues(state.commerce)">
+              <div >
+                <button
+                  type="button"
+                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                  @click="setDate('TODAY')"
+                  :disabled="!state.accept || !state.queue.id"
+                  >
+                  {{ $t("commerceQueuesView.today") }}
+                </button>
+                <button
+                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                  data-bs-toggle="collapse"
+                  href="#booking-date"
+                  :disabled="!state.accept || !state.queue.id">
+                  {{ $t("commerceQueuesView.selectDay") }} <i class="bi bi-chevron-down"></i>
+                </button>
+                <div :class="'collapse'" id="booking-date">
+                  <div class="mx-4">
+                    <VDatePicker
+                      :locale="state.locale"
+                      v-model.string="state.date"
+                      :mask="dateMask"
+                      :min-date="state.minDate"
+                      :disabled-dates="disabledDates"
+                      />
+                      <div v-if="state.date" class="choose-attention py-1 mb-3">
+                        <div><span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
+                        <div class="badge rounded-pill bg-secondary py-2 px-4"><span> {{ formattedDate(state.date) }} </span></div>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2"
+                        @click="getBooking()"
+                        :disabled="!state.accept || !state.queue.id || !state.date"
+                        >
+                        {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                      </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@
   "upgrade": "Faça Upgrade do seu plano para obter mais benefícios.",
   "searcher": "Pesquisar",
   "noResults": "😓 Sem Resultados",
-  "sureAction": "Você tem certeza de realizar esta ação",
+  "sureAction": "Você tem certeza de realizar esta ação?",
   "logoValues": "/images/es_tu_turno_values_br.png",
   "logoValuesAlt": "E a sua vez",
   "close": "Fechar",
@@ -143,6 +143,18 @@
     "email-monthly-commerce-statistics": {
       "title": "Email Statisticas Mensais",
       "description": "Email pra enviar statisticas mensais"
+    },
+    "booking-active": {
+      "title": "Reserva Turno",
+      "description": "Ativa a funçao de Reserva no comércio"
+    },
+    "email-booking": {
+      "title": "Email Reserva",
+      "description": "Email para notificar a reserva do cliente"
+    },
+    "whatsapp-booking": {
+      "title": "Whatsapp Reserva",
+      "description": "Mensaje para notificar a reserva do cliente"
     }
   },
   "paymentMethods": {
@@ -205,6 +217,11 @@
     "phone": "Celular/Telefone",
     "phoneCode": "Pais",
     "email": "Email",
+    "today": "Hoje",
+    "when": "Quando você quer ser atendido?",
+    "selectDay": "Selecionar Data",
+    "daySelected": "Data Selecionada:",
+    "confirm": "Confirmar",
     "message": {
       "title": "Oh não!",
       "content": "Neste momento não há Filas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
@@ -289,6 +306,7 @@
     "attendedBy": "Você será atendido por:",
     "module": "Único",
     "collaborator": "N/A",
+
     "message": {
       "1": {
         "title": "Você chegou tarde!",
@@ -322,6 +340,62 @@
       },
       "5": {
         "action": "Voltar as Filas"
+      },
+      "6": {
+        "title": {
+          "1": " Ative  sino! ",
+          "2": " Sino ativo! ",
+          "3": "Você ouvirá um som quando for a sua vez. Verifique também o volume do seu dispositivo.",
+          "4": "Como soa?"
+        }
+      },
+      "7": {
+        "action": "Quero receber minha vez por e-mail"
+      }
+    }
+  },
+  "userQueueBooking": {
+    "hello": "Olá!",
+    "yourNumber": "Seu número de reserva é:",
+    "thanks": "Obrigado por escolher-nos.",
+    "toGoal": {
+      "1": "Pessoas na sua frente",
+      "2": "pessoas na sua frente."
+    },
+    "cancel": "Cancelar Reserva",
+    "estimatedTime": "Tempo estimado",
+    "estimatedTimeInit": "01:00",
+    "important": "Importante:",
+    "shouldCome": "Você deve comparecer no dia:",
+    "operationStart": "A operação comercial começa às:",
+    "commerceDetails": "Veja mais detalhes do comércio:",
+    "cancelledTitle": "Esta reserva foi",
+    "cancelled": "Cancelada",
+    "newBooking": "Pode solicitar uma nova:",
+    "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar, pois as pessoas à sua frente podem cancelar a reserva. Recomendamos que consulte esta página antes e no dia da sua reserva.",
+    "actions": {
+      "1": {
+        "title": {
+          "1": "Você não quer esperar, certo?",
+          "2": "Ir dar uma volta:"
+        },
+        "action": "Avise-me quando chegar a minha vez"
+      },
+      "2": {
+        "title": {
+          "1": "Faça uma captura de tela caso seu navegador feche e você esqueça seu número.",
+          "2": "Não esqueça!"
+        },
+        "action": "Salva uma captura!"
+      },
+      "3": {
+        "action": "Salvar"
+      },
+      "4": {
+        "action": "Vá para o nosso site"
+      },
+      "5": {
+        "action": "Ir as Filas"
       },
       "6": {
         "title": {

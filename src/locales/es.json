@@ -144,6 +144,18 @@
     "email-monthly-commerce-statistics": {
       "title": "Email Estadisticas Mensuales",
       "description": "Email para enviar notificación de estadísticas mensuales"
+    },
+    "booking-active": {
+      "title": "Reserva Turno",
+      "description": "Activa la funcion de Reservas en el comercio"
+    },
+    "email-booking": {
+      "title": "Email Reserva",
+      "description": "Email que avisa al cliente su Reserva"
+    },
+    "whatsapp-booking": {
+      "title": "Whatsapp Reserva",
+      "description": "Mensaje que avisa al cliente su Reserva"
     }
   },
   "paymentMethods": {
@@ -206,6 +218,11 @@
     "phone": "Celular/Teléfono",
     "phoneCode": "País",
     "email": "Email",
+    "today": "Hoy",
+    "when": "Cuando quieres ser atendido?",
+    "selectDay": "Seleccionar Fecha",
+    "daySelected": "Día Seleccionado:",
+    "confirm": "Confirmar",
     "message": {
       "title": "¡Ups!",
       "content": "En este momento no hay filas de atención. Por favor acércate a algún colaborador para solicitar ayuda."
@@ -331,6 +348,54 @@
           "3": "Escucharás un sonido cuando sea tu Turno. Verifica el volumen de tu dispositivo.",
           "4": " ¿Cómo suena? "
         }
+      },
+      "7": {
+        "action": "Quiero recibir mi turno vía Email"
+      }
+    }
+  },
+  "userQueueBooking": {
+    "hello": "¡Hola!",
+    "thanks": "Gracias por preferir nuestro servicio.",
+    "yourNumber": "Tu número de reserva es:",
+    "toGoal": {
+      "1": "Personas delante de ti",
+      "2": "personas delante de ti."
+    },
+    "cancel": "Cancelar Reserva",
+    "estimatedTime": "Tiempo estimado",
+    "estimatedTimeInit": "00:01",
+    "important": "Importante:",
+    "shouldCome": "Deberás presentarte el día:",
+    "operationStart": "La operación del comercio comienza a las:",
+    "commerceDetails": "Ve más detalles del Comercio:",
+    "cancelledTitle": "Esta reserva fue",
+    "cancelled": "Cancelada",
+    "newBooking": "Puedes solicitar una nueva reserva:",
+    "advice": "* RECUERDA: Las personas que tienes por delante y el tiempo estimado pueden variar ya que personas delante de ti pueden cancelar su reserva. Te recomendamos consultar esta página antes y el día de tu reserva.",
+    "actions": {
+      "1": {
+        "title": {
+          "1": "¿No quieres esperar?",
+          "2": "Ve a dar una vuelta:"
+        },
+        "action": "Notifica cuando llegue mi turno"
+      },
+      "2": {
+        "title": {
+          "1": "Haz una captura de pantalla por si se cierra tu navegador y olvidas tu número.",
+          "2": "¡No olvides!"
+        },
+        "action": "Guarda una captura"
+      },
+      "3": {
+        "action": "Enviar"
+      },
+      "4": {
+        "action": "Ir a nuestra web"
+      },
+      "5": {
+        "action": "Ir a las filas"
       },
       "7": {
         "action": "Quiero recibir mi turno vía Email"
@@ -2055,6 +2120,9 @@
     "user": {
       "notification": {
         "add": "Agregar notificación - Atención de Usuario"
+      },
+      "bookings": {
+        "cancel": "Cancelar Reserva - Reservas"
       }
     },
     "plans": {

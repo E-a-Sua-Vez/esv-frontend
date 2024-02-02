@@ -19,6 +19,7 @@
   "logout": "Logout",
   "capacities": "What I'm able to do?",
   "upgrade": "Upgrade your plan to get more benefits.",
+  "sureAction": "Are you sure you want to complete this action?",
   "logoValues": "/images/es_tu_turno_values.png",
   "logoValuesAlt": "It's your turn",
   "searcher": "Search",
@@ -142,6 +143,18 @@
     "email-monthly-commerce-statistics": {
       "title": "Email Monthly Statistics",
       "description": "Email to notify monthly statistics"
+    },
+    "booking-active": {
+      "title": "Booking Turn",
+      "description": "Active the Booking function"
+    },
+    "email-booking": {
+      "title": "Email Booking",
+      "description": "Email to notify the client's Booking"
+    },
+    "whatsapp-booking": {
+      "title": "Whatsapp Booking",
+      "description": "Message to notify the client's Booking"
     }
   },
   "paymentMethods": {
@@ -204,6 +217,11 @@
     "phone": "Cellphone/Phone",
     "phoneCode": "Country",
     "email": "Email",
+    "today": "Today",
+    "when": "When you want to be attended?",
+    "selectDay": "Select Date",
+    "daySelected": "Date Selected:",
+    "confirm": "Confirm",
     "message": {
       "title": "Oh no!",
       "content": "At this time there are no service queues. Please approach a collaborator to request help."
@@ -321,6 +339,62 @@
       },
       "5": {
         "action": "Back to queues"
+      },
+      "6": {
+        "title": {
+          "1": " Turn on the bell! ",
+          "2": " Bell active! ",
+          "3": "You will hear a sound when it's your turn. Check the volume of your device.",
+          "4": "How it sounds?"
+        }
+      },
+      "7": {
+        "action": "I want to receive my turn via Email"
+      }
+    }
+  },
+  "userQueueBooking": {
+    "hello": "Hello!",
+    "thanks": "Thanks for prefer us.",
+    "yourNumber": "Your booking number is:",
+    "toGoal": {
+      "1": "People in front of you",
+      "2": "people in front of you."
+    },
+    "cancel": "Cancel Booking",
+    "estimatedTime": "Estimated Time",
+    "estimatedTimeInit": "01:00",
+    "important": "Important:",
+    "shouldCome": "You should come on:",
+    "operationStart": "The operation starts at:",
+    "commerceDetails": "See more commerce's details:",
+    "cancelledTitle": "This booking was",
+    "cancelled": "Cancelled",
+    "newBooking": "You can request a new one:",
+    "advice": "* REMEMBER: The people in front of you and the estimated time may vary since people in front of you can cancel their reservation. We recommend that you consult this page before and on the day of your reservation.",
+    "actions": {
+      "1": {
+        "title": {
+          "1": "You don't want to wait, do you?",
+          "2": "Go for a walk:"
+        },
+        "action": "Notify me when my turn comes"
+      },
+      "2": {
+        "title": {
+          "1": "Take a screenshot in case your browser closes and you forget your number.",
+          "2": "Don't forget!"
+        },
+        "action": "Save a screenshot"
+      },
+      "3": {
+        "action": "Save"
+      },
+      "4": {
+        "action": "Go to our website"
+      },
+      "5": {
+        "action": "Go to queues"
       },
       "6": {
         "title": {

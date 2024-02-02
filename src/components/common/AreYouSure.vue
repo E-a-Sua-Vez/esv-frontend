@@ -22,7 +22,7 @@ export default {
 
 <template>
   <div>
-    <div class="question-card g-1 mt-3 p-2" id="sure" v-if="show">
+    <div class="question-card g-1 mt-2 p-2 mx-2" id="sure" v-if="show">
       <div class="text-label">
         {{ $t("sureAction") }}
       </div>
@@ -46,8 +46,9 @@ export default {
 
 <style scoped>
 .question-card {
+  font-size: .9rem;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
   line-height: 1rem;
 }
 </style>
