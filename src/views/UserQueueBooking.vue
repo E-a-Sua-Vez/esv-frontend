@@ -71,7 +71,7 @@ export default {
     }
 
     const getBeforeYou = () => {
-      const beforeYou = state.booking.beforeYou || state.booking.number - 1;
+      const beforeYou = state.booking.beforeYou;
       return beforeYou;
     }
 
