@@ -237,7 +237,7 @@ export default {
                     class="booking-notification-title">
                     {{ $t("userQueueBooking.commerceDetails") }}
                   </div>
-                  <div class="centered">
+                  <div class="centered mb-2">
                     <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
                   </div>
                 </div>
@@ -248,14 +248,14 @@ export default {
                 type="button"
                 class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mt-2 mb-2"
                 @click="goToCancel()"
-                :disabled="!state.toggles['user.bookings.cancel'] || bookingCancelled()"
+                :disabled="bookingCancelled()"
                 >
                 {{ $t("userQueueBooking.cancel") }}
               </button>
               <AreYouSure
                 :show="state.goToCancel"
-                :yesDisabled="state.toggles['user.bookings.cancel']"
-                :noDisabled="state.toggles['user.bookings.cancel']"
+                :yesDisabled="!bookingCancelled()"
+                :noDisabled="!bookingCancelled()"
                 @actionYes="cancellingBooking()"
                 @actionNo="cancelCancel()"
               >
