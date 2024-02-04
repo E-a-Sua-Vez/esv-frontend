@@ -307,6 +307,7 @@
     "attendedBy": "Serás atendido por:",
     "module": "Único",
     "collaborator": "N/A",
+    "cancel": "Cancelar Atención",
     "message": {
       "1": {
         "title": "¡Llegaste tarde!",
@@ -315,6 +316,10 @@
       "2": {
         "title": "¡Recuerda calificarnos!",
         "content": "Al finalizar tu turno, podrás calificar la atención en esta pantalla."
+      },
+      "3": {
+        "title": "¡Cancelado!",
+        "content": "Tu atención fue cancelada. Si deseas puedes solicitar o reservar una nueva atención."
       }
     },
     "actions": {
@@ -373,6 +378,12 @@
     "cancelled": "Cancelada",
     "newBooking": "Puedes solicitar una nueva reserva:",
     "advice": "* RECUERDA: Las personas que tienes por delante y el tiempo estimado pueden variar ya que personas delante de ti pueden cancelar su reserva. Te recomendamos consultar esta página antes y el día de tu reserva.",
+    "message": {
+      "1": {
+        "title": "¡Cancelado!",
+        "content": "Tu reserva fue cancelada. Si deseas puedes solicitar una nueva reserva."
+      }
+    },
     "actions": {
       "1": {
         "title": {
@@ -444,6 +455,7 @@
     "hello": "¡Hola!",
     "hello-user": "¡Hola",
     "yourNumber": "Estás procesando la atención número:",
+    "numberCancelled": "El número fue Cancelado:",
     "toGoal": {
       "1": "Hay",
       "2": "personas esperando atención."
@@ -480,6 +492,10 @@
       "4": {
         "title": "¡No tan rápido!",
         "content": "Aún no puedes atender este turno. Vuelve a la fila para atender los turnos en orden de llegada."
+      },
+      "5": {
+        "title": "¡Cancelado!",
+        "content": "La atención fue cancelada. Vuelve a la fila para atender el próximo número."
       }
     },
     "capacitiesList": {
@@ -546,6 +562,7 @@
       "1": "Hay",
       "2": "personas esperando."
     },
+    "numberCancelled": "El próximo número fue Cancelado:",
     "actions": {
       "1": {
         "title": {
@@ -561,6 +578,9 @@
       },
       "3": {
         "action": "Volver a las filas"
+      },
+      "4": {
+        "action": "Ir al próximo"
       }
     },
     "message": {

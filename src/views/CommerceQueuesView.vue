@@ -258,6 +258,7 @@ export default {
       try {
         loading.value = true;
         alertError.value = '';
+        state.date = undefined;
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
           let newUser = undefined;
@@ -345,7 +346,7 @@ export default {
     }
 
     const formattedDate = (date) => {
-      if (date) {
+      if (date && date !== 'TODAY') {
         return new Date(date).toISOString().slice(0,10);
       }
     }
@@ -357,6 +358,21 @@ export default {
     const goBack = () => {
       router.back()
     }
+
+    const changeDate = computed(() => {
+      const { date } = state;
+      return {
+        date
+      }
+    })
+
+    watch (
+      changeDate,
+      async () => {
+        if (state.date === 'TODAY')
+        await getAttention();
+      }
+    )
 
     return {
       state,
@@ -540,7 +556,7 @@ export default {
               </div>
             </div>
           </div>
-          <div id="date" v-if="getDataActive(state.commerce, 'booking-active', 'PRODUCT')">
+          <div id="date" v-if="getDataActive(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
               <span> {{ $t("commerceQueuesView.when") }} </span>
             </div>
@@ -569,19 +585,19 @@ export default {
                       :mask="dateMask"
                       :min-date="state.minDate"
                       :disabled-dates="disabledDates"
-                      />
-                      <div v-if="state.date" class="choose-attention py-1 mb-3">
-                        <div><span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
-                        <div class="badge rounded-pill bg-secondary py-2 px-4"><span> {{ formattedDate(state.date) }} </span></div>
-                      </div>
-                      <button
-                        type="button"
-                        class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2"
-                        @click="getBooking()"
-                        :disabled="!state.accept || !state.queue.id || !state.date"
-                        >
-                        {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
-                      </button>
+                    />
+                    <div v-if="state.date" class="choose-attention py-1">
+                      <div><span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
+                      <div class="badge rounded-pill bg-secondary py-2 px-4"><span> {{ formattedDate(state.date) }} </span></div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                      @click="getBooking()"
+                      :disabled="!state.accept || !state.queue.id || !state.date"
+                      >
+                      {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                    </button>
                   </div>
                 </div>
               </div>

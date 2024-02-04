@@ -1,7 +1,7 @@
 <script>
 import { ref, watch, reactive, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
-import { getAttentionDetails } from '../application/services/attention';
+import { getAttentionDetails, cancelAttention } from '../application/services/attention';
 import { getCommerceById } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
 import { getUserById } from '../application/services/user';
@@ -22,10 +22,12 @@ import ClientEmailNotifyData from '../components/domain/ClientEmailNotifyData.vu
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import { useI18n } from 'vue-i18n';
+import AreYouSure from '../components/common/AreYouSure.vue';
 
 export default {
   name: 'UserQueueAttention',
   components: {
+    AreYouSure,
     PoweredBy,
     QR,
     CommerceLogo,
@@ -59,6 +61,7 @@ export default {
       estimatedTime: ref("00:01"),
       soundEnabled: false,
       soundPlayed: false,
+      goToCancel: false,
       toggles: {}
     });
 
@@ -170,8 +173,14 @@ export default {
       return (state.attention.status === 'TERMINATED' || state.attention.status === 'RATED')
         && state.attention.surveyId !== undefined;
     }
+    const youWereReserveCancelled = () => {
+      return state.attention.status === 'TERMINATED_RESERVE_CANCELLED';
+    }
     const youWereSkipped = () => {
       return state.attention.status === 'CANCELLED';
+    }
+    const youWereAttentionCancelled = () => {
+      return state.attention.status === 'USER_CANCELLED';
     }
     const getCreatedAt = (createdAt, timeZoneIn) => {
       const dateCorrected = new Date(
@@ -211,6 +220,30 @@ export default {
       const name = state.collaborator.alias || state.collaborator.name;
       return name ? name.split(' ')[0] : t('userQueueAttention.collaborator');
     }
+    const attentionCancelled = () => {
+      return state.attention.status === 'RESERVE_CANCELLED';
+    }
+    const goToCancel = () => {
+      state.goToCancel = !state.goToCancel;
+    }
+    const cancelCancel = () => {
+      state.goToCancel = false;
+    }
+    const cancellingAttention = async () => {
+      try {
+        loading.value = true;
+        if (state.attention.status === "PENDING") {
+          await cancelAttention(state.attention.id);
+          //await getBookingDetailsFromService(state.booking.id);
+          state.goToCancel = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    }
 
     watch(
       [ attentions, queues ],
@@ -231,6 +264,10 @@ export default {
       state,
       loading,
       alertError,
+      goToCancel,
+      cancelCancel,
+      cancellingAttention,
+      attentionCancelled,
       notify,
       getQRValue,
       createdUser,
@@ -238,12 +275,14 @@ export default {
       youWereAttended,
       youFullfilledSurvey,
       youWereSkipped,
+      youWereAttentionCancelled,
       backToCommerceQueues,
       getCreatedAt,
       play,
       attentionActive,
       testSound,
-      collaboratorName
+      collaboratorName,
+      youWereReserveCancelled
     }
   }
 
@@ -323,6 +362,29 @@ export default {
           <Message
             :title="$t('userQueueAttention.message.1.title')"
             :content="$t('userQueueAttention.message.1.content')"
+            :icon="'bi bi-emoji-dizzy'">
+          </Message>
+          <div class="mt-3">
+            <a
+              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+              @click="backToCommerceQueues()">
+              {{ $t("userQueueAttention.actions.5.action") }} <i class="bi bi-arrow-left"></i>
+            </a>
+          </div>
+        </div>
+        <div v-else-if="youWereAttentionCancelled() || youWereReserveCancelled()">
+          <div class="your-attention">
+            <span>{{ $t("userQueueAttention.yourNumber") }}</span>
+          </div>
+          <AttentionNumber
+            :number="state.attention.number"
+            :type="'secondary'"
+            :data="state.user"
+          >
+          </AttentionNumber>
+          <Message
+            :title="$t('userQueueAttention.message.3.title')"
+            :content="$t('userQueueAttention.message.3.content')"
             :icon="'bi bi-emoji-dizzy'">
           </Message>
           <div class="mt-3">
@@ -443,6 +505,24 @@ export default {
                 :commerce="state.commerce"
                 @createdUser="createdUser($event)" />
             </div>
+          </div>
+          <div id="cancel-process" class="mb-3" v-if="!itsYourTurn()">
+            <button
+              type="button"
+              class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mb-1"
+              @click="goToCancel()"
+              :disabled="attentionCancelled()"
+              >
+              {{ $t("userQueueAttention.cancel") }}
+            </button>
+            <AreYouSure
+              :show="state.goToCancel"
+              :yesDisabled="!attentionCancelled()"
+              :noDisabled="!attentionCancelled()"
+              @actionYes="cancellingAttention()"
+              @actionNo="cancelCancel()"
+            >
+            </AreYouSure>
           </div>
           <div id="QR-control">
             <div class="your-attention">

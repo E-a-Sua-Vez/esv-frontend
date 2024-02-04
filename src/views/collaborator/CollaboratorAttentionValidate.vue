@@ -205,6 +205,21 @@ export default {
             :icon="'bi bi-emoji-sunglasses'">
           </Message>
         </div>
+        <div v-if="state.attention.status === 'USER_CANCELLED' || state.attention.status === 'TERMINATED_RESERVE_CANCELLED'">
+          <div class="your-attention mt-2">
+            <span>{{ $t("collaboratorAttentionValidate.yourNumber") }}</span>
+          </div>
+          <AttentionNumber
+            :type="'secondary'"
+            :number="state.attention.number"
+            :data="state.user"
+          ></AttentionNumber>
+          <Message
+            :title="$t('collaboratorAttentionValidate.message.5.title')"
+            :content="$t('collaboratorAttentionValidate.message.5.content')"
+            :icon="'bi bi-emoji-expressionless'">
+          </Message>
+        </div>
         <div class="d-grid gap-2 my-2">
           <button
             class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"

@@ -102,7 +102,7 @@ export default {
       router.push({ path: `/interno/comercio/${state.commerce.keyName}` })
     }
     const bookingCancelled = () => {
-      return state.booking.status === 'CANCELLED';
+      return state.booking.status === 'RESERVE_CANCELLED';
     }
     const goToCancel = () => {
       state.goToCancel = !state.goToCancel;
@@ -161,42 +161,42 @@ export default {
           </div>
         </div>
         <div id="booking">
-          <div v-if="bookingCancelled()" class="your-booking mt-2">
-            <span>{{ $t("userQueueBooking.cancelledTitle") }} <strong>{{ $t("userQueueBooking.cancelled") }}</strong></span>
-          </div>
-          <div v-else class="your-booking mt-2">
-            <span>{{ $t("userQueueBooking.yourNumber") }}</span>
-          </div>
-          <div v-if="bookingCancelled()">
+          <div id="booking-cancelled" v-if="bookingCancelled()">
+            <div class="your-booking mt-2">
+              <span>{{ $t("userQueueBooking.cancelledTitle") }} <strong>{{ $t("userQueueBooking.cancelled") }}</strong></span>
+            </div>
             <AttentionNumber
               :number="state.booking.number"
               :type="'secondary'"
               :data="state.booking.user"
             >
             </AttentionNumber>
+            <Message
+              :title="$t('userQueueBooking.message.1.title')"
+              :content="$t('userQueueBooking.message.1.content')"
+              :icon="'bi bi-emoji-dizzy'">
+            </Message>
             <div class="to-goal">
-              <div class="booking-details-sound mt-2">
-                <div class="">
-                  <div class="booking-notification-title">
-                    {{ $t("userQueueBooking.newBooking") }}
-                    <div class="mt-3">
-                      <button
-                        class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                        @click="backToCommerceQueues()">
-                        {{ $t("userQueueBooking.actions.5.action") }} <i class="bi bi-arrow-left"></i>
-                      </button>
-                    </div>
-                  </div>
+              <div class="mt-2">
+                <div class="mt-2">
+                  <button
+                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                    @click="backToCommerceQueues()">
+                    {{ $t("userQueueBooking.actions.5.action") }} <i class="bi bi-arrow-left"></i>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-          <div v-else>
+          <div id="booking active" v-else>
+            <div class="your-booking mt-2">
+              <span class="fw-bold">{{ $t("userQueueBooking.yourNumber") }}</span>
+            </div>
             <AttentionNumber
               :number="state.booking.number"
               :data="state.booking.user"
             ></AttentionNumber>
-            <div class="to-goal">
+            <div id="booking-data" class="to-goal">
               <div class="booking-details-container">
                 <div class="col-6 booking-details-card">
                   <span class="booking-details-title"> {{ $t("userQueueBooking.toGoal.1") }}* </span><br>
@@ -208,7 +208,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="to-goal">
+            <div id="booking-important" class="to-goal">
               <div class="booking-details-sound mt-2">
                 <div class="">
                   <div class="booking-notification-content">
@@ -243,10 +243,10 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="to-goal">
+            <div id="cancel-process" class="to-goal">
               <button
                 type="button"
-                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mt-2 mb-2"
+                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mt-2 mb-1"
                 @click="goToCancel()"
                 :disabled="bookingCancelled()"
                 >

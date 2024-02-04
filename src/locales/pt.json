@@ -305,16 +305,20 @@
     "getClose": "Acesse o módulo:",
     "attendedBy": "Você será atendido por:",
     "module": "Único",
+    "cancel": "Cancelar Atenção",
     "collaborator": "N/A",
-
     "message": {
       "1": {
         "title": "Você chegou tarde!",
-        "content": "Seu atenção foi ignorada. Por favor solicite um novo número de atenção ou diga a um colaborador."
+        "content": "Seu atenção foi ignorada. Por favor solicite um novo número de atenção ou fale com um colaborador."
       },
       "2": {
         "title": "Não se esqueça de nos qualificar!",
         "content": "Ao final da sua vez, poderá qualificar a atenção nesta tela."
+      },
+      "3": {
+        "title": "Cancelado!",
+        "content": "Seu atenção foi cancelada. Por favor solicite ou reserve um novo número de atenção."
       }
     },
     "actions": {
@@ -373,6 +377,12 @@
     "cancelled": "Cancelada",
     "newBooking": "Pode solicitar uma nova:",
     "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar, pois as pessoas à sua frente podem cancelar a reserva. Recomendamos que consulte esta página antes e no dia da sua reserva.",
+    "message": {
+      "1": {
+        "title": "Cancelado!",
+        "content": "Sea reserva foi cancelada. Por favor solicite uma nova reserva."
+      }
+    },
     "actions": {
       "1": {
         "title": {
@@ -452,6 +462,7 @@
     "hello": "Olá!",
     "hello-user": "Olá",
     "yourNumber": "Você está processando o número de atenção:",
+    "numberCancelled": "O número foi Cancelado:",
     "toGoal": {
       "1": "Há",
       "2": "pessoas esperando."
@@ -487,7 +498,11 @@
       },
       "4": {
         "title": "Não tao rápido!",
-        "content": "Você ainda não pode atender este turno. Retorneas Filas para atender os turnos por ordem de chegada."
+        "content": "Você ainda não pode atender este turno. Retorne as Filas para atender os turnos por ordem de chegada."
+      },
+      "5": {
+        "title": "Cancelado!",
+        "content": "O número de atenção foi cancelado. Retorne as Filas para atender o próximo."
       }
     },
     "capacitiesList": {
@@ -554,6 +569,7 @@
       "1": "Há",
       "2": "pessoas esperando."
     },
+    "numberCancelled": "O próximo número foi Cancelado:",
     "actions": {
       "1": {
         "title": {
@@ -569,6 +585,9 @@
       },
       "3": {
         "action": "Voltar as Filas"
+      },
+      "4": {
+        "action": "Ir ao próximo"
       }
     },
     "message": {

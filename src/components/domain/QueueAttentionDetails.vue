@@ -140,7 +140,7 @@ export default {
         <div v-if="queueProcessingDetails.length > 0" class="attentions-card">
           <div v-for="(attention, index) in queueProcessingDetails" :key="index" class="mt-2">
             <AttentionNumber
-              :type="attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+              :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
               :number="attention.number"
               :data="attention.user"
               :showData="false"
@@ -164,7 +164,7 @@ export default {
         <div v-if="queuePendingDetails.length > 0" class="attentions-card">
           <div v-for="(attention, index) in queuePendingDetails" :key="index" class="mt-2">
             <AttentionNumber
-              :type="attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+            :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
               :number="attention.number"
               :data="attention.user"
               :showData="false"

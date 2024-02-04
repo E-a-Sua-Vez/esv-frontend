@@ -305,6 +305,7 @@
     "getClose": "Get close to module:",
     "attendedBy": "You'll be attended by:",
     "module": "Unique",
+    "cancel": "Cancel Attention",
     "collaborator": "N/A",
     "message": {
       "1": {
@@ -314,6 +315,10 @@
       "2": {
         "title": "Remember to rate us!",
         "content": "At the end of your turn, you'll be able to rate the attention on this screen."
+      },
+      "3": {
+        "title": "Cancelled!",
+        "content": "Your attention was cancelled. You can get or reserve a new number attention."
       }
     },
     "actions": {
@@ -372,6 +377,12 @@
     "cancelled": "Cancelled",
     "newBooking": "You can request a new one:",
     "advice": "* REMEMBER: The people in front of you and the estimated time may vary since people in front of you can cancel their reservation. We recommend that you consult this page before and on the day of your reservation.",
+    "message": {
+      "1": {
+        "title": "Cancelled!",
+        "content": "Your reserve was cancelled. You can get a new reserve."
+      }
+    },
     "actions": {
       "1": {
         "title": {
@@ -451,6 +462,7 @@
     "hello": "Hello!",
     "hello-user": "Hello",
     "yourNumber": "You're processing the attention number:",
+    "numberCancelled": "The number was Cancelled:",
     "toGoal": {
       "1": "There's",
       "2": "users waiting."
@@ -484,6 +496,10 @@
       "4": {
         "title": "Not so fast!",
         "content": "You can not attend this turn. Go back to the queue and attend the previous numbers in order."
+      },
+      "5": {
+        "title": "Cancelled!",
+        "content": "The attention was cancelled. Go back to the queue to attend the next number."
       }
     },
     "capacitiesList": {
@@ -550,6 +566,7 @@
       "1": "There's",
       "2": "people waiting."
     },
+    "numberCancelled": "The next attention number was Cancelled:",
     "actions": {
       "1": {
         "title": {
@@ -565,6 +582,9 @@
       },
       "3": {
         "action": "Back to queues"
+      },
+      "4": {
+        "action": "Go to next"
       }
     },
     "message": {

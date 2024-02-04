@@ -1,7 +1,7 @@
 <script>
-import { ref, watch, reactive, onBeforeMount } from 'vue';
+import { ref, watch, reactive, onBeforeMount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getAttentionDetailsByNumber, getAttentionDetailsByQueue } from '../../application/services/attention';
+import { getAvailableAttentionDetailsByNumber, getAvailableAttentiosnByQueue, getAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
 import { getCommerceById } from '../../application/services/commerce';
 import { getQueueById } from '../../application/services/queue';
 import { globalStore } from '../../stores/index';
@@ -64,8 +64,8 @@ export default {
       store.setCurrentQueue(queue);
       if (queue !== undefined && queue.id !== undefined) {
         if (queue.currentAttentionNumber) {
-          state.attention = await getAttentionDetailsByNumber(queue.id, queue.currentAttentionNumber, 'PENDING');
-          state.queuePendingDetails = await getAttentionDetailsByQueue(queue.id, 'PENDING');
+          state.attention = await getAvailableAttentionDetailsByNumber(queue.id, queue.currentAttentionNumber);
+          state.queuePendingDetails = await getAvailableAttentiosnByQueue(queue.id);
           state.queueProcessingDetails = await getAttentionDetailsByQueue(queue.id, 'PROCESSING');
           if (state.attention.user) {
             state.user = state.attention.user;
@@ -121,6 +121,21 @@ export default {
       }
     };
 
+    const finishCurrentCancelledAttention = async () => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        const body = {  };
+        state.attention = await finishCancelledAttention(state.attention.id, body);
+        await nextTick();
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || error.response.statusCode || 500;
+        loading.value = false;
+      }
+    };
+
     return {
       id,
       state,
@@ -129,7 +144,8 @@ export default {
       isEmptyQueue,
       beforeCurrent,
       collaboratorQueues,
-      attendAttention
+      attendAttention,
+      finishCurrentCancelledAttention
     }
   }
 }
@@ -164,24 +180,44 @@ export default {
         </Message>
       </div>
       <div v-else id="attention">
-        <div class="your-attention mt-2">
-          <span>{{ $t("collaboratorQueueAttentions.yourNumber") }}</span>
+        <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
+          <div class="your-attention mt-2">
+            <span>{{ $t("collaboratorQueueAttentions.numberCancelled") }}</span>
+          </div>
+          <AttentionNumber
+            :type="'secondary'"
+            :number="state.queue.currentAttentionNumber"
+            :data="state.user"
+          ></AttentionNumber>
+          <div class="d-grid gap-2 mt-3">
+            <button
+              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+              :disabled="!state.toggles['collaborator.attention.finish'] || loading"
+              @click="finishCurrentCancelledAttention()">
+              {{ $t("collaboratorQueueAttentions.actions.4.action") }} <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
         </div>
-        <AttentionNumber
-          :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-          :number="state.queue.currentAttentionNumber"
-          :data="state.user"
-        ></AttentionNumber>
-        <div class="to-goal">
-          <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ beforeCurrent() }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
-        </div>
-        <div class="d-grid gap-2 my-2">
-          <button
-            class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-            @click="attendAttention()"
-            :disabled="!state.toggles['collaborator.attention.attend'] || loading">
-            {{ $t("collaboratorQueueAttentions.actions.1.action") }} <i class="bi bi-qr-code-scan"></i>
-          </button>
+        <div v-else>
+          <div class="your-attention mt-2">
+            <span>{{ $t("collaboratorQueueAttentions.yourNumber") }}</span>
+          </div>
+          <AttentionNumber
+            :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+            :number="state.queue.currentAttentionNumber"
+            :data="state.user"
+          ></AttentionNumber>
+          <div class="to-goal">
+            <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ beforeCurrent() }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
+          </div>
+          <div class="d-grid gap-2 my-2">
+            <button
+              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+              @click="attendAttention()"
+              :disabled="!state.toggles['collaborator.attention.attend'] || loading">
+              {{ $t("collaboratorQueueAttentions.actions.1.action") }} <i class="bi bi-qr-code-scan"></i>
+            </button>
+          </div>
         </div>
       </div>
       <div class="d-grid gap-2 my-2">
