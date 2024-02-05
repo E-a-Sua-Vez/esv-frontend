@@ -182,7 +182,9 @@
       "7": "please take a look and retry.",
       "8": "Service Unavailable",
       "9": "please try again later.",
-      "10": "This register does not exist"
+      "10": "This register does not exist",
+      "11": "This schedule is not available anymore,",
+      "12": "please select other and try again."
     },
     "action": "Report error"
   },
@@ -234,6 +236,7 @@
     "confirm": "Confirm",
     "queueSelected": "Queue/Service Selected:",
     "dataSelected": "Date Of Booking:",
+    "blockSelected": "Hour Of Booking:",
     "message": {
       "title": "Oh no!",
       "content": "At this time there are no service queues. Please approach a collaborator to request help."
@@ -527,7 +530,8 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "queue-manage": "Manage Queues"
+          "queue-manage": "Manage Queues",
+          "booking-manage": "Manage Bookings"
         }
       }
     }
@@ -561,7 +565,43 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "queue-manage": "Manage Queues"
+          "queue-manage": "Manage Queues",
+          "booking-manage": "Manage Bookings"
+        }
+      }
+    }
+  },
+  "collaboratorBookingsView": {
+    "welcome": "Booking Management",
+    "queue": "Choose a Queue/Service:",
+    "date": "Choose the Date:",
+    "return": "Back",
+    "create": "Create a Booking",
+    "listResult": "Results:",
+    "message": {
+      "1": {
+        "title": "Oh no!",
+        "content": "At this time there are no service queues. Please approach to your administrator to request help."
+      },
+      "2": {
+        "title": "Hey!",
+        "content": "At this time there are no Bookings for the Queue and Date selected."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Attend",
+          "finish": "Set an attention as Attended",
+          "skip": "Skip Attention"
+        },
+        "module": {
+          "update": "Update attention Module"
+        },
+        "main-menu": {
+          "dashboard": "Go to Dashboard",
+          "queue-manage": "Manage Queues",
+          "booking-manage": "Manage Bookings"
         }
       }
     }
@@ -618,7 +658,8 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "queue-manage": "Manage Queues"
+          "queue-manage": "Manage Queues",
+          "booking-manage": "Manage Bookings"
         }
       }
     }
@@ -1108,6 +1149,7 @@
     "choose": "What do you want to do today?",
     "dashboard": "Dashboard",
     "queue-manage": "Manage Queues",
+    "booking-manage": "Manage Bookings",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1118,7 +1160,8 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Manage Dashboard",
-          "queue-manage": "Manage Queues"
+          "queue-manage": "Manage Queues",
+          "booking-manage": "Manage Bookings"
         }
       }
     }
@@ -1175,6 +1218,9 @@
     "attentionDays": "Attention Days:",
     "link": "URL Web:",
     "go": "Minisite",
+    "break": "Break:",
+    "breakHour": "Break Hours:",
+    "blockTime": "Block (Min):",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1397,6 +1443,9 @@
     "keyNameHelp": "Identifier used for the URL of the minisite.",
     "tagHelp": "Short identifier of the commerce used in the digital product.",
     "listResult": "Results:",
+    "break": "Break:",
+    "breakHour": "Break Hours:",
+    "blockTime": "Block (Min):",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1996,7 +2045,8 @@
       },
       "main-menu": {
         "dashboard": "Enable Dashboard - Main Menu Collaborators",
-        "queue-manage": "Enable Queue Management - Main Menu Collaborators"
+        "queue-manage": "Enable Queue Management - Main Menu Collaborators",
+        "booking-manage": "Enable Booking Management - Main Menu Collaborators"
       }
     },
     "commerces": {

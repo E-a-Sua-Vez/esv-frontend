@@ -30,6 +30,7 @@ export default {
       manageSubMenuOption: false,
       collaboratorOptions: [
         'queue-manage',
+        'booking-manage',
         'dashboard',
       ],
       currentPlanActivation: {},
@@ -58,6 +59,8 @@ export default {
         if (option) {
           if (option === 'queue-manage') {
             router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` });
+          } else if (option === 'booking-manage') {
+            router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/bookings` });
           } else if (option === 'dashboard') {
             router.push({ path: `/interno/colaborador/dashboard` });
           }

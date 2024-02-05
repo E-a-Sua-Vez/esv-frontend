@@ -2,7 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, reactive } from 'vue'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -23,6 +23,9 @@ const auth = firebase.auth();
 const firestore = firebase.firestore();
 const attentionCollection = firestore.collection('attention');
 const queueCollection = firestore.collection('queue');
+export const bookingCollection = firestore.collection('booking');
+
+
 
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);

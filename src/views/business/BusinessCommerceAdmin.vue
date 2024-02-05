@@ -182,7 +182,7 @@ export default {
         country: state.business.country,
         localeInfo: state.business.localeInfo || {},
         contactInfo: state.business.contactInfo || {},
-        serviceInfo: state.business.serviceInfo || {}
+        serviceInfo: { break: false, ...state.business.serviceInfo }
       }
     }
 
@@ -676,6 +676,47 @@ export default {
                             placeholder="Ex. 16">
                         </div>
                       </div>
+                      <div id="add-commerce-break-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.break") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newCommerce.serviceInfo.break"
+                            :disabled="!state.toggles['commerces.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="commerce-attentionBreak-form-add" v-if="state.newCommerce.serviceInfo.break" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.breakHour") }}
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newCommerce.serviceInfo.breakHourFrom"
+                            placeholder="Ex. 8">
+                        </div>
+                        <div class="col-2">
+                          -
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newCommerce.serviceInfo.breakHourTo"
+                            placeholder="Ex. 16">
+                        </div>
+                      </div>
                       <div id="commerce-attentionDays-form-add" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessCommercesAdmin.attentionDays") }}
@@ -1153,6 +1194,47 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="commerce.serviceInfo.attentionHourTo"
+                            placeholder="Ex. 16">
+                        </div>
+                      </div>
+                      <div id="add-commerce-break-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.break") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="commerce.serviceInfo.break"
+                            :disabled="!state.toggles['commerces.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="commerce-attentionBreak-form-add" v-if="commerce.serviceInfo.break" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.breakHour") }}
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="commerce.serviceInfo.breakHourFrom"
+                            placeholder="Ex. 8">
+                        </div>
+                        <div class="col-2">
+                          -
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="commerce.serviceInfo.breakHourTo"
                             placeholder="Ex. 16">
                         </div>
                       </div>

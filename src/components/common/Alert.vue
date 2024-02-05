@@ -36,6 +36,9 @@ export default {
       } else if (this.stack === 404) {
         this.messageTitle = this.$t('alert.message.10');
         this.messageDetail = this.$t('alert.message.9');
+      } else if (this.stack === 990) {
+        this.messageTitle = this.$t('alert.message.11');
+        this.messageDetail = this.$t('alert.message.12');
       } else {
         this.messageTitle = this.$t('alert.message.1');
         this.messageDetail = this.$t('alert.message.2');

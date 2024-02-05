@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
@@ -16,6 +16,7 @@ import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/domain/NotificationConditions.vue';
 import { getActiveFeature } from '../shared/features';
+import { bookingCollection } from '../application/firebase';
 
 export default {
   name: 'CommerceQueuesView',
@@ -41,6 +42,7 @@ export default {
         }
       }
     ]);
+    let unsubscribeBookings = () => {};
 
     const state = reactive({
       commerce: {},
@@ -60,6 +62,7 @@ export default {
       accept: false,
       date: undefined,
       block: {},
+      availableBlocks: [],
       locale: 'es',
       minDate: (new Date()).setDate(new Date().getDate() + 1),
       phoneCodes: [
@@ -69,7 +72,9 @@ export default {
         { id: 'us', label: '🇺🇸', code: '1' },
         { id: 'xx', label: '🏴', code: 'xx' }
       ],
-      hourBlocks: []
+      hourBlocks: [],
+      bookings: ref([]),
+      bookingAvailable: true
     });
 
     onBeforeMount(async () => {
@@ -100,6 +105,23 @@ export default {
         loading.value = false;
       }
     })
+
+    onUnmounted(() => {
+      if (unsubscribeBookings) {
+        unsubscribeBookings();
+      }
+    })
+
+    const formattedDate = (date) => {
+      if (date && date !== 'TODAY') {
+        return new Date(date).toISOString().slice(0,10);
+      }
+    }
+
+    const getBookings = () => {
+      const { unsubscribe } = updatedBookings(state.queue.id, formattedDate(state.date));
+      unsubscribeBookings = unsubscribe;
+    }
 
     const isActiveCommerce = (commerce) => {
       return commerce.active === true &&
@@ -336,12 +358,6 @@ export default {
       }
     }
 
-    const formattedDate = (date) => {
-      if (date && date !== 'TODAY') {
-        return new Date(date).toISOString().slice(0,10);
-      }
-    }
-
     const validateCaptchaError = () => {
       captcha = false;
     };
@@ -351,17 +367,72 @@ export default {
     }
 
     const changeDate = computed(() => {
-      const { date } = state;
+      const { date, bookings, block, availableBlocks } = state;
       return {
-        date
+        date,
+        bookings,
+        block,
+        availableBlocks
       }
     })
 
+    const getAvailableBlocks = (bookings) => {
+      let queueBlocks = [];
+      let availableBlocks = [];
+      if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
+        queueBlocks = state.queue.serviceInfo.blocks;
+        if (queueBlocks && queueBlocks.length > 0) {
+          let bookingsReserved = 0;
+          if (bookings && bookings.length > 0) {
+            bookingsReserved = bookings.map(booking => booking.number);
+            availableBlocks = queueBlocks.filter(block => !bookingsReserved.includes(block.number))
+          } else {
+            availableBlocks = queueBlocks;
+          }
+        }
+      }
+      return availableBlocks;
+    }
+
+    const updatedBookings = (queueId, date) => {
+      let values = ref([]);
+      let unsubscribe;
+      if (date !== undefined) {
+        const bookingsQuery = bookingCollection
+          .where('queueId', "==", queueId)
+          .where('status', "==", 'PENDING')
+          .where('date', '==', date);
+        unsubscribe = bookingsQuery.onSnapshot(snapshot => {
+          values.value = snapshot.docs
+            .map(doc => {
+              return { id: doc.id, ...doc.data() }
+            })
+        })
+
+      }
+      state.bookings = values;
+      return { unsubscribe };
+    }
+
     watch (
       changeDate,
-      async () => {
-        if (state.date === 'TODAY')
-        await getAttention();
+      async (newData, oldData) => {
+        if (state.date === 'TODAY') {
+          await getAttention();
+        } else if (newData.date !== oldData.date) {
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          getBookings();
+        } else if (newData.bookings !== oldData.bookings) {
+          state.availableBlocks = getAvailableBlocks(state.bookings);
+        }
+        const blockAvailable = state.availableBlocks.filter(block => block.number === state.block.number)
+        if (!blockAvailable || blockAvailable.length === 0) {
+          state.bookingAvailable = false;
+        } else {
+          state.bookingAvailable = true;
+        }
       }
     )
 
@@ -574,6 +645,7 @@ export default {
                       <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
                     </div>
                     <VDatePicker
+                      view="weekly"
                       :locale="state.locale"
                       v-model.string="state.date"
                       :mask="dateMask"
@@ -581,32 +653,39 @@ export default {
                       :disabled-dates="disabledDates"
                     />
                     <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
-                        state.queue.serviceInfo.blocks &&
+                        state.availableBlocks &&
                         state.date" class="mb-2">
                       <div class="choose-attention py-1 pt-2">
                         <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                       </div>
                       <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
-                        <option v-for="block in state.queue.serviceInfo.blocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                        <option v-for="block in state.availableBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
                       </select>
                     </div>
-                    <div v-if="state.date" class="py-1 mt-2">
+                    <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-2">
                       <hr>
                       <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
-                      <div> {{ $t("commerceQueuesView.queueSelected") }}
+                      <div>
+                        {{ $t("commerceQueuesView.queueSelected") }}
                         <div class="badge rounded-pill bg-primary py-2 px-4 m-1">{{ state.queue.name }} </div>
                       </div>
                       <div>
                         {{ $t("commerceQueuesView.dataSelected") }}
                         <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
                       </div>
-                      <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block" class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                      <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
+                        {{ $t("commerceQueuesView.blockSelected") }}
+                        <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                      </div>
+                    </div>
+                    <div v-if="state.block.number && state.bookingAvailable === false">
+                      <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
                     </div>
                     <button
                       type="button"
                       class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                       @click="getBooking()"
-                      :disabled="!state.accept || !state.queue.id || !state.date"
+                      :disabled="!state.accept || !state.queue.id || !state.date || !state.bookingAvailable"
                       >
                       {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                     </button>

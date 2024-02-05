@@ -182,7 +182,9 @@
       "7": "por favor revise e tente novamente.",
       "8": "Serviço indisponível",
       "9": "por favor tente logo.",
-      "10": "Esse dado não existe"
+      "10": "Esse dado não existe",
+      "11": "O horário já não está disponível, ",
+      "12": "por favor selecione outro e tente de novo."
     },
     "action": "Relatar bug"
   },
@@ -233,6 +235,7 @@
     "daySelected": "Os dados da sua reserva:",
     "queueSelected": "Fila/Serviço Selecionado:",
     "dataSelected": "Data de Reserva:",
+    "blockSelected": "Hora de Reserva:",
     "confirm": "Confirmar",
     "message": {
       "title": "Oh não!",
@@ -530,7 +533,8 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Gerenciar Filas"
+          "queue-manage": "Gerenciar Filas",
+          "booking-manage": "Gerenciar Reservas"
         }
       }
     }
@@ -569,7 +573,43 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Gerenciar Filas"
+          "queue-manage": "Gerenciar Filas",
+          "booking-manage": "Gerenciar Reservas"
+        }
+      }
+    }
+  },
+  "collaboratorBookingsView": {
+    "welcome": "Gerenciamento de Reservas",
+    "queue": "Selecione Fila ou Serviço:",
+    "date": "Selecione a Data:",
+    "return": "Voltar",
+    "create": "Criar uma Reserva",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Filas de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Reservas a a Fila e Data selecionada"
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Atender",
+          "finish": "Marcar atenção como atendida",
+          "skip": "Saltar atenção"
+        },
+        "module": {
+          "update": "Atualizar o modulo de atenção"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Gerenciar Filas",
+          "booking-manage": "Gerenciar Reservas"
         }
       }
     }
@@ -621,7 +661,8 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Gerenciar Filas"
+          "queue-manage": "Gerenciar Filas",
+          "booking-manage": "Gerenciar Reservas"
         }
       }
     }
@@ -1133,6 +1174,7 @@
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
     "queue-manage": "Gerenciar Filas",
+    "booking-manage": "Gerenciar Reservas",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1143,7 +1185,8 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Gestionar Dashboard",
-          "queue-manage": "Gestionar Filas"
+          "queue-manage": "Gestionar Filas",
+          "booking-manage": "Gerenciar Reservas"
         }
       }
     }
@@ -1176,6 +1219,9 @@
     "listResult": "Registros:",
     "link": "URL Web:",
     "go": "Minisite",
+    "break": "Descanso:",
+    "breakHour": "Houras Descanso:",
+    "blockTime": "Bloque (Min):",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1398,6 +1444,9 @@
     "keyNameHelp": "Identificador usado para a URL do minisite.",
     "tagHelp": "Identificador abreviado do comércio utilizada no produto digital.",
     "listResult": "Registros:",
+    "break": "Descanso:",
+    "breakHour": "Houras Descanso:",
+    "blockTime": "Bloque (Min):",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1986,7 +2035,8 @@
       },
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
-        "queue-manage": "Habilitar Gerenciar Filas - Menú Principal Colaborador"
+        "queue-manage": "Habilitar Gerenciar Filas - Menú Principal Colaborador",
+        "booking-manage": "Habilitar Gerenciar Reservas - Menú Principal Colaborador"
       }
     },
     "administrators": {

@@ -183,7 +183,9 @@
       "7": "por favor revisa e intenta nuevamente.",
       "8": "Servicio indisponible",
       "9": "por favor intenta más tarde.",
-      "10": "Este registro no existe"
+      "10": "Este registro no existe",
+      "11": "El horario ya no está disponible, ",
+      "12": "por favor selecciona otro horario e intenta nuevamente"
     },
     "action": "Reportar error"
   },
@@ -235,6 +237,7 @@
     "confirm": "Confirmar",
     "queueSelected": "Fila/Servicio Seleccionado:",
     "dataSelected": "Fecha de Reserva:",
+    "blockSelected": "Hora de Reserva:",
     "message": {
       "title": "¡Ups!",
       "content": "En este momento no hay filas de atención. Por favor acércate a algún colaborador para solicitar ayuda."
@@ -523,7 +526,8 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Administrar Filas"
+          "queue-manage": "Administrar Filas",
+          "booking-manage": "Administrar Reservas"
         }
       }
     }
@@ -557,7 +561,43 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Administrar Filas"
+          "queue-manage": "Administrar Filas",
+          "booking-manage": "Administrar Reservas"
+        }
+      }
+    }
+  },
+  "collaboratorBookingsView": {
+    "welcome": "Gestión de Reservas",
+    "queue": "Elige la Fila/Servicio:",
+    "date": "Elige la Fecha:",
+    "return": "Volver",
+    "create": "Crear una Reserva",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay filas de atención. Por favor contacta a tu administrador para solicitar ayuda."
+      },
+      "2": {
+        "title": "¡Hola!",
+        "content": "En este momento no hay reservas para la fecha y fila indicada."
+      }
+    },
+    "capacitiesList": {
+      "collaborator": {
+        "attention": {
+          "attend": "Atender",
+          "finish": "Marcar atención como atendida",
+          "skip": "Saltar atención"
+        },
+        "module": {
+          "update": "Actualizar módulo de atención"
+        },
+        "main-menu": {
+          "dashboard": "Ver Dashboard",
+          "queue-manage": "Administrar Filas",
+          "booking-manage": "Administrar Reservas"
         }
       }
     }
@@ -614,7 +654,8 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "queue-manage": "Administrar Filas"
+          "queue-manage": "Administrar Filas",
+          "booking-manage": "Administrar Reservas"
         }
       }
     }
@@ -1127,6 +1168,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
     "queue-manage": "Gestionar Filas",
+    "booking-manage": "Administrar Reservas",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1137,7 +1179,8 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Gestionar Dashboard",
-          "queue-manage": "Gestionar Filas"
+          "queue-manage": "Gestionar Filas",
+          "booking-manage": "Administrar Reservas"
         }
       }
     }
@@ -1170,6 +1213,9 @@
     "listResult": "Registros:",
     "link": "URL Web:",
     "go": "Minisite",
+    "break": "Descanso:",
+    "breakHour": "Horas Descanso:",
+    "blockTime": "Bloque (Min):",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1389,6 +1435,8 @@
     "logo": "Logo",
     "link": "URL Web:",
     "go": "Minisite",
+    "break": "Descanso:",
+    "breakHour": "Horas Descanso:",
     "keyNameHelp": "Identificador usado para la URL del ministe.",
     "tagHelp": "Identificador corto de la sucursal utilizado en el producto digital.",
     "listResult": "Registros:",
@@ -1981,7 +2029,8 @@
       },
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
-        "queue-manage": "Habilitar Gestionar Filas - Menú Principal Colaborador"
+        "queue-manage": "Habilitar Gestionar Filas - Menú Principal Colaborador",
+        "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador"
       }
     },
     "administrators": {

@@ -153,7 +153,7 @@ export default {
       state.showAdd = !state.showAdd;
       state.newQueue = {
         order: state.queues.length + 1,
-        serviceInfo: state.business.serviceInfo || {}
+        serviceInfo: { break: false, ...state.business.serviceInfo }
       }
     }
 
@@ -228,7 +228,7 @@ export default {
     }
 
     const copyLink = (queue) => {
-      const textToCopy = getSurveyLink(queue);
+      const textToCopy = getQueueLink(queue);
       navigator.clipboard.writeText(textToCopy);
     }
 
@@ -368,6 +368,19 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
+                    <div id="queue-block-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessQueuesAdmin.blockTime") }}
+                      </div>
+                      <div class="col-6">
+                        <input
+                          min="1"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.blockTime"
+                          placeholder="1">
+                      </div>
+                    </div>
                     <!-- Datos de Servicio -->
                     <div class="row g-1">
                       <a
@@ -408,7 +421,48 @@ export default {
                             placeholder="Ex. 16">
                         </div>
                       </div>
-                      <div id="commerce-attentionDays-form-add" class="row g-1">
+                      <div id="add-queue-break-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.break") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newQueue.serviceInfo.break"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="queue-attentionBreak-form-add" v-if="state.newQueue.serviceInfo.break" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.breakHour") }}
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newQueue.serviceInfo.breakHourFrom"
+                            placeholder="Ex. 8">
+                        </div>
+                        <div class="col-2">
+                          -
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newQueue.serviceInfo.breakHourTo"
+                            placeholder="Ex. 16">
+                        </div>
+                      </div>
+                      <div id="queue-attentionDays-form-add" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.attentionDays") }}
                         </div>
@@ -563,6 +617,19 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
+                    <div id="queue-block-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.blockTime") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="1"
+                          type="number"
+                          class="form-control"
+                          v-model="queue.blockTime"
+                          placeholder="1">
+                      </div>
+                    </div>
                     <div id="queue-active-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.active") }}
@@ -611,6 +678,47 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="queue.serviceInfo.attentionHourTo"
+                            placeholder="Ex. 16">
+                        </div>
+                      </div>
+                      <div id="update-queue-break-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.break") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="queue.serviceInfo.break"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="queue-attentionBreak-form-update" v-if="queue.serviceInfo.break" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.breakHour") }}
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.serviceInfo.breakHourFrom"
+                            placeholder="Ex. 8">
+                        </div>
+                        <div class="col-2">
+                          -
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="5"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.serviceInfo.breakHourTo"
                             placeholder="Ex. 16">
                         </div>
                       </div>
