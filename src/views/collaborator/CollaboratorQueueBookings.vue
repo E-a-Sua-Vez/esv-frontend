@@ -56,9 +56,8 @@ export default {
       locale: 'es',
       date: (new Date()).setDate(new Date().getDate() + 1),
       bookings: ref([]),
-      bookingAvailable: true,
       availableBlocks: [],
-      minDate: (new Date()).setDate(new Date().getDate() - 30),
+      minDate: (new Date()).setDate(new Date().getDate() + 1),
       toggles: {}
     });
 
@@ -163,11 +162,22 @@ export default {
     }
 
     const changeDate = computed(() => {
-      const { date } = state;
+      const { date, queue } = state;
       return {
-        date
+        date,
+        queue
       }
     })
+
+    const getAvailableBlocks = () => {
+      let queueBlocks = [];
+      if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
+        queueBlocks = state.queue.serviceInfo.blocks;
+        if (queueBlocks && queueBlocks.length > 0) {
+          state.availableBlocks = queueBlocks;
+        }
+      }
+    }
 
     const getQueueLink = (queue) => {
       const commerceKeyName = state.commerce.keyName;
@@ -188,22 +198,24 @@ export default {
       async (newData, oldData) => {
         if (state.date === 'TODAY') {
           await getAttention();
-        } else if (newData.date !== oldData.date) {
+        } else if (newData.date !== oldData.date || newData.queue !== oldData.queue) {
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
           getBookings();
-        } else if (newData.bookings !== oldData.bookings) {
-          state.availableBlocks = getAvailableBlocks(state.bookings);
         }
-        const blockAvailable = state.availableBlocks.filter(block => block.number === state.block.number)
-        if (!blockAvailable || blockAvailable.length === 0) {
-          state.bookingAvailable = false;
-        } else {
-          state.bookingAvailable = true;
-        }
+        getAvailableBlocks();
       }
     )
+
+    const getBooking = (number) => {
+      if (state.bookings && state.bookings.length > 0) {
+        const result = state.bookings.filter(bk => bk.number === number)[0];
+        if (result) {
+          return result;
+        }
+      }
+    }
 
     return {
       siteKey,
@@ -219,7 +231,8 @@ export default {
       beforeCurrentQueue,
       isActiveCommerce,
       getLineAttentions,
-      goBack
+      goBack,
+      getBooking
     }
   }
 }
@@ -283,13 +296,22 @@ export default {
             <div class="my-1">
               <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
             </div>
-            <div v-for="booking in state.bookings" :key="booking.id">
-              <BookingDetailsCard
-                :booking="booking"
-                :show="true"
-                :detailsOpened="false"
-              >
-              </BookingDetailsCard>
+            <div>
+              <div v-for="block in state.availableBlocks" :key="block.number">
+                <div class="metric-card">
+                  <span
+                    class="lefted badge rounded-pill bg-primary m-0"
+                    :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                  <div>
+                    <BookingDetailsCard
+                      :booking="getBooking(block.number)"
+                      :show="true"
+                      :detailsOpened="false"
+                    >
+                    </BookingDetailsCard>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
           <div v-if="state.queue && state.date && (!state.bookings || state.bookings.length === 0)">
@@ -319,5 +341,16 @@ export default {
 }
 .indicator {
   font-size: .7rem;
+}
+.metric-card {
+  background-color: var(--color-background);
+  padding: .2rem;
+  margin: .5rem;
+  margin-bottom: 0;
+  border-radius: .5rem;
+  border: .5px solid var(--gris-default);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0;
 }
 </style>

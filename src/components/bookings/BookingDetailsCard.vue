@@ -69,14 +69,13 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
+  <div v-if="show && booking">
     <div class="row metric-card fw-bold">
       <div class="col centered">
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.number }}</span>
       </div>
       <div class="col-4 centered" v-if="booking.user && booking.user.name">
         <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name || 'N/I' }}
-        <i v-if="booking.cancelled === true || cancelled === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
       </div>
       <div class="col-4 centered" v-if="booking.block && booking.block.hourFrom">
         <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
@@ -104,11 +103,11 @@ export default {
                 @click="copyBooking()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
-              <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2"
+              <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
                 @click="cancel()"
                 :disabled="booking.status === 'USER_CANCELED' || booking.cancelled"
                 >
-                <i class="bi bi-person-check-fill"></i>
+                <i class="bi bi-person-x-fill"> </i>
               </button>
             </div>
             <Spinner :show="loading"></Spinner>
