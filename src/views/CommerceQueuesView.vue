@@ -15,6 +15,7 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/domain/NotificationConditions.vue';
+import { getActiveFeature } from '../shared/features';
 
 export default {
   name: 'CommerceQueuesView',
@@ -58,6 +59,7 @@ export default {
       idNumberError: false,
       accept: false,
       date: undefined,
+      block: {},
       locale: 'es',
       minDate: (new Date()).setDate(new Date().getDate() + 1),
       phoneCodes: [
@@ -67,6 +69,7 @@ export default {
         { id: 'us', label: '🇺🇸', code: '1' },
         { id: 'xx', label: '🏴', code: 'xx' }
       ],
+      hourBlocks: []
     });
 
     onBeforeMount(async () => {
@@ -165,25 +168,13 @@ export default {
       return active;
     };
 
-    const getDataActive = (commerce, name, type) => {
-      let active = false;
-      let features = [];
-      if (commerce !== undefined && commerce.features.length > 0) {
-        features = commerce.features.filter(feature => feature.type === type && feature.name === name);
-        if (features.length > 0) {
-          return features[0].active;
-        }
-      }
-      return active;
-    }
-
     const showConditions = () => {
       if(
-        getDataActive(state.commerce, 'attention-user-name', 'USER') ||
-        getDataActive(state.commerce, 'attention-user-lastName', 'USER') ||
-        getDataActive(state.commerce, 'attention-user-idNumber', 'USER') ||
-        getDataActive(state.commerce, 'attention-user-phone', 'USER') ||
-        getDataActive(state.commerce, 'attention-user-email', 'USER')
+        getActiveFeature(state.commerce, 'attention-user-name', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-lastName', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-phone', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-email', 'USER')
       ) {
         return true;
       }
@@ -193,7 +184,7 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      if (getDataActive(state.commerce, 'attention-user-name', 'USER')) {
+      if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
         if(!user.name || user.name.length === 0) {
           state.nameError = true;
           state.errorsAdd.push('commerceQueuesView.validate.name');
@@ -201,7 +192,7 @@ export default {
           state.nameError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-lastName', 'USER')) {
+      if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
         if(!user.lastName || user.lastName.length === 0) {
           state.lastNameError = true;
           state.errorsAdd.push('commerceQueuesView.validate.lastName');
@@ -209,7 +200,7 @@ export default {
           state.lastNameError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-idNumber', 'USER')) {
+      if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
         if(!user.idNumber || user.idNumber.length === 0) {
           state.idNumberError = true;
           state.errorsAdd.push('commerceQueuesView.validate.idNumber');
@@ -217,7 +208,7 @@ export default {
           state.idNumberError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-phone', 'USER')) {
+      if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
         if(!state.phoneCode || state.phoneCode.length === 0) {
           state.phoneCodeError = true;
           state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
@@ -235,7 +226,7 @@ export default {
           state.phoneError = false;
         }
       }
-      if (getDataActive(state.commerce, 'attention-user-email', 'USER')) {
+      if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
         if(!user.email || user.email.length === 0 || !validateEmail(user.email)) {
           state.emailError = true;
           state.errorsAdd.push('commerceQueuesView.validate.email');
@@ -286,7 +277,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
-          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date) }
+          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block }
           const booking = await createBooking(body);
           router.push({ path: `/interno/booking/${booking.id}` });
         }
@@ -333,7 +324,7 @@ export default {
     const validateCaptchaOk = async (response) => {
       if(response) {
         captcha = true;
-        if (!getDataActive(state.commerce, 'booking-active', 'PRODUCT')) {
+        if (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')) {
           await getAttention();
         }
       }
@@ -385,7 +376,7 @@ export default {
       disabledDates,
       formattedDate,
       isDataActive,
-      getDataActive,
+      getActiveFeature,
       isActiveCommerce,
       isAvailableCommerce,
       isActiveQueues,
@@ -420,7 +411,7 @@ export default {
             </div>
             <div class="row g-1">
               <div class="col col-md-10 offset-md-1 data-card">
-                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-name', 'USER')">
+                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-name', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-name-input-add"
@@ -432,7 +423,7 @@ export default {
                       <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
                   </div>
                 </div>
-                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-lastName', 'USER')">
+                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-lastname-input-add"
@@ -444,7 +435,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
                   </div>
                 </div>
-                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-idNumber', 'USER')">
+                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-idnumber-input-add"
@@ -457,7 +448,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
                   </div>
                 </div>
-                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-email', 'USER')">
+                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-email', 'USER')">
                   <div class="col form-floating">
                     <input
                       id="attention-email-input-add"
@@ -469,7 +460,7 @@ export default {
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
                   </div>
                 </div>
-                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getDataActive(state.commerce, 'attention-user-phone', 'USER')">
+                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-phone', 'USER')">
                   <div class="col-3 form-floating">
                     <select
                       class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
@@ -556,7 +547,7 @@ export default {
               </div>
             </div>
           </div>
-          <div id="date" v-if="getDataActive(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
+          <div id="date" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
               <span> {{ $t("commerceQueuesView.when") }} </span>
             </div>
@@ -575,10 +566,13 @@ export default {
                   data-bs-toggle="collapse"
                   href="#booking-date"
                   :disabled="!state.accept || !state.queue.id">
-                  {{ $t("commerceQueuesView.selectDay") }} <i class="bi bi-chevron-down"></i>
+                  {{ $t("commerceQueuesView.booking") }} <i class="bi bi-chevron-down"></i>
                 </button>
-                <div :class="'collapse'" id="booking-date">
+                <div :class="'collapse mx-2'" id="booking-date">
                   <div class="mx-4">
+                    <div class="choose-attention py-1 pt-2">
+                      <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
+                    </div>
                     <VDatePicker
                       :locale="state.locale"
                       v-model.string="state.date"
@@ -586,9 +580,27 @@ export default {
                       :min-date="state.minDate"
                       :disabled-dates="disabledDates"
                     />
-                    <div v-if="state.date" class="choose-attention py-1">
-                      <div><span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
-                      <div class="badge rounded-pill bg-secondary py-2 px-4"><span> {{ formattedDate(state.date) }} </span></div>
+                    <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
+                        state.queue.serviceInfo.blocks &&
+                        state.date" class="mb-2">
+                      <div class="choose-attention py-1 pt-2">
+                        <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                      </div>
+                      <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
+                        <option v-for="block in state.queue.serviceInfo.blocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                      </select>
+                    </div>
+                    <div v-if="state.date" class="py-1 mt-2">
+                      <hr>
+                      <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
+                      <div> {{ $t("commerceQueuesView.queueSelected") }}
+                        <div class="badge rounded-pill bg-primary py-2 px-4 m-1">{{ state.queue.name }} </div>
+                      </div>
+                      <div>
+                        {{ $t("commerceQueuesView.dataSelected") }}
+                        <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                      </div>
+                      <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block" class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
                     </div>
                     <button
                       type="button"

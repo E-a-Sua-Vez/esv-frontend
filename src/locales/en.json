@@ -146,7 +146,7 @@
     },
     "booking-active": {
       "title": "Booking Turn",
-      "description": "Active the Booking function"
+      "description": "Active the Attention Booking function"
     },
     "email-booking": {
       "title": "Email Booking",
@@ -155,6 +155,14 @@
     "whatsapp-booking": {
       "title": "Whatsapp Booking",
       "description": "Message to notify the client's Booking"
+    },
+    "booking-block-active": {
+      "title": "Attention booking with schedule",
+      "description": "Active the attention booking with schedule"
+    },
+    "attention-user-not-required": {
+      "title": "User Data is not Required",
+      "description": "User data required during attention or booking request are not required"
     }
   },
   "paymentMethods": {
@@ -219,9 +227,13 @@
     "email": "Email",
     "today": "Today",
     "when": "When you want to be attended?",
-    "selectDay": "Select Date",
-    "daySelected": "Date Selected:",
+    "booking": "Booking",
+    "selectDay": "Select the day",
+    "selectBlock": "Select the schedule",
+    "daySelected": "Your Booking Information:",
     "confirm": "Confirm",
+    "queueSelected": "Queue/Service Selected:",
+    "dataSelected": "Date Of Booking:",
     "message": {
       "title": "Oh no!",
       "content": "At this time there are no service queues. Please approach a collaborator to request help."
@@ -372,6 +384,7 @@
     "important": "Important:",
     "shouldCome": "You should come on:",
     "operationStart": "The operation starts at:",
+    "blockInfo": "Your booking schedule is:",
     "commerceDetails": "See more commerce's details:",
     "cancelledTitle": "This booking was",
     "cancelled": "Cancelled",

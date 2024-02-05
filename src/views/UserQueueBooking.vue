@@ -223,7 +223,13 @@ export default {
                     </h6>
                   </div>
                   <div
-                    v-if="state.commerce.serviceInfo && state.commerce.serviceInfo.attentionHourFrom"
+                    v-if="state.booking.block && state.booking.block.hourFrom"
+                    class="booking-notification-title">
+                    {{ $t("userQueueBooking.blockInfo") }}
+                    <strong>{{ state.booking.block.hourFrom }} - {{ state.booking.block.hourTo }}</strong>
+                  </div>
+                  <div
+                    v-else-if="state.commerce.serviceInfo && state.commerce.serviceInfo.attentionHourFrom"
                     class="booking-notification-title">
                     {{ $t("userQueueBooking.operationStart") }}
                     <strong>{{ state.commerce.serviceInfo.attentionHourFrom }}:00</strong>

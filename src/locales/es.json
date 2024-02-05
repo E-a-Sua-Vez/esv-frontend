@@ -156,6 +156,14 @@
     "whatsapp-booking": {
       "title": "Whatsapp Reserva",
       "description": "Mensaje que avisa al cliente su Reserva"
+    },
+    "booking-block-active": {
+      "title": "Reserva de Turno con Horario",
+      "description": "Activa la función de escoger horario de reserva"
+    },
+    "attention-user-not-required": {
+      "title": "Datos de Usuario No Obligatorios",
+      "description": "Datos solicitados del usuario para gestionar atenciones o reservas no son obligatorios"
     }
   },
   "paymentMethods": {
@@ -220,9 +228,13 @@
     "email": "Email",
     "today": "Hoy",
     "when": "Cuando quieres ser atendido?",
-    "selectDay": "Seleccionar Fecha",
-    "daySelected": "Día Seleccionado:",
+    "booking": "Reservar",
+    "selectDay": "Seleccione el día",
+    "selectBlock": "Seleccione el horario",
+    "daySelected": "Datos de su reserva:",
     "confirm": "Confirmar",
+    "queueSelected": "Fila/Servicio Seleccionado:",
+    "dataSelected": "Fecha de Reserva:",
     "message": {
       "title": "¡Ups!",
       "content": "En este momento no hay filas de atención. Por favor acércate a algún colaborador para solicitar ayuda."
@@ -373,6 +385,7 @@
     "important": "Importante:",
     "shouldCome": "Deberás presentarte el día:",
     "operationStart": "La operación del comercio comienza a las:",
+    "blockInfo": "El horario de su reserva es:",
     "commerceDetails": "Ve más detalles del Comercio:",
     "cancelledTitle": "Esta reserva fue",
     "cancelled": "Cancelada",

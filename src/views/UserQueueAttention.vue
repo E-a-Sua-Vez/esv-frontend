@@ -234,7 +234,6 @@ export default {
         loading.value = true;
         if (state.attention.status === "PENDING") {
           await cancelAttention(state.attention.id);
-          //await getBookingDetailsFromService(state.booking.id);
           state.goToCancel = false;
         }
         alertError.value = '';

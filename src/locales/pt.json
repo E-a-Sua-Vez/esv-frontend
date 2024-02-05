@@ -145,7 +145,7 @@
       "description": "Email pra enviar statisticas mensais"
     },
     "booking-active": {
-      "title": "Reserva Turno",
+      "title": "Reserva Atenção Ativa",
       "description": "Ativa a funçao de Reserva no comércio"
     },
     "email-booking": {
@@ -155,6 +155,14 @@
     "whatsapp-booking": {
       "title": "Whatsapp Reserva",
       "description": "Mensaje para notificar a reserva do cliente"
+    },
+    "booking-block-active": {
+      "title": "Reserva de Atenção com Horário",
+      "description": "Ativa a funçao de Reserva con Horário no comércio"
+    },
+    "attention-user-not-required": {
+      "title": "Dados do Usuário nao sao obligatórios",
+      "description": "Os dados do usuário para solicitar Atenção ou reserva nao sao obligatórios"
     }
   },
   "paymentMethods": {
@@ -219,8 +227,12 @@
     "email": "Email",
     "today": "Hoje",
     "when": "Quando você quer ser atendido?",
-    "selectDay": "Selecionar Data",
-    "daySelected": "Data Selecionada:",
+    "booking": "Reservar",
+    "selectDay": "Selecione el dia",
+    "selectBlock": "Selecione um horário",
+    "daySelected": "Os dados da sua reserva:",
+    "queueSelected": "Fila/Serviço Selecionado:",
+    "dataSelected": "Data de Reserva:",
     "confirm": "Confirmar",
     "message": {
       "title": "Oh não!",
@@ -374,6 +386,7 @@
     "operationStart": "A operação comercial começa às:",
     "commerceDetails": "Veja mais detalhes do comércio:",
     "cancelledTitle": "Esta reserva foi",
+    "blockInfo": "O horário da sua reserva é:",
     "cancelled": "Cancelada",
     "newBooking": "Pode solicitar uma nova:",
     "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar, pois as pessoas à sua frente podem cancelar a reserva. Recomendamos que consulte esta página antes e no dia da sua reserva.",
