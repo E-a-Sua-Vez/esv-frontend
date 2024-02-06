@@ -107,6 +107,7 @@ export default {
       state.queue = queueIn;
       store.setCurrentQueue(state.queue);
       if (state.queue.id) {
+        state.date = (new Date()).setDate(new Date().getDate() + 1);
         let disabled = [1, 2, 3, 4, 5, 6, 7];
         if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
           const availableDays = state.queue.serviceInfo.attentionDays;
