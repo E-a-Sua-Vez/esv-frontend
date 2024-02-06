@@ -349,6 +349,7 @@ export default {
         }
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
           if (state.queue.id) {
+            state.date = undefined;
             getAttentions();
             state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
             const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
