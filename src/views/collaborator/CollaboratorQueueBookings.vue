@@ -71,7 +71,10 @@ export default {
         }
         state.locale = state.commerce.localeInfo.language;
         state.queues = state.commerce.queues;
-        state.collaborator = await getCollaboratorById(state.currentUser.id);
+        state.collaborator = state.currentUser;
+        if (!state.currentUser) {
+          state.collaborator = await getCollaboratorById(state.currentUser.id);
+        }
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.toggles = await getPermissions('collaborator');
