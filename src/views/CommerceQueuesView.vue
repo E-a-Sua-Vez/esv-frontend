@@ -68,6 +68,13 @@ export default {
       availableAttentionBlocks: [],
       locale: 'es',
       minDate: (new Date()).setDate(new Date().getDate() + 1),
+      hourBlocks: [],
+      bookings: ref([]),
+      attentions: ref([]),
+      bookingAvailable: true,
+      attentionAvailable: true,
+      showToday: false,
+      showReserve: false,
       phoneCodes: [
         { id: 've', label: '🇻🇪', code: '58' },
         { id: 'br', label: '🇧🇷', code: '55' },
@@ -75,11 +82,6 @@ export default {
         { id: 'us', label: '🇺🇸', code: '1' },
         { id: 'xx', label: '🏴', code: 'xx' }
       ],
-      hourBlocks: [],
-      bookings: ref([]),
-      attentions: ref([]),
-      bookingAvailable: true,
-      attentionAvailable: true
     });
 
     onBeforeMount(async () => {
@@ -349,6 +351,12 @@ export default {
           if (state.queue.id) {
             getAttentions();
             state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+            const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
+            if (!blockAvailable || blockAvailable.length === 0) {
+              state.attentionAvailable = false;
+            } else {
+              state.attentionAvailable = true;
+            }
           }
         }
       }
@@ -386,6 +394,19 @@ export default {
 
     const goBack = () => {
       router.back()
+    }
+
+    const showToday = () => {
+      state.block = {};
+      state.date = undefined;
+      state.showToday = true;
+      state.showReserve = false;
+    }
+
+    const showReserve = () => {
+      state.attentionBlock = {},
+      state.showToday = false;
+      state.showReserve = true;
     }
 
     const changeDate = computed(() => {
@@ -492,13 +513,6 @@ export default {
                 getAttentions();
               }
             }
-            state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
-            const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
-            if (!blockAvailable || blockAvailable.length === 0) {
-              state.attentionAvailable = false;
-            } else {
-              state.attentionAvailable = true;
-            }
           } else {
             await getAttention(undefined);
           }
@@ -515,6 +529,13 @@ export default {
           state.bookingAvailable = false;
         } else {
           state.bookingAvailable = true;
+        }
+        state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+        const blockAttentionAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
+        if (!blockAttentionAvailable || blockAttentionAvailable.length === 0) {
+          state.attentionAvailable = false;
+        } else {
+          state.attentionAvailable = true;
         }
       }
     )
@@ -541,7 +562,9 @@ export default {
       validateCaptchaError,
       showConditions,
       setDate,
-      getBooking
+      getBooking,
+      showToday,
+      showReserve
     }
   }
 }
@@ -559,6 +582,7 @@ export default {
       <Alert :show="loading" :stack="alertError"></Alert>
       <div v-if="isActiveCommerce(state.commerce) && !loading">
         <div v-if="isAvailableCommerce(state.commerce)">
+          <!-- FORM -->
           <div id="data" v-if="isDataActive(state.commerce)">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-4">
               <span>{{ $t("commerceQueuesView.data") }}</span>
@@ -653,6 +677,7 @@ export default {
               </div>
             </div>
           </div>
+          <!-- QUEUES -->
           <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
               <span>{{ $t("commerceQueuesView.choose") }}</span>
@@ -701,46 +726,56 @@ export default {
               </div>
             </div>
           </div>
-          <div id="date" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
+          <!-- BOOKING / ATTENTION -->
+          <div id="booking" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
               <span> {{ $t("commerceQueuesView.when") }} </span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
               <div>
-                <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.queue.id">
+                <!-- ATTENTION TODAY HOUR -->
+                <div id="booking-today-hour" v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.queue.id">
                   <button
                     class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
                     data-bs-toggle="collapse"
                     href="#booking-hour"
-                    @click="setDate('TODAY')"
+                    @click="setDate('TODAY');showToday()"
                     :disabled="!state.accept || !state.queue.id">
                     {{ $t("commerceQueuesView.today") }} <i class="bi bi-chevron-down"></i>
                   </button>
-                  <div :class="'collapse mx-2'" id="booking-hour">
-                    <div class="choose-attention py-1 pt-2">
-                      <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                  <div :class="state.showToday ? 'collapse mx-2 show' : 'collapse mx-2 hide'" id="booking-hour">
+                    <div class="centered">
+                      <div class="col col-md-9 data-card">
+                        <div class="choose-attention py-1 pt-2">
+                          <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                        </div>
+                        <div>
+                          <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.attentionBlock">
+                            <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                          </select>
+                        </div>
+                        <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock && state.attentionBlock.number" class="py-1 mt-2">
+                          <hr>
+                          {{ $t("commerceQueuesView.blockSelected") }}
+                          <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
+                        </div>
+                        <div v-if="state.attentionBlock.number && state.attentionAvailable === false">
+                          <Alert :show="!!state.attentionAvailable" :stack="990"></Alert>
+                        </div>
+                        <button
+                          type="button"
+                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                          @click="getAttention(state.attentionBlock)"
+                          :disabled="!state.accept || !state.queue.id || !state.attentionAvailable"
+                          >
+                          {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                        </button>
+                      </div>
                     </div>
-                    <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.attentionBlock">
-                      <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
-                    </select>
-                    <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock" class="py-1 mt-2">
-                      {{ $t("commerceQueuesView.blockSelected") }}
-                      <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
-                    </div>
-                    <div v-if="state.attentionBlock.number && state.attentionAvailable === false">
-                      <Alert :show="state.attentionAvailable" :stack="990"></Alert>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                      @click="getAttention(state.attentionBlock)"
-                      :disabled="!state.accept || !state.queue.id || !state.attentionAvailable"
-                      >
-                      {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
-                    </button>
                   </div>
                 </div>
-                <div v-else>
+                <!-- ATTENTION TODAY -->
+                <div id="booking-today" v-else>
                   <button
                     type="button"
                     class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
@@ -750,63 +785,79 @@ export default {
                     {{ $t("commerceQueuesView.today") }}
                   </button>
                 </div>
+                <!-- BOOKING -->
                 <button
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
                   data-bs-toggle="collapse"
                   href="#booking-date"
+                  @click="showReserve()"
                   :disabled="!state.accept || !state.queue.id">
                   {{ $t("commerceQueuesView.booking") }} <i class="bi bi-chevron-down"></i>
                 </button>
-                <div :class="'collapse mx-2'" id="booking-date">
-                  <div class="mx-4">
-                    <div class="choose-attention py-1 pt-2">
-                      <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
-                    </div>
-                    <VDatePicker
-                      view="weekly"
-                      :locale="state.locale"
-                      v-model.string="state.date"
-                      :mask="dateMask"
-                      :min-date="state.minDate"
-                      :disabled-dates="disabledDates"
-                    />
-                    <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
-                        state.availableBlocks &&
-                        state.date" class="mb-2">
+                <div :class="state.showReserve ? 'collapse mx-2 show' : 'collapse mx-2 hide'" id="booking-date">
+                  <div class="centered">
+                    <div class="col col-md-9 data-card">
                       <div class="choose-attention py-1 pt-2">
-                        <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                        <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
                       </div>
-                      <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
-                        <option v-for="block in state.availableBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
-                      </select>
-                    </div>
-                    <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-2">
-                      <hr>
-                      <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
-                      <div>
-                        {{ $t("commerceQueuesView.queueSelected") }}
-                        <div class="badge rounded-pill bg-primary py-2 px-4 m-1">{{ state.queue.name }} </div>
+                      <VDatePicker
+                        view="weekly"
+                        :locale="state.locale"
+                        v-model.string="state.date"
+                        :mask="dateMask"
+                        :min-date="state.minDate"
+                        :disabled-dates="disabledDates"
+                      />
+                      <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
+                          state.availableBlocks &&
+                          state.date" class="mb-2">
+                        <div class="choose-attention py-1 pt-2">
+                          <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                        </div>
+                        <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
+                          <option v-for="block in state.availableBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                        </select>
                       </div>
-                      <div>
-                        {{ $t("commerceQueuesView.dataSelected") }}
-                        <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                      <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-2">
+                        <hr>
+                        <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
+                        <div>
+                          {{ $t("commerceQueuesView.queueSelected") }}
+                          <div class="badge rounded-pill bg-primary py-2 px-4 m-1">{{ state.queue.name }} </div>
+                        </div>
+                        <div>
+                          {{ $t("commerceQueuesView.dataSelected") }}
+                          <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                        </div>
+                        <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
+                          {{ $t("commerceQueuesView.blockSelected") }}
+                          <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                        </div>
                       </div>
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
-                        {{ $t("commerceQueuesView.blockSelected") }}
-                        <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                        <div v-if="state.block.number && state.bookingAvailable === false">
+                          <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
+                        </div>
+                        <button
+                          type="button"
+                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                          @click="getBooking()"
+                          :disabled="!state.accept || !state.queue.id || !state.date || !state.bookingAvailable"
+                          >
+                          {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                        </button>
+                      </div>
+                      <div v-else-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')">
+                        <button
+                          type="button"
+                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                          @click="getBooking()"
+                          :disabled="!state.accept || !state.queue.id || !state.date"
+                          >
+                          {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                        </button>
                       </div>
                     </div>
-                    <div v-if="state.block.number && state.bookingAvailable === false">
-                      <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                      @click="getBooking()"
-                      :disabled="!state.accept || !state.queue.id || !state.date || !state.bookingAvailable"
-                      >
-                      {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -857,6 +908,14 @@ export default {
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   align-items: left;
+}
+.booking-data-card {
+  --margin-top: .2rem;
+  margin-bottom: .5rem;
+  background-color: var(--color-background);
+  border-radius: .5rem;
+  border: .5px solid var(--gris-default);
+  font-weight: 400;
 }
 .form-floating > label {
   text-align: center !important;

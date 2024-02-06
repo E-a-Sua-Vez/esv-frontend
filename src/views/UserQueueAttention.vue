@@ -446,18 +446,20 @@ export default {
                 <span class="attention-details-content"> 🚨 </span><br>
                 <span class="attention-details-title">  {{ $t("userQueueAttention.willBeAttendedShortly") }} </span>
               </div>
-              <div v-else class="col-6 attention-details-card">
-                <span class="attention-details-title"> {{ $t("userQueueAttention.toGoal.1") }} </span><br>
-                <span class="attention-details-content"> <i class="bi bi-person"></i> {{ state.beforeYou }} </span><br>
-              </div>
-              <div class="col-6 attention-details-card">
-                <div v-if="state.attention.block && state.attention.block.hourFrom">
-                  <span class="attention-details-title"> {{ $t("userQueueAttention.blockInfo") }}</span><br>
-                  <span class="attention-details-content parpadea"> {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }} </span> <br>
+              <div v-else class="centered col-12">
+                <div class="col-6 attention-details-card">
+                  <span class="attention-details-title"> {{ $t("userQueueAttention.toGoal.1") }} </span><br>
+                  <span class="attention-details-content"> <i class="bi bi-person"></i> {{ state.beforeYou }} </span><br>
                 </div>
-                <div v-else-if="state.beforeYou">
-                  <span class="attention-details-title"> {{ $t("userQueueAttention.estimatedTime") }} </span><br>
-                  <span class="attention-details-content parpadea"> <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }} </span> <br>
+                <div class="col-6 attention-details-card">
+                  <div v-if="state.attention.block && state.attention.block.hourFrom">
+                    <span class="attention-details-title"> {{ $t("userQueueAttention.blockInfo") }}</span><br>
+                    <span class="attention-details-content parpadea"> {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }} </span> <br>
+                  </div>
+                  <div v-else-if="state.beforeYou">
+                    <span class="attention-details-title"> {{ $t("userQueueAttention.estimatedTime") }} </span><br>
+                    <span class="attention-details-content parpadea"> <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }} </span> <br>
+                  </div>
                 </div>
               </div>
             </div>
