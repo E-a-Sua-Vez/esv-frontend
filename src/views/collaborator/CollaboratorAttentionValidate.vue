@@ -40,6 +40,7 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.currentUser = await store.getCurrentUser;
         state.attention = await getAttentionDetails(id);
         if (state.attention.id) {
           state.queue = state.attention.queue;
@@ -57,8 +58,6 @@ export default {
       }
     })
 
-    state.currentUser = await store.getCurrentUser;
-
     const finishCurrentAttention = async () => {
       try {
         loading.value = true;
@@ -73,17 +72,6 @@ export default {
         loading.value = false;
       }
     };
-
-    const beforeCurrent = () => {
-      if(state.queue.currentNumber === 0){
-        return 0;
-      }
-      return state.queue.currentNumber - state.queue.currentAttentionNumber + 1;
-    }
-
-    const isEmptyQueue = () => {
-      return state.attention.number === state.queue.currentNumber;
-    }
 
     const queueAttentions = () => {
       router.push({ path: `/interno/colaborador/fila/${state.queue.id}/atenciones` });
@@ -114,8 +102,6 @@ export default {
       comment,
       loading,
       alertError,
-      isEmptyQueue,
-      beforeCurrent,
       finishCurrentAttention,
       queueAttentions,
       skipAttention,

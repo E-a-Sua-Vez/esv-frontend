@@ -237,7 +237,7 @@
     "confirm": "Confirmar",
     "queueSelected": "Fila/Servicio Seleccionado:",
     "dataSelected": "Fecha de Reserva:",
-    "blockSelected": "Hora de Reserva:",
+    "blockSelected": "Hora Seleccionada:",
     "message": {
       "title": "¡Ups!",
       "content": "En este momento no hay filas de atención. Por favor acércate a algún colaborador para solicitar ayuda."
@@ -323,6 +323,7 @@
     "module": "Único",
     "collaborator": "N/A",
     "cancel": "Cancelar Atención",
+    "blockInfo": "Su horario de atención:",
     "message": {
       "1": {
         "title": "¡Llegaste tarde!",

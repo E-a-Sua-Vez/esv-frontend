@@ -1,12 +1,12 @@
 <script>
 import { ref, watch, reactive, onBeforeMount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getAvailableAttentionDetailsByNumber, getAvailableAttentiosnByQueue, getAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
+import { getNextAvailableAttentionDetails, getAvailableAttentiosnByQueue, getAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
 import { getCommerceById } from '../../application/services/commerce';
 import { getQueueById } from '../../application/services/queue';
 import { globalStore } from '../../stores/index';
 import { attend } from '../../application/services/attention';
-import { updatedQueues } from '../../application/firebase';
+import { updatedQueues, updatedAvailableAttentions } from '../../application/firebase';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -59,17 +59,18 @@ export default {
     let queues = ref([]);
     queues = updatedQueues(id);
 
+    let attentions = ref([]);
+    attentions = updatedAvailableAttentions(id);
+
     const getQueueValues = async (queue, oldQueue) => {
       state.queue = queue;
       store.setCurrentQueue(queue);
       if (queue !== undefined && queue.id !== undefined) {
-        if (queue.currentAttentionNumber) {
-          state.attention = await getAvailableAttentionDetailsByNumber(queue.id, queue.currentAttentionNumber);
-          state.queuePendingDetails = await getAvailableAttentiosnByQueue(queue.id);
-          state.queueProcessingDetails = await getAttentionDetailsByQueue(queue.id, 'PROCESSING');
-          if (state.attention.user) {
-            state.user = state.attention.user;
-          }
+        state.attention = await getNextAvailableAttentionDetails(queue.id);
+        state.queuePendingDetails = await getAvailableAttentiosnByQueue(queue.id);
+        state.queueProcessingDetails = await getAttentionDetailsByQueue(queue.id, 'PROCESSING');
+        if (state.attention.user) {
+          state.user = state.attention.user;
         }
         if (state.attention.commerce) {
           state.commerce = state.attention.commerce;
@@ -90,18 +91,6 @@ export default {
       }
     )
 
-    const isEmptyQueue = () => {
-      const flag = state.queue.currentAttentionNumber - 1;
-      return (state.queue.currentNumber === 0 || state.queue.currentNumber === flag) && (state.attention.id === undefined || state.attention.status !== 'PROCESSING');
-    }
-
-    const beforeCurrent = () => {
-      if(state.queue.currentNumber === 0){
-        return 0;
-      }
-      return state.queue.currentNumber - state.queue.currentAttentionNumber + 1;
-    }
-
     const collaboratorQueues = () => {
       router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` })
     }
@@ -111,7 +100,7 @@ export default {
         loading.value = true;
         alertError.value = '';
         const body = { queueId: state.queue.id, collaboratorId: state.currentUser.id , commerceLanguage: state.commerce.localeInfo ? state.commerce.localeInfo.language : 'sp'};
-        state.attention = await attend(state.queue.currentAttentionNumber, body);
+        state.attention = await attend(state.attention.number, body);
         router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/validar` }).then(() => { router.go() });
         alertError.value = '';
         loading.value = false;
@@ -141,8 +130,7 @@ export default {
       state,
       loading,
       alertError,
-      isEmptyQueue,
-      beforeCurrent,
+      attentions,
       collaboratorQueues,
       attendAttention,
       finishCurrentCancelledAttention
@@ -172,7 +160,7 @@ export default {
       ></ToggleCapabilities>
       <Spinner :show="loading"></Spinner>
       <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="isEmptyQueue()" class="mt-2">
+      <div v-if="attentions.length === 0" class="mt-2">
         <Message
           :title="$t('collaboratorQueueAttentions.message.1.title')"
           :content="$t('collaboratorQueueAttentions.message.1.content')"
@@ -186,7 +174,7 @@ export default {
           </div>
           <AttentionNumber
             :type="'secondary'"
-            :number="state.queue.currentAttentionNumber"
+            :number="state.attention.number"
             :data="state.user"
           ></AttentionNumber>
           <div class="d-grid gap-2 mt-3">
@@ -204,11 +192,11 @@ export default {
           </div>
           <AttentionNumber
             :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-            :number="state.queue.currentAttentionNumber"
+            :number="state.attention.number"
             :data="state.user"
           ></AttentionNumber>
           <div class="to-goal">
-            <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ beforeCurrent() }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
+            <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ attentions.length }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
           </div>
           <div class="d-grid gap-2 my-2">
             <button

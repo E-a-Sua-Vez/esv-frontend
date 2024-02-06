@@ -139,6 +139,9 @@ export default {
         </div>
         <div v-if="queueProcessingDetails.length > 0" class="attentions-card">
           <div v-for="(attention, index) in queueProcessingDetails" :key="index" class="mt-2">
+            <div v-if="attention.block">
+              <span class="lefted badge rounded-pill bg-primary m-0"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
+            </div>
             <AttentionNumber
               :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
               :number="attention.number"
@@ -163,8 +166,11 @@ export default {
         </div>
         <div v-if="queuePendingDetails.length > 0" class="attentions-card">
           <div v-for="(attention, index) in queuePendingDetails" :key="index" class="mt-2">
+            <div v-if="attention.block">
+              <span class="lefted badge rounded-pill bg-primary m-0"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
+            </div>
             <AttentionNumber
-            :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
+              :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
               :number="attention.number"
               :data="attention.user"
               :showData="false"

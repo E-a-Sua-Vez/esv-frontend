@@ -236,7 +236,7 @@
     "confirm": "Confirm",
     "queueSelected": "Queue/Service Selected:",
     "dataSelected": "Date Of Booking:",
-    "blockSelected": "Hour Of Booking:",
+    "blockSelected": "Hour Selected:",
     "message": {
       "title": "Oh no!",
       "content": "At this time there are no service queues. Please approach a collaborator to request help."
@@ -321,6 +321,7 @@
     "attendedBy": "You'll be attended by:",
     "module": "Unique",
     "cancel": "Cancel Attention",
+    "blockInfo": "Your attention schedule:",
     "collaborator": "N/A",
     "message": {
       "1": {

@@ -235,7 +235,7 @@
     "daySelected": "Os dados da sua reserva:",
     "queueSelected": "Fila/Serviço Selecionado:",
     "dataSelected": "Data de Reserva:",
-    "blockSelected": "Hora de Reserva:",
+    "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
     "message": {
       "title": "Oh não!",
@@ -321,6 +321,7 @@
     "attendedBy": "Você será atendido por:",
     "module": "Único",
     "cancel": "Cancelar Atenção",
+    "blockInfo": "Seu horário de atenção:",
     "collaborator": "N/A",
     "message": {
       "1": {

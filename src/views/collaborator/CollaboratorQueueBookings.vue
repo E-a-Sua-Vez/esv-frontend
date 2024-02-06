@@ -123,13 +123,6 @@ export default {
       }
     }
 
-    const beforeCurrentQueue = (queue) => {
-      if(queue.currentNumber === 0){
-        return 0;
-      }
-      return queue.currentNumber - queue.currentAttentionNumber + 1;
-    }
-
     const goBack = () => {
       router.push({ path: `/interno/colaborador/menu` });
     }
@@ -228,7 +221,6 @@ export default {
       copyLink,
       getQueueLink,
       getQueue,
-      beforeCurrentQueue,
       isActiveCommerce,
       getLineAttentions,
       goBack,

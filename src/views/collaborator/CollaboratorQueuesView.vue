@@ -7,7 +7,7 @@ import { getCollaboratorById, updateModule } from '../../application/services/co
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import { updatedQueuesByCommerce } from '../../application/firebase';
+import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -42,6 +42,7 @@ export default {
       module: {},
       activeCommerce: false,
       captcha: false,
+      queueStatus: {},
       toggles: {}
     });
 
@@ -54,9 +55,15 @@ export default {
           state.commerce = await getCommerceById(state.currentUser.commerceId);
         }
         state.queues = state.commerce.queues;
+        initializeQueueStatus();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
-        state.collaborator = await getCollaboratorById(state.currentUser.id);
-        state.module = await getModuleById(state.collaborator.moduleId);
+        state.collaborator = state.currentUser;
+        if (!state.currentUser) {
+          state.collaborator = await getCollaboratorById(state.currentUser.id);
+        }
+        if (state.modules && state.modules.length > 0) {
+          state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
+        }
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.toggles = await getPermissions('collaborator');
@@ -68,15 +75,17 @@ export default {
       }
     })
 
-    let queues = ref([]);
-    queues = updatedQueuesByCommerce(id);
+    let attentions = ref([]);
+    attentions = updatedAvailableAttentionsByCommerce(id);
 
     const isActiveCommerce = () => {
       return state.commerce && state.commerce.active === true && state.commerce.queues.length > 0;
     };
+
     const isActiveModules = () => {
       return state.module && state.modules.length > 0
     }
+
     const getLineAttentions = async () => {
       try {
         loading.value = true;
@@ -89,6 +98,7 @@ export default {
         alertError.value = error.message;
       }
     };
+
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
       store.setCurrentQueue(state.queue);
@@ -96,15 +106,18 @@ export default {
        await validateCaptchaOk(true);
       }
     }
+
     const validateCaptchaOk = async (response) => {
       if(response) {
         state.captcha = true;
         getLineAttentions();
       }
     };
+
     const validateCaptchaError = () => {
       state.captcha = false;
     };
+
     const moduleSelect = async () => {
       try {
         loading.value = true;
@@ -119,25 +132,39 @@ export default {
         loading.value = false;
       }
     }
-    const beforeCurrentQueue = (queue) => {
-      if(queue.currentNumber === 0){
-        return 0;
-      }
-      return queue.currentNumber - queue.currentAttentionNumber + 1;
-    }
-
-    const getQueueValues = async (queues) => {
-      state.queues = queues;
-    }
 
     const goBack = () => {
       router.push({ path: `/interno/colaborador/menu` });
     }
 
+    const initializeQueueStatus = () => {
+      if (state.queues && state.queues.length > 0) {
+        state.queues.forEach(queue => {
+          state.queueStatus[queue.id] = 0;
+        })
+      }
+    }
+
+    const checkQueueStatus = (filteredAttentionsByQueue) => {
+        if (state.queues && state.queues.length > 0) {
+        state.queues.forEach(queue => {
+          if (filteredAttentionsByQueue[queue.id]) {
+            const attentions = filteredAttentionsByQueue[queue.id].length;
+            state.queueStatus[queue.id] = attentions;
+          }
+        })
+      }
+    }
+
     watch(
-      queues,
+      attentions,
       async () => {
-        await getQueueValues(queues)
+        if (attentions && attentions.value && attentions.value.length > 0) {
+          const filteredAttentionsByQueue = Object.groupBy(attentions.value, ({ queueId }) => queueId);
+          checkQueueStatus(filteredAttentionsByQueue);
+        } else {
+          initializeQueueStatus();
+        }
       }
     )
 
@@ -148,7 +175,6 @@ export default {
       loading,
       alertError,
       getQueue,
-      beforeCurrentQueue,
       isActiveCommerce,
       getLineAttentions,
       validateCaptchaOk,
@@ -222,9 +248,9 @@ export default {
                       {{ queue.name }}
                     </div>
                     <div class="col-2">
-                      <span :class="`badge rounded-pill m-0 indicator ${beforeCurrentQueue(queue) === 0 ? 'text-bg-success': 'text-bg-primary'}`">
+                      <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">
                         <i class="bi bi-person-fill"></i>
-                        {{ beforeCurrentQueue(queue) }}
+                        {{ state.queueStatus[queue.id] }}
                       </span>
                     </div>
                   </div>
@@ -244,9 +270,9 @@ export default {
                       {{ queue.name }}
                     </div>
                     <div class="col-2">
-                      <span :class="`badge rounded-pill m-0 indicator ${beforeCurrentQueue(queue) === 0 ? 'text-bg-success': 'text-bg-primary'}`">
+                      <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">
                         <i class="bi bi-person-fill"></i>
-                        {{ beforeCurrentQueue(queue) }}
+                        {{ state.queueStatus[queue.id] }}
                       </span>
                     </div>
                   </div>

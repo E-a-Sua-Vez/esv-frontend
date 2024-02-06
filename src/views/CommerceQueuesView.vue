@@ -16,7 +16,7 @@ import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/domain/NotificationConditions.vue';
 import { getActiveFeature } from '../shared/features';
-import { bookingCollection } from '../application/firebase';
+import { bookingCollection, attentionCollection } from '../application/firebase';
 
 export default {
   name: 'CommerceQueuesView',
@@ -43,6 +43,7 @@ export default {
       }
     ]);
     let unsubscribeBookings = () => {};
+    let unsubscribeAttentions = () => {};
 
     const state = reactive({
       commerce: {},
@@ -62,7 +63,9 @@ export default {
       accept: false,
       date: undefined,
       block: {},
+      attentionBlock: {},
       availableBlocks: [],
+      availableAttentionBlocks: [],
       locale: 'es',
       minDate: (new Date()).setDate(new Date().getDate() + 1),
       phoneCodes: [
@@ -74,7 +77,9 @@ export default {
       ],
       hourBlocks: [],
       bookings: ref([]),
-      bookingAvailable: true
+      attentions: ref([]),
+      bookingAvailable: true,
+      attentionAvailable: true
     });
 
     onBeforeMount(async () => {
@@ -87,13 +92,13 @@ export default {
           if (queueId) {
             state.queue = await getQueueById(queueId);
             state.queues = [state.queue];
-            await getAttention();
+            await getAttention(undefined);
           } else {
             const queues = state.commerce.queues;
             state.queues = queues;
             if (queues.length === 1) {
               state.queue = queues[0];
-              await getAttention();
+              await getAttention(undefined);
             }
           }
           if (state.commerce.localeInfo && state.commerce.localeInfo.country) {
@@ -110,6 +115,9 @@ export default {
       if (unsubscribeBookings) {
         unsubscribeBookings();
       }
+      if (unsubscribeAttentions) {
+        unsubscribeAttentions();
+      }
     })
 
     const formattedDate = (date) => {
@@ -121,6 +129,11 @@ export default {
     const getBookings = () => {
       const { unsubscribe } = updatedBookings(state.queue.id, formattedDate(state.date));
       unsubscribeBookings = unsubscribe;
+    }
+
+    const getAttentions = () => {
+      const { unsubscribe } = updatedAttentions(state.queue.id);
+      unsubscribeAttentions = unsubscribe;
     }
 
     const isActiveCommerce = (commerce) => {
@@ -267,18 +280,21 @@ export default {
       return false;
     }
 
-    const getAttention = async () => {
+    const getAttention = async (block) => {
       try {
         loading.value = true;
         alertError.value = '';
-        state.date = undefined;
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
             newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
-          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser }
+          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser }
+          if (block && block.number) {
+            body = { ...body, block };
+          }
+          state.date = undefined;
           const attention = await createAttention(body);
           router.push({ path: `/interno/fila/${state.queue.id}/atencion/${attention.id}` });
         }
@@ -329,6 +345,12 @@ export default {
             disabledDates.value[0].repeat.weekdays.push(...disabled);
           }
         }
+        if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+          if (state.queue.id) {
+            getAttentions();
+            state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+          }
+        }
       }
       if (captchaEnabled) {
        await validateCaptchaOk(true);
@@ -347,7 +369,7 @@ export default {
       if(response) {
         captcha = true;
         if (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')) {
-          await getAttention();
+          await getAttention(undefined);
         }
       }
     };
@@ -367,12 +389,21 @@ export default {
     }
 
     const changeDate = computed(() => {
-      const { date, bookings, block, availableBlocks } = state;
+      const {
+        date,
+        bookings,
+        attentions,
+        block,
+        attentionBlock,
+        availableBlocks
+      } = state;
       return {
         date,
         bookings,
         block,
-        availableBlocks
+        attentionBlock,
+        availableBlocks,
+        attentions
       }
     })
 
@@ -386,6 +417,24 @@ export default {
           if (bookings && bookings.length > 0) {
             bookingsReserved = bookings.map(booking => booking.number);
             availableBlocks = queueBlocks.filter(block => !bookingsReserved.includes(block.number))
+          } else {
+            availableBlocks = queueBlocks;
+          }
+        }
+      }
+      return availableBlocks;
+    }
+
+    const getAvailableAttentionBlocks = (attentions) => {
+      let queueBlocks = [];
+      let availableBlocks = [];
+      if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
+        queueBlocks = state.queue.serviceInfo.blocks;
+        if (queueBlocks && queueBlocks.length > 0) {
+          let attentionsReserved = 0;
+          if (attentions && attentions.length > 0) {
+            attentionsReserved = attentions.map(attention => attention.number);
+            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number))
           } else {
             availableBlocks = queueBlocks;
           }
@@ -414,11 +463,45 @@ export default {
       return { unsubscribe };
     }
 
+    const updatedAttentions = (queueId) => {
+      let values = ref([]);
+      let unsubscribe;
+      const attentionsQuery = attentionCollection
+        .where('queueId', "==", queueId)
+        .where('status', "==", 'PENDING')
+        .orderBy('number', 'asc');
+      unsubscribe = attentionsQuery.onSnapshot(snapshot => {
+        values.value = snapshot.docs
+          .map(doc => {
+            return { id: doc.id, ...doc.data() }
+          })
+      })
+      state.attentions = values;
+      return { unsubscribe };
+    }
+
     watch (
       changeDate,
       async (newData, oldData) => {
         if (state.date === 'TODAY') {
-          await getAttention();
+          if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+            if (newData.attentions && oldData.attentions) {
+              const newIds = newData.attentions.map(att => att.id);
+              const oldIds = oldData.attentions.map(att => att.id);
+              if (newIds.includes(oldIds) && newIds.length !== oldIds.length) {
+                getAttentions();
+              }
+            }
+            state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+            const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
+            if (!blockAvailable || blockAvailable.length === 0) {
+              state.attentionAvailable = false;
+            } else {
+              state.attentionAvailable = true;
+            }
+          } else {
+            await getAttention(undefined);
+          }
         } else if (newData.date !== oldData.date) {
           if (unsubscribeBookings) {
             unsubscribeBookings();
@@ -623,15 +706,50 @@ export default {
               <span> {{ $t("commerceQueuesView.when") }} </span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
-              <div >
-                <button
-                  type="button"
-                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
-                  @click="setDate('TODAY')"
-                  :disabled="!state.accept || !state.queue.id"
-                  >
-                  {{ $t("commerceQueuesView.today") }}
-                </button>
+              <div>
+                <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.queue.id">
+                  <button
+                    class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    data-bs-toggle="collapse"
+                    href="#booking-hour"
+                    @click="setDate('TODAY')"
+                    :disabled="!state.accept || !state.queue.id">
+                    {{ $t("commerceQueuesView.today") }} <i class="bi bi-chevron-down"></i>
+                  </button>
+                  <div :class="'collapse mx-2'" id="booking-hour">
+                    <div class="choose-attention py-1 pt-2">
+                      <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
+                    </div>
+                    <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.attentionBlock">
+                      <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                    </select>
+                    <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock" class="py-1 mt-2">
+                      {{ $t("commerceQueuesView.blockSelected") }}
+                      <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
+                    </div>
+                    <div v-if="state.attentionBlock.number && state.attentionAvailable === false">
+                      <Alert :show="state.attentionAvailable" :stack="990"></Alert>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                      @click="getAttention(state.attentionBlock)"
+                      :disabled="!state.accept || !state.queue.id || !state.attentionAvailable"
+                      >
+                      {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div v-else>
+                  <button
+                    type="button"
+                    class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    @click="setDate('TODAY')"
+                    :disabled="!state.accept || !state.queue.id"
+                    >
+                    {{ $t("commerceQueuesView.today") }}
+                  </button>
+                </div>
                 <button
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
                   data-bs-toggle="collapse"

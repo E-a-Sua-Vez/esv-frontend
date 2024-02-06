@@ -7,8 +7,7 @@ import { getQueueById } from '../application/services/queue';
 import { getUserById } from '../application/services/user';
 import { getCollaboratorById } from '../application/services/collaborator';
 import { getModuleById } from '../application/services/module';
-import { updatedAttentions } from '../application/firebase';
-import { updatedQueues } from '../application/firebase';
+import { updatedAvailableAttentionsByCommerceAndQueue } from '../application/firebase';
 import { getPermissions } from '../application/services/permissions';
 import Message from '../components/common/Message.vue';
 import AttentionSurvey from'../components/domain/AttentionSurvey.vue';
@@ -78,9 +77,7 @@ export default {
     })
 
     let attentions = ref([]);
-    attentions = updatedAttentions(id);
-    let queues = ref([]);
-    queues = updatedQueues(queueId);
+    attentions = updatedAvailableAttentionsByCommerceAndQueue(queueId);
 
     const getEstimatedTime = (totalMinutes) => {
       const hours = Math.floor(totalMinutes / 60);
@@ -99,7 +96,7 @@ export default {
     };
 
     const getQueueAttentionValues = async (attention, oldAttention) => {
-      if (attention && attention.id && attention.id !== oldAttention.id) {
+      if (attention && attention.id) {
         try {
           await getAttentionDetailsFromService(id);
           let attentionDetails = state.attention;
@@ -108,8 +105,6 @@ export default {
             if (!attentionDetails.queue) {
               state.queue = await getQueueById(attention.queueId);
             }
-            state.beforeYou = attention.number - state.queue.currentAttentionNumber;
-            state.beforeYou = state.beforeYou < 0 ? 0 : state.beforeYou;
             const totalMinutes = (state.beforeYou) * state.queue.estimatedTime;
             state.estimatedTime = totalMinutes > 0 ? getEstimatedTime(totalMinutes) : getEstimatedTime(state.queue.estimatedTime);
             state.commerce = attentionDetails.commerce;
@@ -153,53 +148,61 @@ export default {
         router.push({ path: `/not-found` })
       }
     }
-    const getQueueValues = async (queue, oldQueue) => {
-      if (queue && queue.id) {
-        state.queue = queue;
-      }
-    }
+
     const attentionActive = () => {
       return state.attention.status === 'PENDING' || state.attention.status === 'REACTIVATED';
     };
+
     const itsYourTurn = () => {
       return (state.beforeYou === 0 && state.attention.status === 'PROCESSING') ||
         state.attention.status === 'REACTIVATED';
     }
+
     const youWereAttended = () => {
       return state.attention.status === 'TERMINATED'
         && state.attention.surveyId === undefined;
     }
+
     const youFullfilledSurvey = () => {
       return (state.attention.status === 'TERMINATED' || state.attention.status === 'RATED')
         && state.attention.surveyId !== undefined;
     }
+
     const youWereReserveCancelled = () => {
       return state.attention.status === 'TERMINATED_RESERVE_CANCELLED';
     }
+
     const youWereSkipped = () => {
       return state.attention.status === 'CANCELLED';
     }
+
     const youWereAttentionCancelled = () => {
       return state.attention.status === 'USER_CANCELLED';
     }
+
     const getCreatedAt = (createdAt, timeZoneIn) => {
       const dateCorrected = new Date(
-      new Date(createdAt).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }),
-    );
-    return dateCorrected.toLocaleString("en-GB");
+        new Date(createdAt).toLocaleString('en-US', {
+          timeZone: timeZoneIn,
+        }),
+      );
+      return dateCorrected.toLocaleString("en-GB");
     }
+
     const notify = () => { };
+
     const getQRValue = () => {
       return `${import.meta.env.VITE_URL}/interno/colaborador/atencion/${state.attention.id}/validar`;
     };
+
     const createdUser = (user) => {
       state.user = user;
     };
+
     const backToCommerceQueues = () => {
       router.push({ path: `/interno/comercio/${state.commerce.keyName}` })
     }
+
     const itsYourTurnPlay = () => {
       if (itsYourTurn() && !state.soundPlayed) {
         var audio = document.getElementById('its-your-turn-audio');
@@ -207,11 +210,13 @@ export default {
         state.soundPlayed = true;
       }
     }
+
     const play = () => {
       state.soundEnabled = !state.soundEnabled;
       var audio = document.getElementById('its-your-turn-audio');
       audio.muted = !state.soundEnabled;
     }
+
     const testSound = () => {
       var audio = document.getElementById('its-your-turn-audio-test');
       audio.play();
@@ -220,15 +225,19 @@ export default {
       const name = state.collaborator.alias || state.collaborator.name;
       return name ? name.split(' ')[0] : t('userQueueAttention.collaborator');
     }
+
     const attentionCancelled = () => {
       return state.attention.status === 'RESERVE_CANCELLED';
     }
+
     const goToCancel = () => {
       state.goToCancel = !state.goToCancel;
     }
+
     const cancelCancel = () => {
       state.goToCancel = false;
     }
+
     const cancellingAttention = async () => {
       try {
         loading.value = true;
@@ -244,13 +253,25 @@ export default {
       }
     }
 
+    const getBeforeYou = (attentions) => {
+      if (attentions && attentions.value && attentions.value.length > 0) {
+        const attentionToProcess = attentions.value.filter(attention => attention.id === id)[0];
+        const pendingAttentions = attentions.value.filter(attention => attention.status === 'PENDING');
+        const beforeYou = pendingAttentions.filter(attention => attention.number < attentionToProcess.number);
+        state.beforeYou = beforeYou.length;
+      }
+    }
+
     watch(
-      [ attentions, queues ],
-      async ([newAttention, newQueue], [oldAttention, oldQueue]) => {
+      attentions,
+      async () => {
         try {
-          await getQueueAttentionValues(newAttention[0], oldAttention);
-          await getQueueValues(newQueue[0], oldQueue);
-          await itsYourTurnPlay();
+          if (attentions && attentions.value && attentions.value.length >= 0) {
+            const newAttention = attentions.value.filter(attention => attention.id === id)[0];
+            getBeforeYou(attentions);
+            await getQueueAttentionValues(newAttention, state.attention);
+            await itsYourTurnPlay();
+          }
           loading.value = false;
         } catch (error) {
           loading.value = false;
@@ -429,12 +450,21 @@ export default {
                 <span class="attention-details-title"> {{ $t("userQueueAttention.toGoal.1") }} </span><br>
                 <span class="attention-details-content"> <i class="bi bi-person"></i> {{ state.beforeYou }} </span><br>
               </div>
-              <div v-if=" state.beforeYou > 0" class="col-6 attention-details-card">
-                <span class="attention-details-title"> {{ $t("userQueueAttention.estimatedTime") }} </span><br>
-                <span class="attention-details-content parpadea"> <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }} </span> <br>
+              <div class="col-6 attention-details-card">
+                <div v-if="state.attention.block && state.attention.block.hourFrom">
+                  <span class="attention-details-title"> {{ $t("userQueueAttention.blockInfo") }}</span><br>
+                  <span class="attention-details-content parpadea"> {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }} </span> <br>
+                </div>
+                <div v-else-if="state.beforeYou">
+                  <span class="attention-details-title"> {{ $t("userQueueAttention.estimatedTime") }} </span><br>
+                  <span class="attention-details-content parpadea"> <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }} </span> <br>
+                </div>
               </div>
             </div>
           </div>
+
+
+
           <div id="sound-control" class="attention-details-sound" v-if="attentionActive()">
             <div class="row centered attention-sound">
               <div class="col-8">

@@ -2,7 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 
-import { ref, onUnmounted, reactive } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,11 +21,9 @@ const auth = firebase.auth();
 // Initialize Firebase Authentication and get a reference to the service
 
 const firestore = firebase.firestore();
-const attentionCollection = firestore.collection('attention');
-const queueCollection = firestore.collection('queue');
+export const attentionCollection = firestore.collection('attention');
+export const queueCollection = firestore.collection('queue');
 export const bookingCollection = firestore.collection('booking');
-
-
 
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);
@@ -51,6 +49,58 @@ export function updatedQueues(queueId) {
   })
   onUnmounted(unsubscribe)
   return queues;
+}
+
+export function updatedAvailableAttentions(queueId) {
+  const attentions = ref([]);
+  const attentionQuery = attentionCollection
+    .where('queueId', "==", queueId)
+    .where('status', 'in', ['PENDING'])
+    .orderBy('number', 'asc');
+  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
+    attentions.value = snapshot.docs
+      .map(doc => {
+        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+      })
+  })
+  onUnmounted(unsubscribe)
+  return attentions;
+}
+
+export function updatedAvailableAttentionsByCommerce(commerceId) {
+  const attentions = ref([]);
+  const attentionQuery = attentionCollection
+    .where('commerceId', "==", commerceId)
+    .where('status', 'in', ['PENDING'])
+    .orderBy('number', 'asc');
+  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
+    attentions.value = snapshot.docs
+      .map(doc => {
+        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+      })
+  })
+  onUnmounted(unsubscribe)
+  return attentions;
+}
+
+export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
+  const attentions = ref([]);
+  const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
+  const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
+  const attentionQuery = attentionCollection
+    .where('queueId', "==", queueId)
+    .where('createdAt', '>', dateToRequest)
+    .orderBy('createdAt', 'asc')
+    .orderBy('number', 'asc');
+  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
+    attentions.value = snapshot.docs
+      .map(doc => {
+        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+      })
+  })
+
+  onUnmounted(unsubscribe)
+  return attentions;
 }
 
 export function updatedQueuesByCommerce(commerceId) {
