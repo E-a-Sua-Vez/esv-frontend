@@ -448,16 +448,27 @@ export default {
       return availableBlocks;
     }
 
+    const getActualDay = (day, timeZoneIn) => {
+      const dateCorrected = new Date(
+      new Date(day).toLocaleString('en-US', {
+        timeZone: timeZoneIn,
+      }));
+      return dateCorrected.toLocaleString("en-GB");
+    }
+
     const getAvailableAttentionBlocks = (attentions) => {
       let queueBlocks = [];
       let availableBlocks = [];
       if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
         queueBlocks = state.queue.serviceInfo.blocks;
+        const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
+        const day = getActualDay(new Date(), timeZone);
+        const hour = new Date(day).getHours() || 0;
         if (queueBlocks && queueBlocks.length > 0) {
           let attentionsReserved = 0;
           if (attentions && attentions.length > 0) {
             attentionsReserved = attentions.map(attention => attention.number);
-            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number))
+            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number) && block.hourFrom.split(':')[0] > hour);
           } else {
             availableBlocks = queueBlocks;
           }
