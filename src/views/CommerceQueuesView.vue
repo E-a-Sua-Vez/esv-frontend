@@ -752,7 +752,7 @@ export default {
                         </div>
                         <div>
                           <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.attentionBlock">
-                            <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
+                            <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block"> {{ block.hourFrom }} - {{ block.hourTo }} </option>
                           </select>
                         </div>
                         <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock && state.attentionBlock.number" class="py-1 mt-2">

@@ -1055,7 +1055,8 @@
     "subtitle": {
       "1": {
         "1": "Attention without Device",
-        "2": "Enter the user complete name:"
+        "2": "Enter the user complete name:",
+        "3": "Select a schedule:"
       }
     },
     "actions": {
@@ -1151,6 +1152,7 @@
     "dashboard": "Dashboard",
     "queue-manage": "Manage Queues",
     "booking-manage": "Manage Bookings",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "Ups!",

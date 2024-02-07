@@ -1051,7 +1051,8 @@
     "subtitle": {
       "1": {
         "1": "Atención sin Dispositivo",
-        "2": "Ingresa el nombre y apellido del cliente:"
+        "2": "Ingresa el nombre y apellido del cliente:",
+        "3": "Seleccione un horario:"
       }
     },
     "actions": {
@@ -1170,6 +1171,7 @@
     "dashboard": "Dashboard",
     "queue-manage": "Gestionar Filas",
     "booking-manage": "Administrar Reservas",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "¡Ups!",

@@ -6,6 +6,10 @@ export const createAttention = async (body) => {
   return (await requestBackend.post(`/${entity}`, body, await getHeaders())).data;
 }
 
+export const getAttentionByDate = async (queueId, date) => {
+  return (await requestBackend.get(`/${entity}/queue/${queueId}/date/${date}`, await getHeaders())).data;
+}
+
 export const getAttentionDetails = async (id) => {
   return (await requestBackend.get(`/${entity}/details/${id}`, await getHeaders())).data;
 }
@@ -24,6 +28,10 @@ export const getNextAvailableAttentionDetails = async (queueId) => {
 
 export const getAttentionDetailsByQueue = async (queueId, status) => {
   return (await requestBackend.get(`/${entity}/details/queue/${queueId}/status/${status}`, await getHeaders())).data;
+}
+
+export const getProcessingAttentionDetailsByQueue = async (queueId) => {
+  return (await requestBackend.get(`/${entity}/processing/details/queue/${queueId}`, await getHeaders())).data;
 }
 
 export const getAvailableAttentiosnByQueue = async (queueId) => {

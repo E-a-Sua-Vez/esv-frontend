@@ -11,7 +11,8 @@ export const globalStore = defineStore('globalStore', {
     currentCommerce: ref(undefined),
     currentBusiness: ref(undefined),
     currentUserType: ref(undefined),
-    currentAttentionChannel: ref(undefined)
+    currentAttentionChannel: ref(undefined),
+    currentActiveAttentions: ref(undefined)
   }),
   getters: {
     getCurrentUser: (state) => {
@@ -58,7 +59,14 @@ export const globalStore = defineStore('globalStore', {
       const localValue = localStorage.getItem('currentAttentionChannel');
       let value = state.currentAttentionChannel || localValue || 'QR';
       return value === 'undefined' ? undefined : value;
-    }
+    },
+    getCurrentActiveAttentions: async (state) => {
+      let localValue = localStorage.getItem('currentActiveAttentions');
+      let value = state.currentActiveAttentions || localValue || undefined;
+      value = value === 'undefined' ? undefined : value;
+      value = value ? JSON.parse(value) : value;
+      return value;
+    },
   },
   actions: {
     async setCurrentUser(value) {
@@ -94,16 +102,24 @@ export const globalStore = defineStore('globalStore', {
       await localStorage.setItem('currentAttentionChannel', value);
       this.currentAttentionChannel = value;
     },
+    async setCurrentActiveAttentions(value) {
+      const val = value ? JSON.stringify(value) : value;
+      await localStorage.setItem('currentActiveAttentions', val);
+      this.currentActiveAttentions = val;
+    },
     async resetSession() {
       await localStorage.setItem('currentUser', undefined);
       await localStorage.setItem('currentQueue', undefined);
       await localStorage.setItem('currentPermissions', undefined);
+      await localStorage.setItem('currentActiveAttentions', undefined);
       await this.setCurrentUser(undefined);
       await this.setCurrentQueue(undefined);
       await this.setCurrentPermissions(undefined);
+      await this.setCurrentActiveAttentions(undefined);
       this.currentUser = undefined;
       this.currentQueue = undefined;
       this.currentPermissions = undefined;
+      this.currentActiveAttentions = undefined;
     },
     async getActualBusiness() {
       let business = await this.getCurrentBusiness || undefined;

@@ -1042,7 +1042,7 @@
   "resumeAttention": {
     "subtitle": {
       "1": {
-        "1": "Retomar a atenção",
+        "1": "Retomar Atenção",
         "2": "Digite o número de atenção que deseja atender:"
       }
     },
@@ -1057,8 +1057,9 @@
   "noDeviceAttention": {
     "subtitle": {
       "1": {
-        "1": "Atençao sem Dispositivo",
-        "2": "Digite o nome do usuário:"
+        "1": "Atenção sem Dispositivo",
+        "2": "Digite o nome do usuário:",
+        "3": "Selecione o horário:"
       }
     },
     "actions": {
@@ -1176,6 +1177,7 @@
     "dashboard": "Dashboard",
     "queue-manage": "Gerenciar Filas",
     "booking-manage": "Gerenciar Reservas",
+    "go-minisite": "Minisite",
     "message": {
       "1": {
         "title": "Oh não!",

@@ -1,7 +1,7 @@
 <script>
-import { ref, watch, reactive, onBeforeMount, nextTick } from 'vue';
+import { ref, watch, reactive, onBeforeMount, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getNextAvailableAttentionDetails, getAvailableAttentiosnByQueue, getAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
+import { getNextAvailableAttentionDetails, getAvailableAttentiosnByQueue, getProcessingAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
 import { getCommerceById } from '../../application/services/commerce';
 import { getQueueById } from '../../application/services/queue';
 import { globalStore } from '../../stores/index';
@@ -68,7 +68,7 @@ export default {
       if (queue !== undefined && queue.id !== undefined) {
         state.attention = await getNextAvailableAttentionDetails(queue.id);
         state.queuePendingDetails = await getAvailableAttentiosnByQueue(queue.id);
-        state.queueProcessingDetails = await getAttentionDetailsByQueue(queue.id, 'PROCESSING');
+        state.queueProcessingDetails = await getProcessingAttentionDetailsByQueue(queue.id);
         if (state.attention.user) {
           state.user = state.attention.user;
         }
@@ -124,6 +124,27 @@ export default {
         loading.value = false;
       }
     };
+
+    const changeData = computed(() => {
+      const atts = attentions;
+      return {
+        atts
+      }
+    })
+
+    watch (
+      changeData,
+      async (newData, oldData) => {
+        if (newData.atts && oldData.atts) {
+          store.setCurrentActiveAttentions(oldData.atts.value);
+          const newIds = newData.atts.value.map(att => att.id);
+          const oldIds = oldData.atts.value.map(att => att.id);
+          if (newIds.includes(oldIds) && newIds.length !== oldIds.length) {
+            store.setCurrentActiveAttentions(newData.atts.value);
+          }
+        }
+      }
+    )
 
     return {
       id,

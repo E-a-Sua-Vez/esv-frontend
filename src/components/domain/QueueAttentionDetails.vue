@@ -1,29 +1,9 @@
 <script>
-import { getMetrics } from '../../application/services/query-stack';
+import { getAttentionByDate } from '../../application/services/attention';
 import AttentionNumber from '../common/AttentionNumber.vue';
 import Message from '../../components/common/Message.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import SimpleCard from '../dashboard/common/SimpleCard.vue';
-
-const attentionCreated = {
-  attentionNumber: 0,
-  totalDuration: 0,
-  avgDuration: 0,
-  maxQueue: '',
-  evolution: {},
-  attentionQueues: {
-    datasets: [0, 0, 0, 0]
-  },
-  attentionFlow: {
-    datasets: [0, 0, 0, 0]
-  }
-}
-const surveyCreated = {
-  avgRating: 0
-}
-const notificationCreated = {
-  notificationNumber: 0
-}
 
 export default {
   name: 'QueueAttentionDetails',
@@ -35,15 +15,11 @@ export default {
   },
   data() {
     return {
-      startDate: new Date().toISOString().slice(0,10),
-      endDate: new Date().toISOString().slice(0,10),
-      calculatedMetrics: {
-        'attention.created': attentionCreated,
-        'survey.created': surveyCreated,
-        'notification.created': notificationCreated
-      },
-      toggles: {
-        'dashboard.indicators.view': true
+      date: new Date().toISOString().slice(0,10),
+      status: {
+        TOTAL: 0,
+        PENDING: 0,
+        TERMINATED: 0
       },
       loading: false,
     };
@@ -51,14 +27,22 @@ export default {
   methods: {
     async getQueueDetails(queue) {
       try {
-        const queues = [{ id: queue.id, name: queue.name }];
-        const { calculatedMetrics } = await getMetrics(queue.commerceId, queues, this.startDate, this.endDate);
-        return calculatedMetrics;
+        const attentions = await getAttentionByDate(queue.id, this.date);
+        if (attentions && attentions.length > 0) {
+          const total = attentions.length || 0;
+          const pending = attentions.filter(att => att.status = 'PENDING').length || 0;
+          const terminated = attentions.filter(att => ['TERMINATED', 'RATED'].includes(att.status)).length || 0;
+          this.status = {
+            TOTAL: total || 0,
+            PENDING: pending || 0,
+            TERMINATED: terminated || 0
+          };
+        }
       } catch (error) {
-        this.calculatedMetrics = {
-          'attention.created': attentionCreated,
-          'survey.created': surveyCreated,
-          'notification.created': notificationCreated
+        this.status = {
+          TOTAL: 0,
+          PENDING: 0,
+          TERMINATED: 0
         };
         this.loading = false;
       }
@@ -81,7 +65,7 @@ export default {
       deep: true,
       async handler(queue) {
         if (queue && queue.id) {
-          this.calculatedMetrics = await this.getQueueDetails(queue);
+          await this.getQueueDetails(queue);
         }
       }
     }
@@ -100,7 +84,7 @@ export default {
           </div>
             <span class="fw-bold px-2">
               <i :class="`bi bi-qr-code blue-icon`"></i>
-              {{ calculatedMetrics['attention.created'] ? calculatedMetrics['attention.created'].attentionQueues.datasets[0] : 0 }}
+              {{ status.TOTAL || 0 }}
             </span>
         </div>
         <div class="col metric-card">
@@ -110,7 +94,7 @@ export default {
           <div>
             <span class="fw-bold px-2">
               <i class="bi bi-play-circle blue-icon"></i>
-              {{ beforeCurrentQueue() }}
+              {{ status.PENDING || 0 }}
             </span>
           </div>
         </div>
@@ -121,7 +105,7 @@ export default {
           <div>
             <span class="fw-bold px-2">
               <i class="bi bi-stop-circle green-icon"></i>
-              {{ calculatedMetrics['attention.created'] ? calculatedMetrics['attention.created'].attentionFlow.datasets[2] : 0 }}
+              {{ status.TERMINATED || 0 }}
             </span>
           </div>
         </div>
@@ -143,7 +127,7 @@ export default {
               <span class="lefted badge rounded-pill bg-primary m-0"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
             </div>
             <AttentionNumber
-              :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
+              :type="attention.type === 'NODEVICE' ? 'no-device' : (attention.status === 'PENDING' || attention.status === 'REACTIVATED') ? 'primary' : 'secondary'"
               :number="attention.number"
               :data="attention.user"
               :showData="false"

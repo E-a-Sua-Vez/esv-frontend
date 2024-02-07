@@ -1,4 +1,5 @@
 <script>
+import { ref } from 'vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
@@ -8,6 +9,7 @@ import Message from '../../components/common/Message.vue';
 import { createAttention } from '../../application/services/attention';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
+import { getActiveFeature } from '../../shared/features';
 
 export default {
   name: 'NoDeviceAttention',
@@ -27,7 +29,14 @@ export default {
       store,
       queue: undefined,
       commerce: undefined,
-      router
+      router,
+      attentions: ref([]),
+      newAttentions: [],
+      bookingHourActive: false,
+      attentionBlock: {},
+      availableAttentionBlocks: [],
+      date: undefined,
+      attentionAvailable: true
     }
   },
   methods: {
@@ -35,8 +44,9 @@ export default {
       this.$emit('close-modal');
       this.attention = undefined;
       this.userName = undefined;
+      this.attentionBlock = {};
     },
-    async getAttention() {
+    async getAttention(block) {
       try {
         this.loading = true;
         this.alertError = '';
@@ -53,7 +63,10 @@ export default {
             queueId: this.queue.id,
             channel: this.currentChannel,
             user,
-            type: 'NODEVICE'
+            type: 'NODEVICE',
+          }
+          if (block && block.number) {
+            body = { ...body, block };
           }
           this.attention = await createAttention(body);
         } else {
@@ -70,6 +83,42 @@ export default {
     },
     async getQueue() {
       this.queue = await this.store.getCurrentQueue;
+      if (getActiveFeature(this.commerce, 'booking-block-active', 'PRODUCT')) {
+        if (this.queue && this.queue.id) {
+          this.date = undefined;
+          this.getAttentions();
+          this.availableAttentionBlocks = this.getAvailableAttentionBlocks(this.attentions);
+          const blockAvailable = this.availableAttentionBlocks.filter(block => block.number === this.attentionBlock.number)
+          if (!blockAvailable || blockAvailable.length === 0) {
+            this.attentionAvailable = false;
+          } else {
+            this.attentionAvailable = true;
+          }
+        }
+      }
+    },
+    getActiveFeature() {
+      this.bookingHourActive = getActiveFeature(this.commerce, 'booking-block-active', 'PRODUCT');
+    },
+    getAvailableAttentionBlocks(attentions) {
+      let queueBlocks = [];
+      let availableBlocks = [];
+      if (this.queue && this.queue.serviceInfo && this.queue.serviceInfo.blocks) {
+        queueBlocks = this.queue.serviceInfo.blocks;
+        if (queueBlocks && queueBlocks.length > 0) {
+          let attentionsReserved = 0;
+          if (attentions && attentions.length > 0) {
+            attentionsReserved = attentions.map(attention => attention.number);
+            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number))
+          } else {
+            availableBlocks = queueBlocks;
+          }
+        }
+      }
+      return availableBlocks;
+    },
+    async getAttentions() {
+      this.attentions = await this.store.getCurrentActiveAttentions;
     },
     async getCommerce() {
       this.commerce = await this.store.getCurrentCommerce;
@@ -85,24 +134,37 @@ export default {
     },
     isQueueSelected() {
       return this.store.currentQueue !== undefined
-    }
+    },
   },
   async beforeMount() {
     await this.getUserType();
     await this.getQueue();
     await this.getCurrentUser();
     await this.getCommerce();
+    await this.getAttentions();
+    this.getActiveFeature();
   },
-  watch: {
-    store: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        await this.getUserType();
-        await this.getQueue();
+  computed: {
+    changeData() {
+      const { store, queue, attentionBlock } = this;
+      return {
+        store, queue, attentionBlock
       }
     }
   },
+  watch: {
+    changeData: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        await this.getAttentions();
+        await this.getUserType();
+        await this.getQueue();
+        await this.getCommerce();
+        this.getActiveFeature();
+      }
+    }
+  }
 }
 </script>
 
@@ -110,16 +172,40 @@ export default {
   <div v-if="isCollabotator() && isQueueSelected()" id="noDeviceAttention" class="card mb-4">
     <p class="mb-2 details"><span class="fw-bold">{{ $t("noDeviceAttention.subtitle.1.1") }}</span></p>
     <QueueName :queue="queue"></QueueName>
-    <p v-if="!attention" class="details-subtitle mt-2">{{ $t("noDeviceAttention.subtitle.1.2") }}</p>
+    <span v-if="!attention" class="details-subtitle my-1 mt-2">{{ $t("noDeviceAttention.subtitle.1.2") }}</span>
     <div class="mb-2">
       <div v-if="!attention" class="col-12">
         <input
           type="text"
-          class="form-control mb-2"
+          class="form-control mb-1"
           id="attention-number-nodevice"
           placeholder="Ej: José López"
           v-model="userName">
-        <a class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4" @click="getAttention()">{{ $t("noDeviceAttention.actions.1") }}  <i class="bi bi-ticket-detailed"></i></a>
+        <div id="attention-hour" v-if="this.bookingHourActive" class="my-2 mb-3">
+          <div class="details-subtitle my-1">
+            <span> {{ $t("noDeviceAttention.subtitle.1.3") }} </span>
+          </div>
+          <div>
+            <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="this.attentionBlock">
+              <option v-for="block in availableAttentionBlocks" :key="block.number" :value="block" id="select-block"> {{ block.hourFrom }} - {{ block.hourTo }} </option>
+            </select>
+          </div>
+        </div>
+        <div v-if="this.bookingHourActive">
+          <button
+            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+            @click="getAttention(this.attentionBlock)"
+            :disabled="!userName || !attentionAvailable">
+            {{ $t("noDeviceAttention.actions.1") }}
+            <i class="bi bi-ticket-detailed"></i>
+          </button>
+        </div>
+        <div v-else>
+          <button
+            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+            @click="getAttention(undefined)">{{ $t("noDeviceAttention.actions.1") }} <i class="bi bi-ticket-detailed"></i>
+          </button>
+        </div>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div class="errors" id="feedback" v-if="(errors.length > 0)">
