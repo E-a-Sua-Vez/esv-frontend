@@ -125,23 +125,11 @@ export default {
       }
     };
 
-    const changeData = computed(() => {
-      const atts = attentions;
-      return {
-        atts
-      }
-    })
-
     watch (
-      changeData,
+      attentions,
       async (newData, oldData) => {
-        if (newData.atts && oldData.atts) {
-          store.setCurrentActiveAttentions(oldData.atts.value);
-          const newIds = newData.atts.value.map(att => att.id);
-          const oldIds = oldData.atts.value.map(att => att.id);
-          if (newIds.includes(oldIds) && newIds.length !== oldIds.length) {
-            store.setCurrentActiveAttentions(newData.atts.value);
-          }
+        if (newData && oldData) {
+          store.setCurrentActiveAttentions(newData);
         }
       }
     )
