@@ -67,6 +67,26 @@ export function updatedAvailableAttentions(queueId) {
   return attentions;
 }
 
+export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
+  const attentions = ref([]);
+  const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
+  const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
+  const attentionQuery = attentionCollection
+    .where('queueId', "==", queueId)
+    .where('status', "in", ['PENDING', 'TERMINATED', 'RATED'])
+    .where('createdAt', '>', dateToRequest)
+    .orderBy('createdAt', 'asc')
+    .orderBy('number', 'asc');
+  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
+    attentions.value = snapshot.docs
+      .map(doc => {
+        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+      })
+  })
+  onUnmounted(unsubscribe)
+  return attentions;
+}
+
 export function updatedAvailableAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
   const attentionQuery = attentionCollection
@@ -98,7 +118,6 @@ export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
         return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
       })
   })
-
   onUnmounted(unsubscribe)
   return attentions;
 }

@@ -100,9 +100,12 @@ export default {
           id="attention-number"
           placeholder="Ej: 24"
           v-model="attentionNumber">
-          <a class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-            @click="attend()">{{ $t("resumeAttention.actions.1") }} <i class="bi bi-qr-code-scan"></i>
-          </a>
+          <button
+            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+            @click="attend()"
+            :disabled="!attentionNumber">
+            {{ $t("resumeAttention.actions.1") }} <i class="bi bi-qr-code-scan"></i>
+          </button>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div class="errors" id="feedback" v-if="(errors.length > 0)">

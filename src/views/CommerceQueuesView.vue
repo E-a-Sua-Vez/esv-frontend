@@ -17,6 +17,7 @@ import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/domain/NotificationConditions.vue';
 import { getActiveFeature } from '../shared/features';
 import { bookingCollection, attentionCollection } from '../application/firebase';
+import firebase from 'firebase/app';
 
 export default {
   name: 'CommerceQueuesView',
@@ -479,7 +480,6 @@ export default {
               return { id: doc.id, ...doc.data() }
             })
         })
-
       }
       state.bookings = values;
       return { unsubscribe };
@@ -488,10 +488,14 @@ export default {
     const updatedAttentions = (queueId) => {
       let values = ref([]);
       let unsubscribe;
+      const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
+      const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
       const attentionsQuery = attentionCollection
         .where('queueId', "==", queueId)
-        .where('status', "==", 'PENDING')
-        .orderBy('number', 'asc');
+        .where('status', "in", ['PENDING', 'TERMINATED', 'RATED'])
+        .orderBy('createdAt', 'asc')
+        .orderBy('number', 'asc')
+        .where('createdAt', '>', dateToRequest);
       unsubscribe = attentionsQuery.onSnapshot(snapshot => {
         values.value = snapshot.docs
           .map(doc => {

@@ -6,7 +6,7 @@ import { getCommerceById } from '../../application/services/commerce';
 import { getQueueById } from '../../application/services/queue';
 import { globalStore } from '../../stores/index';
 import { attend } from '../../application/services/attention';
-import { updatedQueues, updatedAvailableAttentions } from '../../application/firebase';
+import { updatedQueues, updatedAttentionsByDateAndCommerceAndQueue } from '../../application/firebase';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -37,6 +37,7 @@ export default {
       attention: {},
       user: {},
       toggles: {},
+      pendingAttentions: [],
       queuePendingDetails: [],
       queueProcessingDetails: []
     });
@@ -60,7 +61,7 @@ export default {
     queues = updatedQueues(id);
 
     let attentions = ref([]);
-    attentions = updatedAvailableAttentions(id);
+    attentions = updatedAttentionsByDateAndCommerceAndQueue(id);
 
     const getQueueValues = async (queue, oldQueue) => {
       state.queue = queue;
@@ -129,6 +130,7 @@ export default {
       attentions,
       async (newData, oldData) => {
         if (newData && oldData) {
+          state.pendingAttentions = newData.filter(att => att.status === 'PENDING');
           store.setCurrentActiveAttentions(newData);
         }
       }
@@ -139,7 +141,6 @@ export default {
       state,
       loading,
       alertError,
-      attentions,
       collaboratorQueues,
       attendAttention,
       finishCurrentCancelledAttention
@@ -169,7 +170,7 @@ export default {
       ></ToggleCapabilities>
       <Spinner :show="loading"></Spinner>
       <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="attentions.length === 0" class="mt-2">
+      <div v-if="state.pendingAttentions.length === 0" class="mt-2">
         <Message
           :title="$t('collaboratorQueueAttentions.message.1.title')"
           :content="$t('collaboratorQueueAttentions.message.1.content')"
@@ -205,7 +206,7 @@ export default {
             :data="state.user"
           ></AttentionNumber>
           <div class="to-goal">
-            <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ attentions.length }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
+            <span>{{ $t("collaboratorQueueAttentions.toGoal.1") }} <strong>{{ state.pendingAttentions.length }}</strong> {{ $t("collaboratorQueueAttentions.toGoal.2") }}</span>
           </div>
           <div class="d-grid gap-2 my-2">
             <button
