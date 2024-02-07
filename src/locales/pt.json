@@ -242,8 +242,12 @@
       "content": "Neste momento não há Filas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
     },
     "message2": {
-      "title": "¡Ups, tamos fechados!",
+      "title": "Ups, tamos fechados!",
       "content": "O comércio não está disponível no momento. Esperamos por você mais tarde!"
+    },
+    "message3": {
+      "title": "Ups!",
+      "content": "Não há horas disponíveis para essa data. Tente com outra data."
     },
     "validate": {
       "name": "Deve digitar seu nome",

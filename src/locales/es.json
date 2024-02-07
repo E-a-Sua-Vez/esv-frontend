@@ -246,6 +246,10 @@
       "title": "¡Ups, estamos cerrados!",
       "content": "Este comercio no está disponible en este momento. ¡Te esperamos luego!"
     },
+    "message3": {
+      "title": "¡Ups!",
+      "content": "No hay horarios disponibles para esta fecha. Intenta con una fecha posterior."
+    },
     "validate": {
       "name": "Debes ingresar tu nombre",
       "lastName": "Debes ingresar tu apellido",

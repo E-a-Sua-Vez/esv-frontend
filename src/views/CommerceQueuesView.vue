@@ -754,10 +754,18 @@ export default {
                         <div class="choose-attention py-1 pt-2">
                           <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                         </div>
-                        <div>
+                        <div v-if="state.availableAttentionBlocks &&
+                          state.availableAttentionBlocks.length > 0" class="mb-2">
                           <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.attentionBlock">
                             <option v-for="block in state.availableAttentionBlocks" :key="block.number" :value="block" id="select-block"> {{ block.hourFrom }} - {{ block.hourTo }} </option>
                           </select>
+                        </div>
+                        <div v-if="state.availableAttentionBlocks &&
+                          state.availableAttentionBlocks.length === 0" class="mb-2">
+                          <Message
+                            :title="$t('commerceQueuesView.message3.title')"
+                            :content="$t('commerceQueuesView.message3.content')">
+                          </Message>
                         </div>
                         <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock && state.attentionBlock.number" class="py-1 mt-2">
                           <hr>
@@ -815,6 +823,7 @@ export default {
                       />
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
                           state.availableBlocks &&
+                          state.availableBlocks.length > 0 &&
                           state.date" class="mb-2">
                         <div class="choose-attention py-1 pt-2">
                           <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
@@ -822,6 +831,15 @@ export default {
                         <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
                           <option v-for="block in state.availableBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
                         </select>
+                      </div>
+                      <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
+                          state.availableBlocks &&
+                          state.availableBlocks.length === 0 &&
+                          state.date" class="mb-2">
+                        <Message
+                          :title="$t('commerceQueuesView.message3.title')"
+                          :content="$t('commerceQueuesView.message3.content')">
+                        </Message>
                       </div>
                       <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-2">
                         <hr>

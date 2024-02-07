@@ -245,6 +245,10 @@
       "title": "¡Ups, we are closed!",
       "content": "This commerce is not available at the moment. ¡Come back later!"
     },
+    "message3": {
+      "title": "¡Ups!",
+      "content": "Theres not hours availables for this date. Try selecting other day."
+    },
     "validate": {
       "name": "Should set your name",
       "lastName": "Should set your lastname",
