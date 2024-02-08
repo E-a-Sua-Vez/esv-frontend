@@ -443,8 +443,14 @@ export default {
           <div v-else class="to-goal">
             <div class="attention-details-container">
               <div v-if="state.attention.number === 1 && state.attention.status ==='PENDING' || state.beforeYou === 0" class="col-12 attention-shortly-details-card attention-details-message">
-                <span class="attention-details-content"> 🚨 </span><br>
-                <span class="attention-details-title">  {{ $t("userQueueAttention.willBeAttendedShortly") }} </span>
+                <div v-if="state.attention.block && state.attention.block.hourFrom">
+                  <p class="attention-details-title"> 🚨  {{ $t("userQueueAttention.blockInfo") }} </p>
+                  <span class="attention-details-content parpadea"> {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }} </span>
+                </div>
+                <div v-else>
+                  <span class="attention-details-content"> 🚨 </span><br>
+                  <span class="attention-details-title">  {{ $t("userQueueAttention.willBeAttendedShortly") }} </span>
+                </div>
               </div>
               <div v-else class="centered col-12">
                 <div class="col-6 attention-details-card">
