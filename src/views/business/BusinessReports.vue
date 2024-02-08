@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getAttentions, getNotifications, getSurveys} from '../../application/services/query-stack';
+import { getAttentions, getNotifications, getSurveys, getBookings } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -144,6 +144,30 @@ export default {
       }
     }
 
+    const downloadBookingsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getBookings(state.commerce.id, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `bookings-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
     return {
       state,
       loading,
@@ -153,7 +177,8 @@ export default {
       selectCommerce,
       downloadAttentionsReport,
       downloadNotificationsReport,
-      downloadSurveysReport
+      downloadSurveysReport,
+      downloadBookingsReport
     }
   }
 }
@@ -230,6 +255,16 @@ export default {
                   :icon="'bi-star'"
                   :iconStyleClass="'yellow-icon'"
                   @download="downloadSurveysReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="state.toggles['reports.admin.bookings']"
+                  :canDonwload="state.toggles['reports.admin.bookings']"
+                  :title="$t('businessReports.items.reports.4.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.4.description')"
+                  :icon="'bi-calendar2-check'"
+                  :iconStyleClass="'blue-icon'"
+                  @download="downloadBookingsReport"
                 ></SimpleDownloadCard>
               </div>
             </div>

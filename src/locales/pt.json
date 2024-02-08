@@ -785,6 +785,7 @@
     "commerce": "Comércio",
     "refresh": "Pesquisar",
     "return": "Voltar",
+    "bookings": "Reservas",
     "indicators": "Indicadores",
     "graph": "Tendências",
     "surveys": "Pesquisas",
@@ -848,6 +849,10 @@
         "24": "Qualificação Cliente Promotor (NPS)",
         "25": "Pesquisa",
         "26": "É assim que seus clientes veem você",
+        "27": "Número de Reservas",
+        "28": "Criadas",
+        "29": "Processadas",
+        "30": "Canceladas",
         "graph": {
           "1": "Evolução das Atenções",
           "2": "Atenções por Linha",
@@ -857,7 +862,12 @@
           "6": "Evolução Duração de Pesquisas (prom/min)",
           "7": "Fluxo de Pesquisas",
           "8": "Evolução de NPS",
-          "9": "Evolução de CSAT"
+          "9": "Evolução de CSAT",
+          "10": "Evolução de Reservas",
+          "11": "Fluxo de Reservas",
+          "12": "Distribução de Reservas (Hora)",
+          "13": "Distribução de Atenções (Día)",
+          "14": "Distribução de Reservas (Día)"
         }
       },
       "surveys": {
@@ -920,9 +930,15 @@
         },
         "attention-hour-distribution": {
           "1": "Horas",
-          "2": "Neste período o horário do dia com maior atenção foi",
+          "2": "Neste período o horário do dia com maior quantidade de atenções foi",
           "3": "com",
           "4": "atenções."
+        },
+        "booking-hour-distribution": {
+          "1": "Horas",
+          "2": "Neste período o horário do dia com maior quantidade de reservas foi",
+          "3": "com",
+          "4": "reservas."
         },
         "surveys-consolidated-csat-evolution": {
           "1": "CSAT",
@@ -932,6 +948,18 @@
           "5": " o pior mês é ",
           "6": "NPS",
           "7": "Neste período teu NPS tem um promédio de"
+        },
+        "attention-day-distribution": {
+          "1": "Dàa",
+          "2": "Neste período o dia com maior quantidade de atenções foi",
+          "3": "com",
+          "4": "atenções."
+        },
+        "booking-day-distribution": {
+          "1": "Dàa",
+          "2": "Neste período o dia com maior quantidade de reservas foi",
+          "3": "com",
+          "4": "reservas."
         }
       }
     },
@@ -1522,6 +1550,10 @@
         "3": {
           "name": "Relatório de Pesquisas",
           "description": "Lista de Pesquisas do comércio entre as datas selecionadas."
+        },
+        "4": {
+          "name": "Relatório de Reservas",
+          "description": "Lista de Reservas do comércio entre as datas selecionadas."
         }
       }
     },

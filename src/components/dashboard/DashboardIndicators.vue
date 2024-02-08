@@ -12,7 +12,6 @@ import AttentionCollaboratorsDetails from './domain/AttentionCollaboratorsDetail
 import AttentionNotificationDetails from './domain/AttentionNotificationDetails.vue';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
-import { onBeforeMount } from 'vue';
 
 export default {
   name: 'DashboardIndicators',
@@ -112,7 +111,7 @@ export default {
       </PDFHeader>
       <div id="attention-number">
         <DetailsCard
-          :show="toggles['dashboard.attention-number.view']"
+          :show="!!toggles['dashboard.attention-number.view']"
           :data="calculatedMetrics['attention.created'].attentionNumber"
           :subdatapastperiod="calculatedMetrics['attention.created'].pastPeriodAttentionNumber"
           :subdatapastmonth="calculatedMetrics['attention.created'].pastMonthAttentionNumber"
@@ -156,11 +155,54 @@ export default {
           </template>
         </DetailsCard>
       </div>
+      <div id="booking-number">
+        <DetailsCard
+          :show="toggles['dashboard.booking-number.view']"
+          :data="calculatedMetrics['booking.created'].bookingNumber"
+          :title="$t('dashboard.items.attentions.27')"
+          :showTooltip="false"
+          :icon="'bi-calendar2-check-fill'"
+          :iconStyleClass="'orange-icon'"
+          :detailsOpened="detailsOpened"
+          >
+          <template v-slot:details>
+            <div id="booking-number-details" class="row">
+              <div class="col-4">
+                <div class="metric-card-title">
+                  <i class="bi bi-calendar-plus-fill h4 fw-bold yellow-icon m-1"></i>
+                  {{ $t('dashboard.items.attentions.28') }}
+                </div>
+                <div class="centered">
+                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0 }}</span>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="metric-card-title">
+                  <i class="bi bi-calendar2-check-fill h4 fw-bold green-icon m-1"></i>
+                  {{ $t('dashboard.items.attentions.29') }}
+                </div>
+                <div class="centered">
+                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0 }}</span>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="metric-card-title">
+                  <i class="bi bi-calendar-x-fill h4 fw-bold red-icon m-1"></i>
+                  {{ $t('dashboard.items.attentions.30') }}
+                </div>
+                <div class="centered">
+                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </DetailsCard>
+      </div>
       <div>
         <div class="row">
           <div id="attention-time-avg" class="col">
             <SimpleCard
-              :show="toggles['dashboard.attention-time-avg.view']"
+              :show="!!toggles['dashboard.attention-time-avg.view']"
               :data="calculatedMetrics['attention.created'].avgDuration"
               :title="$t('dashboard.items.attentions.2')"
               :showTooltip="true"
@@ -171,7 +213,7 @@ export default {
           </div>
           <div id="attention-no-device" class="col">
             <SimpleCard
-              :show="toggles['dashboard.attention-no-device.view']"
+              :show="!!toggles['dashboard.attention-no-device.view']"
               :data="calculatedMetrics['attention.created'].noDevicePer || 0 + '%'"
               :subdata="calculatedMetrics['attention.created'].noDevice || 0"
               :title="$t('dashboard.items.attentions.5')"
@@ -184,7 +226,7 @@ export default {
       </div>
       <div id="attention-queue">
         <SimpleCard
-          :show="toggles['dashboard.attention-queue.view']"
+          :show="!!toggles['dashboard.attention-queue.view']"
           :data="calculatedMetrics['attention.created'].maxQueue"
           :subdata="calculatedMetrics['attention.created'].maxQueueCount"
           :title="$t('dashboard.items.attentions.4')"
@@ -221,7 +263,7 @@ export default {
       </div>
       <div id="attention-nps-avg">
         <DetailsCard
-          :show="toggles['dashboard.attention-nps-avg.view']"
+          :show="!!toggles['dashboard.attention-nps-avg.view']"
           :data="calculatedMetrics['survey.created'].nps"
           :subdata="calculatedMetrics['survey.created'].count_nps"
           :title="$t('dashboard.items.attentions.24')"
@@ -232,7 +274,7 @@ export default {
           >
           <template v-slot:details>
             <AttentionNPSDetails
-              :show="toggles['dashboard.attention-nps-avg.view']"
+              :show="!!toggles['dashboard.attention-nps-avg.view']"
               :min="calculatedMetrics['survey.created']['min']?.nps || 0"
               :max="calculatedMetrics['survey.created']['max']?.nps || 0"
               :score="calculatedMetrics['survey.created']['npsScore'] || []"
@@ -246,7 +288,7 @@ export default {
       </div>
       <div id="attention-comments-avg">
         <DetailsCard
-          :show="toggles['dashboard.attention-comments-avg.view']"
+          :show="!!toggles['dashboard.attention-comments-avg.view']"
           :data="calculatedMetrics['survey.created']?.prom_score"
           :subdata="calculatedMetrics['survey.created']['scoredMessages']?.length"
           :title="$t('dashboard.items.attentions.21')"
@@ -258,7 +300,7 @@ export default {
           >
           <template v-slot:details>
             <AttentionCommentsDetails
-              :show="toggles['dashboard.attention-comments-avg.view']"
+              :show="!!toggles['dashboard.attention-comments-avg.view']"
               :messages="calculatedMetrics['survey.created']['scoredMessages']"
               :min="calculatedMetrics['survey.created']['sentimentScore']['minSentiment'] || 0"
               :max="calculatedMetrics['survey.created']['sentimentScore']['maxSentiment'] || 0"
@@ -271,7 +313,7 @@ export default {
       </div>
       <div id="attention-collaborators">
         <DetailsCard
-          :show="toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
+          :show="!!toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
           :data="calculatedMetrics['collaborators'] ? calculatedMetrics['collaborators'][0]?.name : 'No Data'"
           :subdata="calculatedMetrics['collaborators'] ? calculatedMetrics['collaborators'][0]?.attention_counter : 0"
           :title="$t('dashboard.items.attentions.20')"
@@ -282,7 +324,7 @@ export default {
           >
           <template v-slot:details>
             <AttentionCollaboratorsDetails
-              :show="toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
+              :show="!!toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
               :collaborators="calculatedMetrics['collaborators']"
               :limit="5"
             >
@@ -292,7 +334,7 @@ export default {
       </div>
       <div id="attention-notification">
         <DetailsCard
-          :show="toggles['dashboard.attention-notification.view']"
+          :show="!!toggles['dashboard.attention-notification.view']"
           :data="calculatedMetrics['notification.created'].notificationNumber"
           :title="$t('dashboard.items.attentions.6')"
           :showTooltip="false"
@@ -302,7 +344,7 @@ export default {
           >
           <template v-slot:details>
             <AttentionNotificationDetails
-              :show="toggles['dashboard.attention-notification.view']"
+              :show="!!toggles['dashboard.attention-notification.view']"
               :count="calculatedMetrics['notification.created'].notifiedAttentions"
               :channels="calculatedMetrics['notification.created'].channelFlow"
               :types="calculatedMetrics['notification.created'].typesFlow"

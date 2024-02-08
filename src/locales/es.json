@@ -781,6 +781,7 @@
     "indicators": "Indicadores",
     "graph": "Tendencias",
     "surveys": "Encuestas",
+    "bookings": "Reservas",
     "surveys-management": "Encuestas (Detalles)",
     "surveys-consolidated": "Encuestas (Consolidado)",
     "details": "Detalles",
@@ -841,6 +842,10 @@
         "24": "Puntuación Cliente Promotor (NPS)",
         "25": "Encuesta",
         "26": "Así te ven tus clientes",
+        "27": "Número de Reservas",
+        "28": "Creadas",
+        "29": "Procesadas",
+        "30": "Canceladas",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
@@ -850,7 +855,12 @@
           "6": "Evolución Duración Encuestas (prom/min)",
           "7": "Flujo de Encuestas",
           "8": "Evolución de NPS",
-          "9": "Evolución de CSAT"
+          "9": "Evolución de CSAT",
+          "10": "Evolución de Reservas",
+          "11": "Flujo de Reservas",
+          "12": "Distribución de Reservas (Por Hora)",
+          "13": "Distribución de Atenciones (Por Dia)",
+          "14": "Distribución de Reservas (Por Dia)"
         }
       },
       "surveys": {
@@ -897,6 +907,12 @@
           "3": "con",
           "4": "atenciones."
         },
+        "booking-hour-distribution": {
+          "1": "Horas",
+          "2": "En este período la hora del día con más reservas fue",
+          "3": "con",
+          "4": "reservas."
+        },
         "attention-rate-duration-evolution": {
           "1": "Tiempo",
           "2": "En este período el tiempo de encuesta promedio en minutos es",
@@ -925,6 +941,18 @@
           "5": " y el mes con peor desempeño es ",
           "6": "NPS",
           "7": "En este período tu NPS está promediando"
+        },
+        "attention-day-distribution": {
+          "1": "Dias",
+          "2": "En este período el día con más atenciones fue",
+          "3": "con",
+          "4": "atenciones."
+        },
+        "booking-day-distribution": {
+          "1": "Dias",
+          "2": "En este período el día con más reservas fue",
+          "3": "con",
+          "4": "reservas."
         }
       }
     },
@@ -1515,6 +1543,10 @@
         "3": {
           "name": "Informe de Calificaciones",
           "description": "Listado de Calificaciones del comercio entre las fechas seleccionadas."
+        },
+        "4": {
+          "name": "Informe de Reservas",
+          "description": "Listado de Reservas del comercio entre las fechas seleccionadas."
         }
       }
     },

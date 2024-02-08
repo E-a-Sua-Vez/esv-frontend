@@ -784,6 +784,7 @@
     "return": "Return",
     "indicators": "Indicators",
     "graph": "Trends",
+    "bookings": "Bookings",
     "details": "Details",
     "surveys": "Surveys",
     "surveys-management": "Surveys (Details)",
@@ -845,6 +846,10 @@
         "24": "Net Promoter Score (NPS)",
         "25": "Survey",
         "26": "This is how your clients see you",
+        "27": "Number of Bookings",
+        "28": "Created",
+        "29": "Processed",
+        "30": "Cancelled",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -854,7 +859,12 @@
           "6": "Survey-duration Evolution (prom/min)",
           "7": "Survey Flow",
           "8": "NPS Evolution",
-          "9": "CSAT Evolution"
+          "9": "CSAT Evolution",
+          "10": "Bookings Evolution",
+          "11": "Bookings Flow",
+          "12": "Bookings Distribution (By Hour)",
+          "13": "Attentions Distribution (By Day of Week)",
+          "14": "Bookings Distribution (By Day of Week)"
         }
       },
       "surveys": {
@@ -917,9 +927,15 @@
         },
         "attention-hour-distribution": {
           "1": "Hours",
-          "2": "In this period the time of day with the most attention was",
+          "2": "In this period the hour with the bigger amount of attentions created was",
           "3": "with",
           "4": "attentions."
+        },
+        "booking-hour-distribution": {
+          "1": "Hours",
+          "2": "In this period the hour with the bigger amount of bookings created was",
+          "3": "with",
+          "4": "bookings."
         },
         "surveys-consolidated-csat-evolution": {
           "1": "CSAT",
@@ -929,6 +945,18 @@
           "5": " the worst month avg is ",
           "6": "NPS",
           "7": "In this period your NPS avg is"
+        },
+        "attention-day-distribution": {
+          "1": "Days",
+          "2": "In this period the day with the bigger amount of attentions created was",
+          "3": "with",
+          "4": "attentions."
+        },
+        "booking-day-distribution": {
+          "1": "Days",
+          "2": "In this period the day with the bigger amount of bookings created was",
+          "3": "with",
+          "4": "bookings."
         }
       }
     },
@@ -1521,6 +1549,10 @@
         "3": {
           "name": "Qualifications Report",
           "description": "List of Qualifications of the commerce between the selected dates."
+        },
+        "4": {
+          "name": "Bookings Report",
+          "description": "List of Bookings of the commerce between the selected dates."
         }
       }
     },

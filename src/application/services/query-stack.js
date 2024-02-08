@@ -70,6 +70,17 @@ export const getSurveys = async (commerceId, from, to) => {
   return (await requestQuery.get('survey', options)).data;
 };
 
+export const getBookings = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('booking', options)).data;
+};
+
 export const getNotifications = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };

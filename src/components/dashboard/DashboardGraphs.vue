@@ -32,7 +32,9 @@ export default {
   data() {
     return {
       loading: false,
-      downloading: false
+      downloading: false,
+      showAttentions: true,
+      showBookings: false
     }
   },
   methods: {
@@ -52,6 +54,10 @@ export default {
     },
     getPercentage(number) {
       const percentage = (number * 100) / this.calculatedMetrics['attention.created'].attentionNumber;
+      return parseFloat(percentage.toFixed(2), 2) || 0;
+    },
+    getPercentageBooking(number) {
+      const percentage = (number * 100) / this.calculatedMetrics['booking.created'].bookingNumber;
       return parseFloat(percentage.toFixed(2), 2) || 0;
     },
     getDifference(percentage) {
@@ -83,6 +89,33 @@ export default {
         data: max
       }
     },
+    getMaxAvgDay() {
+      const arr = this.calculatedMetrics["attention.created"].dayDistribution.datasets;
+      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max.toString());
+      return {
+        label: this.calculatedMetrics["attention.created"].dayDistribution.labels[ind],
+        data: max
+      }
+    },
+    getMaxBookingAvgHour() {
+      const arr = this.calculatedMetrics["booking.created"].hourDistribution.datasets;
+      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max.toString());
+      return {
+        label: this.calculatedMetrics["booking.created"].hourDistribution.labels[ind],
+        data: max
+      }
+    },
+    getMaxBookingAvgDay() {
+      const arr = this.calculatedMetrics["booking.created"].dayDistribution.datasets;
+      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max.toString());
+      return {
+        label: this.calculatedMetrics["booking.created"].dayDistribution.labels[ind],
+        data: max
+      }
+    },
     getLocalHour(hour) {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
@@ -102,6 +135,14 @@ export default {
         'RATED': 'TERMINATED'
       };
       return labels[label];
+    },
+    showAttentionsMenu() {
+      this.showAttentions = true;
+      this.showBookings = false;
+    },
+    showBookingsMenu() {
+      this.showAttentions = false;
+      this.showBookings = true;
     },
     exportToPDF() {
       this.loading = true;
@@ -142,7 +183,7 @@ export default {
   <div id="graphs" class="row" v-if="showGraphs === true && toggles['dashboard.graphs.view']">
     <SimpleDownloadCard
       :download="toggles['dashboard.reports.graphs']"
-      :title="$t('dashboard.reports.graphs.title')"
+      :title="`${$t('dashboard.reports.graphs.title')} ${this.showAttentions ? $t('dashboard.attentions') : $t('dashboard.bookings')}`"
       :showTooltip="true"
       :description="$t('dashboard.reports.graphs.description')"
       :icon="'bi-file-earmark-pdf'"
@@ -150,6 +191,24 @@ export default {
       @download="exportToPDF"
     ></SimpleDownloadCard>
     <Spinner :show="loading"></Spinner>
+    <div id="subMenu" class="my-2">
+      <h5 class="mb-0">
+        <button
+          class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+          @click="showAttentionsMenu()"
+          :disabled="!toggles['dashboard.graphs-attentions.view']"
+          >
+          {{ $t('dashboard.attentions') }}
+        </button>
+        <button
+          class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+          @click="showBookingsMenu()"
+          :disabled="!toggles['dashboard.graphs-bookings.view']"
+          >
+          {{ $t('dashboard.bookings') }}
+      </button>
+      </h5>
+    </div>
     <div id="graphs-component">
       <PDFHeader
         :show="toggles['dashboard.reports.graphs']"
@@ -161,341 +220,538 @@ export default {
       </PDFHeader>
       <!-- cards desktop -->
       <div class="d-block">
-        <!-- attention-number-evolution -->
-        <div v-if="graphs['attention-number-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-number-evolution.view']" class="col d-flex align-items-stretch">
-            <div class="card col metric-card-graph centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.1') }} </strong></span>
-              </div>
-              <div class="row">
-                <LineChart class="centered" v-bind="calculatedMetrics.attentionNumberEvolutionProps" />
-                <div class="metric-conclusion mt-3">
-                  <div class="row centered">
-                    <div class="col-12 col-md-2 m-1 centered">
-                      <i :class="getTrendIcon(
-                        calculatedMetrics['attention.created'].attentionNumber,
-                        calculatedMetrics['attention.created'].pastPeriodAttentionNumber.number)">
-                        <span> {{ $t('dashboard.items.trends.attention-number-evolution.1') }} </span>
-                      </i>
-                    </div>
-                    <div class="col-12 col-md-4 m-1 centered">
-                      <span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.2') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
-                        {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
-                        <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].dailyAvg || 0).toFixed(2) }} </span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
-                      </span>
-                    </div>
-                    <div class="col-12 col-md-4 m-1 centered">
-                      <span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.4') }}
-                          <span class="fw-bold"> {{ getPastPeriodPercentage(calculatedMetrics['attention.created'].pastPeriodAttentionNumber) }}% </span>
-                          {{ $t('dashboard.items.trends.attention-number-evolution.5') }} <span class="fw-bold"> ({{ calculatedMetrics['attention.created'].pastPeriodAttentionNumber.number }}). </span>
-                          {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
-                          <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].pastPeriodAttentionNumber.dailyAvg || 0).toFixed(2) }} </span>
-                          {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
-                      </span>
-                    </div>
-                  </div>
-                  <hr>
-                  <div class="row centered mt-1">
-                    <div class="col-12 col-md-2 m-1 centered">
-                      <i :class="getTrendIcon(
-                        calculatedMetrics['attention.created'].currentMonthAttentionNumber.number,
-                        calculatedMetrics['attention.created'].pastMonthAttentionNumber.number)">
-                        <span> {{ $t('dashboard.items.trends.attention-number-evolution.6') }} </span>
-                      </i>
-                    </div>
-                    <div class="col-12 col-md-4 m-1 centered">
-                      <span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.7') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].currentMonthAttentionNumber.number }} </span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
-                      </span>
-                    </div>
-                    <div class="col-12 col-md-4 m-1 centered">
-                      <span>
-                        {{ $t('dashboard.items.trends.attention-number-evolution.8') }}
-                          <span class="fw-bold"> {{ calculatedMetrics['attention.created'].pastMonthAttentionNumber.number }} </span>
-                          {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
-                          {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
-                          <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].pastMonthAttentionNumber.dailyAvg || 0).toFixed(2) }} </span>
-                          {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
+        <div id="accordion">
+          <div>
+            <div id="collapseOne" v-if="showAttentions === true && toggles['dashboard.graphs-attentions.view']">
+              <div class="card-body">
+                <!-- attention-number-evolution -->
+                <div v-if="graphs['attention-number-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-number-evolution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.1') }} </strong></span>
+                      </div>
+                      <div class="row">
+                        <LineChart class="centered" v-bind="calculatedMetrics.attentionNumberEvolutionProps" />
+                        <div class="metric-conclusion mt-3">
+                          <div class="row centered">
+                            <div class="col-12 col-md-2 m-1 centered">
+                              <i :class="getTrendIcon(
+                                calculatedMetrics['attention.created'].attentionNumber,
+                                calculatedMetrics['attention.created'].pastPeriodAttentionNumber.number)">
+                                <span> {{ $t('dashboard.items.trends.attention-number-evolution.1') }} </span>
+                              </i>
+                            </div>
+                            <div class="col-12 col-md-4 m-1 centered">
+                              <span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
+                                {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
+                                <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].dailyAvg || 0).toFixed(2) }} </span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
+                              </span>
+                            </div>
+                            <div class="col-12 col-md-4 m-1 centered">
+                              <span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.4') }}
+                                  <span class="fw-bold"> {{ getPastPeriodPercentage(calculatedMetrics['attention.created'].pastPeriodAttentionNumber) }}% </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.5') }} <span class="fw-bold"> ({{ calculatedMetrics['attention.created'].pastPeriodAttentionNumber.number }}). </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
+                                  <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].pastPeriodAttentionNumber.dailyAvg || 0).toFixed(2) }} </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
+                              </span>
+                            </div>
+                          </div>
+                          <hr>
+                          <div class="row centered mt-1">
+                            <div class="col-12 col-md-2 m-1 centered">
+                              <i :class="getTrendIcon(
+                                calculatedMetrics['attention.created'].currentMonthAttentionNumber.number,
+                                calculatedMetrics['attention.created'].pastMonthAttentionNumber.number)">
+                                <span> {{ $t('dashboard.items.trends.attention-number-evolution.6') }} </span>
+                              </i>
+                            </div>
+                            <div class="col-12 col-md-4 m-1 centered">
+                              <span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.7') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].currentMonthAttentionNumber.number }} </span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
+                              </span>
+                            </div>
+                            <div class="col-12 col-md-4 m-1 centered">
+                              <span>
+                                {{ $t('dashboard.items.trends.attention-number-evolution.8') }}
+                                  <span class="fw-bold"> {{ calculatedMetrics['attention.created'].pastMonthAttentionNumber.number }} </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.3') }}
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.10') }}
+                                  <span class="fw-bold"> {{ (calculatedMetrics["attention.created"].pastMonthAttentionNumber.dailyAvg || 0).toFixed(2) }} </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.11') }}
 
-                          {{ $t('dashboard.items.trends.attention-number-evolution.9') }}
-                          <span class="fw-bold"> {{ getPastMonthPercentage(calculatedMetrics['attention.created'].pastMonthAttentionNumber,
-                          calculatedMetrics['attention.created'].currentMonthAttentionNumber) }}%. </span>
-                      </span>
+                                  {{ $t('dashboard.items.trends.attention-number-evolution.9') }}
+                                  <span class="fw-bold"> {{ getPastMonthPercentage(calculatedMetrics['attention.created'].pastMonthAttentionNumber,
+                                  calculatedMetrics['attention.created'].currentMonthAttentionNumber) }}%. </span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.1')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-         <!-- attention-number-queue -->
-        <div v-if="graphs['attention-number-queue']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-number-queue.view']" class="col d-flex align-items-stretch">
-            <div class="card col metric-card-graph centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.2') }} </strong></span>
-              </div>
-              <div class="row">
-                <DoughnutChart class="centered" v-bind="calculatedMetrics.attentionQueuesProps" />
-                <div class="col-12 mt-2">
-                  <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].attentionQueues.labels" :key="`option.${ind}`">
-                    <div class="col-6 centered">
-                      <span class="metric-card-title fw-bold"> {{ option }} </span>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.1')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-number-queue -->
+                <div v-if="graphs['attention-number-queue']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-number-queue.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.2') }} </strong></span>
+                      </div>
+                      <div class="row">
+                        <DoughnutChart class="centered" v-bind="calculatedMetrics.attentionQueuesProps" />
+                        <div class="col-12 mt-2">
+                          <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].attentionQueues.labels" :key="`option.${ind}`">
+                            <div class="col-6 centered">
+                              <span class="metric-card-title fw-bold"> {{ option }} </span>
+                            </div>
+                            <div class="col-2 centered">
+                              <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].attentionQueues.datasets[ind] }} </span>
+                            </div>
+                            <div class="col-4 centered">
+                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].attentionQueues.datasets[ind]) }} % </span>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="col-2 centered">
-                      <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].attentionQueues.datasets[ind] }} </span>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.2')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-flow -->
+                <div v-if="graphs['attention-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-flow.view']" class="col">
+                    <div class="card metric-card-graph h6 centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.3') }} </strong></span>
+                      </div>
+                      <BarChart class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
+                      <div class="col-12 mt-2">
+                        <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].attentionFlow.labels" :key="`option.${ind}`">
+                          <div class="col-6 centered">
+                            <span class="metric-card-title fw-bold"> {{ option }} </span>
+                          </div>
+                          <div class="col-2 centered">
+                            <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].attentionFlow.datasets[ind] }} </span>
+                          </div>
+                          <div class="col-4 centered">
+                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].attentionFlow.datasets[ind]) }} % </span>
+                          </div>
+                        </div>
+                        <hr class="mb-2">
+                      </div>
+                      <div class="metric-conclusion mt-1">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-funnel-fill blue-icon"> {{ $t('dashboard.items.trends.attention-flow.1') }}</i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-flow.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
+                                {{ $t('dashboard.items.trends.attention-flow.3') }}
+                                <span class="fw-bold"> {{ calculatedMetrics["attention.created"].attentionFlow.datasets[2] }} </span>.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-flow.5') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }}
+                                <span class="fw-bold"> {{ getPercentage(calculatedMetrics["attention.created"].attentionFlow.datasets[2]) }}% </span>
+                              {{ $t('dashboard.items.trends.attention-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.attention-flow.8') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentage(calculatedMetrics["attention.created"].attentionFlow.datasets[2])) }}%. </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="col-4 centered">
-                    <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].attentionQueues.datasets[ind]) }} % </span>
                   </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.3')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- survey-flow -->
+                <div v-if="graphs['survey-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.survey-flow.view']" class="col">
+                    <div class="card metric-card-graph h6 centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.7') }} </strong></span>
+                      </div>
+                      <BarChart class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
+                      <div class="col-12 mt-2">
+                        <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].surveyFlow.labels" :key="`option.${ind}`">
+                          <div class="col-6 centered">
+                            <span class="metric-card-title fw-bold"> {{ surveyLabel(option) }} </span>
+                          </div>
+                          <div class="col-2 centered">
+                            <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].surveyFlow.datasets[ind] }} </span>
+                          </div>
+                          <div class="col-4 centered">
+                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].surveyFlow.datasets[ind]) }} % </span>
+                          </div>
+                        </div>
+                        <hr class="mb-2">
+                      </div>
+                      <div class="metric-conclusion mt-1">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-funnel-fill blue-icon"> {{ $t('dashboard.items.trends.survey-flow.1') }}</i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.survey-flow.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
+                                {{ $t('dashboard.items.trends.survey-flow.3') }}
+                                <span class="fw-bold"> {{ calculatedMetrics["attention.created"].surveyFlow.datasets[1] }} </span>.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.survey-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.survey-flow.5') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }}
+                                <span class="fw-bold"> {{ getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1]) }}% </span>
+                              {{ $t('dashboard.items.trends.survey-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.survey-flow.8') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1])) }}%. </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.7')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-duration-evolution -->
+                <div v-if="graphs['attention-duration-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-duration-evolution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.4') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.attentionDurationEvolutionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].avgDuration }} </span>.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.3') }}
+                                <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.4') }} </i>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
+                                <span class="fw-bold"> {{ getMaxAvgTime() }} </span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.6') }} <i class="bi bi-arrow-down-circle-fill red-icon">
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.7') }} </i> {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
+                                <span class="fw-bold"> {{ getMinAvgTime() }} </span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.8') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.4')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-rate-duration-evolution -->
+                <div v-if="graphs['attention-rate-duration-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-rate-duration-evolution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.6') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.attentionRateDurationEvolutionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-rate-duration-evolution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-rate-duration-evolution.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].avgRateDuration }} </span>.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.3') }}
+                                <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.4') }} </i>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
+                                <span class="fw-bold"> {{ getMaxAvgTime() }} </span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.6') }} <i class="bi bi-arrow-down-circle-fill red-icon">
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.7') }} </i> {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
+                                <span class="fw-bold"> {{ getMinAvgTime() }} </span>
+                              {{ $t('dashboard.items.trends.attention-duration-evolution.8') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.6')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-hour-distribution -->
+                <div v-if="graphs['attention-hour-distribution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-hour-distribution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.5') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.attentionHourDistributionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-hour-distribution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-8 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-hour-distribution.2') }}
+                                <span class="fw-bold"> {{ getLocalHour(getMaxAvgHour().label) }}:00 </span>
+                              {{ $t('dashboard.items.trends.attention-hour-distribution.3') }}
+                                <span class="fw-bold"> {{ getMaxAvgHour().data }} </span>
+                              {{ $t('dashboard.items.trends.attention-hour-distribution.4') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.5')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- attention-day-distribution -->
+                <div v-if="graphs['attention-day-distribution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.attention-day-distribution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.13') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.attentionDayDistributionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-day-distribution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-8 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-day-distribution.2') }}
+                                <span class="fw-bold"> {{ getMaxAvgDay().label }} </span>
+                              {{ $t('dashboard.items.trends.attention-day-distribution.3') }}
+                                <span class="fw-bold"> {{ getMaxAvgDay().data }} </span>
+                              {{ $t('dashboard.items.trends.attention-day-distribution.4') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.13')"
+                    :content="$t('dashboard.message.2.content')" />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.2')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-         <!-- attention-flow -->
-        <div v-if="graphs['attention-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-flow.view']" class="col">
-            <div class="card metric-card-graph h6 centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.3') }} </strong></span>
-              </div>
-              <BarChart class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
-              <div class="col-12 mt-2">
-                <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].attentionFlow.labels" :key="`option.${ind}`">
-                  <div class="col-6 centered">
-                    <span class="metric-card-title fw-bold"> {{ option }} </span>
-                  </div>
-                  <div class="col-2 centered">
-                    <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].attentionFlow.datasets[ind] }} </span>
-                  </div>
-                  <div class="col-4 centered">
-                    <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].attentionFlow.datasets[ind]) }} % </span>
+            <div v-if="showAttentions === true && !toggles['dashboard.graphs-attentions.view']">
+              <Message
+                :icon="'bi-graph-up-arrow'"
+                :title="$t('dashboard.message.1.title')"
+                :content="$t('dashboard.message.1.content')" />
+            </div>
+            <div id="collapseTwo" v-if="showBookings === true && toggles['dashboard.graphs-bookings.view']">
+              <div class="card-body">
+                <!-- booking-number-evolution -->
+                <div v-if="graphs['booking-number-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.booking-number-evolution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.10') }} </strong></span>
+                      </div>
+                      <div class="row">
+                        <LineChart class="centered" v-bind="calculatedMetrics.bookingNumberEvolutionProps" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <hr class="mb-2">
-              </div>
-              <div class="metric-conclusion mt-1">
-                <div class="row centered">
-                  <div class="col-12 col-md-2 m-1 centered">
-                    <i class="bi bi-funnel-fill blue-icon"> {{ $t('dashboard.items.trends.attention-flow.1') }}</i>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.10')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- booking-flow -->
+                <div v-if="graphs['booking-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  a
+                  <div v-if="toggles['dashboard.booking-flow.view']" class="col">
+                    b
+                    <div class="card metric-card-graph h6 centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.11') }} </strong></span>
+                      </div>
+                      <BarChart class="centered" v-bind="calculatedMetrics.bookingFlowProps" />
+                      <div class="col-12 mt-2">
+                        <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['booking.created'].bookingFlow.labels" :key="`option.${ind}`">
+                          <div class="col-6 centered">
+                            <span class="metric-card-title fw-bold"> {{ option }} </span>
+                          </div>
+                          <div class="col-2 centered">
+                            <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['booking.created'].bookingFlow.datasets[ind] }} </span>
+                          </div>
+                          <div class="col-4 centered">
+                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentageBooking(calculatedMetrics['booking.created'].bookingFlow.datasets[ind]) }} % </span>
+                          </div>
+                        </div>
+                        <hr class="mb-2">
+                      </div>
+                      <div class="metric-conclusion mt-1">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-funnel-fill blue-icon"> {{ $t('dashboard.items.trends.attention-flow.1') }}</i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-flow.2') }}
+                                <span class="fw-bold"> {{ calculatedMetrics['booking.created'].bookingNumber }} </span>
+                                {{ $t('dashboard.items.trends.attention-flow.3') }}
+                                <span class="fw-bold"> {{ calculatedMetrics["booking.created"].bookingFlow.datasets[1] }} </span>.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.attention-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-flow.5') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }}
+                                <span class="fw-bold"> {{ getPercentageBooking(calculatedMetrics["booking.created"].bookingFlow.datasets[1]) }}% </span>
+                              {{ $t('dashboard.items.trends.attention-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.attention-flow.8') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentageBooking(calculatedMetrics["booking.created"].bookingFlow.datasets[1])) }}%. </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-flow.2') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
-                        {{ $t('dashboard.items.trends.attention-flow.3') }}
-                        <span class="fw-bold"> {{ calculatedMetrics["attention.created"].attentionFlow.datasets[2] }} </span>.
-                    </span>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.11')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- booking-hour-distribution -->
+                <div v-if="graphs['booking-hour-distribution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.booking-hour-distribution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.12') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.bookingHourDistributionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.booking-hour-distribution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-8 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.booking-hour-distribution.2') }}
+                                <span class="fw-bold"> {{ getLocalHour(getMaxBookingAvgHour().label) }}:00 </span>
+                              {{ $t('dashboard.items.trends.booking-hour-distribution.3') }}
+                                <span class="fw-bold"> {{ getMaxBookingAvgHour().data }} </span>
+                              {{ $t('dashboard.items.trends.booking-hour-distribution.4') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-flow.5') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }}
-                        <span class="fw-bold"> {{ getPercentage(calculatedMetrics["attention.created"].attentionFlow.datasets[2]) }}% </span>
-                      {{ $t('dashboard.items.trends.attention-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.attention-flow.8') }} </i> {{ $t('dashboard.items.trends.attention-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentage(calculatedMetrics["attention.created"].attentionFlow.datasets[2])) }}%. </span>
-                    </span>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.12')"
+                    :content="$t('dashboard.message.2.content')" />
+                </div>
+                <!-- booking-day-distribution -->
+                <div v-if="graphs['booking-day-distribution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
+                  <div v-if="toggles['dashboard.booking-day-distribution.view']" class="col d-flex align-items-stretch">
+                    <div class="card col metric-card-graph centered">
+                      <div class="metric-card-title">
+                        <span><strong> {{ $t('dashboard.items.attentions.graph.14') }} </strong></span>
+                      </div>
+                      <LineChart class="centered" v-bind="calculatedMetrics.bookingDayDistributionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.booking-day-distribution.1') }} </i>
+                          </div>
+                          <div class="col-12 col-md-8 m-1 centered">
+                            <span>
+                              {{ $t('dashboard.items.trends.booking-day-distribution.2') }}
+                                <span class="fw-bold"> {{ getMaxBookingAvgDay().label }} </span>
+                              {{ $t('dashboard.items.trends.booking-day-distribution.3') }}
+                                <span class="fw-bold"> {{ getMaxBookingAvgDay().data }} </span>
+                              {{ $t('dashboard.items.trends.booking-day-distribution.4') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </div>
+                <div v-else>
+                  <Message v-if="!downloading"
+                    :icon="'bi-graph-up-arrow'"
+                    :title="$t('dashboard.items.attentions.graph.14')"
+                    :content="$t('dashboard.message.2.content')" />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.3')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-        <!-- survey-flow -->
-        <div v-if="graphs['survey-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.survey-flow.view']" class="col">
-            <div class="card metric-card-graph h6 centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.7') }} </strong></span>
-              </div>
-              <BarChart class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
-              <div class="col-12 mt-2">
-                <div class="row centered m-1" v-for="(option, ind) in calculatedMetrics['attention.created'].surveyFlow.labels" :key="`option.${ind}`">
-                  <div class="col-6 centered">
-                    <span class="metric-card-title fw-bold"> {{ surveyLabel(option) }} </span>
-                  </div>
-                  <div class="col-2 centered">
-                    <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].surveyFlow.datasets[ind] }} </span>
-                  </div>
-                  <div class="col-4 centered">
-                    <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].surveyFlow.datasets[ind]) }} % </span>
-                  </div>
-                </div>
-                <hr class="mb-2">
-              </div>
-              <div class="metric-conclusion mt-1">
-                <div class="row centered">
-                  <div class="col-12 col-md-2 m-1 centered">
-                    <i class="bi bi-funnel-fill blue-icon"> {{ $t('dashboard.items.trends.survey-flow.1') }}</i>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.survey-flow.2') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
-                        {{ $t('dashboard.items.trends.survey-flow.3') }}
-                        <span class="fw-bold"> {{ calculatedMetrics["attention.created"].surveyFlow.datasets[1] }} </span>.
-                    </span>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.survey-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.survey-flow.5') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }}
-                        <span class="fw-bold"> {{ getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1]) }}% </span>
-                      {{ $t('dashboard.items.trends.survey-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.survey-flow.8') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1])) }}%. </span>
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div v-if="showBookings === true && !toggles['dashboard.graphs-bookings.view']">
+              <Message
+                :icon="'bi-graph-up-arrow'"
+                :title="$t('dashboard.message.1.title')"
+                :content="$t('dashboard.message.1.content')" />
             </div>
           </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.7')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-        <!-- attention-duration-evolution -->
-        <div v-if="graphs['attention-duration-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-duration-evolution.view']" class="col d-flex align-items-stretch">
-            <div class="card col metric-card-graph centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.4') }} </strong></span>
-              </div>
-              <LineChart class="centered" v-bind="calculatedMetrics.attentionDurationEvolutionProps" />
-              <div class="metric-conclusion mt-3">
-                <div class="row centered">
-                  <div class="col-12 col-md-2 m-1 centered">
-                    <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.1') }} </i>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.2') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].avgDuration }} </span>.
-                    </span>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.3') }}
-                        <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.4') }} </i>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
-                        <span class="fw-bold"> {{ getMaxAvgTime() }} </span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.6') }} <i class="bi bi-arrow-down-circle-fill red-icon">
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.7') }} </i> {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
-                        <span class="fw-bold"> {{ getMinAvgTime() }} </span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.8') }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.4')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-        <!-- attention-rate-duration-evolution -->
-        <div v-if="graphs['attention-rate-duration-evolution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-rate-duration-evolution.view']" class="col d-flex align-items-stretch">
-            <div class="card col metric-card-graph centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.6') }} </strong></span>
-              </div>
-              <LineChart class="centered" v-bind="calculatedMetrics.attentionRateDurationEvolutionProps" />
-              <div class="metric-conclusion mt-3">
-                <div class="row centered">
-                  <div class="col-12 col-md-2 m-1 centered">
-                    <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-rate-duration-evolution.1') }} </i>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-rate-duration-evolution.2') }}
-                        <span class="fw-bold"> {{ calculatedMetrics['attention.created'].avgRateDuration }} </span>.
-                    </span>
-                  </div>
-                  <div class="col-12 col-md-4 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.3') }}
-                        <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.attention-duration-evolution.4') }} </i>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
-                        <span class="fw-bold"> {{ getMaxAvgTime() }} </span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.6') }} <i class="bi bi-arrow-down-circle-fill red-icon">
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.7') }} </i> {{ $t('dashboard.items.trends.attention-duration-evolution.5') }}
-                        <span class="fw-bold"> {{ getMinAvgTime() }} </span>
-                      {{ $t('dashboard.items.trends.attention-duration-evolution.8') }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.6')"
-            :content="$t('dashboard.message.2.content')" />
-        </div>
-        <!-- attention-hour-distribution -->
-        <div v-if="graphs['attention-hour-distribution']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-          <div v-if="toggles['dashboard.attention-hour-distribution.view']" class="col d-flex align-items-stretch">
-            <div class="card col metric-card-graph centered">
-              <div class="metric-card-title">
-                <span><strong> {{ $t('dashboard.items.attentions.graph.5') }} </strong></span>
-              </div>
-              <LineChart class="centered" v-bind="calculatedMetrics.attentionHourDistributionProps" />
-              <div class="metric-conclusion mt-3">
-                <div class="row centered">
-                  <div class="col-12 col-md-2 m-1 centered">
-                    <i class="bi bi-clock-fill blue-icon"> {{ $t('dashboard.items.trends.attention-hour-distribution.1') }} </i>
-                  </div>
-                  <div class="col-12 col-md-8 m-1 centered">
-                    <span>
-                      {{ $t('dashboard.items.trends.attention-hour-distribution.2') }}
-                        <span class="fw-bold"> {{ getLocalHour(getMaxAvgHour().label) }}:00 </span>
-                      {{ $t('dashboard.items.trends.attention-hour-distribution.3') }}
-                        <span class="fw-bold"> {{ getMaxAvgHour().data }} </span>
-                      {{ $t('dashboard.items.trends.attention-hour-distribution.4') }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <Message v-if="!downloading"
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.items.attentions.graph.5')"
-            :content="$t('dashboard.message.2.content')" />
         </div>
       </div>
       <PDFFooter
