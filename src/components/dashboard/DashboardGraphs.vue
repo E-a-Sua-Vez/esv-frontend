@@ -624,9 +624,7 @@ export default {
                 </div>
                 <!-- booking-flow -->
                 <div v-if="graphs['booking-flow']" class="row row-cols-1 row-cols-md-1 g-2 mx-2">
-                  a
                   <div v-if="toggles['dashboard.booking-flow.view']" class="col">
-                    b
                     <div class="card metric-card-graph h6 centered">
                       <div class="metric-card-title">
                         <span><strong> {{ $t('dashboard.items.attentions.graph.11') }} </strong></span>
