@@ -78,7 +78,7 @@ export default {
     </div>
     <hr>
     <div class="row mt-1">
-      <div class="col-6">
+      <div class="col-4">
         <div class="metric-card-title">
           <i class="bi bi-star-fill h4 fw-bold blue-icon m-1"></i>
           {{ $t('dashboard.items.attentions.12') }}
@@ -87,13 +87,22 @@ export default {
           <span class="h4 fw-bold">{{ types.TUTURNO || 0 }}</span>
         </div>
       </div>
-      <div class="col-6">
+      <div class="col-4">
         <div class="metric-card-title">
           <i class="bi bi-star-fill h4 fw-bold yellow-icon m-1"></i>
           {{ $t('dashboard.items.attentions.25') }}
         </div>
         <div class="centered">
           <span class="h4 fw-bold">{{ types.ENCUESTA || 0 }}</span>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="metric-card-title">
+          <i class="bi bi-calendar2-check-fill h4 fw-bold orange-icon m-1"></i>
+          {{ $t('dashboard.bookings') }}
+        </div>
+        <div class="centered">
+          <span class="h4 fw-bold">{{ types.BOOKING || 0 }}</span>
         </div>
       </div>
     </div>
