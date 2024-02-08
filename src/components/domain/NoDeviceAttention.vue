@@ -105,6 +105,13 @@ export default {
       let availableBlocks = [];
       if (this.queue && this.queue.serviceInfo && this.queue.serviceInfo.blocks) {
         queueBlocks = this.queue.serviceInfo.blocks;
+        queueBlocks = queueBlocks.filter(block => {
+          const hourBlock = parseInt(block.hourFrom.split(':')[0]);
+          const minBlock = parseInt(block.hourFrom.split(':')[1]);
+          const day = new Date(getActualDay(new Date(), timeZone)).getTime();
+          const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
+          return (dayBlock > day);
+        });
         if (queueBlocks && queueBlocks.length > 0) {
           let attentionsReserved = 0;
           if (attentions && attentions.length > 0) {

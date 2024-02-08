@@ -30,17 +30,26 @@ export default {
       </template>
     </Suspense>
     <RouterView v-slot="{ Component }">
-      <Suspense timeout="0">
-        <template #default>
-          <div>
-            <Offline :show="true"></Offline>
-            <component :is="Component" :key="$route.path" class="container col-md-7"></component>
-          </div>
-        </template>
-        <template #fallback>
-          <DefaultSkeleton></DefaultSkeleton>
-        </template>
-      </Suspense>
+      <template v-if="Component">
+        <Transition mode="out-in">
+          <KeepAlive>
+            <Suspense>
+              <template #default>
+                <div>
+                  <Offline :show="true"></Offline>
+                  <component :is="Component" :key="$route.path" class="container col-md-7"></component>
+                </div>
+              </template>
+              <template #fallback>
+                <DefaultSkeleton></DefaultSkeleton>
+              </template>
+            </Suspense>
+          </KeepAlive>
+        </Transition>
+      </template>
+      <template v-else>
+        <DefaultSkeleton></DefaultSkeleton>
+      </template>
     </RouterView>
     <Footer></Footer>
   </div>

@@ -462,13 +462,18 @@ export default {
       if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
         queueBlocks = state.queue.serviceInfo.blocks;
         const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
-        const day = getActualDay(new Date(), timeZone);
-        const hour = new Date(day).getHours() || 0;
         if (queueBlocks && queueBlocks.length > 0) {
           let attentionsReserved = 0;
+          queueBlocks = queueBlocks.filter(block => {
+            const hourBlock = parseInt(block.hourFrom.split(':')[0]);
+            const minBlock = parseInt(block.hourFrom.split(':')[1]);
+            const day = new Date(getActualDay(new Date(), timeZone)).getTime();
+            const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
+            return (dayBlock > day);
+          });
           if (attentions && attentions.length > 0) {
             attentionsReserved = attentions.map(attention => attention.number);
-            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number) && block.hourFrom.split(':')[0] > hour);
+            availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number));
           } else {
             availableBlocks = queueBlocks;
           }

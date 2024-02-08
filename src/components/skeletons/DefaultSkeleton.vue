@@ -1,19 +1,19 @@
 <template>
   <div>
     <div  class="content">
-      <div id="logo" class="content-image img-fluid mx-auto"></div>
-      <div id="page-header" class="content-info">
+      <div id="skel-logo" class="content-image img-fluid mx-auto"></div>
+      <div id="skel-page-header" class="content-info">
         <span></span>
         <h3></h3>
       </div>
-      <div id="queues" class="content-queues">
+      <div id="skel-queues" class="content-queues">
       </div>
     </div>
   </div>
 </template>
 <style scoped>
 .content {
-  padding: 2rem;
+  padding: 2rem 6rem;
 }
 .content-image {
   display: flex;
