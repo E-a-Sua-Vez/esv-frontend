@@ -3,10 +3,11 @@ import Popper from "vue3-popper";
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { createBookingFromWaitlist } from '../../application/services/booking';
 import Spinner from '../common/Spinner.vue';
+import Alert from '../common/Alert.vue';
 
 export default {
   name: 'WaitlistDetailsCard',
-  components: { Popper, Spinner },
+  components: { Popper, Spinner, Alert },
   props: {
     show: { type: Boolean, default: true },
     waitlist: { type: Object, default: undefined },
@@ -18,7 +19,8 @@ export default {
       loading: false,
       extendedEntity: false,
       checked: false,
-      block: undefined
+      block: undefined,
+      alertError: undefined
     }
   },
   methods: {
@@ -47,7 +49,6 @@ export default {
         }
         this.loading = false;
       } catch (error) {
-        this.cancelled = false;
         this.loading = false;
         this.alertError = error.message;
       }
@@ -159,6 +160,7 @@ export default {
               </button>
             </div>
           </div>
+          <Alert :show="alertError === undefined" :stack="302"></Alert>
         </div>
         <div class="row m-0 mt-3 centered">
           <div class="col">
