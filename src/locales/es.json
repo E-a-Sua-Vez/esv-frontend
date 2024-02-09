@@ -164,6 +164,18 @@
     "attention-user-not-required": {
       "title": "Datos de Usuario No Obligatorios",
       "description": "Datos solicitados del usuario para gestionar atenciones o reservas no son obligatorios"
+    },
+    "booking-waitlist-active": {
+      "title": "Lista de espera para Reserva de Turno",
+      "description": "Activa la función de unirse a la lista de espera para reserva de turnos."
+    },
+    "email-waitlist": {
+      "title": "Email Lista de Espera",
+      "description": "Email que avisa al cliente su lista de espera"
+    },
+    "whatsapp-waitlist": {
+      "title": "Whatsapp Lista de Espera",
+      "description": "Mensaje que avisa al cliente su lista de espera"
     }
   },
   "paymentMethods": {
@@ -238,6 +250,11 @@
     "queueSelected": "Fila/Servicio Seleccionado:",
     "dataSelected": "Fecha de Reserva:",
     "blockSelected": "Hora Seleccionada:",
+    "waitlist": {
+      "title": "¡Únete a la lista de espera!",
+      "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
+      "action": "¡Sí, quiero!"
+    },
     "message": {
       "title": "¡Ups!",
       "content": "En este momento no hay filas de atención. Por favor acércate a algún colaborador para solicitar ayuda."
@@ -249,6 +266,10 @@
     "message3": {
       "title": "¡Ups!",
       "content": "No hay horarios disponibles para esta fecha. Intenta con una fecha posterior."
+    },
+    "message4": {
+      "title": "¡Listo!",
+      "content": "Estás en la lista de espera. Te avisaremos si una hora está disponible."
     },
     "validate": {
       "name": "Debes ingresar tu nombre",
@@ -431,6 +452,21 @@
       },
       "7": {
         "action": "Quiero recibir mi turno vía Email"
+      }
+    }
+  },
+  "userQueueWaitlist": {
+    "hello": "¡Hola!",
+    "thanks": "Gracias por preferir nuestro servicio.",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "La hora ya fue tomada. Puedes ir a las filas y tomar o reservar un número de atención."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Ir a las filas"
       }
     }
   },

@@ -7,7 +7,7 @@
   "blog": "https://blog.easuavez.com",
   "poweredBy": "Powered By",
   "logoPoweredBy": "/images/easuavez_logo_powered.png",
-  "enableAll": "¡Ative mais recursos!",
+  "enableAll": "Ative mais recursos!",
   "curious": "Curioso?",
   "wantToKnowMore": "Quero saber mais!",
   "titleEnterUser": "Selecione um tipo de login de acordo com seu perfil:",
@@ -163,6 +163,18 @@
     "attention-user-not-required": {
       "title": "Dados do Usuário nao sao obligatórios",
       "description": "Os dados do usuário para solicitar Atenção ou reserva nao sao obligatórios"
+    },
+    "booking-waitlist-active": {
+      "title": "Lista de espera Ativa",
+      "description": "Ativa a lista de espera para reservas."
+    },
+    "email-waitlist": {
+      "title": "Email Lista de Espera",
+      "description": "Email para notificar ao cliente que tem hora disponível na lista de espera"
+    },
+    "whatsapp-waitlist": {
+      "title": "Whatsapp Lista de Espera",
+      "description": "Mensagem para notificar ao cliente que tem hora disponível na lista de espera"
     }
   },
   "paymentMethods": {
@@ -237,6 +249,11 @@
     "dataSelected": "Data de Reserva:",
     "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
+    "waitlist": {
+      "title": "Junte-se à lista de espera!",
+      "content": "Neste momento não há horas disponíveis. Você quer ser contatao em caso alguma pessoa cancela e fica uma hora disponível?",
+      "action": "Eu quero!"
+    },
     "message": {
       "title": "Oh não!",
       "content": "Neste momento não há Filas de atendimento. Aproxime-se de um colaborador para solicitar ajuda."
@@ -248,6 +265,10 @@
     "message3": {
       "title": "Ups!",
       "content": "Não há horas disponíveis para essa data. Tente com outra data."
+    },
+    "message4": {
+      "title": "Pronto!",
+      "content": "Você tá na lista de espera. Você será contatado caso que uma hora fique disponível."
     },
     "validate": {
       "name": "Deve digitar seu nome",
@@ -301,7 +322,7 @@
       "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
     },
     "message4": {
-      "title": "¡Ups, tamos fechados!",
+      "title": "Ups, tamos fechados!",
       "content": "O comércio não está disponível no momento. Verifique o horário de funcionamento no botão ‘Serviços’. Esperamos por você mais tarde!"
     }
   },
@@ -438,6 +459,21 @@
       },
       "7": {
         "action": "Quero receber minha vez por e-mail"
+      }
+    }
+  },
+  "userQueueWaitlist": {
+    "hello": "Olá!",
+    "thanks": "Obrigado por escolher-nos.",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "A hora já foi pegada. Você pode ir as filas e pegar ou reservar outro número de atenção."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Ir a las filas"
       }
     }
   },

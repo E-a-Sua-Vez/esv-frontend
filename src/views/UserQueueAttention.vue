@@ -470,9 +470,6 @@ export default {
               </div>
             </div>
           </div>
-
-
-
           <div id="sound-control" class="attention-details-sound" v-if="attentionActive()">
             <div class="row centered attention-sound">
               <div class="col-8">

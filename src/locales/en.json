@@ -7,7 +7,7 @@
   "backToInit": "Back to init",
   "poweredBy": "Powered By",
   "logoPoweredBy": "/images/itsyourturn_logo_powered.png",
-  "enableAll": "¡Enable more the capabilities!",
+  "enableAll": "Enable more the capabilities!",
   "curious": "Curious?",
   "wantToKnowMore": "I Want to know More!",
   "titleEnterUser": "Please select a type of income according to your profile:",
@@ -163,6 +163,18 @@
     "attention-user-not-required": {
       "title": "User Data is not Required",
       "description": "User data required during attention or booking request are not required"
+    },
+    "booking-waitlist-active": {
+      "title": "Waitlist to booking a Turn",
+      "description": "Active the waitlist for booking with schedule."
+    },
+    "email-waitlist": {
+      "title": "Email Waitlist",
+      "description": "Email to notify the Waitlist"
+    },
+    "whatsapp-waitlist": {
+      "title": "Whatsapp Waitlist",
+      "description": "Mensaje to notify the Waitlist"
     }
   },
   "paymentMethods": {
@@ -237,17 +249,26 @@
     "queueSelected": "Queue/Service Selected:",
     "dataSelected": "Date Of Booking:",
     "blockSelected": "Hour Selected:",
+    "waitlist": {
+      "title": "Join the Waitlist!",
+      "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
+      "action": "Yes, I Want!"
+    },
     "message": {
       "title": "Oh no!",
       "content": "At this time there are no service queues. Please approach a collaborator to request help."
     },
     "message2": {
-      "title": "¡Ups, we are closed!",
-      "content": "This commerce is not available at the moment. ¡Come back later!"
+      "title": "Ups, we are closed!",
+      "content": "This commerce is not available at the moment. Come back later!"
     },
     "message3": {
-      "title": "¡Ups!",
+      "title": "Ups!",
       "content": "Theres not hours availables for this date. Try selecting other day."
+    },
+    "message4": {
+      "title": "Ready!",
+      "content": "You are on the Waitlist. You'll be contacted if one hour is available."
     },
     "validate": {
       "name": "Should set your name",
@@ -301,8 +322,8 @@
       "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
     },
     "message4": {
-      "title": "¡Ups, we are closed!",
-      "content": "This commerce is not available at the moment. Please check the business hours clicking the button 'Services'. ¡Come back later!"
+      "title": "Ups, we are closed!",
+      "content": "This commerce is not available at the moment. Please check the business hours clicking the button 'Services'. Come back later!"
     }
   },
   "userQueueAttention": {
@@ -438,6 +459,21 @@
       },
       "7": {
         "action": "I want to receive my turn via Email"
+      }
+    }
+  },
+  "userQueueWaitlist": {
+    "hello": "Hello!",
+    "thanks": "Thanks for prefer us.",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "The hour was taken already. You can go to the queues and take or book other hour."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Go to queues"
       }
     }
   },
@@ -1919,7 +1955,7 @@
         "content": "At this time there are no Plan to activate."
       },
       "3": {
-        "title": "¡Ups!",
+        "title": "Ups!",
         "content": "At the moment there's not Plans to activate to show."
       }
     },
