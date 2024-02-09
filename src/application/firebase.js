@@ -24,6 +24,7 @@ const firestore = firebase.firestore();
 export const attentionCollection = firestore.collection('attention');
 export const queueCollection = firestore.collection('queue');
 export const bookingCollection = firestore.collection('booking');
+export const waitlistCollection = firestore.collection('waitlist');
 
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);

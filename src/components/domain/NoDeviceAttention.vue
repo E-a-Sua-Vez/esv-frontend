@@ -100,10 +100,18 @@ export default {
     getActiveFeature() {
       this.bookingHourActive = getActiveFeature(this.commerce, 'booking-block-active', 'PRODUCT');
     },
+    getActualDay(day, timeZoneIn){
+      const dateCorrected = new Date(
+      new Date(day).toLocaleString('en-US', {
+        timeZone: timeZoneIn,
+      }));
+      return dateCorrected.toLocaleString("en-GB");
+    },
     getAvailableAttentionBlocks(attentions) {
       let queueBlocks = [];
       let availableBlocks = [];
       if (this.queue && this.queue.serviceInfo && this.queue.serviceInfo.blocks) {
+        const timeZone = this.commerce && this.commerce.localeInfo ? this.commerce.localeInfo.timezone : 'America/Sao_Paulo';
         queueBlocks = this.queue.serviceInfo.blocks;
         queueBlocks = queueBlocks.filter(block => {
           const hourBlock = parseInt(block.hourFrom.split(':')[0]);

@@ -619,6 +619,8 @@
     "return": "Back",
     "create": "Create a Booking",
     "listResult": "Results:",
+    "bookings": "Bookings",
+    "waitlists": "Waitlist",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -627,6 +629,10 @@
       "2": {
         "title": "Hey!",
         "content": "At this time there are no Bookings for the Queue and Date selected."
+      },
+      "3": {
+        "title": "Hey!",
+        "content": "At this time there are no one Waitlist for the Queue and Date selected."
       }
     },
     "capacitiesList": {

@@ -627,6 +627,8 @@
     "return": "Voltar",
     "create": "Criar uma Reserva",
     "listResult": "Registros:",
+    "bookings": "Reservas",
+    "waitlists": "Lista de Espera",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -635,6 +637,10 @@
       "2": {
         "title": "Oh não!",
         "content": "Neste momento não há Reservas a a Fila e Data selecionada"
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Neste momento não há ninguem na Lista de espera na Fila e Data selecionada"
       }
     },
     "capacitiesList": {

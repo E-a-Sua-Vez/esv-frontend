@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, watch, computed } from 'vue';
+import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getCollaboratorById } from '../../application/services/collaborator';
@@ -13,20 +13,18 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import { dateYYYYMMDD } from '../../shared/utils/date';
-import { bookingCollection } from '../../application/firebase';
+import { bookingCollection, waitlistCollection } from '../../application/firebase';
 import BookingDetailsCard from '../../components/bookings/BookingDetailsCard.vue';
+import WaitlistDetailsCard from '../../components/waitlist/WaitlistDetailsCard.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingDetailsCard },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingDetailsCard, WaitlistDetailsCard },
   async setup() {
     const router = useRouter();
-    const route = useRoute();
 
     const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
-
-    const { id } = route.params;
 
     let loading = ref(false);
     let alertError = ref('');
@@ -41,6 +39,7 @@ export default {
       }
     ]);
     let unsubscribeBookings = () => {};
+    let unsubscribeWaitlists = () => {};
 
     const store = globalStore();
 
@@ -56,8 +55,12 @@ export default {
       locale: 'es',
       date: (new Date()).setDate(new Date().getDate() + 1),
       bookings: ref([]),
+      waitlists: ref([]),
       availableBlocks: [],
+      availableAttentionBlocks: [],
       minDate: (new Date()).setDate(new Date().getDate() + 1),
+      showBooking: true,
+      showWaitlist: false,
       toggles: {}
     });
 
@@ -83,6 +86,16 @@ export default {
       } catch (error) {
         alertError.value = error.response.status;
         loading.value = false;
+      }
+    })
+
+    onUnmounted(() => {
+      if (unsubscribeBookings) {
+        unsubscribeBookings();
+      }
+      getBookings();
+      if (unsubscribeWaitlists) {
+        unsubscribeWaitlists();
       }
     })
 
@@ -129,6 +142,15 @@ export default {
 
     const goBack = () => {
       router.push({ path: `/interno/colaborador/menu` });
+    }
+
+    const getBooking = (number) => {
+      if (state.bookings && state.bookings.length > 0) {
+        const result = state.bookings.filter(bk => bk.number === number)[0];
+        if (result) {
+          return result;
+        }
+      }
     }
 
     const getBookings = () => {
@@ -200,18 +222,50 @@ export default {
             unsubscribeBookings();
           }
           getBookings();
+          if (unsubscribeWaitlists) {
+            unsubscribeWaitlists();
+          }
+          getWaitlists();
         }
         getAvailableBlocks();
       }
     )
 
-    const getBooking = (number) => {
-      if (state.bookings && state.bookings.length > 0) {
-        const result = state.bookings.filter(bk => bk.number === number)[0];
-        if (result) {
-          return result;
-        }
+    const getWaitlists = () => {
+      loading.value = true;
+      const { unsubscribe } = updatedWaitlists(state.queue.id, dateYYYYMMDD(state.date));
+      unsubscribeWaitlists = unsubscribe;
+      loading.value = false;
+    }
+
+    const updatedWaitlists = (queueId, date) => {
+      let values = ref([]);
+      let unsubscribe;
+      if (date !== undefined) {
+        const waitlistQuery = waitlistCollection
+          .where('queueId', "==", queueId)
+          .where('status', "==", 'PENDING')
+          .where('date', '==', date)
+          .orderBy('createdAt', 'asc');
+        unsubscribe = waitlistQuery.onSnapshot(snapshot => {
+          values.value = snapshot.docs
+            .map(doc => {
+              return { id: doc.id, ...doc.data() }
+            })
+        })
       }
+      state.waitlists = values;
+      return { unsubscribe };
+    }
+
+    const showBookings = () => {
+      state.showBooking = true;
+      state.showWaitlist = false;
+    }
+
+    const showWaitlists = () => {
+      state.showBooking = false;
+      state.showWaitlist = true;
     }
 
     return {
@@ -228,7 +282,9 @@ export default {
       isActiveCommerce,
       getLineAttentions,
       goBack,
-      getBooking
+      getBooking,
+      showBookings,
+      showWaitlists
     }
   }
 }
@@ -264,10 +320,10 @@ export default {
       </div>
       <div id="queue-link-form" class="row g-1">
         <div class="col" v-if="state.queue && state.queue.id">
-          <a class="btn copy-icon"
+          <button class="btn copy-icon"
             @click="copyLink(state.queue)">
             <i class="bi bi-file-earmark-spreadsheet"></i>
-          </a>
+          </button>
           <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
               :href="`${getQueueLink(state.queue)}`"
               target="_blank">
@@ -288,32 +344,82 @@ export default {
               :disabled-dates="disabledDates"
             />
           </div>
-          <div v-if="state.queue && state.date && state.bookings && state.bookings.length > 0">
-            <div class="my-1">
-              <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
+          <div v-if="state.queue && state.queue.id">
+            <div id="subMenu" class="my-1 mt-4">
+              <h5 class="mb-0">
+                <button
+                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+                  :class="state.showBooking ? 'btn-selected' : ''"
+                  @click="showBookings()"
+                  :disabled="!state.queue || !state.date"
+                  >
+                  {{ $t('collaboratorBookingsView.bookings') }}
+                </button>
+                <button
+                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+                  :class="state.showWaitlist ? 'btn-selected' : ''"
+                  @click="showWaitlists()"
+                  :disabled="!state.queue.id || !state.date"
+                  >
+                  {{ $t('collaboratorBookingsView.waitlists') }}
+              </button>
+              </h5>
             </div>
-            <div>
-              <div v-for="block in state.availableBlocks" :key="block.number">
-                <div class="metric-card">
-                  <span
-                    class="lefted badge rounded-pill bg-primary m-0"
-                    :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                  <div>
-                    <BookingDetailsCard
-                      :booking="getBooking(block.number)"
-                      :show="true"
-                      :detailsOpened="false"
-                    >
-                    </BookingDetailsCard>
+            <hr>
+            <div v-if="state.showBooking && state.queue && state.date">
+              <div v-if="state.queue && state.date && state.bookings && state.bookings.length > 0">
+                <div class="my-1">
+                  <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
+                </div>
+                <div>
+                  <div v-for="block in state.availableBlocks" :key="block.number">
+                    <div class="metric-card">
+                      <span
+                        class="lefted badge rounded-pill bg-primary m-0"
+                        :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                      <div>
+                        <BookingDetailsCard
+                          :booking="getBooking(block.number)"
+                          :show="true"
+                          :detailsOpened="false"
+                        >
+                        </BookingDetailsCard>
+                    </div>
+                  </div>
+                </div>
                 </div>
               </div>
+              <div v-if="state.queue && state.date && (!state.bookings || state.bookings.length === 0)">
+                <Message
+                  :title="$t('collaboratorBookingsView.message.2.title')"
+                  :content="$t('collaboratorBookingsView.message.2.content')" />
+              </div>
             </div>
+            <div v-if="state.showWaitlist && state.queue && state.date">
+              <div v-if="state.queue && state.date && state.waitlists && state.waitlists.length > 0">
+                <div class="my-1">
+                  <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
+                </div>
+                <div>
+                  <div v-for="waitlist in state.waitlists" :key="waitlist.id">
+                    <div>
+                      <WaitlistDetailsCard
+                        :waitlist="waitlist"
+                        :show="true"
+                        :detailsOpened="false"
+                        :availableBlocks="state.availableBlocks"
+                      >
+                      </WaitlistDetailsCard>
+                    </div>
+                </div>
+                </div>
+              </div>
+              <div v-if="state.queue && state.date && (!state.waitlists || state.waitlists.length === 0)">
+                <Message
+                  :title="$t('collaboratorBookingsView.message.3.title')"
+                  :content="$t('collaboratorBookingsView.message.3.content')" />
+              </div>
             </div>
-          </div>
-          <div v-if="state.queue && state.date && (!state.bookings || state.bookings.length === 0)">
-            <Message
-              :title="$t('collaboratorBookingsView.message.2.title')"
-              :content="$t('collaboratorBookingsView.message.2.content')" />
           </div>
         </div>
         <div v-if="!isActiveCommerce() && !loading">
