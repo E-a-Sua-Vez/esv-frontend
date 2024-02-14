@@ -80,6 +80,12 @@
     }
   },
   "configuration": {
+    "types": {
+      "email": "E-Mail (EMAIL)",
+      "product": "Produto (PRODUCT)",
+      "user": "Usuário (USER)",
+      "whatsapp": "Whatsapp (WHATSAPP)"
+    },
     "whatsapp-notify-now": {
       "title": "Notificação Whatsapp É a sua vez",
       "description": "Mensagem via whatsapp quando chegar a vez do usuário."
@@ -154,7 +160,7 @@
     },
     "whatsapp-booking": {
       "title": "Whatsapp Reserva",
-      "description": "Mensaje para notificar a reserva do cliente"
+      "description": "Mensagem para notificar a reserva do cliente"
     },
     "booking-block-active": {
       "title": "Reserva de Atenção com Horário",
@@ -175,6 +181,14 @@
     "whatsapp-waitlist": {
       "title": "Whatsapp Lista de Espera",
       "description": "Mensagem para notificar ao cliente que tem hora disponível na lista de espera"
+    },
+    "booking-whatsapp-confirm": {
+      "title": "Whatsapp Confirmação de Reserva",
+      "description": "Mensagem para confirmar uma reserva"
+    },
+    "booking-email-confirm": {
+      "title": "Email Confirmação de Reserva",
+      "description": "Email para confirmar uma reserva"
     }
   },
   "paymentMethods": {

@@ -80,6 +80,12 @@
     }
   },
   "configuration": {
+    "types": {
+      "email": "E-Mail (EMAIL)",
+      "product": "Product (PRODUCT)",
+      "user": "User (USER)",
+      "whatsapp": "Whatsapp (WHATSAPP)"
+    },
     "whatsapp-notify-now": {
       "title": "Notification Whatsapp É a sua vez",
       "description": "Message via whatsapp when the user's turn arrives."
@@ -175,6 +181,14 @@
     "whatsapp-waitlist": {
       "title": "Whatsapp Waitlist",
       "description": "Mensaje to notify the Waitlist"
+    },
+    "booking-whatsapp-confirm": {
+      "title": "Whatsapp Booking Confirmation",
+      "description": "Message to confirm booking"
+    },
+    "booking-email-confirm": {
+      "title": "Email Booking Confirmation",
+      "description": "Email to confirm booking"
     }
   },
   "paymentMethods": {

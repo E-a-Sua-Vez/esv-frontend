@@ -29,6 +29,7 @@ export default {
       activeBusiness: false,
       commerces: ref({}),
       configurations: ref({}),
+      groupedConfigurations : {},
       options: {},
       optionSelected: undefined,
       commerce: {},
@@ -73,6 +74,9 @@ export default {
         loading.value = true;
         state.commerce = commerce;
         state.configurations = await getFeatureToggleByCommerceId(state.commerce.id);
+        if (state.configurations && state.configurations.length > 0) {
+          state.groupedConfigurations = Object.groupBy(state.configurations, ({type}) => type);
+        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -110,6 +114,9 @@ export default {
           await addFeatureToggle(state.newConfiguration);
           const configurations = await getFeatureToggleByCommerceId(state.commerce.id);
           state.configurations = configurations;
+          if (state.configurations && state.configurations.length > 0) {
+            state.groupedConfigurations = Object.groupBy(state.configurations, ({type}) => type);
+          }
           state.showAdd = false;
           state.newConfiguration = {};
         }
@@ -224,14 +231,105 @@ export default {
                 </div>
               </div>
               <div class="configuration-card mb-4" v-if="state.configurations.length > 0 && state.toggles['configuration.admin.edit']">
-                <div v-for="(configuration, index) in state.configurations" :key="index">
-                  <SimpleConfigurationCard
-                    :show="true"
-                    :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
-                    :configuration="configuration"
-                    :showTooltip="true"
-                  >
-                  </SimpleConfigurationCard>
+                <div class="my-4">
+                  <a class="nav-link configuration-title centered"
+                    data-bs-toggle="collapse"
+                    href="#email">
+                    {{ $t("configuration.types.email") }} <i class="bi bi-chevron-down mx-2"></i>
+                  </a>
+                  <div id="email" class="collapse">
+                    <div v-if="state.groupedConfigurations['EMAIL'] && state.groupedConfigurations['EMAIL'].length > 0">
+                      <div v-for="(configuration, index) in state.groupedConfigurations['EMAIL']" :key="index">
+                        <SimpleConfigurationCard
+                          :show="true"
+                          :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
+                          :configuration="configuration"
+                          :showTooltip="true"
+                        >
+                        </SimpleConfigurationCard>
+                      </div>
+                    </div>
+                    <div v-else>
+                      <Message
+                        :title="$t('businessConfiguration.message.1.title')"
+                        :content="$t('businessConfiguration.message.1.content')" />
+                    </div>
+                  </div>
+                </div>
+                <div class="my-4">
+                  <a class="nav-link configuration-title centered"
+                    data-bs-toggle="collapse"
+                    href="#product">
+                    {{ $t("configuration.types.product") }} <i class="bi bi-chevron-down mx-2"></i>
+                  </a>
+                  <div id="product" class="collapse">
+                    <div v-if="state.groupedConfigurations['PRODUCT'] && state.groupedConfigurations['PRODUCT'].length > 0">
+                      <div v-for="(configuration, index) in state.groupedConfigurations['PRODUCT']" :key="index">
+                        <SimpleConfigurationCard
+                          :show="true"
+                          :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
+                          :configuration="configuration"
+                          :showTooltip="true"
+                        >
+                        </SimpleConfigurationCard>
+                      </div>
+                    </div>
+                    <div v-else>
+                      <Message
+                        :title="$t('businessConfiguration.message.1.title')"
+                        :content="$t('businessConfiguration.message.1.content')" />
+                    </div>
+                  </div>
+                </div>
+                <div class="my-4">
+                  <a class="nav-link configuration-title centered"
+                    data-bs-toggle="collapse"
+                    href="#user">
+                    {{ $t("configuration.types.user") }} <i class="bi bi-chevron-down mx-2"></i>
+                  </a>
+                  <div id="user" class="collapse">
+                    <div v-if="state.groupedConfigurations['USER'] && state.groupedConfigurations['USER'].length > 0">
+                      <div v-for="(configuration, index) in state.groupedConfigurations['USER']" :key="index">
+                        <SimpleConfigurationCard
+                          :show="true"
+                          :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
+                          :configuration="configuration"
+                          :showTooltip="true"
+                        >
+                        </SimpleConfigurationCard>
+                      </div>
+                    </div>
+                    <div v-else>
+                      <Message
+                        :title="$t('businessConfiguration.message.1.title')"
+                        :content="$t('businessConfiguration.message.1.content')" />
+                    </div>
+                  </div>
+                </div>
+                <div class="my-4">
+                  <a class="nav-link configuration-title centered"
+                    data-bs-toggle="collapse"
+                    href="#whatsapp">
+                    {{ $t("configuration.types.whatsapp") }} <i class="bi bi-chevron-down mx-2"></i>
+                  </a>
+                  <div id="whatsapp" class="collapse">
+                    <div v-if="state.groupedConfigurations['WHATSAPP'] && state.groupedConfigurations['WHATSAPP'].length > 0">
+                      <div v-for="(configuration, index) in state.groupedConfigurations['WHATSAPP']" :key="index">
+                        <SimpleConfigurationCard
+                          :show="true"
+                          :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
+                          :configuration="configuration"
+                          :showTooltip="true"
+                        >
+                        </SimpleConfigurationCard>
+                      </div>
+                    </div>
+                    <div v-else>
+                      <Message
+                        :title="$t('businessConfiguration.message.1.title')"
+                        :content="$t('businessConfiguration.message.1.content')" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -304,5 +402,11 @@ export default {
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   align-items: left;
+}
+.configuration-title {
+  line-height: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: left;
 }
 </style>
