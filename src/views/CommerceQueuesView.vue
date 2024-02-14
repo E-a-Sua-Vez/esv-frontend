@@ -354,28 +354,34 @@ export default {
       }
     };
 
+    const getDisabledDates = () => {
+      let disabled = [1, 2, 3, 4, 5, 6, 7];
+      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+        const availableDays = state.queue.serviceInfo.attentionDays;
+        if (availableDays.length < 7) {
+          const forDeletion = [];
+          availableDays.forEach(day => {
+            if (day === 7) {
+              forDeletion.push(1);
+            } else {
+              forDeletion.push(7 - day);
+            }
+          })
+          disabled = disabled.filter(item => !forDeletion.includes(item));
+          disabledDates.value[0].repeat.weekdays.push(...disabled);
+        }
+      }
+    }
+
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
       if (state.queue.id) {
-        let disabled = [1, 2, 3, 4, 5, 6, 7];
-        if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
-          const availableDays = state.queue.serviceInfo.attentionDays;
-          if (availableDays.length < 7) {
-            const forDeletion = [];
-            availableDays.forEach(day => {
-              if (day === 7) {
-                forDeletion.push(1);
-              } else {
-                forDeletion.push(7 - day);
-              }
-            })
-            disabled = disabled.filter(item => !forDeletion.includes(item));
-            disabledDates.value[0].repeat.weekdays.push(...disabled);
-          }
-        }
+        getDisabledDates();
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
           if (state.queue.id) {
             state.date = undefined;
+            state.block = {};
+            state.attentionBlock = {};
             getAttentions();
             state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
             const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
@@ -478,7 +484,7 @@ export default {
       new Date(day).toLocaleString('en-US', {
         timeZone: timeZoneIn,
       }));
-      return dateCorrected.toLocaleString("en-GB");
+      return dateCorrected;
     }
 
     const getAvailableAttentionBlocks = (attentions) => {
