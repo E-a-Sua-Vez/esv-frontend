@@ -238,7 +238,7 @@ export default {
                   </div>
                   <hr>
                   <div v-if="state.commerce.serviceInfo || state.commerce.contactInfo"
-                    class="booking-notification-title">
+                    class="booking-notification-title mb-2">
                     {{ $t("userQueueBooking.commerceDetails") }}
                   </div>
                   <div class="centered mb-2">

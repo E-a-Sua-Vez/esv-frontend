@@ -446,9 +446,9 @@ export default {
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .2rem;
-  margin: .5rem;
-  margin-bottom: 0;
+  padding: .5rem;
+  margin: .2rem;
+  margin-bottom: .2rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   border-bottom-left-radius: 0;
