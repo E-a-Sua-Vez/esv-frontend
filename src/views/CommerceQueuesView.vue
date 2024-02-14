@@ -209,7 +209,7 @@ export default {
     };
 
     const showConditions = () => {
-      if(
+      if (
         getActiveFeature(state.commerce, 'attention-user-name', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-lastName', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER') ||

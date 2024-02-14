@@ -824,6 +824,8 @@
     "graph": "Tendencias",
     "surveys": "Encuestas",
     "bookings": "Reservas",
+    "waitlist": "Lista Espera",
+    "bookingsConfirm": "Conf. Reserva",
     "surveys-management": "Encuestas (Detalles)",
     "surveys-consolidated": "Encuestas (Consolidado)",
     "details": "Detalles",
@@ -876,7 +878,7 @@
         "16": "Estándar",
         "17": "Manual",
         "18": "Sólo Encuesta",
-        "19": "Notificadas",
+        "19": "Atenciones",
         "20": "Top de Colaboradores",
         "21": "Análisis de Sentimientos",
         "22": "Variación en relación al mismo período del mes anterior.",
@@ -1589,6 +1591,10 @@
         "4": {
           "name": "Informe de Reservas",
           "description": "Listado de Reservas del comercio entre las fechas seleccionadas."
+        },
+        "5": {
+          "name": "Informe de Lista de Espera",
+          "description": "Listado de Espera del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -1598,7 +1604,9 @@
           "view": "Acceder a esta sección",
           "attentions": "Informe de Atenciones",
           "notifications": "Informe de Notificaciones",
-          "surveys": "Informe de Calificaciones"
+          "surveys": "Informe de Calificaciones",
+          "bookings": "Informe de Reservas",
+          "waitlist": "Informe de Lista de Espera"
         }
       }
     }

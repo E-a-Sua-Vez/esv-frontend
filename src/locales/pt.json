@@ -831,6 +831,8 @@
     "indicators": "Indicadores",
     "graph": "Tendências",
     "surveys": "Pesquisas",
+    "waitlist": "Lista Espera",
+    "bookingsConfirm": "Conf. Reserva",
     "surveys-management": "Pesquisas (Detalhes)",
     "surveys-consolidated": "Pesquisas (Consolidado)",
     "details": "Detalhes",
@@ -883,7 +885,7 @@
         "16": "Standard",
         "17": "Manual",
         "18": "Pesquisa só",
-        "19": "Notificadas",
+        "19": "Atenções",
         "20": "Principais Colaboradores",
         "21": "Análise de Sentimento",
         "22": "Variação em relação ao mesmo período do mês anterior.",
@@ -1596,6 +1598,10 @@
         "4": {
           "name": "Relatório de Reservas",
           "description": "Lista de Reservas do comércio entre as datas selecionadas."
+        },
+        "5": {
+          "name": "Relatório de Lista de Espera",
+          "description": "Lista de Espera do comércio entre as datas selecionadas."
         }
       }
     },
@@ -1605,7 +1611,9 @@
           "view": "Acessar esta seçao",
           "attentions": "Relatório de Atenções",
           "notifications": "Relatório de Notificações",
-          "surveys": "Relatório de Pesquisas"
+          "surveys": "Relatório de Pesquisas",
+          "bookings": "Relatório de Reservas",
+          "waitlists": "Relatório de Lista de Espera"
         }
       }
     }

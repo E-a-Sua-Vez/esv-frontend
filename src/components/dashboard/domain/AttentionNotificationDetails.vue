@@ -18,6 +18,27 @@ export default {
 <template>
   <div v-if="show">
     <div class="row">
+      <div class="col-6">
+        <div class="metric-card-title">
+          <i class="bi bi-whatsapp h4 fw-bold green-icon m-1"></i>
+          {{ $t('dashboard.items.attentions.10') }}
+        </div>
+        <div class="centered">
+          <span class="h4 fw-bold">{{ channels.WHATSAPP || 0 }}</span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="metric-card-title">
+          <i class="bi bi-envelope-fill h4 fw-bold red-icon m-1"></i>
+          {{ $t('dashboard.items.attentions.11') }}
+        </div>
+        <div class="centered">
+          <span class="h4 fw-bold">{{ channels.EMAIL || 0 }}</span>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="row mt-2">
       <div class="col-4">
         <div class="metric-card-title">
           <i class="bi bi-qr-code h4 fw-bold blue-icon m-1"></i>
@@ -29,20 +50,20 @@ export default {
       </div>
       <div class="col-4">
         <div class="metric-card-title">
-          <i class="bi bi-whatsapp h4 fw-bold green-icon m-1"></i>
-          {{ $t('dashboard.items.attentions.10') }}
+          <i class="bi bi-calendar2-check-fill h4 fw-bold orange-icon m-1"></i>
+          {{ $t('dashboard.bookings') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ channels.WHATSAPP || 0 }}</span>
+          <span class="h4 fw-bold">{{ types.BOOKING || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
         <div class="metric-card-title">
-          <i class="bi bi-envelope-fill h4 fw-bold red-icon m-1"></i>
-          {{ $t('dashboard.items.attentions.11') }}
+          <i class="bi bi-calendar-heart-fill h4 fw-bold red-icon m-1"></i>
+          {{ $t('dashboard.waitlist') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ channels.EMAIL || 0 }}</span>
+          <span class="h4 fw-bold">{{ types.WAITLIST || 0 }}</span>
         </div>
       </div>
     </div>
@@ -99,10 +120,10 @@ export default {
       <div class="col-4">
         <div class="metric-card-title">
           <i class="bi bi-calendar2-check-fill h4 fw-bold orange-icon m-1"></i>
-          {{ $t('dashboard.bookings') }}
+          {{ $t('dashboard.bookingsConfirm') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.BOOKING || 0 }}</span>
+          <span class="h4 fw-bold">{{ types.BOOKING_CONFIRM || 0 }}</span>
         </div>
       </div>
     </div>

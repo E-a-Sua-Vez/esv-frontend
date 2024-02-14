@@ -92,6 +92,17 @@ export const getNotifications = async (commerceId, from, to) => {
   return (await requestQuery.get('notification', options)).data;
 };
 
+export const getWaitlists = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('waitlist', options)).data;
+};
+
 export const getSurveysDetails = async (
   commerceId,
   from,

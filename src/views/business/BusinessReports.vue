@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getAttentions, getNotifications, getSurveys, getBookings } from '../../application/services/query-stack';
+import { getAttentions, getNotifications, getSurveys, getBookings, getWaitlists } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -168,6 +168,30 @@ export default {
       }
     }
 
+    const downloadWaitlistsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getWaitlists(state.commerce.id, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `waitlist-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
     return {
       state,
       loading,
@@ -178,7 +202,8 @@ export default {
       downloadAttentionsReport,
       downloadNotificationsReport,
       downloadSurveysReport,
-      downloadBookingsReport
+      downloadBookingsReport,
+      downloadWaitlistsReport
     }
   }
 }
@@ -242,7 +267,7 @@ export default {
                   :title="$t('businessReports.items.reports.2.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.2.description')"
-                  :icon="'bi-send-check'"
+                  :icon="'bi-send-check-fill'"
                   :iconStyleClass="'blue-icon'"
                   @download="downloadNotificationsReport"
                 ></SimpleDownloadCard>
@@ -252,7 +277,7 @@ export default {
                   :title="$t('businessReports.items.reports.3.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.3.description')"
-                  :icon="'bi-star'"
+                  :icon="'bi-star-fill'"
                   :iconStyleClass="'yellow-icon'"
                   @download="downloadSurveysReport"
                 ></SimpleDownloadCard>
@@ -262,9 +287,19 @@ export default {
                   :title="$t('businessReports.items.reports.4.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.4.description')"
-                  :icon="'bi-calendar2-check'"
-                  :iconStyleClass="'blue-icon'"
+                  :icon="'bi-calendar2-check-fill'"
+                  :iconStyleClass="'orange-icon'"
                   @download="downloadBookingsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="state.toggles['reports.admin.waitlists']"
+                  :canDonwload="state.toggles['reports.admin.waitlists']"
+                  :title="$t('businessReports.items.reports.5.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.5.description')"
+                  :icon="'bi-calendar-heart-fill'"
+                  :iconStyleClass="'red-icon'"
+                  @download="downloadWaitlistsReport"
                 ></SimpleDownloadCard>
               </div>
             </div>
