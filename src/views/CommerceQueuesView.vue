@@ -824,7 +824,7 @@ export default {
                         </div>
                         <button
                           type="button"
-                          v-if="state.availableAttentionBlocks && state.availableAttentionBlocks.length === 0"
+                          v-if="state.attentionBlock"
                           class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                           @click="getAttention(state.attentionBlock)"
                           :disabled="!state.accept || !state.queue.id || !state.attentionAvailable"
@@ -922,20 +922,10 @@ export default {
                             <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
                           </div>
                         </div>
-                        <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
+                        <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block.number">
                           <div v-if="state.block.number && state.bookingAvailable === false">
                             <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
                           </div>
-                          <button
-                            type="button"
-                            class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                            @click="getBooking()"
-                            :disabled="!state.accept || !state.queue.id || !state.date || !state.bookingAvailable"
-                            >
-                            {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
-                          </button>
-                        </div>
-                        <div v-else-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')">
                           <button
                             type="button"
                             class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
@@ -945,6 +935,16 @@ export default {
                             {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                           </button>
                         </div>
+                      </div>
+                      <div v-else-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')">
+                        <button
+                          type="button"
+                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                          @click="getBooking()"
+                          :disabled="!state.accept || !state.queue.id || !state.date"
+                          >
+                          {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
