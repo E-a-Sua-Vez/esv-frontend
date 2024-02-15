@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getCommerceById } from '../../application/services/commerce';
 import { getMetrics } from '../../application/services/query-stack';
 import { getQueueByCommerce } from '../../application/services/queue';
 import { Chart, registerables } from 'chart.js';
@@ -595,13 +594,26 @@ export default {
               <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.surveys-management") }}</span>
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Tooltip on top">
+  Tooltip on top
+</button>
+<button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Tooltip on right">
+  Tooltip on right
+</button>
+<button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Tooltip on bottom">
+  Tooltip on bottom
+</button>
+<button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Tooltip on left">
+  Tooltip on left
+</button>
             <div class="row col mx-1 mt-3 mb-1">
               <div class="col-3 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showIndicators ? 'btn-selected' : ''"
                   @click="showIndicators()"
-                  :disabled="!state.toggles['dashboard.indicators.view']">
+                  :disabled="!state.toggles['dashboard.indicators.view']"
+                  :title="$t('dashboard.consolidated')">
                   <i class="bi bi-stoplights-fill"></i>
                 </button>
               </div>

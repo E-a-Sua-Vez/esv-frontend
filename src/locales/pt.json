@@ -1162,6 +1162,10 @@
       "1": {
         "title": "Lembre-se!",
         "content": "Diga ao usuário seu número de atenção e que espere sua vez até que seja chamado por nome ou número."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "Neste momento não há horas disponíveis."
       }
     }
   },

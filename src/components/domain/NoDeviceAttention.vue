@@ -105,7 +105,7 @@ export default {
       new Date(day).toLocaleString('en-US', {
         timeZone: timeZoneIn,
       }));
-      return dateCorrected.toLocaleString("en-GB");
+      return dateCorrected;
     },
     getAvailableAttentionBlocks(attentions) {
       let queueBlocks = [];
@@ -116,7 +116,7 @@ export default {
         queueBlocks = queueBlocks.filter(block => {
           const hourBlock = parseInt(block.hourFrom.split(':')[0]);
           const minBlock = parseInt(block.hourFrom.split(':')[1]);
-          const day = new Date(getActualDay(new Date(), timeZone)).getTime();
+          const day = new Date(this.getActualDay(new Date(), timeZone)).getTime();
           const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
           return (dayBlock > day);
         });
@@ -197,28 +197,39 @@ export default {
           placeholder="Ej: José López"
           v-model="userName">
         <div id="attention-hour" v-if="this.bookingHourActive" class="my-2 mb-3">
-          <div class="details-subtitle my-1">
-            <span> {{ $t("noDeviceAttention.subtitle.1.3") }} </span>
+          <div v-if="availableAttentionBlocks.length > 0">
+            <div class="details-subtitle my-1">
+              <span> {{ $t("noDeviceAttention.subtitle.1.3") }} </span>
+            </div>
+            <div>
+              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="this.attentionBlock">
+                <option v-for="block in availableAttentionBlocks" :key="block.number" :value="block" id="select-block"> {{ block.hourFrom }} - {{ block.hourTo }} </option>
+              </select>
+            </div>
           </div>
-          <div>
-            <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="this.attentionBlock">
-              <option v-for="block in availableAttentionBlocks" :key="block.number" :value="block" id="select-block"> {{ block.hourFrom }} - {{ block.hourTo }} </option>
-            </select>
+          <div v-else>
+            <Message
+              :title="$t('noDeviceAttention.message.2.title')"
+              :content="$t('noDeviceAttention.message.2.content')"
+              :icon="'bi bi-exclamation-triangle-fill'">
+            </Message>
           </div>
         </div>
         <div v-if="this.bookingHourActive">
           <button
             class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
             @click="getAttention(this.attentionBlock)"
-            :disabled="!userName || !attentionAvailable">
+            :disabled="!userName || !attentionAvailable || !attentionBlock.number">
             {{ $t("noDeviceAttention.actions.1") }}
             <i class="bi bi-ticket-detailed"></i>
           </button>
         </div>
         <div v-else>
           <button
-            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-            @click="getAttention(undefined)">{{ $t("noDeviceAttention.actions.1") }} <i class="bi bi-ticket-detailed"></i>
+            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-2"
+            @click="getAttention(undefined)"
+            :disabled="!userName"
+            >{{ $t("noDeviceAttention.actions.1") }} <i class="bi bi-ticket-detailed"></i>
           </button>
         </div>
         <Spinner :show="loading"></Spinner>

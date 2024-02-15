@@ -1156,6 +1156,10 @@
       "1": {
         "title": "¡Recuerda!",
         "content": "Dile al usuario su número de atención, y que debe esperar su turno hasta que sea llamado por su nombre o número."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "No hay horas disponibles."
       }
     }
   },

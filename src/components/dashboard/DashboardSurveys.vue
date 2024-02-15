@@ -56,7 +56,8 @@ export default {
             class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
             :class="showSurveyResults ? 'btn-selected' : ''"
             @click="showSurveysResults()"
-            :disabled="!toggles['dashboard.surveys.view']">
+            :disabled="!toggles['dashboard.surveys.view']"
+            alt>
             {{ $t("dashboard.resume") }}
           </button>
         </div>
@@ -93,7 +94,8 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showSurveyResults === true && !toggles['dashboard.surveys.view']">
+  <div v-if="showSurvey === true && !toggles['dashboard.surveys.view']">
+   {{showSurveyResults }} {{ toggles['dashboard.surveys.view']}}
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

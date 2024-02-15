@@ -1159,6 +1159,10 @@
       "1": {
         "title": "Remember!",
         "content": "Tell the attention number to the user and that he must wait until being called by name or number."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "There's not hours availables."
       }
     }
   },
