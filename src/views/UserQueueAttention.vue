@@ -545,7 +545,7 @@ export default {
               type="button"
               class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mb-1"
               @click="goToCancel()"
-              :disabled="attentionCancelled()"
+              :disabled="attentionCancelled() || !state.toggles['user.attentions.cancel']"
               >
               {{ $t("userQueueAttention.cancel") }}
             </button>

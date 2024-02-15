@@ -195,6 +195,7 @@ export default {
       <h5 class="mb-0">
         <button
           class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+          :class="state.showAttentions ? 'btn-selected' : ''"
           @click="showAttentionsMenu()"
           :disabled="!toggles['dashboard.graphs-attentions.view']"
           >
@@ -202,6 +203,7 @@ export default {
         </button>
         <button
           class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
+          :class="state.showBookings ? 'btn-selected' : ''"
           @click="showBookingsMenu()"
           :disabled="!toggles['dashboard.graphs-bookings.view']"
           >
