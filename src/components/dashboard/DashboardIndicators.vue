@@ -157,7 +157,7 @@ export default {
       </div>
       <div id="booking-number">
         <DetailsCard
-          :show="toggles['dashboard.booking-number.view']"
+          :show="!!toggles['dashboard.booking-number.view']"
           :data="calculatedMetrics['booking.created'].bookingNumber"
           :title="$t('dashboard.items.attentions.27')"
           :showTooltip="false"
