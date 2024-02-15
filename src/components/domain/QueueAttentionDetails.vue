@@ -31,7 +31,7 @@ export default {
         if (attentions && attentions.length > 0) {
           const total = attentions.length || 0;
           const pending = attentions.filter(att => att.status === 'PENDING').length || 0;
-          const terminated = attentions.filter(att => ['TERMINATED', 'RATED'].includes(att.status)).length || 0;
+          const terminated = attentions.filter(att => ['TERMINATED', 'RATED', 'SKIPED'].includes(att.status)).length || 0;
           this.status = {
             TOTAL: total || 0,
             PENDING: pending || 0,

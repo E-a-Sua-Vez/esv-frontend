@@ -173,7 +173,7 @@ export default {
     }
 
     const youWereSkipped = () => {
-      return state.attention.status === 'CANCELLED';
+      return state.attention.status === 'SKIPED';
     }
 
     const youWereAttentionCancelled = () => {

@@ -184,7 +184,7 @@ export default {
             :icon="'bi bi-emoji-sunglasses'">
           </Message>
         </div>
-        <div v-if="state.attention.status === 'CANCELLED'">
+        <div v-if="state.attention.status === 'SKIPED'">
           <Message
             :title="$t('collaboratorAttentionValidate.message.3.title')"
             :content="$t('collaboratorAttentionValidate.message.3.content')"
