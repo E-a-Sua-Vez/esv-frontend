@@ -4,16 +4,19 @@
   "homeTitle": "É a sua vez {'|'} Serviço de Filas 100% digital",
   "backToInit": "Ir para começar",
   "email": "ola{'@'}easuavez.com",
+  "publicSite": "Site Público",
+  "publicSiteUrl": "https://easuavez.com",
   "blog": "https://blog.easuavez.com",
+  "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "poweredBy": "Powered By",
   "logoPoweredBy": "/images/easuavez_logo_powered.png",
   "enableAll": "Ative mais recursos!",
   "curious": "Curioso?",
   "wantToKnowMore": "Quero saber mais!",
   "titleEnterUser": "Selecione um tipo de login de acordo com seu perfil:",
-  "titleEnterMaster": "Se você é um usuário master, ",
-  "enterMaster": "Login aqui",
-  "enterCommerce": "Login do Comércio",
+  "titleEnterMaster": "Se você é um usuário master",
+  "enterMaster": "Login do Master",
+  "enterCommerce": "Login do Admin",
   "enterCollaborator": "Login do Colaborador",
   "welcome": "Bem-vindo!",
   "logout": "Sair",
@@ -31,6 +34,7 @@
   "no": "Não",
   "page": "Página",
   "of": "de",
+  "serviceStatus": "Status do serviço",
   "countries": {
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",
@@ -103,28 +107,28 @@
       "description": "Mensagem via whatsapp quando o usuário tem 1 usuário na frente."
     },
     "get-number-remote": {
-      "title": "Obter número remoto",
-      "description": "Obtenha o número de serviço de qualquer lugar"
+      "title": "Obter senha remota",
+      "description": "Obtenha a senha de serviço de qualquer lugar"
     },
     "attention-user-name": {
       "title": "Atenção requer Nome",
-      "description": "Solicite o nome do usuário para obter o número do serviço"
+      "description": "Solicite o nome do usuário para obter a senha"
     },
     "attention-user-lastName": {
       "title": "Atenção requer Sobrenome",
-      "description": "Solicite o sobrenome do usuário para obter o número do serviço"
+      "description": "Solicite o sobrenome do usuário para obter a senha"
     },
     "attention-user-phone": {
       "title": "Atenção requer Telefone",
-      "description": "Solicite o telefone do usuário para obter o número do serviço"
+      "description": "Solicite o telefone do usuário para obter a senha"
     },
     "attention-user-email": {
       "title": "Atenção requer Email",
-      "description": "Solicite o email do usuário para obter o número do serviçor"
+      "description": "Solicite o email do usuário para obter a senhar"
     },
     "attention-user-idNumber": {
       "title": "Atenção requer Id",
-      "description": "Solicite o Id do usuário para obter o número do serviço"
+      "description": "Solicite o Id do usuário para obter a senha"
     },
     "close-commerce-by-service-hours": {
       "title": "Fechar comércio fora do tempo",
@@ -308,7 +312,7 @@
     "scan": "Escaneie o código QR para ser atendido!",
     "youllReceive": "Você receberá seu número de turno em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
-    "action": "Quero um número de atenção",
+    "action": "Quero uma senha",
     "commerce": "Selecione um comércio:",
     "services": "Serviços",
     "contact": "Contato",
@@ -343,7 +347,7 @@
   "userQueueAttention": {
     "hello": "Olá!",
     "itsYourTurn": "🚨 É a sua vez! 🚨",
-    "yourNumber": "Seu número de atenção é:",
+    "yourNumber": "sua senha é:",
     "youWereAttended": "Você foi atendido!",
     "thanks": "Obrigado por escolher-nos.",
     "toGoal": {
@@ -351,7 +355,7 @@
       "2": "pessoas na sua frente."
     },
     "yourAttention": "Quando chegar a sua vez, apresente este QR code ao colaborador para validar o seu serviço:",
-    "rateYourAttention": "¿Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
     "willBeAttendedShortly": "Você será atendido em breve.",
     "estimatedTime": "Tempo estimado",
     "estimatedTimeInit": "01:00",
@@ -365,7 +369,7 @@
     "message": {
       "1": {
         "title": "Você chegou tarde!",
-        "content": "Seu atenção foi ignorada. Por favor solicite um novo número de atenção ou fale com um colaborador."
+        "content": "Sua senha foi pulada. Por favor solicite uma nova senha ou fale com um colaborador."
       },
       "2": {
         "title": "Não se esqueça de nos qualificar!",
@@ -373,7 +377,7 @@
       },
       "3": {
         "title": "Cancelado!",
-        "content": "Seu atenção foi cancelada. Por favor solicite ou reserve um novo número de atenção."
+        "content": "Seu atenção foi cancelada. Por favor solicite ou reserve uma nova senha."
       }
     },
     "actions": {
@@ -386,7 +390,7 @@
       },
       "2": {
         "title": {
-          "1": "Faça uma captura de tela caso seu navegador feche e você esqueça seu número.",
+          "1": "Faça uma captura de tela caso seu navegador feche e você esqueça sua senha.",
           "2": "Não esqueça!"
         },
         "action": "Salva uma captura!"
@@ -482,7 +486,7 @@
     "message": {
       "1": {
         "title": "Ups!",
-        "content": "A hora já foi pegada. Você pode ir as filas e pegar ou reservar outro número de atenção."
+        "content": "A hora já foi tomada. Você pode ir as filas e pegar ou reservar outra senha."
       }
     },
     "actions": {
@@ -532,14 +536,14 @@
   "collaboratorAttentionValidate": {
     "hello": "Olá!",
     "hello-user": "Olá",
-    "yourNumber": "Você está processando o número de atenção:",
-    "numberCancelled": "O número foi Cancelado:",
+    "yourNumber": "Você está processando a senha:",
+    "numberCancelled": "A senha foi Cancelada:",
     "toGoal": {
       "1": "Há",
       "2": "pessoas esperando."
     },
     "next": {
-      "1": "O número da",
+      "1": "A senha da",
       "2": "próxima atenção e:"
     },
     "actions": {
@@ -573,7 +577,7 @@
       },
       "5": {
         "title": "Cancelado!",
-        "content": "O número de atenção foi cancelado. Retorne as Filas para atender o próximo."
+        "content": "a senha foi cancelada. Retorne as Filas para atender o próximo."
       }
     },
     "capacitiesList": {
@@ -581,7 +585,7 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atenção como atendida",
-          "skip": "Saltar atenção"
+          "skip": "Pular Atenção"
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
@@ -621,7 +625,7 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atenção como atendida",
-          "skip": "Saltar atenção"
+          "skip": "Pular atenção"
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
@@ -662,7 +666,7 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atenção como atendida",
-          "skip": "Saltar atenção"
+          "skip": "Pular Atenção"
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
@@ -683,7 +687,7 @@
       "1": "Há",
       "2": "pessoas esperando."
     },
-    "numberCancelled": "O próximo número foi Cancelado:",
+    "numberCancelled": "A próxima senha foi Cancelada:",
     "actions": {
       "1": {
         "title": {
@@ -695,7 +699,7 @@
         "title": {
           "1": "Não?"
         },
-        "action": "Saltar"
+        "action": "Pular"
       },
       "3": {
         "action": "Voltar as Filas"
@@ -715,7 +719,7 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atenção como atendida",
-          "skip": "Saltar atenção"
+          "skip": "Pular Atenção"
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
@@ -753,7 +757,7 @@
       },
       "2": {
         "title": {
-          "1": "¿Esqueceu seu nome de usuário e/ou senha?"
+          "1": "Esqueceu seu nome de usuário e/ou senha?"
         },
         "action": "Gerenciar acesso"
       }
@@ -797,7 +801,7 @@
     }
   },
   "attentionSurvey": {
-    "rateYourAttention": "¿Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
     "other": "OUTRO",
     "survey": {
       "label": "Algum comentário na atenção? (Opcional):",
@@ -881,10 +885,10 @@
     "entities": "Palavras chave:",
     "items": {
       "attentions": {
-        "1": "Número de atenções",
+        "1": "Número de Atenções",
         "2": "Tempo de atenção (Méd.)",
         "3": "Qualificação do Cliente Satisfeito (CSAT)",
-        "4": "Linha com mais atenções",
+        "4": "Linha com mais Atenções",
         "5": "Atenções manuais (%)",
         "6": "Notificações Enviadas",
         "7": "Atenções Qualificadas",
@@ -1060,16 +1064,16 @@
     "capacitiesList": {
       "dashboard": {
         "attention-number": {
-          "view": "Número de atenções"
+          "view": "Número de Atenções"
         },
         "attention-time-avg": {
-          "view": "Tempo médio de atenção"
+          "view": "Tempo médio de Atenção"
         },
         "attention-rating-avg": {
-          "view": "Qualificação médio de atenção"
+          "view": "Qualificação médio de Atenção"
         },
         "attention-queue": {
-          "view": "Linha com mais atençõess"
+          "view": "Linha com mais Atençõess"
         },
         "attention-no-device": {
           "view": "Atenções manuais (%)"
@@ -1132,28 +1136,28 @@
   "resumeAttention": {
     "subtitle": {
       "1": {
-        "1": "Retomar Atenção",
-        "2": "Digite o número de atenção que deseja atender:"
+        "1": "Chamar Senha Novamente",
+        "2": "Digite a senha que deseja atender:"
       }
     },
     "actions": {
       "1": "Atender"
     },
     "validate": {
-      "number": "Você deve digitar o número de atenção",
-      "resume": "O número de atenção não existe, já foi finalizado ou já foi retomado."
+      "number": "Você deve digitar a senha",
+      "resume": "a senha não existe, já foi finalizado ou já foi retomado."
     }
   },
   "noDeviceAttention": {
     "subtitle": {
       "1": {
-        "1": "Atenção sem Dispositivo",
+        "1": "Incluir Senha Manual",
         "2": "Digite o nome do usuário:",
         "3": "Selecione o horário:"
       }
     },
     "actions": {
-      "1": "Obter número de atenção"
+      "1": "Obter Senha"
     },
     "validate": {
       "name": "Você deve digitar o nome do usuário"
@@ -1161,7 +1165,7 @@
     "message": {
       "1": {
         "title": "Lembre-se!",
-        "content": "Diga ao usuário seu número de atenção e que espere sua vez até que seja chamado por nome ou número."
+        "content": "Diga ao usuário sua senha e que espere sua vez até que seja chamado por nome ou senha."
       },
       "2": {
         "title": "Ups!",
@@ -1779,7 +1783,7 @@
           "whatsapp-notify-five": "Editar Notificação Whatsapp Faltam 5",
           "only-survey": "Editar Modo Só Pesquisa",
           "whatsapp-notify-one": "Editar Notificação Whatsapp Falta 1",
-          "get-number-remote": "Editar Obter número remoto"
+          "get-number-remote": "Editar Obter Senha remota"
         }
       }
     },
@@ -2209,7 +2213,7 @@
         "view": "Ver la Fila com mais atenções - Seção Dashboard"
       },
       "attention-no-device": {
-        "view": "Ver Número de atenções manuales - Seção Dashboard"
+        "view": "Ver Número de Atenções Manuales - Seção Dashboard"
       },
       "attention-notification": {
         "view": "Ver Número de notificaciones - Seção Dashboard"
@@ -2300,7 +2304,7 @@
       "attention": {
         "attend": "Atender - Seção Atenções del Colaborador",
         "finish": "Marcar atencão como atendida - Seção Atenções del Colaborador",
-        "skip": "Saltar atencão - Seção Atenções del Colaborador"
+        "skip": "Pular Atencão - Seção Atenções del Colaborador"
       }
     },
     "roles": {

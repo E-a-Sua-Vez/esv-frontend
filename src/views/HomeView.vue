@@ -46,20 +46,36 @@ export default {
       <div class="mx-4">
         <img class="rounded img-fluid mx-auto logo" :src="$t('logoValues')" :alt="$t('logoValuesAlt')">
       </div>
-      <div class="row my-4 subtitle">
+      <div class="row mt-4 mb-1 subtitle">
         <span>{{ $t("titleEnterUser") }}</span>
       </div>
       <div class="row my-1">
         <div class="col-6">
-          <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="loginBusiness()">{{ $t("enterCommerce") }} <i class="bi bi-person-badge-fill"></i></a>
+          <a class="btn btn-lg btn-size fw-bold btn-dark col-12 rounded-pill mt-2 px-4" @click="loginBusiness()">{{ $t("enterCommerce") }} <i class="bi bi-person-badge-fill"></i></a>
         </div>
         <div class="col-6">
-          <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="loginCollaborator()">{{ $t("enterCollaborator") }} <i class="bi bi-people-fill"></i></a>
+          <a class="btn btn-lg btn-size fw-bold btn-dark col-12 rounded-pill mt-2 px-4" @click="loginCollaborator()">{{ $t("enterCollaborator") }} <i class="bi bi-people-fill"></i></a>
         </div>
       </div>
       <div class="row mt-4">
-        <div class="row my-1 subtitle">
-          <span>{{ $t("titleEnterMaster") }}</span><a @click="loginMaster()"><span class="fw-bold enter-master">{{ $t("enterMaster") }}</span></a>
+        <div class="subtitle mb-3">
+          <span>{{ $t("titleEnterMaster") }}</span><br>
+          <a @click="loginMaster()"><span class="btn btn-lg btn-size col-8 fw-bold btn-dark rounded-pill mt-2 px-4">{{ $t("enterMaster") }} <i class="bi bi-person-fill-gear"></i></span></a>
+        </div>
+        <hr>
+        <div class="subtitle centered mt-2">
+          <a
+            class="btn btn-lg btn-size fw-bold  col-8 btn-secondary rounded-pill mt-2 px-4"
+            :href="$t('serviceStatusUrl')"
+            target="_blank">{{ $t("serviceStatus") }} <i class="bi bi-rocket-takeoff-fill"></i>
+          </a>
+        </div>
+        <div class="subtitle centered mt-1">
+          <a
+            class="btn btn-lg btn-size fw-bold col-8 btn-secondary rounded-pill px-4"
+            :href="$t('publicSiteUrl')"
+            target="_blank">{{ $t("publicSite") }} <i class="bi bi-arrow-up-right-circle-fill"></i>
+          </a>
         </div>
       </div>
       <PoweredBy />
@@ -70,7 +86,7 @@ export default {
 <style scoped>
 .logo {
   display: flex;
-  width: 400px;
+  width: 250px;
   background-repeat: no-repeat;
   background-size: 100%;
 }
@@ -83,7 +99,7 @@ export default {
 }
 @media (min-width: 1024px) {
   .logo {
-    width: 400px;
+    width: 250px;
     background-position: center;
   }
 }
