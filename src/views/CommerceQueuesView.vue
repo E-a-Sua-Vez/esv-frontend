@@ -364,8 +364,9 @@ export default {
             if (day === 7) {
               forDeletion.push(1);
             } else {
-              forDeletion.push(7 - day);
+              forDeletion.push(day + 1);
             }
+
           })
           disabled = disabled.filter(item => !forDeletion.includes(item));
           disabledDates.value[0].repeat.weekdays.push(...disabled);
