@@ -604,15 +604,18 @@ export default {
       const avaliableToCalendar = availableDates.map(date => {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
-      })
+      });
+      calendarAttributes.value[0].dates = [];
       calendarAttributes.value[0].dates.push(...avaliableToCalendar);
       const forDeletionToCalendar = forDeletion.map(date => {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
-      })
+      });
+      calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
       return availableDates;
     }
+
 
     watch (
       changeDate,
