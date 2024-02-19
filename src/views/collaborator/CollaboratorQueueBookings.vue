@@ -1,6 +1,6 @@
 <script>
 import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { VueRecaptcha } from 'vue-recaptcha';

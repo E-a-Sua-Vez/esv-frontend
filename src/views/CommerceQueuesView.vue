@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
 import { createAttention } from '../application/services/attention';
-import { createBooking } from '../application/services/booking';
+import { createBooking, getPendingBookingsBetweenDates } from '../application/services/booking';
 import { createWaitlist } from '../application/services/waitlist';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../stores';
@@ -34,6 +34,7 @@ export default {
 
     let loading = ref(false);
     let alertError = ref('');
+    let calendar = ref(null);
     let dateMask = ref({
       modelValue: 'YYYY-MM-DD',
     });
@@ -44,6 +45,23 @@ export default {
         }
       }
     ]);
+    let calendarAttributes = ref([
+      {
+        key: 'Available',
+        bar: 'green',
+        dates: []
+      },
+      {
+        key: 'Unavailable',
+        bar: 'red',
+        dates: []
+      },
+      {
+        key: 'Disabled',
+        bar: 'gray',
+        dates: []
+      }
+    ])
     let unsubscribeBookings = () => {};
     let unsubscribeAttentions = () => {};
 
@@ -384,6 +402,8 @@ export default {
             state.block = {};
             state.attentionBlock = {};
             getAttentions();
+            const currentDate = new Date().toISOString().slice(0, 10);
+            getAvailableDatesByMonth(currentDate);
             state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
             const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
             if (!blockAvailable || blockAvailable.length === 0) {
@@ -554,6 +574,46 @@ export default {
       return { unsubscribe };
     }
 
+    const getAvailableDatesByMonth = async (date) => {
+      let availableDates = [];
+      const blocks = state.queue.serviceInfo.blocks;
+      const [year, month] = date.split('-');
+      const thisMonth = +month - 1;
+      const nextMonth = +month;
+      const dateFrom = new Date(+year, thisMonth, 1);
+      const dateTo = new Date(+year, nextMonth, 0);
+      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
+      const bookingsGroupedByDate = Object.groupBy(monthBookings, ({date}) => date);
+      const dates = Object.keys(bookingsGroupedByDate);
+      for(let i = 1; i <= dateTo.getDate(); i ++) {
+        const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
+        if (new Date(key) > new Date()) {
+          availableDates.push(key);
+        }
+      }
+      const forDeletion = [];
+      if (dates && dates.length > 0) {
+        dates.forEach(date => {
+          const bookings = bookingsGroupedByDate[date];
+          if (bookings.length >= blocks.length) {
+            forDeletion.push(date);
+          }
+        })
+        availableDates = availableDates.filter(item => !forDeletion.includes(item));
+      }
+      const avaliableToCalendar = availableDates.map(date => {
+        const [year,month,day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      })
+      calendarAttributes.value[0].dates.push(...avaliableToCalendar);
+      const forDeletionToCalendar = forDeletion.map(date => {
+        const [year,month,day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      })
+      calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+      return availableDates;
+    }
+
     watch (
       changeDate,
       async (newData, oldData) => {
@@ -593,6 +653,13 @@ export default {
       }
     )
 
+    const getAvailableDatesByCalendarMonth = async (pages) => {
+      if (pages && pages.length > 0) {
+        const page = pages[0].id;
+        await getAvailableDatesByMonth(`${page}-01`);
+      }
+    }
+
     return {
       state,
       siteKey,
@@ -602,6 +669,8 @@ export default {
       alertError,
       dateMask,
       disabledDates,
+      calendarAttributes,
+      calendar,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -618,7 +687,8 @@ export default {
       getBooking,
       showToday,
       showReserve,
-      getWaitList
+      getWaitList,
+      getAvailableDatesByCalendarMonth
     }
   }
 }
@@ -863,12 +933,13 @@ export default {
                         <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
                       </div>
                       <VDatePicker
-                        view="weekly"
                         :locale="state.locale"
                         v-model.string="state.date"
                         :mask="dateMask"
                         :min-date="state.minDate"
                         :disabled-dates="disabledDates"
+                        :attributes='calendarAttributes'
+                        @did-move="getAvailableDatesByCalendarMonth"
                       />
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')">
                         <div v-if="state.availableBlocks &&
