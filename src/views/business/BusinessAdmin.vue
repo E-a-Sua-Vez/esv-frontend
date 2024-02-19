@@ -168,7 +168,13 @@ export default {
       state.newBusiness = {
         localeInfo: {},
         contactInfo: {},
-        serviceInfo: { break: false }
+        serviceInfo: {
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {}
+       }
       }
     }
 
@@ -227,6 +233,28 @@ export default {
           serviceInfo.attentionDays = serviceInfo.attentionDays.filter(el => el !== day);
         }
         serviceInfo.attentionDays.sort();
+        if (serviceInfo.personalized === true) {
+          serviceInfo.personalizedHours[day] = {
+            attentionHourFrom: serviceInfo.attentionHourFrom,
+            attentionHourTo: serviceInfo.attentionHourTo
+          };
+        }
+      }
+    }
+
+    const initializedParsonalizedHours = (serviceInfo) => {
+      if (serviceInfo.personalized === true) {
+        if (!serviceInfo.personalizedHours) {
+          serviceInfo.personalizedHours = {};
+        }
+        if (serviceInfo.attentionDays && serviceInfo.attentionDays.length > 0) {
+          serviceInfo.attentionDays.forEach(day => {
+            serviceInfo.personalizedHours[day] = {
+              attentionHourFrom: serviceInfo.attentionHourFrom,
+              attentionHourTo: serviceInfo.attentionHourTo
+            };
+          })
+        }
       }
     }
 
@@ -242,7 +270,8 @@ export default {
       dayChecked,
       checkDay,
       selectBusiness,
-      closeBusiness
+      closeBusiness,
+      initializedParsonalizedHours
     }
   }
 }
@@ -732,6 +761,50 @@ export default {
                           </div>
                         </div>
                       </div>
+                      <div id="add-business-personalized-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.personalized") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newBusiness.serviceInfo.personalized"
+                            :disabled="!state.toggles['businesses.admin.edit']"
+                            @click="initializedParsonalizedHours(state.newBusiness.serviceInfo)"
+                          />
+                        </div>
+                      </div>
+                      <div id="business-personalized-form-add" v-if="state.newBusiness.serviceInfo.personalized" class="row g-1">
+                        <div class="row g-1" v-for="day in state.newBusiness.serviceInfo.attentionDays" :key="day">
+                          <div class="col-4 text-label">
+                            {{ $t(`days.${day}`) }}
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newBusiness.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              placeholder="Ex. 8">
+                          </div>
+                          <div class="col-2">
+                            -
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newBusiness.serviceInfo.personalizedHours[day].attentionHourTo"
+                              placeholder="Ex. 16">
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div class="col">
                       <button
@@ -1140,46 +1213,46 @@ export default {
                             </div>
                           </div>
                           <div id="add-business-break-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessCommercesAdmin.break") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="state.business.serviceInfo.break"
-                            :disabled="!state.toggles['businesses.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-attentionBreak-form-add" v-if="state.business.serviceInfo.break" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessCommercesAdmin.breakHour") }}
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="state.business.serviceInfo.breakHourFrom"
-                            placeholder="Ex. 8">
-                        </div>
-                        <div class="col-2">
-                          -
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="state.business.serviceInfo.breakHourTo"
-                            placeholder="Ex. 16">
-                        </div>
-                      </div>
+                            <div class="col-4 text-label">
+                              {{ $t("businessCommercesAdmin.break") }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="state.business.serviceInfo.break"
+                                :disabled="!state.toggles['businesses.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="business-attentionBreak-form-update" v-if="state.business.serviceInfo.break" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t("businessCommercesAdmin.breakHour") }}
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="state.business.serviceInfo.breakHourFrom"
+                                placeholder="Ex. 8">
+                            </div>
+                            <div class="col-2">
+                              -
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="state.business.serviceInfo.breakHourTo"
+                                placeholder="Ex. 16">
+                            </div>
+                          </div>
                           <div id="business-attentionDays-form-update" class="row g-1">
                             <div class="col-4 text-label">
                               {{ $t("businessCommercesAdmin.attentionDays") }}
@@ -1226,6 +1299,50 @@ export default {
                                   :checked="dayChecked(state.business.serviceInfo, 7)"
                                   @click="checkDay($event, state.business.serviceInfo, 7)">
                                 <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                              </div>
+                            </div>
+                          </div>
+                          <div id="update-business-personalized-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t("businessCommercesAdmin.personalized") }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="state.business.serviceInfo.personalized"
+                                :disabled="!state.toggles['businesses.admin.edit']"
+                                @click="initializedParsonalizedHours(state.business.serviceInfo)"
+                              />
+                            </div>
+                          </div>
+                          <div id="business-personalized-form-update" v-if="state.business.serviceInfo.personalized" class="row g-1">
+                            <div class="row g-1" v-for="day in state.business.serviceInfo.attentionDays" :key="day">
+                              <div class="col-4 text-label">
+                                {{ $t(`days.${day}`) }}
+                              </div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control"
+                                  v-model="state.business.serviceInfo.personalizedHours[day].attentionHourFrom"
+                                  placeholder="Ex. 8">
+                              </div>
+                              <div class="col-2">
+                                -
+                              </div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control"
+                                  v-model="state.business.serviceInfo.personalizedHours[day].attentionHourTo"
+                                  placeholder="Ex. 16">
                               </div>
                             </div>
                           </div>

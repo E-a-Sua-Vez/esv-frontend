@@ -1317,6 +1317,9 @@
     "break": "Descanso:",
     "breakHour": "Horas Descanso:",
     "blockTime": "Bloque (Min):",
+    "sameCommeceHours": "Horas del Comercio:",
+    "personalized": "Personalizado:",
+    "holidays": "Feriados:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1541,6 +1544,8 @@
     "keyNameHelp": "Identificador usado para la URL del ministe.",
     "tagHelp": "Identificador corto de la sucursal utilizado en el producto digital.",
     "listResult": "Registros:",
+    "personalized": "Personalizado:",
+    "holidays": "Feriados:",
     "message": {
       "1": {
         "title": "¡Ups!",

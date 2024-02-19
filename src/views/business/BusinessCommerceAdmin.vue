@@ -182,7 +182,13 @@ export default {
         country: state.business.country,
         localeInfo: state.business.localeInfo || {},
         contactInfo: state.business.contactInfo || {},
-        serviceInfo: { break: false, ...state.business.serviceInfo }
+        serviceInfo: {
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {},
+          ...state.business.serviceInfo }
       }
     }
 
@@ -229,6 +235,12 @@ export default {
           serviceInfo.attentionDays = serviceInfo.attentionDays.filter(el => el !== day);
         }
         serviceInfo.attentionDays.sort();
+        if (serviceInfo.personalized === true) {
+          serviceInfo.personalizedHours[day] = {
+            attentionHourFrom: serviceInfo.attentionHourFrom,
+            attentionHourTo: serviceInfo.attentionHourTo
+          };
+        }
       }
     }
 
@@ -240,6 +252,22 @@ export default {
     const copyLink = (commerce) => {
       const textToCopy = getSurveyLink(commerce);
       navigator.clipboard.writeText(textToCopy);
+    }
+
+    const initializedParsonalizedHours = (serviceInfo) => {
+      if (serviceInfo.personalized === true) {
+        if (!serviceInfo.personalizedHours) {
+          serviceInfo.personalizedHours = {};
+        }
+        if (serviceInfo.attentionDays && serviceInfo.attentionDays.length > 0) {
+          serviceInfo.attentionDays.forEach(day => {
+            serviceInfo.personalizedHours[day] = {
+              attentionHourFrom: serviceInfo.attentionHourFrom,
+              attentionHourTo: serviceInfo.attentionHourTo
+            };
+          })
+        }
+      }
     }
 
     return {
@@ -255,7 +283,8 @@ export default {
       dayChecked,
       checkDay,
       getCommerceLink,
-      copyLink
+      copyLink,
+      initializedParsonalizedHours
     }
   }
 }
@@ -763,6 +792,50 @@ export default {
                               :checked="dayChecked(state.newCommerce.serviceInfo)"
                               @click="checkDay($event, state.newCommerce.serviceInfo, 7)">
                             <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="add-commerce-personalized-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCommercesAdmin.personalized") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newCommerce.serviceInfo.personalized"
+                            :disabled="!state.toggles['commerces.admin.edit']"
+                            @click="initializedParsonalizedHours(state.newCommerce.serviceInfo)"
+                          />
+                        </div>
+                      </div>
+                      <div id="commerce-personalized-form-add" v-if="state.newCommerce.serviceInfo.personalized" class="row g-1">
+                        <div class="row g-1" v-for="day in state.newCommerce.serviceInfo.attentionDays" :key="day">
+                          <div class="col-4 text-label">
+                            {{ $t(`days.${day}`) }}
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newCommerce.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              placeholder="Ex. 8">
+                          </div>
+                          <div class="col-2">
+                            -
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newCommerce.serviceInfo.personalizedHours[day].attentionHourTo"
+                              placeholder="Ex. 16">
                           </div>
                         </div>
                       </div>
@@ -1284,6 +1357,50 @@ export default {
                               :checked="dayChecked(commerce.serviceInfo, 7)"
                               @click="checkDay($event, commerce.serviceInfo, 7)">
                             <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="update-commerce-personalized-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t("businessCommercesAdmin.personalized") }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.personalized"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                                @click="initializedParsonalizedHours(commerce.serviceInfo)"
+                              />
+                            </div>
+                      </div>
+                      <div id="commerce-personalized-form-update" v-if="commerce.serviceInfo.personalized" class="row g-1">
+                        <div class="row g-1" v-for="day in commerce.serviceInfo.attentionDays" :key="day">
+                          <div class="col-4 text-label">
+                            {{ $t(`days.${day}`) }}
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="commerce.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              placeholder="Ex. 8">
+                          </div>
+                          <div class="col-2">
+                            -
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="commerce.serviceInfo.personalizedHours[day].attentionHourTo"
+                              placeholder="Ex. 16">
                           </div>
                         </div>
                       </div>

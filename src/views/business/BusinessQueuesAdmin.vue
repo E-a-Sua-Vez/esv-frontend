@@ -153,7 +153,15 @@ export default {
       state.showAdd = !state.showAdd;
       state.newQueue = {
         order: state.queues.length + 1,
-        serviceInfo: { break: false, ...state.business.serviceInfo }
+        serviceInfo: {
+          sameCommeceHours: true,
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {},
+          ...state.business.serviceInfo
+        }
       }
     }
 
@@ -215,6 +223,12 @@ export default {
           serviceInfo.attentionDays = serviceInfo.attentionDays.filter(el => el !== day);
         }
         serviceInfo.attentionDays.sort();
+        if (serviceInfo.personalized === true) {
+          serviceInfo.personalizedHours[day] = {
+            attentionHourFrom: serviceInfo.attentionHourFrom,
+            attentionHourTo: serviceInfo.attentionHourTo
+          };
+        }
       }
     }
 
@@ -232,6 +246,41 @@ export default {
       navigator.clipboard.writeText(textToCopy);
     }
 
+    const initializedParsonalizedHours = (serviceInfo) => {
+      if (serviceInfo.personalized === true) {
+        if (!serviceInfo.personalizedHours) {
+          serviceInfo.personalizedHours = {};
+        }
+        if (serviceInfo.attentionDays && serviceInfo.attentionDays.length > 0) {
+          serviceInfo.attentionDays.forEach(day => {
+            serviceInfo.personalizedHours[day] = {
+              attentionHourFrom: serviceInfo.attentionHourFrom,
+              attentionHourTo: serviceInfo.attentionHourTo
+            };
+          })
+        }
+      }
+    }
+
+    const initializedSameCommerceHours = (serviceInfo) => {
+      if (serviceInfo.sameCommeceHours === true) {
+        if (state.commerce.serviceInfo) {
+          serviceInfo.sameCommeceHours = true;
+          serviceInfo.attentionDays = state.commerce.serviceInfo.attentionDays;
+          serviceInfo.attentionHourFrom = state.commerce.serviceInfo.attentionHourFrom;
+          serviceInfo.attentionHourTo = state.commerce.serviceInfo.attentionHourTo;
+          serviceInfo.break = state.commerce.serviceInfo.break;
+          serviceInfo.breakHourFrom = state.commerce.serviceInfo.breakHourFrom;
+          serviceInfo.breakHourTo = state.commerce.serviceInfo.breakHourTo;
+          serviceInfo.personalized = state.commerce.serviceInfo.personalized;
+          serviceInfo.personalizedHours = state.commerce.serviceInfo.personalizedHours;
+          serviceInfo.holiday = state.commerce.serviceInfo.holiday;
+          serviceInfo.holidays = state.commerce.serviceInfo.holidays;
+          console.log("🚀 ~ initializedSameCommerceHours ~ serviceInfo:", serviceInfo);
+        };
+      }
+    }
+
     return {
       state,
       loading,
@@ -246,7 +295,9 @@ export default {
       dayChecked,
       checkDay,
       getQueueLink,
-      copyLink
+      copyLink,
+      initializedParsonalizedHours,
+      initializedSameCommerceHours
     }
   }
 }
@@ -391,6 +442,18 @@ export default {
                       </a>
                     </div>
                     <div id="add-service" class="collapse row m-0">
+                      <div id="add-queue-samecommerce-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.sameCommeceHours") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newQueue.serviceInfo.sameCommeceHours"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            @click="initializedSameCommerceHours(state.newQueue.serviceInfo)"
+                          />
+                        </div>
+                      </div>
                       <div id="commerce-attentionHour-form-add" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.attentionHour") }}
@@ -508,6 +571,50 @@ export default {
                               :checked="dayChecked(state.newQueue.serviceInfo, 7)"
                               @click="checkDay($event, state.newQueue.serviceInfo, 7)">
                             <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="add-queue-personalized-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.personalized") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newQueue.serviceInfo.personalized"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            @click="initializedParsonalizedHours(state.newQueue.serviceInfo)"
+                          />
+                        </div>
+                      </div>
+                      <div id="queue-personalized-form-add" v-if="state.newQueue.serviceInfo.personalized" class="row g-1">
+                        <div class="row g-1" v-for="day in state.newQueue.serviceInfo.attentionDays" :key="day">
+                          <div class="col-4 text-label">
+                            {{ $t(`days.${day}`) }}
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              placeholder="Ex. 8">
+                          </div>
+                          <div class="col-2">
+                            -
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourTo"
+                              placeholder="Ex. 16">
                           </div>
                         </div>
                       </div>
@@ -651,6 +758,18 @@ export default {
                       </a>
                     </div>
                     <div id="update-service" class="collapse row m-0">
+                      <div id="update-queue-samecommerce-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.sameCommeceHours") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="queue.serviceInfo.sameCommeceHours"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            @click="initializedSameCommerceHours(queue.serviceInfo)"
+                          />
+                        </div>
+                      </div>
                       <div id="queue-attentionHour-form-update" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.attentionHour") }}
@@ -771,6 +890,50 @@ export default {
                           </div>
                         </div>
                       </div>
+                      <div id="update-queue-personalized-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.personalized") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="queue.serviceInfo.personalized"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            @click="initializedParsonalizedHours(queue.serviceInfo)"
+                          />
+                        </div>
+                      </div>
+                      <div id="queue-personalized-form-update" v-if="queue.serviceInfo.personalized" class="row g-1">
+                        <div class="row g-1" v-for="day in queue.serviceInfo.attentionDays" :key="day">
+                          <div class="col-4 text-label">
+                            {{ $t(`days.${day}`) }}
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="queue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              placeholder="Ex. 8">
+                          </div>
+                          <div class="col-2">
+                            -
+                          </div>
+                          <div class="col-3">
+                            <input
+                              min="0"
+                              max="24"
+                              minlength="1"
+                              maxlength="2"
+                              type="number"
+                              class="form-control"
+                              v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
+                              placeholder="Ex. 16">
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div id="queue-id-form" class="row -2 mb-g3">
                       <div class="row queue-details-container">
@@ -856,7 +1019,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 1000px !important;
+  max-height: 1500px !important;
   overflow-y: auto;
 }
 .detailed-data {
