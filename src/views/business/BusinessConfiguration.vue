@@ -75,7 +75,14 @@ export default {
         state.commerce = commerce;
         state.configurations = await getFeatureToggleByCommerceId(state.commerce.id);
         if (state.configurations && state.configurations.length > 0) {
-          state.groupedConfigurations = Object.groupBy(state.configurations, ({type}) => type);
+          state.groupedConfigurations  = state.configurations.reduce((acc, conf) => {
+            const type = conf.type;
+            if (!acc[type]) {
+              acc[type] = [];
+            }
+            acc[type].push(conf);
+            return acc;
+          }, {});
         }
         alertError.value = '';
         loading.value = false;
@@ -115,7 +122,14 @@ export default {
           const configurations = await getFeatureToggleByCommerceId(state.commerce.id);
           state.configurations = configurations;
           if (state.configurations && state.configurations.length > 0) {
-            state.groupedConfigurations = Object.groupBy(state.configurations, ({type}) => type);
+            state.groupedConfigurations = state.configurations.reduce((acc, conf) => {
+              const type = conf.type;
+              if (!acc[type]) {
+                acc[type] = [];
+              }
+              acc[type].push(conf);
+              return acc;
+            }, {});
           }
           state.showAdd = false;
           state.newConfiguration = {};

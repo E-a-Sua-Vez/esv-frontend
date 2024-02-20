@@ -160,7 +160,14 @@ export default {
       attentions,
       async () => {
         if (attentions && attentions.value && attentions.value.length > 0) {
-          const filteredAttentionsByQueue = Object.groupBy(attentions.value, ({ queueId }) => queueId);
+          const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
+            const queueId = attention.queueId;
+            if (!acc[queueId]) {
+              acc[queueId] = [];
+            }
+            acc[queueId].push(attention);
+            return acc;
+          }, {});
           checkQueueStatus(filteredAttentionsByQueue);
         } else {
           initializeQueueStatus();
