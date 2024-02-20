@@ -16,7 +16,7 @@
   "titleEnterUser": "Selecione um tipo de login de acordo com seu perfil:",
   "titleEnterMaster": "Se você é um usuário master",
   "enterMaster": "Login do Master",
-  "enterCommerce": "Login do Admin",
+  "enterCommerce": "Login do Administrador",
   "enterCollaborator": "Login do Colaborador",
   "welcome": "Bem-vindo!",
   "logout": "Sair",

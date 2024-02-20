@@ -689,7 +689,12 @@ export default {
         }
         attentionsAvailables();
         bookingsAvailables();
-        const currentDate = new Date().toISOString().slice(0, 10);
+        let currentDate;
+        if (state.date === undefined || state.date === 'TODAY') {
+          currentDate = new Date().toISOString().slice(0, 10);
+        } else {
+          currentDate = new Date(state.date || new Date()).toISOString().slice(0, 10);
+        }
         await getAvailableDatesByMonth(currentDate);
       }
     )
@@ -978,6 +983,9 @@ export default {
                           :attributes='calendarAttributes'
                           @did-move="getAvailableDatesByCalendarMonth"
                         />
+                        <div v-if="state.date">
+                          <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                        </div>
                       </div>
                       <div v-if="loadingCalendar">
                         <Spinner :show="loadingCalendar"></Spinner>

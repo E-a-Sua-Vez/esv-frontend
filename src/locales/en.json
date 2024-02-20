@@ -16,7 +16,7 @@
   "titleEnterUser": "Please select a type of income according to your profile:",
   "titleEnterMaster": "If you are a master user",
   "enterMaster": "Login Master",
-  "enterCommerce": "Login Admin",
+  "enterCommerce": "Login Administrator",
   "enterCollaborator": "Login Collaborator",
   "welcome": "Welcome!",
   "logout": "Logout",

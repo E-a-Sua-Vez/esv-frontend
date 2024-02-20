@@ -56,6 +56,14 @@ export default {
           fillMode: 'light',
         },
         dates: []
+      },
+      {
+        key: 'Reserves',
+        highlight: {
+          color: 'blue',
+          fillMode: 'light',
+        },
+        dates: []
       }
     ])
     let unsubscribeBookings = () => {};
@@ -125,6 +133,12 @@ export default {
     const isActiveCommerce = () => {
       return state.commerce && state.commerce.active === true && state.commerce.queues.length > 0;
     };
+
+    const formattedDate = (date) => {
+      if (date && date !== 'TODAY') {
+        return new Date(date).toISOString().slice(0,10);
+      }
+    }
 
     const getLineAttentions = async () => {
       try {
@@ -273,7 +287,12 @@ export default {
           getWaitlists();
         }
         getAvailableBlocks();
-        const currentDate = new Date().toISOString().slice(0, 10);
+        let currentDate;
+        if (state.date === undefined || state.date === 'TODAY') {
+          currentDate = new Date().toISOString().slice(0, 10);
+        } else {
+          currentDate = new Date(state.date || new Date()).toISOString().slice(0, 10);
+        }
         await getAvailableDatesByMonth(currentDate);
       }
     )
@@ -346,6 +365,7 @@ export default {
         }
       }
       const forDeletion = [];
+      const forReserves = [];
       if (dates && dates.length > 0) {
         dates.forEach(date => {
           const bookings = bookingsGroupedByDate[date];
@@ -354,6 +374,8 @@ export default {
           const blocks = state.blocksByDay[dayNumber] || [];
           if (bookings.length >= blocks.length) {
             forDeletion.push(date);
+          } else if (bookings.length >= 1) {
+            forReserves.push(date);
           }
         })
         availableDates = availableDates.filter(item => !forDeletion.includes(item));
@@ -370,6 +392,12 @@ export default {
       });
       calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+      const avaliableToReserve = forReserves.map(date => {
+        const [year,month,day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+      calendarAttributes.value[2].dates = [];
+      calendarAttributes.value[2].dates.push(...avaliableToReserve);
     }
 
     return {
@@ -390,7 +418,8 @@ export default {
       goBack,
       getBooking,
       showBookings,
-      showWaitlists
+      showWaitlists,
+      formattedDate
     }
   }
 }
@@ -452,6 +481,9 @@ export default {
               :attributes='calendarAttributes'
               @did-move="getAvailableDatesByCalendarMonth"
             />
+            <div v-if="state.date">
+              <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+            </div>
           </div>
           <div v-if="state.queue && state.queue.id">
             <div id="subMenu" class="my-1 mt-4">
