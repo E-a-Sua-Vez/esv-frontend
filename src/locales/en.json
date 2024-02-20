@@ -318,6 +318,7 @@
     "contact": "Contact",
     "location": "Location",
     "attentionHours": "Attention Hours: ",
+    "breakHours": "Break: ",
     "from": "from ",
     "to": "to ",
     "hrs": "hrs.",
@@ -1550,6 +1551,8 @@
     "break": "Break:",
     "breakHour": "Break Hours:",
     "blockTime": "Block (Min):",
+    "personalized": "Personalized:",
+    "holidays": "Holidays:",
     "message": {
       "1": {
         "title": "Ups!",

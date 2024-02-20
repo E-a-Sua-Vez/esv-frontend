@@ -36,6 +36,12 @@ export default {
         }
       }
       return undefined;
+    },
+    timeConvert(attentionHourFrom) {
+      const minsFrom = attentionHourFrom * 60;
+      const hours = Math.floor(minsFrom / 60);
+      const minutes = minsFrom % 60;
+      return `${hours}:${minutes === 0 ? '00': minutes}`;
     }
   }
 }
@@ -77,13 +83,34 @@ export default {
               <span class="fw-bold"> {{ $t("commerceQRSetup.category") }} </span>
               <p> {{ $t(`categories.${commerce.category}`) }}</p>
             </div>
-            <div v-if="commerce.serviceInfo.attentionHourFrom >= 0 && commerce.serviceInfo.attentionHourTo >= 0">
-              <span class="fw-bold"> {{ $t("commerceQRSetup.attentionHours") }} </span>
-              {{ attentionDays() }}
+            <div v-if="commerce.serviceInfo.personalized === false">
+              <div v-if="commerce.serviceInfo.attentionHourFrom >= 0 && commerce.serviceInfo.attentionHourTo >= 0">
+                <span class="fw-bold mb-1"> {{ $t("commerceQRSetup.attentionHours") }} </span>
+                {{ attentionDays() }}
+                {{ $t("commerceQRSetup.from") }}
+                <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.attentionHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
+                {{ $t("commerceQRSetup.to") }}
+                <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.attentionHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
+              </div>
+            </div>
+            <div v-else>
+              <div v-if="commerce.serviceInfo.personalizedHours">
+                <span class="fw-bold mb-1"> {{ $t("commerceQRSetup.attentionHours") }} </span>
+                <div v-for="day in Object.keys(commerce.serviceInfo.personalizedHours || {})" :key="day">
+                  {{ $t(`days.${day}`)}}
+                  {{ $t("commerceQRSetup.from") }}
+                  <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
+                  {{ $t("commerceQRSetup.to") }}
+                  <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
+                </div>
+              </div>
+            </div>
+            <div v-if="commerce.serviceInfo.break === true" class="mt-2">
+              <span class="fw-bold"> {{ $t("commerceQRSetup.breakHours") }} </span>
               {{ $t("commerceQRSetup.from") }}
-              <span class="fw-bold">{{ commerce.serviceInfo.attentionHourFrom }} {{ $t("commerceQRSetup.hrs") }}</span>
+              <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.breakHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
               {{ $t("commerceQRSetup.to") }}
-              <span class="fw-bold">{{ commerce.serviceInfo.attentionHourTo }}</span> {{ $t("commerceQRSetup.hrs") }}
+              <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.breakHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
             </div>
             <div v-if="commerce.serviceInfo.serviceUrl">
               <a

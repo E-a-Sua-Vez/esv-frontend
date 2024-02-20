@@ -317,7 +317,8 @@
     "services": "Serviços",
     "contact": "Contato",
     "location": "Localização",
-    "attentionHours": "Horas de atenção: ",
+    "attentionHours": "Horário de atendimento: ",
+    "breakHours": "Horário de descanso: ",
     "from": "de ",
     "to": "até ",
     "hrs": "hrs.",
@@ -1551,6 +1552,8 @@
     "break": "Descanso:",
     "breakHour": "Houras Descanso:",
     "blockTime": "Bloque (Min):",
+    "personalized": "Personalizado:",
+    "holidays": "Férias:",
     "message": {
       "1": {
         "title": "Oh não!",
