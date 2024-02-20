@@ -49,17 +49,12 @@ export default {
     let calendarAttributes = ref([
       {
         key: 'Available',
-        bar: 'green',
+        dot: 'green',
         dates: []
       },
       {
         key: 'Unavailable',
-        bar: 'red',
-        dates: []
-      },
-      {
-        key: 'Disabled',
-        bar: 'gray',
+        dot: 'red',
         dates: []
       }
     ])
