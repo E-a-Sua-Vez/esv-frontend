@@ -34,6 +34,7 @@ export default {
     let captcha = false;
 
     let loading = ref(false);
+    let loadingCalendar = ref(false);
     let alertError = ref('');
     let calendar = ref(null);
     let dateMask = ref({
@@ -594,47 +595,52 @@ export default {
     }
 
     const getAvailableDatesByMonth = async (date) => {
-      let availableDates = [];
-      const [year, month] = date.split('-');
-      const thisMonth = +month - 1;
-      const nextMonth = +month;
-      const dateFrom = new Date(+year, thisMonth, 1);
-      const dateTo = new Date(+year, nextMonth, 0);
-      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
-      const bookingsGroupedByDate = Object.groupBy(monthBookings, ({date}) => date);
-      const dates = Object.keys(bookingsGroupedByDate);
-      for(let i = 1; i <= dateTo.getDate(); i ++) {
-        const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
-        if (new Date(key) > new Date()) {
-          availableDates.push(key);
-        }
-      }
-      const forDeletion = [];
-      if (dates && dates.length > 0) {
-        dates.forEach(date => {
-          const bookings = bookingsGroupedByDate[date];
-          const [year, month, day] = date.split('-');
-          const dayNumber = new Date(+year, +month - 1, +day).getDay();
-          const blocks = state.blocksByDay[dayNumber] || [];
-          if (bookings.length >= blocks.length) {
-            forDeletion.push(date);
+      try {
+        loadingCalendar.value = true;
+        let availableDates = [];
+        const [year, month] = date.split('-');
+        const thisMonth = +month - 1;
+        const nextMonth = +month;
+        const dateFrom = new Date(+year, thisMonth, 1);
+        const dateTo = new Date(+year, nextMonth, 0);
+        const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
+        const bookingsGroupedByDate = Object.groupBy(monthBookings, ({date}) => date);
+        const dates = Object.keys(bookingsGroupedByDate);
+        for(let i = 1; i <= dateTo.getDate(); i ++) {
+          const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
+          if (new Date(key) > new Date()) {
+            availableDates.push(key);
           }
-        })
-        availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const forDeletion = [];
+        if (dates && dates.length > 0) {
+          dates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date];
+            const [year, month, day] = date.split('-');
+            const dayNumber = new Date(+year, +month - 1, +day).getDay();
+            const blocks = state.blocksByDay[dayNumber] || [];
+            if (bookings.length >= blocks.length) {
+              forDeletion.push(date);
+            }
+          })
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const avaliableToCalendar = availableDates.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[0].dates = [];
+        calendarAttributes.value[0].dates.push(...avaliableToCalendar);
+        const forDeletionToCalendar = forDeletion.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[1].dates = [];
+        calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+        loadingCalendar.value = false;
+      } catch (error) {
+        loadingCalendar.value = false;
       }
-      const avaliableToCalendar = availableDates.map(date => {
-        const [year,month,day] = date.split('-');
-        return new Date(+year, +month - 1, +day);
-      });
-      calendarAttributes.value[0].dates = [];
-      calendarAttributes.value[0].dates.push(...avaliableToCalendar);
-      const forDeletionToCalendar = forDeletion.map(date => {
-        const [year,month,day] = date.split('-');
-        return new Date(+year, +month - 1, +day);
-      });
-      calendarAttributes.value[1].dates = [];
-      calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
-      return availableDates;
     }
 
     const changeDate = computed(() => {
@@ -699,6 +705,7 @@ export default {
       disabledDates,
       calendarAttributes,
       calendar,
+      loadingCalendar,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -960,16 +967,22 @@ export default {
                       <div class="choose-attention py-1 pt-2">
                         <i class="bi bi-calendar-check"></i> <span> {{ $t("commerceQueuesView.selectDay") }} </span>
                       </div>
-                      <VDatePicker
-                        :locale="state.locale"
-                        v-model.string="state.date"
-                        :mask="dateMask"
-                        :min-date="state.minDate"
-                        :max-date="state.maxDate"
-                        :disabled-dates="disabledDates"
-                        :attributes='calendarAttributes'
-                        @did-move="getAvailableDatesByCalendarMonth"
-                      />
+                      <div v-if="!loadingCalendar">
+                        <VDatePicker
+                          :locale="state.locale"
+                          v-model.string="state.date"
+                          :mask="dateMask"
+                          :min-date="state.minDate"
+                          :max-date="state.maxDate"
+                          :disabled-dates="disabledDates"
+                          :attributes='calendarAttributes'
+                          @did-move="getAvailableDatesByCalendarMonth"
+                        />
+                      </div>
+                      <div v-if="loadingCalendar">
+                        <Spinner :show="loadingCalendar"></Spinner>
+                      </div>
+
                       {{ calendarAttributes }}
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')">
                         <div v-if="state.availableBlocks &&
