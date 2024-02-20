@@ -392,6 +392,7 @@ export default {
             }
           })
           disabled = disabled.filter(item => !forDeletion.includes(item));
+          disabledDates.value[0].repeat.weekdays = [];
           disabledDates.value[0].repeat.weekdays.push(...disabled);
         }
       }
