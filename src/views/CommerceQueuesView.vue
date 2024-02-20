@@ -419,7 +419,7 @@ export default {
           state.attentionBlock = {};
           getAttentions();
           const currentDate = new Date().toISOString().slice(0, 10);
-          getAvailableDatesByMonth(currentDate);
+          await getAvailableDatesByMonth(currentDate);
           attentionsAvailables();
         }
       }
@@ -684,7 +684,7 @@ export default {
         attentionsAvailables();
         bookingsAvailables();
         const currentDate = new Date().toISOString().slice(0, 10);
-        getAvailableDatesByMonth(currentDate);
+        await getAvailableDatesByMonth(currentDate);
       }
     )
 
