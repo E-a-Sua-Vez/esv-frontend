@@ -453,6 +453,14 @@ export default {
       return '';
     }
 
+    const getActualDay = (day, timeZoneIn) => {
+      const dateCorrected = new Date(
+      new Date(day).toLocaleString('en-US', {
+        timeZone: timeZoneIn,
+      }));
+      return dateCorrected;
+    }
+
     const validateCaptchaOk = async (response) => {
       if(response) {
         captcha = true;
@@ -508,13 +516,7 @@ export default {
       return availableBlocks;
     }
 
-    const getActualDay = (day, timeZoneIn) => {
-      const dateCorrected = new Date(
-      new Date(day).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected;
-    }
+
 
     const getAvailableAttentionBlocks = (attentions) => {
       let queueBlocks = [];
@@ -611,7 +613,7 @@ export default {
           const bookings = bookingsGroupedByDate[date];
           const [year, month, day] = date.split('-');
           const dayNumber = new Date(+year, +month - 1, +day).getDay();
-          const blocks = state.blocksByDay[dayNumber];
+          const blocks = state.blocksByDay[dayNumber] || [];
           if (bookings.length >= blocks.length) {
             forDeletion.push(date);
           }
@@ -1006,16 +1008,16 @@ export default {
                           <hr>
                           <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
                           <div>
-                            {{ $t("commerceQueuesView.queueSelected") }}
-                            <div class="badge rounded-pill bg-primary py-2 px-4 m-1">{{ state.queue.name }} </div>
+                            <div>{{ $t("commerceQueuesView.queueSelected") }}</div>
+                            <div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.queue.name }} </div>
                           </div>
                           <div>
-                            {{ $t("commerceQueuesView.dataSelected") }}
-                            <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                            <div>{{ $t("commerceQueuesView.dataSelected") }}</div>
+                            <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ formattedDate(state.date) }} </span></div>
                           </div>
                           <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
-                            {{ $t("commerceQueuesView.blockSelected") }}
-                            <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                            <div>{{ $t("commerceQueuesView.blockSelected") }}</div>
+                            <div class="badge rounded-pill bg-light text-dark py-2 px-4 mx-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
                           </div>
                         </div>
                         <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block.number">
