@@ -92,6 +92,7 @@ export default {
       availableAttentionBlocks: [],
       locale: 'es',
       minDate: (new Date()).setDate(new Date().getDate() + 1),
+      maxDate: (new Date()).setDate(new Date().getDate() + 90),
       hourBlocks: [],
       bookings: ref([]),
       attentions: ref([]),
@@ -964,10 +965,12 @@ export default {
                         v-model.string="state.date"
                         :mask="dateMask"
                         :min-date="state.minDate"
+                        :max-date="state.maxDate"
                         :disabled-dates="disabledDates"
                         :attributes='calendarAttributes'
                         @did-move="getAvailableDatesByCalendarMonth"
                       />
+                      {{ calendarAttributes }}
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')">
                         <div v-if="state.availableBlocks &&
                           state.availableBlocks.length > 0 &&
