@@ -519,8 +519,6 @@ export default {
       return availableBlocks;
     }
 
-
-
     const getAvailableAttentionBlocks = (attentions) => {
       let queueBlocks = [];
       let availableBlocks = [];
@@ -595,6 +593,7 @@ export default {
     }
 
     const getAvailableDatesByMonth = async (date) => {
+      console.log("🚀 ~ getAvailableDatesByMonth ~ date:", date);
       try {
         loadingCalendar.value = true;
         let availableDates = [];
@@ -604,7 +603,9 @@ export default {
         const dateFrom = new Date(+year, thisMonth, 1);
         const dateTo = new Date(+year, nextMonth, 0);
         const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
+        console.log("🚀 ~ getAvailableDatesByMonth ~ monthBookings:", monthBookings);
         const bookingsGroupedByDate = Object.groupBy(monthBookings, ({date}) => date);
+        console.log("🚀 ~ getAvailableDatesByMonth ~ bookingsGroupedByDate:", bookingsGroupedByDate);
         const dates = Object.keys(bookingsGroupedByDate);
         for(let i = 1; i <= dateTo.getDate(); i ++) {
           const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
@@ -629,18 +630,23 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
+        console.log("🚀 ~ getAvailableDatesByMonth ~ calendarAttributes:", calendarAttributes);
+        console.log("🚀 ~ avaliableToCalendar ~ avaliableToCalendar:", avaliableToCalendar);
         calendarAttributes.value[0].dates = [];
         calendarAttributes.value[0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
+        console.log("🚀 ~ forDeletionToCalendar ~ forDeletionToCalendar:", forDeletionToCalendar);
         calendarAttributes.value[1].dates = [];
         calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+        console.log("🚀 ~ getAvailableDatesByMonth ~ calendarAttributes:", calendarAttributes);
         loadingCalendar.value = false;
       } catch (error) {
         loadingCalendar.value = false;
       }
+
     }
 
     const changeDate = computed(() => {
@@ -982,8 +988,6 @@ export default {
                       <div v-if="loadingCalendar">
                         <Spinner :show="loadingCalendar"></Spinner>
                       </div>
-
-                      {{ calendarAttributes }}
                       <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')">
                         <div v-if="state.availableBlocks &&
                           state.availableBlocks.length > 0 &&
