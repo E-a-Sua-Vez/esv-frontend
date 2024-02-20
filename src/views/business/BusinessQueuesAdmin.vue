@@ -276,7 +276,6 @@ export default {
           serviceInfo.personalizedHours = state.commerce.serviceInfo.personalizedHours;
           serviceInfo.holiday = state.commerce.serviceInfo.holiday;
           serviceInfo.holidays = state.commerce.serviceInfo.holidays;
-          console.log("🚀 ~ initializedSameCommerceHours ~ serviceInfo:", serviceInfo);
         };
       }
     }

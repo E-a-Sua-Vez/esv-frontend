@@ -5,6 +5,7 @@ import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
 import { createAttention } from '../application/services/attention';
 import { createBooking, getPendingBookingsBetweenDates } from '../application/services/booking';
+import { getQueueBlockDetailsByDay } from '../application/services/block';
 import { createWaitlist } from '../application/services/waitlist';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../stores';
@@ -82,6 +83,8 @@ export default {
       idNumberError: false,
       accept: false,
       date: undefined,
+      blocksByDay: {},
+      blocks: [],
       block: {},
       attentionBlock: {},
       availableBlocks: [],
@@ -384,7 +387,6 @@ export default {
             } else {
               forDeletion.push(day + 1);
             }
-
           })
           disabled = disabled.filter(item => !forDeletion.includes(item));
           disabledDates.value[0].repeat.weekdays.push(...disabled);
@@ -392,30 +394,54 @@ export default {
       }
     }
 
+    const getBlocksByDay = () => {
+      if (!state.date || state.date === 'TODAY') {
+        const day = new Date().getDay();
+        return state.blocksByDay[day];
+      } else {
+        const [year, month, day] = state.date.slice(0,10).split('-');
+        const dayNumber = new Date(+year, +month - 1, +day).getDay();
+        return state.blocksByDay[dayNumber];
+      }
+    }
+
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
       if (state.queue.id) {
-        getDisabledDates();
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
-          if (state.queue.id) {
-            state.date = undefined;
-            state.block = {};
-            state.attentionBlock = {};
-            getAttentions();
-            const currentDate = new Date().toISOString().slice(0, 10);
-            getAvailableDatesByMonth(currentDate);
-            state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
-            const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
-            if (!blockAvailable || blockAvailable.length === 0) {
-              state.attentionAvailable = false;
-            } else {
-              state.attentionAvailable = true;
-            }
-          }
+          getDisabledDates();
+          state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+          state.blocks = getBlocksByDay();
+          state.date = undefined;
+          state.block = {};
+          state.attentionBlock = {};
+          getAttentions();
+          const currentDate = new Date().toISOString().slice(0, 10);
+          getAvailableDatesByMonth(currentDate);
+          attentionsAvailables();
         }
       }
       if (captchaEnabled) {
        await validateCaptchaOk(true);
+      }
+    }
+
+    const attentionsAvailables = () => {
+      state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+      const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
+      if (!blockAvailable || blockAvailable.length === 0) {
+        state.attentionAvailable = false;
+      } else {
+        state.attentionAvailable = true;
+      }
+    }
+
+    const bookingsAvailables = () => {
+      const blockAvailable = state.availableBlocks.filter(block => block.number === state.block.number)
+      if (!blockAvailable || blockAvailable.length === 0) {
+        state.bookingAvailable = false;
+      } else {
+        state.bookingAvailable = true;
       }
     }
 
@@ -439,6 +465,7 @@ export default {
     const setDate = (date) => {
       if (state.queue.id) {
         state.date = date;
+        state.block = {};
       }
     }
 
@@ -463,30 +490,11 @@ export default {
       state.showReserve = true;
     }
 
-    const changeDate = computed(() => {
-      const {
-        date,
-        bookings,
-        attentions,
-        block,
-        attentionBlock,
-        availableBlocks
-      } = state;
-      return {
-        date,
-        bookings,
-        block,
-        attentionBlock,
-        availableBlocks,
-        attentions
-      }
-    })
-
     const getAvailableBlocks = (bookings) => {
       let queueBlocks = [];
       let availableBlocks = [];
-      if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
-        queueBlocks = state.queue.serviceInfo.blocks;
+      if (state.blocks) {
+        queueBlocks = state.blocks;
         if (queueBlocks && queueBlocks.length > 0) {
           let bookingsReserved = 0;
           if (bookings && bookings.length > 0) {
@@ -511,8 +519,8 @@ export default {
     const getAvailableAttentionBlocks = (attentions) => {
       let queueBlocks = [];
       let availableBlocks = [];
-      if (state.queue.serviceInfo && state.queue.serviceInfo.blocks) {
-        queueBlocks = state.queue.serviceInfo.blocks;
+      if (state.blocks) {
+        queueBlocks = state.blocks;
         const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
         if (queueBlocks && queueBlocks.length > 0) {
           let attentionsReserved = 0;
@@ -574,9 +582,15 @@ export default {
       return { unsubscribe };
     }
 
+    const getAvailableDatesByCalendarMonth = async (pages) => {
+      if (pages && pages.length > 0) {
+        const page = pages[0].id;
+        await getAvailableDatesByMonth(`${page}-01`);
+      }
+    }
+
     const getAvailableDatesByMonth = async (date) => {
       let availableDates = [];
-      const blocks = state.queue.serviceInfo.blocks;
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
       const nextMonth = +month;
@@ -595,6 +609,9 @@ export default {
       if (dates && dates.length > 0) {
         dates.forEach(date => {
           const bookings = bookingsGroupedByDate[date];
+          const [year, month, day] = date.split('-');
+          const dayNumber = new Date(+year, +month - 1, +day).getDay();
+          const blocks = state.blocksByDay[dayNumber];
           if (bookings.length >= blocks.length) {
             forDeletion.push(date);
           }
@@ -616,6 +633,24 @@ export default {
       return availableDates;
     }
 
+    const changeDate = computed(() => {
+      const {
+        date,
+        bookings,
+        attentions,
+        block,
+        attentionBlock,
+        availableBlocks
+      } = state;
+      return {
+        date,
+        bookings,
+        block,
+        attentionBlock,
+        availableBlocks,
+        attentions
+      }
+    })
 
     watch (
       changeDate,
@@ -633,6 +668,8 @@ export default {
             await getAttention(undefined);
           }
         } else if (newData.date !== oldData.date) {
+          state.blocks = getBlocksByDay();
+          state.block = {};
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
@@ -640,28 +677,12 @@ export default {
         } else if (newData.bookings !== oldData.bookings) {
           state.availableBlocks = getAvailableBlocks(state.bookings);
         }
-        const blockAvailable = state.availableBlocks.filter(block => block.number === state.block.number)
-        if (!blockAvailable || blockAvailable.length === 0) {
-          state.bookingAvailable = false;
-        } else {
-          state.bookingAvailable = true;
-        }
-        state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
-        const blockAttentionAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number)
-        if (!blockAttentionAvailable || blockAttentionAvailable.length === 0) {
-          state.attentionAvailable = false;
-        } else {
-          state.attentionAvailable = true;
-        }
+        attentionsAvailables();
+        bookingsAvailables();
+        const currentDate = new Date().toISOString().slice(0, 10);
+        getAvailableDatesByMonth(currentDate);
       }
     )
-
-    const getAvailableDatesByCalendarMonth = async (pages) => {
-      if (pages && pages.length > 0) {
-        const page = pages[0].id;
-        await getAvailableDatesByMonth(`${page}-01`);
-      }
-    }
 
     return {
       state,
