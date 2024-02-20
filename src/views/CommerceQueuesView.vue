@@ -976,7 +976,7 @@ export default {
                           :max-date="state.maxDate"
                           :disabled-dates="disabledDates"
                           :attributes='calendarAttributes'
-                          @did-move="async () => await getAvailableDatesByCalendarMonth"
+                          @did-move="getAvailableDatesByCalendarMonth"
                         />
                       </div>
                       <div v-if="loadingCalendar">
