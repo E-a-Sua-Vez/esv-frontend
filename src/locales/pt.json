@@ -1323,6 +1323,9 @@
     "break": "Descanso:",
     "breakHour": "Houras Descanso:",
     "blockTime": "Bloque (Min):",
+    "sameCommeceHours": "Horas do Comércio:",
+    "personalized": "Personalizado:",
+    "holidays": "Férias:",
     "message": {
       "1": {
         "title": "Oh não!",

@@ -1322,6 +1322,9 @@
     "break": "Break:",
     "breakHour": "Break Hours:",
     "blockTime": "Block (Min):",
+    "sameCommeceHours": "Commerce Hours:",
+    "personalized": "Personalized:",
+    "holidays": "Holidays:",
     "message": {
       "1": {
         "title": "Ups!",
