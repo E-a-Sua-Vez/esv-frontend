@@ -313,7 +313,7 @@
     "youllReceive": "Você receberá seu número de turno em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
     "action": "Quero uma Senha",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "services": "Serviços",
     "contact": "Contato",
     "location": "Localização",
@@ -1210,7 +1210,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
-    "commerce-admin": "Comércios/Unidades",
+    "commerce-admin": "Comércios",
     "queues-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
@@ -1253,7 +1253,7 @@
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
-    "commerce-master-admin": "Comércios/Unidades",
+    "commerce-master-admin": "Comércios",
     "queues-master-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
@@ -1306,7 +1306,7 @@
   },
   "businessQueuesAdmin": {
     "title": "Filas / Serviços",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "name": "Nome:",
     "return": "Voltar",
     "limit": "Limite:",
@@ -1367,7 +1367,7 @@
   },
   "businessModulesAdmin": {
     "title": "Módulos",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "name": "Nome:",
     "return": "Voltar",
     "active": "Ativo:",
@@ -1410,7 +1410,7 @@
   },
   "businessAdministratorAdmin": {
     "title": "Administradores",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1463,7 +1463,7 @@
   },
   "businessCollaboratorsAdmin": {
     "title": "Colaboradores",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1592,7 +1592,7 @@
   },
   "businessReports": {
     "title": "Relatórios",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "return": "Voltar",
     "listResult": "Registros:",
     "message": {
@@ -1760,7 +1760,7 @@
   },
   "businessConfiguration": {
     "title": "Configurações",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "return": "Voltar",
     "listResult": "Registros:",
     "feature": "Configuração:",
@@ -2040,7 +2040,7 @@
   },
   "businessSurveysAdmin": {
     "title": "Pesquisas",
-    "commerce": "Selecione um comércio/unidade:",
+    "commerce": "Selecione um comércio:",
     "return": "Voltar",
     "type": "Tipo:",
     "attentionDefault": "Default:",
