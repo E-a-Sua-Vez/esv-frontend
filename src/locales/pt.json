@@ -313,7 +313,7 @@
     "youllReceive": "Você receberá seu número de turno em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
     "action": "Quero uma Senha",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "services": "Serviços",
     "contact": "Contato",
     "location": "Localização",
@@ -1210,7 +1210,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
-    "commerce-admin": "Comércios",
+    "commerce-admin": "Comércios/Unidades",
     "queues-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
@@ -1233,7 +1233,7 @@
           "business-resume": "Estado do Sistema",
           "dashboard": "Dashboard",
           "reports": "Relatórios",
-          "commerce-admin": "Gerenciar Comércios",
+          "commerce-admin": "Gerenciar Comércios/Unidades",
           "modules-admin": "Gerenciar Módulos",
           "queues-admin": "Gerenciar Filas",
           "collaborators-admin": "Gerenciar Colaboradores",
@@ -1253,7 +1253,7 @@
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
-    "commerce-master-admin": "Comércios",
+    "commerce-master-admin": "Comércios/Unidades",
     "queues-master-admin": "Filas/Serviços",
     "configuration": "Configurações",
     "reports": "Relatórios",
@@ -1306,7 +1306,7 @@
   },
   "businessQueuesAdmin": {
     "title": "Filas / Serviços",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "name": "Nome:",
     "return": "Voltar",
     "limit": "Limite:",
@@ -1367,7 +1367,7 @@
   },
   "businessModulesAdmin": {
     "title": "Módulos",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "name": "Nome:",
     "return": "Voltar",
     "active": "Ativo:",
@@ -1410,7 +1410,7 @@
   },
   "businessAdministratorAdmin": {
     "title": "Administradores",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1421,7 +1421,7 @@
     "module": "Módulo:",
     "update": "Atualizar",
     "add": "Adicionar",
-    "commerces": "Comércios:",
+    "commerces": "Comércios/Unidades:",
     "aliasHelp": "Identificador abreviado do administrador utilizado no produto digital.",
     "listResult": "Registros:",
     "message": {
@@ -1463,7 +1463,7 @@
   },
   "businessCollaboratorsAdmin": {
     "title": "Colaboradores",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1514,7 +1514,7 @@
     }
   },
   "businessCommercesAdmin": {
-    "title": "Comércios",
+    "title": "Comércios/Unidades",
     "return": "Voltar",
     "name": "Nome:",
     "keyName": "Nome web:",
@@ -1592,7 +1592,7 @@
   },
   "businessReports": {
     "title": "Relatórios",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
     "message": {
@@ -1654,11 +1654,11 @@
     "attentions": "Atenções",
     "notifications": "Notificações",
     "enquetes": "Pesquisas",
-    "commerces": "Comércios",
+    "commerces": "Comércios/Unidades",
     "modules": "Módulos",
     "queues": "Filas",
     "collaborators": "Colaboradores",
-    "resumeByCommerce": "Sumário por Comércio",
+    "resumeByCommerce": "Sumário por Comércio/Unidade",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1760,7 +1760,7 @@
   },
   "businessConfiguration": {
     "title": "Configurações",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
     "feature": "Configuração:",
@@ -2040,7 +2040,7 @@
   },
   "businessSurveysAdmin": {
     "title": "Pesquisas",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione um comércio/unidade:",
     "return": "Voltar",
     "type": "Tipo:",
     "attentionDefault": "Default:",
