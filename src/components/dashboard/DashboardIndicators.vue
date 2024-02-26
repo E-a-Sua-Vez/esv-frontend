@@ -130,7 +130,7 @@ export default {
                   {{ $t('dashboard.items.attentions.16') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.STANDARD || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.STANDARD || 0 }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -139,7 +139,7 @@ export default {
                   {{ $t('dashboard.items.attentions.17') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0 }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -148,7 +148,7 @@ export default {
                   {{ $t('dashboard.items.attentions.18') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0 }}</span>
                 </div>
               </div>
             </div>
@@ -173,7 +173,7 @@ export default {
                   {{ $t('dashboard.items.attentions.28') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0 }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -182,7 +182,7 @@ export default {
                   {{ $t('dashboard.items.attentions.29') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0 }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -191,7 +191,7 @@ export default {
                   {{ $t('dashboard.items.attentions.30') }}
                 </div>
                 <div class="centered">
-                  <span class="h4 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
                 </div>
               </div>
             </div>

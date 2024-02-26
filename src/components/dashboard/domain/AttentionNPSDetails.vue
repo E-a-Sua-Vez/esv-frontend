@@ -46,7 +46,7 @@ export default {
           {{ $t('dashboard.items.attentions.9') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ min || 0 }}</span>
+          <span class="h5 fw-bold">{{ min || 0 }}</span>
         </div>
       </div>
       <div class="col-6">
@@ -55,7 +55,7 @@ export default {
           {{ $t('dashboard.items.attentions.8') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ max || 0 }}</span>
+          <span class="h5 fw-bold">{{ max || 0 }}</span>
         </div>
       </div>
     </div>

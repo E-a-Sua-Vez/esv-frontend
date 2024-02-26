@@ -25,7 +25,7 @@ export default {
           {{ $t('dashboard.items.attentions.10') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ channels.WHATSAPP || 0 }}</span>
+          <span class="h5 fw-bold">{{ channels.WHATSAPP || 0 }}</span>
         </div>
       </div>
       <div class="col-6">
@@ -34,7 +34,7 @@ export default {
           {{ $t('dashboard.items.attentions.11') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ channels.EMAIL || 0 }}</span>
+          <span class="h5 fw-bold">{{ channels.EMAIL || 0 }}</span>
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@ export default {
           {{ $t('dashboard.items.attentions.19') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ count || 0 }}</span>
+          <span class="h5 fw-bold">{{ count || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -55,7 +55,7 @@ export default {
           {{ $t('dashboard.bookings') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ booking || types.BOOKING || 0 }}</span>
+          <span class="h5 fw-bold">{{ booking || types.BOOKING || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -64,7 +64,7 @@ export default {
           {{ $t('dashboard.waitlist') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ waitlist || types.WAITLIST || 0 }}</span>
+          <span class="h5 fw-bold">{{ waitlist || types.WAITLIST || 0 }}</span>
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@ export default {
           {{ $t('dashboard.items.attentions.13') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.FALTANCINCO || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.FALTANCINCO || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -85,7 +85,7 @@ export default {
           {{ $t('dashboard.items.attentions.14') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.FALTAUNO || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.FALTAUNO || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -94,7 +94,7 @@ export default {
           {{ $t('dashboard.items.attentions.15') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.ESTUTURNO || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.ESTUTURNO || 0 }}</span>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@ export default {
           {{ $t('dashboard.items.attentions.12') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.TUTURNO || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.TUTURNO || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -115,7 +115,7 @@ export default {
           {{ $t('dashboard.items.attentions.25') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.ENCUESTA || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.ENCUESTA || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -124,7 +124,7 @@ export default {
           {{ $t('dashboard.bookingsConfirm') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.BOOKING_CONFIRM || 0 }}</span>
+          <span class="h5 fw-bold">{{ types.BOOKING_CONFIRM || 0 }}</span>
         </div>
       </div>
     </div>
