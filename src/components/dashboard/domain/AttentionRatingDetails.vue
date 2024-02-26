@@ -100,7 +100,7 @@ export default {
     </div>
     <div class="row mx-2">
       <div class="row metric-card-title" v-for="index in 6" :key="index">
-        <div class="col-6 centered">
+        <div class="col-5 centered">
           <i :class="`bi bi-star-fill yellow-icon`"> </i> <span class="mx-1"> {{ 6 - index}}</span>
         </div>
         <div class="col centered">
