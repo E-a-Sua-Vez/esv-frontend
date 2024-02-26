@@ -346,6 +346,8 @@ export default {
             <AttentionNotificationDetails
               :show="!!toggles['dashboard.attention-notification.view']"
               :count="calculatedMetrics['notification.created'].notifiedAttentions"
+              :booking="calculatedMetrics['notification.created'].notifiedBookings"
+              :waitlist="calculatedMetrics['notification.created'].notifiedWaitlists"
               :channels="calculatedMetrics['notification.created'].channelFlow"
               :types="calculatedMetrics['notification.created'].typesFlow"
             >

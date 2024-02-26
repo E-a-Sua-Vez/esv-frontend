@@ -5,6 +5,7 @@ export default {
   props: {
     show: { type: Boolean, default: true },
     count: { type: [String, Number], default: 0 },
+    booking: { type: [String, Number], default: 0 },
     channels: { type: Object, default: {} },
     types: { type: Object, default: {} }
   },
@@ -54,7 +55,7 @@ export default {
           {{ $t('dashboard.bookings') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.BOOKING || 0 }}</span>
+          <span class="h4 fw-bold">{{ booking || types.BOOKING || 0 }}</span>
         </div>
       </div>
       <div class="col-4">
@@ -63,7 +64,7 @@ export default {
           {{ $t('dashboard.waitlist') }}
         </div>
         <div class="centered">
-          <span class="h4 fw-bold">{{ types.WAITLIST || 0 }}</span>
+          <span class="h4 fw-bold">{{ waitlist || types.WAITLIST || 0 }}</span>
         </div>
       </div>
     </div>
