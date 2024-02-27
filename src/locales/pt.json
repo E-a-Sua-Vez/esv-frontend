@@ -193,6 +193,10 @@
     "booking-email-confirm": {
       "title": "Email Confirmação de Reserva",
       "description": "Email para confirmar uma reserva"
+    },
+    "booking-block-walkin": {
+      "title": "Reserva permite entrar na fila",
+      "description": "No caso de reservas, permite entrar na última posição na fila"
     }
   },
   "paymentMethods": {
@@ -260,13 +264,14 @@
     "today": "Hoje",
     "when": "Quando você quer ser atendido?",
     "booking": "Reservar",
-    "selectDay": "Selecione o día",
-    "selectBlock": "Selecione um horário",
+    "selectDay": "Seleciona o día:",
+    "selectBlock": "Seleciona um horário:",
     "daySelected": "Os dados da sua reserva:",
     "queueSelected": "Fila/Serviço Selecionado:",
     "dataSelected": "Data de Reserva:",
     "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
+    "walkin": "Ingresa na fila:",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não há horas disponíveis. Você quer ser contatao em caso alguma pessoa cancela e fica uma hora disponível?",
@@ -348,7 +353,7 @@
   "userQueueAttention": {
     "hello": "Olá!",
     "itsYourTurn": "🚨 É a sua vez! 🚨",
-    "yourNumber": "sua senha é:",
+    "yourNumber": "Sua senha é:",
     "youWereAttended": "Você foi atendido!",
     "thanks": "Obrigado por escolher-nos.",
     "toGoal": {

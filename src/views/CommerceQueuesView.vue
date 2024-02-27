@@ -449,6 +449,16 @@ export default {
       }
     }
 
+    const isQueueWalkin = () => {
+      if (state.queue && state.queue.serviceInfo) {
+        if (state.queue.serviceInfo.walkin) {
+          return state.queue.serviceInfo.walkin;
+        }
+        return false;
+      }
+      return false;
+    }
+
     const findPhoneCode = (codeIn) => {
       const search = state.phoneCodes.find(code => code.id === codeIn);
       if (search) {
@@ -468,7 +478,7 @@ export default {
     const validateCaptchaOk = async (response) => {
       if(response) {
         captcha = true;
-        if (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')) {
+        if (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') || isQueueWalkin()) {
           await getAttention(undefined);
         }
       }
@@ -728,7 +738,8 @@ export default {
       showToday,
       showReserve,
       getWaitList,
-      getAvailableDatesByCalendarMonth
+      getAvailableDatesByCalendarMonth,
+      isQueueWalkin
     }
   }
 }
@@ -898,7 +909,7 @@ export default {
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
               <div>
                 <!-- ATTENTION TODAY HOUR -->
-                <div id="booking-today-hour" v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.queue.id">
+                <div id="booking-today-hour" v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.queue.id && !isQueueWalkin()">
                   <button
                     class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
                     data-bs-toggle="collapse"
@@ -924,6 +935,19 @@ export default {
                             :title="$t('commerceQueuesView.message3.title')"
                             :content="$t('commerceQueuesView.message3.content')">
                           </Message>
+                          <div v-if="getActiveFeature(state.commerce, 'booking-block-walkin', 'PRODUCT') && state.queue.id">
+                            <div class="choose-attention py-1 pt-2">
+                              <span> {{ $t("commerceQueuesView.walkin") }} </span>
+                            </div>
+                            <button
+                              type="button"
+                              class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                              @click="getAttention(undefined)"
+                              :disabled="!state.accept || !state.queue.id"
+                              >
+                              {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                          </button>
+                          </div>
                         </div>
                         <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock && state.attentionBlock.number" class="py-1 mt-2">
                           <hr>
@@ -935,7 +959,7 @@ export default {
                         </div>
                         <button
                           type="button"
-                          v-if="state.attentionBlock"
+                          v-if="state.attentionBlock && state.availableAttentionBlocks.length > 0"
                           class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                           @click="getAttention(state.attentionBlock)"
                           :disabled="!state.accept || !state.queue.id || !state.attentionAvailable"

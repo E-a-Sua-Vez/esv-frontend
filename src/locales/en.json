@@ -193,6 +193,10 @@
     "booking-email-confirm": {
       "title": "Email Booking Confirmation",
       "description": "Email to confirm booking"
+    },
+    "booking-block-walkin": {
+      "title": "Booking let enter to the queue",
+      "description": "In case of Bookings, it let to enter to the last position of the queue"
     }
   },
   "paymentMethods": {
@@ -260,13 +264,14 @@
     "today": "Today",
     "when": "When you want to be attended?",
     "booking": "Booking",
-    "selectDay": "Select the day",
-    "selectBlock": "Select the schedule",
+    "selectDay": "Select the day:",
+    "selectBlock": "Select the schedule:",
     "daySelected": "Your Booking Information:",
     "confirm": "Confirm",
     "queueSelected": "Queue/Service Selected:",
     "dataSelected": "Date Of Booking:",
     "blockSelected": "Hour Selected:",
+    "walkin": "Enter to the queue:",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
