@@ -72,6 +72,7 @@ export default {
         await getAttentionDetailsFromService(id);
         state.queue = state.attention.queue;
         state.commerce = state.attention.commerce;
+        console.log("🚀 ~ onBeforeMount ~ state.commerce:", state.commerce);
         state.toggles = await getPermissions('user');
         loading.value = false;
       } catch (error) {
@@ -92,6 +93,7 @@ export default {
     const getAttentionDetailsFromService = async (id) => {
       try {
         state.attention = await getAttentionDetails(id);
+        state.commerce = state.attention.commerce;
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -228,7 +230,9 @@ export default {
     }
 
     const speak = async (test) => {
+      console.log("🚀 ~ speak ~ test:", test);
       if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
+        console.log("puede reproducir");
         let userLocaleByDefault = 'es';
         userLocaleByDefault = locale.value;
         const voices = await window.speechSynthesis.getVoices();
@@ -267,6 +271,7 @@ export default {
         msg.rate = state.voiceConfig.rate;
         msg.lang = state.voiceConfig.lang;
         msg.voice = state.voiceConfig.voice;
+        console.log("🚀 ~ speak ~ msg:", msg);
         await window.speechSynthesis.speak(msg);
       }
     }
