@@ -72,7 +72,6 @@ export default {
         await getAttentionDetailsFromService(id);
         state.queue = state.attention.queue;
         state.commerce = state.attention.commerce;
-        console.log("🚀 ~ onBeforeMount ~ state.commerce:", state.commerce);
         state.toggles = await getPermissions('user');
         loading.value = false;
       } catch (error) {
@@ -212,7 +211,9 @@ export default {
       if (itsYourTurn() && !state.soundPlayed) {
         var audio = document.getElementById('its-your-turn-audio');
         await audio.play();
-        await speak(true);
+        setTimeout(async () => {
+          await speak(true);
+        }, 1500);
         state.soundPlayed = true;
       }
     }
@@ -229,9 +230,7 @@ export default {
     }
 
     const speak = async (test) => {
-      console.log("🚀 ~ speak ~ test:", test);
       if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
-        console.log("puede reproducir");
         let userLocaleByDefault = 'es';
         userLocaleByDefault = locale.value;
         const voices = await window.speechSynthesis.getVoices();
@@ -270,7 +269,6 @@ export default {
         msg.rate = state.voiceConfig.rate;
         msg.lang = state.voiceConfig.lang;
         msg.voice = state.voiceConfig.voice;
-        console.log("🚀 ~ speak ~ msg:", msg);
         await window.speechSynthesis.speak(msg);
       }
     }
