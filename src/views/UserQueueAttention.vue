@@ -226,7 +226,6 @@ export default {
     const testSound = async () => {
       var audio = document.getElementById('its-your-turn-audio-test');
       await audio.play();
-      await speak(false);
     }
 
     const speak = async (test) => {
@@ -357,7 +356,8 @@ export default {
       attentionActive,
       testSound,
       collaboratorName,
-      youWereReserveCancelled
+      youWereReserveCancelled,
+      speak
     }
   }
 
@@ -541,7 +541,7 @@ export default {
                     <i :class="`bi ${state.soundEnabled ? 'bi-bell-fill' : 'bi-bell-slash-fill'} `"></i>
                   </button>
                 </div>
-                <span class="test-sound justify-content-end" @click="testSound()">{{ $t("userQueueAttention.actions.6.title.4") }}</span>
+                <span class="test-sound justify-content-end" @click="testSound();speak()">{{ $t("userQueueAttention.actions.6.title.4") }}</span>
               </div>
             </div>
           </div>
