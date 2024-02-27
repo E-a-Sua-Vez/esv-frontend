@@ -197,6 +197,10 @@
     "booking-block-walkin": {
       "title": "Booking let enter to the queue",
       "description": "In case of Bookings, it let to enter to the last position of the queue"
+    },
+    "attention-voice-command": {
+      "title": "Voice alert It's your Turn",
+      "description": "Let to warning the client turn by voice"
     }
   },
   "paymentMethods": {
@@ -1331,6 +1335,7 @@
     "sameCommeceHours": "Commerce Hours:",
     "personalized": "Personalized:",
     "holidays": "Holidays:",
+    "walkin": "Queue Direct (Today):",
     "message": {
       "1": {
         "title": "Ups!",

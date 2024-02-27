@@ -160,6 +160,7 @@ export default {
           personalizedHours: {},
           holiday: false,
           holidays: {},
+          walkin: false,
           ...state.business.serviceInfo
         }
       }
@@ -441,6 +442,17 @@ export default {
                       </a>
                     </div>
                     <div id="add-service" class="collapse row m-0">
+                      <div id="add-queue-samecommerce-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.walkin") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="state.newQueue.serviceInfo.walkin"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                          />
+                        </div>
+                      </div>
                       <div id="add-queue-samecommerce-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.sameCommeceHours") }}
@@ -757,6 +769,17 @@ export default {
                       </a>
                     </div>
                     <div id="update-service" class="collapse row m-0">
+                      <div id="update-queue-samecommerce-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.walkin") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="queue.serviceInfo.walkin"
+                            :disabled="!state.toggles['queues.admin.edit']"
+                          />
+                        </div>
+                      </div>
                       <div id="update-queue-samecommerce-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.sameCommeceHours") }}

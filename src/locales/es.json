@@ -198,6 +198,10 @@
     "booking-block-walkin": {
       "title": "Reserva permite entrar a Cola",
       "description": "En caso de reservas, permite entrar a la última posición de la cola"
+    },
+    "attention-voice-command": {
+      "title": "Aviso Es tu Turno por Voz",
+      "description": "Permite activar el sonido de Voz para llamar al cliente cuando es su turno"
     }
   },
   "paymentMethods": {
@@ -1326,6 +1330,7 @@
     "sameCommeceHours": "Horas del Comercio:",
     "personalized": "Personalizado:",
     "holidays": "Feriados:",
+    "walkin": "Fila sin Reserva (Hoy):",
     "message": {
       "1": {
         "title": "¡Ups!",

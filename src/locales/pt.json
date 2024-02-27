@@ -197,6 +197,10 @@
     "booking-block-walkin": {
       "title": "Reserva permite entrar na fila",
       "description": "No caso de reservas, permite entrar na última posição na fila"
+    },
+    "attention-voice-command": {
+      "title": "Alerta de Voz É a sua Vez",
+      "description": "Permite chamar ao cliente por voz quando chega sua vez"
     }
   },
   "paymentMethods": {
@@ -1332,6 +1336,7 @@
     "sameCommeceHours": "Horas do Comércio:",
     "personalized": "Personalizado:",
     "holidays": "Férias:",
+    "walkin": "Fila sem Reserva (Hoje):",
     "message": {
       "1": {
         "title": "Oh não!",

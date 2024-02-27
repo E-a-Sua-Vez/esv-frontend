@@ -22,6 +22,7 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import { useI18n } from 'vue-i18n';
 import AreYouSure from '../components/common/AreYouSure.vue';
+import { getActiveFeature } from '../shared/features';
 
 export default {
   name: 'UserQueueAttention',
@@ -40,7 +41,7 @@ export default {
     Alert
   },
   async setup() {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const { queueId, id } = route.params;
@@ -61,6 +62,7 @@ export default {
       soundEnabled: false,
       soundPlayed: false,
       goToCancel: false,
+      voiceConfig: {},
       toggles: {}
     });
 
@@ -203,10 +205,11 @@ export default {
       router.push({ path: `/interno/comercio/${state.commerce.keyName}` })
     }
 
-    const itsYourTurnPlay = () => {
+    const itsYourTurnPlay = async () => {
       if (itsYourTurn() && !state.soundPlayed) {
         var audio = document.getElementById('its-your-turn-audio');
-        audio.play();
+        await audio.play();
+        await speak(true);
         state.soundPlayed = true;
       }
     }
@@ -217,10 +220,56 @@ export default {
       audio.muted = !state.soundEnabled;
     }
 
-    const testSound = () => {
+    const testSound = async () => {
       var audio = document.getElementById('its-your-turn-audio-test');
-      audio.play();
+      await audio.play();
+      await speak(false);
     }
+
+    const speak = async (test) => {
+      if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
+        let userLocaleByDefault = 'es';
+        userLocaleByDefault = locale.value;
+        const voices = await window.speechSynthesis.getVoices();
+        if (userLocaleByDefault === 'pt') {
+          state.voiceConfig = {
+            text: `E a sua Vez! Senha ${state.attention.number} ${test ? `, Módulo' ${state.module.name}.` : '.'}`,
+            volume: 1.0,
+            pitch: 1.0,
+            rate: 1.0,
+            lang: 'pt-BR',
+            voice: await voices.find(voice => voice.name === 'Google português do Brasil')
+          }
+        } else if (userLocaleByDefault === 'en') {
+          state.voiceConfig = {
+            text: `It's your Turn! Number ${state.attention.number} ${test ? `, Module' ${state.module.name}.` : '.'}`,
+            volume: 1.0,
+            pitch: 1.0,
+            rate: 1.0,
+            lang: 'en-US',
+            voice: await voices.find(voice => voice.name === 'Google US English')
+          }
+        } else {
+          state.voiceConfig = {
+            text: `¡Es tu Turno! Número ${state.attention.number} ${test ? `, Módulo' ${state.module.name}.` : '.'}`,
+            volume: 1.0,
+            pitch: 1.0,
+            rate: 1.0,
+            lang: 'es-MX',
+            voice: await voices.find(voice => voice.name === 'Paulina')
+          }
+        }
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = state.voiceConfig.text;
+        msg.volume = state.voiceConfig.volume;
+        msg.pitch = state.voiceConfig.pitch;
+        msg.rate = state.voiceConfig.rate;
+        msg.lang = state.voiceConfig.lang;
+        msg.voice = state.voiceConfig.voice;
+        await window.speechSynthesis.speak(msg);
+      }
+    }
+
     const collaboratorName = () => {
       const name = state.collaborator.alias || state.collaborator.name;
       return name ? name.split(' ')[0] : t('userQueueAttention.collaborator');

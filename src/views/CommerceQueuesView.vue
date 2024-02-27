@@ -984,6 +984,7 @@ export default {
                 <!-- BOOKING -->
                 <button
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                  v-if="!isQueueWalkin()"
                   data-bs-toggle="collapse"
                   href="#booking-date"
                   @click="showReserve()"
