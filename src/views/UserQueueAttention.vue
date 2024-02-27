@@ -227,7 +227,7 @@ export default {
     }
 
     const speak = async (test) => {
-      if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
+      //if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
         let userLocaleByDefault = 'es';
         userLocaleByDefault = locale.value;
         const voices = await window.speechSynthesis.getVoices();
@@ -267,7 +267,7 @@ export default {
         msg.lang = state.voiceConfig.lang;
         msg.voice = state.voiceConfig.voice;
         await window.speechSynthesis.speak(msg);
-      }
+      //}
     }
 
     const collaboratorName = () => {

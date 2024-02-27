@@ -903,7 +903,7 @@ export default {
           </div>
           <!-- BOOKING / ATTENTION -->
           <div id="booking" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
-            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
+            <div v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()" class="choose-attention py-1 pt-2">
               <span> {{ $t("commerceQueuesView.when") }} </span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
@@ -974,6 +974,7 @@ export default {
                 <div id="booking-today" v-else>
                   <button
                     type="button"
+                    v-if="!isQueueWalkin()"
                     class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-2"
                     @click="setDate('TODAY')"
                     :disabled="!state.accept || !state.queue.id"
