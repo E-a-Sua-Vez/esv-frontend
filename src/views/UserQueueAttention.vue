@@ -212,16 +212,17 @@ export default {
         var audio = document.getElementById('its-your-turn-audio');
         await audio.play();
         setTimeout(async () => {
-          await speak(true);
+          await speak(true, false);
         }, 1500);
         state.soundPlayed = true;
       }
     }
 
-    const play = () => {
+    const play = async () => {
       state.soundEnabled = !state.soundEnabled;
       var audio = document.getElementById('its-your-turn-audio');
       audio.muted = !state.soundEnabled;
+      await speak(true, true);
     }
 
     const testSound = async () => {
@@ -229,7 +230,7 @@ export default {
       await audio.play();
     }
 
-    const speak = async (test) => {
+    const speak = async (test, mute) => {
       if (getActiveFeature(state.commerce, 'attention-voice-command', 'PRODUCT')) {
         let userLocaleByDefault = 'es';
         userLocaleByDefault = locale.value;
@@ -264,7 +265,7 @@ export default {
         }
         const msg = new SpeechSynthesisUtterance();
         msg.text = state.voiceConfig.text;
-        msg.volume = state.voiceConfig.volume;
+        msg.volume = mute === true ? 0 : state.voiceConfig.volume;
         msg.pitch = state.voiceConfig.pitch;
         msg.rate = state.voiceConfig.rate;
         msg.lang = state.voiceConfig.lang;
