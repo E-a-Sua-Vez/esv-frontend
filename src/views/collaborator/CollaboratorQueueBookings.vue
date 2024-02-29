@@ -162,8 +162,6 @@ export default {
         state.date = undefined;
         state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
         state.blocks = getBlocksByDay();
-        const currentDate = new Date().toISOString().slice(0, 10);
-        await getAvailableDatesByMonth(currentDate);
       }
     }
 
@@ -289,9 +287,9 @@ export default {
         getAvailableBlocks();
         let currentDate;
         if (state.date === undefined || state.date === 'TODAY') {
-          currentDate = new Date().toISOString().slice(0, 10);
+          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         } else {
-          currentDate = new Date(state.date || new Date()).toISOString().slice(0, 10);
+          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
         await getAvailableDatesByMonth(currentDate);
       }
