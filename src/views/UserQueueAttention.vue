@@ -222,7 +222,6 @@ export default {
       state.soundEnabled = !state.soundEnabled;
       var audio = document.getElementById('its-your-turn-audio');
       audio.muted = !state.soundEnabled;
-      await speak(true, true);
     }
 
     const testSound = async () => {
@@ -536,11 +535,11 @@ export default {
                 <div class="d-flex justify-content-center mb-1">
                   <button
                     class="btn btn-md fw-bold btn-dark rounded-pill"
-                    @click="play()">
+                    @click="play();speak(false, true)">
                     <i :class="`bi ${state.soundEnabled ? 'bi-bell-fill' : 'bi-bell-slash-fill'} `"></i>
                   </button>
                 </div>
-                <span class="test-sound justify-content-end" @click="testSound();speak()">{{ $t("userQueueAttention.actions.6.title.4") }}</span>
+                <span class="test-sound justify-content-end" @click="testSound();speak(true, false)">{{ $t("userQueueAttention.actions.6.title.4") }}</span>
               </div>
             </div>
           </div>
