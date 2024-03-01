@@ -192,6 +192,7 @@ export default {
         if (this.searchText) {
           this.searchText = this.searchText.toUpperCase();
           if (this.searchText.length > 3) {
+            this.page = 1;
             this.refresh();
           }
         }
