@@ -180,8 +180,11 @@ export default {
           <div class="col-1">
             <span class="fw-bold"> {{ ind + 1 }} </span>
           </div>
-          <div class="col-3">
-            <span class="metric-card-score fw-bold"> <i :class="`h6 bi ${clasifyScoredComment(comment && comment['messageScore'] ? comment['messageScore']['score'] : undefined)}  mb-0`"> </i> {{ comment && comment['messageScore'] ? comment['messageScore']['score'] : 'N/I' }} </span>
+          <div class="col-3 comment-score">
+            <span class="metric-card-score fw-bold">
+              <i :class="`h6 bi ${clasifyScoredComment(comment && comment['messageScore'] ? comment['messageScore']['score'] : undefined)}  mb-0`"> </i>
+              {{ comment && comment['messageScore'] ? comment['messageScore']['score'] : 'N/I' }}
+            </span>
           </div>
           <div class="col metric-card-comment mb-1">
             <span class=""> {{ wrapComment(comment) }} </span>
@@ -236,11 +239,11 @@ export default {
                   <div class="col-1">
                     <span class="fw-bold"> {{ ind + 1 }} </span>
                   </div>
-                  <div class="col-3">
+                  <div class="col-3 comment-score">
                     <span class="metric-card-score fw-bold"> <i :class="`h6 bi ${clasifyScoredComment(comment && comment['messageScore'] ? comment['messageScore']['score'] : undefined)}  mb-0`"> </i> {{ comment && comment['messageScore'] ? comment['messageScore']['score'] : 'N/I' }} </span>
                   </div>
                   <div class="col metric-card-comment mb-1">
-                    <span class=""> {{ wrapComment(comment) }} </span>
+                    <span class=""> {{ comment.message }} </span>
                   </div>
                   <hr>
                 </div>
@@ -251,7 +254,6 @@ export default {
             ></PDFFooter>
           </div>
           <div class="mx-2 mb-4 text-center">
-
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
@@ -292,6 +294,9 @@ export default {
   cursor: pointer;
   text-align: right;
   margin-bottom: 1rem;
+}
+.comment-score {
+  line-height: 1rem;
 }
 .comments {
   overflow-y: scroll;
