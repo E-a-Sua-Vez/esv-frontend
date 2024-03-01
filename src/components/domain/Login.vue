@@ -7,12 +7,11 @@ import Alert from '../../components/common/Alert.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Message from '../../components/common/Message.vue';
 import Warning from '../../components/common/Warning.vue';
-import NotificationConditions from '../../components/domain/NotificationConditions.vue';
 import AccessAdmin from '../../components/domain/AccessAdmin.vue';
 
 export default {
   name: 'Login',
-  components: { Message, Warning, NotificationConditions, VueRecaptcha, Spinner, Alert, AccessAdmin },
+  components: { Message, Warning, VueRecaptcha, Spinner, Alert, AccessAdmin },
   props: {
     userType: { type: String, default: undefined },
     urlOkRedirect: { type: String, default: '' },
