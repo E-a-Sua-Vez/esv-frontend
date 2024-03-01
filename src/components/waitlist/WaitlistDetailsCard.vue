@@ -77,7 +77,7 @@ export default {
   <div v-if="show && waitlist">
     <div class="row metric-card fw-bold">
       <div class="col-12 centered" v-if="waitlist.user && waitlist.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ waitlist.user.name || 'N/I' }}
+        <i class="bi bi-person-circle mx-1"></i> {{ waitlist.user.name.split(' ')[0] || 'N/I' }}
       </div>
     </div>
     <div class="details-arrow">

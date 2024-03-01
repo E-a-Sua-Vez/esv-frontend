@@ -104,17 +104,17 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
-      <div class="col-5 centered">
-        <i class="bi bi-person-circle mx-1"></i> {{ survey.name || 'N/I' }}
+      <div class="col-5 centered" v-if="survey && survey.name">
+        <i class="bi bi-person-circle mx-1"></i> {{ survey.name.split(' ')[0] || 'N/I' }}
         <i v-if="survey.contacted === true || checked === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
       </div>
-      <div class="col centered">
+      <div class="col-2 centered">
         <i :class="`bi ${clasifyRatedComment(survey.rating)} mx-1`"></i> {{ survey.rating || 'N/I' }}
       </div>
-      <div class="col centered">
+      <div class="col-2 centered">
         <i :class="`bi ${clasifyNpsComment(survey.nps)} mx-1`"> </i> {{ survey.nps || 'N/I' }}
       </div>
-      <div class="col centered">
+      <div class="col-2 centered">
         <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey && survey.messageScore ? survey.messageScore : 0 }}
       </div>
     </div>
@@ -227,7 +227,7 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .2rem;
+  padding: .1rem;
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
@@ -235,6 +235,7 @@ export default {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
+  line-height: 1.6rem;
 }
 .detailed-data {
   width: 100%;

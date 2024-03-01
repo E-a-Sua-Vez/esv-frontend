@@ -71,13 +71,13 @@ export default {
 <template>
   <div v-if="show && booking">
     <div class="row metric-card fw-bold">
-      <div class="col centered">
+      <div class="col-2 centered">
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.number }}</span>
       </div>
       <div class="col-4 centered" v-if="booking.user && booking.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name || 'N/I' }}
+        <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
       </div>
-      <div class="col-4 centered" v-if="booking.block && booking.block.hourFrom">
+      <div class="col-6 centered" v-if="booking.block && booking.block.hourFrom">
         <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
       </div>
     </div>
@@ -169,7 +169,7 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .2rem;
+  padding: .1rem;
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
@@ -177,6 +177,7 @@ export default {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
+  line-height: 1.6rem;
 }
 .detailed-data {
   width: 100%;
