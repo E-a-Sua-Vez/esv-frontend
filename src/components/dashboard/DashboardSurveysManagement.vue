@@ -63,7 +63,7 @@ export default {
           this.counter = counter;
           const total = counter / this.limit;
           const totalB = Math.trunc(total);
-          this.totalPages = totalB <= 0 ? 1 : counter % 10 === 0 ? totalB : totalB + 1;
+          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
         } else {
           this.counter = 0;
           this.totalPages = 0;
@@ -171,7 +171,17 @@ export default {
     changeData: {
       immediate: true,
       deep: true,
-      async handler() {
+      async handler(oldData, newData) {
+        if (
+          (oldData && newData) &&
+          (oldData.ratingType !== newData.ratingType ||
+          oldData.npsType !== newData.npsType ||
+          oldData.contactable !== newData.contactable ||
+          oldData.keyWord !== newData.keyWord ||
+          oldData.queueId !== newData.queueId)
+        ) {
+          this.page = 1;
+        }
         this.refresh();
       }
     },
