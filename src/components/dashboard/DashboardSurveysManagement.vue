@@ -301,8 +301,7 @@ export default {
               <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ this.counter }} </span>
               <span class="badge bg-secondary px-3 py-2 m-1"> {{ $t("page") }} {{ this.page }} {{ $t("of") }} {{ this.totalPages }} </span>
             </div>
-            <div v-if="surveys && surveys.length > 0">
-              <div class="centered mt-2">
+            <div class="centered mt-2">
                 <nav>
                   <ul class="pagination">
                     <li class="page-item">
@@ -348,6 +347,7 @@ export default {
                   </ul>
                 </nav>
               </div>
+            <div v-if="surveys && surveys.length > 0">
               <div class="row" v-for="(survey, index) in surveys" :key="`survey-${index}`">
                 <SurveyDetailsCard
                   :show="true"
