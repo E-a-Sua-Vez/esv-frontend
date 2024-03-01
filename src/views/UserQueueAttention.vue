@@ -236,7 +236,7 @@ export default {
         const voices = await window.speechSynthesis.getVoices();
         if (userLocaleByDefault === 'pt') {
           state.voiceConfig = {
-            text: `E a sua Vez! Senha ${state.attention.number} ${test ? `, Módulo' ${state.module.name}.` : '.'}`,
+            text: `E a sua Vez! Senha ${state.attention.number} ${test === true ? '.' : `, Módulo' ${state.module.name}.`}`,
             volume: 1.0,
             pitch: 1.0,
             rate: 1.0,
@@ -245,7 +245,7 @@ export default {
           }
         } else if (userLocaleByDefault === 'en') {
           state.voiceConfig = {
-            text: `It's your Turn! Number ${state.attention.number} ${test ? `, Module' ${state.module.name}.` : '.'}`,
+            text: `It's your Turn! Number ${state.attention.number} ${test === true ? '.' : `, Module' ${state.module.name}.`}`,
             volume: 1.0,
             pitch: 1.0,
             rate: 1.0,
