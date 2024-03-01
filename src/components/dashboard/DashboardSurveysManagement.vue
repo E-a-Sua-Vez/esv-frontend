@@ -39,7 +39,7 @@ export default {
       searchText: undefined,
       queueId: undefined,
       page: 1,
-      limit: 20
+      limit: 15
     }
   },
   async beforeMount() {
@@ -297,19 +297,25 @@ export default {
                     <li class="page-item">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
                         aria-label="Previous"
                         @click="setPage(page - 1)"
                         :disabled="page === 1">
                         <span aria-hidden="true">&laquo;</span>
                       </button>
                     </li>
-                    <li class="page-item" v-for="pag in totalPages" :key="`page-${pag}`">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 m-0"
-                        @click="setPage(pag)"
-                        :disabled="pag === page">
-                        {{ pag }}
-                      </button>
+                    <li>
+                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page">
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
+                      </select>
                     </li>
                     <li class="page-item">
                       <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
@@ -317,6 +323,15 @@ export default {
                         @click="setPage(page + 1)"
                         :disabled="page === totalPages">
                         <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
                       </button>
                     </li>
                   </ul>
@@ -335,19 +350,25 @@ export default {
                     <li class="page-item">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
                         aria-label="Previous"
                         @click="setPage(page - 1)"
                         :disabled="page === 1">
                         <span aria-hidden="true">&laquo;</span>
                       </button>
                     </li>
-                    <li class="page-item" v-for="pag in totalPages" :key="`page-${pag}`">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 m-0"
-                        @click="setPage(pag)"
-                        :disabled="pag === page">
-                        {{ pag }}
-                      </button>
+                    <li>
+                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page">
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
+                      </select>
                     </li>
                     <li class="page-item">
                       <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
@@ -355,6 +376,15 @@ export default {
                         @click="setPage(page + 1)"
                         :disabled="page === totalPages">
                         <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
                       </button>
                     </li>
                   </ul>
