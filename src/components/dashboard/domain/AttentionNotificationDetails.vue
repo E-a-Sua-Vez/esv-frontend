@@ -6,6 +6,7 @@ export default {
     show: { type: Boolean, default: true },
     count: { type: [String, Number], default: 0 },
     booking: { type: [String, Number], default: 0 },
+    waitlist: { type: [String, Number], default: 0 },
     channels: { type: Object, default: {} },
     types: { type: Object, default: {} }
   },

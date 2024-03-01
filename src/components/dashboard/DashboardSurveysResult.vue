@@ -287,7 +287,9 @@ export default {
                 :question="question"
                 :startDate="startDate"
                 :endDate="endDate"
-                :detailsOpened="detailsOpened">
+                :detailsOpened="detailsOpened"
+                :toggles="toggles"
+                :commerce="commerce">
               </AttentionQuestionOpenWriting>
             </div>
           </div>

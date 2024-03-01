@@ -1,16 +1,22 @@
 <script>
 import { getPersonalizedSurveyDetails } from '../../../application/services/query-stack';
 import Spinner from '../../../components/common/Spinner.vue';
+import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
+import html2pdf from "html2pdf.js";
+import PDFHeader from '../../reports/PDFHeader.vue';
+import PDFFooter from '../../reports/PDFFooter.vue';
 
 export default {
   name: 'AttentionQuestionOpenWriting',
-  components: { Spinner },
+  components: { Spinner, SimpleDownloadCard, html2pdf, PDFHeader, PDFFooter },
   props: {
     show: { type: Boolean, default: true },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     question: { type: Object, default: {} },
     detailsOpened: { type: Boolean, default: false },
+    toggles: { type: Object, default: undefined },
+    commerce: { type: Object, default: undefined },
   },
   data() {
     return {
@@ -86,6 +92,34 @@ export default {
       }
       return comment;
     },
+    exportToPDF() {
+      this.loading = true;
+      const filename = `surveys-question-${this.commerce.name}-${this.commerce.tag}-${this.startDate}-${this.endDate}.pdf`;
+      const options = {
+				margin: .5,
+  			filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+			};
+      let doc = document.getElementById("survey-question-component");
+      document.getElementById("pdf-header").style.display = "block";
+      document.getElementById("pdf-footer").style.display = "block";
+      setTimeout(() => {
+        html2pdf().set(options).from(doc).save().then(() => {
+          document.getElementById("pdf-header").style.display = "none";
+          document.getElementById("pdf-footer").style.display = "none";
+          this.loading = false;
+          doc = undefined;
+        }).catch(error => {
+          document.getElementById("pdf-header").style.display = "none";
+          document.getElementById("pdf-footer").style.display = "none";
+          this.loading = false;
+          doc = undefined;
+        });
+      }, 1000);
+    }
   },
   watch: {
     question: {
@@ -161,14 +195,32 @@ export default {
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0">
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <SimpleDownloadCard
+            :download="toggles['dashboard.reports.surveys'] && this.answersExtended.length > 0"
+            :title="$t('dashboard.reports.surveys-question.title')"
+            :showTooltip="true"
+            :description="$t('dashboard.reports.surveys-question.description')"
+            :icon="'bi-file-earmark-pdf'"
+            @download="exportToPDF"
+            :canDownload="toggles['dashboard.reports.surveys'] === true"
+          ></SimpleDownloadCard>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0" id="survey-question-component">
+            <PDFHeader
+              :show="toggles['dashboard.reports.surveys']"
+              :title="$t('dashboard.reports.surveys-question.title')"
+              :startDate="startDate"
+              :endDate="endDate"
+              :commerce="commerce"
+            >
+            </PDFHeader>
             <span class="metric-card-title">
               {{ question.title }}
               <span class="badge bg-dark metric-card-subtitle mx-2"> {{ question.counter }} </span>
             </span>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-center pb-5">
-            <div class="col-12 mb-2">
+            <div class="col-12 my-2">
               <div class="row centered">
                 <i :class="`h1 centered bi ${clasifyScoredComment(question['scoreAvg'] ? question['scoreAvg'] : undefined)} mb-0`"> </i>
               </div>
@@ -194,7 +246,13 @@ export default {
                 </div>
               </div>
             </div>
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <PDFFooter
+              :show="toggles['dashboard.reports.surveys']"
+            ></PDFFooter>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>
@@ -237,7 +295,6 @@ export default {
 }
 .comments {
   overflow-y: scroll;
-  margin-bottom: 2rem;
   padding: 1rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);

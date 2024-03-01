@@ -1062,6 +1062,10 @@
       "surveys-consolidated": {
         "title": "Reporte de Encuestas (Consolidado)",
         "description": "Descarga archivo PDF con el resultado de las encuestas consolidado"
+      },
+      "surveys-question": {
+        "title": "Reporte de Encuestas (Pregunta)",
+        "description": "Descarga archivo PDF con el resultado de las pregunta realizadas en el rango de fechas seleccionado"
       }
     },
     "capacitiesList": {

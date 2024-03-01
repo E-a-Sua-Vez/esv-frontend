@@ -1069,6 +1069,10 @@
       "surveys-consolidated": {
         "title": "Relatório de Pesquisa (Consolidado)",
         "description": "Baixar arquivo PDF com os resultados das pesquisas consolidado"
+      },
+      "surveys-question": {
+        "title": "Relatório de Pesquisa (Sumário)",
+        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
       }
     },
     "capacitiesList": {

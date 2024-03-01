@@ -1066,6 +1066,10 @@
       "surveys-consolidated": {
         "title": "Survey Report (Consolidated)",
         "description": "Download PDF file with the results of the surveys consolidated"
+      },
+      "surveys-question": {
+        "title": "Survey Report (Question)",
+        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
       }
     },
     "capacitiesList": {
