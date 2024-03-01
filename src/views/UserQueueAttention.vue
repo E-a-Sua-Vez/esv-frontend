@@ -212,7 +212,7 @@ export default {
         var audio = document.getElementById('its-your-turn-audio');
         await audio.play();
         setTimeout(async () => {
-          await speak(true, false);
+          await speak(false, false);
         }, 1500);
         state.soundPlayed = true;
       }
@@ -254,7 +254,7 @@ export default {
           }
         } else {
           state.voiceConfig = {
-            text: `¡Es tu Turno! Número ${state.attention.number} ${test ? `, Módulo' ${state.module.name}.` : '.'}`,
+            text: `¡Es tu Turno! Número ${state.attention.number} ${test === true ? '.' : `, Módulo' ${state.module.name}.`}`,
             volume: 1.0,
             pitch: 1.0,
             rate: 1.0,
