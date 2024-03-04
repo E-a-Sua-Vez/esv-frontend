@@ -3,6 +3,7 @@ import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getCollaboratorById } from '../../application/services/collaborator';
+import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -18,6 +19,7 @@ import { bookingCollection, waitlistCollection } from '../../application/firebas
 import BookingDetailsCard from '../../components/bookings/BookingDetailsCard.vue';
 import WaitlistDetailsCard from '../../components/waitlist/WaitlistDetailsCard.vue';
 import { getQueueBlockDetailsByDay } from '../../application/services/block';
+import { getActiveFeature } from '../../shared/features';
 
 export default {
   name: 'CollaboratorQueueBookings',
@@ -75,6 +77,7 @@ export default {
       currentUser: {},
       queue: {},
       queues: [],
+      groupedQueues: [],
       commerce: {},
       collaborator: {},
       module: {},
@@ -108,6 +111,15 @@ export default {
         state.collaborator = state.currentUser;
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
+        }
+        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+          if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+            const queues = [...collaboratorQueues, ...otherQueues];
+            state.queues = queues;
+          }
         }
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
@@ -448,7 +460,9 @@ export default {
             v-model="state.queue"
             @change="getQueue(state.queue)"
             id="queues">
-            <option v-for="queue in state.queues" :key="queue.name" :value="queue">{{ queue.name }}</option>
+            <option v-for="queue in state.queues" :key="queue.name" :value="queue">
+              <span v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill">👤</span> {{ queue.name }}
+            </option>
           </select>
         </div>
       </div>

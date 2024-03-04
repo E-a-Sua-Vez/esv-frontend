@@ -201,6 +201,10 @@
     "attention-voice-command": {
       "title": "Voice alert It's your Turn",
       "description": "Let to warning the client turn by voice"
+    },
+    "attention-queue-typegrouped": {
+      "title": "Attention select the type of queue",
+      "description": "Let the user select the queue by type, by collaborator, service and more"
     }
   },
   "paymentMethods": {
@@ -276,6 +280,8 @@
     "dataSelected": "Date Of Booking:",
     "blockSelected": "Hour Selected:",
     "walkin": "Enter to the queue:",
+    "byCollaborator": "By Professional",
+    "byService": "By Service",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -1498,6 +1504,7 @@
     "name": "Name:",
     "alias": "Alias (Optional):",
     "email": "Email:",
+    "type": "Type:",
     "services": "Services:",
     "phone": "Phone:",
     "active": "Active:",
@@ -1541,7 +1548,8 @@
       "name": "You should enter the name",
       "phone": "You should enter the phone",
       "email": "You should enter the email",
-      "module": "You should select the module"
+      "module": "You should select the module",
+      "type": "You should select the type"
     }
   },
   "businessAdministratorAdmin": {

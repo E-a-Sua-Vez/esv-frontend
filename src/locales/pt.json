@@ -201,6 +201,10 @@
     "attention-voice-command": {
       "title": "Alerta de Voz É a sua Vez",
       "description": "Permite chamar ao cliente por voz quando chega sua vez"
+    },
+    "attention-queue-typegrouped": {
+      "title": "Atenção selecione por tipo da fila",
+      "description": "Permite ao usuário selecionar o tipo de fila, por colaborador, por serviço e mais"
     }
   },
   "paymentMethods": {
@@ -276,6 +280,8 @@
     "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
     "walkin": "Ingresa na fila:",
+    "byCollaborator": "Por Profesional",
+    "byService": "Por Serviço",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não há horas disponíveis. Você quer ser contatao em caso alguma pessoa cancela e fica uma hora disponível?",
@@ -1553,7 +1559,7 @@
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
     "email": "Email:",
-
+    "type": "Tipo:",
     "services": "Serviços:",
     "phone": "Fono:",
     "bot": "É Bot:",
@@ -1597,7 +1603,8 @@
       "name": "Você deve digitar o nome",
       "phone": "Você deve digitar o telefone",
       "email": "Você deve digitar o email",
-      "module": "Você deve selecionar um módulo"
+      "module": "Você deve selecionar um módulo",
+      "type": "Você deve selecionar o tipo"
     }
   },
   "businessCommercesAdmin": {

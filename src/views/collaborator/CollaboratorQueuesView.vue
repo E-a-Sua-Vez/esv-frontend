@@ -2,7 +2,8 @@
 import { ref, reactive, onBeforeMount, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
-import { getActiveModulesByCommerceId, getModuleById } from '../../application/services/module';
+import { getActiveModulesByCommerceId } from '../../application/services/module';
+import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getCollaboratorById, updateModule } from '../../application/services/collaborator';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
@@ -14,6 +15,7 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
+import { getActiveFeature } from '../../shared/features';
 
 export default {
   name: 'CollaboratorQueuesView',
@@ -36,6 +38,7 @@ export default {
       currentUser: {},
       queue: {},
       queues: [],
+      groupedQueues: [],
       commerce: {},
       collaborator: {},
       modules: ref({}),
@@ -55,12 +58,21 @@ export default {
           state.commerce = await getCommerceById(state.currentUser.commerceId);
         }
         state.queues = state.commerce.queues;
-        initializeQueueStatus();
-        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         state.collaborator = state.currentUser;
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
+        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+          if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+            const queues = [...collaboratorQueues, ...otherQueues];
+            state.queues = queues;
+          }
+        }
+        initializeQueueStatus();
+        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
           state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
         }
@@ -252,7 +264,7 @@ export default {
                   >
                   <div class="row centered">
                     <div class="col-8">
-                      {{ queue.name }}
+                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i> {{ queue.name }}
                     </div>
                     <div class="col-2">
                       <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">
@@ -274,7 +286,7 @@ export default {
                   >
                   <div class="row centered">
                     <div class="col-8">
-                      {{ queue.name }}
+                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i> {{ queue.name }}
                     </div>
                     <div class="col-2">
                       <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">

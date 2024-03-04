@@ -35,6 +35,11 @@ export default {
       services: ref({}),
       modules: ref({}),
       collaborators: ref({}),
+      types: [
+        {  name: 'Standard', type: 'STANDARD' },
+        {  name: 'Assistant', type: 'ASSISTANT' },
+        {  name: 'Full', type: 'FULL' },
+      ],
       commerce: {},
       service: {},
       showAdd: false,
@@ -47,6 +52,7 @@ export default {
       phoneUpdateError: false,
       moduleError: false,
       emailError: false,
+      typeError: false,
       toggles: {}
     });
 
@@ -104,6 +110,12 @@ export default {
           state.errorsAdd.push('businessCollaboratorsAdmin.validate.email');
         } else {
           state.emailError = false;
+        }
+        if(!collaborator.type || collaborator.type.length === 0) {
+          state.typeError = true;
+          state.errorsAdd.push('businessCollaboratorsAdmin.validate.type');
+        } else {
+          state.typeError = false;
         }
         if(!collaborator.phone || collaborator.phone.length < 10) {
           state.phoneAddError = true;
@@ -377,6 +389,20 @@ export default {
                           placeholder="Jhon Pérez">
                       </div>
                     </div>
+                    <div id="collaborator-type-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessCollaboratorsAdmin.type") }}
+                      </div>
+                      <div class="col-6">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select"
+                          v-model="state.newCollaborator.type"
+                          id="types"
+                          v-bind:class="{ 'is-invalid': state.typeError }">
+                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                        </select>
+                      </div>
+                    </div>
                     <div id="collaborator-commerces-form-add" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessCollaboratorsAdmin.services") }}
@@ -521,6 +547,21 @@ export default {
                           class="form-control"
                           v-model="collaborator.alias"
                           placeholder="Jhon Pérez">
+                      </div>
+                    </div>
+                    <div id="collaborator-type-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.type") }}
+                      </div>
+                      <div class="col-8">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select"
+                          v-model="collaborator.type"
+                          id="modules-edit"
+                          :disabled="!state.toggles['collaborators.admin.edit']"
+                          >
+                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                        </select>
                       </div>
                     </div>
                     <div id="collaborator-services-form-update" class="row g-1">

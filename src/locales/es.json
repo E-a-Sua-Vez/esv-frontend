@@ -209,6 +209,10 @@
     "attention-voice-command": {
       "title": "Aviso Es tu Turno por Voz",
       "description": "Permite activar el sonido de Voz para llamar al cliente cuando es su turno"
+    },
+    "attention-queue-typegrouped": {
+      "title": "Atención selecciona por tipo de cola",
+      "description": "Permite seleccionar el tipo de cola, sea por colaborador, por servicio y mas"
     }
   },
   "paymentMethods": {
@@ -284,6 +288,8 @@
     "dataSelected": "Fecha de Reserva:",
     "blockSelected": "Hora Seleccionada:",
     "walkin": "Ingresa a la fila:",
+    "byCollaborator": "Por Profesional",
+    "byService": "Por Servicio",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -1551,6 +1557,7 @@
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
     "name": "Nombre:",
+    "type": "Tipo:",
     "alias": "Alias (Opcional):",
     "email": "Email:",
     "phone": "Teléfono:",
@@ -1596,7 +1603,8 @@
       "name": "Debes ingresar el nombre",
       "phone": "Debes ingresar el teléfono",
       "email": "Debes ingresar el email",
-      "module": "Debes seleccionar un módulo"
+      "module": "Debes seleccionar un módulo",
+      "type": "Debe seleccionar el tipo"
     }
   },
   "businessCommercesAdmin": {
