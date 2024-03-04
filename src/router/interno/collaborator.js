@@ -5,6 +5,7 @@ import CollaboratorQueueAttentions from '../../views/collaborator/CollaboratorQu
 import CollaboratorMenu from '../../views/collaborator/CollaboratorMenu.vue';
 import CollaboratorDashboard from '../../views/collaborator/CollaboratorDashboard.vue';
 import CollaboratorQueueBookings from '../../views/collaborator/CollaboratorQueueBookings.vue';
+import CollaboratorTracing from '../../views/collaborator/CollaboratorTracing.vue';
 
 const PrivateCollaboratorRoutes = [
   {
@@ -31,6 +32,11 @@ const PrivateCollaboratorRoutes = [
     path: '/interno/colaborador/dashboard',
     name: 'collaborator-dashboard',
     component: CollaboratorDashboard
+  },
+  {
+    path: '/interno/colaborador/tracing',
+    name: 'collaborator-tracing',
+    component: CollaboratorTracing
   },
   {
     path: '/interno/commerce/:id/colaborador/bookings',

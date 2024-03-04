@@ -32,6 +32,7 @@ export default {
         'queue-manage',
         'booking-manage',
         'dashboard',
+        'tracing',
         'go-minisite'
       ],
       currentPlanActivation: {},
@@ -65,6 +66,8 @@ export default {
             router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/bookings` });
           } else if (option === 'dashboard') {
             router.push({ path: `/interno/colaborador/dashboard` });
+          } else if (option === 'tracing') {
+            router.push({ path: `/interno/colaborador/tracing` });
           }
         }
         loading.value = false;

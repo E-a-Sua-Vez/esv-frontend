@@ -7,19 +7,20 @@ import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
+import { getQueueBlockDetailsByDay } from '../../application/services/block';
+import { getActiveFeature } from '../../shared/features';
 import { getPendingBookingsBetweenDates } from '../../application/services/booking';
+import { dateYYYYMMDD } from '../../shared/utils/date';
+import { bookingCollection, waitlistCollection } from '../../application/firebase';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import { dateYYYYMMDD } from '../../shared/utils/date';
-import { bookingCollection, waitlistCollection } from '../../application/firebase';
 import BookingDetailsCard from '../../components/bookings/BookingDetailsCard.vue';
 import WaitlistDetailsCard from '../../components/waitlist/WaitlistDetailsCard.vue';
-import { getQueueBlockDetailsByDay } from '../../application/services/block';
-import { getActiveFeature } from '../../shared/features';
+
 
 export default {
   name: 'CollaboratorQueueBookings',
@@ -109,6 +110,8 @@ export default {
         state.locale = state.commerce.localeInfo.language;
         state.queues = state.commerce.queues;
         state.collaborator = state.currentUser;
+        store.setCurrentCommerce(state.commerce);
+        store.setCurrentQueue(undefined);
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
@@ -121,8 +124,6 @@ export default {
             state.queues = queues;
           }
         }
-        store.setCurrentCommerce(state.commerce);
-        store.setCurrentQueue(undefined);
         state.toggles = await getPermissions('collaborator');
         alertError.value = '';
         loading.value = false;

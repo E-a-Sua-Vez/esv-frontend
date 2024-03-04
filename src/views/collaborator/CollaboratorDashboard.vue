@@ -3,10 +3,12 @@ import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getMetrics } from '../../application/services/query-stack';
-import { getQueueByCommerce } from '../../application/services/queue';
+import { getCollaboratorById } from '../../application/services/collaborator';
+import { getQueueByCommerce, getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { Chart, registerables } from 'chart.js';
 import { LineChart, DoughnutChart, BarChart, useBarChart } from 'vue-chart-3';
 import { getPermissions } from '../../application/services/permissions';
+import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -80,8 +82,10 @@ export default {
       commerces: ref({}),
       queues: ref({}),
       queue: {},
+      groupedQueues: [],
       dateType: 'month',
       commerce: {},
+      collaborator: {},
       showIndicators: true,
       showGraphs: false,
       showSurveyResults: false,
@@ -108,11 +112,24 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
+        state.collaborator = state.currentUser;
+        if (!state.currentUser) {
+          state.collaborator = await getCollaboratorById(state.currentUser.id);
+        }
         if (state.currentUser && state.currentUser.commerceId) {
           const commerce = await getQueueByCommerce(state.currentUser.commerceId);
           state.commerces = [commerce];
           state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
           state.queues = commerce.queues;
+          if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+            state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+            if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+              const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+              const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+              const queues = [...collaboratorQueues, ...otherQueues];
+              state.queues = queues;
+            }
+          }
         }
         state.toggles = await getPermissions('dashboard');
         await refresh();
@@ -132,6 +149,15 @@ export default {
         state.commerce = commerce;
         const queuesByCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = queuesByCommerce.queues;
+        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+          if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+            const queues = [...collaboratorQueues, ...otherQueues];
+            state.queues = queues;
+          }
+        }
         await refresh();
         loading.value = false;
       } catch (error) {
@@ -212,6 +238,14 @@ export default {
         alertError.value = error ? error.response ? error.respose.status : 500 : 500;
         loading.value = false;
       }
+    }
+
+    const getToday = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      state.startDate = `${year}-${month}-${day}`;
+      state.endDate = `${year}-${month}-${day}`;
+      await refresh();
     }
 
     const getCurrentMonth = async () => {
@@ -521,7 +555,8 @@ export default {
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
-      getLocalHour
+      getLocalHour,
+      getToday
     }
   }
 }
@@ -561,14 +596,17 @@ export default {
                 </div>
               </div>
               <div class="row my-2">
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                <div class="col-3">
+                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
                 </div>
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                <div class="col-3">
+                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
                 </div>
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                <div class="col-3">
+                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                </div>
+                <div class="col-3">
+                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
                 </div>
               </div>
               <div class="row">
