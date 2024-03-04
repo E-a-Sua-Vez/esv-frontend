@@ -67,6 +67,13 @@
     "restaurant": "🍽️ Restaurant",
     "supermarket": "🛒 Supermercado"
   },
+  "queues": {
+    "types": {
+      "STANDARD": "Standard",
+      "COLLABORATOR": "Colaborador",
+      "SERVICE": "Service"
+    }
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Sólo CSAT y Comentario",
@@ -1218,6 +1225,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
     "commerce-admin": "Sucursales",
+    "service-admin": "Servicios",
     "queues-admin": "Filas",
     "configuration": "Configuraciones",
     "reports": "Informes",
@@ -1241,6 +1249,7 @@
           "dashboard": "Dashboard",
           "reports": "Informes",
           "commerce-admin": "Administrar Sucursales",
+          "service-admin": "Administrar Servicios",
           "modules-admin": "Administrar Módulos",
           "queues-admin": "Administrar Filas",
           "collaborators-admin": "Administrar Colaboradores",
@@ -1261,6 +1270,7 @@
     "business-master-resume": "Estado del Sistema",
     "dashboard": "Dashboard",
     "commerce-master-admin": "Sucursales",
+    "service-master-admin": "Servicios",
     "queues-master-admin": "Filas",
     "configuration": "Configuraciones",
     "reports": "Informes",
@@ -1316,13 +1326,17 @@
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
     "name": "Nombre:",
+    "type": "Tipo:",
     "limit": "Limite:",
     "order": "Orden:",
     "active": "Activo:",
     "estimated": "Tiempo estimado (min):",
     "update": "Actualizar",
     "add": "Agregar",
-    "service": "Servicio",
+    "service": "Servicio:",
+    "selectCollaborator": "Selecciona Colaborador",
+    "selectService": "Selecciona Servicio",
+    "collaborator": "Colaborador:",
     "attentionHour": "Horas Atención:",
     "attentionDays": "Días Atención:",
     "listResult": "Registros:",
@@ -1370,7 +1384,70 @@
       "name": "Debes ingresar el nombre",
       "limit": "Debes ingresar el límite",
       "order": "Debes ingresar el orden",
-      "estimatedTime": "Debes ingresar el tiempo estimado"
+      "estimatedTime": "Debes ingresar el tiempo estimado",
+      "type": "Debe seleccionar el tipo",
+      "collaborator": "Debe seleccionar el colaborador",
+      "service": "Debe seleccionar el servicio"
+    }
+  },
+  "businessServicesAdmin": {
+    "title": "Servicios",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "name": "Nombre:",
+    "tag": "Tag:",
+    "shortDescription": "Descripción corta:",
+    "longDescription": "Descripción larga:",
+    "order": "Orden:",
+    "active": "Activo:",
+    "online": "Online:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "service": "Servicio",
+    "price": "Precio:",
+    "onlinePrice": "Precio Online:",
+    "saving": "Descuento:",
+    "onlineSaving": "Descuento Online:",
+    "listResult": "Registros:",
+    "blockTime": "Bloque (Min):",
+    "estimatedTime": "Tiempo estimado:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay servicios."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de servicios. Para agregar más servicios cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay servicios. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "services": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Servicios",
+          "edit": "Editar los Servicios",
+          "update": "Actualizar los Servicios",
+          "add": "Agregar Servicios",
+          "limit": "Cantidad límite de Servicios",
+          "queue-limit": "Límite de Servicios"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "tag": "Debes ingresar el tag",
+      "order": "Debes ingresar el orden",
+      "estimatedTime": "Debes ingresar el tiempo estimado",
+      "shortDescription": "Debes ingresar la descripción corta"
     }
   },
   "businessModulesAdmin": {
@@ -1477,6 +1554,7 @@
     "alias": "Alias (Opcional):",
     "email": "Email:",
     "phone": "Teléfono:",
+    "services": "Servicios:",
     "active": "Activo:",
     "module": "Módulo:",
     "bot": "Es Bot:",
@@ -2361,6 +2439,16 @@
       "admin": {
         "plans": "Ver los permisos de los Planes",
         "roles": "Ver los permisos de los Roles"
+      }
+    },
+    "services": {
+      "admin": {
+        "view": "Ver Sección - Administrar Servicios",
+        "read": "Leer datos - Sección Administrar Servicios",
+        "edit": "Editar datos - Sección Administrar Servicios",
+        "update": "Actualizar datos - Sección Administrar Servicios",
+        "add": "Agregar datos - Sección Administrar Servicios",
+        "limit": "Límite de datos - Sección Administrar Servicios"
       }
     }
   }

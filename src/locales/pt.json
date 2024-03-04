@@ -1224,7 +1224,8 @@
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
     "commerce-admin": "Comércios",
-    "queues-admin": "Filas/Serviços",
+    "service-admin": "Serviços",
+    "queues-admin": "Filas",
     "configuration": "Configurações",
     "reports": "Relatórios",
     "your-plan": "Seu Plano",
@@ -1247,6 +1248,7 @@
           "dashboard": "Dashboard",
           "reports": "Relatórios",
           "commerce-admin": "Gerenciar Comércios/Unidades",
+          "service-admin": "Gerenciar Serviços",
           "modules-admin": "Gerenciar Módulos",
           "queues-admin": "Gerenciar Filas",
           "collaborators-admin": "Gerenciar Colaboradores",
@@ -1267,7 +1269,8 @@
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
     "commerce-master-admin": "Comércios",
-    "queues-master-admin": "Filas/Serviços",
+    "service-master-admin": "Serviços",
+    "queues-master-admin": "Filas",
     "configuration": "Configurações",
     "reports": "Relatórios",
     "your-plan": "Seu Plano",
@@ -1318,17 +1321,21 @@
     }
   },
   "businessQueuesAdmin": {
-    "title": "Filas / Serviços",
+    "title": "Filas",
     "commerce": "Selecione um comércio:",
     "name": "Nome:",
     "return": "Voltar",
     "limit": "Limite:",
     "order": "Ordem:",
     "active": "Ativo:",
+    "type": "Tipo:",
     "estimated": "Tempo estimado (min):",
     "update": "Atualizar",
     "add": "Adicionar",
-    "service": "Serviço",
+    "service": "Serviço:",
+    "selectCollaborator": "Selecione Colaborador",
+    "selectService": "Selecione Serviço",
+    "collaborator": "Colaborador:",
     "attentionHour": "Horas Atenção:",
     "attentionDays": "Dias Atenção:",
     "listResult": "Registros:",
@@ -1376,7 +1383,71 @@
       "name": "Você deve digitar o nome",
       "limit": "Você deve digitar o límite",
       "order": "Você deve digitar o ordem",
-      "estimatedTime": "Você deve digitar o tempo estimado"
+      "estimatedTime": "Você deve digitar o tempo estimado",
+      "type": "Você deve selecionar o tipo",
+      "collaborator": "Você deve selecionar o colaborador",
+      "service": "Você deve selecionar o serviço"
+    }
+  },
+  "businessServicesAdmin": {
+    "title": "Serviços",
+    "commerce": "Selecione um comércio:",
+    "name": "Nome:",
+    "tag": "Tag:",
+    "shortDescription": "Descrição curta:",
+    "longDescription": "Descrição longa:",
+    "return": "Voltar",
+    "order": "Ordem:",
+    "active": "Ativo:",
+    "online": "Online:",
+    "estimated": "Tempo estimado (min):",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "service": "Serviço",
+    "price": "Preço:",
+    "onlinePrice": "Preço Online:",
+    "saving": "Poupança:",
+    "onlineSaving": "Poupança online:",
+    "listResult": "Registros:",
+    "blockTime": "Bloque (Min):",
+    "estimatedTime": "Tempo estimado:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Serviços."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de Serviços. Para adicionar mais Serviços, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há Serviços. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "services": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Serviços",
+          "edit": "Editar os Serviços",
+          "update": "Atualizar os Serviços",
+          "add": "Adicionar Serviços",
+          "limit": "Número limite de Serviços",
+          "queue-limit": "Limite de Serviços"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "tag": "Você deve digitar o lítagmite",
+      "order": "Você deve digitar o ordem",
+      "estimatedTime": "Você deve digitar o tempo estimado",
+      "shortDescription": "Você deve digitar a descrição curta"
     }
   },
   "businessModulesAdmin": {
@@ -1482,6 +1553,8 @@
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
     "email": "Email:",
+
+    "services": "Serviços:",
     "phone": "Fono:",
     "bot": "É Bot:",
     "active": "Ativo:",
@@ -2364,6 +2437,16 @@
       "admin": {
         "plans": "Ver los permisos de los Planos",
         "roles": "Ver los permisos de los Roles"
+      }
+    },
+    "services": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Serviços",
+        "read": "Ver dados - Seção Gerenciar Serviços",
+        "edit": "Editar dados - Seção Gerenciar Serviços",
+        "update": "Atualizar dados - Seção Gerenciar Serviços",
+        "add": "Adicionar dados - Seção Gerenciar Serviços",
+        "limit": "Límite de dados - Seção Gerenciar Serviços"
       }
     }
   }

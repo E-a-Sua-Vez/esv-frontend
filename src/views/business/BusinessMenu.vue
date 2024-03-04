@@ -38,6 +38,7 @@ export default {
       ],
       manageSubMenuOptions: [
         'commerce-admin',
+        'service-admin',
         'modules-admin',
         'queues-admin',
         'collaborators-admin',
@@ -158,6 +159,7 @@ export default {
                           type="button"
                           class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
                           @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
                           >
                           {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
                         </button>

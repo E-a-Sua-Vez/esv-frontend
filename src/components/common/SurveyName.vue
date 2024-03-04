@@ -50,7 +50,6 @@ export default {
   font-weight: 900;
   font-size: .8rem;
 }
-
 .desactived {
   background-color: var(--gris-tooltip);
   border-top-left-radius: 1rem;

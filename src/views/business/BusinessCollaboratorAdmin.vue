@@ -5,6 +5,7 @@ import { globalStore } from '../../stores';
 import { getActiveModulesByCommerceId } from '../../application/services/module';
 import { getCollaboratorsByCommerceId, updateCollaborator, addCollaborator } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
+import { getServiceByCommerce } from '../../application/services/service';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CollaboratorName from '../../components/common/CollaboratorName.vue';
 import Toggle from '@vueform/toggle';
@@ -31,9 +32,11 @@ export default {
       business: {},
       activeBusiness: false,
       commerces: ref({}),
+      services: ref({}),
       modules: ref({}),
       collaborators: ref({}),
       commerce: {},
+      service: {},
       showAdd: false,
       newCollaborator: {},
       extendedEntity: undefined,
@@ -58,6 +61,10 @@ export default {
           state.modules = await getActiveModulesByCommerceId(state.commerce.id);
           const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
           state.collaborators = collaborators;
+          state.services = await getServiceByCommerce(state.commerce.id);
+          if (state.services.length > 0) {
+            state.service = undefined;
+          }
         }
         state.toggles = await getPermissions('collaborators', 'admin');
         alertError.value = '';
@@ -143,6 +150,7 @@ export default {
           state.collaborators = collaborators;
         }
         state.extendedEntity = undefined;
+        state.service = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -152,9 +160,11 @@ export default {
     }
 
     const showAdd = () => {
+      const servicesId = [];
       state.showAdd = !state.showAdd;
       state.newCollaborator = {
-        bot: false
+        bot: false,
+        servicesId
       }
     }
 
@@ -170,6 +180,7 @@ export default {
           state.newCollaborator = {}
         }
         state.extendedEntity = undefined;
+        state.service = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -185,6 +196,7 @@ export default {
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         state.collaborators = collaborators;
+        state.services = await getServiceByCommerce(state.commerce.id);
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -197,6 +209,47 @@ export default {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     }
 
+    const selectService = async (collaborator, service) => {
+      if (service) {
+        if (collaborator.servicesId && collaborator.servicesId.length >= 0) {
+          if (!collaborator.servicesId.includes(service.id)) {
+            collaborator.servicesId.push(service.id);
+          }
+        }
+      }
+    }
+
+    const selectServiceIndex = async (index, service) => {
+      if (!state.collaborators[index].servicesId) {
+        state.collaborators[index].servicesId = []
+      }
+      if (state.collaborators[index].servicesId && state.collaborators[index].servicesId.length >= 0) {
+        if (!state.collaborators[index].servicesId.includes(service.id)) {
+          state.collaborators[index].servicesId.push(service.id);
+        }
+      }
+    }
+
+    const deleteService = (collaborator, serviceId) => {
+      if (collaborator && serviceId) {
+        if (collaborator.servicesId && collaborator.servicesId.length >= 0) {
+          if (collaborator.servicesId.includes(serviceId)) {
+            const filtered = collaborator.servicesId.filter(com => com !== serviceId);
+            collaborator.servicesId = filtered;
+          }
+        }
+      }
+    }
+
+    const showService = (serviceId) => {
+      if (state.services && state.services.length >= 1) {
+        const service = state.services.find(com => com.id === serviceId);
+        if (service) {
+          return service.tag;
+        }
+      }
+    }
+
     return {
       state,
       loading,
@@ -207,7 +260,11 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce
+      selectCommerce,
+      selectService,
+      deleteService,
+      showService,
+      selectServiceIndex
     }
   }
 }
@@ -318,6 +375,22 @@ export default {
                           class="form-control"
                           v-model="state.newCollaborator.alias"
                           placeholder="Jhon Pérez">
+                      </div>
+                    </div>
+                    <div id="collaborator-commerces-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.services") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.service" @change="selectService(state.newCollaborator, state.service)" id="services">
+                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if=" state.newCollaborator.servicesId &&  state.newCollaborator.servicesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.servicesId" :key="com.id">
+                            {{ showService(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newCollaborator, com)"></button>
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div id="collaborator-phone-form-add" class="row g-1">
@@ -448,6 +521,22 @@ export default {
                           class="form-control"
                           v-model="collaborator.alias"
                           placeholder="Jhon Pérez">
+                      </div>
+                    </div>
+                    <div id="collaborator-services-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.services") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
+                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if="collaborator.servicesId &&  collaborator.servicesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.servicesId" :key="com.id">
+                            {{ showService(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(collaborator, com)"></button>
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div id="collaborator-phone-form-update" class="row g-1">
@@ -586,7 +675,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 800px !important;
   overflow-y: auto;
 }
 .detailed-data {
@@ -599,5 +688,8 @@ export default {
 .errors {
   font-size: small;
   color: var(--rojo-warning);
+}
+.btn-close {
+  height: 0em !important;
 }
 </style>

@@ -1221,6 +1221,7 @@
     "choose": "What do you want to do today?",
     "dashboard": "Dashboard",
     "commerce-admin": "Commerces",
+    "service-admin": "Services",
     "queues-admin": "Queues",
     "configuration": "Settings",
     "reports": "Reports",
@@ -1245,6 +1246,7 @@
           "dashboard": "Dashboard",
           "reports": "Reports",
           "commerce-admin": "Commerce Settings",
+          "service-admin": "Services Settings",
           "modules-admin": "Modules Settings",
           "queues-admin": "Queues Settings",
           "collaborators-admin": "Collaborator Settings",
@@ -1290,6 +1292,7 @@
     "business-master-resume": "System State",
     "dashboard": "Dashboard",
     "commerce-master-admin": "Commerces",
+    "service-master-admin": "Services",
     "queues-master-admin": "Queues",
     "configuration": "Settings",
     "reports": "Reports",
@@ -1323,12 +1326,16 @@
     "name": "Name:",
     "limit": "Limit:",
     "order": "Order:",
+    "type": "Type:",
     "active": "Active:",
     "estimated": "Estimated time (min):",
     "listResult": "Results:",
     "update": "Update",
     "add": "Add",
-    "service": "Service",
+    "service": "Service:",
+    "selectCollaborator": "Select Collaborator",
+    "selectService": "Select Service",
+    "collaborator": "Collaborator:",
     "attentionHour": "Attention Hours:",
     "attentionDays": "Attention Days:",
     "link": "URL Web:",
@@ -1375,7 +1382,70 @@
       "name": "You should enter the name",
       "limit": "You should enter the limit",
       "order": "You should enter the order",
-      "estimatedTime": "You should enter the estimated time"
+      "estimatedTime": "You should enter the estimated time",
+      "type": "You should select the type",
+      "collaborator": "You should select the collaborator",
+      "service": "You should select the service"
+    }
+  },
+  "businessServicesAdmin": {
+    "title": "Services",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "tag": "Tag:",
+    "shortDescription": "Short Description:",
+    "longDescription": "Long Description:",
+    "order": "Order:",
+    "active": "Active:",
+    "online": "Online:",
+    "estimated": "Estimated time (min):",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "service": "Service",
+    "price": "Price:",
+    "onlinePrice": "Online Price:",
+    "saving": "Saving:",
+    "onlineSaving": "Online saving:",
+    "blockTime": "Block (Min):",
+    "estimatedTime": "Estimated Time:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no services."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Services. To add more services, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no services. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "services": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Services",
+          "edit": "Edit the Services",
+          "update": "Update the Services",
+          "add": "Add Services",
+          "limit": "Limit amount of Services"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "tag": "You should enter the tag",
+      "order": "You should enter the order",
+      "estimatedTime": "You should enter the estimated time",
+      "shortDescription": "You should enter the short description"
     }
   },
   "businessModulesAdmin": {
@@ -1428,6 +1498,7 @@
     "name": "Name:",
     "alias": "Alias (Optional):",
     "email": "Email:",
+    "services": "Services:",
     "phone": "Phone:",
     "active": "Active:",
     "bot": "Is Bot:",
@@ -2364,6 +2435,16 @@
       "admin": {
         "plans": "Get to the Plans permissions",
         "roles": "Get to the Roles permissions"
+      }
+    },
+    "services": {
+      "admin": {
+        "view": "Get to this Section - Manage Services",
+        "read": "Read data - Section Manage Services",
+        "edit": "Edit data - Section Manage Services",
+        "update": "Update data - Section Manage Services",
+        "add": "Add data - Section Manage Services",
+        "limit": "Limit of data - Section Manage Services"
       }
     }
   }

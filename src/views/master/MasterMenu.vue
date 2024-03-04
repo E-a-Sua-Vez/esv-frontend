@@ -42,6 +42,7 @@ export default {
       ],
       manageSubMenuOptions: [
         'commerce-master-admin',
+        'service-master-admin',
         'modules-master-admin',
         'queues-master-admin',
         'administrators-master-admin',

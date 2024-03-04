@@ -1,8 +1,9 @@
 <script>
+
 export default {
-  name: 'QueueSimpleName',
+  name: 'ServiceSimpleName',
   props: {
-    queue: { type: Object, default: { name: '', active: false } },
+    service: { type: Object, default: { name: '', active: false } },
     details: { type: Boolean, default: false },
   },
   data() {
@@ -20,17 +21,25 @@ export default {
 
 <template>
   <div>
-    <div :class="queue.active === true ? 'active' : 'desactived'">
-      <span :class="queue.active === true ? 'active-name' : 'desactived-name'">
-        <i class="bi bi-person-lines-fill"></i> {{ queue.name }}
+    <div :class="service.active === true ? 'active' : 'desactived'">
+      <span
+        v-if="details"
+        class="service-details"
+        :class="service.active === true ? 'active-name' : 'desactived-name'"
+      >
+        <div class="row centered">
+          <div class="col-8">
+            <i class="bi bi-person-lines-fill"></i> {{ service.name }}
+          </div>
+          <div class="col-2">
+            <span>
+              <i class="dark fw-bold" :class="'bi bi-arrow-right-circle-fill'"></i>
+            </span>
+          </div>
+        </div>
       </span>
-    </div>
-    <div class="tag" v-if="queue.type">
-      <span class="tag-name" v-if="queue.type !== 'STANDARD'">
-        <i class="bi bi-tags-fill"></i> {{ queue.tag }}
-      </span>
-      <span class="tag-name" v-else>
-        <i class="bi bi-tags-fill"></i> {{ queue.type }}
+      <span v-else :class="service.active === true ? 'active-name' : 'desactived-name'">
+        <i class="bi bi-person-lines-fill"></i> {{ service.name }}
       </span>
     </div>
   </div>
@@ -39,8 +48,8 @@ export default {
 <style scoped>
 .active {
   background-color: var(--azul-turno);
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
+  margin: .1rem;
+  border-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid var(--azul-turno);
 }
@@ -67,18 +76,8 @@ export default {
   padding: .5rem;
   overflow-y: auto;
 }
-.queue-details {
+.service-details {
   cursor: pointer;
 }
-.tag {
-  background-color: var(--gris-clear);
-  border-bottom-left-radius: 1rem;
-  border-bottom-right-radius: 1rem;
-  line-height: 1.1rem;
-}
-.tag-name {
-  background-color: var(--gris-clear);
-  font-weight: 900;
-  font-size: .8rem;
-}
+
 </style>

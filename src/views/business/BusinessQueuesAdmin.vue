@@ -3,6 +3,8 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getQueueByCommerce, updateQueue, addQueue } from '../../application/services/queue';
+import { getServiceByCommerce } from '../../application/services/service';
+import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import QueueSimpleName from '../../components/common/QueueSimpleName.vue';
@@ -30,9 +32,18 @@ export default {
       activeBusiness: false,
       commerces: ref({}),
       queues: ref({}),
+      services: ref({}),
+      collaborators: ref({}),
+      types: [
+        {  name: 'Standard', type: 'STANDARD' },
+        {  name: 'Collaborator', type: 'COLLABORATOR' },
+        {  name: 'Service', type: 'SERVICE' },
+      ],
       commerce: {},
       showAdd: false,
       newQueue: {},
+      selectedCollaborator: {},
+      selectedService: {},
       extendedEntity: undefined,
       errorsAdd: [],
       errorsUpdate: [],
@@ -43,6 +54,7 @@ export default {
       orderUpdateError: false,
       timeAddError: false,
       timeUpdateError: false,
+      typeError: false,
       toggles: {}
     });
 
@@ -56,6 +68,8 @@ export default {
         if (state.commerce) {
           const commerce = await getQueueByCommerce(state.commerce.id);
           state.queues = commerce.queues;
+          state.services = await getServiceByCommerce(state.commerce.id);
+          state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         }
         state.toggles = await getPermissions('queues', 'admin');
         alertError.value = '';
@@ -81,6 +95,20 @@ export default {
         state.errorsAdd.push('businessQueuesAdmin.validate.name');
       } else {
         state.nameError = false;
+      }
+      if(!queue.type || queue.type.length === 0) {
+        state.typeError = true;
+        state.errorsAdd.push('businessQueuesAdmin.validate.type');
+      } else {
+        state.typeError = false;
+      }
+      if (queue.type) {
+        if (queue.type === 'COLLABORATOR' && !queue.collaboratorId) {
+          state.errorsAdd.push('businessQueuesAdmin.validate.collaborator');
+        }
+        if (queue.type === 'SERVICE' && !queue.serviceId) {
+          state.errorsAdd.push('businessQueuesAdmin.validate.service');
+        }
       }
       if(!queue.limit || queue.limit.length === 0 || queue.limit > state.toggles['queues.admin.queue-limit']) {
         state.limitAddError = true;
@@ -113,6 +141,12 @@ export default {
         state.errorsUpdate.push('businessQueuesAdmin.validate.limit');
       } else {
         state.limitUpdateError = false;
+      }
+      if(!queue.type || queue.type.length === 0) {
+        state.typeError = true;
+        state.errorsAdd.push('businessQueuesAdmin.validate.type');
+      } else {
+        state.typeError = false;
       }
       if(!queue.order || queue.order.length === 0) {
         state.orderUpdateError = true;
@@ -192,6 +226,8 @@ export default {
         state.commerce = commerce;
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
+        state.services = await getServiceByCommerce(state.commerce.id);
+        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -281,6 +317,37 @@ export default {
       }
     }
 
+    const selectCollaborator = (queue, collaborator) => {
+      if (queue !== undefined && collaborator !== undefined && collaborator.id !== undefined) {
+        queue.collaboratorId = collaborator.id;
+        queue.tag = `${collaborator.email}`;
+        state.selectedCollaborator = collaborator;
+      }
+    }
+
+    const selectService = (queue, service) => {
+      if (queue !== undefined && service !== undefined && service.id !== undefined) {
+        queue.serviceId = service.id;
+        queue.tag = `${service.name}`;
+        state.selectedService = service;
+        queue.estimatedTime = service.serviceInfo.estimatedTime;
+        queue.blockTime = service.serviceInfo.blockTime;
+      }
+    }
+
+    const selectType = (queue, type) => {
+      if (queue) {
+        if (typ === 'COLLABORATOR') {
+          queue.serviceId = undefined;
+          queue.type = type.name;
+        }
+        if (typ === 'SERVICE') {
+          queue.collaboratorId = undefined;
+          queue.type = type.name;
+        }
+      }
+    }
+
     return {
       state,
       loading,
@@ -297,7 +364,10 @@ export default {
       getQueueLink,
       copyLink,
       initializedParsonalizedHours,
-      initializedSameCommerceHours
+      initializedSameCommerceHours,
+      selectCollaborator,
+      selectService,
+      selectType
     }
   }
 }
@@ -373,6 +443,67 @@ export default {
                           v-model="state.newQueue.name"
                           v-bind:class="{ 'is-invalid': state.nameError }"
                           placeholder="Service A">
+                      </div>
+                    </div>
+                    <div id="queue-type-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessQueuesAdmin.type") }}
+                      </div>
+                      <div class="col-6">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select"
+                          v-model="state.newQueue.type"
+                          id="types"
+                          v-bind:class="{ 'is-invalid': state.typeError }"
+                          @change="selectType(typ)">
+                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div v-if="state.newQueue.type === 'COLLABORATOR'" class="row g-1">
+                      <div class="col-12 text-label">
+                        <div class="dropdown">
+                          <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="fw-bold m-1"> {{ state.selectedCollaborator.name || $t("businessQueuesAdmin.selectCollaborator") }} </span>
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="select-commerce">
+                            <li v-for="col in state.collaborators" :key="col.id" :value="col" class="list-item">
+                              <div class="row d-flex m-1 searcher" @click="selectCollaborator(state.newQueue, col)">
+                                <div class="col-12">
+                                  <div>
+                                    <span class="item-title fw-bold"> {{ col.name }} </span>
+                                  </div>
+                                  <div v-if="col !== undefined">
+                                    <span class="item-subtitle text-break"> {{ col.email }} </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="state.newQueue.type === 'SERVICE'" class="row g-1">
+                      <div class="col-12 text-label">
+                        <div class="dropdown">
+                          <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="fw-bold m-1"> {{ state.selectedService.name || $t("businessQueuesAdmin.selectService") }} </span>
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="select-commerce">
+                            <li v-for="serv in state.services" :key="serv.id" :value="serv" class="list-item">
+                              <div class="row d-flex m-1 searcher" @click="selectService(state.newQueue, serv)">
+                                <div class="col-12">
+                                  <div>
+                                    <span class="item-title fw-bold"> {{ serv.name }} </span>
+                                  </div>
+                                  <div v-if="serv !== undefined">
+                                    <span class="item-subtitle text-break"> {{ serv.tag }} </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                     <div id="queue-limit-form-add" class="row g-1">
@@ -686,6 +817,19 @@ export default {
                             target="_blank">
                           <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessQueuesAdmin.go") }}
                         </a>
+                      </div>
+                    </div>
+                    <div id="queue-type-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.type") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :disabled="true"
+                          type="text"
+                          class="form-control"
+                          v-model="queue.type"
+                          placeholder="Type">
                       </div>
                     </div>
                     <div id="queue-limit-form" class="row g-1">
@@ -1055,5 +1199,30 @@ export default {
   color: var(--gris-default);
   cursor: pointer;
   margin: .5rem;
+}
+.list-item {
+  cursor: pointer;
+}
+.searcher {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.item-title {
+  display: flex;
+  justify-content: left;
+  align-items: left;
+  margin: .1rem .3rem;
+  font-size: 1rem;
+  line-height: .9rem !important;
+}
+.item-subtitle {
+  display: flex;
+  justify-content: left;
+  align-items: left;
+  margin: .1rem .3rem;
+  font-size: .6rem;
+  line-height: .6rem !important;
 }
 </style>
