@@ -200,10 +200,11 @@ export const getAttentionsDetails = async (
   contacted = undefined,
   keyWord = undefined,
   searchText = undefined,
-  queueId = undefined
+  queueId = undefined,
+  survey = undefined
 ) => {
   const options = {};
-  options.params = { from, to, commerceId, page, limit, daysSinceType, daysSinceContacted, contactable, contacted, keyWord, searchText, queueId };
+  options.params = { from, to, commerceId, page, limit, daysSinceType, daysSinceContacted, contactable, contacted, keyWord, searchText, queueId, survey };
   options.paramsSerializer = params => {
     return qs.stringify(params);
   };

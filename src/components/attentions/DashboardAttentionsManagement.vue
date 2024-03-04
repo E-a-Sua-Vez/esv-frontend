@@ -28,6 +28,7 @@ export default {
       daysSinceContacted: undefined,
       contacted: undefined,
       contactable: undefined,
+      survey: undefined,
       showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
@@ -51,7 +52,7 @@ export default {
         this.loading = true;
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId);
+          this.keyWord, this.searchText, this.queueId, this.survey);
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
           this.counter = counter;
@@ -73,9 +74,9 @@ export default {
     clear() {
       this.daysSinceType = undefined;
       this.daysSinceContacted = undefined;
+      this.survey = undefined
       this.contactable = undefined;
       this.contacted = undefined;
-      this.keyWord = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
     },
@@ -91,6 +92,13 @@ export default {
         this.contacted = true;
       } else {
         this.contacted = false;
+      }
+    },
+    async checkSurvey(event) {
+      if (event.target.checked) {
+        this.survey = true;
+      } else {
+        this.survey = false;
       }
     },
     showFilters() {
@@ -120,9 +128,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactable, contacted, keyWord, queueId } = this;
+      const { page, daysSinceType, daysSinceContacted, contactable, contacted, survey, searchText, queueId } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactable, contacted, keyWord, queueId
+        page, daysSinceType, daysSinceContacted, contactable, contacted, survey, searchText, queueId
       }
     }
   },
@@ -136,7 +144,8 @@ export default {
           (oldData.daysSinceType !== newData.daysSinceType ||
           oldData.daysSinceContacted !== newData.daysSinceContacted ||
           oldData.contactable !== newData.contactable ||
-          oldData.keyWord !== newData.keyWord ||
+          oldData.contacted !== newData.contacted ||
+          oldData.survey !== newData.survey ||
           oldData.queueId !== newData.queueId)
         ) {
           this.page = 1;
@@ -223,16 +232,24 @@ export default {
                   <label class="btn" for="late-contacted"> <i :class="`bi bi-chat-left-dots-fill red-icon`"></i> </label>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-5">
+                  <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="contactable === false ? 'bg-danger' : ''" type="checkbox" name="contactable" id="contactable" v-model="contactable" @click="checkContactable($event)">
                       <label class="form-check-label metric-card-subtitle" for="contactable">{{ $t("dashboard.contactable") }}</label>
                     </div>
                   </div>
-                  <div class="col-12 col-md-5">
+                  <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="contacted === false ? 'bg-danger' : ''" type="checkbox" name="contacted" id="contacted"  v-model="contacted" @click="checkContacted($event)">
                       <label class="form-check-label metric-card-subtitle" for="contacted">{{ $t("dashboard.contacted") }}</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12 col-md-12">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
+                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
                     </div>
                   </div>
                 </div>

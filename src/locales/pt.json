@@ -608,7 +608,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Ver Seguimento",
+          "tracing": "Ver Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -649,7 +649,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Ver Seguimento",
+          "tracing": "Ver Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -691,7 +691,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Ver Seguimento",
+          "tracing": "Ver Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -745,7 +745,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Ver Seguimento",
+          "tracing": "Ver Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -887,6 +887,7 @@
     "aditionalFilters": "Filtros adicionais",
     "contacted": "Contatado",
     "contactable": "Contactável",
+    "survey": "Pesquisa",
     "keyWord": "Palavras Chave",
     "search": "🔎 Nome, Telefone ou Email",
     "detractor": "Detrator",
@@ -905,7 +906,7 @@
     "comment": "Comentário:",
     "entities": "Palavras chave:",
     "tracing": {
-      "title": "Seguimento"
+      "title": "Monitoramento"
     },
     "items": {
       "attentions": {
@@ -1171,7 +1172,7 @@
           "view": "Número de Reservas"
         },
         "tracing": {
-          "view": "Seguimento"
+          "view": "Monitoramento"
         },
         "booking-hour-distribution": {
           "view": "Distribução de Reservas (Hora)"
@@ -1281,7 +1282,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
-    "tracing": "Seguimento",
+    "tracing": "Monitoramento",
     "commerce-admin": "Comércios",
     "service-admin": "Serviços",
     "queues-admin": "Filas",
@@ -1305,7 +1306,7 @@
         "main-menu": {
           "business-resume": "Estado do Sistema",
           "dashboard": "Dashboard",
-          "tracing": "Seguimento",
+          "tracing": "Monitoramento",
           "reports": "Relatórios",
           "commerce-admin": "Gerenciar Comércios/Unidades",
           "service-admin": "Gerenciar Serviços",
@@ -1328,7 +1329,7 @@
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
-    "tracing": "Seguimento",
+    "tracing": "Monitoramento",
     "commerce-master-admin": "Comércios",
     "service-master-admin": "Serviços",
     "queues-master-admin": "Filas",
@@ -1351,7 +1352,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
-    "tracing": "Seguimento",
+    "tracing": "Monitoramento",
     "queue-manage": "Gerenciar Filas",
     "booking-manage": "Gerenciar Reservas",
     "go-minisite": "Minisite",
@@ -1365,7 +1366,7 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Gerenciar Dashboard",
-          "tracing": "Gerenciar Seguimento",
+          "tracing": "Gerenciar Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -2281,7 +2282,7 @@
       "main-menu": {
         "business-resume": "Habilitar Estado del Sistema - Menú Principal Negócio",
         "dashboard": "Habilitar Dashboard - Menú Principal Negócio",
-        "tracing": "Habilitar Seguimento - Menú Principal Negócio",
+        "tracing": "Habilitar Monitoramento - Menú Principal Negócio",
         "reports": "Habilitar Reportes - Menú Principal Negócio",
         "commerce-admin": "Habilitar Gerenciar Comercios - Menú Principal Negócio",
         "modules-admin": "Habilitar Gerenciar Módulos - Menú Principal Negócio",
@@ -2304,7 +2305,7 @@
       },
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
-        "tracing": "Habilitar Seguimento - Menú Principal Colaborador",
+        "tracing": "Habilitar Monitoramento - Menú Principal Colaborador",
         "queue-manage": "Habilitar Gerenciar Filas - Menú Principal Colaborador",
         "booking-manage": "Habilitar Gerenciar Reservas - Menú Principal Colaborador"
       }

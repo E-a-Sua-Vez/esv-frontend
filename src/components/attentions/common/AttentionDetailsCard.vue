@@ -95,6 +95,7 @@ export default {
     <div class="row metric-card fw-bold">
       <div class="col-8 centered" v-if="attention && attention.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
+        <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
         <i v-if="attention.contacted === true || checked === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
       </div>
       <div class="col-2 centered">
@@ -141,13 +142,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+attention.userPhone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+attention.email"
+                :href="'mailto'+attention.userEmail"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
               </a>
@@ -178,9 +179,17 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row m-0 mt-3 centered">
+        <div class="row m-0 centered">
           <div class="col">
+            <div v-if="attention.rating || attention.nps">
+              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ attention.rating || 'N/I' }} </span>
+              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
+              </span>
+            </div>
             <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span><br>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionid }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
           </div>
