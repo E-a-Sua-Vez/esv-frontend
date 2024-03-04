@@ -251,6 +251,14 @@ export default {
       }
     }
 
+    const getToday = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      state.startDate = `${year}-${month}-${day}`;
+      state.endDate = `${year}-${month}-${day}`;
+      await refresh();
+    }
+
     const getCurrentMonth = async () => {
       const date = new Date().toISOString().slice(0,10);
       const [ year, month, day ] = date.split('-');
@@ -700,7 +708,8 @@ export default {
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
-      getLocalHour
+      getLocalHour,
+      getToday
     }
   }
 }
@@ -740,14 +749,17 @@ export default {
                 </div>
               </div>
               <div class="row my-2">
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                <div class="col-3">
+                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
                 </div>
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                <div class="col-3">
+                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
                 </div>
-                <div class="col">
-                  <button class="btn btn-md btn-size btn-dark rounded-pill px-3 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                <div class="col-3">
+                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                </div>
+                <div class="col-3">
+                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
                 </div>
               </div>
               <div class="row">
@@ -890,6 +902,8 @@ export default {
 }
 .metric-filters {
   font-size: .7rem !important;
+  line-height: .8rem !important;
+  font-weight: 600;
 }
 .metric-subtitle {
   text-align: left;

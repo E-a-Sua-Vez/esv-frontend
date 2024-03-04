@@ -16,6 +16,7 @@ import BusinessPlan from '../../views/business/BusinessPlan.vue';
 import BusinessPlanActivationAdmin from '../../views/business/BusinessPlanActivationAdmin.vue';
 import BusinessSurveysAdmin from '../../views/business/BusinessSurveyAdmin.vue';
 import BusinessServicesAdmin from '../../views/business/BusinessServicesAdmin.vue';
+import BusinessTracing from '../../views/business/BusinessTracing.vue';
 
 const PrivateMasterRoutes = [
   {
@@ -37,6 +38,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/dashboard',
     name: 'business-master-dashboard',
     component: BusinessDashboard
+  },
+  {
+    path: '/interno/master/tracing',
+    name: 'business-master-tracing',
+    component: BusinessTracing
   },
   {
     path: '/interno/master/commerce-master-admin',

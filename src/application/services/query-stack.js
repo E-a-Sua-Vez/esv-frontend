@@ -187,3 +187,27 @@ export const getSurveyMetrics = async (
   options.headers = headers;
   return (await requestQuery.get('metrics/survey', options)).data;
 };
+
+export const getAttentionsDetails = async (
+  commerceId,
+  from,
+  to,
+  page = undefined,
+  limit = undefined,
+  daysSinceType = undefined,
+  daysSinceContacted = undefined,
+  contactable = undefined,
+  contacted = undefined,
+  keyWord = undefined,
+  searchText = undefined,
+  queueId = undefined
+) => {
+  const options = {};
+  options.params = { from, to, commerceId, page, limit, daysSinceType, daysSinceContacted, contactable, contacted, keyWord, searchText, queueId };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('attention/details', options)).data;
+};

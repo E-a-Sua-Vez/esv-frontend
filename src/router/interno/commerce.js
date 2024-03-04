@@ -11,6 +11,7 @@ import BusinessConfiguration from '../../views/business/BusinessConfiguration.vu
 import BusinessPlan from '../../views/business/BusinessPlan.vue';
 import BusinessSurveysAdmin from '../../views/business/BusinessSurveyAdmin.vue';
 import BusinessServicesAdmin from '../../views/business/BusinessServicesAdmin.vue';
+import BusinessTracing from '../../views/business/BusinessTracing.vue';
 
 const PrivateCommerceRoutes = [
   {
@@ -22,6 +23,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/dashboard',
     name: 'business-dashboard',
     component: BusinessDashboard
+  },
+  {
+    path: '/interno/negocio/tracing',
+    name: 'business-tracing',
+    component: BusinessTracing
   },
   {
     path: '/interno/negocio/commerce-admin',

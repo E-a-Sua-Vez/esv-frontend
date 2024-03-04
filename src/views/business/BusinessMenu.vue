@@ -29,6 +29,7 @@ export default {
       manageSubMenuOption: false,
       menuOptions: [
         'dashboard',
+        'tracing',
         'reports',
         'manage-admin',
         'configuration',

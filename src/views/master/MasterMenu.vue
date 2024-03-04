@@ -33,6 +33,7 @@ export default {
       ],
       businessMenuOptions: [
         'dashboard',
+        'tracing',
         'reports',
         'manage-master-admin',
         'configuration',

@@ -605,6 +605,7 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
+          "tracing": "Go to Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
         }
@@ -640,6 +641,7 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
+          "tracing": "Go to Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
         }
@@ -681,6 +683,7 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
+          "tracing": "Go to Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
         }
@@ -739,6 +742,7 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
+          "tracing": "Go to Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
         }
@@ -872,6 +876,7 @@
     "sentiment": "Sentiment analysis of customer feedback. Bad: -1 to 0.1, Fair: 0.1 to 0.7, Good: 0.5 to 1.",
     "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",
     "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
+    "today": "Today",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
     "lastThreeMonths": "3 Months",
@@ -896,6 +901,9 @@
     },
     "comment": "Comment:",
     "entities": "Key Words:",
+    "tracing": {
+      "title": "Tracing"
+    },
     "items": {
       "attentions": {
         "1": "Number of attentions",
@@ -1076,6 +1084,10 @@
       "surveys-question": {
         "title": "Survey Report (Question)",
         "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+      },
+      "attentions-management": {
+        "title": "Attentions Report (Details)",
+        "description": "Download PDF file with the results of the attentions carried out in the selected date range"
       }
     },
     "capacitiesList": {
@@ -1140,12 +1152,52 @@
         "surveys-consolidated-csat-evolution": {
           "view": "CSAT Evolution"
         },
+        "attention-nps-avg": {
+          "view": "NPS (Promedio)"
+        },
+        "booking-flow": {
+          "view": "Flujo de Reservas"
+        },
+        "attention-comments-avg": {
+          "view": "Atenciones comentadas (Promedio)"
+        },
+        "graphs-attentions": {
+          "view": "Attention Graphs"
+        },
+        "booking-number": {
+          "view": "Booking Number"
+        },
+        "tracing": {
+          "view": "Tracing"
+        },
+        "booking-hour-distribution": {
+          "view": "Booking Distribution (Hour)"
+        },
+        "attention-collaborators": {
+          "view": "Top Collaborators"
+        },
+        "booking-day-distribution": {
+          "view": "Booking Distribution (Day)"
+        },
+        "attention-day-distribution": {
+          "view": "Attention Distribution (Day)"
+        },
+        "graphs-bookings": {
+          "view": "Booking Graphs"
+        },
+        "booking-number-evolution": {
+          "view": "Booking Evolution"
+        },
+        "attentions-management": {
+          "view": "See Attentions (Details)"
+        },
         "reports": {
           "surveys": "Surveys Report (Summary)",
           "indicators": "Indicators Report",
           "graphs": "Trends Report",
           "surveys-management": "Surveys Report (Details)",
-          "surveys-consolidated": "Surveys Report (Consolidated)"
+          "surveys-consolidated": "Surveys Report (Consolidated)",
+          "attentions-management": "Attentions Report (Details)"
         }
       }
     }
@@ -1226,6 +1278,7 @@
     "welcome-user": "Welcome",
     "choose": "What do you want to do today?",
     "dashboard": "Dashboard",
+    "tracing": "Tracing",
     "commerce-admin": "Commerces",
     "service-admin": "Services",
     "queues-admin": "Queues",
@@ -1250,6 +1303,7 @@
         "main-menu": {
           "business-resume": "System State",
           "dashboard": "Dashboard",
+          "tracing": "Tracing",
           "reports": "Reports",
           "commerce-admin": "Commerce Settings",
           "service-admin": "Services Settings",
@@ -1283,6 +1337,7 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Manage Dashboard",
+          "tracing": "Manage Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
         }
@@ -1297,6 +1352,7 @@
     "business-master-admin": "Business Settings",
     "business-master-resume": "System State",
     "dashboard": "Dashboard",
+    "tracing": "Tracing",
     "commerce-master-admin": "Commerces",
     "service-master-admin": "Services",
     "queues-master-admin": "Queues",
@@ -2222,6 +2278,7 @@
       "main-menu": {
         "business-resume": "Enable Estado del Sistema - Main Menu Business",
         "dashboard": "Enable Dashboard - Main Menu Business",
+        "tracing": "Enable Tracing - Main Menu Business",
         "reports": "Enable Reportes - Main Menu Business",
         "commerce-admin": "Enable Manage Commerces - Main Menu Business",
         "modules-admin": "Enable Manage Modules - Main Menu Business",
@@ -2255,6 +2312,7 @@
       },
       "main-menu": {
         "dashboard": "Enable Dashboard - Main Menu Collaborators",
+        "tracing": "Enable Tracing - Main Menu Collaborators",
         "queue-manage": "Enable Queue Management - Main Menu Collaborators",
         "booking-manage": "Enable Booking Management - Main Menu Collaborators"
       }

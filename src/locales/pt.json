@@ -608,6 +608,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
+          "tracing": "Ver Seguimento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -648,6 +649,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
+          "tracing": "Ver Seguimento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -689,6 +691,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
+          "tracing": "Ver Seguimento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -742,6 +745,7 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
+          "tracing": "Ver Seguimento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
@@ -875,6 +879,7 @@
     "sentiment": "Análise de sentimento do feedback do cliente. Ruim: -1 a 0.1, Regular: 0.1 a 0.5, Bom: 0.5 a 1.",
     "rating": "Classificação de satisfação do cliente. Ruim: 0 a 2,5, Regular: 2,5 a 4, Bom: 4 a 5.",
     "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
+    "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
     "lastThreeMonths": "3 Meses",
@@ -899,6 +904,9 @@
     },
     "comment": "Comentário:",
     "entities": "Palavras chave:",
+    "tracing": {
+      "title": "Seguimento"
+    },
     "items": {
       "attentions": {
         "1": "Número de Atenções",
@@ -1079,6 +1087,10 @@
       "surveys-question": {
         "title": "Relatório de Pesquisa (Sumário)",
         "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+      },
+      "attentions-management": {
+        "title": "Relatório de Atenções (Detalhes)",
+        "description": "Baixar arquivo PDF com os resultados das atenções no intervalo de datas selecionado"
       }
     },
     "capacitiesList": {
@@ -1143,12 +1155,52 @@
         "surveys-consolidated-csat-evolution": {
           "view": "Evolução de CSAT"
         },
+        "attention-nps-avg": {
+          "view": "NPS (Promedio)"
+        },
+        "booking-flow": {
+          "view": "Flujo de Reservas"
+        },
+        "attention-comments-avg": {
+          "view": "Atenciones comentadas (Promedio)"
+        },
+        "graphs-attentions": {
+          "view": "Gráficos de Atenções"
+        },
+        "booking-number": {
+          "view": "Número de Reservas"
+        },
+        "tracing": {
+          "view": "Seguimento"
+        },
+        "booking-hour-distribution": {
+          "view": "Distribução de Reservas (Hora)"
+        },
+        "attention-collaborators": {
+          "view": "Top Colaboradores"
+        },
+        "booking-day-distribution": {
+          "view": "Distribução de Reservas (Día)"
+        },
+        "attention-day-distribution": {
+          "view": "Distribução de Atenções (Día)"
+        },
+        "graphs-bookings": {
+          "view": "Gráficos de Reservas"
+        },
+        "booking-number-evolution": {
+          "view": "Evolução de Reservas"
+        },
+        "attentions-management": {
+          "view": "Ver Atenções (Detalhes)"
+        },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
           "indicators": "Relatório de Indicadores",
           "graphs": "Relatório de Tendências",
           "surveys-management": "Relatório de Pesquisas (Detalhes)",
-          "surveys-consolidated": "Relatório de Pesquisas (Consolidado)"
+          "surveys-consolidated": "Relatório de Pesquisas (Consolidado)",
+          "attentions-management": "Relatório de Atenções (Detalhes)"
         }
       }
     }
@@ -1229,6 +1281,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
+    "tracing": "Seguimento",
     "commerce-admin": "Comércios",
     "service-admin": "Serviços",
     "queues-admin": "Filas",
@@ -1252,6 +1305,7 @@
         "main-menu": {
           "business-resume": "Estado do Sistema",
           "dashboard": "Dashboard",
+          "tracing": "Seguimento",
           "reports": "Relatórios",
           "commerce-admin": "Gerenciar Comércios/Unidades",
           "service-admin": "Gerenciar Serviços",
@@ -1274,6 +1328,7 @@
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Dashboard",
+    "tracing": "Seguimento",
     "commerce-master-admin": "Comércios",
     "service-master-admin": "Serviços",
     "queues-master-admin": "Filas",
@@ -1296,6 +1351,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Dashboard",
+    "tracing": "Seguimento",
     "queue-manage": "Gerenciar Filas",
     "booking-manage": "Gerenciar Reservas",
     "go-minisite": "Minisite",
@@ -1308,8 +1364,9 @@
     "capacitiesList": {
       "collaborator": {
         "main-menu": {
-          "dashboard": "Gestionar Dashboard",
-          "queue-manage": "Gestionar Filas",
+          "dashboard": "Gerenciar Dashboard",
+          "tracing": "Gerenciar Seguimento",
+          "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
         }
       }
@@ -2224,6 +2281,7 @@
       "main-menu": {
         "business-resume": "Habilitar Estado del Sistema - Menú Principal Negócio",
         "dashboard": "Habilitar Dashboard - Menú Principal Negócio",
+        "tracing": "Habilitar Seguimento - Menú Principal Negócio",
         "reports": "Habilitar Reportes - Menú Principal Negócio",
         "commerce-admin": "Habilitar Gerenciar Comercios - Menú Principal Negócio",
         "modules-admin": "Habilitar Gerenciar Módulos - Menú Principal Negócio",
@@ -2246,6 +2304,7 @@
       },
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
+        "tracing": "Habilitar Seguimento - Menú Principal Colaborador",
         "queue-manage": "Habilitar Gerenciar Filas - Menú Principal Colaborador",
         "booking-manage": "Habilitar Gerenciar Reservas - Menú Principal Colaborador"
       }
