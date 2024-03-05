@@ -2,18 +2,18 @@
 import SimpleCard from './common/SimpleCard.vue';
 import DetailsCard from './common/DetailsCard.vue';
 import Spinner from '../common/Spinner.vue';
-import { DoughnutChart, BarChart } from 'vue-chart-3';
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import AttentionRatingDetails from './domain/AttentionRatingDetails.vue';
 import AttentionNPSDetails from './domain/AttentionNPSDetails.vue';
-import { getSurveysDetails } from '../../application/services/query-stack';
 import SurveyDetailsCard from './common/SurveyDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
+import Popper from "vue3-popper";
+import { getSurveysDetails } from '../../application/services/query-stack';
 
 export default {
   name: 'DashboardSurveysManagement',
-  components: { SimpleCard, DetailsCard, DoughnutChart, BarChart, Message, SimpleDownloadCard, AttentionRatingDetails, AttentionNPSDetails, Spinner, SurveyDetailsCard },
+  components: { SimpleCard, DetailsCard, Message, SimpleDownloadCard, AttentionRatingDetails, AttentionNPSDetails, Spinner, SurveyDetailsCard, Popper },
   props: {
     showSurveyManagement: { type: Boolean, default: false },
     calculatedMetrics: { type: Object, default: undefined },
@@ -254,6 +254,14 @@ export default {
                   <label class="btn" for="neutro-rating"> <i :class="`bi bi-star-half yellow-icon`"></i> </label>
                   <input type="radio" class="btn btn-check btn-sm" v-model="ratingType" value="PROMOTOR" name="rating-type" id="promotor-rating" autocomplete="off">
                   <label class="btn" for="promotor-rating"> <i :class="`bi bi-star-fill green-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.surveysFilters.filters.rating`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="npsType" value="DETRACTOR" name="nps-type" id="detractor-nps" autocomplete="off">
@@ -262,6 +270,14 @@ export default {
                   <label class="btn" for="neutro-nps"> <i :class="`bi bi-emoji-neutral-fill yellow-icon`"></i> </label>
                   <input type="radio" class="btn btn-check btn-sm" v-model="npsType" value="PROMOTOR" name="nps-type" id="promotor-nps" autocomplete="off">
                   <label class="btn" for="promotor-nps"> <i :class="`bi bi-emoji-smile-fill green-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.surveysFilters.filters.nps`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
                 </div>
                 <div class="row">
                   <div class="col-12 col-md-5">

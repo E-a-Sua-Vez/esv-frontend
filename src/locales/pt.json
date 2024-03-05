@@ -920,6 +920,12 @@
         "contactResult": "Retorno de Contato"
       }
     },
+    "surveysFilters": {
+      "filters": {
+        "nps": "NPS",
+        "rating": "CSAT"
+      }
+    },
     "items": {
       "attentions": {
         "1": "Número de Atendimentos",

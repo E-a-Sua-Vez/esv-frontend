@@ -61,7 +61,10 @@ export default {
       const idNumber = !this.attention.userIdNumber ? 'undefined' : this.attention.userIdNumber;
       const email = !this.attention.userEmail ? 'undefined' : this.attention.userEmail;
       const phone = !this.attention.userPhone ? 'undefined' : this.attention.userPhone.slice(2,15);
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
+      if (name || lastName || idNumber || email || phone) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
+      }
+      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
     clasifyDaysSinceComment(score) {
       if (!score) {

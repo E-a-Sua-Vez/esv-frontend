@@ -917,6 +917,12 @@
         "contactResult": "Contact Result"
       }
     },
+    "surveysFilters": {
+      "filters": {
+        "nps": "NPS",
+        "rating": "CSAT"
+      }
+    },
     "items": {
       "attentions": {
         "1": "Number of attentions",

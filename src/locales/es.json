@@ -920,6 +920,12 @@
         "contactResult": "Resultado de Contacto"
       }
     },
+    "surveysFilters": {
+      "filters": {
+        "nps": "NPS",
+        "rating": "CSAT"
+      }
+    },
     "items": {
       "attentions": {
         "1": "Número de atenciones",
@@ -971,7 +977,11 @@
       },
       "surveys": {
         "yes": "Sí",
-        "no": "No"
+        "no": "No",
+        "filters": {
+          "nps": "NPS",
+          "rating": "CSAT"
+        }
       },
       "trends": {
         "attention-number-evolution": {
