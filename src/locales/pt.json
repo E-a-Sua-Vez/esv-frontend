@@ -457,7 +457,7 @@
     "blockInfo": "O horário da sua reserva é:",
     "cancelled": "Cancelada",
     "newBooking": "Pode solicitar uma nova:",
-    "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar, pois as pessoas à sua frente podem cancelar a reserva. Recomendamos que consulte esta página antes e no dia da sua reserva.",
+    "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar. Recomendamos que consulte esta página antes e no dia da sua reserva.",
     "message": {
       "1": {
         "title": "Cancelado!",
