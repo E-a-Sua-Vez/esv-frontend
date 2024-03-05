@@ -783,7 +783,7 @@ export default {
                       maxlength="30"
                       type="text"
                       class="form-control form-control-solid"
-                      v-model="state.newUser.name"
+                      v-model.trim="state.newUser.name"
                       placeholder="Ex. Jhon">
                       <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
                   </div>
@@ -795,7 +795,7 @@ export default {
                       maxlength="20"
                       type="text"
                       class="form-control form-control-solid"
-                      v-model="state.newUser.lastName"
+                      v-model.trim="state.newUser.lastName"
                       placeholder="Ex. Pérez">
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
                   </div>
@@ -807,7 +807,7 @@ export default {
                       maxlength="20"
                       type="text"
                       class="form-control"
-                      v-model="state.newUser.idNumber"
+                      v-model.trim="state.newUser.idNumber"
                       v-bind:class="{ 'is-invalid': state.idNumberError }"
                       placeholder="Ex. 112223334">
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
@@ -820,7 +820,7 @@ export default {
                       maxlength="50"
                       type="email"
                       class="form-control"
-                      v-model="state.newUser.email"
+                      v-model.trim="state.newUser.email"
                       placeholder="Ex. jhon@user.com">
                       <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
                   </div>
@@ -829,7 +829,7 @@ export default {
                   <div class="col-3 form-floating">
                     <select
                       class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
-                      v-model="state.phoneCode"
+                      v-model.trim="state.phoneCode"
                       id="attention-phoneCode-input-add">
                       <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">{{ code.label }}</option>
                     </select>
