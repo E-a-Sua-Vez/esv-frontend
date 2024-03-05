@@ -11,12 +11,18 @@ export default {
     show: { type: Boolean, default: true },
     attention: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
+    commerce: { type: Object, default: undefined },
   },
   data() {
     return {
       loading: false,
       extendedEntity: false,
-      checked: false
+      checked: false,
+      contactResultTypes: [
+        { id: 'INTERESTED', name: 'INTERESTED' },
+        { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
+        { id: 'REJECTED', name: 'REJECTED' }
+      ]
     }
   },
   methods: {
@@ -48,6 +54,10 @@ export default {
         this.alertError = error.message;
       }
     },
+    goToLink() {
+      const commerceKeyName = this.commerce.id;
+      return `${import.meta.env.VITE_URL}/interno/commerce/${commerceKeyName}/colaborador/bookings`;
+    },
     clasifyDaysSinceComment(score) {
       if (!score) {
         return 'bi-qr-code blue-icon';
@@ -69,7 +79,18 @@ export default {
       } else {
         return 'bi-chat-left-dots-fill red-icon';
       }
-    }
+    },
+    clasifyContactResult(result){
+      if (!result) {
+        return 'bi-patch-check-fill blue-icon';
+      } else if (result === 'INTERESTED') {
+        return 'bi-patch-check-fill green-icon';
+      } else if (result === 'CONTACT_LATER') {
+        return 'bi-patch-check-fill yellow-icon';
+      } else {
+        return 'bi-patch-check-fill red-icon';
+      }
+    },
   },
   watch: {
     detailsOpened: {
@@ -96,7 +117,7 @@ export default {
       <div class="col-8 centered" v-if="attention && attention.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i v-if="attention.contacted === true || checked === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
+        <i v-if="attention.contacted === true || checked === true" :class="`bi ${clasifyContactResult(attention.contactResult || undefined)} mx-1`"> </i>
       </div>
       <div class="col-2 centered">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
@@ -118,21 +139,12 @@ export default {
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
         <div class="row m-0">
-          <div class="d-block col-12 col-md-5">
+          <div class="d-block col-12 col-md-6">
             <div class="col-12 centered">
-              <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }} {{ attention.userLastName || '' }}
-            </div>
-            <div class="col-12 centered" v-if="!loading">
-              <a class="btn copy-icon"
+              <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }} {{ attention.userLastName || '' }} <a class="btn copy-icon"
                 @click="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
-              <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                @click="check()"
-                :disabled="attention.contacted || checked"
-                >
-                <i class="bi bi-person-check-fill"></i>
-              </button>
             </div>
             <Spinner :show="loading"></Spinner>
           </div>
@@ -179,7 +191,27 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row m-0 centered">
+        <div class="row my-3 centered" v-if="!loading">
+          <div class="col-12">
+            <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="attention.contactResult" :disabled="attention.contacted || checked">
+              <option v-for="typ in contactResultTypes" :key="typ.name" :value="typ.id" id="select-result">{{ $t(`contactTypes.${typ.name}`) }}</option>
+            </select>
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+              @click="check()"
+              :disabled="attention.contacted || checked"
+              >
+              <i class="bi bi-person-check-fill"></i>
+            </button>
+            <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+              :href="goToLink()"
+              :disabled="attention.contacted || checked"
+              target="_blank"
+              >
+              <i class="bi bi-calendar-check-fill"></i>
+            </a>
+          </div>
+        </div>
+        <div class="row m-1 centered">
           <div class="col">
             <div v-if="attention.rating || attention.nps">
               <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
@@ -188,9 +220,9 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
               </span>
             </div>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span><br>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionid }}</span>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
+            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
+            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
           </div>
         </div>

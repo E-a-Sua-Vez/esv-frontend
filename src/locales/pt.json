@@ -239,6 +239,11 @@
     "email": "Denuncie por e-mail",
     "emailDir": "ola{'@'}easuavez.com"
   },
+  "contactTypes": {
+    "INTERESTED": "Teve Interesse",
+    "CONTACT_LATER": "Contate logo",
+    "REJECTED": "Não contate mais"
+  },
   "actions": {
     "title": "Ações",
     "subtitle": {
@@ -616,9 +621,9 @@
     }
   },
   "queueAttentionDetails": {
-    "requested": "Atenções geradas",
-    "pending": "Atenções pendentes",
-    "terminated": "Atenções fechadas"
+    "requested": "Atendimentos geradas",
+    "pending": "Atendimentos pendentes",
+    "terminated": "Atendimentos fechadas"
   },
   "collaboratorQueuesView": {
     "welcome": "Gerenciamento de Filas",
@@ -861,7 +866,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "attentions": "Atenções",
+    "attentions": "Atendimentos",
     "commerce": "Comércio",
     "refresh": "Pesquisar",
     "return": "Voltar",
@@ -883,6 +888,8 @@
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
     "lastThreeMonths": "3 Meses",
+    "asc": "Crescente",
+    "desc": "Decrescente",
     "showAll": "Mostrar tudo",
     "aditionalFilters": "Filtros adicionais",
     "contacted": "Contatado",
@@ -906,17 +913,22 @@
     "comment": "Comentário:",
     "entities": "Palavras chave:",
     "tracing": {
-      "title": "Monitoramento"
+      "title": "Monitoramento",
+      "filters": {
+        "attention": "Atendimentos",
+        "contact": "Contato",
+        "contactResult": "Retorno de Contato"
+      }
     },
     "items": {
       "attentions": {
-        "1": "Número de Atenções",
+        "1": "Número de Atendimentos",
         "2": "Tempo de atenção (Méd.)",
         "3": "Qualificação do Cliente Satisfeito (CSAT)",
-        "4": "Linha com mais Atenções",
-        "5": "Atenções manuais (%)",
+        "4": "Linha com mais Atendimentos",
+        "5": "Atendimentos manuais (%)",
         "6": "Notificações Enviadas",
-        "7": "Atenções Qualificadas",
+        "7": "Atendimentos Qualificadas",
         "8": "Qualificação Maior",
         "9": "Qualificação Menor",
         "10": "Whatsapp",
@@ -928,7 +940,7 @@
         "16": "Standard",
         "17": "Manual",
         "18": "Pesquisa só",
-        "19": "Atenções",
+        "19": "Atendimentos",
         "20": "Principais Colaboradores",
         "21": "Análise de Sentimento",
         "22": "Variação em relação ao mesmo período do mês anterior.",
@@ -941,11 +953,11 @@
         "29": "Processadas",
         "30": "Canceladas",
         "graph": {
-          "1": "Evolução das Atenções",
-          "2": "Atenções por Linha",
-          "3": "Fluxo de Atenções",
-          "4": "Evolução Duração de Atenções (prom/min)",
-          "5": "Distribução de Atenções (Hora)",
+          "1": "Evolução das Atendimentos",
+          "2": "Atendimentos por Linha",
+          "3": "Fluxo de Atendimentos",
+          "4": "Evolução Duração de Atendimentos (prom/min)",
+          "5": "Distribução de Atendimentos (Hora)",
           "6": "Evolução Duração de Pesquisas (prom/min)",
           "7": "Fluxo de Pesquisas",
           "8": "Evolução de NPS",
@@ -953,7 +965,7 @@
           "10": "Evolução de Reservas",
           "11": "Fluxo de Reservas",
           "12": "Distribução de Reservas (Hora)",
-          "13": "Distribução de Atenções (Día)",
+          "13": "Distribução de Atendimentos (Día)",
           "14": "Distribução de Reservas (Día)"
         }
       },
@@ -1090,14 +1102,14 @@
         "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
       },
       "attentions-management": {
-        "title": "Relatório de Atenções (Detalhes)",
+        "title": "Relatório de Atendimentos (Detalhes)",
         "description": "Baixar arquivo PDF com os resultados das atenções no intervalo de datas selecionado"
       }
     },
     "capacitiesList": {
       "dashboard": {
         "attention-number": {
-          "view": "Número de Atenções"
+          "view": "Número de Atendimentos"
         },
         "attention-time-avg": {
           "view": "Tempo médio de Atenção"
@@ -1106,28 +1118,28 @@
           "view": "Qualificação médio de Atenção"
         },
         "attention-queue": {
-          "view": "Linha com mais Atençõess"
+          "view": "Linha com mais Atendimentoss"
         },
         "attention-no-device": {
-          "view": "Atenções manuais (%)"
+          "view": "Atendimentos manuais (%)"
         },
         "attention-notification": {
           "view": "Notificações Enviadas"
         },
         "attention-number-evolution": {
-          "view": "Evolução das Atenções"
+          "view": "Evolução das Atendimentos"
         },
         "attention-duration-evolution": {
-          "view": "Evolução da duração Atenções (prom/min)"
+          "view": "Evolução da duração Atendimentos (prom/min)"
         },
         "attention-rate-duration-evolution": {
           "view": "Evolução da duração Pesquisas (prom/min)"
         },
         "attention-number-queue": {
-          "view": "Atenções por Linha"
+          "view": "Atendimentos por Linha"
         },
         "attention-flow": {
-          "view": "Fluxo de Atenções"
+          "view": "Fluxo de Atendimentos"
         },
         "survey-flow": {
           "view": "Fluxo de Pesquisas"
@@ -1148,7 +1160,7 @@
           "view": "Ver Pesquisas (Consolidado)"
         },
         "attention-hour-distribution": {
-          "view": "Distribução de Atenções (Hora)"
+          "view": "Distribução de Atendimentos (Hora)"
         },
         "surveys-consolidated-nps-evolution": {
           "view": "Evolução de NPS"
@@ -1166,7 +1178,7 @@
           "view": "Atenciones comentadas (Promedio)"
         },
         "graphs-attentions": {
-          "view": "Gráficos de Atenções"
+          "view": "Gráficos de Atendimentos"
         },
         "booking-number": {
           "view": "Número de Reservas"
@@ -1184,7 +1196,7 @@
           "view": "Distribução de Reservas (Día)"
         },
         "attention-day-distribution": {
-          "view": "Distribução de Atenções (Día)"
+          "view": "Distribução de Atendimentos (Día)"
         },
         "graphs-bookings": {
           "view": "Gráficos de Reservas"
@@ -1193,7 +1205,7 @@
           "view": "Evolução de Reservas"
         },
         "attentions-management": {
-          "view": "Ver Atenções (Detalhes)"
+          "view": "Ver Atendimentos (Detalhes)"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
@@ -1201,7 +1213,7 @@
           "graphs": "Relatório de Tendências",
           "surveys-management": "Relatório de Pesquisas (Detalhes)",
           "surveys-consolidated": "Relatório de Pesquisas (Consolidado)",
-          "attentions-management": "Relatório de Atenções (Detalhes)"
+          "attentions-management": "Relatório de Atendimentos (Detalhes)"
         }
       }
     }
@@ -1764,8 +1776,8 @@
     "items": {
       "reports": {
         "1": {
-          "name": "Relatório de Atenções",
-          "description": "Lista de Atenções do comércio entre as datas selecionadas."
+          "name": "Relatório de Atendimentos",
+          "description": "Lista de Atendimentos do comércio entre as datas selecionadas."
         },
         "2": {
           "name": "Relatório de Notificações",
@@ -1789,7 +1801,7 @@
       "reports": {
         "admin": {
           "view": "Acessar esta seçao",
-          "attentions": "Relatório de Atenções",
+          "attentions": "Relatório de Atendimentos",
           "notifications": "Relatório de Notificações",
           "surveys": "Relatório de Pesquisas",
           "bookings": "Relatório de Reservas",
@@ -1803,7 +1815,7 @@
     "return": "Voltar",
     "resume": "Sumário",
     "activity": "Atividade",
-    "attentions": "Atenções",
+    "attentions": "Atendimentos",
     "notifications": "Notificações",
     "enquetes": "Pesquisas",
     "commerces": "Comércios/Unidades",
@@ -2361,7 +2373,7 @@
         "view": "Ver Tendências - Seção Dashboard"
       },
       "attention-number": {
-        "view": "Ver Número de Atenções - Seção Dashboard"
+        "view": "Ver Número de Atendimentos - Seção Dashboard"
       },
       "attention-time-avg": {
         "view": "Ver Tiempo promedio de atencão - Seção Dashboard"
@@ -2373,7 +2385,7 @@
         "view": "Ver la Fila com mais atenções - Seção Dashboard"
       },
       "attention-no-device": {
-        "view": "Ver Número de Atenções Manuales - Seção Dashboard"
+        "view": "Ver Número de Atendimentos Manuales - Seção Dashboard"
       },
       "attention-notification": {
         "view": "Ver Número de notificaciones - Seção Dashboard"
@@ -2382,7 +2394,7 @@
         "view": "Ver evoluçao de atenções - Seção Dashboard"
       },
       "attention-number-queue": {
-        "view": "Ver Atenções por filas - Seção Dashboard"
+        "view": "Ver Atendimentos por filas - Seção Dashboard"
       },
       "attention-duration-evolution": {
         "view": "Ver evoluçao duraçao de atenções - Seção Dashboard"
@@ -2391,7 +2403,7 @@
         "view": "Ver evoluçao duraçao de pesquisas - Seção Dashboard"
       },
       "attention-flow": {
-        "view": "Ver Flujo de Atenções - Seção Dashboard"
+        "view": "Ver Flujo de Atendimentos - Seção Dashboard"
       },
       "survey-flow": {
         "view": "Ver Flujo de Pesquisas - Seção Dashboard"
@@ -2452,19 +2464,19 @@
     "reports": {
       "admin": {
         "view": "Acessar Seção - Reportes",
-        "attentions": "Descargar Reporte de Atenções",
+        "attentions": "Descargar Reporte de Atendimentos",
         "notifications": "Descargar Reporte de Notificaciones",
         "surveys": "Descargar Reporte de Pesquisas"
       }
     },
     "collaborator": {
       "module": {
-        "update": "Atualizar módulo - Seção Atenções del Colaborador"
+        "update": "Atualizar módulo - Seção Atendimentos del Colaborador"
       },
       "attention": {
-        "attend": "Atender - Seção Atenções del Colaborador",
-        "finish": "Marcar atencão como atendida - Seção Atenções del Colaborador",
-        "skip": "Pular Atencão - Seção Atenções del Colaborador"
+        "attend": "Atender - Seção Atendimentos del Colaborador",
+        "finish": "Marcar atencão como atendida - Seção Atendimentos del Colaborador",
+        "skip": "Pular Atencão - Seção Atendimentos del Colaborador"
       }
     },
     "roles": {

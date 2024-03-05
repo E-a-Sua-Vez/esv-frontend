@@ -1,15 +1,16 @@
 <script>
 import Spinner from '../common/Spinner.vue';
-import { DoughnutChart, BarChart } from 'vue-chart-3';
+import Popper from "vue3-popper";
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import { getAttentionsDetails } from '../../application/services/query-stack';
 import AttentionDetailsCard from './common/AttentionDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
+import { getAttentionsDetails } from '../../application/services/query-stack';
+import { DoughnutChart, BarChart } from 'vue-chart-3';
 
 export default {
   name: 'DashboardAttentionsManagement',
-  components: { DoughnutChart, BarChart, Message, SimpleDownloadCard, Spinner, AttentionDetailsCard },
+  components: { DoughnutChart, BarChart, Message, SimpleDownloadCard, Spinner, AttentionDetailsCard, Popper },
   props: {
     showAttentionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -26,9 +27,11 @@ export default {
       totalPages: 0,
       daysSinceType: undefined,
       daysSinceContacted: undefined,
+      contactResultType: undefined,
       contacted: undefined,
       contactable: undefined,
       survey: undefined,
+      asc: true,
       showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
@@ -52,7 +55,7 @@ export default {
         this.loading = true;
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId, this.survey);
+          this.keyWord, this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
           this.counter = counter;
@@ -74,7 +77,9 @@ export default {
     clear() {
       this.daysSinceType = undefined;
       this.daysSinceContacted = undefined;
-      this.survey = undefined
+      this.contactResultType = undefined;
+      this.survey = undefined;
+      this.asc = true;
       this.contactable = undefined;
       this.contacted = undefined;
       this.searchText = undefined;
@@ -99,6 +104,13 @@ export default {
         this.survey = true;
       } else {
         this.survey = false;
+      }
+    },
+    async checkAsc(event) {
+      if (event.target.checked) {
+        this.asc = true;
+      } else {
+        this.asc = false;
       }
     },
     showFilters() {
@@ -128,9 +140,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactable, contacted, survey, searchText, queueId } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, searchText, queueId } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactable, contacted, survey, searchText, queueId
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, searchText, queueId
       }
     }
   },
@@ -144,8 +156,10 @@ export default {
           (oldData.daysSinceType !== newData.daysSinceType ||
           oldData.daysSinceContacted !== newData.daysSinceContacted ||
           oldData.contactable !== newData.contactable ||
+          oldData.contactResultType !== newData.contactResultType ||
           oldData.contacted !== newData.contacted ||
           oldData.survey !== newData.survey ||
+          oldData.asc !== newData.asc ||
           oldData.queueId !== newData.queueId)
         ) {
           this.page = 1;
@@ -222,6 +236,14 @@ export default {
                   <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
                   <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.tracing.filters.attention`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="EARLY" name="daysContacted-type" id="early-contacted" autocomplete="off">
@@ -230,6 +252,30 @@ export default {
                   <label class="btn" for="medium-contacted"> <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i> </label>
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="LATE" name="daysContacted-type" id="late-contacted" autocomplete="off">
                   <label class="btn" for="late-contacted"> <i :class="`bi bi-chat-left-dots-fill red-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.tracing.filters.contact`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
+                </div>
+                <div class="col-12 col-md my-1 filter-card">
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="INTERESTED" name="contactResultType-type" id="interested-contacted" autocomplete="off">
+                  <label class="btn" for="interested-contacted"> <i :class="`bi bi-patch-check-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="CONTACT_LATER" name="contactResultType-type" id="contact-later-contacted" autocomplete="off">
+                  <label class="btn" for="contact-later-contacted"> <i :class="`bi bi-patch-check-fill yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="REJECTED" name="contactResultType-type" id="rejected-contacted" autocomplete="off">
+                  <label class="btn" for="rejected-contacted"> <i :class="`bi bi-patch-check-fill red-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.tracing.filters.contactResult`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
                 </div>
                 <div class="row">
                   <div class="col-12 col-md-6">
@@ -246,10 +292,16 @@ export default {
                   </div>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-12">
+                  <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
                       <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>
                 </div>
@@ -310,6 +362,7 @@ export default {
                 <AttentionDetailsCard
                   :show="true"
                   :attention="attention"
+                  :commerce="commerce"
                 >
                 </AttentionDetailsCard>
               </div>

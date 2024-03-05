@@ -239,6 +239,11 @@
     "email": "Report by email",
     "emailDir": "hola{'@'}estuturno.app"
   },
+  "contactTypes": {
+    "INTERESTED": "Interested",
+    "CONTACT_LATER": "Contact Later",
+    "REJECTED": "No more Contact"
+  },
   "actions": {
     "title": "Actions",
     "subtitle": {
@@ -884,6 +889,8 @@
     "aditionalFilters": "Aditional filters",
     "contacted": "Contacted",
     "contactable": "Contactable",
+    "asc": "To minor",
+    "desc": "To mayor",
     "keyWord": "Key Words",
     "search": "🔎 Name, Phone or Email",
     "detractor": "Detractor",
@@ -903,7 +910,12 @@
     "comment": "Comment:",
     "entities": "Key Words:",
     "tracing": {
-      "title": "Tracing"
+      "title": "Tracing",
+      "filters": {
+        "attention": "Attention",
+        "contact": "Contact",
+        "contactResult": "Contact Result"
+      }
     },
     "items": {
       "attentions": {

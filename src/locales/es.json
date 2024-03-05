@@ -247,6 +247,11 @@
     "email": "Reporta vía email",
     "emailDir": "hola{'@'}estuturno.app"
   },
+  "contactTypes": {
+    "INTERESTED": "Interesado",
+    "CONTACT_LATER": "Contactar Después",
+    "REJECTED": "No contactar Más"
+  },
   "actions": {
     "title": "Acciones",
     "subtitle": {
@@ -888,6 +893,8 @@
     "contacted": "Contactado",
     "contactable": "Contactable",
     "survey": "Encuesta",
+    "asc": "A menor",
+    "desc": "A mayor",
     "keyWord": "Palabras Clave",
     "search": "🔎 Nombre, Teléfono o Email",
     "detractor": "Detractor",
@@ -906,7 +913,12 @@
     "comment": "Comentario:",
     "entities": "Palabras clave:",
     "tracing": {
-      "title": "Seguimiento"
+      "title": "Seguimiento",
+      "filters": {
+        "attention": "Atenciones",
+        "contact": "Contactos",
+        "contactResult": "Resultado de Contacto"
+      }
     },
     "items": {
       "attentions": {
