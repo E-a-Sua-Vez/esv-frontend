@@ -878,7 +878,7 @@ export default {
                   :disabled="!state.accept">
                   {{ $t("commerceQueuesView.byCollaborator") }} <i class="bi bi-chevron-down"></i>
                 </button>
-                <div :class="state.showToday ? 'collapse mx-2 my-2 show' : 'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
+                <div :class="'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
                   <div v-if="state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0">
                     <div v-for="(queue, index) in state.groupedQueues['COLLABORATOR']" :key="index">
                       <div v-if="captchaEnabled === true" class="my-2">
@@ -918,7 +918,7 @@ export default {
                   :disabled="!state.accept">
                   {{ $t("commerceQueuesView.byService") }} <i class="bi bi-chevron-down"></i>
                 </button>
-                <div :class="state.showToday ? 'collapse mx-2 my-2 show' : 'collapse mx-2 my-2 hide'" id="attention-service-queue">
+                <div :class="'collapse mx-2 my-2 hide'" id="attention-service-queue">
                   <div v-if="state.groupedQueues['SERVICE'] && state.groupedQueues['SERVICE'].length > 0">
                     <div v-for="(queue, index) in state.groupedQueues['SERVICE']" :key="index">
                       <div v-if="captchaEnabled === true">
