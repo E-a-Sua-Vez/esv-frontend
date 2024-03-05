@@ -55,8 +55,13 @@ export default {
       }
     },
     goToLink() {
-      const commerceKeyName = this.commerce.id;
-      return `${import.meta.env.VITE_URL}/interno/commerce/${commerceKeyName}/colaborador/bookings`;
+      const commerceKeyName = this.commerce.keyName;
+      const name = !this.attention.userName ? 'undefined' : this.attention.userName;
+      const lastName = !this.attention.userLastName ? 'undefined' : this.attention.userLastName;
+      const idNumber = !this.attention.userIdNumber ? 'undefined' : this.attention.userIdNumber;
+      const email = !this.attention.userEmail ? 'undefined' : this.attention.userEmail;
+      const phone = !this.attention.userPhone ? 'undefined' : this.attention.userPhone.slice(2,15);
+      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
     },
     clasifyDaysSinceComment(score) {
       if (!score) {
@@ -203,7 +208,7 @@ export default {
               <i class="bi bi-person-check-fill"></i>
             </button>
             <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-              :href="goToLink()"
+              :href="goToLink(attention)"
               :disabled="attention.contacted || checked"
               target="_blank"
               >

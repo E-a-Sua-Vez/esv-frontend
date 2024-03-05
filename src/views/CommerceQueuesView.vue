@@ -28,7 +28,7 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const store = globalStore();
-    const { keyName, queueId } = route.params;
+    const { keyName, queueId, name, lastName, idNumber, phone, email } = route.params;
     const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
     let captcha = false;
@@ -136,6 +136,16 @@ export default {
           }
           if (state.commerce.localeInfo && state.commerce.localeInfo.country) {
             state.phoneCode = findPhoneCode(state.commerce.localeInfo.country);
+          }
+          if (name || lastName || idNumber || phone || email) {
+            state.newUser = {
+              name: name !== 'undefined' ? name : '',
+              lastName: lastName !== 'undefined' ? lastName : '',
+              idNumber: idNumber !== 'undefined' ? idNumber : '',
+              phone: phone !== 'undefined' ? phone : '',
+              email: email !== 'undefined' ? email : '',
+            }
+            state.phone = phone !== 'undefined' ? phone : '';
           }
         }
         loading.value = false;

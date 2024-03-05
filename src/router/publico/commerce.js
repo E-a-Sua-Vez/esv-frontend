@@ -19,8 +19,13 @@ const PublicCommerceRoutes = [
     component: CommerceQueuesView
   },
   {
-    path: '/publico/comercio/:keyName/filas/:queueId',
+    path: '/publico/comercio/:keyName/filas/:queueId/',
     name: 'commerce-queues-directed',
+    component: CommerceQueuesView
+  },
+  {
+    path: '/publico/comercio/:keyName/filas/user/:name/:lastName/:idNumber/:phone/:email',
+    name: 'commerce-queues-user',
     component: CommerceQueuesView
   }
 ]

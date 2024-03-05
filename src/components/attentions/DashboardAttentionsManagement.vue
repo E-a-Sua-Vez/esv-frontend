@@ -55,7 +55,7 @@ export default {
         this.loading = true;
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
           this.counter = counter;
@@ -74,7 +74,7 @@ export default {
     setPage(pageIn) {
       this.page = pageIn;
     },
-    clear() {
+    async clear() {
       this.daysSinceType = undefined;
       this.daysSinceContacted = undefined;
       this.contactResultType = undefined;
@@ -84,6 +84,7 @@ export default {
       this.contacted = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      await this.refresh();
     },
     async checkContactable(event) {
       if (event.target.checked) {
@@ -140,9 +141,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, searchText, queueId } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, searchText, queueId
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId
       }
     }
   },

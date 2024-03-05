@@ -198,7 +198,6 @@ export const getAttentionsDetails = async (
   daysSinceContacted = undefined,
   contactable = undefined,
   contacted = undefined,
-  keyWord = undefined,
   searchText = undefined,
   queueId = undefined,
   survey = undefined,
@@ -208,7 +207,7 @@ export const getAttentionsDetails = async (
   const options = {};
   options.params = {
     from, to, commerceId, page, limit, daysSinceType, daysSinceContacted,
-    contactable, contacted, keyWord, searchText, queueId, survey, asc,
+    contactable, contacted, searchText, queueId, survey, asc,
     contactResultType
   };
   options.paramsSerializer = params => {
