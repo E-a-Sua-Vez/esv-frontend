@@ -58,6 +58,7 @@ export default {
           state.commerce = await getCommerceById(state.currentUser.commerceId);
         }
         state.queues = state.commerce.queues;
+        initializeQueueStatus();
         state.collaborator = state.currentUser;
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
@@ -71,7 +72,6 @@ export default {
             state.queues = queues;
           }
         }
-        initializeQueueStatus();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
           state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
