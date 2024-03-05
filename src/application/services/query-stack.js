@@ -59,6 +59,50 @@ export const getBusinessExecutiveReport = async (businessId, from, to) => {
   return (await requestQuery.get('reports/business-executive', options)).data;
 };
 
+export const getAttentionsReport = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/attentions', options)).data;
+};
+
+export const getBookingsReport = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/bookings', options)).data;
+};
+
+export const getWaitlistsReport = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/waitlists', options)).data;
+};
+
+export const getSurveysReport = async (commerceId, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/surveys', options)).data;
+};
+
 export const getSurveys = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };

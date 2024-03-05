@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getAttentions, getNotifications, getSurveys, getBookings, getWaitlists } from '../../application/services/query-stack';
+import { getAttentionsReport, getNotifications, getSurveysReport, getBookingsReport, getWaitlistsReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -76,7 +76,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getAttentions(state.commerce.id, state.startDate, state.endDate);
+        const result = await getAttentionsReport(state.commerce.id, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -124,7 +124,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getSurveys(state.commerce.id, state.startDate, state.endDate);
+        const result = await getSurveysReport(state.commerce.id, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -148,7 +148,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getBookings(state.commerce.id, state.startDate, state.endDate);
+        const result = await getBookingsReport(state.commerce.id, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -172,7 +172,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getWaitlists(state.commerce.id, state.startDate, state.endDate);
+        const result = await getWaitlistsReport(state.commerce.id, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
