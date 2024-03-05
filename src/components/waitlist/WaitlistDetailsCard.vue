@@ -13,6 +13,7 @@ export default {
     waitlist: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
     availableBlocks: { type: Array, default: undefined },
+    toggles: { type: Object, default: undefined },
   },
   data() {
     return {
@@ -154,7 +155,7 @@ export default {
               </select>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3"
                 @click="process()"
-                :disabled="waitlist.status === 'PROCESSED' || waitlist.cancelled || !block"
+                :disabled="waitlist.status === 'PROCESSED' || waitlist.cancelled || !block || !toggles['collaborator.waitlists.book']"
                 >
                 <i class="bi bi-person-check-fill"> </i>
               </button>

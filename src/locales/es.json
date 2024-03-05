@@ -694,6 +694,12 @@
           "tracing": "Seguimiento",
           "queue-manage": "Administrar Filas",
           "booking-manage": "Administrar Reservas"
+        },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
+        },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
         }
       }
     }

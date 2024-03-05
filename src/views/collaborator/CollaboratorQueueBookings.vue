@@ -536,6 +536,7 @@ export default {
                           :booking="getBooking(block.number)"
                           :show="true"
                           :detailsOpened="false"
+                          :toggles="state.toggles"
                         >
                         </BookingDetailsCard>
                     </div>
@@ -562,6 +563,7 @@ export default {
                         :show="true"
                         :detailsOpened="false"
                         :availableBlocks="state.availableBlocks"
+                        :toggles="state.toggles"
                       >
                       </WaitlistDetailsCard>
                     </div>

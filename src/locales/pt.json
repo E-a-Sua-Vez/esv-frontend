@@ -285,11 +285,11 @@
     "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
     "walkin": "Ingresa na fila:",
-    "byCollaborator": "Por Profesional",
+    "byCollaborator": "Por Profissional",
     "byService": "Por Serviço",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
-      "content": "Neste momento não há horas disponíveis. Você quer ser contatao em caso alguma pessoa cancela e fica uma hora disponível?",
+      "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
       "action": "Eu quero!"
     },
     "message": {
@@ -306,7 +306,7 @@
     },
     "message4": {
       "title": "Pronto!",
-      "content": "Você tá na lista de espera. Você será contatado caso que uma hora fique disponível."
+      "content": "Você está na lista de espera, caso o horário fique disponível contataremos."
     },
     "validate": {
       "name": "Deve digitar seu nome",
@@ -699,6 +699,12 @@
           "tracing": "Ver Monitoramento",
           "queue-manage": "Gerenciar Filas",
           "booking-manage": "Gerenciar Reservas"
+        },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
+        },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
         }
       }
     }

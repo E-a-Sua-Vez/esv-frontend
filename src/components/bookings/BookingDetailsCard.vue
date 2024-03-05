@@ -11,6 +11,7 @@ export default {
     show: { type: Boolean, default: true },
     booking: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
+    toggles: { type: Object, default: undefined },
   },
   data() {
     return {
@@ -105,7 +106,7 @@ export default {
               </a>
               <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
                 @click="cancel()"
-                :disabled="booking.status === 'USER_CANCELED' || booking.cancelled"
+                :disabled="booking.status === 'USER_CANCELED' || booking.cancelled || !toggles['collaborator.bookings.cancel']"
                 >
                 <i class="bi bi-person-x-fill"> </i>
               </button>

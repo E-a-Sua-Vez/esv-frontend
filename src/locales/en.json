@@ -691,6 +691,12 @@
           "tracing": "Go to Tracing",
           "queue-manage": "Manage Queues",
           "booking-manage": "Manage Bookings"
+        },
+        "bookings": {
+          "cancel": "Cancel Booking"
+        },
+        "waitlists": {
+          "book": "Book Waitlist"
         }
       }
     }
