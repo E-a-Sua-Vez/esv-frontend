@@ -151,6 +151,7 @@ export const getSurveysDetails = async (
   commerceId,
   from,
   to,
+  commerceIds = undefined,
   page = undefined,
   limit = undefined,
   ratingType = undefined,
@@ -162,7 +163,10 @@ export const getSurveysDetails = async (
   queueId = undefined
 ) => {
   const options = {};
-  options.params = { from, to, commerceId, page, limit, ratingType, npsType, contactable, contacted, keyWord, searchText, queueId };
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit, ratingType, npsType,
+    contactable, contacted, keyWord, searchText, queueId
+  };
   options.paramsSerializer = params => {
     return qs.stringify(params);
   };
@@ -260,4 +264,36 @@ export const getAttentionsDetails = async (
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('attention/details', options)).data;
+};
+
+export const getClientsDetails = async (
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  page = undefined,
+  limit = undefined,
+  daysSinceType = undefined,
+  daysSinceContacted = undefined,
+  contactable = undefined,
+  contacted = undefined,
+  searchText = undefined,
+  queueId = undefined,
+  survey = undefined,
+  asc = true,
+  contactResultType = undefined
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
+    contactable, contacted, searchText, queueId, survey, asc,
+    contactResultType
+  };
+  console.log("🚀 ~ options.params:", options.params);
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('client/details', options)).data;
 };

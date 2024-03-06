@@ -13,6 +13,7 @@ import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import DashboardSurveysManagement from '../../components/dashboard/DashboardSurveysManagement.vue';
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
+import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
 
 export default {
   name: 'BusinessTracing',
@@ -25,6 +26,7 @@ export default {
     ToggleCapabilities,
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
+    DashboardClientsManagement,
   },
   async setup() {
     const router = useRouter();
@@ -65,6 +67,7 @@ export default {
       endDate: new Date().toISOString().slice(0,10),
       activeBusiness: false,
       commerces: ref({}),
+      selectedCommerces: ref({}),
       queues: ref({}),
       queue: {},
       dateType: 'month',
@@ -87,12 +90,14 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.selectedCommerces = [state.commerce];
         const commerce = await getQueueByCommerce(state.commerce.id);
         state.queues = commerce.queues;
         state.toggles = await getPermissions('dashboard');
         await refresh();
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ onBeforeMount ~ error:", error);
         loading.value = false;
       }
     })
@@ -104,10 +109,19 @@ export default {
     const selectCommerce = async (commerce) => {
       try {
         loading.value = true;
-        state.commerce = commerce;
-        const queuesByCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = queuesByCommerce.queues;
+        if (commerce.id === 'ALL') {
+          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
+            state.selectedCommerces = state.currentUser.commercesId;
+          } else {
+            state.selectedCommerces = state.commerces;
+          }
+        } else {
+          state.commerce = commerce;
+          const queuesByCommerce = await getQueueByCommerce(state.commerce.id);
+          state.queues = queuesByCommerce.queues;
+        }
         await refresh();
+        state.selectedCommerces = undefined;
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -242,6 +256,7 @@ export default {
                   <span>{{ $t("dashboard.commerce") }} </span>
                   <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
                     <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                    <option key="ALL" :value="{id:'ALL'}">{{ $t("dashboard.all") }}</option>
                   </select>
                 </div>
               </div>
@@ -276,7 +291,7 @@ export default {
           </div>
           <div v-if="!loading" id="dashboard-result" class="mt-4">
             <div id="title" class="metric-title">
-              <span v-if="state.showAttentions">{{ $t("dashboard.attentions") }}</span>
+              <span v-if="state.showAttentions">{{ $t("dashboard.clients") }}</span>
               <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.surveys-management") }}</span>
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
@@ -301,23 +316,25 @@ export default {
               </div>
             </div>
             <div>
-              <DashboardAttentionsManagement
+              <DashboardClientsManagement
                 :showAttentionManagement="state.showAttentions"
                 :toggles="state.toggles"
                 :startDate="state.startDate"
                 :endDate="state.endDate"
                 :commerce="state.commerce"
                 :queues="state.queues"
+                :commerces="state.selectedCommerces"
               >
-              </DashboardAttentionsManagement>
+              </DashboardClientsManagement>
               <DashboardSurveysManagement
                 :showSurveyManagement="state.showSurveyManagement"
                 :calculatedMetrics="state.calculatedMetrics"
                 :toggles="state.toggles"
                 :startDate="state.startDate"
-                :endDate="state.endDate"
                 :commerce="state.commerce"
+                :endDate="state.endDate"
                 :queues="state.queues"
+                :commerces="state.selectedCommerces"
               >
               </DashboardSurveysManagement>
             </div>

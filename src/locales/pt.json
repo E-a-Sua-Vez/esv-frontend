@@ -873,6 +873,7 @@
   "dashboard": {
     "title": "Dashboard",
     "attentions": "Atendimentos",
+    "clients": "Clientes",
     "commerce": "Comércio",
     "refresh": "Pesquisar",
     "return": "Voltar",
@@ -912,6 +913,7 @@
     "day": "Dia",
     "month": "Mês",
     "year": "Ano",
+    "all": "Todos",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1116,6 +1118,10 @@
       "attentions-management": {
         "title": "Relatório de Atendimentos (Detalhes)",
         "description": "Baixar arquivo PDF com os resultados das atenções no intervalo de datas selecionado"
+      },
+      "clients-management": {
+        "title": "Relatório de Clientes (Detalhes)",
+        "description": "Baixar arquivo PDF com os resultados dos clientes no intervalo de datas selecionado"
       }
     },
     "capacitiesList": {
@@ -1219,13 +1225,17 @@
         "attentions-management": {
           "view": "Ver Atendimentos (Detalhes)"
         },
+        "clients-management": {
+          "view": "Ver Clientes (Detalhes)"
+        },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
           "indicators": "Relatório de Indicadores",
           "graphs": "Relatório de Tendências",
           "surveys-management": "Relatório de Pesquisas (Detalhes)",
           "surveys-consolidated": "Relatório de Pesquisas (Consolidado)",
-          "attentions-management": "Relatório de Atendimentos (Detalhes)"
+          "attentions-management": "Relatório de Atendimentos (Detalhes)",
+          "clients-management": "Relatório de Clientes (Detalhes)"
         }
       }
     }

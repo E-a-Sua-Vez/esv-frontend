@@ -1,42 +1,39 @@
 <script>
-import SimpleCard from './common/SimpleCard.vue';
-import DetailsCard from './common/DetailsCard.vue';
 import Spinner from '../common/Spinner.vue';
+import Popper from "vue3-popper";
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import AttentionRatingDetails from './domain/AttentionRatingDetails.vue';
-import AttentionNPSDetails from './domain/AttentionNPSDetails.vue';
-import SurveyDetailsCard from './common/SurveyDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
-import Popper from "vue3-popper";
-import { getSurveysDetails } from '../../application/services/query-stack';
+import { getClientsDetails } from '../../application/services/query-stack';
+import ClientDetailsCard from '../clients/common/ClientDetailsCard.vue';
 
 export default {
-  name: 'DashboardSurveysManagement',
-  components: { SimpleCard, DetailsCard, Message, SimpleDownloadCard, AttentionRatingDetails, AttentionNPSDetails, Spinner, SurveyDetailsCard, Popper },
+  name: 'DashboardClientsManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard },
   props: {
-    showSurveyManagement: { type: Boolean, default: false },
-    calculatedMetrics: { type: Object, default: undefined },
+    showAttentionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
-    commerces: { type: Array, default: [] },
-    queues: { type: Object, default: undefined }
+    queues: { type: Object, default: undefined },
+    commerces: { type: Array, default: undefined }
   },
   data() {
     return {
       loading: false,
       counter: 0,
-      surveys: undefined,
+      clients: undefined,
       totalPages: 0,
-      ratingType: undefined,
-      npsType: undefined,
+      daysSinceType: undefined,
+      daysSinceContacted: undefined,
+      contactResultType: undefined,
       contacted: undefined,
       contactable: undefined,
+      survey: undefined,
+      asc: true,
       showKeyWordsOptions: false,
       showFilterOptions: false,
-      keyWord: undefined,
       searchText: undefined,
       queueId: undefined,
       page: 1,
@@ -59,13 +56,12 @@ export default {
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
-          console.log("🚀 ~ refresh ~ commerceIds:", commerceIds);
         }
-        this.surveys = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.ratingType, this.npsType, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId);
-        if (this.surveys && this.surveys.length > 0) {
-          const { counter } = this.surveys[0];
+        this.clients = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+        if (this.clients && this.clients.length > 0) {
+          const { counter } = this.clients[0];
           this.counter = counter;
           const total = counter / this.limit;
           const totalB = Math.trunc(total);
@@ -82,14 +78,17 @@ export default {
     setPage(pageIn) {
       this.page = pageIn;
     },
-    clear() {
-      this.ratingType = undefined;
-      this.npsType = undefined;
+    async clear() {
+      this.daysSinceType = undefined;
+      this.daysSinceContacted = undefined;
+      this.contactResultType = undefined;
+      this.survey = undefined;
+      this.asc = true;
       this.contactable = undefined;
       this.contacted = undefined;
-      this.keyWord = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      await this.refresh();
     },
     async checkContactable(event) {
       if (event.target.checked) {
@@ -105,40 +104,19 @@ export default {
         this.contacted = false;
       }
     },
-    getKeyWords() {
-      if (this.calculatedMetrics &&
-        this.calculatedMetrics['survey.created'] &&
-        this.calculatedMetrics['survey.created'].keyWords
-      ) {
-        return Object.keys(this.calculatedMetrics['survey.created'].keyWords).sort((a,b) => b - a).slice(0, 10);
-      }
-    },
-    getKeyWordAvg(word) {
-      if (this.calculatedMetrics &&
-        this.calculatedMetrics['survey.created'] &&
-        this.calculatedMetrics['survey.created'].keyWords &&
-        this.calculatedMetrics['survey.created'].keyWords[word]
-      ) {
-        return this.calculatedMetrics['survey.created'].keyWords[word]['scoreAvg'] || 0
-      }
-      return 0;
-    },
-    clasifyScoredComment(messageScore) {
-      if (!messageScore) {
-        return 'bi-emoji-expressionless-fill blue-icon';
-      } else if (messageScore < 0.1) {
-        return 'bi-emoji-frown-fill red-icon';
-      } else if (messageScore < 0.5) {
-        return 'bi-emoji-neutral-fill yellow-icon';
+    async checkSurvey(event) {
+      if (event.target.checked) {
+        this.survey = true;
       } else {
-        return 'bi-emoji-smile-fill green-icon';
+        this.survey = false;
       }
     },
-    showKeyWords() {
-      this.showKeyWordsOptions = !this.showKeyWordsOptions;
-    },
-    setKeyWord(keyword) {
-      this.keyWord = keyword;
+    async checkAsc(event) {
+      if (event.target.checked) {
+        this.asc = true;
+      } else {
+        this.asc = false;
+      }
     },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions
@@ -147,14 +125,14 @@ export default {
       try {
         this.loading = true;
         let csvAsBlob = [];
-        const result = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate);
+        const result = await getClientsDetails(this.commerce.id, this.startDate, this.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `surveys-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `clients-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -167,9 +145,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, ratingType, npsType, contactable, contacted, keyWord, queueId } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId } = this;
       return {
-        page, ratingType, npsType, contactable, contacted, keyWord, queueId
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId
       }
     }
   },
@@ -180,10 +158,13 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.ratingType !== newData.ratingType ||
-          oldData.npsType !== newData.npsType ||
+          (oldData.daysSinceType !== newData.daysSinceType ||
+          oldData.daysSinceContacted !== newData.daysSinceContacted ||
           oldData.contactable !== newData.contactable ||
-          oldData.keyWord !== newData.keyWord ||
+          oldData.contactResultType !== newData.contactResultType ||
+          oldData.contacted !== newData.contacted ||
+          oldData.survey !== newData.survey ||
+          oldData.asc !== newData.asc ||
           oldData.queueId !== newData.queueId)
         ) {
           this.page = 1;
@@ -197,7 +178,7 @@ export default {
       async handler() {
         if (this.searchText) {
           this.searchText = this.searchText.toUpperCase();
-          if (this.searchText.length > 3) {
+          if (this.searchText.length > 5) {
             this.page = 1;
             this.refresh();
           }
@@ -209,20 +190,20 @@ export default {
 </script>
 
 <template>
-  <div id="surveys-management" class="row" v-if="showSurveyManagement === true && toggles['dashboard.surveys-management.view']">
+  <div id="clients-management" class="row" v-if="showAttentionManagement === true && toggles['dashboard.clients-management.view']">
     <div class="col">
-      <div id="survey-management-component">
+      <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
             <SimpleDownloadCard
-              :download="toggles['dashboard.reports.surveys-management']"
-              :title="$t('dashboard.reports.surveys-management.title')"
+              :download="toggles['dashboard.reports.clients-management']"
+              :title="$t('dashboard.reports.clients-management.title')"
               :showTooltip="true"
-              :description="$t('dashboard.reports.surveys-management.description')"
+              :description="$t('dashboard.reports.clients-management.description')"
               :icon="'bi-file-earmark-spreadsheet'"
               @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.surveys-management'] === true"
+              :canDownload="toggles['dashboard.reports.clients-management'] === true"
             ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -254,66 +235,78 @@ export default {
                   </div>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="ratingType" value="DETRACTOR" name="rating-type" id="detractor-rating" autocomplete="off">
-                  <label class="btn" for="detractor-rating"> <i :class="`bi bi-star-fill red-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="ratingType" value="NEUTRO" name="rating-type" id="neutro-rating" autocomplete="off">
-                  <label class="btn" for="neutro-rating"> <i :class="`bi bi-star-half yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="ratingType" value="PROMOTOR" name="rating-type" id="promotor-rating" autocomplete="off">
-                  <label class="btn" for="promotor-rating"> <i :class="`bi bi-star-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
+                  <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="MEDIUM" name="daysSince-type" id="medium-since" autocomplete="off">
+                  <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
+                  <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
                   <Popper
                     v-if="true"
                     :class="'dark'"
                     arrow
                     disableClickAway
-                    :content="$t(`dashboard.surveysFilters.filters.rating`)">
+                    :content="$t(`dashboard.tracing.filters.attention`)">
                     <i class='bi bi-info-circle-fill h7 m-2'></i>
                   </Popper>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="npsType" value="DETRACTOR" name="nps-type" id="detractor-nps" autocomplete="off">
-                  <label class="btn" for="detractor-nps"> <i :class="`bi bi-emoji-frown-fill red-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="npsType" value="NEUTRO" name="nps-type" id="neutro-nps" autocomplete="off">
-                  <label class="btn" for="neutro-nps"> <i :class="`bi bi-emoji-neutral-fill yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="npsType" value="PROMOTOR" name="nps-type" id="promotor-nps" autocomplete="off">
-                  <label class="btn" for="promotor-nps"> <i :class="`bi bi-emoji-smile-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="EARLY" name="daysContacted-type" id="early-contacted" autocomplete="off">
+                  <label class="btn" for="early-contacted"> <i :class="`bi bi-chat-left-dots-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="MEDIUM" name="daysContacted-type" id="medium-contacted" autocomplete="off">
+                  <label class="btn" for="medium-contacted"> <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="LATE" name="daysContacted-type" id="late-contacted" autocomplete="off">
+                  <label class="btn" for="late-contacted"> <i :class="`bi bi-chat-left-dots-fill red-icon`"></i> </label>
                   <Popper
                     v-if="true"
                     :class="'dark'"
                     arrow
                     disableClickAway
-                    :content="$t(`dashboard.surveysFilters.filters.nps`)">
+                    :content="$t(`dashboard.tracing.filters.contact`)">
+                    <i class='bi bi-info-circle-fill h7 m-2'></i>
+                  </Popper>
+                </div>
+                <div class="col-12 col-md my-1 filter-card">
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="INTERESTED" name="contactResultType-type" id="interested-contacted" autocomplete="off">
+                  <label class="btn" for="interested-contacted"> <i :class="`bi bi-patch-check-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="CONTACT_LATER" name="contactResultType-type" id="contact-later-contacted" autocomplete="off">
+                  <label class="btn" for="contact-later-contacted"> <i :class="`bi bi-patch-check-fill yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="REJECTED" name="contactResultType-type" id="rejected-contacted" autocomplete="off">
+                  <label class="btn" for="rejected-contacted"> <i :class="`bi bi-patch-check-fill red-icon`"></i> </label>
+                  <Popper
+                    v-if="true"
+                    :class="'dark'"
+                    arrow
+                    disableClickAway
+                    :content="$t(`dashboard.tracing.filters.contactResult`)">
                     <i class='bi bi-info-circle-fill h7 m-2'></i>
                   </Popper>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-5">
+                  <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="contactable === false ? 'bg-danger' : ''" type="checkbox" name="contactable" id="contactable" v-model="contactable" @click="checkContactable($event)">
                       <label class="form-check-label metric-card-subtitle" for="contactable">{{ $t("dashboard.contactable") }}</label>
                     </div>
                   </div>
-                  <div class="col-12 col-md-5">
+                  <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="contacted === false ? 'bg-danger' : ''" type="checkbox" name="contacted" id="contacted"  v-model="contacted" @click="checkContacted($event)">
                       <label class="form-check-label metric-card-subtitle" for="contacted">{{ $t("dashboard.contacted") }}</label>
                     </div>
                   </div>
                 </div>
-                <div class="filter-card col-md">
-                  <span class="form-check-label metric-keyword-subtitle" @click="showKeyWords()"> {{ $t("dashboard.keyWord") }} <i :class="`bi ${showKeyWordsOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
-                  <div v-if="showKeyWordsOptions === true" class="row">
-                    <div class="col" v-for="(word, ind) in getKeyWords()" :key="`word-${ind}`">
-                      <div class="m-0">
-                        <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold" :class="word === keyWord ? 'metric-keyword-tag-selected': ''" @click="setKeyWord(word)">
-                          {{ word }}
-                          <span class="badge rounded-pill bg-danger metric-keyword-tag mx-1 ">
-                            {{ calculatedMetrics['survey.created'].keyWords[word].count }}
-                          </span>
-                          <span class="metric-keyword-tag" v-if="getKeyWordAvg(word) !== 0">
-                            <i :class="`metric-keyword-tag bi ${clasifyScoredComment(calculatedMetrics['survey.created'].keyWords[word] ? getKeyWordAvg(word) : undefined)}  mb-0`"> </i> {{ getKeyWordAvg(word) }}
-                          </span>
-                        </span>
-                      </div>
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
+                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>
                 </div>
@@ -369,13 +362,14 @@ export default {
                   </ul>
                 </nav>
               </div>
-            <div v-if="surveys && surveys.length > 0">
-              <div class="row" v-for="(survey, index) in surveys" :key="`survey-${index}`">
-                <SurveyDetailsCard
+            <div v-if="clients && clients.length > 0">
+              <div class="row" v-for="(client, index) in clients" :key="`clients-${index}`">
+                <ClientDetailsCard
                   :show="true"
-                  :survey="survey"
+                  :client="client"
+                  :commerce="commerce"
                 >
-                </SurveyDetailsCard>
+              </ClientDetailsCard>
               </div>
               <div class="centered mt-2">
                 <nav>
@@ -435,7 +429,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showSurveyManagement === true && !toggles['dashboard.surveys-management.view']">
+  <div v-if="showAttentionManagement === true && !toggles['dashboard.clients-management.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

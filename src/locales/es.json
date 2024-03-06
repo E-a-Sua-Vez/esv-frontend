@@ -872,6 +872,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "clients": "Clientes",
     "attentions": "Atenciones",
     "commerce": "Comercio:",
     "refresh": "Buscar",
@@ -912,6 +913,7 @@
     "day": "Día",
     "month": "Mes",
     "year": "Año",
+    "all": "Todos",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1120,6 +1122,10 @@
       "attentions-management": {
         "title": "Reporte de Atenciones (Detalles)",
         "description": "Descarga archivo PDF con el resultado de las atenciones realizadas en el rango de fechas seleccionado"
+      },
+      "clients-management": {
+        "title": "Reporte de Clientes (Detalles)",
+        "description": "Descarga archivo PDF con el resultado de las clientes realizadas en el rango de fechas seleccionado"
       }
     },
     "capacitiesList": {
@@ -1223,13 +1229,17 @@
         "attentions-management": {
           "view": "Ver Atenciones (Detalles)"
         },
+        "clients-management": {
+          "view": "Ver Clientes (Detalles)"
+        },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",
           "indicators": "Reporte de Indicadores",
           "graphs": "Reporte de Tendencias",
           "surveys-management": "Reporte de Encuestas (Detalles)",
           "surveys-consolidated": "Reporte de Encuestas (Consolidado)",
-          "attentions-management": "Reporte de Atenciones (Detalles)"
+          "attentions-management": "Reporte de Atenciones (Detalles)",
+          "clientes-management": "Reporte de Clientes (Detalles)"
         }
       }
     }
