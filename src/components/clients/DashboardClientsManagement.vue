@@ -17,7 +17,8 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    business: { type: Object, default: undefined }
   },
   data() {
     return {
@@ -49,7 +50,7 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        this.clients = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+        this.clients = await getClientsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
         if (this.clients && this.clients.length > 0) {

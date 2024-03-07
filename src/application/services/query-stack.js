@@ -279,6 +279,7 @@ export const getAttentionsDetails = async (
 };
 
 export const getClientsDetails = async (
+  businessId,
   commerceId,
   from,
   to,
@@ -299,7 +300,7 @@ export const getClientsDetails = async (
   options.params = {
     from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
     contactable, contacted, searchText, queueId, survey, asc,
-    contactResultType
+    contactResultType, businessId
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);

@@ -381,6 +381,7 @@ export default {
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
+                :business="state.business"
               >
               </DashboardClientsManagement>
               <DashboardAttentionsManagement
