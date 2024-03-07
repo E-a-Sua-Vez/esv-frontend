@@ -676,6 +676,7 @@
   },
   "collaboratorBookingsView": {
     "welcome": "Gerenciamento de Reservas",
+    "commerce": "Comércio:",
     "queue": "Selecione Fila ou Serviço:",
     "date": "Selecione a Data:",
     "return": "Voltar",

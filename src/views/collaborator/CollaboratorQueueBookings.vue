@@ -3,7 +3,7 @@ import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getCollaboratorById } from '../../application/services/collaborator';
-import { getGroupedQueueByCommerceId } from '../../application/services/queue';
+import { getGroupedQueueByCommerceId, getQueueByCommerce } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -76,6 +76,7 @@ export default {
 
     const state = reactive({
       currentUser: {},
+      commerces: ref([]),
       queue: {},
       queues: [],
       groupedQueues: [],
@@ -103,27 +104,19 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.commerce = await store.getCurrentCommerce;
-        if (!state.commerce) {
-          state.commerce = await getCommerceById(state.currentUser.commerceId);
-        }
-        state.locale = state.commerce.localeInfo.language;
-        state.queues = state.commerce.queues;
         state.collaborator = state.currentUser;
-        store.setCurrentCommerce(state.commerce);
-        store.setCurrentQueue(undefined);
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-          if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-            const queues = [...collaboratorQueues, ...otherQueues];
-            state.queues = queues;
-          }
-        }
+        state.business = await store.getActualBusiness();
+        state.commerces = await store.getAvailableCommerces(state.business.commerces);
+        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        const commerceById = await getCommerceById(state.commerce.id);
+        state.queues = commerceById.queues;
+        await initQueues();
+        store.setCurrentCommerce(state.commerce);
+        store.setCurrentQueue(undefined);
+        state.locale = state.commerce.localeInfo.language;
         state.toggles = await getPermissions('collaborator');
         alertError.value = '';
         loading.value = false;
@@ -144,12 +137,29 @@ export default {
     })
 
     const isActiveCommerce = () => {
-      return state.commerce && state.commerce.active === true && state.commerce.queues.length > 0;
+      return state.commerce && state.commerce.active === true;
     };
 
     const formattedDate = (date) => {
       if (date && date !== 'TODAY') {
         return new Date(date).toISOString().slice(0,10);
+      }
+    }
+
+    const initQueues = async () => {
+      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+          const queues = [...collaboratorQueues, ...otherQueues];
+          state.queues = queues;
+        }
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const queues = [...collaboratorQueues];
+          state.queues = queues;
+        }
       }
     }
 
@@ -275,40 +285,20 @@ export default {
       navigator.clipboard.writeText(textToCopy);
     }
 
-    const changeDate = computed(() => {
-      const { date, queue } = state;
-      return {
-        date,
-        queue
+    const selectCommerce = async (commerce) => {
+      try {
+        loading.value = true;
+        state.commerce = commerce;
+        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
+        state.queues = selectedCommerce.queues;
+        await initQueues()
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
       }
-    })
-
-    watch(
-      changeDate,
-      async (newData, oldData) => {
-        if (state.date === 'TODAY') {
-          await getAttention();
-        } else if (newData.date !== oldData.date || newData.queue !== oldData.queue) {
-          state.blocks = getBlocksByDay();
-          if (unsubscribeBookings) {
-            unsubscribeBookings();
-          }
-          getBookings();
-          if (unsubscribeWaitlists) {
-            unsubscribeWaitlists();
-          }
-          getWaitlists();
-        }
-        getAvailableBlocks();
-        let currentDate;
-        if (state.date === undefined || state.date === 'TODAY') {
-          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        } else {
-          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        }
-        await getAvailableDatesByMonth(currentDate);
-      }
-    )
+    }
 
     const getWaitlists = () => {
       loading.value = true;
@@ -415,6 +405,41 @@ export default {
       calendarAttributes.value[2].dates.push(...avaliableToReserve);
     }
 
+    const changeDate = computed(() => {
+      const { date, queue } = state;
+      return {
+        date,
+        queue
+      }
+    })
+
+    watch(
+      changeDate,
+      async (newData, oldData) => {
+        if (state.date === 'TODAY') {
+          await getAttention();
+        } else if (newData.date !== oldData.date || newData.queue !== oldData.queue) {
+          state.blocks = getBlocksByDay();
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          getBookings();
+          if (unsubscribeWaitlists) {
+            unsubscribeWaitlists();
+          }
+          getWaitlists();
+        }
+        getAvailableBlocks();
+        let currentDate;
+        if (state.date === undefined || state.date === 'TODAY') {
+          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+        } else {
+          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+        }
+        await getAvailableDatesByMonth(currentDate);
+      }
+    )
+
     return {
       siteKey,
       state,
@@ -434,7 +459,8 @@ export default {
       getBooking,
       showBookings,
       showWaitlists,
-      formattedDate
+      formattedDate,
+      selectCommerce
     }
   }
 }
@@ -458,6 +484,21 @@ export default {
         ></ToggleCapabilities>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
+        <div id="businessQueuesAdmin-controls" class="control-box">
+          <div class="row">
+            <div class="col" v-if="state.commerces.length > 0">
+              <span>{{ $t("collaboratorBookingsView.commerce") }} </span>
+              <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="commerces">
+                <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+              </select>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('businessQueuesAdmin.message.4.title')"
+                :content="$t('businessQueuesAdmin.message.4.content')" />
+            </div>
+          </div>
+        </div>
         <div id="queue-selector" class="mb-1 mt-2">
           <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
           <select
@@ -614,5 +655,12 @@ export default {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
+}
+.control-box {
+  background-color: var(--color-background);
+  padding: .5rem;
+  margin: .1rem;
+  border-radius: .5rem;
+  border: 1.5px solid var(--gris-default);
 }
 </style>

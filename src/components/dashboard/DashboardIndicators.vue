@@ -237,7 +237,7 @@ export default {
       </div>
       <div id="attention-rating-avg">
         <DetailsCard
-          :show="toggles['dashboard.attention-rating-avg.view']"
+          :show="!!toggles['dashboard.attention-rating-avg.view']"
           :data="calculatedMetrics['survey.created'].avgRating || 0"
           :subdata="calculatedMetrics['survey.created'].count_rating || 0"
           :title="$t('dashboard.items.attentions.3')"

@@ -64,7 +64,7 @@ export default {
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const commerceById = await getCommerceById(state.commerce.id);
         state.queues = commerceById.queues;
-        await initQueues(state.commerce);
+        await initQueues();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
           state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];

@@ -668,6 +668,7 @@
   },
   "collaboratorBookingsView": {
     "welcome": "Booking Management",
+    "commerce": "Commerce:",
     "queue": "Choose a Queue/Service:",
     "date": "Choose the Date:",
     "return": "Back",
