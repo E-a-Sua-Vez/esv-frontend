@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getAttentionsReport, getNotifications, getSurveysReport, getBookingsReport, getWaitlistsReport } from '../../application/services/query-stack';
+import { getAttentionsReport, getNotificationsReport, getSurveysReport, getBookingsReport, getWaitlistsReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -29,6 +29,7 @@ export default {
       business: {},
       activeBusiness: false,
       commerces: ref({}),
+      selectedCommerces: ref({}),
       startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().slice(0,10),
       endDate: new Date().toISOString().slice(0,10),
       reports: ref({}),
@@ -43,6 +44,7 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.selectedCommerces = [state.commerce.id];
         state.toggles = await getPermissions('reports', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -63,7 +65,16 @@ export default {
     const selectCommerce = async (commerce) => {
       try {
         loading.value = true;
-        state.commerce = commerce;
+        if (commerce.id === 'ALL') {
+          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
+            state.selectedCommerces = state.currentUser.commercesId;
+          } else {
+            state.selectedCommerces = state.commerces.map(com => com.id);
+          }
+        } else {
+          state.commerce = commerce;
+          state.selectedCommerces = commerce.id;
+        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -76,7 +87,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getAttentionsReport(state.commerce.id, state.startDate, state.endDate);
+        const result = await getAttentionsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -91,6 +102,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ downloadAttentionsReport ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
@@ -100,7 +112,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getNotifications(state.commerce.id, state.startDate, state.endDate);
+        const result = await getNotificationsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -124,7 +136,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getSurveysReport(state.commerce.id, state.startDate, state.endDate);
+        const result = await getSurveysReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -148,7 +160,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getBookingsReport(state.commerce.id, state.startDate, state.endDate);
+        const result = await getBookingsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -172,7 +184,7 @@ export default {
       try {
         loading.value = true;
         let csvAsBlob = [];
-        const result = await getWaitlistsReport(state.commerce.id, state.startDate, state.endDate);
+        const result = await getWaitlistsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -238,6 +250,7 @@ export default {
                 <span>{{ $t("businessReports.commerce") }} </span>
                 <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="reports">
                   <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                  <option key="ALL" :value="{id:'ALL',tag:'all',active:true}">{{ $t("dashboard.all") }}</option>
                 </select>
               </div>
             </div>
