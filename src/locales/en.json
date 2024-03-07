@@ -650,6 +650,12 @@
         "module": {
           "update": "Update attention Module"
         },
+        "waitlists": {
+          "book": "Book Waitlist"
+        },
+        "bookings": {
+          "cancel": "Cancel Booking"
+        },
         "main-menu": {
           "dashboard": "Go to Dashboard",
           "tracing": "Go to Tracing",
@@ -756,6 +762,12 @@
         },
         "module": {
           "update": "Update attention Module"
+        },
+        "waitlists": {
+          "book": "Book Waitlist"
+        },
+        "bookings": {
+          "cancel": "Cancel Booking"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",

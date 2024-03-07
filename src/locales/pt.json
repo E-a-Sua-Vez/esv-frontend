@@ -658,6 +658,12 @@
         "module": {
           "update": "Atualizar o modulo de atenção"
         },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
+        },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
+        },
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Ver Monitoramento",
@@ -759,6 +765,12 @@
         },
         "module": {
           "update": "Atualizar o modulo de atenção"
+        },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
+        },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",

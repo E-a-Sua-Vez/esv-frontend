@@ -116,18 +116,29 @@ export default {
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        if (state.currentUser && state.currentUser.commerceId) {
-          const commerce = await getQueueByCommerce(state.currentUser.commerceId);
-          state.commerces = [commerce];
-          state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-          state.queues = commerce.queues;
-          if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-            state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-            if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-              const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-              const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-              const queues = [...collaboratorQueues, ...otherQueues];
-              state.queues = queues;
+        if (state.collaborator) {
+          if (state.collaborator.commercesId && state.collaborator.commercesId.length > 0) {
+            state.business = await store.getActualBusiness();
+            state.commerces = await store.getAvailableCommerces(state.business.commerces);
+            state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+            state.selectedCommerces = state.commerces;
+            if (state.commerce) {
+              const commerce = await getQueueByCommerce(state.commerce.id);
+              state.queues = commerce.queues;
+            }
+          } else if (state.collaborator.commerceId) {
+            const commerce = await getQueueByCommerce(state.currentUser.commerceId);
+            state.commerces = [commerce];
+            state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+            state.queues = commerce.queues;
+            if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+              state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+              if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+                const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+                const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+                const queues = [...collaboratorQueues, ...otherQueues];
+                state.queues = queues;
+              }
             }
           }
         }

@@ -656,6 +656,9 @@
         "waitlists": {
           "book": "Reservar Lista de Espera"
         },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
+        },
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
@@ -762,6 +765,12 @@
         },
         "module": {
           "update": "Actualizar módulo de atención"
+        },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
+        },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
