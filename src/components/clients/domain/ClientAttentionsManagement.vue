@@ -39,7 +39,7 @@ export default {
       limit: 10
     }
   },
-  beforeMount() {
+  updated() {
     this.attentions = this.attentionsIn;
   },
   methods: {
@@ -158,8 +158,8 @@ export default {
           oldData.queueId !== newData.queueId)
         ) {
           this.page = 1;
+          await this.refresh();
         }
-        await this.refresh();
       }
     }
   }

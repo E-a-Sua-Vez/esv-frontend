@@ -102,7 +102,6 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ downloadAttentionsReport ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }

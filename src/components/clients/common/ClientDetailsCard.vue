@@ -150,13 +150,6 @@ export default {
     },
   },
   watch: {
-    detailsOpened: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.extendedEntity = this.detailsOpened;
-      }
-    },
     extendedEntity: {
       immediate: true,
       deep: true,

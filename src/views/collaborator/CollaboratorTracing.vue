@@ -3,7 +3,7 @@ import { ref, reactive, onBeforeMount, } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getMetrics } from '../../application/services/query-stack';
-import { getQueueByCommerce } from '../../application/services/queue';
+import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getGroupedQueueByCommerceId } from '../../application/services/queue';
@@ -100,13 +100,13 @@ export default {
             state.business = await store.getActualBusiness();
             state.commerces = await store.getAvailableCommerces(state.business.commerces);
             state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-            state.selectedCommerces = state.commerces;
+            state.selectedCommerces = [state.commerce];
             if (state.commerce) {
-              const commerce = await getQueueByCommerce(state.commerce.id);
+              const commerce = await getCommerceById(state.commerce.id);
               state.queues = commerce.queues;
             }
           } else if (state.collaborator.commerceId) {
-            const commerce = await getQueueByCommerce(state.collaborator.commerceId);
+            const commerce = await getCommerceById(state.collaborator.commerceId);
             state.commerces = [commerce];
             state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
             state.selectedCommerces = [state.commerce];
@@ -137,6 +137,7 @@ export default {
     const selectCommerce = async (commerce) => {
       try {
         loading.value = true;
+        state.selectedCommerces = undefined;
         if (commerce.id === 'ALL') {
           if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
             state.selectedCommerces = state.commerces;
@@ -146,7 +147,7 @@ export default {
         } else {
           state.commerce = commerce;
           state.selectedCommerces = [state.commerce];
-          const queuesByCommerce = await getQueueByCommerce(state.commerce.id);
+          const queuesByCommerce = await getCommerceById(state.commerce.id);
           state.queues = queuesByCommerce.queues;
           if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
             state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
@@ -159,7 +160,6 @@ export default {
           }
         }
         await refresh();
-        state.selectedCommerces = undefined;
         loading.value = false;
       } catch (error) {
         loading.value = false;

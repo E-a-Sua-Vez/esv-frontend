@@ -63,7 +63,7 @@ export default {
       limit: 10
     }
   },
-  beforeMount() {
+  updated() {
     this.clientContacts = this.clientContactsIn;
   },
   methods: {
@@ -242,8 +242,8 @@ export default {
           oldData.limit !== newData.limit)
         ) {
           this.page = 1;
+          this.refresh();
         }
-        this.refresh();
       }
     },
     store: {

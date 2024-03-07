@@ -41,15 +41,6 @@ export default {
       limit: 10
     }
   },
-  async beforeMount() {
-    try {
-      this.loading = true;
-      await this.refresh();
-      this.loading = false;
-    } catch (error) {
-      this.loading = false;
-    }
-  },
   methods: {
     async refresh() {
       try {

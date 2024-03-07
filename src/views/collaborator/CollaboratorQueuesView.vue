@@ -80,8 +80,31 @@ export default {
       }
     })
 
+    const checkQueueStatus = async (attentions) => {
+      if (attentions && attentions.value) {
+        const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
+          const queueId = attention.queueId;
+          if (!acc[queueId]) {
+            acc[queueId] = [];
+          }
+          acc[queueId].push(attention);
+          return acc;
+        }, {});
+        if (state.queues && state.queues.length > 0) {
+          state.queues.forEach(queue => {
+            if (filteredAttentionsByQueue[queue.id]) {
+              const attentions = filteredAttentionsByQueue[queue.id].length;
+              state.queueStatus[queue.id] = attentions;
+            }
+          })
+        }
+      }
+    }
+
     let attentions = ref([]);
     attentions = updatedAvailableAttentionsByCommerce(id);
+
+    checkQueueStatus(attentions);
 
     const initQueues = async () => {
       initializeQueueStatus();
@@ -99,7 +122,7 @@ export default {
           state.queues = queues;
         }
       }
-      checkQueueStatus();
+      checkQueueStatus(attentions);
     }
 
     const isActiveCommerce = () => {
@@ -146,9 +169,11 @@ export default {
       try {
         loading.value = true;
         state.commerce = commerce;
+        attentions = updatedAvailableAttentionsByCommerce(commerce.id);
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
-        await initQueues()
+        checkQueueStatus(attentions);
+        await initQueues();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -184,30 +209,13 @@ export default {
       }
     }
 
-    const checkQueueStatus = () => {
-        const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
-          const queueId = attention.queueId;
-          if (!acc[queueId]) {
-            acc[queueId] = [];
-          }
-          acc[queueId].push(attention);
-          return acc;
-        }, {});
-        if (state.queues && state.queues.length > 0) {
-        state.queues.forEach(queue => {
-          if (filteredAttentionsByQueue[queue.id]) {
-            const attentions = filteredAttentionsByQueue[queue.id].length;
-            state.queueStatus[queue.id] = attentions;
-          }
-        })
-      }
-    }
+
 
     watch(
       attentions,
       async () => {
         if (attentions && attentions.value && attentions.value.length > 0) {
-          checkQueueStatus();
+          checkQueueStatus(checkQueueStatus);
         } else {
           initializeQueueStatus();
         }
