@@ -17,6 +17,11 @@ export const getCollaboratorByEmail = async email => {
   return user;
 }
 
+export const getCollaboratorByCommerceIdEmail = async (commerceId, email) => {
+  const user = (await requestBackend.get(`/${entity}/commerceId/${commerceId}/email/${email}`, await getHeaders())).data;
+  return user;
+}
+
 export const getCollaboratorByEmailSimple = async email => {
   const user = (await requestBackend.get(`/${entity}/email/${email}`, await getHeaders())).data;
   return user;

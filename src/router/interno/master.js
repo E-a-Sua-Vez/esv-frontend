@@ -10,7 +10,7 @@ import BusinessDashboard from '../../views/business/BusinessDashboard.vue';
 import BusinessExecutiveReport from '../../views/business/BusinessExecutiveReport.vue';
 import BusinessAdmin from '../../views/business/BusinessAdmin.vue';
 import BusinessConfiguration from '../../views/business/BusinessConfiguration.vue';
-import BusinessPermissionsAdmin from '../../views/business/BusinessPermissionsAdmin.vue';
+import MasterPermissionsAdmin from '../../views/business/MasterPermissionsAdmin.vue';
 import BusinessPlansAdmin from '../../views/business/BusinessPlansAdmin.vue';
 import BusinessPlan from '../../views/business/BusinessPlan.vue';
 import BusinessPlanActivationAdmin from '../../views/business/BusinessPlanActivationAdmin.vue';
@@ -97,7 +97,7 @@ const PrivateMasterRoutes = [
   {
     path: '/interno/master/features-master-admin',
     name: 'features-master-admin',
-    component: BusinessPermissionsAdmin
+    component: MasterPermissionsAdmin
   },
   {
     path: '/interno/master/plan-activations-admin',

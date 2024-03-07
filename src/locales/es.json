@@ -626,6 +626,7 @@
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
+          "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
           "booking-manage": "Administrar Reservas"
         }
@@ -712,6 +713,7 @@
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
+          "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
           "booking-manage": "Administrar Reservas"
         },
@@ -783,6 +785,7 @@
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
+          "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
           "booking-manage": "Administrar Reservas"
         }
@@ -1374,6 +1377,7 @@
     "reports": "Informes",
     "your-plan": "Tu Plan",
     "collaborators-admin": "Colaboradores",
+    "permissions-admin": "Permisos",
     "modules-admin": "Módulos",
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
@@ -1397,6 +1401,7 @@
           "modules-admin": "Administrar Módulos",
           "queues-admin": "Administrar Filas",
           "collaborators-admin": "Administrar Colaboradores",
+          "permissions-admin": "Administrar Permisos",
           "configuration": "Configuraciones",
           "surveys-admin": "Administrar Encuestas",
           "your-plan": "Tu Plan",
@@ -1414,6 +1419,7 @@
     "business-master-resume": "Estado del Sistema",
     "dashboard": "Dashboard",
     "tracing": "Seguimiento",
+    "permissions-admin": "Permisos",
     "commerce-master-admin": "Sucursales",
     "service-master-admin": "Servicios",
     "queues-master-admin": "Filas",
@@ -1437,6 +1443,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
     "tracing": "Seguimiento",
+    "permissions-admin": "Permisos",
     "queue-manage": "Gestionar Filas",
     "booking-manage": "Administrar Reservas",
     "go-minisite": "Minisite",
@@ -2070,6 +2077,11 @@
           "roles": "Ver los permisos de los Roles",
           "plans": "Ver los permisos de los Planes",
           "users": "Ver los permisos de los Usuarios"
+        },
+        "collaborators": {
+          "view": "Acceder a esta sección",
+          "update": "Actualizar los Permisos",
+          "add": "Agregar Permisos"
         }
       }
     },
@@ -2372,6 +2384,7 @@
         "modules-admin": "Habilitar Administrar Módulos - Menú Principal Negocio",
         "queues-admin": "Habilitar Administrar Filas - Menú Principal Negocio",
         "collaborators-admin": "Habilitar Administrar Colaboradores - Menú Principal Negocio",
+        "permissions-admin": "Habilitar Administrar Permisos - Menú Principal Negocio",
         "configuration": "Habilitar Administrar Configuraciones - Menú Principal Negocio",
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
@@ -2390,6 +2403,7 @@
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
         "tracing": "Habilitar Seguimiento - Menú Principal Colaborador",
+        "permissions-admin": "Habilitar Permisos - Menú Principal Colaborador",
         "reports": "Habilitar Reportes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Gestionar Filas - Menú Principal Colaborador",
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador"
@@ -2499,12 +2513,17 @@
       "surveys-consolidated-csat-evolution": {
         "view": "Ver Evolución de CSAT - Sección Dashboard"
       },
+      "client-contacts-management": {
+        "view": "Ver Sección - Administrar Clientes"
+      },
       "reports": {
         "surveys": "Descargar Reporte de Encuestas (Resumen) Sección Dashboard",
         "indicators": "Descargar Reporte de Indicadores Sección Dashboard",
         "graphs": "Descargar Reporte de Tendencias Sección Dashboard",
         "surveys-management": "Descargar Reporte de Encuestas (Detalles) Sección Dashboard",
-        "surveys-consolidated": "Descargar Reporte de Encuestas (Consolidado) Sección Dashboard"
+        "surveys-consolidated": "Descargar Reporte de Encuestas (Consolidado) Sección Dashboard",
+        "attentions-management": "Descargar Reporte de Atenciones Sección Dashboard",
+        "client-contacts-management": "Descargar Reporte de Contactos Sección Dashboard"
       }
     },
     "executive": {
@@ -2550,6 +2569,18 @@
         "attend": "Atender - Sección Atenciones del Colaborador",
         "finish": "Marcar atención como atendida - Sección Atenciones del Colaborador",
         "skip": "Saltar atención - Sección Atenciones del Colaborador"
+      },
+      "bookings": {
+        "cancel": "Cancelar Reserva"
+      },
+      "waitlists": {
+        "book": "Reservar Lista de Espera"
+      },
+      "main-menu": {
+        "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
+        "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
+        "queue-manage":"Habilitar Gestionar Filas - Menú Principal Colaborador",
+        "tracing": "Habilitar Seguimiento - Menú Principal Colaborador"
       }
     },
     "roles": {

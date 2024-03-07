@@ -12,6 +12,7 @@ import BusinessPlan from '../../views/business/BusinessPlan.vue';
 import BusinessSurveysAdmin from '../../views/business/BusinessSurveyAdmin.vue';
 import BusinessServicesAdmin from '../../views/business/BusinessServicesAdmin.vue';
 import BusinessTracing from '../../views/business/BusinessTracing.vue';
+import BusinessPermissionsAdmin from '../../views/business/BusinessPermissionsAdmin.vue';
 
 const PrivateCommerceRoutes = [
   {
@@ -78,6 +79,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/surveys-admin',
     name: 'surveys-admin',
     component: BusinessSurveysAdmin
+  },
+  {
+    path: '/interno/negocio/permissions-admin',
+    name: 'permissions-admin',
+    component: BusinessPermissionsAdmin
   }
 ]
 

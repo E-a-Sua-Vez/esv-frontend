@@ -13,11 +13,11 @@ import Warning from '../../components/common/Warning.vue';
 import SimplePermissionCard from '../../components/permissions/SimplePermissionCard.vue';
 import RolPermissionsAdmin from '../../components/permissions/RolPermissionsAdmin.vue';
 import PlanPermissionsAdmin from '../../components/permissions/PlanPermissionsAdmin.vue';
-import CollaboratorPermissionsAdmin from '../../components/permissions/CollaboratorPermissionsAdmin.vue';
+import UserPermissionsAdmin from '../../components/permissions/UserPermissionsAdmin.vue';
 
 export default {
-  name: 'BusinessPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, RolPermissionsAdmin, PlanPermissionsAdmin, CollaboratorPermissionsAdmin },
+  name: 'MasterPermissionsAdmin',
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, RolPermissionsAdmin, PlanPermissionsAdmin, UserPermissionsAdmin },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -41,7 +41,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.toggles = await getPermissions('permissions', 'collaborators');
+        state.toggles = await getPermissions('permissions', 'admin');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -54,11 +54,32 @@ export default {
       router.back();
     }
 
+    const showRoles = () => {
+      state.showRoles = true;
+      state.showPlans = false;
+      state.showUsers = false;
+    }
+
+    const showPlans = () => {
+      state.showRoles = false;
+      state.showPlans = true;
+      state.showUsers = false;
+    }
+
+    const showUsers = () => {
+      state.showRoles = false;
+      state.showPlans = false;
+      state.showUsers = true;
+    }
+
     return {
       state,
       loading,
       alertError,
       goBack,
+      showRoles,
+      showPlans,
+      showUsers
     }
   }
 }
@@ -81,8 +102,40 @@ export default {
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
       <div id="businessPermissionsAdmin" class="">
-        <div id="users" class="row" v-if="state.toggles['permissions.collaborators.view']">
-          <CollaboratorPermissionsAdmin></CollaboratorPermissionsAdmin>
+        <div class="row m-3">
+          <div class="col">
+            <button
+              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+              @click="showRoles()"
+              :disabled="!state.toggles['permissions.admin.roles']">
+              <i class="bi bi-file-earmark-person-fill"></i> {{ $t("businessPermissionsAdmin.roles") }}
+            </button>
+          </div>
+          <div class="col">
+            <button
+              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+              @click="showPlans()"
+              :disabled="!state.toggles['permissions.admin.plans']">
+              <i class="bi bi-card-list"></i> {{ $t("businessPermissionsAdmin.plans") }}
+            </button>
+          </div>
+          <div class="col">
+            <button
+              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+              @click="showUsers()"
+              :disabled="!state.toggles['permissions.admin.users']">
+              <i class="bi bi-person-fill"></i> {{ $t("businessPermissionsAdmin.users") }}
+            </button>
+          </div>
+        </div>
+        <div id="roles" class="row" v-if="state.showRoles === true && state.toggles['permissions.admin.roles']">
+          <RolPermissionsAdmin></RolPermissionsAdmin>
+        </div>
+        <div id="plans" class="row" v-if="state.showPlans === true && state.toggles['permissions.admin.plans']">
+          <PlanPermissionsAdmin></PlanPermissionsAdmin>
+        </div>
+        <div id="plans" class="row" v-if="state.showUsers === true && state.toggles['permissions.admin.users']">
+          <UserPermissionsAdmin></UserPermissionsAdmin>
         </div>
       </div>
     </div>

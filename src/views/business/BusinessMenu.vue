@@ -43,7 +43,8 @@ export default {
         'modules-admin',
         'queues-admin',
         'collaborators-admin',
-        'surveys-admin'
+        'surveys-admin',
+        'permissions-admin'
       ],
       currentPlanActivation: {},
       toggles: {}

@@ -1369,6 +1369,7 @@
     "reports": "Relatórios",
     "your-plan": "Seu Plano",
     "collaborators-admin": "Colaboradores",
+    "permissions-admin": "Permissões",
     "modules-admin": "Módulos",
     "business-resume": "Estado do Sistema",
     "surveys-admin": "Pesquisas",
@@ -1392,6 +1393,7 @@
           "modules-admin": "Gerenciar Módulos",
           "queues-admin": "Gerenciar Filas",
           "collaborators-admin": "Gerenciar Colaboradores",
+          "permissions-admin": "Gerenciar Permissões",
           "configuration": "Configurações",
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
@@ -2049,7 +2051,7 @@
       },
       "2": {
         "title": "Oh não!",
-        "content": "Neste momento não há configurações."
+        "content": "Neste momento não há permissões."
       }
     },
     "capacitiesList": {
@@ -2067,6 +2069,11 @@
           "roles": "Ver os Permissões dos Roles",
           "plans": "Ver os Permissões dos Planos",
           "users": "Ver os Permissões dos Usuários"
+        },
+        "collaborators": {
+          "view": "Acessar esta seçao",
+          "update": "Atualizas os Permissões",
+          "add": "Agregar Permisos"
         }
       }
     },
@@ -2368,6 +2375,7 @@
         "modules-admin": "Habilitar Gerenciar Módulos - Menú Principal Negócio",
         "queues-admin": "Habilitar Gerenciar Filas/Serviços - Menú Principal Negócio",
         "collaborators-admin": "Habilitar Gerenciar Colaboradores - Menú Principal Negócio",
+        "permissions-admin": "Habilitar Gerenciar Permissões - Menú Principal Negócio",
         "configuration": "Habilitar Gerenciar Configurações - Menú Principal Negócio",
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",

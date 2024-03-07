@@ -1366,6 +1366,7 @@
     "reports": "Reports",
     "your-plan": "Your Plan",
     "collaborators-admin": "Collaborators",
+    "permissions-admin": "Permissions",
     "administrators-admin": "Administrators",
     "modules-admin": "Modules",
     "business-resume": "System State",
@@ -1390,6 +1391,7 @@
           "modules-admin": "Modules Settings",
           "queues-admin": "Queues Settings",
           "collaborators-admin": "Collaborator Settings",
+          "permissions-admin": "Permissions Settings",
           "administrators-admin": "Administrator Settings",
           "configuration": "Settings",
           "your-plan": "Your Plan",
@@ -2064,6 +2066,11 @@
           "roles": "See the Roles Permissions",
           "plans": "See the Plans Permissions",
           "users": "See the Users Permissions"
+        },
+        "collaborators": {
+          "view": "Get to this section",
+          "update": "Update the Permissions",
+          "add": "Add Permissions"
         }
       }
     },
@@ -2365,6 +2372,7 @@
         "modules-admin": "Enable Manage Modules - Main Menu Business",
         "queues-admin": "Enable Manage Queues - Main Menu Business",
         "collaborators-admin": "Enable Manage Collaborators - Main Menu Business",
+        "permissions-admin": "Enable Manage Permissions - Main Menu Business",
         "administrators-admin": "Enable Manage Administrators - Main Menu Business",
         "configuration": "Enable Manage Configurations - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
@@ -2396,6 +2404,12 @@
         "tracing": "Enable Tracing - Main Menu Collaborators",
         "queue-manage": "Enable Queue Management - Main Menu Collaborators",
         "booking-manage": "Enable Booking Management - Main Menu Collaborators"
+      },
+      "bookings": {
+        "cancel": "Cancel Booking"
+      },
+      "waitlists": {
+        "book": "Book Waitlist"
       }
     },
     "commerces": {
