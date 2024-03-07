@@ -1,56 +1,85 @@
 <script>
-import Spinner from '../common/Spinner.vue';
+import Spinner from '../../../components/common/Spinner.vue';
+import Alert from '../../../components/common/Alert.vue';
+import Warning from '../../../components/common/Warning.vue';
 import Popper from "vue3-popper";
-import Message from '../common/Message.vue';
-import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import jsonToCsv from '../../shared/utils/jsonToCsv';
-import { getClientsDetails } from '../../application/services/query-stack';
-import ClientDetailsCard from '../clients/common/ClientDetailsCard.vue';
+import Message from '../../common/Message.vue';
+import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
+import ClientContactDetailsCard from '../common/ClientContactDetailsCard.vue';
+import { globalStore } from '../../../stores';
+import { getClientContactsDetails } from '../../../application/services/query-stack';
+import { contactClient } from '../../../application/services/client';
+import jsonToCsv from '../../../shared/utils/jsonToCsv';
 
 export default {
-  name: 'DashboardClientsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard },
+  name: 'ClientContactsManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientContactDetailsCard, Alert, Warning },
   props: {
-    showClientManagement: { type: Boolean, default: false },
+    showClientAttentionsManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
+    client: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
-    queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    queues: { type: Array, default: undefined }
   },
   data() {
+    const store = globalStore();
     return {
       loading: false,
+      alertError: '',
+      clientContacts: [],
+      contactTypes: [
+        { id: 'CALL', name: 'CALL' },
+        { id: 'EMAIL', name: 'EMAIL' },
+        { id: 'MESSAGE', name: 'MESSAGE' },
+        { id: 'VISIT', name: 'VISIT' }
+      ],
+      contactResultTypes: [
+        { id: 'INTERESTED', name: 'INTERESTED' },
+        { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
+        { id: 'REJECTED', name: 'REJECTED' }
+      ],
+      newContact: {},
       counter: 0,
-      clients: undefined,
       totalPages: 0,
-      daysSinceType: undefined,
       daysSinceContacted: undefined,
       contactResultType: undefined,
-      contacted: undefined,
-      contactable: undefined,
-      survey: undefined,
       asc: true,
-      showKeyWordsOptions: false,
+      checked: false,
       showFilterOptions: false,
+      showAddOption: false,
       searchText: undefined,
-      queueId: undefined,
+      typeError: false,
+      commentError: false,
+      resultError: false,
+      store,
+      errorsAdd: [],
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10
     }
   },
-  async beforeMount() {
-    try {
-      this.loading = true;
-      await this.refresh();
-      this.loading = false;
-    } catch (error) {
-      this.loading = false;
-    }
-  },
   methods: {
+    setPage(pageIn) {
+      this.page = pageIn;
+    },
+    async clear() {
+      this.daysSinceContacted = undefined;
+      this.contactResultType = undefined;
+      this.asc = true;
+      this.searchText = undefined;
+      this.limit = 10;
+      await this.refresh();
+    },
+    async checkAsc(event) {
+      if (event.target.checked) {
+        this.asc = true;
+      } else {
+        this.asc = false;
+      }
+    },
     async refresh() {
       try {
         this.loading = true;
@@ -58,11 +87,15 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        this.clients = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
-        if (this.clients && this.clients.length > 0) {
-          const { counter } = this.clients[0];
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.clientContacts = await getClientContactsDetails(
+          this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
+          this.page, this.limit, this.daysSinceContacted,
+          this.searchText, this.asc, this.contactResultType);
+        if (this.clientContacts && this.clientContacts.length > 0) {
+          const { counter } = this.clientContacts[0];
           this.counter = counter;
           const total = counter / this.limit;
           const totalB = Math.trunc(total);
@@ -76,51 +109,73 @@ export default {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
-      this.page = pageIn;
-    },
-    async clear() {
-      this.daysSinceType = undefined;
-      this.daysSinceContacted = undefined;
-      this.contactResultType = undefined;
-      this.survey = undefined;
-      this.asc = true;
-      this.contactable = undefined;
-      this.contacted = undefined;
-      this.searchText = undefined;
-      this.queueId = undefined;
-      await this.refresh();
-    },
-    async checkContactable(event) {
-      if (event.target.checked) {
-        this.contactable = true;
-      } else {
-        this.contactable = false;
-      }
-    },
-    async checkContacted(event) {
-      if (event.target.checked) {
-        this.contacted = true;
-      } else {
-        this.contacted = false;
-      }
-    },
-    async checkSurvey(event) {
-      if (event.target.checked) {
-        this.survey = true;
-      } else {
-        this.survey = false;
-      }
-    },
-    async checkAsc(event) {
-      if (event.target.checked) {
-        this.asc = true;
-      } else {
-        this.asc = false;
-      }
-    },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions
+    },
+    showAdd() {
+      this.showAddOption = !this.showAddOption
+    },
+    validateAdd(newContact) {
+      this.errorsAdd = [];
+      if (!newContact.type || newContact.type.length === 0) {
+        this.typeError = true;
+        this.errorsAdd.push('dashboard.validate.type');
+      } else {
+        this.typeError = false;
+      }
+      if (!newContact.result || newContact.result.length === 0) {
+        this.resultError = true;
+        this.errorsAdd.push('dashboard.validate.result');
+      } else {
+        this.resultError = false;
+      }
+      if (!newContact.comment || newContact.comment.length <= 10) {
+        this.commentError = true;
+        this.errorsAdd.push('dashboard.validate.comment');
+      } else {
+        this.commentError = false;
+      }
+      if(this.errorsAdd.length === 0) {
+        return true;
+      }
+      return false;
+    },
+    async add(newContact) {
+      try {
+        this.loading = true;
+        if (this.validateAdd(newContact)) {
+          this.currentUserType = await this.store.currentUserType;
+          if (this.currentUserType === 'collaborator') {
+            this.user = await this.store.getCurrentUser;
+            newContact.collaboratorId = this.user.id;
+          }
+          await contactClient(this.client.id, newContact);
+          setTimeout(async () => {
+            await this.refresh();
+          }, 2000)
+          this.showAddOption = false;
+          this.newContact = {}
+          this.extendedEntity = undefined;
+        }
+        this.alertError = '';
+        this.loading = false;
+      } catch (error) {
+        console.log("🚀 ~ add ~ error:", error);
+        this.alertError = error.response.status;
+        this.loading = false;
+      }
+    },
+    goToLink() {
+      const commerceKeyName = this.commerce.keyName;
+      const name = !this.client.userName ? 'undefined' : this.client.userName;
+      const lastName = !this.client.userLastName ? 'undefined' : this.client.userLastName;
+      const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
+      const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
+      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone.slice(2,15);
+      if (name || lastName || idNumber || email || phone) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
+      }
+      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
     async exportToCSV() {
       try {
@@ -133,16 +188,17 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        const result = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+        const result = this.clientContacts = await getClientContactsDetails(
+          this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
+          undefined, undefined, this.daysSinceContacted,
+          this.searchText, undefined, this.contactResultType);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `clients-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `client-contacts-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -155,9 +211,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit } = this;
+      const { page, daysSinceContacted, contactResultType, asc, queueId, limit } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit
+        page, daysSinceContacted, contactResultType, asc, queueId, limit
       }
     }
   },
@@ -168,32 +224,15 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.daysSinceType !== newData.daysSinceType ||
+          (oldData.client !== newData.client ||
           oldData.daysSinceContacted !== newData.daysSinceContacted ||
-          oldData.contactable !== newData.contactable ||
           oldData.contactResultType !== newData.contactResultType ||
-          oldData.contacted !== newData.contacted ||
-          oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
-          oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId)
+          oldData.limit !== newData.limit)
         ) {
           this.page = 1;
         }
         this.refresh();
-      }
-    },
-    searchText: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.searchText) {
-          this.searchText = this.searchText.toUpperCase();
-          if (this.searchText.length > 5) {
-            this.page = 1;
-            this.refresh();
-          }
-        }
       }
     }
   }
@@ -201,20 +240,98 @@ export default {
 </script>
 
 <template>
-  <div id="clients-management" class="row" v-if="showClientManagement === true && toggles['dashboard.clients-management.view']">
+  <div id="clientContacts-management" class="row" v-if="showClientAttentionsManagement === true && toggles['dashboard.client-contacts-management.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
         <div v-if="!loading">
           <div>
+            <div class="my-2 row metric-card">
+              <div class="col-12">
+                <span class="">
+                  <span class="form-check-label" @click="showAdd()">
+                    <i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.addContact") }}
+                    <i :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
+                </span>
+              </div>
+              <div v-if="showAddOption">
+                <div class="row mt-2">
+                  <div class="col-4 text-label">
+                    {{ $t("dashboard.commerce") }}
+                  </div>
+                  <div class="col-8">
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="newContact.commerceId">
+                      <option v-for="com in commerces" :key="com.id" :value="com.id" id="select-commerce">{{ com.name }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row mt-2">
+                  <div class="col-4 text-label">
+                    {{ $t("dashboard.type") }}
+                  </div>
+                  <div class="col-8">
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="newContact.type">
+                      <option v-for="typ in contactTypes" :key="typ.name" :value="typ.id" id="select-type">{{ $t(`contactTypes.${typ.name}`) }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row m-1">
+                  <div class="col-4 text-label">
+                    {{ $t("dashboard.result") }}
+                  </div>
+                  <div class="col-8">
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="newContact.result">
+                      <option v-for="typ in contactResultTypes" :key="typ.name" :value="typ.id" id="select-result">{{ $t(`contactResultTypes.${typ.name}`) }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row m-1">
+                  <textarea
+                    class="form-control mt-2"
+                    id="commennt"
+                    rows="3"
+                    v-model="newContact.comment"
+                    :placeholder="$t('dashboard.comment')">
+                  </textarea>
+                </div>
+                <div class="row m-1">
+                  <div class="col-8 text-label">
+                    <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(newContact)"
+                      >
+                      {{ $t("dashboard.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="col-4 text-label">
+                    <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      :href="goToLink(client)"
+                      :disabled="client.contacted"
+                      target="_blank"
+                      >
+                      <i class="bi bi-calendar-check-fill"></i>
+                    </a>
+                  </div>
+                </div>
+                <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
+                  <Warning>
+                    <template v-slot:message>
+                      <li v-for="(error, index) in errorsAdd" :key="index">
+                        {{ $t(error) }}
+                      </li>
+                    </template>
+                  </Warning>
+                </div>
+              </div>
+            </div>
             <SimpleDownloadCard
-              :download="toggles['dashboard.reports.clients-management']"
-              :title="$t('dashboard.reports.clients-management.title')"
+              :download="toggles['dashboard.reports.client-contacts-management']"
+              :title="$t('dashboard.reports.client-contacts-management.title')"
               :showTooltip="true"
-              :description="$t('dashboard.reports.clients-management.description')"
+              :description="$t('dashboard.reports.client-contacts-management.description')"
               :icon="'bi-file-earmark-spreadsheet'"
               @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.clients-management'] === true"
+              :canDownload="toggles['dashboard.reports.client-contacts-management'] === true"
             ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -228,39 +345,6 @@ export default {
                 </button>
               </div>
               <div v-if="showFilterOptions">
-                <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
-                    <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
-                  </select>
-                </div>
-                <div class="col-12 m-1">
-                  <div class="col-12 col-md">
-                    <input
-                      min="1"
-                      max="50"
-                      type="text"
-                      class="form-control"
-                      v-model="searchText"
-                      :placeholder="$t('dashboard.search')">
-                  </div>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
-                  <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="MEDIUM" name="daysSince-type" id="medium-since" autocomplete="off">
-                  <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
-                  <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disableClickAway
-                    :content="$t(`dashboard.tracing.filters.attention`)">
-                    <i class='bi bi-info-circle-fill h7 m-2'></i>
-                  </Popper>
-                </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="EARLY" name="daysContacted-type" id="early-contacted" autocomplete="off">
                   <label class="btn" for="early-contacted"> <i :class="`bi bi-chat-left-dots-fill green-icon`"></i> </label>
@@ -294,29 +378,9 @@ export default {
                   </Popper>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-6">
+                  <div class="col-12">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="contactable === false ? 'bg-danger' : ''" type="checkbox" name="contactable" id="contactable" v-model="contactable" @click="checkContactable($event)">
-                      <label class="form-check-label metric-card-subtitle" for="contactable">{{ $t("dashboard.contactable") }}</label>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="contacted === false ? 'bg-danger' : ''" type="checkbox" name="contacted" id="contacted"  v-model="contacted" @click="checkContacted($event)">
-                      <label class="form-check-label metric-card-subtitle" for="contacted">{{ $t("dashboard.contacted") }}</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
-                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>
@@ -376,65 +440,14 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="clients && clients.length > 0">
-              <div class="row" v-for="(client, index) in clients" :key="`clients-${index}`">
-                <ClientDetailsCard
+            <div v-if="clientContacts && clientContacts.length > 0">
+              <div class="row" v-for="(contact, index) in clientContacts" :key="`clientContacts-${index}`">
+                <ClientContactDetailsCard
                   :show="true"
-                  :client="client"
-                  :commerce="this.commerce"
-                  :toggles="this.toggles"
-                  :startDate="this.startDate"
-                  :endDate="this.endDate"
-                  :queues="this.queues"
-                  :commerces="this.commerces"
+                  :client="contact"
+                  :commerce="commerce"
                 >
-              </ClientDetailsCard>
-              </div>
-              <div class="centered mt-2">
-                <nav>
-                  <ul class="pagination">
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="First"
-                        @click="setPage(1)"
-                        :disabled="page === 1 || totalPages === 0">
-                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                      </button>
-                    </li>
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="Previous"
-                        @click="setPage(page - 1)"
-                        :disabled="page === 1 || totalPages === 0">
-                        <span aria-hidden="true">&laquo;</span>
-                      </button>
-                    </li>
-                    <li>
-                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page" :disabled="totalPages === 0">
-                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
-                      </select>
-                    </li>
-                    <li class="page-item">
-                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="Next"
-                        @click="setPage(page + 1)"
-                        :disabled="page === totalPages || totalPages === 0">
-                        <span aria-hidden="true">&raquo;</span>
-                      </button>
-                    </li>
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="First"
-                        @click="setPage(totalPages)"
-                        :disabled="page === totalPages || totalPages === 0">
-                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+              </ClientContactDetailsCard>
               </div>
             </div>
             <div v-else>
@@ -448,7 +461,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showClientManagement === true && !toggles['dashboard.clients-management.view']">
+  <div v-if="showClientAttentionsManagement === true && !toggles['dashboard.client-contacts-management.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

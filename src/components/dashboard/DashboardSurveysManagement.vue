@@ -40,7 +40,8 @@ export default {
       searchText: undefined,
       queueId: undefined,
       page: 1,
-      limit: 15
+      limits: [10, 20, 50, 100],
+      limit: 10
     }
   },
   async beforeMount() {
@@ -59,7 +60,6 @@ export default {
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
-          console.log("🚀 ~ refresh ~ commerceIds:", commerceIds);
         }
         this.surveys = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.ratingType, this.npsType, this.contactable, this.contacted,
@@ -167,9 +167,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, ratingType, npsType, contactable, contacted, keyWord, queueId } = this;
+      const { page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit} = this;
       return {
-        page, ratingType, npsType, contactable, contacted, keyWord, queueId
+        page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit
       }
     }
   },
@@ -184,6 +184,7 @@ export default {
           oldData.npsType !== newData.npsType ||
           oldData.contactable !== newData.contactable ||
           oldData.keyWord !== newData.keyWord ||
+          oldData.limit !== newData.limit ||
           oldData.queueId !== newData.queueId)
         ) {
           this.page = 1;
@@ -322,6 +323,9 @@ export default {
             <div class="my-3">
               <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ this.counter }} </span>
               <span class="badge bg-secondary px-3 py-2 m-1"> {{ $t("page") }} {{ this.page }} {{ $t("of") }} {{ this.totalPages }} </span>
+              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">{{ lim }}</option>
+              </select>
             </div>
             <div class="centered mt-2">
                 <nav>

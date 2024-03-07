@@ -248,6 +248,12 @@
     "emailDir": "hola{'@'}estuturno.app"
   },
   "contactTypes": {
+    "CALL": "Llamada",
+    "MESSAGE": "Mensaje",
+    "VISIT": "Visita",
+    "EMAIL": "Email"
+  },
+  "contactResultTypes": {
     "INTERESTED": "Interesado",
     "CONTACT_LATER": "Contactar Después",
     "REJECTED": "No contactar Más"
@@ -647,6 +653,9 @@
         "module": {
           "update": "Actualizar módulo de atención"
         },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
+        },
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
@@ -896,6 +905,9 @@
     "lastMonth": "Mes Pasado",
     "lastThreeMonths": "3 Meses",
     "showAll": "Mostrar todo",
+    "attentionsOf": "Atenciones de ",
+    "contactsOf": "Contactos de ",
+    "addContact": "Nuevo Contacto",
     "aditionalFilters": "Filtros adicionales",
     "contacted": "Contactado",
     "contactable": "Contactable",
@@ -914,6 +926,9 @@
     "month": "Mes",
     "year": "Año",
     "all": "Todos",
+    "type": "Tipo:",
+    "result": "Resultado:",
+    "add": "Agregar",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1097,35 +1112,39 @@
     "reports": {
       "surveys": {
         "title": "Reporte de Encuestas (Resumen)",
-        "description": "Descarga archivo PDF con el resultado de las encuestas realizadas en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las encuestas realizadas en el rango de fechas seleccionado"
       },
       "indicators": {
         "title": "Reporte de Indicadores",
-        "description": "Descarga archivo PDF con el resultado de los indicadores en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de los indicadores en el rango de fechas seleccionado"
       },
       "graphs": {
         "title": "Reporte de Tendencias",
-        "description": "Descarga archivo PDF con el resultado de las tendencias en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las tendencias en el rango de fechas seleccionado"
       },
       "surveys-management": {
         "title": "Reporte de Encuestas (Detalles)",
-        "description": "Descarga archivo PDF con el resultado de las encuestas realizadas en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las encuestas realizadas en el rango de fechas seleccionado"
       },
       "surveys-consolidated": {
         "title": "Reporte de Encuestas (Consolidado)",
-        "description": "Descarga archivo PDF con el resultado de las encuestas consolidado"
+        "description": "Descarga archivo report con el resultado de las encuestas consolidado"
       },
       "surveys-question": {
         "title": "Reporte de Encuestas (Pregunta)",
-        "description": "Descarga archivo PDF con el resultado de las pregunta realizadas en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las pregunta realizadas en el rango de fechas seleccionado"
       },
       "attentions-management": {
         "title": "Reporte de Atenciones (Detalles)",
-        "description": "Descarga archivo PDF con el resultado de las atenciones realizadas en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las atenciones realizadas en el rango de fechas seleccionado"
       },
       "clients-management": {
         "title": "Reporte de Clientes (Detalles)",
-        "description": "Descarga archivo PDF con el resultado de las clientes realizadas en el rango de fechas seleccionado"
+        "description": "Descarga archivo report con el resultado de las clientes realizadas en el rango de fechas seleccionado"
+      },
+      "client-contacts-management": {
+        "title": "Reporte de Contactos (Detalles)",
+        "description": "Descarga archivo report con el resultado de los contactos realizadas en el rango de fechas seleccionado"
       }
     },
     "capacitiesList": {
@@ -1232,6 +1251,9 @@
         "clients-management": {
           "view": "Ver Clientes (Detalles)"
         },
+        "client-contacts-management": {
+          "view": "Ver Contactos (Detalles)"
+        },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",
           "indicators": "Reporte de Indicadores",
@@ -1239,9 +1261,15 @@
           "surveys-management": "Reporte de Encuestas (Detalles)",
           "surveys-consolidated": "Reporte de Encuestas (Consolidado)",
           "attentions-management": "Reporte de Atenciones (Detalles)",
-          "clientes-management": "Reporte de Clientes (Detalles)"
+          "clients-management": "Reporte de Clientes (Detalles)",
+          "client-contacts-management": "Reporte de Contactos (Detalles)"
         }
       }
+    },
+    "validate": {
+      "type": "Debes seleccionar el tipo",
+      "result": "Debes seleccionar el resultado",
+      "comment": "Debes ingresar un comentario"
     }
   },
   "resumeAttention": {

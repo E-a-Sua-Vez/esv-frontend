@@ -240,6 +240,12 @@
     "emailDir": "hola{'@'}estuturno.app"
   },
   "contactTypes": {
+    "CALL": "Call",
+    "MESSAGE": "Message",
+    "VISIT": "Visit",
+    "EMAIL": "Email"
+  },
+  "contactResultTypes": {
     "INTERESTED": "Interested",
     "CONTACT_LATER": "Contact Later",
     "REJECTED": "No more Contact"
@@ -893,6 +899,9 @@
     "lastMonth": "Last Month",
     "lastThreeMonths": "3 Months",
     "showAll": "Show all",
+    "attentionsOf": "Attentions of ",
+    "contactsOf": "Contacts of ",
+    "addContact": "New Contact",
     "aditionalFilters": "Aditional filters",
     "contacted": "Contacted",
     "contactable": "Contactable",
@@ -911,6 +920,9 @@
     "month": "Month",
     "year": "Year",
     "all": "All",
+    "type": "Type:",
+    "result": "Result:",
+    "add": "Add",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1090,35 +1102,39 @@
     "reports": {
       "surveys": {
         "title": "Survey Report (Summary)",
-        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+        "description": "Download report file with the results of the surveys carried out in the selected date range"
       },
       "indicators": {
         "title": "Indicators Report",
-        "description": "Download PDF file with the results of the indicators in the selected date range"
+        "description": "Download report file with the results of the indicators in the selected date range"
       },
       "graphs": {
         "title": "Trends Report",
-        "description": "Download PDF file with the results of the graphs in the selected date range"
+        "description": "Download report file with the results of the graphs in the selected date range"
       },
       "surveys-management": {
         "title": "Survey Report (Details)",
-        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+        "description": "Download report file with the results of the surveys carried out in the selected date range"
       },
       "surveys-consolidated": {
         "title": "Survey Report (Consolidated)",
-        "description": "Download PDF file with the results of the surveys consolidated"
+        "description": "Download report file with the results of the surveys consolidated"
       },
       "surveys-question": {
         "title": "Survey Report (Question)",
-        "description": "Download PDF file with the results of the surveys carried out in the selected date range"
+        "description": "Download report file with the results of the surveys carried out in the selected date range"
       },
       "attentions-management": {
         "title": "Attentions Report (Details)",
-        "description": "Download PDF file with the results of the attentions carried out in the selected date range"
+        "description": "Download report file with the results of the attentions carried out in the selected date range"
       },
       "clients-management": {
         "title": "Clients Report (Details)",
-        "description": "Download PDF file with the results of the clients carried out in the selected date range"
+        "description": "Download repor file with the results of the clients carried out in the selected date range"
+      },
+      "client-contacts-management": {
+        "title": "Client Contacts Report (Details)",
+        "description": "Download report file with the results of the clients carried out in the selected date range"
       }
     },
     "capacitiesList": {
@@ -1225,6 +1241,9 @@
         "clients-management": {
           "view": "See Clients (Details)"
         },
+        "client-contacts-management": {
+          "view": "See Contacts (Details)"
+        },
         "reports": {
           "surveys": "Surveys Report (Summary)",
           "indicators": "Indicators Report",
@@ -1232,9 +1251,15 @@
           "surveys-management": "Surveys Report (Details)",
           "surveys-consolidated": "Surveys Report (Consolidated)",
           "attentions-management": "Attentions Report (Details)",
-          "clients-management": "Clients Report (Details)"
+          "clients-management": "Clients Report (Details)",
+          "client-contacts-management": "Contacts Report (Details)"
         }
       }
+    },
+    "validate": {
+      "type": "Should select the type",
+      "result": "Should select the result",
+      "comment": "Debes enter the comment"
     }
   },
   "resumeAttention": {

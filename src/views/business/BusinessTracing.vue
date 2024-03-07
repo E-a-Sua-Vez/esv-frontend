@@ -72,7 +72,8 @@ export default {
       queue: {},
       dateType: 'month',
       commerce: {},
-      showAttentions: true,
+      showClients: true,
+      showAttentions: false,
       showSurveyManagement: false,
       calculatedMetrics: {
         'attention.created': attentionCreated,
@@ -97,7 +98,6 @@ export default {
         await refresh();
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ onBeforeMount ~ error:", error);
         loading.value = false;
       }
     })
@@ -196,14 +196,22 @@ export default {
       router.back();
     }
 
-    const showAttentions = () => {
-      state.showAttentions = true;
+    const showClients = () => {
+      state.showClients = true;
+      state.showAttentions = false,
       state.showSurveyManagement = false;
     }
 
     const showSurveys = () => {
-      state.showAttentions = false;
+      state.showClients = false;
+      state.showAttentions = false,
       state.showSurveyManagement = true;
+    }
+
+    const showAttentions = () => {
+      state.showClients = false;
+      state.showAttentions = true,
+      state.showSurveyManagement = false;
     }
 
     return {
@@ -214,8 +222,9 @@ export default {
       isActiveBusiness,
       refresh,
       selectCommerce,
-      showAttentions,
+      showClients,
       showSurveys,
+      showAttentions,
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
@@ -291,21 +300,31 @@ export default {
           </div>
           <div v-if="!loading" id="dashboard-result" class="mt-4">
             <div id="title" class="metric-title">
-              <span v-if="state.showAttentions">{{ $t("dashboard.clients") }}</span>
+              <span v-if="state.showClients">{{ $t("dashboard.clients") }}</span>
               <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.surveys-management") }}</span>
+              <span v-else-if="state.showAttentions">{{ $t("dashboard.attentions") }}</span>
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
             <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-6 centered">
+              <div class="col-4 centered">
+                <button
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  :class="state.showClients ? 'btn-selected' : ''"
+                  @click="showClients()"
+                  :disabled="!state.toggles['dashboard.clients-management.view']">
+                  <i class="bi bi-person-fill"></i>
+                </button>
+              </div>
+              <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showAttentions ? 'btn-selected' : ''"
                   @click="showAttentions()"
-                  :disabled="!state.toggles['dashboard.tracing.view']">
+                  :disabled="!state.toggles['dashboard.attentions-management.view']">
                   <i class="bi bi-qr-code"></i>
                 </button>
               </div>
-              <div class="col-6 centered">
+              <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showSurveyManagement ? 'btn-selected' : ''"
@@ -317,7 +336,7 @@ export default {
             </div>
             <div>
               <DashboardClientsManagement
-                :showAttentionManagement="state.showAttentions"
+                :showClientManagement="state.showClients"
                 :toggles="state.toggles"
                 :startDate="state.startDate"
                 :endDate="state.endDate"
@@ -326,6 +345,16 @@ export default {
                 :commerces="state.selectedCommerces"
               >
               </DashboardClientsManagement>
+              <DashboardAttentionsManagement
+                :showAttentionManagement="state.showAttentions"
+                :toggles="state.toggles"
+                :startDate="state.startDate"
+                :endDate="state.endDate"
+                :commerce="state.commerce"
+                :queues="state.queues"
+                :commerces="state.selectedCommerces"
+              >
+              </DashboardAttentionsManagement>
               <DashboardSurveysManagement
                 :showSurveyManagement="state.showSurveyManagement"
                 :calculatedMetrics="state.calculatedMetrics"

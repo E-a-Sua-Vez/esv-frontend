@@ -1,110 +1,55 @@
 <script>
-import Spinner from '../common/Spinner.vue';
+import Spinner from '../../common/Spinner.vue';
 import Popper from "vue3-popper";
-import Message from '../common/Message.vue';
-import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import AttentionManagementDetailsCard from './common/AttentionManagementDetailsCard.vue';
-import jsonToCsv from '../../shared/utils/jsonToCsv';
-import { getAttentionsDetails } from '../../application/services/query-stack';
-import { DoughnutChart, BarChart } from 'vue-chart-3';
+import Message from '../../common/Message.vue';
+import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
+import AttentionDetailsCard from '../../clients/common/AttentionDetailsCard.vue';
+import { getAttentionsDetails } from '../../../application/services/query-stack';
+import jsonToCsv from '../../../shared/utils/jsonToCsv';
 
 export default {
-  name: 'DashboardAttentionsManagement',
-  components: { DoughnutChart, BarChart, Message, SimpleDownloadCard, Spinner, AttentionManagementDetailsCard, Popper },
+  name: 'ClientAttentionsManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard },
   props: {
-    showAttentionManagement: { type: Boolean, default: false },
+    showClientAttentionsManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
+    client: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
-    queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    queues: { type: Array, default: undefined }
   },
   data() {
     return {
       loading: false,
+      attentions: [],
       counter: 0,
-      attentions: undefined,
       totalPages: 0,
       daysSinceType: undefined,
-      daysSinceContacted: undefined,
-      contactResultType: undefined,
-      contacted: undefined,
-      contactable: undefined,
       survey: undefined,
       asc: true,
-      showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
       queueId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10
-    }
-  },
-  async beforeMount() {
-    try {
-      this.loading = true;
-      await this.refresh();
-      this.loading = false;
-    } catch (error) {
-      this.loading = false;
+
     }
   },
   methods: {
-    async refresh() {
-      try {
-        this.loading = true;
-        let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
-        if (this.attentions && this.attentions.length > 0) {
-          const { counter } = this.attentions[0];
-          this.counter = counter;
-          const total = counter / this.limit;
-          const totalB = Math.trunc(total);
-          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
-        } else {
-          this.counter = 0;
-          this.totalPages = 0;
-        }
-        this.loading = false;
-      } catch (error) {
-        this.loading = false;
-      }
-    },
     setPage(pageIn) {
       this.page = pageIn;
     },
     async clear() {
       this.daysSinceType = undefined;
-      this.daysSinceContacted = undefined;
-      this.contactResultType = undefined;
       this.survey = undefined;
       this.asc = true;
-      this.contactable = undefined;
-      this.contacted = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.limit = 10;
       await this.refresh();
-    },
-    async checkContactable(event) {
-      if (event.target.checked) {
-        this.contactable = true;
-      } else {
-        this.contactable = false;
-      }
-    },
-    async checkContacted(event) {
-      if (event.target.checked) {
-        this.contacted = true;
-      } else {
-        this.contacted = false;
-      }
     },
     async checkSurvey(event) {
       if (event.target.checked) {
@@ -120,6 +65,34 @@ export default {
         this.asc = false;
       }
     },
+    async refresh() {
+      try {
+        this.loading = true;
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
+          this.searchText, this.queueId, this.survey, this.asc, undefined);
+        if (this.attentions && this.attentions.length > 0) {
+          const { counter } = this.attentions[0];
+          this.counter = counter;
+          const total = counter / this.limit;
+          const totalB = Math.trunc(total);
+          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+        } else {
+          this.counter = 0;
+          this.totalPages = 0;
+        }
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions
     },
@@ -127,7 +100,17 @@ export default {
       try {
         this.loading = true;
         let csvAsBlob = [];
-        const result = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate);
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        const result = this.attentions = await getAttentionsDetails(
+          this.commerce.id, this.startDate, this.endDate, commerceIds,
+          undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
+          this.searchText, this.queueId, this.survey, this.asc, undefined);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -147,9 +130,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit } = this;
+      const { page, daysSinceType, survey, asc, queueId, limit } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit
+        page, daysSinceType, survey, asc, queueId, limit
       }
     }
   },
@@ -160,11 +143,8 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.daysSinceType !== newData.daysSinceType ||
-          oldData.daysSinceContacted !== newData.daysSinceContacted ||
-          oldData.contactable !== newData.contactable ||
-          oldData.contactResultType !== newData.contactResultType ||
-          oldData.contacted !== newData.contacted ||
+          (oldData.client !== newData.client ||
+          oldData.daysSinceType !== newData.daysSinceType ||
           oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
@@ -174,26 +154,13 @@ export default {
         }
         this.refresh();
       }
-    },
-    searchText: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.searchText) {
-          this.searchText = this.searchText.toUpperCase();
-          if (this.searchText.length > 5) {
-            this.page = 1;
-            this.refresh();
-          }
-        }
-      }
     }
   }
 }
 </script>
 
 <template>
-  <div id="attentions-management" class="row" v-if="showAttentionManagement === true && toggles['dashboard.attentions-management.view']">
+  <div id="attentions-management" class="row" v-if="showClientAttentionsManagement === true && toggles['dashboard.attentions-management.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
@@ -226,17 +193,6 @@ export default {
                     <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
                   </select>
                 </div>
-                <div class="col-12 m-1">
-                  <div class="col-12 col-md">
-                    <input
-                      min="1"
-                      max="50"
-                      type="text"
-                      class="form-control"
-                      v-model="searchText"
-                      :placeholder="$t('dashboard.search')">
-                  </div>
-                </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
                   <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
@@ -252,36 +208,6 @@ export default {
                     :content="$t(`dashboard.tracing.filters.attention`)">
                     <i class='bi bi-info-circle-fill h7 m-2'></i>
                   </Popper>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="INTERESTED" name="contactResultType-type" id="interested-contacted" autocomplete="off">
-                  <label class="btn" for="interested-contacted"> <i :class="`bi bi-patch-check-fill green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="CONTACT_LATER" name="contactResultType-type" id="contact-later-contacted" autocomplete="off">
-                  <label class="btn" for="contact-later-contacted"> <i :class="`bi bi-patch-check-fill yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="contactResultType" value="REJECTED" name="contactResultType-type" id="rejected-contacted" autocomplete="off">
-                  <label class="btn" for="rejected-contacted"> <i :class="`bi bi-patch-check-fill red-icon`"></i> </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disableClickAway
-                    :content="$t(`dashboard.tracing.filters.contactResult`)">
-                    <i class='bi bi-info-circle-fill h7 m-2'></i>
-                  </Popper>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="contactable === false ? 'bg-danger' : ''" type="checkbox" name="contactable" id="contactable" v-model="contactable" @click="checkContactable($event)">
-                      <label class="form-check-label metric-card-subtitle" for="contactable">{{ $t("dashboard.contactable") }}</label>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="contacted === false ? 'bg-danger' : ''" type="checkbox" name="contacted" id="contacted"  v-model="contacted" @click="checkContacted($event)">
-                      <label class="form-check-label metric-card-subtitle" for="contacted">{{ $t("dashboard.contacted") }}</label>
-                    </div>
-                  </div>
                 </div>
                 <div class="row">
                   <div class="col-12 col-md-6">
@@ -351,61 +277,15 @@ export default {
                     </li>
                   </ul>
                 </nav>
-              </div>
+            </div>
             <div v-if="attentions && attentions.length > 0">
-              <div class="row" v-for="(attention, index) in attentions" :key="`attention-${index}`">
-                <AttentionManagementDetailsCard
+              <div class="row" v-for="(attention, index) in attentions" :key="`attentions-${index}`">
+                <AttentionDetailsCard
                   :show="true"
                   :attention="attention"
                   :commerce="commerce"
                 >
-                </AttentionManagementDetailsCard>
-              </div>
-              <div class="centered mt-2">
-                <nav>
-                  <ul class="pagination">
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="First"
-                        @click="setPage(1)"
-                        :disabled="page === 1 || totalPages === 0">
-                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                      </button>
-                    </li>
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="Previous"
-                        @click="setPage(page - 1)"
-                        :disabled="page === 1 || totalPages === 0">
-                        <span aria-hidden="true">&laquo;</span>
-                      </button>
-                    </li>
-                    <li>
-                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page" :disabled="totalPages === 0">
-                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
-                      </select>
-                    </li>
-                    <li class="page-item">
-                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="Next"
-                        @click="setPage(page + 1)"
-                        :disabled="page === totalPages || totalPages === 0">
-                        <span aria-hidden="true">&raquo;</span>
-                      </button>
-                    </li>
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                        aria-label="First"
-                        @click="setPage(totalPages)"
-                        :disabled="page === totalPages || totalPages === 0">
-                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+              </AttentionDetailsCard>
               </div>
             </div>
             <div v-else>
@@ -419,7 +299,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showAttentionManagement === true && !toggles['dashboard.attentions-management.view']">
+  <div v-if="showClientAttentionsManagement === true && !toggles['dashboard.attentions-management.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

@@ -239,10 +239,16 @@
     "email": "Denuncie por e-mail",
     "emailDir": "ola{'@'}easuavez.com"
   },
-  "contactTypes": {
+  "contactResultTypes": {
     "INTERESTED": "Teve Interesse",
     "CONTACT_LATER": "Contate logo",
     "REJECTED": "Não contate mais"
+  },
+  "contactTypes": {
+    "CALL": "Chamada",
+    "MESSAGE": "Mensagem",
+    "VISIT": "Visita",
+    "EMAIL": "Email"
   },
   "actions": {
     "title": "Ações",
@@ -898,6 +904,9 @@
     "asc": "Crescente",
     "desc": "Decrescente",
     "showAll": "Mostrar tudo",
+    "attentionsOf": "Atendimentos de ",
+    "contactsOf": "Contatos de ",
+    "addContact": "Novo Contato",
     "aditionalFilters": "Filtros adicionais",
     "contacted": "Contatado",
     "contactable": "Contactável",
@@ -914,6 +923,9 @@
     "month": "Mês",
     "year": "Ano",
     "all": "Todos",
+    "type": "Tipo:",
+    "result": "Resultado:",
+    "add": "Adicionar",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1093,35 +1105,39 @@
     "reports": {
       "surveys": {
         "title": "Relatório de Pesquisa (Sumário)",
-        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+        "description": "Baixar arquivo relatório com os resultados das pesquisas realizadas no período selecionado"
       },
       "indicators": {
         "title": "Relatório de Indicadores",
-        "description": "Baixar arquivo PDF com os resultados dos indicadores no intervalo de datas selecionado"
+        "description": "Baixar arquivo relatório com os resultados dos indicadores no intervalo de datas selecionado"
       },
       "graphs": {
         "title": "Relatório Tendências",
-        "description": "Baixar arquivo PDF com os resultados dos gráficos no intervalo de datas selecionado"
+        "description": "Baixar arquivo relatório com os resultados dos gráficos no intervalo de datas selecionado"
       },
       "surveys-management": {
         "title": "Relatório de Pesquisa (Detalhes)",
-        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+        "description": "Baixar arquivo relatório com os resultados das pesquisas realizadas no período selecionado"
       },
       "surveys-consolidated": {
         "title": "Relatório de Pesquisa (Consolidado)",
-        "description": "Baixar arquivo PDF com os resultados das pesquisas consolidado"
+        "description": "Baixar arquivo relatório com os resultados das pesquisas consolidado"
       },
       "surveys-question": {
         "title": "Relatório de Pesquisa (Sumário)",
-        "description": "Baixar arquivo PDF com os resultados das pesquisas realizadas no período selecionado"
+        "description": "Baixar arquivo relatório com os resultados das pesquisas realizadas no período selecionado"
       },
       "attentions-management": {
         "title": "Relatório de Atendimentos (Detalhes)",
-        "description": "Baixar arquivo PDF com os resultados das atenções no intervalo de datas selecionado"
+        "description": "Baixar arquivo relatório com os resultados das atenções no intervalo de datas selecionado"
       },
       "clients-management": {
         "title": "Relatório de Clientes (Detalhes)",
-        "description": "Baixar arquivo PDF com os resultados dos clientes no intervalo de datas selecionado"
+        "description": "Baixar arquivo relatório com os resultados dos clientes no intervalo de datas selecionado"
+      },
+      "client-contacts-management": {
+        "title": "Relatório de Contatos (Detalhes)",
+        "description": "Baixar arquivo relatório com os resultados dos contatos no intervalo de datas selecionado"
       }
     },
     "capacitiesList": {
@@ -1228,6 +1244,9 @@
         "clients-management": {
           "view": "Ver Clientes (Detalhes)"
         },
+        "client-contacts-management": {
+          "view": "Ver Contatos (Detalhes)"
+        },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
           "indicators": "Relatório de Indicadores",
@@ -1235,9 +1254,15 @@
           "surveys-management": "Relatório de Pesquisas (Detalhes)",
           "surveys-consolidated": "Relatório de Pesquisas (Consolidado)",
           "attentions-management": "Relatório de Atendimentos (Detalhes)",
-          "clients-management": "Relatório de Clientes (Detalhes)"
+          "clients-management": "Relatório de Clientes (Detalhes)",
+          "client-contacts-management": "Relatório de Contatos (Detalhes)"
         }
       }
+    },
+    "validate": {
+      "type": "Você deve selecionar o tipo",
+      "result": "Você deve selecionar o resultado",
+      "comment": "Você deve digitar o comentário"
     }
   },
   "resumeAttention": {

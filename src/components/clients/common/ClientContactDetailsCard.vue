@@ -3,12 +3,10 @@ import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactClient } from '../../../application/services/client';
 import Spinner from '../../common/Spinner.vue';
-import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
-import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
 
 export default {
-  name: 'ClientDetailsCard',
-  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement },
+  name: 'ClientContactDetailsCard',
+  components: { Popper, Spinner },
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
@@ -132,12 +130,7 @@ export default {
     <div class="row metric-card fw-bold">
       <div class="col-8 centered" v-if="client && client.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ client.userName.split(' ')[0] || client.userIdNumber || 'N/I' }}
-        <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ client.attentionsCounter || 0 }} </span>
-        <i v-if="client.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i v-if="client.contacted === true || checked === true" :class="`bi ${clasifyContactResult(client.contactResult || undefined)} mx-1`"> </i>
-      </div>
-      <div class="col-2 centered">
-        <i :class="`bi ${clasifyDaysSinceComment(client.daysSinceAttention || 0)} mx-1`"></i> {{ client.daysSinceAttention || 0 }}
+        <i :class="`bi ${clasifyContactResult(client.clientContactResult || undefined)} mx-1`"> </i>
       </div>
       <div class="col-2 centered">
         <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedUser || 0)} mx-1`"> </i> {{ client.daysSinceContactedUser || 0 }}
@@ -209,21 +202,10 @@ export default {
           </div>
         </div>
         <div class="row my-3 centered" v-if="!loading">
-          <div class="col-4">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-              data-bs-toggle="modal"
-              data-bs-target="#attentionsModal">
-              <i class="bi bi-qr-code"></i>
-            </button>
+          <div class="col-9">
+            <span>{{ client.comment }}</span>
           </div>
-          <div class="col-4">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-              data-bs-toggle="modal"
-              data-bs-target="#contactModal" >
-              <i class="bi bi-chat-left-dots-fill"></i>
-            </button>
-          </div>
-          <div class="col-4">
+          <div class="col-3">
             <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
               :href="goToLink(client)"
               :disabled="client.contacted || checked"
@@ -236,73 +218,11 @@ export default {
         <hr>
         <div class="row m-1 centered">
           <div class="col">
-            <div v-if="client.rating || client.nps">
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
-                CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ client.rating || 'N/I' }} </span>
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
-                NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ client.nps || 'N/I' }}
-              </span>
-            </div>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span>
             <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Modal Attentions -->
-    <div class="modal fade" id="attentionsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> {{ $t("dashboard.attentionsOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0">
-            <ClientAttentionsManagement
-              :showClientAttentionsManagement="true"
-              :toggles="toggles"
-              :client="client"
-              :startDate="startDate"
-              :endDate="endDate"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-            >
-            </ClientAttentionsManagement>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Modal Contact -->
-    <div class="modal fade" id="contactModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.contactsOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <ClientContactsManagement
-              :showClientAttentionsManagement="true"
-              :toggles="toggles"
-              :client="client"
-              :startDate="startDate"
-              :endDate="endDate"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-            >
-            </ClientContactsManagement>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate) }}</span>
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { contactUser } from '../../../application/services/user';
 import Spinner from '../../common/Spinner.vue';
 
 export default {
-  name: 'AttentionDetailsCard',
+  name: 'AttentionManagementDetailsCard',
   components: { Popper, Spinner },
   props: {
     show: { type: Boolean, default: true },
@@ -122,16 +122,12 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
-      <div class="col-8 centered" v-if="attention && attention.userName">
+      <div class="col-9 centered" v-if="attention && attention.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i v-if="attention.contacted === true || checked === true" :class="`bi ${clasifyContactResult(attention.contactResult || undefined)} mx-1`"> </i>
       </div>
-      <div class="col-2 centered">
+      <div class="col-3 centered">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
-      </div>
-      <div class="col-2 centered">
-        <i :class="`bi ${clasifyDaysContacted(attention.daysSinceContactedUser || 0)} mx-1`"> </i> {{ attention.daysSinceContactedUser || 0 }}
       </div>
     </div>
     <div class="details-arrow">
@@ -197,26 +193,6 @@ export default {
             <div class="lefted">
               <i class="bi bi-person-vcard mx-1"></i> {{ attention.userIdNumber || 'N/I' }}
             </div>
-          </div>
-        </div>
-        <div class="row my-3 centered" v-if="!loading">
-          <div class="col-12">
-            <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="attention.contactResult" :disabled="attention.contacted || checked">
-              <option v-for="typ in contactResultTypes" :key="typ.name" :value="typ.id" id="select-result">{{ $t(`contactTypes.${typ.name}`) }}</option>
-            </select>
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-              @click="check()"
-              :disabled="attention.contacted || checked"
-              >
-              <i class="bi bi-person-check-fill"></i>
-            </button>
-            <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-              :href="goToLink(attention)"
-              :disabled="attention.contacted || checked"
-              target="_blank"
-              >
-              <i class="bi bi-calendar-check-fill"></i>
-            </a>
           </div>
         </div>
         <div class="row m-1 centered">

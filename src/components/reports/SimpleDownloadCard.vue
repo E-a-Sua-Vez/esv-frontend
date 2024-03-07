@@ -61,7 +61,7 @@ export default {
 }
 .metric-card-title {
   margin: .1rem;
-  font-size: 1rem;
+  font-size: .9rem;
   font-weight: 500;
   display: flex;
   align-self: center;
