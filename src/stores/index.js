@@ -123,18 +123,20 @@ export const globalStore = defineStore('globalStore', {
     },
     async getActualBusiness() {
       let business = await this.getCurrentBusiness || undefined;
-      const currentUser = this.getCurrentUser;
-      if (!business && currentUser.businessId) {
-        business = await getBusinessById(currentUser.businessId);
+      const currentUser = await this.getCurrentUser;
+      const currentCommerce = await this.getCurrentCommerce;
+      if (!business && (currentUser.businessId || currentCommerce.businessId)) {
+        business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }
       return business;
     },
     async renewActualBusiness() {
       let business = await this.getCurrentBusiness || undefined;
-      const currentUser = this.getCurrentUser;
-      if (currentUser.businessId) {
-        business = await getBusinessById(currentUser.businessId);
+      const currentUser = await this.getCurrentUser;
+      const currentCommerce = await this.getCurrentCommerce;
+      if (currentUser.businessId || currentCommerce.businessId) {
+        business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }
       return business;

@@ -208,7 +208,7 @@ export default {
     }
 
     const itsYourTurnPlay = async () => {
-      if (itsYourTurn() && !state.soundPlayed) {
+      if (itsYourTurn() && state.soundEnabled && !state.soundPlayed) {
         var audio = document.getElementById('its-your-turn-audio');
         await audio.play();
         setTimeout(async () => {

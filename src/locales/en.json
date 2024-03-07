@@ -614,6 +614,12 @@
         "module": {
           "update": "Update attention Module"
         },
+        "bookings": {
+          "cancel": "Cancel Booking"
+        },
+        "waitlists": {
+          "book": "Book Waitlist"
+        },
         "main-menu": {
           "dashboard": "Go to Dashboard",
           "tracing": "Go to Tracing",

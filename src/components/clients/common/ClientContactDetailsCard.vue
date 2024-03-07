@@ -73,7 +73,7 @@ export default {
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
     clasifyDaysContacted(score){
-      if (!score) {
+      if (score === undefined) {
         return 'bi-chat-left-dots-fill blue-icon';
       } else if (score <= 30) {
         return 'bi-chat-left-dots-fill green-icon';
@@ -84,7 +84,7 @@ export default {
       }
     },
     clasifyContactResult(result){
-      if (!result) {
+      if (result === undefined) {
         return 'bi-patch-check-fill blue-icon';
       } else if (result === 'INTERESTED') {
         return 'bi-patch-check-fill green-icon';
@@ -207,11 +207,14 @@ export default {
         <hr>
         <div class="row m-1 centered">
           <div class="col">
-            <span v-if="client.clientContactType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
-            <span v-if="client.clientContactResult" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
-            <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate) }}</span>
+            <div class="mt-2">
+              <span v-if="client.clientContactType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
+              <span v-if="client.clientContactResult" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
+              <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
+              <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
+              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate) }}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import ClientContactDetailsCard from '../common/ClientContactDetailsCard.vue';
 import { globalStore } from '../../../stores';
 import { getClientContactsDetails } from '../../../application/services/query-stack';
-import { contactClient } from '../../../application/services/client';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 
 export default {
@@ -22,7 +21,8 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
-    queues: { type: Array, default: undefined }
+    queues: { type: Array, default: undefined },
+    clientContactsIn: { type: Array, default: undefined }
   },
   data() {
     const store = globalStore();
@@ -55,11 +55,16 @@ export default {
       commentError: false,
       resultError: false,
       store,
+      userType: undefined,
+      user: undefined,
       errorsAdd: [],
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10
     }
+  },
+  beforeMount() {
+    this.clientContacts = this.clientContactsIn;
   },
   methods: {
     setPage(pageIn) {
@@ -94,16 +99,7 @@ export default {
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
           this.page, this.limit, this.daysSinceContacted,
           this.searchText, this.asc, this.contactResultType);
-        if (this.clientContacts && this.clientContacts.length > 0) {
-          const { counter } = this.clientContacts[0];
-          this.counter = counter;
-          const total = counter / this.limit;
-          const totalB = Math.trunc(total);
-          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
-        } else {
-          this.counter = 0;
-          this.totalPages = 0;
-        }
+        updatePaginationData();
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -114,6 +110,18 @@ export default {
     },
     showAdd() {
       this.showAddOption = !this.showAddOption
+    },
+    updatePaginationData() {
+      if (this.clientContacts && this.clientContacts.length > 0) {
+        const { counter } = this.clientContacts[0];
+        this.counter = counter;
+        const total = counter / this.limit;
+        const totalB = Math.trunc(total);
+        this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+      } else {
+        this.counter = 0;
+        this.totalPages = 0;
+      }
     },
     validateAdd(newContact) {
       this.errorsAdd = [];
@@ -144,15 +152,13 @@ export default {
       try {
         this.loading = true;
         if (this.validateAdd(newContact)) {
-          this.currentUserType = await this.store.currentUserType;
-          if (this.currentUserType === 'collaborator') {
-            this.user = await this.store.getCurrentUser;
+          if (this.userType === 'collaborator') {
             newContact.collaboratorId = this.user.id;
           }
           await contactClient(this.client.id, newContact);
           setTimeout(async () => {
             await this.refresh();
-          }, 2000)
+          }, 7000)
           this.showAddOption = false;
           this.newContact = {}
           this.extendedEntity = undefined;
@@ -206,7 +212,13 @@ export default {
       } catch (error) {
         this.loading = false;
       }
-    }
+    },
+    async getUserType() {
+      this.userType = await this.store.getCurrentUserType;
+    },
+    async getUser() {
+      this.user = await this.store.getCurrentUser;
+    },
   },
   computed: {
     changeData() {
@@ -233,6 +245,14 @@ export default {
         }
         this.refresh();
       }
+    },
+    store: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        await this.getUserType();
+        await this.getUser();
+      }
     }
   }
 }
@@ -255,7 +275,7 @@ export default {
                 </span>
               </div>
               <div v-if="showAddOption">
-                <div class="row mt-2">
+                <div class="row mt-1">
                   <div class="col-4 text-label">
                     {{ $t("dashboard.commerce") }}
                   </div>
@@ -265,7 +285,7 @@ export default {
                     </select>
                   </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row mt-1">
                   <div class="col-4 text-label">
                     {{ $t("dashboard.type") }}
                   </div>
@@ -285,7 +305,7 @@ export default {
                     </select>
                   </div>
                 </div>
-                <div class="row m-1">
+                <div class="row mt-1">
                   <textarea
                     class="form-control mt-2"
                     id="commennt"
@@ -340,7 +360,7 @@ export default {
                 <button
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
                   @click="clear()">
-                  <span><i class="bi bi-eraser-fill"></i></span>
+                  <span><i class="bi bi-arrow-counterclockwise"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">

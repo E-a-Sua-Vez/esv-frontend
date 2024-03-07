@@ -67,7 +67,7 @@ export default {
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
     clasifyDaysSinceComment(score) {
-      if (!score) {
+      if (score === undefined) {
         return 'bi-qr-code blue-icon';
       } else if (score <= 30) {
         return 'bi-qr-code green-icon';
@@ -182,10 +182,13 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
               </span>
             </div>
-            <span v-if="attention.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
-            <span v-if="attention.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
+            <div class="mt-2">
+              <span v-if="attention.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
+              <span v-if="attention.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
+              <span v-if="attention.commerceName && attention.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.commerceName }} - {{ attention.commerceTag }}</span><br>
+              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
+              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
+            </div>
           </div>
         </div>
       </div>

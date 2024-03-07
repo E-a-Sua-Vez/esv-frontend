@@ -297,7 +297,7 @@ export default {
             <button
               class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
               @click="clear()">
-              <span><i class="bi bi-eraser-fill"></i></span>
+              <span><i class="bi bi-arrow-counterclockwise"></i></span>
             </button>
           </div>
           <div class="col mt-2" v-if="state.user">

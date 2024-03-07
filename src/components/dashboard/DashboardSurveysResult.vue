@@ -160,7 +160,7 @@ export default {
           <button
             class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
             @click="clear()">
-            <span><i class="bi bi-eraser-fill"></i></span>
+            <span><i class="bi bi-arrow-counterclockwise"></i></span>
           </button>
         </div>
         <div v-if="showFilterOptions">

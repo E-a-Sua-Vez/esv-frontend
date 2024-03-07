@@ -45,6 +45,7 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.commerce = await getCommerceById(state.currentUser.commerceId);
         store.setCurrentCommerce(state.commerce);
+        state.business = await store.renewActualBusiness();
         state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.commerce.id, true) || {};
         state.toggles = await getPermissions('collaborator', 'main-menu');
         alertError.value = '';

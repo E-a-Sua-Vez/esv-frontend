@@ -5,6 +5,7 @@ import { contactClient } from '../../../application/services/client';
 import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
+import { getAttentionsDetails, getClientContactsDetails } from '../../../application/services/query-stack';
 
 export default {
   name: 'ClientDetailsCard',
@@ -12,7 +13,6 @@ export default {
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
-    detailsOpened: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
     toggles: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
@@ -26,6 +26,8 @@ export default {
       extendedEntity: false,
       checked: false,
       asc: false,
+      attentions: [],
+      clientContacts: [],
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
         { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
@@ -34,6 +36,45 @@ export default {
     }
   },
   methods: {
+    async getAttentions() {
+      try {
+        this.loading = true;
+        this.attentions = [];
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
+          this.searchText, this.queueId, this.survey, this.asc, undefined);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
+    async getClientContacts() {
+      try {
+        this.loading = true;
+        this.clientContacts = [];
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.clientContacts = await getClientContactsDetails(
+          this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
+          this.page, this.limit, this.daysSinceContacted,
+          this.searchText, this.asc, this.contactResultType);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
     },
@@ -75,7 +116,7 @@ export default {
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
     clasifyDaysSinceComment(score) {
-      if (!score) {
+      if (score === undefined) {
         return 'bi-qr-code blue-icon';
       } else if (score <= 30) {
         return 'bi-qr-code green-icon';
@@ -86,7 +127,7 @@ export default {
       }
     },
     clasifyDaysContacted(score){
-      if (!score) {
+      if (score === undefined) {
         return 'bi-chat-left-dots-fill blue-icon';
       } else if (score <= 30) {
         return 'bi-chat-left-dots-fill green-icon';
@@ -97,7 +138,7 @@ export default {
       }
     },
     clasifyContactResult(result){
-      if (!result) {
+      if (result === undefined) {
         return 'bi-patch-check-fill blue-icon';
       } else if (result === 'INTERESTED') {
         return 'bi-patch-check-fill green-icon';
@@ -210,16 +251,20 @@ export default {
         </div>
         <div class="row my-3 centered" v-if="!loading">
           <div class="col-4">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+            <button
+              @click="getAttentions()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
               data-bs-toggle="modal"
-              data-bs-target="#attentionsModal">
+              :data-bs-target="`#attentionsModal-${this.client.id}`">
               <i class="bi bi-qr-code"></i>
             </button>
           </div>
           <div class="col-4">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+            <button
+              @click="getClientContacts()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
               data-bs-toggle="modal"
-              data-bs-target="#contactModal" >
+              :data-bs-target="`#contactModal-${this.client.id}`">
               <i class="bi bi-chat-left-dots-fill"></i>
             </button>
           </div>
@@ -243,20 +288,23 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ client.nps || 'N/I' }}
               </span>
             </div>
-            <span v-if="client.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
-            <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
+            <div class="mt-2">
+              <span v-if="client.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
+              <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
+              <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
+              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <!-- Modal Attentions -->
-    <div class="modal fade" id="attentionsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" :id="`attentionsModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> {{ $t("dashboard.attentionsOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
+            <h5 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> {{ $t("dashboard.attentionsOf") }} {{ client.userName || client.userIdNumber || client.userEmail }} </h5>
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <Spinner :show="loading"></Spinner>
@@ -264,6 +312,7 @@ export default {
             <ClientAttentionsManagement
               :showClientAttentionsManagement="true"
               :toggles="toggles"
+              :attentionsIn="attentions"
               :client="client"
               :startDate="startDate"
               :endDate="endDate"
@@ -280,7 +329,7 @@ export default {
       </div>
     </div>
     <!-- Modal Contact -->
-    <div class="modal fade" id="contactModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" :id="`contactModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
@@ -292,6 +341,7 @@ export default {
             <ClientContactsManagement
               :showClientAttentionsManagement="true"
               :toggles="toggles"
+              :clientContactsIn="clientContacts"
               :client="client"
               :startDate="startDate"
               :endDate="endDate"

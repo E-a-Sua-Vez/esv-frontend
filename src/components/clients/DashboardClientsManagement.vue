@@ -130,9 +130,6 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
         const result = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
@@ -224,7 +221,7 @@ export default {
                 <button
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
                   @click="clear()">
-                  <span><i class="bi bi-eraser-fill"></i></span>
+                  <span><i class="bi bi-arrow-counterclockwise"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">

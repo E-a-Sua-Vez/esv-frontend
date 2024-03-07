@@ -18,13 +18,15 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
-    queues: { type: Array, default: undefined }
+    queues: { type: Array, default: undefined },
+    attentionsIn: { type: Array, default: undefined },
   },
   data() {
     return {
       loading: false,
-      attentions: [],
       counter: 0,
+      attentions: [],
+      clientIn: [],
       totalPages: 0,
       daysSinceType: undefined,
       survey: undefined,
@@ -35,10 +37,31 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10
-
     }
   },
+  beforeMount() {
+    this.attentions = this.attentionsIn;
+  },
   methods: {
+    async refresh() {
+      try {
+        this.loading = true;
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
+          this.searchText, this.queueId, this.survey, this.asc, undefined);
+        updatePaginationData();
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
     setPage(pageIn) {
       this.page = pageIn;
     },
@@ -65,32 +88,16 @@ export default {
         this.asc = false;
       }
     },
-    async refresh() {
-      try {
-        this.loading = true;
-        let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
-        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined);
-        if (this.attentions && this.attentions.length > 0) {
-          const { counter } = this.attentions[0];
-          this.counter = counter;
-          const total = counter / this.limit;
-          const totalB = Math.trunc(total);
-          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
-        } else {
-          this.counter = 0;
-          this.totalPages = 0;
-        }
-        this.loading = false;
-      } catch (error) {
-        this.loading = false;
+    updatePaginationData() {
+      if (this.attentions && this.attentions.length > 0) {
+        const { counter } = this.attentions[0];
+        this.counter = counter;
+        const total = counter / this.limit;
+        const totalB = Math.trunc(total);
+        this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+      } else {
+        this.counter = 0;
+        this.totalPages = 0;
       }
     },
     showFilters() {
@@ -107,7 +114,7 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        const result = this.attentions = await getAttentionsDetails(
+        const result = await getAttentionsDetails(
           this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
           this.searchText, this.queueId, this.survey, this.asc, undefined);
@@ -152,7 +159,7 @@ export default {
         ) {
           this.page = 1;
         }
-        this.refresh();
+        await this.refresh();
       }
     }
   }
@@ -183,7 +190,7 @@ export default {
                 <button
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
                   @click="clear()">
-                  <span><i class="bi bi-eraser-fill"></i></span>
+                  <span><i class="bi bi-arrow-counterclockwise"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">
@@ -218,7 +225,7 @@ export default {
                   </div>
                   <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>

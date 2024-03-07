@@ -617,6 +617,12 @@
         "module": {
           "update": "Actualizar módulo de atención"
         },
+        "bookings": {
+          "cancel": "Cancelar Reserva"
+        },
+        "waitlists": {
+          "book": "Reservar Lista de Espera"
+        },
         "main-menu": {
           "dashboard": "Ver Dashboard",
           "tracing": "Seguimiento",
