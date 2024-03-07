@@ -227,7 +227,7 @@ export default {
         <div id="module-selector" class="mb-3 mt-2" v-if="isActiveModules()">
           <span>{{ $t("collaboratorQueuesView.module") }} </span>
           <select
-            class="btn btn-md btn-light fw-bold text-dark m-2 select"
+            class="btn btn-md btn-light fw-bold text-dark m-1 select"
             v-model="state.module"
             id="modules"
             :disabled="!state.toggles['collaborator.module.update'] || !state.commerce.active"
@@ -317,7 +317,7 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .indicator {
   font-size: .7rem;

@@ -284,7 +284,7 @@ export default {
                         {{ $t("businessAdministratorAdmin.commerces") }}
                       </div>
                       <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(state.newAdministrator, state.commerce)" id="commerces">
+                        <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.newAdministrator, state.commerce)" id="commerces">
                           <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                         </select>
                         <div class="select p-1" v-if=" state.newAdministrator.commercesId &&  state.newAdministrator.commercesId.length > 0">
@@ -371,7 +371,7 @@ export default {
                         {{ $t("businessAdministratorAdmin.commerces") }}
                       </div>
                       <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerceIndex(index, state.commerce)" id="commerces">
+                        <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerceIndex(index, state.commerce)" id="commerces">
                           <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                         </select>
                         <div class="select p-1" v-if="administrator.commercesId &&  administrator.commercesId.length > 0">

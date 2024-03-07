@@ -590,7 +590,7 @@ export default {
               <div class="row">
                 <div class="col" v-if="state.commerces">
                   <span>{{ $t("dashboard.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
+                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
                     <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                   </select>
                 </div>
@@ -753,7 +753,7 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);

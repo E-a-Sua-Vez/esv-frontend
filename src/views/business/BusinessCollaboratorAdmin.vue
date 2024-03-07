@@ -41,6 +41,7 @@ export default {
         {  name: 'Full', type: 'FULL' },
       ],
       commerce: {},
+      commercesSelected: {},
       service: {},
       showAdd: false,
       newCollaborator: {},
@@ -173,10 +174,12 @@ export default {
 
     const showAdd = () => {
       const servicesId = [];
+      const commercesId = [];
       state.showAdd = !state.showAdd;
       state.newCollaborator = {
         bot: false,
-        servicesId
+        servicesId,
+        commercesId
       }
     }
 
@@ -189,7 +192,7 @@ export default {
           const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
           state.collaborators = collaborators;
           state.showAdd = false;
-          state.newCollaborator = {}
+          state.newCollaborator = { }
         }
         state.extendedEntity = undefined;
         state.service = undefined;
@@ -262,6 +265,45 @@ export default {
       }
     }
 
+    const selectCommerceSelected = async (collaborator, commerce) => {
+      if (commerce) {
+        if (collaborator.commercesId && collaborator.commercesId.length >= 0) {
+          if (!collaborator.commercesId.includes(commerce.id)) {
+            collaborator.commercesId.push(commerce.id);
+          }
+        }
+      }
+    }
+
+    const selectCommerceIndex = async (index, commerce) => {
+      if (!state.collaborators[index] || !state.collaborators[index].commercesId) {
+        state.collaborators[index].commercesId = []
+      }
+      if (state.collaborators[index].commercesId && state.collaborators[index].commercesId.length >= 0) {
+        if (!state.collaborators[index].commercesId.includes(commerce.id)) {
+          state.collaborators[index].commercesId.push(commerce.id);
+        }
+      }
+    }
+
+    const showCommerce = (commerceId) => {
+      if (state.commerces && state.commerces.length >= 1) {
+        const commerce = state.commerces.find(com => com.id === commerceId);
+        if (commerce) {
+          return commerce.tag;
+        }
+      }
+    }
+
+    const deleteCommerce = (collaborator, commerceId) => {
+      if (collaborator.commercesId && collaborator.commercesId.length >= 0) {
+        if (collaborator.commercesId.includes(commerceId)) {
+          const filtered = collaborator.commercesId.filter(com => com !== commerceId);
+          collaborator.commercesId = filtered;
+        }
+      }
+    }
+
     return {
       state,
       loading,
@@ -276,7 +318,11 @@ export default {
       selectService,
       deleteService,
       showService,
-      selectServiceIndex
+      selectServiceIndex,
+      selectCommerceSelected,
+      selectCommerceIndex,
+      showCommerce,
+      deleteCommerce
     }
   }
 }
@@ -304,7 +350,7 @@ export default {
             <div class="row">
               <div class="col" v-if="state.commerces.length > 0">
                 <span>{{ $t("businessCollaboratorsAdmin.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
+                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
                   <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                 </select>
               </div>
@@ -390,10 +436,10 @@ export default {
                       </div>
                     </div>
                     <div id="collaborator-type-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessCollaboratorsAdmin.type") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <select
                           class="btn btn-md btn-light fw-bold text-dark select"
                           v-model="state.newCollaborator.type"
@@ -405,10 +451,26 @@ export default {
                     </div>
                     <div id="collaborator-commerces-form-add" class="row g-1">
                       <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.commerces") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.commercesSelected" @change="selectCommerceSelected(state.newCollaborator, state.commercesSelected)" id="commerces">
+                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if=" state.newCollaborator.commercesId &&  state.newCollaborator.commercesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.commercesId" :key="com.id">
+                            {{ showCommerce(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(state.newCollaborator, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="collaborator-services-form-add" class="row g-1">
+                      <div class="col-4 text-label">
                         {{ $t("businessCollaboratorsAdmin.services") }}
                       </div>
                       <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.service" @change="selectService(state.newCollaborator, state.service)" id="services">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectService(state.newCollaborator, state.service)" id="services">
                           <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                         </select>
                         <div class="select p-1" v-if=" state.newCollaborator.servicesId &&  state.newCollaborator.servicesId.length > 0">
@@ -564,12 +626,28 @@ export default {
                         </select>
                       </div>
                     </div>
+                    <div id="collaborator-commerces-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.commerces") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.commerceSelected" @change="selectCommerceIndex(index, state.commerceSelected)" id="commerces">
+                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if="collaborator.commercesId &&  collaborator.commercesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.commercesId" :key="com.id">
+                            {{ showCommerce(com) }}
+                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(collaborator, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                     <div id="collaborator-services-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessCollaboratorsAdmin.services") }}
                       </div>
                       <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
                           <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                         </select>
                         <div class="select p-1" v-if="collaborator.servicesId &&  collaborator.servicesId.length > 0">
@@ -681,7 +759,7 @@ export default {
 <style scoped>
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .text-label {
   line-height: 1.2rem;

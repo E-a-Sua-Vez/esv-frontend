@@ -457,7 +457,7 @@ export default {
         <div id="queue-selector" class="mb-1 mt-2">
           <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
           <select
-            class="btn btn-md btn-light fw-bold text-dark m-2 select"
+            class="btn btn-md btn-light fw-bold text-dark m-1 select"
             v-model="state.queue"
             @change="getQueue(state.queue)"
             id="queues">
@@ -595,7 +595,7 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .indicator {
   font-size: .7rem;

@@ -182,7 +182,7 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;

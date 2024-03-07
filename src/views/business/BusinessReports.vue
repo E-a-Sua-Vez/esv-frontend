@@ -236,7 +236,7 @@ export default {
             <div class="row">
               <div class="col" v-if="state.commerces">
                 <span>{{ $t("businessReports.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="reports">
+                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="reports">
                   <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                 </select>
               </div>
@@ -319,7 +319,7 @@ export default {
 <style scoped>
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .text-label {
   line-height: 1.2rem;

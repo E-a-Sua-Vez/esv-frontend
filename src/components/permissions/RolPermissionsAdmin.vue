@@ -191,7 +191,7 @@ export default {
           <div class="row">
             <div class="col" v-if="state.roles">
               <span>{{ $t("businessPermissionsAdmin.commerce") }} </span>
-              <select class="btn btn-md fw-bold text-dark m-2 select" v-model="state.rolSelected" @change="selectRol($event.target.selectedIndex)" id="roles">
+              <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.rolSelected" @change="selectRol($event.target.selectedIndex)" id="roles">
                 <option v-for="rol in state.roles" :key="rol.id" :value="rol">{{ rol.name }}</option>
               </select>
             </div>
@@ -305,7 +305,7 @@ export default {
 <style scoped>
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .text-label {
   line-height: 1.2rem;
