@@ -628,6 +628,7 @@
   },
   "collaboratorQueuesView": {
     "welcome": "Gestión de Filas",
+    "commerce": "Comercio:",
     "choose": "Elige la fila que atenderás:",
     "module": "Tu módulo de atención es:",
     "attentions": "En fila",

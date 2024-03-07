@@ -164,8 +164,8 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
               </span>
             </div>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
-            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
+            <span v-if="attention.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
+            <span v-if="attention.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
           </div>

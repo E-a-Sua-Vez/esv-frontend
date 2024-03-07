@@ -340,6 +340,7 @@ export default {
             <div id="title" class="metric-title">
               <span v-if="state.showAttentions">{{ $t("dashboard.attentions") }}</span>
               <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.surveys-management") }}</span>
+              <span v-else-if="state.showClients">{{ $t("dashboard.clients") }}</span>
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
             <div class="row col mx-1 mt-3 mb-1">

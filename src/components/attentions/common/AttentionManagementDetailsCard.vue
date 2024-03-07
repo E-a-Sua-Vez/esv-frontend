@@ -76,29 +76,7 @@ export default {
       } else {
         return 'bi-qr-code red-icon';
       }
-    },
-    clasifyDaysContacted(score){
-      if (!score) {
-        return 'bi-chat-left-dots-fill blue-icon';
-      } else if (score <= 30) {
-        return 'bi-chat-left-dots-fill green-icon';
-      } else if (score <= 90) {
-        return 'bi-chat-left-dots-fill yellow-icon';
-      } else {
-        return 'bi-chat-left-dots-fill red-icon';
-      }
-    },
-    clasifyContactResult(result){
-      if (!result) {
-        return 'bi-patch-check-fill blue-icon';
-      } else if (result === 'INTERESTED') {
-        return 'bi-patch-check-fill green-icon';
-      } else if (result === 'CONTACT_LATER') {
-        return 'bi-patch-check-fill yellow-icon';
-      } else {
-        return 'bi-patch-check-fill red-icon';
-      }
-    },
+    }
   },
   watch: {
     detailsOpened: {
@@ -204,8 +182,8 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
               </span>
             </div>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
-            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
+            <span v-if="attention.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
+            <span v-if="attention.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
           </div>

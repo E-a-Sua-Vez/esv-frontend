@@ -243,8 +243,8 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ client.nps || 'N/I' }}
               </span>
             </div>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
-            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
+            <span v-if="client.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
+            <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
           </div>

@@ -442,7 +442,7 @@ export default {
 <style scoped>
 .select {
   border-radius: .5rem;
-  border: 1px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 .text-label {
   line-height: 1.2rem;

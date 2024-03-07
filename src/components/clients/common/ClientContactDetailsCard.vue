@@ -72,17 +72,6 @@ export default {
       }
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
-    clasifyDaysSinceComment(score) {
-      if (!score) {
-        return 'bi-qr-code blue-icon';
-      } else if (score <= 30) {
-        return 'bi-qr-code green-icon';
-      } else if (score <= 90) {
-        return 'bi-qr-code yellow-icon';
-      } else {
-        return 'bi-qr-code red-icon';
-      }
-    },
     clasifyDaysContacted(score){
       if (!score) {
         return 'bi-chat-left-dots-fill blue-icon';
@@ -218,9 +207,9 @@ export default {
         <hr>
         <div class="row m-1 centered">
           <div class="col">
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span>
-            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
+            <span v-if="client.clientContactType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
+            <span v-if="client.clientContactResult" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
+            <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate) }}</span>
           </div>

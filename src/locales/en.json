@@ -625,6 +625,7 @@
   },
   "collaboratorQueuesView": {
     "welcome": "Queue Attention",
+    "commerce": "Commerce:",
     "choose": "Choose the queue that you'll attend:",
     "module": "Your module of attention is:",
     "attentions": "In queue",

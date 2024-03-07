@@ -224,15 +224,17 @@ export default {
 
     const getBookings = () => {
       loading.value = true;
-      const { unsubscribe } = updatedBookings(state.queue.id, dateYYYYMMDD(state.date));
-      unsubscribeBookings = unsubscribe;
+      if (state.queue && state.queue.id) {
+        const { unsubscribe } = updatedBookings(state.queue.id, dateYYYYMMDD(state.date));
+        unsubscribeBookings = unsubscribe;
+      }
       loading.value = false;
     }
 
     const updatedBookings = (queueId, date) => {
       let values = ref([]);
       let unsubscribe;
-      if (date !== undefined) {
+      if (date !== undefined && queueId) {
         const bookingsQuery = bookingCollection
           .where('queueId', "==", queueId)
           .where('status', "==", 'PENDING')
@@ -310,15 +312,17 @@ export default {
 
     const getWaitlists = () => {
       loading.value = true;
-      const { unsubscribe } = updatedWaitlists(state.queue.id, dateYYYYMMDD(state.date));
-      unsubscribeWaitlists = unsubscribe;
+      if (state.queue && state.queue.id) {
+        const { unsubscribe } = updatedWaitlists(state.queue.id, dateYYYYMMDD(state.date));
+        unsubscribeWaitlists = unsubscribe;
+      }
       loading.value = false;
     }
 
     const updatedWaitlists = (queueId, date) => {
       let values = ref([]);
       let unsubscribe;
-      if (date !== undefined) {
+      if (date !== undefined && queueId) {
         const waitlistQuery = waitlistCollection
           .where('queueId', "==", queueId)
           .where('status', "==", 'PENDING')

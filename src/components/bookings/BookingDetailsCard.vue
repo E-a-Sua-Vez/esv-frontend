@@ -1,8 +1,8 @@
 <script>
 import Popper from "vue3-popper";
 import jsonToCsv from '../../shared/utils/jsonToCsv';
-import { cancelBooking } from '../../application/services/booking';
 import Spinner from '../common/Spinner.vue';
+import { cancelBooking } from '../../application/services/booking';
 
 export default {
   name: 'BookingDetailsCard',

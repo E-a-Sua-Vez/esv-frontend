@@ -9,6 +9,7 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
+import { getQueueByCommerce } from '../../application/services/queue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -36,6 +37,7 @@ export default {
 
     const state = reactive({
       currentUser: {},
+      commerces: ref([]),
       queue: {},
       queues: [],
       groupedQueues: [],
@@ -53,25 +55,16 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.commerce = await store.getCurrentCommerce;
-        if (!state.commerce) {
-          state.commerce = await getCommerceById(state.currentUser.commerceId);
-        }
-        state.queues = state.commerce.queues;
-        initializeQueueStatus();
         state.collaborator = state.currentUser;
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-          if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-            const queues = [...collaboratorQueues, ...otherQueues];
-            state.queues = queues;
-          }
-        }
+        state.business = await store.getActualBusiness();
+        state.commerces = await store.getAvailableCommerces(state.business.commerces);
+        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        const commerceById = await getCommerceById(state.commerce.id);
+        state.queues = commerceById.queues;
+        await initQueues(state.commerce);
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
           state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
@@ -90,8 +83,27 @@ export default {
     let attentions = ref([]);
     attentions = updatedAvailableAttentionsByCommerce(id);
 
+    const initQueues = async () => {
+      initializeQueueStatus();
+      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+          const queues = [...collaboratorQueues, ...otherQueues];
+          state.queues = queues;
+        }
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const queues = [...collaboratorQueues];
+          state.queues = queues;
+        }
+      }
+      checkQueueStatus();
+    }
+
     const isActiveCommerce = () => {
-      return state.commerce && state.commerce.active === true && state.commerce.queues.length > 0;
+      return state.commerce && state.commerce.active === true;
     };
 
     const isActiveModules = () => {
@@ -130,6 +142,21 @@ export default {
       state.captcha = false;
     };
 
+    const selectCommerce = async (commerce) => {
+      try {
+        loading.value = true;
+        state.commerce = commerce;
+        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
+        state.queues = selectedCommerce.queues;
+        await initQueues()
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status;
+        loading.value = false;
+      }
+    }
+
     const moduleSelect = async () => {
       try {
         loading.value = true;
@@ -157,7 +184,15 @@ export default {
       }
     }
 
-    const checkQueueStatus = (filteredAttentionsByQueue) => {
+    const checkQueueStatus = () => {
+        const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
+          const queueId = attention.queueId;
+          if (!acc[queueId]) {
+            acc[queueId] = [];
+          }
+          acc[queueId].push(attention);
+          return acc;
+        }, {});
         if (state.queues && state.queues.length > 0) {
         state.queues.forEach(queue => {
           if (filteredAttentionsByQueue[queue.id]) {
@@ -172,15 +207,7 @@ export default {
       attentions,
       async () => {
         if (attentions && attentions.value && attentions.value.length > 0) {
-          const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
-            const queueId = attention.queueId;
-            if (!acc[queueId]) {
-              acc[queueId] = [];
-            }
-            acc[queueId].push(attention);
-            return acc;
-          }, {});
-          checkQueueStatus(filteredAttentionsByQueue);
+          checkQueueStatus();
         } else {
           initializeQueueStatus();
         }
@@ -200,7 +227,8 @@ export default {
       validateCaptchaError,
       moduleSelect,
       isActiveModules,
-      goBack
+      goBack,
+      selectCommerce
     }
   }
 }
@@ -224,7 +252,22 @@ export default {
         ></ToggleCapabilities>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
-        <div id="module-selector" class="mb-3 mt-2" v-if="isActiveModules()">
+        <div id="businessQueuesAdmin-controls" class="control-box">
+          <div class="row">
+            <div class="col" v-if="state.commerces.length > 0">
+              <span>{{ $t("collaboratorQueuesView.commerce") }} </span>
+              <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
+                <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+              </select>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('businessQueuesAdmin.message.4.title')"
+                :content="$t('businessQueuesAdmin.message.4.content')" />
+            </div>
+          </div>
+        </div>
+        <div id="module-selector" class="mb-2 mt-1" v-if="isActiveModules()">
           <span>{{ $t("collaboratorQueuesView.module") }} </span>
           <select
             class="btn btn-md btn-light fw-bold text-dark m-1 select"
@@ -321,5 +364,12 @@ export default {
 }
 .indicator {
   font-size: .7rem;
+}
+.control-box {
+  background-color: var(--color-background);
+  padding: .5rem;
+  margin: .1rem;
+  border-radius: .5rem;
+  border: 1.5px solid var(--gris-default);
 }
 </style>
