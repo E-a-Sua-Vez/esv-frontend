@@ -166,7 +166,7 @@ export default {
         this.alertError = '';
         this.loading = false;
       } catch (error) {
-        this.alertError = error.response.status;
+        this.alertError = error.response.status || 500;
         this.loading = false;
       }
     },

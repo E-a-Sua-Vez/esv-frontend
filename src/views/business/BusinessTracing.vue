@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount, } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getMetrics } from '../../application/services/query-stack';
+import { getSurveyMetrics } from '../../application/services/query-stack';
 import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
@@ -130,7 +130,7 @@ export default {
 
     const getCalculatedMetrics = async () => {
       const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-      const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, state.startDate, state.endDate);
+      const { calculatedMetrics } = await getSurveyMetrics(state.commerce.id, queues, state.startDate, state.endDate);
       return calculatedMetrics;
     }
 

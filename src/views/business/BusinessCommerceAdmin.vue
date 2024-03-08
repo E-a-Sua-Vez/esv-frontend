@@ -166,7 +166,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status;
+        alertError.value = error.response.status || 500;
         loading.value = false;
       }
     }
@@ -206,7 +206,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status;
+        alertError.value = error.response.status || 500;
         loading.value = false;
       }
     }
