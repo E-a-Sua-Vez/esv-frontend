@@ -122,6 +122,7 @@ export default {
           if (queueId) {
             state.queue = await getQueueById(queueId);
             state.queues = [state.queue];
+            getQueue(state.queue);
             await getAttention(undefined);
           } else {
             const queues = state.commerce.queues;
@@ -733,6 +734,7 @@ export default {
       calendarAttributes,
       calendar,
       loadingCalendar,
+      queueId,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -870,7 +872,7 @@ export default {
               <span>{{ $t("commerceQueuesView.choose") }}</span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
-              <div v-if="getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
+              <div v-if="!queueId && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
                 <button
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   data-bs-toggle="collapse"
