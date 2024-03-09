@@ -67,6 +67,13 @@
     "restaurant": "🍽️ Restaurant",
     "supermarket": "🛒 Supermercado"
   },
+  "queues": {
+    "types": {
+      "STANDARD": "Standard",
+      "COLLABORATOR": "Colaborador",
+      "SERVICE": "Serviço"
+    }
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Só CSAT e Comentário",
@@ -618,7 +625,8 @@
           "update": "Atualizar o modulo de atenção"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Gerenciar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -669,7 +677,8 @@
           "book": "Reservar Lista de Espera"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Gerenciar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -690,6 +699,11 @@
     "listResult": "Registros:",
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
+    "hours": "Horàrios",
+    "selectQueue": "Selecione a fila e a data no calendário:",
+    "manageAll": "Monitore todas as Agendas:",
+    "or": "Ou",
+    "schedules": "Agendas",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -721,7 +735,8 @@
           "booking-manage": "Gerenciar Reservas"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Gerenciar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -778,7 +793,8 @@
           "book": "Reservar Lista de Espera"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Gerenciar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",

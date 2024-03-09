@@ -67,6 +67,13 @@
     "restaurant": "🍽️ Restaurant",
     "supermarket": "🛒 Supermarket"
   },
+  "queues": {
+    "types": {
+      "STANDARD": "Standard",
+      "COLLABORATOR": "Collaborator",
+      "SERVICE": "Service"
+    }
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Only CSAT and Comment",
@@ -615,7 +622,8 @@
           "update": "Update attention Module"
         },
         "bookings": {
-          "cancel": "Cancel Booking"
+          "cancel": "Cancel Booking",
+          "manage": "Manage Bookings"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -661,7 +669,8 @@
           "book": "Book Waitlist"
         },
         "bookings": {
-          "cancel": "Cancel Booking"
+          "cancel": "Cancel Booking",
+          "manage": "Manage Bookings"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -682,6 +691,12 @@
     "listResult": "Results:",
     "bookings": "Bookings",
     "waitlists": "Waitlist",
+    "queues": "Queues",
+    "hours": "Hours",
+    "selectQueue": "Select the queue and the date on the calendar:",
+    "manageAll": "Manage all the schedules:",
+    "or": "Or",
+    "schedules": "Schedules",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -713,7 +728,8 @@
           "booking-manage": "Manage Bookings"
         },
         "bookings": {
-          "cancel": "Cancel Booking"
+          "cancel": "Cancel Booking",
+          "manage": "Manage Bookings"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -775,7 +791,8 @@
           "book": "Book Waitlist"
         },
         "bookings": {
-          "cancel": "Cancel Booking"
+          "cancel": "Cancel Booking",
+          "manage": "Manage Bookings"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -2406,7 +2423,8 @@
         "booking-manage": "Enable Booking Management - Main Menu Collaborators"
       },
       "bookings": {
-        "cancel": "Cancel Booking"
+        "cancel": "Cancel Booking",
+        "manage": "Manage Bookings"
       },
       "waitlists": {
         "book": "Book Waitlist"

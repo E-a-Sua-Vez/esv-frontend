@@ -1,9 +1,8 @@
 <script>
 import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getCommerceById } from '../../application/services/commerce';
 import { getCollaboratorById } from '../../application/services/collaborator';
-import { getGroupedQueueByCommerceId, getQueueByCommerce } from '../../application/services/queue';
+import { getGroupedQueueByCommerceId, getQueueByCommerce, getQueuesByCommerceId } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -18,13 +17,13 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import BookingDetailsCard from '../../components/bookings/BookingDetailsCard.vue';
+import BookingDetailsCard from '../../components/bookings/common/BookingDetailsCard.vue';
 import WaitlistDetailsCard from '../../components/waitlist/WaitlistDetailsCard.vue';
-
+import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingDetailsCard, WaitlistDetailsCard },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingDetailsCard, WaitlistDetailsCard, BookingCalendar },
   async setup() {
     const router = useRouter();
 
@@ -111,8 +110,8 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        const commerceById = await getCommerceById(state.commerce.id);
-        state.queues = commerceById.queues;
+        const queues = await getQueuesByCommerceId(state.commerce.id);
+        state.queues = queues;
         await initQueues();
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
@@ -291,7 +290,8 @@ export default {
         state.commerce = commerce;
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
-        await initQueues()
+        state.queue = {};
+        await initQueues();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -499,6 +499,18 @@ export default {
             </div>
           </div>
         </div>
+        <div class="mb-1 mt-2">
+          <div class="choose-attention"><span> {{ $t("collaboratorBookingsView.manageAll") }} </span></div>
+          <button
+            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+            data-bs-toggle="modal"
+            data-bs-target="#modalAgenda"
+            :disabled="!state.toggles['collaborator.bookings.manage']"
+            >
+            <i class="bi bi-calendar-check-fill"></i> {{ $t("collaboratorBookingsView.schedules") }}
+          </button>
+        </div>
+        <div class="choose-attention mt-2"><span>{{ $t("collaboratorBookingsView.or") }}</span></div>
         <div id="queue-selector" class="mb-1 mt-2">
           <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
           <select
@@ -525,7 +537,7 @@ export default {
           </a>
         </div>
       </div>
-      <div id="bookings">
+      <div id="bookings" v-if="state.queue && state.queue.id">
         <div class="row" v-if="isActiveCommerce()">
           <div v-if="state.queue && state.queue.id !== undefined">
             <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.date") }} </span></div>
@@ -631,6 +643,28 @@ export default {
       </div>
     </div>
     <PoweredBy :name="state.commerce.name" />
+    <!-- Modal Agenda -->
+    <div class="modal fade" id="modalAgenda" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-calendar-check-fill"></i> Agenda {{ state.commerce.name }} - {{ state.commerce.tag}} </h5>
+            <button id="close-modal" class="btn-close btn-light" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <BookingCalendar
+              :show="true"
+              :collaborator="state.collaborator"
+              :commerce="state.commerce"
+              :queues="state.queues"
+              :toggles="state.toggles"
+            >
+            </BookingCalendar>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <style scoped>
@@ -662,5 +696,11 @@ export default {
   margin: .1rem;
   border-radius: .5rem;
   border: 1.5px solid var(--gris-default);
+}
+.active-name {
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  font-weight: 700;
+  font-size: .9rem;
 }
 </style>

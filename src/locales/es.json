@@ -71,7 +71,7 @@
     "types": {
       "STANDARD": "Standard",
       "COLLABORATOR": "Colaborador",
-      "SERVICE": "Service"
+      "SERVICE": "Servicio"
     }
   },
   "surveys": {
@@ -618,7 +618,8 @@
           "update": "Actualizar módulo de atención"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Manejar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -665,7 +666,8 @@
           "book": "Reservar Lista de Espera"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Manejar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -686,6 +688,12 @@
     "listResult": "Registros:",
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
+    "queues": "Filas",
+    "hours": "Horas",
+    "selectQueue": "Seleccione una fila y fecha en el calendario:",
+    "manageAll": "Monitore todas as Agendas:",
+    "or": "Ó",
+    "schedules": "Agendas",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -718,7 +726,8 @@
           "booking-manage": "Administrar Reservas"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Manejar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -780,7 +789,8 @@
           "book": "Reservar Lista de Espera"
         },
         "bookings": {
-          "cancel": "Cancelar Reserva"
+          "cancel": "Cancelar Reserva",
+          "manage": "Manejar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -2571,7 +2581,8 @@
         "skip": "Saltar atención - Sección Atenciones del Colaborador"
       },
       "bookings": {
-        "cancel": "Cancelar Reserva"
+        "cancel": "Cancelar Reserva",
+        "manage": "Manejar Reservas"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -2597,7 +2608,8 @@
         "add": "Agregar notificación - Atención de Usuario"
       },
       "bookings": {
-        "cancel": "Cancelar Reserva - Reservas"
+        "cancel": "Cancelar Reserva - Reservas",
+        "manage": "Manejar Reservas- Reservas"
       }
     },
     "plans": {

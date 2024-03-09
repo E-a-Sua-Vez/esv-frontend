@@ -12,6 +12,10 @@ export const getQueueById = async id => {
     return (await requestBackend.get(`/${entity}/${id}`, await getHeaders())).data;
 }
 
+export const getQueuesByCommerceId = async commerceId => {
+    return (await requestBackend.get(`/${entity}/commerce/${commerceId}`, await getHeaders())).data;
+}
+
 export const getGroupedQueueByCommerceId = async commerceId => {
     return (await requestBackend.get(`/${entity}/grouped/commerce/${commerceId}`, await getHeaders())).data;
 }

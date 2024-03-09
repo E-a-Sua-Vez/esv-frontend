@@ -9,3 +9,7 @@ export const getBlocksByQueueId = async (queueId) => {
 export const getQueueBlockDetailsByDay = async (queueId) => {
   return (await requestBackend.get(`/${entity}/day/queueId/${queueId}`, await getHeaders())).data;
 }
+
+export const getQueueBlockDetailsByDayByCommerceId = async (commerceId) => {
+  return (await requestBackend.get(`/${entity}/day/commerceId/${commerceId}`, await getHeaders())).data;
+}

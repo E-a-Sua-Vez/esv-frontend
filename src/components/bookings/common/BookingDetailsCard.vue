@@ -1,8 +1,8 @@
 <script>
 import Popper from "vue3-popper";
-import jsonToCsv from '../../shared/utils/jsonToCsv';
-import Spinner from '../common/Spinner.vue';
-import { cancelBooking } from '../../application/services/booking';
+import jsonToCsv from '../../../shared/utils/jsonToCsv';
+import Spinner from '../../common/Spinner.vue';
+import { cancelBooking } from '../../../application/services/booking';
 
 export default {
   name: 'BookingDetailsCard',
@@ -24,7 +24,8 @@ export default {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
     },
-    getDate(date, timeZoneIn) {
+    getDate(dateIn, timeZoneIn) {
+      const date = dateIn.toDate().toString();
       const dateCorrected = new Date(
       new Date(date).toLocaleString('en-US', {
         timeZone: timeZoneIn,
@@ -159,7 +160,7 @@ export default {
         <div class="row m-0 mt-3 centered">
           <div class="col">
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.id }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ booking.createdDate }}</span>
+            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span>
           </div>
         </div>
       </div>
