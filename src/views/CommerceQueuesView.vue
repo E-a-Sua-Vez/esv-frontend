@@ -20,10 +20,11 @@ import NotificationConditions from '../components/domain/NotificationConditions.
 import { getActiveFeature } from '../shared/features';
 import { bookingCollection, attentionCollection } from '../application/firebase';
 import firebase from 'firebase/app';
+import ClientForm from '../components/domain/ClientForm.vue';
 
 export default {
   name: 'CommerceQueuesView',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, Warning, NotificationConditions },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, Warning, NotificationConditions, ClientForm },
   async setup() {
     const router = useRouter();
     const route = useRoute();
@@ -102,14 +103,7 @@ export default {
       attentionAvailable: true,
       showToday: false,
       showReserve: false,
-      waitlistCreated: false,
-      phoneCodes: [
-        { id: 've', label: '🇻🇪', code: '58' },
-        { id: 'br', label: '🇧🇷', code: '55' },
-        { id: 'cl', label: '🇨🇱', code: '56' },
-        { id: 'us', label: '🇺🇸', code: '1' },
-        { id: 'xx', label: '🏴', code: 'xx' }
-      ],
+      waitlistCreated: false
     });
 
     onBeforeMount(async () => {
@@ -135,19 +129,6 @@ export default {
               state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
             }
           }
-          if (state.commerce.localeInfo && state.commerce.localeInfo.country) {
-            state.phoneCode = findPhoneCode(state.commerce.localeInfo.country);
-          }
-          if (name || lastName || idNumber || phone || email) {
-            state.newUser = {
-              name: name !== 'undefined' ? name : '',
-              lastName: lastName !== 'undefined' ? lastName : '',
-              idNumber: idNumber !== 'undefined' ? idNumber : '',
-              phone: phone !== 'undefined' ? phone : '',
-              email: email !== 'undefined' ? email : '',
-            }
-            state.phone = phone !== 'undefined' ? phone : '';
-          }
         }
         loading.value = false;
       } catch (error) {
@@ -163,6 +144,30 @@ export default {
         unsubscribeAttentions();
       }
     })
+
+    const receiveData = (data) => {
+      if (data) {
+        if (data.name) {
+          state.newUser.name = data.name;
+        }
+        if (data.lastName) {
+          state.newUser.lastName = data.lastName;
+        }
+        if (data.idNumber) {
+          state.newUser.idNumber = data.idNumber;
+        }
+        if (data.email) {
+          state.newUser.email = data.email;
+        }
+        if (data.phoneCode && data.phone) {
+          state.phone = data.phone;
+          state.phoneCode = data.phoneCode;
+        }
+        if (data.accept !== undefined) {
+          state.accept = data.accept;
+        }
+      };
+    }
 
     const formattedDate = (date) => {
       if (date && date !== 'TODAY') {
@@ -429,8 +434,6 @@ export default {
       if (state.queue.id) {
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
           getDisabledDates();
-          state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          state.blocks = getBlocksByDay();
           state.date = undefined;
           state.block = {};
           state.attentionBlock = {};
@@ -470,14 +473,6 @@ export default {
         return false;
       }
       return false;
-    }
-
-    const findPhoneCode = (codeIn) => {
-      const search = state.phoneCodes.find(code => code.id === codeIn);
-      if (search) {
-        return search.code;
-      }
-      return '';
     }
 
     const getActualDay = (day, timeZoneIn) => {
@@ -646,13 +641,13 @@ export default {
           const [year, month, day] = date.split('-');
           const dayNumber = new Date(+year, +month - 1, +day).getDay();
           const blocks = state.blocksByDay[dayNumber] || [];
-          if (bookings.length >= blocks.length) {
+          if (bookings.length === blocks.length) {
             forDeletion.push(date);
           }
         })
-        availableDates = availableDates.filter(item => !forDeletion.includes(item));
       }
-      const avaliableToCalendar = availableDates.map(date => {
+      const availability = await availableDates.filter(item => !forDeletion.includes(item));
+      const avaliableToCalendar = await availability.map(date => {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
@@ -685,6 +680,34 @@ export default {
       }
     })
 
+    const changeQueue = computed(() => {
+      const {
+        queue
+      } = state;
+      return {
+       queue
+      }
+    })
+
+    watch (
+      changeQueue,
+      async () => {
+        state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+        state.blocks = getBlocksByDay();
+        state.blocks = await getBlocksByDay();
+        state.block = {};
+        let currentDate;
+        if (state.date === undefined || state.date === 'TODAY') {
+          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+        } else {
+          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+        }
+        state.availableBlocks = getAvailableBlocks(state.bookings);
+        bookingsAvailables();
+        await getAvailableDatesByMonth(currentDate);
+      }
+    )
+
     watch (
       changeDate,
       async (newData, oldData) => {
@@ -700,25 +723,25 @@ export default {
           } else {
             await getAttention(undefined);
           }
-        } else if (newData.date !== oldData.date) {
+        } else if (newData.date && newData.date !== oldData.date) {
           state.blocks = getBlocksByDay();
           state.block = {};
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
           getBookings();
+          let currentDate;
+          if (state.date === undefined || state.date === 'TODAY') {
+            currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+          } else {
+            currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+          }
+          await getAvailableDatesByMonth(currentDate);
         } else if (newData.bookings !== oldData.bookings) {
           state.availableBlocks = getAvailableBlocks(state.bookings);
         }
         attentionsAvailables();
         bookingsAvailables();
-        let currentDate;
-        if (state.date === undefined || state.date === 'TODAY') {
-          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        } else {
-          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        }
-        await getAvailableDatesByMonth(currentDate);
       }
     )
 
@@ -735,6 +758,11 @@ export default {
       calendar,
       loadingCalendar,
       queueId,
+      name,
+      lastName,
+      idNumber,
+      phone,
+      email,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -753,7 +781,8 @@ export default {
       showReserve,
       getWaitList,
       getAvailableDatesByCalendarMonth,
-      isQueueWalkin
+      isQueueWalkin,
+      receiveData
     }
   }
 }
@@ -772,100 +801,16 @@ export default {
       <div v-if="isActiveCommerce(state.commerce) && !loading">
         <div v-if="isAvailableCommerce(state.commerce)">
           <!-- FORM -->
-          <div id="data" v-if="isDataActive(state.commerce)">
-            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-4">
-              <span>{{ $t("commerceQueuesView.data") }}</span>
-            </div>
-            <div class="row g-1">
-              <div class="col col-md-10 offset-md-1 data-card">
-                <div id="attention-name-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-name', 'USER')">
-                  <div class="col form-floating">
-                    <input
-                      id="attention-name-input-add"
-                      maxlength="30"
-                      type="text"
-                      class="form-control form-control-solid"
-                      v-model.trim="state.newUser.name"
-                      placeholder="Ex. Jhon">
-                      <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
-                  </div>
-                </div>
-                <div id="attention-lastname-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')">
-                  <div class="col form-floating">
-                    <input
-                      id="attention-lastname-input-add"
-                      maxlength="20"
-                      type="text"
-                      class="form-control form-control-solid"
-                      v-model.trim="state.newUser.lastName"
-                      placeholder="Ex. Pérez">
-                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
-                  </div>
-                </div>
-                <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')">
-                  <div class="col form-floating">
-                    <input
-                      id="attention-idnumber-input-add"
-                      maxlength="20"
-                      type="text"
-                      class="form-control"
-                      v-model.trim="state.newUser.idNumber"
-                      v-bind:class="{ 'is-invalid': state.idNumberError }"
-                      placeholder="Ex. 112223334">
-                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
-                  </div>
-                </div>
-                <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-email', 'USER')">
-                  <div class="col form-floating">
-                    <input
-                      id="attention-email-input-add"
-                      maxlength="50"
-                      type="email"
-                      class="form-control"
-                      v-model.trim="state.newUser.email"
-                      placeholder="Ex. jhon@user.com">
-                      <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
-                  </div>
-                </div>
-                <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(state.commerce, 'attention-user-phone', 'USER')">
-                  <div class="col-3 form-floating">
-                    <select
-                      class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
-                      v-model.trim="state.phoneCode"
-                      id="attention-phoneCode-input-add">
-                      <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">{{ code.label }}</option>
-                    </select>
-                    <label for="attention-phoneCode-input-add"> {{ $t("commerceQueuesView.phoneCode") }}</label>
-                  </div>
-                  <div class="col-9 form-floating">
-                    <input
-                      id="attention-phone-input-add"
-                      maxlength="15"
-                      type="tel"
-                      class="form-control"
-                      v-model="state.phone"
-                      placeholder="Ex.: 56233445533">
-                      <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
-                  </div>
-                  <label v-if="!state.phoneCode" class="examples mt-2"> {{ $t('clientNotifyData.validate.cellphone.example') }} </label>
-                  <label v-else class="examples mt-2"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.phoneCode}`) }} </label>
-                </div>
-                <div class="recaptcha-area form-check form-check-inline" v-if="showConditions()">
-                  <input type="checkbox" class="form-check-input" id="conditions" v-model="state.accept">
-                  <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }} <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a></label>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ClientForm
+            :commerce="state.commerce"
+            :name="name"
+            :lastName="lastName"
+            :idNumber="idNumber"
+            :email="email"
+            :phone="phone"
+            :receiveData="receiveData"
+          >
+          </ClientForm>
           <!-- QUEUES -->
           <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading" class="mb-2">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
@@ -1282,18 +1227,6 @@ export default {
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   font-weight: 400;
-}
-.form-floating > label {
-  text-align: center !important;
-  transform-origin: center center !important;
-  font-weight: 700;
-  font-size: .9rem;
-}
-.form-control {
-  border: 1.75px solid #ced4da !important;
-  border-radius: 1rem !important;
-  text-align: center;
-  line-height: 1.5rem;
 }
 .examples {
   font-size: .8rem;
