@@ -13,10 +13,11 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessModulesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -28,6 +29,7 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
+      goToUnavailable: false,
       commerces: ref({}),
       modules: ref({}),
       commerce: {},
@@ -89,23 +91,6 @@ export default {
       return false;
     }
 
-    const update = async (module) => {
-      try {
-        loading.value = true;
-        if (validateUpdate()) {
-          await updateModule(module.id, module);
-          const modules = await getModulesByCommerceId(state.commerce.id);
-          state.modules = modules;
-        }
-        state.extendedEntity = undefined;
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const showAdd = () => {
       state.showAdd = !state.showAdd;
       state.newQueue = {
@@ -131,6 +116,51 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (module) => {
+      try {
+        loading.value = true;
+        if (validateUpdate()) {
+          await updateModule(module.id, module);
+          const modules = await getModulesByCommerceId(state.commerce.id);
+          state.modules = modules;
+        }
+        state.extendedEntity = undefined;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (module) => {
+      try {
+        loading.value = true;
+        if (module && module.id) {
+          module.available = false;
+          module.active = false;
+          await updateModule(module.id, module);
+          const modules = await getModulesByCommerceId(state.commerce.id);
+          state.modules = modules;
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const selectCommerce = async (commerce) => {
@@ -161,7 +191,10 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce
+      selectCommerce,
+      unavailable,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -303,9 +336,23 @@ export default {
                       <button
                         class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                         @click="update(module)"
-                        :disabled="!state.toggles['modules.admin.update']">
+                        v-if="state.toggles['modules.admin.update']">
                         {{ $t("businessModulesAdmin.update") }} <i class="bi bi-save"></i>
-                    </button>
+                      </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['modules.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="state.toggles['modules.admin.unavailable']"
+                        :noDisabled="state.toggles['modules.admin.unavailable']"
+                        @actionYes="unavailable(module)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                   </div>
                 </div>

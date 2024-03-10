@@ -17,3 +17,7 @@ export const updateService = async (id, service) => {
 export const addService = async (service) => {
     return (await requestBackend.post(`/${entity}`, service, await getHeaders())).data;
 }
+
+export const getActiveServicesByCommerceId = async commerceId => {
+    return (await requestBackend.get(`/${entity}/commerceId/${commerceId}/active`, await getHeaders())).data;
+  }

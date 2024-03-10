@@ -16,10 +16,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import Popper from "vue3-popper";
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessCollaboratorsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, ToggleCapabilities, Warning, Popper },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, ToggleCapabilities, Warning, Popper, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -44,6 +45,7 @@ export default {
       commercesSelected: {},
       service: {},
       showAdd: false,
+      goToUnavailable: false,
       newCollaborator: {},
       extendedEntity: undefined,
       errorsAdd: [],
@@ -154,24 +156,6 @@ export default {
       return false;
     }
 
-    const update = async (collaborator) => {
-      try {
-        loading.value = true;
-        if (validateUpdate(collaborator)) {
-          await updateCollaborator(collaborator.id, collaborator);
-          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-          state.collaborators = collaborators;
-        }
-        state.extendedEntity = undefined;
-        state.service = undefined;
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const showAdd = () => {
       const servicesId = [];
       const commercesId = [];
@@ -202,6 +186,52 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (collaborator) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(collaborator)) {
+          await updateCollaborator(collaborator.id, collaborator);
+          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+          state.collaborators = collaborators;
+        }
+        state.extendedEntity = undefined;
+        state.service = undefined;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (collaborator) => {
+      try {
+        loading.value = true;
+        if (collaborator && collaborator.id) {
+          collaborator.available = false;
+          collaborator.active = false;
+          await updateCollaborator(collaborator.id, collaborator);
+          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+          state.collaborators = collaborators;
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const selectCommerce = async (commerce) => {
@@ -322,7 +352,10 @@ export default {
       selectCommerceSelected,
       selectCommerceIndex,
       showCommerce,
-      deleteCommerce
+      deleteCommerce,
+      unavailable,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -723,6 +756,20 @@ export default {
                         :disabled="!state.toggles['collaborators.admin.update']">
                         {{ $t("businessCollaboratorsAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['collaborators.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="state.toggles['collaborators.admin.unavailable']"
+                        :noDisabled="state.toggles['collaborators.admin.unavailable']"
+                        @actionYes="unavailable(collaborator)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
                       <Warning>

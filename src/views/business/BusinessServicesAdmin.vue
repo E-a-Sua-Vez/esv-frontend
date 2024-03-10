@@ -13,10 +13,11 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessServicesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ServiceSimpleName, Toggle, ToggleCapabilities, Warning },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ServiceSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -32,6 +33,7 @@ export default {
       services: ref([]),
       commerce: {},
       showAdd: false,
+      goToUnavailable: false,
       newService: {},
       extendedEntity: undefined,
       errorsAdd: [],
@@ -122,22 +124,6 @@ export default {
       return false;
     }
 
-    const update = async (service) => {
-      try {
-        loading.value = true;
-        if (validateUpdate(service)) {
-          await updateService(service.id, service);
-          state.services = await getServiceByCommerce(state.commerce.id);
-          state.extendedEntity = undefined;
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const showAdd = () => {
       state.showAdd = !state.showAdd;
       state.newService = {
@@ -164,6 +150,49 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (service) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(service)) {
+          await updateService(service.id, service);
+          state.services = await getServiceByCommerce(state.commerce.id);
+          state.extendedEntity = undefined;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (service) => {
+      try {
+        loading.value = true;
+        if (service && service.id) {
+          service.available = false;
+          service.active = false;
+          await updateService(service.id, service);
+          state.services = await getServiceByCommerce(state.commerce.id);
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const selectCommerce = async (commerce) => {
@@ -193,7 +222,10 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce
+      selectCommerce,
+      unavailable,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -644,6 +676,20 @@ export default {
                         :disabled="!state.toggles['services.admin.update']">
                         {{ $t("businessServicesAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['services.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="state.toggles['services.admin.unavailable']"
+                        :noDisabled="state.toggles['services.admin.unavailable']"
+                        @actionYes="unavailable(service)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
                       <Warning>

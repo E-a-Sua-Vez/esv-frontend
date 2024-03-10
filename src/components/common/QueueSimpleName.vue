@@ -52,8 +52,8 @@ export default {
 }
 .desactived {
   background-color: var(--gris-tooltip);
-  margin: .1rem;
-  border-radius: 1rem;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid var(--gris-tooltip);
 }

@@ -291,12 +291,12 @@ export default {
             :title="$t('collaboratorQueuesView.message.2.title')"
             :content="$t('collaboratorQueuesView.message.2.content')" />
         </div>
-        <div v-if="isActiveCommerce()" class="choose-attention">
+      </div>
+      <div id="queues" v-if="isActiveModules() && !loading">
+        <div class="row" v-if="isActiveCommerce()">
+          <div class="choose-attention">
           <span>{{ $t("collaboratorQueuesView.choose") }}</span>
         </div>
-      </div>
-      <div id="queues">
-        <div class="row" v-if="isActiveCommerce()">
           <div
             v-for="queue in state.queues"
             :key="queue.id"

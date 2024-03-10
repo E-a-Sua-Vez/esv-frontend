@@ -2,8 +2,8 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getQueueByCommerce, updateQueue, addQueue } from '../../application/services/queue';
-import { getServiceByCommerce } from '../../application/services/service';
+import { getQueueByCommerce, updateQueue, addQueue, getQueuesByCommerceId } from '../../application/services/queue';
+import { getActiveServicesByCommerceId } from '../../application/services/service';
 import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -69,9 +69,8 @@ export default {
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
-          state.services = await getServiceByCommerce(state.commerce.id);
+          state.queues = await getQueuesByCommerceId(state.commerce.id);
+          state.services = await getActiveServicesByCommerceId(state.commerce.id);
           state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         }
         state.toggles = await getPermissions('queues', 'admin');
@@ -200,8 +199,7 @@ export default {
         if (validateAdd(state.newQueue)) {
           state.newQueue.commerceId = state.commerce.id;
           await addQueue(state.newQueue);
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
+          state.queues = await getQueuesByCommerceId(state.commerce.id);
           state.showAdd = false;
           state.newQueue = {}
           state.extendedEntity = undefined;
@@ -219,8 +217,7 @@ export default {
         loading.value = true;
         if (validateUpdate(queue)) {
           await updateQueue(queue.id, queue);
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
+          state.queues = await getQueuesByCommerceId(state.commerce.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -236,9 +233,9 @@ export default {
         loading.value = true;
         if (queue && queue.id) {
           queue.available = false;
+          queue.active = false;
           await updateQueue(queue.id, queue);
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
+          state.queues = await getQueuesByCommerceId(state.commerce.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -392,7 +389,6 @@ export default {
       alertError,
       showUpdateForm,
       update,
-      unavailable,
       showAdd,
       add,
       goBack,
@@ -407,6 +403,7 @@ export default {
       selectCollaborator,
       selectService,
       selectType,
+      unavailable,
       goToUnavailable,
       unavailableCancel
     }
@@ -1168,19 +1165,19 @@ export default {
                       <button
                         class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                         @click="update(queue)"
-                        :disabled="!state.toggles['queues.admin.update']">
+                        v-if="state.toggles['queues.admin.update']">
                         {{ $t("businessQueuesAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
                       <button
                         class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
                         @click="goToUnavailable()"
-                        v-if="!state.toggles['queues.admin.unavailable']">
+                        v-if="state.toggles['queues.admin.unavailable']">
                         {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
                       </button>
                       <AreYouSure
                         :show="state.goToUnavailable"
-                        :yesDisabled="!state.toggles['queues.admin.unavailable']"
-                        :noDisabled="!state.toggles['queues.admin.unavailable']"
+                        :yesDisabled="state.toggles['queues.admin.unavailable']"
+                        :noDisabled="state.toggles['queues.admin.unavailable']"
                         @actionYes="unavailable(queue)"
                         @actionNo="unavailableCancel()"
                       >

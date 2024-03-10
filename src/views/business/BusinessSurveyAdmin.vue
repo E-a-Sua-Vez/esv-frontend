@@ -16,10 +16,11 @@ import Warning from '../../components/common/Warning.vue';
 import Popper from "vue3-popper";
 import { getQueueByCommerce } from '../../application/services/queue';
 import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data';
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessSurveysAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SurveyName, Toggle, ToggleCapabilities, Warning, Popper },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SurveyName, Toggle, ToggleCapabilities, Warning, Popper, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -38,6 +39,7 @@ export default {
       commerce: {},
       queues: [],
       showAdd: false,
+      goToUnavailable: false,
       showAddQuestions: false,
       showUpdateQuestions: false,
       questions: ref([]),
@@ -109,26 +111,6 @@ export default {
       return false;
     }
 
-    const update = async (survey) => {
-      try {
-        loading.value = true;
-        if (validateUpdate(survey)) {
-          if (survey.attentionDefault === true) {
-            survey.queueId = undefined;
-          }
-          await updateSurveyPersonalized(survey.id, survey);
-          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-          state.surveys = surveys;
-        }
-        state.extendedEntity = undefined;
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const showAdd = () => {
       state.showAdd = !state.showAdd;
       state.newSurvey = {
@@ -162,6 +144,54 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (survey) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(survey)) {
+          if (survey.attentionDefault === true) {
+            survey.queueId = undefined;
+          }
+          await updateSurveyPersonalized(survey.id, survey);
+          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.surveys = surveys;
+        }
+        state.extendedEntity = undefined;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (survey) => {
+      try {
+        loading.value = true;
+        if (survey && survey.id) {
+          survey.available = false;
+          survey.active = false;
+          await updateSurveyPersonalized(survey.id, survey);
+          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.surveys = surveys;
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const selectCommerce = async (commerce) => {
@@ -282,7 +312,10 @@ export default {
       isActiveBusiness,
       selectCommerce,
       copyLink,
-      getSurveyLink
+      getSurveyLink,
+      unavailable,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -763,6 +796,20 @@ export default {
                         :disabled="!state.toggles['surveys.admin.update']">
                         {{ $t("businessSurveysAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['surveys.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="state.toggles['surveys.admin.unavailable']"
+                        :noDisabled="state.toggles['surveys.admin.unavailable']"
+                        @actionYes="unavailable(survey)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
                       <Warning>

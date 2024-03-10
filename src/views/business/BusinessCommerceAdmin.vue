@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getCommercesByBusinessId, updateCommerce, addCommerce } from '../../application/services/commerce';
+import { getCommercesByBusinessId, updateCommerce, addCommerce, getActiveCommercesByBusinessId } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from "vue3-popper";
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -14,10 +14,11 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessCommerceAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, ToggleCapabilities, Warning, Popper },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, ToggleCapabilities, Warning, Popper, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -33,6 +34,7 @@ export default {
       modules: ref({}),
       commerce: {},
       showAdd: false,
+      goToUnavailable: false,
       newCommerce: {},
       extendedEntity: undefined,
       errorsAdd: [],
@@ -66,7 +68,7 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
+        state.commerces = await getCommercesByBusinessId(state.business.id);
         state.toggles = await getPermissions('commerces', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -154,23 +156,6 @@ export default {
       return false;
     }
 
-    const update = async (commerce) => {
-      try {
-        loading.value = true;
-        if (validateUpdate(commerce)) {
-          await updateCommerce(commerce.id, commerce);
-          const commerces = await getCommercesByBusinessId(state.business.id);
-          state.commerces = commerces;
-          state.extendedEntity = undefined;
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const showAdd = () => {
       state.showAdd = !state.showAdd;
       state.newCommerce = {
@@ -209,6 +194,51 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (commerce) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(commerce)) {
+          await updateCommerce(commerce.id, commerce);
+          const commerces = await getCommercesByBusinessId(state.business.id);
+          state.commerces = commerces;
+          state.extendedEntity = undefined;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (commerce) => {
+      try {
+        loading.value = true;
+        if (commerce && commerce.id) {
+          commerce.available = false;
+          commerce.active = false;
+          await updateCommerce(commerce.id, commerce);
+          const commerces = await getCommercesByBusinessId(state.business.id);
+          state.commerces = commerces;
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const showUpdateForm = (index) => {
@@ -284,7 +314,10 @@ export default {
       checkDay,
       getCommerceLink,
       copyLink,
-      initializedParsonalizedHours
+      initializedParsonalizedHours,
+      unavailable,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -1419,6 +1452,20 @@ export default {
                         :disabled="!state.toggles['commerces.admin.update']">
                         {{ $t("businessCommercesAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['commerces.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="state.toggles['commerces.admin.unavailable']"
+                        :noDisabled="state.toggles['commerces.admin.unavailable']"
+                        @actionYes="unavailable(commerce)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
                       <Warning>
