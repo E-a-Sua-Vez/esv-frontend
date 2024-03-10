@@ -2,7 +2,8 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getAttentionsReport, getNotificationsReport, getSurveysReport, getBookingsReport, getWaitlistsReport } from '../../application/services/query-stack';
+import { getAttentionsReport, getNotificationsReport, getSurveysReport,
+   getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -203,6 +204,54 @@ export default {
       }
     }
 
+    const downloadClientsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getClientsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `clients-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const downloadClientContactsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getClientContactsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
     return {
       state,
       loading,
@@ -214,7 +263,9 @@ export default {
       downloadNotificationsReport,
       downloadSurveysReport,
       downloadBookingsReport,
-      downloadWaitlistsReport
+      downloadWaitlistsReport,
+      downloadClientsReport,
+      downloadClientContactsReport
     }
   }
 }
@@ -312,6 +363,26 @@ export default {
                   :icon="'bi-calendar-heart-fill'"
                   :iconStyleClass="'red-icon'"
                   @download="downloadWaitlistsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="state.toggles['reports.admin.clients']"
+                  :canDonwload="state.toggles['reports.admin.clients']"
+                  :title="$t('businessReports.items.reports.6.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.6.description')"
+                  :icon="'bi-person-fill'"
+                  :iconStyleClass="'blue-icon'"
+                  @download="downloadClientsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="state.toggles['reports.admin.client-contacts']"
+                  :canDonwload="state.toggles['reports.admin.client-contacts']"
+                  :title="$t('businessReports.items.reports.7.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.7.description')"
+                  :icon="'bi-chat-left-dots-fill'"
+                  :iconStyleClass="'green-icon'"
+                  @download="downloadClientContactsReport"
                 ></SimpleDownloadCard>
               </div>
             </div>

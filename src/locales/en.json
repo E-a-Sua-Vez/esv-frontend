@@ -90,6 +90,21 @@
       "CHOOSE_OPTION": "☝️ Select 1"
     }
   },
+  "origin": {
+    "REFERENCE": "Reference",
+    "GOOGLE": "Google",
+    "WEB_SITE": "Web Site",
+    "INSTAGRAM": "Instagram",
+    "FACEBOOK": "Facebook",
+    "EMAIL": "Email",
+    "MARKETING": "Publicity",
+    "TV": "Television",
+    "RADIO": "Radio",
+    "TIK_TOK": "Tik Tok",
+    "WHATSAPP": "Whatsapp",
+    "CALL": "Call",
+    "OTHER": "Other"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -136,6 +151,30 @@
     "attention-user-idNumber": {
       "title": "Attention Request Id",
       "description": "Request the Id of the user to obtain service number"
+    },
+    "attention-user-birthday": {
+      "title": "Attention Request Birthday",
+      "description": "Request the birthday of the user to obtain service number"
+    },
+    "attention-user-address": {
+      "title": "Attention Request Address",
+      "description": "Request the address of the user to obtain service number"
+    },
+    "attention-user-origin": {
+      "title": "Attention Request Origin",
+      "description": "Request the origin of the user to obtain service number"
+    },
+    "attention-user-code1": {
+      "title": "Attention Request Code 1",
+      "description": "Request the code 1 of the user to obtain service number"
+    },
+    "attention-user-code2": {
+      "title": "Attention Request Code 2",
+      "description": "Request the code 2 of the user to obtain service number"
+    },
+    "attention-user-code3": {
+      "title": "Attention Request Code 3",
+      "description": "Request the code 3 of the user to obtain service number"
     },
     "close-commerce-by-service-hours": {
       "title": "Close commerce out of time",
@@ -300,6 +339,14 @@
     "walkin": "Enter to the queue:",
     "byCollaborator": "By Professional",
     "byService": "By Service",
+    "birthday": "Birthday",
+    "addressText": "Address (Text)",
+    "addressCode": "Address (Zip)",
+    "origin": "Origin",
+    "originText": "How did you know about us?",
+    "code1": "Code 1",
+    "code2": "Code 2",
+    "code3": "Code 3",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -327,7 +374,14 @@
       "idNumber": "Should set your id",
       "phone": "Should set your phone",
       "email": "Should set your valid email",
-      "phoneCode": "Should select the country code"
+      "phoneCode": "Should select the country code",
+      "birthday": "Should set your birthday",
+      "addressText": "Should set your address (text)",
+      "addressCode": "Should set your address (zip)",
+      "origin": "Should set your origin",
+      "code1": "Should set your code 1",
+      "code2": "Should set your code 2",
+      "code3": "Should set your code 3"
     }
   },
   "attentionNumber": {
@@ -1878,6 +1932,14 @@
         "5": {
           "name": "Waitlist Report",
           "description": "Waitlist of the commerce between the selected dates."
+        },
+        "6": {
+          "name": "Clients Report",
+          "description": "Clients of the commerce between the selected dates."
+        },
+        "7": {
+          "name": "Client Contacts Report",
+          "description": "Client Contacts of the commerce between the selected dates."
         }
       }
     },
@@ -1889,7 +1951,9 @@
           "notifications": "Notifications Report",
           "surveys": "Qualifications Report",
           "bookings": "Bookings Report",
-          "waitlists": "Waitlist Report"
+          "waitlists": "Waitlist Report",
+          "client-contacts": "Client Contacts Report",
+          "clients": "Clients Report"
         }
       }
     }

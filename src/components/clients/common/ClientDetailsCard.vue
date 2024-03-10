@@ -281,11 +281,22 @@ export default {
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ client.nps || 'N/I' }}
               </span>
             </div>
-            <div class="mt-2">
+            <div class="mt-2" v-if="client.queueName || client.collaboratorName || (client.commerceName && client.commerceTag)">
               <span v-if="client.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
               <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
               <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
-              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
+            </div>
+            <div class="mt-2" v-if="client.userBirthday || client.userOrigin || client.userAddressCode || client.userCode1">
+              <span v-if="client.userBirthday" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-cake-fill"></i> {{ client.userBirthday }}</span>
+              <span v-if="client.userOrigin" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userOrigin }}</span><br>
+              <span v-if="client.userAddressText" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressText }}</span>
+              <span v-if="client.userAddressCode" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressCode }}</span><br>
+              <span v-if="client.userCode1" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode1 }}</span>
+              <span v-if="client.userCode2" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode2 }}</span>
+              <span v-if="client.userCode3" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode3 }}</span>
+            </div>
+            <div class="mt-2">
+              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.id }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
             </div>
           </div>

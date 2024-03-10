@@ -122,7 +122,7 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        const result = await getClientsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+        const result = await getClientsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
         if (result && result.length > 0) {

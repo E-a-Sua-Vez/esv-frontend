@@ -29,7 +29,22 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const store = globalStore();
-    const { keyName, queueId, name, lastName, idNumber, phone, email } = route.params;
+    const {
+      keyName,
+      queueId,
+      name,
+      lastName,
+      idNumber,
+      phone,
+      email,
+      addressText,
+      birthday,
+      code1,
+      code2,
+      code3,
+      addressCode,
+      origin
+    } = route.params;
     const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
     let captcha = false;
@@ -79,12 +94,6 @@ export default {
       errorsAdd: [],
       phone: '',
       phoneCode: '',
-      nameError: false,
-      lastNameError: false,
-      phoneError: false,
-      phoneCodeError: false,
-      emailError: false,
-      idNumberError: false,
       accept: false,
       date: undefined,
       blocksByDay: {},
@@ -158,6 +167,27 @@ export default {
         }
         if (data.email) {
           state.newUser.email = data.email;
+        }
+        if (data.birthday) {
+          state.newUser.birthday = data.birthday;
+        }
+        if (data.addressCode) {
+          state.newUser.addressCode = data.addressCode;
+        }
+        if (data.addressText) {
+          state.newUser.addressText = data.addressText;
+        }
+        if (data.origin) {
+          state.newUser.origin = data.origin;
+        }
+        if (data.code1) {
+          state.newUser.code1 = data.code1;
+        }
+        if (data.code2) {
+          state.newUser.code2 = data.code2;
+        }
+        if (data.code3) {
+          state.newUser.code3 = data.code3;
         }
         if (data.phoneCode && data.phone) {
           state.phone = data.phone;
@@ -258,7 +288,13 @@ export default {
         getActiveFeature(state.commerce, 'attention-user-lastName', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-phone', 'USER') ||
-        getActiveFeature(state.commerce, 'attention-user-email', 'USER')
+        getActiveFeature(state.commerce, 'attention-user-email', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-birthday', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-address', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-origin', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-code1', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-code2', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-code3', 'USER')
       ) {
         return true;
       }
@@ -269,53 +305,69 @@ export default {
     const validate = (user) => {
       state.errorsAdd = [];
       if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
-        if(!user.name || user.name.length === 0) {
-          state.nameError = true;
+        if (!user.name || user.name.length === 0) {
           state.errorsAdd.push('commerceQueuesView.validate.name');
-        } else {
-          state.nameError = false;
         }
       }
       if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
-        if(!user.lastName || user.lastName.length === 0) {
-          state.lastNameError = true;
+        if (!user.lastName || user.lastName.length === 0) {
           state.errorsAdd.push('commerceQueuesView.validate.lastName');
-        } else {
-          state.lastNameError = false;
         }
       }
       if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
-        if(!user.idNumber || user.idNumber.length === 0) {
-          state.idNumberError = true;
+        if (!user.idNumber || user.idNumber.length === 0) {
           state.errorsAdd.push('commerceQueuesView.validate.idNumber');
-        } else {
-          state.idNumberError = false;
         }
       }
       if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
-        if(!state.phoneCode || state.phoneCode.length === 0) {
-          state.phoneCodeError = true;
+        if (!state.phoneCode || state.phoneCode.length === 0) {
           state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
         } else {
           if (state.phoneCode === 'xx') {
             state.phoneCode = '';
           }
           user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
-          state.phoneCodeError = false;
         }
         if(!state.phone || state.phone.length === 0) {
-          state.phoneError = true;
           state.errorsAdd.push('commerceQueuesView.validate.phone');
-        } else {
-          state.phoneError = false;
         }
       }
       if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
-        if(!user.email || user.email.length === 0 || !validateEmail(user.email)) {
-          state.emailError = true;
+        if (!user.email || user.email.length === 0 || !validateEmail(user.email)) {
           state.errorsAdd.push('commerceQueuesView.validate.email');
-        } else {
-          state.emailError = false;
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
+        if (!user.addressText || user.addressText.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.addressText');
+        }
+        if (!user.addressCode || user.addressCode.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.addressCode');
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
+        if (!user.birthday || user.birthday.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.birthday');
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-origin', 'USER')) {
+        if (!user.origin || user.origin.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.origin');
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-code1', 'USER')) {
+        if (!user.code1 || user.code1.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.code1');
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-code2', 'USER')) {
+        if (!user.code2 || user.code2.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.code2');
+        }
+      }
+      if (getActiveFeature(state.commerce, 'attention-user-code3', 'USER')) {
+        if (!user.code3 || user.code3.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.code3');
         }
       }
       if (showConditions()) {
@@ -329,15 +381,51 @@ export default {
       return false;
     }
 
+    const buildUserBody = (user) => {
+      const body = user;
+      const personalInfo = {};
+      if (user.birthday) {
+        personalInfo.birthday = user.birthday;
+        delete user.birthday;
+      }
+      if (user.addressText) {
+        personalInfo.addressText = user.addressText;
+        delete user.addressText;
+      }
+      if (user.addressCode) {
+        personalInfo.addressCode = user.addressCode;
+        delete user.addressCode;
+      }
+      if (user.origin) {
+        personalInfo.origin = user.origin;
+        delete user.origin;
+      }
+      if (user.code1) {
+        personalInfo.code1 = user.code1;
+        delete user.code1;
+      }
+      if (user.code2) {
+        personalInfo.code2 = user.code2;
+        delete user.code2;
+      }
+      if (user.code3) {
+        personalInfo.code3 = user.code3;
+        delete user.code3;
+      }
+      user.personalInfo = personalInfo;
+      return user;
+    }
+
     const getAttention = async (block) => {
       try {
         loading.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
+          const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
           let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser }
           if (block && block.number) {
@@ -360,9 +448,10 @@ export default {
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
+          const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
           const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block }
           const booking = await createBooking(body);
@@ -381,9 +470,10 @@ export default {
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
+          const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...state.newUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
           const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date) }
           const waitlist = await createWaitlist(body);
@@ -763,6 +853,13 @@ export default {
       idNumber,
       phone,
       email,
+      addressText,
+      birthday,
+      code1,
+      code2,
+      code3,
+      addressCode,
+      origin,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -808,6 +905,14 @@ export default {
             :idNumber="idNumber"
             :email="email"
             :phone="phone"
+            :birthday="birthday"
+            :addressText="addressText"
+            :addressCode="addressCode"
+            :origin="origin"
+            :code1="code1"
+            :code2="code2"
+            :code3="code3"
+            :errorsAdd="state.errorsAdd"
             :receiveData="receiveData"
           >
           </ClientForm>
@@ -1227,11 +1332,6 @@ export default {
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   font-weight: 400;
-}
-.examples {
-  font-size: .8rem;
-  line-height: 1rem;
-  color: .5px solid var(--gris-default);
 }
 .waitlist-box {
   background-color: var(--color-background);

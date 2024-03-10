@@ -90,6 +90,21 @@
       "CHOOSE_OPTION": "☝️ Selecione 1"
     }
   },
+  "origin": {
+    "REFERENCE": "Referéncia",
+    "GOOGLE": "Google",
+    "WEB_SITE": "Web Site",
+    "INSTAGRAM": "Instagram",
+    "FACEBOOK": "Facebook",
+    "EMAIL": "Email",
+    "MARKETING": "Publicidade",
+    "TV": "Television",
+    "RADIO": "Radio",
+    "TIK_TOK": "Tik Tok",
+    "WHATSAPP": "Whatsapp",
+    "CALL": "Chamada",
+    "OTHER": "Outro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -136,6 +151,30 @@
     "attention-user-idNumber": {
       "title": "Atenção requer Id",
       "description": "Solicite o Id do usuário para obter a senha"
+    },
+    "attention-user-birthday": {
+      "title": "Atenção requer Data de Nascimento",
+      "description": "Solicite a data de nascimento do usuário para obter a senha"
+    },
+    "attention-user-address": {
+      "title": "Atenção requer Endereço",
+      "description": "Solicite o endereço do usuário para obter a senha"
+    },
+    "attention-user-origin": {
+      "title": "Atenção requer Origin",
+      "description": "Solicite o origem do usuário para obter a senha"
+    },
+    "attention-user-code1": {
+      "title": "Atenção requer Código 1",
+      "description": "Solicite o Código 1 do usuário para obter a senha"
+    },
+    "attention-user-code2": {
+      "title": "Atenção requer Código 2",
+      "description": "Solicite o Código 2 do usuário para obter a senha"
+    },
+    "attention-user-code3": {
+      "title": "Atenção requer Código 3",
+      "description": "Solicite o Código 3 do usuário para obter a senha"
     },
     "close-commerce-by-service-hours": {
       "title": "Fechar comércio fora do tempo",
@@ -283,7 +322,7 @@
     "data": "Precisamos saber mais sobre você:",
     "name": "Nome",
     "lastName": "Sobrenome",
-    "idNumber": "Id/CPF/Passaporte",
+    "idNumber": "CPF/Passaporte",
     "phone": "Celular/Telefone",
     "phoneCode": "Pais",
     "email": "Email",
@@ -300,6 +339,14 @@
     "walkin": "Ingresa na fila:",
     "byCollaborator": "Por Profissional",
     "byService": "Por Serviço",
+    "birthday": "Data de Nascimento",
+    "addressText": "Endereço (Texto)",
+    "addressCode": "Endereço (CEP)",
+    "origin": "Origem",
+    "originText": "Como nos conoceu?",
+    "code1": "Chave 1",
+    "code2": "Chave 2",
+    "code3": "Chave 3",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -327,7 +374,15 @@
       "idNumber": "Deve digitar seu Id",
       "phone": "Deve digitar seu telefone",
       "email": "Deve digitar seu email válido",
-      "phoneCode": "Deve selecionar o codigo do pais"
+      "phoneCode": "Deve selecionar o codigo do pais",
+      "accept": "Deve aceitar as condições de uso",
+      "birthday": "Deve digitar sua data de nascimento",
+      "addressText": "Deve digitar seu endereço (texto)",
+      "addressCode": "Deve digitar seu endereço (cep)",
+      "origin": "Deve digitar seu origem",
+      "code1": "Deve digitar seu código 1",
+      "code2": "Deve digitar seu código 2",
+      "code3": "Deve digitar seu código 3"
     }
   },
   "attentionNumber": {
@@ -1880,6 +1935,14 @@
         "5": {
           "name": "Relatório de Lista de Espera",
           "description": "Lista de Espera do comércio entre as datas selecionadas."
+        },
+        "6": {
+          "name": "Relatório de Clientes",
+          "description": "Lista de Clientes do comércio entre as datas selecionadas."
+        },
+        "7": {
+          "name": "Relatório de Contatos de Clientes",
+          "description": "Lista de Contatos de Clientes do comércio entre as datas selecionadas."
         }
       }
     },
@@ -1891,7 +1954,9 @@
           "notifications": "Relatório de Notificações",
           "surveys": "Relatório de Pesquisas",
           "bookings": "Relatório de Reservas",
-          "waitlists": "Relatório de Lista de Espera"
+          "waitlists": "Relatório de Lista de Espera",
+          "client-contacts": "Relatório de Contatos a Clientes",
+          "clients": "Relatório de Clientes"
         }
       }
     }

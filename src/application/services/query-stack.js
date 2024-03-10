@@ -114,6 +114,28 @@ export const getNotificationsReport = async (commerceId, commerceIds, from, to) 
   return (await requestQuery.get('reports/notifications', options)).data;
 };
 
+export const getClientsReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/clients', options)).data;
+};
+
+export const getClientContactsReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/client-contacts', options)).data;
+};
+
 export const getSurveys = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
@@ -308,6 +330,32 @@ export const getClientsDetails = async (
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('client/details', options)).data;
+};
+
+export const getClientContactsDetailsByClientId = async (
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  clientId = undefined,
+  page = undefined,
+  limit = undefined,
+  daysSinceContacted = undefined,
+  searchText = undefined,
+  asc = true,
+  contactResultType = undefined
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, clientId, page, limit, daysSinceContacted,
+    searchText, asc, contactResultType
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get(`client-contact/details/client/${clientId}`, options)).data;
 };
 
 export const getClientContactsDetails = async (

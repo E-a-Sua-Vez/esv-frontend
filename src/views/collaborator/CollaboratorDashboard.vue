@@ -18,7 +18,6 @@ import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
 import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
-import DashboardSurveysManagement from '../../components/dashboard/DashboardSurveysManagement.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
 
 Chart.register(...registerables);
@@ -38,7 +37,6 @@ export default {
     DashboardIndicators,
     DashboardGraphs,
     DashboardSurveysResult,
-    DashboardSurveysManagement,
     DashboardSurveys
   },
   async setup() {
@@ -89,7 +87,6 @@ export default {
       showIndicators: true,
       showGraphs: false,
       showSurveyResults: false,
-      showSurveyManagement: false,
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
@@ -305,28 +302,18 @@ export default {
       state.showIndicators = true;
       state.showGraphs = false;
       state.showSurveyResults = false;
-      state.showSurveyManagement = false;
     }
 
     const showGraphs = () => {
       state.showIndicators = false;
       state.showGraphs = true;
       state.showSurveyResults = false;
-      state.showSurveyManagement = false;
     }
 
     const showSurvey = () => {
       state.showIndicators = false;
       state.showGraphs = false;
       state.showSurveyResults = true;
-      state.showSurveyManagement = false;
-    }
-
-    const showSurveys = () => {
-      state.showIndicators = false;
-      state.showGraphs = false;
-      state.showSurveyResults = false;
-      state.showSurveyManagement = true;
     }
 
     const surveyLabel = (label) => {
@@ -562,7 +549,6 @@ export default {
       showIndicators,
       showSurvey,
       showGraphs,
-      showSurveys,
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
@@ -640,11 +626,10 @@ export default {
               <span v-if="state.showIndicators">{{ $t("dashboard.indicators") }}</span>
               <span v-else-if="state.showGraphs">{{ $t("dashboard.graph") }}</span>
               <span v-else-if="state.showSurveyResults">{{ $t("dashboard.surveys") }}</span>
-              <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.surveys-management") }}</span>
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
             <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-3 centered">
+              <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showIndicators ? 'btn-selected' : ''"
@@ -654,7 +639,7 @@ export default {
                   <i class="bi bi-stoplights-fill"></i>
                 </button>
               </div>
-              <div class="col-3 centered">
+              <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showGraphs ? 'btn-selected' : ''"
@@ -663,22 +648,13 @@ export default {
                   <i class="bi bi-bar-chart-line-fill"></i>
                 </button>
               </div>
-              <div class="col-3 centered">
+              <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
                   :class="state.showSurveyResults ? 'btn-selected' : ''"
                   @click="showSurvey()"
                   :disabled="!state.toggles['dashboard.surveys.view']">
                   <i class="bi bi-patch-question-fill"></i>
-                </button>
-              </div>
-              <div class="col-3 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
-                  :class="state.showSurveyManagement ? 'btn-selected' : ''"
-                  @click="showSurveys()"
-                  :disabled="!state.toggles['dashboard.surveys-management.view']">
-                  <i class="bi bi-chat-heart-fill"></i>
                 </button>
               </div>
             </div>
@@ -721,16 +697,6 @@ export default {
                 :queues="state.queues"
               >
               </DashboardSurveys>
-              <DashboardSurveysManagement
-                :showSurveyManagement="state.showSurveyManagement"
-                :calculatedMetrics="state.calculatedMetrics"
-                :toggles="state.toggles"
-                :startDate="state.startDate"
-                :endDate="state.endDate"
-                :commerce="state.commerce"
-                :queues="state.queues"
-              >
-              </DashboardSurveysManagement>
             </div>
           </div>
         </div>

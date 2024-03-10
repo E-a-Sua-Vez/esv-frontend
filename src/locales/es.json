@@ -90,6 +90,21 @@
       "CHOOSE_OPTION": "☝️ Selección 1"
     }
   },
+  "origin": {
+    "REFERENCE": "Referencia",
+    "GOOGLE": "Google",
+    "WEB_SITE": "Web Site",
+    "INSTAGRAM": "Instagram",
+    "FACEBOOK": "Facebook",
+    "EMAIL": "Email",
+    "MARKETING": "Publicidad",
+    "TV": "Televisión",
+    "RADIO": "Radio",
+    "TIK_TOK": "Tik Tok",
+    "WHATSAPP": "Whatsapp",
+    "CALL": "Llamada",
+    "OTHER": "Otro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -137,6 +152,30 @@
     "attention-user-idNumber": {
       "title": "Atención Solicita Id",
       "description": "Solicita número de identificación del usuario para obtener número de atención"
+    },
+    "attention-user-birthday": {
+      "title": "Atención Solicita Fecha de Nacimiento",
+      "description": "Solicita fecha de nacimiento del usuario para obtener número de atención"
+    },
+    "attention-user-address": {
+      "title": "Atención Solicita Dirección",
+      "description": "Solicita dirección del usuario para obtener número de atención"
+    },
+    "attention-user-origin": {
+      "title": "Atención Solicita Origen",
+      "description": "Solicita origen del usuario para obtener número de atención"
+    },
+    "attention-userc-code1": {
+      "title": "Atención Solicita Código 1",
+      "description": "Solicita código 1 del usuario para obtener número de atención"
+    },
+    "attention-user-code2": {
+      "title": "Atención Solicita Código 2",
+      "description": "Solicita código 2 del usuario para obtener número de atención"
+    },
+    "attention-user-code3": {
+      "title": "Atención Solicita Código 3",
+      "description": "Solicita código 3 del usuario para obtener número de atención"
     },
     "close-commerce-by-service-hours": {
       "title": "Cerrar comercio fuera de horario",
@@ -301,6 +340,14 @@
     "walkin": "Ingresa a la fila:",
     "byCollaborator": "Por Profesional",
     "byService": "Por Servicio",
+    "birthday": "Fecha de Nacimiento",
+    "addressText": "Dirección (Texto)",
+    "addressCode": "Dirección (Zip)",
+    "origin": "Origen",
+    "originText": "¿Cómo nos conoció?",
+    "code1": "Código 1",
+    "code2": "Código 2",
+    "code3": "Código 3",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -329,7 +376,14 @@
       "phone": "Debes ingresar tu teléfono",
       "email": "Debes ingresar tu email válido",
       "phoneCode": "Debes seleccionar el pais",
-      "accept": "Debes aceptar las condiciones de uso"
+      "accept": "Debes aceptar las condiciones de uso",
+      "birthday": "Debes ingresar tu fecha de nacimiento",
+      "addressText": "Debes ingresar tu dirección (texto)",
+      "addressCode": "Debes ingresar tu dirección (código postal)",
+      "origin": "Debes ingresar tu origen",
+      "code1": "Debes ingresar tu código 1",
+      "code2": "Debes ingresar tu código 2",
+      "code3": "Debes ingresar tu código 3"
     }
   },
   "attentionNumber": {
@@ -1882,6 +1936,14 @@
         "5": {
           "name": "Informe de Lista de Espera",
           "description": "Listado de Espera del comercio entre las fechas seleccionadas."
+        },
+        "6": {
+          "name": "Informe de Clientes",
+          "description": "Listado de Clientes del comercio entre las fechas seleccionadas."
+        },
+        "7": {
+          "name": "Informe de Contactos de Clientes",
+          "description": "Listado de Contactos de Clientes del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -1893,7 +1955,9 @@
           "notifications": "Informe de Notificaciones",
           "surveys": "Informe de Calificaciones",
           "bookings": "Informe de Reservas",
-          "waitlist": "Informe de Lista de Espera"
+          "waitlist": "Informe de Lista de Espera",
+          "clients": "Informe de Clientes",
+          "client-contacts": "Informe de Contactos de Clientes"
         }
       }
     }
@@ -2568,7 +2632,11 @@
         "view": "Ver Sección - Reportes",
         "attentions": "Descargar Reporte de Atenciones",
         "notifications": "Descargar Reporte de Notificaciones",
-        "surveys": "Descargar Reporte de Encuestas"
+        "surveys": "Descargar Reporte de Encuestas",
+        "bookings": "Descargar Reporte de Reservas",
+        "waitlist": "Descargar Reporte de Lista de Espera",
+        "client-contacts": "Descargar Reporte de Contacto de Clientes",
+        "clients": "Descargar Reporte de Clientes"
       }
     },
     "collaborator": {
