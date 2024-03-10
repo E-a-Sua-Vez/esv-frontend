@@ -152,6 +152,7 @@ export default {
                     state.newUser.addressText = `${result.logradouro}, ${result.bairro}, ${result.localidade} ${result.uf}`;
                     state.addressCodeError = false;
                   } else {
+                    state.newUser.addressText = '';
                     state.addressCodeError = true;
                   }
                 }
