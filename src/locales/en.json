@@ -341,6 +341,7 @@
     "byService": "By Service",
     "birthday": "Birthday",
     "addressText": "Address (Text)",
+    "addressComplement": "Address (Complement)",
     "addressCode": "Address (Zip)",
     "origin": "Origin",
     "originText": "How did you know about us?",
@@ -378,6 +379,7 @@
       "birthday": "Should set your birthday",
       "addressText": "Should set your address (text)",
       "addressCode": "Should set your address (zip)",
+      "addressComplement": "Should set your address (complement)",
       "origin": "Should set your origin",
       "code1": "Should set your code 1",
       "code2": "Should set your code 2",
@@ -1546,6 +1548,7 @@
     "estimated": "Estimated time (min):",
     "listResult": "Results:",
     "update": "Update",
+    "unavailable": "Delete",
     "add": "Add",
     "service": "Service:",
     "selectCollaborator": "Select Collaborator",
@@ -2379,6 +2382,7 @@
     "otherOption": "'Other' Option:",
     "otherOpen": "'Other' Open:",
     "optionsHelp": "List of answer options splitted by comma, without spaces.",
+    "analize": "Analize AI:",
     "listResult": "Results:",
     "message": {
       "1": {

@@ -3,9 +3,7 @@ import { requestBackend, getHeaders } from '../api';
 const entity = 'queue';
 
 export const getQueueByCommerce = async id => {
-    let commerce = (await requestBackend.get(`/commerce/${id}`, await getHeaders())).data;
-    commerce.queues = (await requestBackend.get(`/${entity}/commerce/${id}`, await getHeaders())).data;
-    return commerce;
+    return (await requestBackend.get(`/commerce/${id}`, await getHeaders())).data;
 }
 
 export const getQueueById = async id => {

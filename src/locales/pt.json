@@ -342,6 +342,7 @@
     "birthday": "Data de Nascimento",
     "addressText": "Endereço (Texto)",
     "addressCode": "Endereço (CEP)",
+    "addressComplement": "Complemento",
     "origin": "Origem",
     "originText": "Como você nos conheceu?",
     "code1": "Chave 1",
@@ -379,6 +380,7 @@
       "birthday": "Deve digitar sua data de nascimento",
       "addressText": "Deve digitar seu endereço (texto)",
       "addressCode": "Deve digitar seu endereço (cep)",
+      "addressComplement": "Deve digitar seu endereço (complement)",
       "origin": "Deve digitar seu origem",
       "code1": "Deve digitar seu código 1",
       "code2": "Deve digitar seu código 2",
@@ -1548,6 +1550,7 @@
     "estimated": "Tempo estimado (min):",
     "update": "Atualizar",
     "add": "Adicionar",
+    "unavailable": "Deletar",
     "service": "Serviço:",
     "selectCollaborator": "Selecione Colaborador",
     "selectService": "Selecione Serviço",
@@ -2382,6 +2385,7 @@
     "otherOption": "Opção 'Outro':",
     "otherOpen": "'Outro' Aberto:",
     "optionsHelp": "Lista de opções de reposta separados por vírgula, sem espaços.",
+    "analize": "Analisar IA:",
     "listResult": "Registros:",
     "message": {
       "1": {

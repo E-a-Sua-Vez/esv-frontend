@@ -25,3 +25,26 @@ export const getUserOrigin = () => {
     { id: 'OTHER', code: 'OTHER' }
   ];
 }
+
+export const getQuestionTypes = () => {
+  return [
+    "RATING_TO_5",
+    "RATING_TO_10",
+    "YES_OR_NOT",
+    "OPEN_WRITING",
+    "OPEN_OPTIONS",
+    "CHOOSE_OPTION"
+  ]
+}
+
+export const getSurveyTypes = () => {
+  return [
+    "SIMPLE_CSAT",
+    "SIMPLE_NPS",
+    "SIMPLE_CSAT_NPS",
+    "PERSONALIZED_SURVEY"
+  ]
+}
+
+
+

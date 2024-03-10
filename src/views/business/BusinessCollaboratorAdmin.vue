@@ -567,7 +567,6 @@ export default {
                       </div>
                       <div class="col-8">
                         <input
-                          :disabled="true"
                           min="1"
                           max="50"
                           type="text"

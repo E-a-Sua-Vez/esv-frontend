@@ -15,10 +15,11 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
+import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -41,13 +42,15 @@ export default {
       ],
       commerce: {},
       showAdd: false,
+      goToUnavailable: false,
       newQueue: {},
       selectedCollaborator: {},
       selectedService: {},
       extendedEntity: undefined,
       errorsAdd: [],
       errorsUpdate: [],
-      nameError: false,
+      nameAddError: false,
+      nameUpdateError: false,
       limitAddError: false,
       limitUpdateError: false,
       orderAddError: false,
@@ -91,10 +94,10 @@ export default {
     const validateAdd = (queue) => {
       state.errorsAdd = [];
       if(!queue.name || queue.name.length === 0) {
-        state.nameError = true;
+        state.nameAddError = true;
         state.errorsAdd.push('businessQueuesAdmin.validate.name');
       } else {
-        state.nameError = false;
+        state.nameAddError = false;
       }
       if(!queue.type || queue.type.length === 0) {
         state.typeError = true;
@@ -136,6 +139,12 @@ export default {
 
     const validateUpdate = (queue) => {
       state.errorsUpdate = [];
+      if(!queue.name || queue.name.length === 0) {
+        state.nameUpdateError = true;
+        state.errorsAdd.push('businessQueuesAdmin.validate.name');
+      } else {
+        state.nameUpdateError = false;
+      }
       if(!queue.limit || queue.limit.length === 0 || queue.limit > state.toggles['queues.admin.queue-limit']) {
         state.limitUpdateError = true;
         state.errorsUpdate.push('businessQueuesAdmin.validate.limit');
@@ -166,22 +175,7 @@ export default {
       return false;
     }
 
-    const update = async (queue) => {
-      try {
-        loading.value = true;
-        if (validateUpdate(queue)) {
-          await updateQueue(queue.id, queue);
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
-          state.extendedEntity = undefined;
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
+
 
     const showAdd = () => {
       state.showAdd = !state.showAdd;
@@ -218,6 +212,50 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const update = async (queue) => {
+      try {
+        loading.value = true;
+        if (validateUpdate(queue)) {
+          await updateQueue(queue.id, queue);
+          const commerce = await getQueueByCommerce(state.commerce.id);
+          state.queues = commerce.queues;
+          state.extendedEntity = undefined;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const unavailable = async (queue) => {
+      try {
+        loading.value = true;
+        if (queue && queue.id) {
+          queue.available = false;
+          await updateQueue(queue.id, queue);
+          const commerce = await getQueueByCommerce(state.commerce.id);
+          state.queues = commerce.queues;
+          state.extendedEntity = undefined;
+          state.goToUnavailable = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const goToUnavailable = () => {
+      state.goToUnavailable = !state.goToUnavailable;
+    }
+
+    const unavailableCancel = () => {
+      state.goToUnavailable = false;
     }
 
     const selectCommerce = async (commerce) => {
@@ -354,6 +392,7 @@ export default {
       alertError,
       showUpdateForm,
       update,
+      unavailable,
       showAdd,
       add,
       goBack,
@@ -367,7 +406,9 @@ export default {
       initializedSameCommerceHours,
       selectCollaborator,
       selectService,
-      selectType
+      selectType,
+      goToUnavailable,
+      unavailableCancel
     }
   }
 }
@@ -441,7 +482,7 @@ export default {
                           type="text"
                           class="form-control"
                           v-model="state.newQueue.name"
-                          v-bind:class="{ 'is-invalid': state.nameError }"
+                          v-bind:class="{ 'is-invalid': state.nameAddError }"
                           placeholder="Service A">
                       </div>
                     </div>
@@ -819,7 +860,22 @@ export default {
                         </a>
                       </div>
                     </div>
-                    <div id="queue-type-form-add" class="row g-1">
+                    <div id="queue-name-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.name") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="queue.name"
+                          v-bind:class="{ 'is-invalid': state.nameUpdateError }"
+                          placeholder="Service A">
+                      </div>
+                    </div>
+                    <div id="queue-type-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.type") }}
                       </div>
@@ -832,7 +888,7 @@ export default {
                           placeholder="Type">
                       </div>
                     </div>
-                    <div id="queue-limit-form" class="row g-1">
+                    <div id="queue-limit-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.limit") }}
                       </div>
@@ -848,7 +904,7 @@ export default {
                           placeholder="100">
                       </div>
                     </div>
-                    <div id="queue-order-form" class="row g-1">
+                    <div id="queue-order-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.order") }}
                       </div>
@@ -864,7 +920,7 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
-                    <div id="queue-estimated-form" class="row g-1">
+                    <div id="queue-estimated-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.estimated") }}
                       </div>
@@ -879,7 +935,7 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
-                    <div id="queue-block-form-add" class="row g-1">
+                    <div id="queue-block-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.blockTime") }}
                       </div>
@@ -892,7 +948,7 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
-                    <div id="queue-active-form" class="row g-1">
+                    <div id="queue-active-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.active") }}
                       </div>
@@ -1115,6 +1171,20 @@ export default {
                         :disabled="!state.toggles['queues.admin.update']">
                         {{ $t("businessQueuesAdmin.update") }} <i class="bi bi-save"></i>
                       </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="!state.toggles['queues.admin.unavailable']">
+                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yesDisabled="!state.toggles['queues.admin.unavailable']"
+                        :noDisabled="!state.toggles['queues.admin.unavailable']"
+                        @actionYes="unavailable(queue)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
                       <Warning>

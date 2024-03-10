@@ -289,8 +289,9 @@ export default {
             <div class="mt-2" v-if="client.userBirthday || client.userOrigin || client.userAddressCode || client.userCode1">
               <span v-if="client.userBirthday" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-cake-fill"></i> {{ client.userBirthday }}</span>
               <span v-if="client.userOrigin" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userOrigin }}</span><br>
-              <span v-if="client.userAddressText" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressText }}</span>
-              <span v-if="client.userAddressCode" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressCode }}</span><br>
+              <span v-if="client.userAddressCode" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressCode }}</span>
+              <span v-if="client.userAddressText" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressText }}</span>
+              <span v-if="client.userAddressComplement" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressComplement }}</span>
               <span v-if="client.userCode1" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode1 }}</span>
               <span v-if="client.userCode2" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode2 }}</span>
               <span v-if="client.userCode3" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode3 }}</span>

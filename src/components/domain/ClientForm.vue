@@ -17,6 +17,7 @@ export default {
     email: { type: String, default: '' },
     birthday: { type: String, default: '' },
     addressText: { type: String, default: '' },
+    addressComplement: { type: String, default: '' },
     addressCode: { type: String, default: '' },
     origin: { type: String, default: '' },
     code1: { type: String, default: '' },
@@ -39,6 +40,7 @@ export default {
       birthday,
       addressText,
       addressCode,
+      addressComplement,
       origin,
       code1,
       code2,
@@ -83,6 +85,9 @@ export default {
         }
         if (addressText.value) {
           state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
+        }
+        if (addressComplement.value) {
+          state.newUser.addressText = addressComplement.value != 'undefined' ? addressComplement.value : '';
         }
         if (addressCode.value) {
           state.newUser.addressCode = addressCode.value != 'undefined' ? addressCode.value : '';
@@ -204,8 +209,8 @@ export default {
 <template>
   <div>
     <div id="data" v-if="isDataActive()">
-      <div v-if="isActiveCommerce()" class="choose-attention py-1 pt-4">
-        <span>{{ $t("commerceQueuesView.data") }}</span>
+      <div v-if="isActiveCommerce()" class="choose-attention py-2 pt-3">
+        <span class="fw-bold">{{ $t("commerceQueuesView.data") }}</span>
       </div>
       <div class="row g-1">
         <div class="col col-md-10 offset-md-1 data-card">
@@ -289,7 +294,7 @@ export default {
                 <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
             </div>
             <label v-if="!state.newUser.phoneCode" class="examples mt-2"> {{ $t('clientNotifyData.validate.cellphone.example') }} </label>
-            <label v-else class="examples mt-2"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.newUser.phoneCode}`) }} </label>
+            <label v-else class="examples mt-1"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.newUser.phoneCode}`) }} </label>
           </div>
           <div id="attention-birthday-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(commerce, 'attention-user-birthday', 'USER')">
             <div class="col form-floating">
@@ -304,7 +309,7 @@ export default {
             </div>
           </div>
           <div id="attention-addressCode-form-add" class="row g-1 mb-1"  v-if="getActiveFeature(commerce, 'attention-user-address', 'USER')">
-            <div class="col form-floating">
+            <div class="col-12 col-md-6 form-floating">
               <input
                 id="attention-addressCode-input-add"
                 maxlength="10"
@@ -317,6 +322,18 @@ export default {
                 v-bind:class="{ 'is-invalid': state.addressCodeError }"
                 >
                 <label for="attention-addressCode-input-add" class="label-form">{{ $t("commerceQueuesView.addressCode") }} <i class="bi bi-geo-alt-fill"></i></label>
+            </div>
+            <div class="col-12 col-md-6 form-floating">
+              <input
+                id="attention-addressComplement-input-add"
+                maxlength="10"
+                type="text"
+                class="form-control"
+                v-model.trim="state.newUser.addressComplement"
+                placeholder="00000-00"
+                @keyup="sendData"
+                >
+                <label for="attention-addressComplement-input-add" class="label-form">{{ $t("commerceQueuesView.addressComplement") }} <i class="bi bi-geo-alt-fill"></i></label>
             </div>
           </div>
           <div id="attention-addressCode-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(commerce, 'attention-user-address', 'USER')">

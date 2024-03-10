@@ -15,6 +15,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import Popper from "vue3-popper";
 import { getQueueByCommerce } from '../../application/services/queue';
+import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessSurveysAdmin',
@@ -32,20 +33,8 @@ export default {
       activeBusiness: false,
       commerces: ref({}),
       surveys: ref({}),
-      types: [
-        "SIMPLE_CSAT",
-        "SIMPLE_NPS",
-        "SIMPLE_CSAT_NPS",
-        "PERSONALIZED_SURVEY"
-      ],
-      question_types: [
-        "RATING_TO_5",
-        "RATING_TO_10",
-        "YES_OR_NOT",
-        "OPEN_WRITING",
-        "OPEN_OPTIONS",
-        "CHOOSE_OPTION"
-      ],
+      types: [],
+      question_types: [],
       commerce: {},
       queues: [],
       showAdd: false,
@@ -63,6 +52,8 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.question_types = getQuestionTypes();
+        state.types = getSurveyTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
@@ -227,7 +218,8 @@ export default {
         active: true,
         order: state.questions.length + 1,
         otherOption: false,
-        otherOptionOpen: false
+        otherOptionOpen: false,
+        analize: false
       }
       if (questions === undefined) {
         questions = [];
@@ -472,6 +464,16 @@ export default {
                             />
                           </div>
                         </div>
+                        <div v-if="(question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING')" class="row g-1 mt-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessSurveysAdmin.analize") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="question.analize"
+                            />
+                          </div>
+                        </div>
                         <div class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.order") }}
@@ -696,6 +698,16 @@ export default {
                           <div class="col-8">
                             <Toggle
                               v-model="question.otherOptionOpen"
+                            />
+                          </div>
+                        </div>
+                        <div v-if="(question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING')" class="row g-1 mt-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessSurveysAdmin.analize") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="question.analize"
                             />
                           </div>
                         </div>

@@ -177,6 +177,9 @@ export default {
         if (data.addressText) {
           state.newUser.addressText = data.addressText;
         }
+        if (data.addressComplement) {
+          state.newUser.addressComplement = data.addressComplement;
+        }
         if (data.origin) {
           state.newUser.origin = data.origin;
         }
@@ -304,70 +307,81 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
-        if (!user.name || user.name.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.name');
-        }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
-        if (!user.lastName || user.lastName.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.lastName');
-        }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
-        if (!user.idNumber || user.idNumber.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.idNumber');
-        }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
-        if (!state.phoneCode || state.phoneCode.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
-        } else {
-          if (state.phoneCode === 'xx') {
-            state.phoneCode = '';
+      if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
+        if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
+          if (!user.name || user.name.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.name');
           }
-          user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
         }
-        if(!state.phone || state.phone.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.phone');
+        if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
+          if (!user.lastName || user.lastName.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.lastName');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
-        if (!user.email || user.email.length === 0 || !validateEmail(user.email)) {
-          state.errorsAdd.push('commerceQueuesView.validate.email');
+        if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
+          if (!user.idNumber || user.idNumber.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.idNumber');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
-        if (!user.addressText || user.addressText.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.addressText');
+        if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
+          if (!state.phoneCode || state.phoneCode.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
+          } else {
+            if (state.phoneCode === 'xx') {
+              state.phoneCode = '';
+            }
+            user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+          }
+          if(!state.phone || state.phone.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.phone');
+          }
         }
-        if (!user.addressCode || user.addressCode.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.addressCode');
+        if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
+          if (!user.email || user.email.length === 0 || !validateEmail(user.email)) {
+            state.errorsAdd.push('commerceQueuesView.validate.email');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
-        if (!user.birthday || user.birthday.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.birthday');
+        if (getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
+          if (!user.addressText || user.addressText.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.addressText');
+          }
+          if (!user.addressCode || user.addressCode.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.addressCode');
+          }
+          if (!user.addressComplement || user.addressComplement.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.addressComplement');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-origin', 'USER')) {
-        if (!user.origin || user.origin.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.origin');
+        if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
+          if (!user.birthday || user.birthday.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.birthday');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-code1', 'USER')) {
-        if (!user.code1 || user.code1.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.code1');
+        if (getActiveFeature(state.commerce, 'attention-user-origin', 'USER')) {
+          if (!user.origin || user.origin.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.origin');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-code2', 'USER')) {
-        if (!user.code2 || user.code2.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.code2');
+        if (getActiveFeature(state.commerce, 'attention-user-code1', 'USER')) {
+          if (!user.code1 || user.code1.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.code1');
+          }
         }
-      }
-      if (getActiveFeature(state.commerce, 'attention-user-code3', 'USER')) {
-        if (!user.code3 || user.code3.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.code3');
+        if (getActiveFeature(state.commerce, 'attention-user-code2', 'USER')) {
+          if (!user.code2 || user.code2.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.code2');
+          }
+        }
+        if (getActiveFeature(state.commerce, 'attention-user-code3', 'USER')) {
+          if (!user.code3 || user.code3.length === 0) {
+            state.errorsAdd.push('commerceQueuesView.validate.code3');
+          }
+        }
+      } else {
+        if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
+          if (!validateEmail(user.email)) {
+            state.errorsAdd.push('commerceQueuesView.validate.email');
+          }
         }
       }
       if (showConditions()) {
@@ -395,6 +409,10 @@ export default {
       if (user.addressCode) {
         personalInfo.addressCode = user.addressCode;
         delete user.addressCode;
+      }
+      if (user.addressComplement) {
+        personalInfo.addressComplement = user.addressComplement;
+        delete user.addressComplement;
       }
       if (user.origin) {
         personalInfo.origin = user.origin;
@@ -888,7 +906,7 @@ export default {
   <div>
     <div  class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <div id="page-header" class="text-center mt-4">
+      <div id="page-header" class="text-center mt-2">
         <div class="welcome">
           <span>{{ $t("commerceQueuesView.welcome") }}</span>
         </div>
@@ -918,8 +936,8 @@ export default {
           </ClientForm>
           <!-- QUEUES -->
           <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading" class="mb-2">
-            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-1 pt-2">
-              <span>{{ $t("commerceQueuesView.choose") }}</span>
+            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-2">
+              <span class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
               <div v-if="!queueId && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
@@ -933,6 +951,7 @@ export default {
                 <div :class="'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
                   <div v-if="state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0">
                     <div v-for="(queue, index) in state.groupedQueues['COLLABORATOR']" :key="index">
+                      {{ queue }}
                       <div v-if="captchaEnabled === true" class="my-2">
                         <VueRecaptcha
                           :sitekey="siteKey"

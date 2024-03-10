@@ -78,10 +78,16 @@ export default {
         let answersCollected = [];
         if (this.surveyPersonalized.questions && this.surveyPersonalized.questions.length > 0) {
           answersCollected = this.surveyPersonalized.questions.map((question, ind) =>  {
-            return {
-              title: question.title,
-              type: question.type,
-              answer: this.answers[ind]
+            if (question) {
+              const answer = {
+                title: question.title,
+                type: question.type,
+                answer: this.answers[ind]
+              };
+              if (question['analize'] !== undefined) {
+                answer['analize'] = question['analize'];
+              }
+              return answer;
             }
           })
         }
