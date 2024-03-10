@@ -2,6 +2,7 @@
 import { ref, reactive, onBeforeMount, toRefs } from 'vue';
 import { getActiveFeature } from '../../shared/features';
 import { getPhoneCodes, getUserOrigin } from '../../shared/utils/data';
+import { getAddressBR } from '../../application/services/address';
 import Warning from '../../components/common/Warning.vue';
 
 export default {
@@ -53,7 +54,8 @@ export default {
       phone: '',
       phoneCode: '',
       phoneCodes: [],
-      originCodes: []
+      originCodes: [],
+      addressCodeError: false
     })
 
     onBeforeMount(async () => {
@@ -135,6 +137,34 @@ export default {
       return '';
     }
 
+    const getAddress = async () => {
+      const addressCode = state.newUser.addressCode;
+      if (addressCode) {
+        if (commerce.value && commerce.value.localeInfo.country) {
+          if (commerce.value.localeInfo.country === 'br') {
+            const value = addressCode.replace(/\D/g, '');
+            const validcep = /^[0-9]{8}$/;
+            if (validcep.test(value)) {
+              try {
+                const result = await getAddressBR(addressCode);
+                if (result) {
+                  if (!result.erro) {
+                    state.newUser.addressText = `${result.logradouro}, ${result.bairro}, ${result.localidade} ${result.uf}`;
+                    state.addressCodeError = false;
+                  } else {
+                    state.addressCodeError = true;
+                  }
+                }
+              } catch (error) {
+                state.addressCodeError = true;
+                state.newUser.addressText = '';
+              }
+            }
+          }
+        }
+      }
+    }
+
     const showConditions = () => {
       if (
         getActiveFeature(commerce.value, 'attention-user-name', 'USER') ||
@@ -164,7 +194,8 @@ export default {
       isActiveCommerce,
       getActiveFeature,
       showConditions,
-      sendData
+      sendData,
+      getAddress
     }
   }
 }
@@ -271,6 +302,22 @@ export default {
                 <label for="attention-birthday-input-add" class="label-form">{{ $t("commerceQueuesView.birthday") }} <i class="bi bi-calendar"></i></label>
             </div>
           </div>
+          <div id="attention-addressCode-form-add" class="row g-1 mb-1"  v-if="getActiveFeature(commerce, 'attention-user-address', 'USER')">
+            <div class="col form-floating">
+              <input
+                id="attention-addressCode-input-add"
+                maxlength="10"
+                type="text"
+                class="form-control"
+                v-model.trim="state.newUser.addressCode"
+                placeholder="00000-00"
+                @blur="getAddress"
+                @keyup="sendData"
+                v-bind:class="{ 'is-invalid': state.addressCodeError }"
+                >
+                <label for="attention-addressCode-input-add" class="label-form">{{ $t("commerceQueuesView.addressCode") }} <i class="bi bi-geo-alt-fill"></i></label>
+            </div>
+          </div>
           <div id="attention-addressCode-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(commerce, 'attention-user-address', 'USER')">
             <div class="col form-floating">
               <input
@@ -283,18 +330,6 @@ export default {
                 @keyup="sendData"
                 >
                 <label for="attention-addressText-input-add" class="label-form">{{ $t("commerceQueuesView.addressText") }} <i class="bi bi-geo-alt-fill"></i></label>
-            </div>
-            <div class="col form-floating">
-              <input
-                id="attention-addressCode-input-add"
-                maxlength="10"
-                type="text"
-                class="form-control"
-                v-model.trim="state.newUser.addressCode"
-                placeholder="00000-00"
-                @keyup="sendData"
-                >
-                <label for="attention-addressCode-input-add" class="label-form">{{ $t("commerceQueuesView.addressCode") }} <i class="bi bi-geo-alt-fill"></i></label>
             </div>
           </div>
           <div id="attention-code1-form-add" class="row g-1 mb-2"  v-if="getActiveFeature(commerce, 'attention-user-code1', 'USER')">
@@ -347,7 +382,7 @@ export default {
                 id="attention-origin-input-add">
                 <option v-for="code in state.originCodes" :key="code.id" :value="code.code">{{ $t(`origin.${code.id}`) }}</option>
               </select>
-              <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.origin") }}</label>
+              <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.originText") }}</label>
             </div>
           </div>
           <div class="recaptcha-area form-check form-check-inline" v-if="showConditions()">

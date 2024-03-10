@@ -82,7 +82,7 @@ export default {
     setPage(pageIn) {
       this.page = pageIn;
     },
-    clear() {
+    async clear() {
       this.ratingType = undefined;
       this.npsType = undefined;
       this.contactable = undefined;
@@ -90,6 +90,7 @@ export default {
       this.keyWord = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      await this.refresh();
     },
     async checkContactable(event) {
       if (event.target.checked) {

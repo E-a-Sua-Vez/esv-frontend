@@ -691,7 +691,6 @@ export default {
       showIndicators,
       showSurvey,
       showGraphs,
-      showSurveys,
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
