@@ -33,7 +33,8 @@ export default {
       business: {},
       commerces: ref({}),
       commerce: {},
-      getNumberRemote: {}
+      getNumberRemote: {},
+      extendedEntity: false,
     });
 
     onBeforeMount(async () => {
@@ -127,6 +128,10 @@ export default {
       }
     }
 
+    const showDetails = () => {
+      state.extendedEntity = !state.extendedEntity;
+    };
+
     return {
       state,
       id,
@@ -142,7 +147,8 @@ export default {
       selectCommerce,
       goToRequestAttentionNumber,
       validateCaptchaOk,
-      validateCaptchaError
+      validateCaptchaError,
+      showDetails
     }
   }
 }
@@ -215,6 +221,49 @@ export default {
                 {{ $t("commerceQRSetup.action") }}
               </button>
             </VueRecaptcha>
+            <div class="details-arrow mt-3" v-if="!getActiveFeature(state.commerce, 'get-number-remote')">
+              <div>
+                <div>
+                  <div class="scan-qr">
+                    <span>{{ $t("commerceQRSetup.scan") }}</span>
+                  </div>
+                  <div class="get-attention mt-3">
+                    <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
+                  </div>
+                </div>
+                <div @click="getQRValue(state.commerce)">
+                  <QR :value="getQRValue(state.commerce)"></QR>
+                </div>
+              </div>
+            </div>
+            <div class="details-arrow" v-else>
+              <div class="centered">
+                <span
+                  href="#"
+                  @click.prevent="showDetails()">
+                  <span class="details-title">{{ $t("commerceQRSetup.seeQrCode") }}</span>
+                  <i class="dark" :class="`bi ${state.extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                </span>
+              </div>
+              <div
+                :class="{ show: state.extendedEntity }"
+                class="detailed-data transition-slow">
+                <div>
+                  <div class="scan-qr">
+                    <span>{{ $t("commerceQRSetup.scan") }}</span>
+                  </div>
+                  <div class="get-attention mt-3">
+                    <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
+                  </div>
+                </div>
+                <div @click="getQRValue(state.commerce)">
+                  <QR :value="getQRValue(state.commerce)"></QR>
+                </div>
+                <div hidden v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
+                  <span>{{ $t("commerceQRSetup.request") }}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div v-else>
             <button
@@ -224,6 +273,49 @@ export default {
               @click="goToRequestAttentionNumber()">
               {{ $t("commerceQRSetup.action") }} <i class="bi bi-emoji-wink-fill"></i>
             </button>
+            <div class="details-arrow mt-3" v-if="!getActiveFeature(state.commerce, 'get-number-remote')">
+              <div>
+                <div>
+                  <div class="scan-qr">
+                    <span>{{ $t("commerceQRSetup.scan") }}</span>
+                  </div>
+                  <div class="get-attention mt-3">
+                    <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
+                  </div>
+                </div>
+                <div @click="getQRValue(state.commerce)">
+                  <QR :value="getQRValue(state.commerce)"></QR>
+                </div>
+              </div>
+            </div>
+            <div class="details-arrow" v-else>
+              <div class="centered">
+                <span
+                  href="#"
+                  @click.prevent="showDetails()">
+                  <span class="details-title">{{ $t("commerceQRSetup.seeQrCode") }}</span>
+                  <i class="dark" :class="`bi ${state.extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                </span>
+              </div>
+              <div
+                :class="{ show: state.extendedEntity }"
+                class="detailed-data transition-slow">
+                <div>
+                  <div class="scan-qr">
+                    <span>{{ $t("commerceQRSetup.scan") }}</span>
+                  </div>
+                  <div class="get-attention mt-3">
+                    <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
+                  </div>
+                </div>
+                <div @click="getQRValue(state.commerce)">
+                  <QR :value="getQRValue(state.commerce)"></QR>
+                </div>
+                <div hidden v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
+                  <span>{{ $t("commerceQRSetup.request") }}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div>
           <Message
@@ -317,5 +409,31 @@ export default {
   margin: .1rem .3rem;
   font-size: .6rem;
   line-height: .6rem !important;
+}
+.detailed-data {
+  width: 100%;
+  max-height: 0px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px auto auto;
+}
+.details-arrow {
+  margin: .5rem;
+  margin-top: 0;
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+  line-height: 1.1rem;
+  border-top: 0;
+}
+.show {
+  padding: 10px;
+  max-height: 800px !important;
+  overflow-y: auto;
+}
+.details-title {
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: .9rem;
+  color: var(--color-text);
 }
 </style>
