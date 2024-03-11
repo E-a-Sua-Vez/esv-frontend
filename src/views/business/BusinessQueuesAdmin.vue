@@ -77,7 +77,6 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ onBeforeMount ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
@@ -111,6 +110,11 @@ export default {
         }
         if (queue.type === 'SERVICE' && !queue.serviceId) {
           state.errorsAdd.push('businessQueuesAdmin.validate.service');
+        }
+        if (queue.type === 'STANDARD') {
+          if (queue.tag === undefined) {
+            queue.tag = queue.name;
+          }
         }
       }
       if(!queue.limit || queue.limit.length === 0 || queue.limit > state.toggles['queues.admin.queue-limit']) {
@@ -174,8 +178,6 @@ export default {
       }
       return false;
     }
-
-
 
     const showAdd = () => {
       state.showAdd = !state.showAdd;
@@ -267,7 +269,6 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ selectCommerce ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
