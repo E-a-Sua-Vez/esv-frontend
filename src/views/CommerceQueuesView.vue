@@ -951,7 +951,6 @@ export default {
                 <div :class="'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
                   <div v-if="state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0">
                     <div v-for="(queue, index) in state.groupedQueues['COLLABORATOR']" :key="index">
-                      {{ queue }}
                       <div v-if="captchaEnabled === true" class="my-2">
                         <VueRecaptcha
                           :sitekey="siteKey"
