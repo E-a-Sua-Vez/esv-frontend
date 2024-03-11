@@ -174,6 +174,10 @@ export default {
         state.queues = selectedCommerce.queues;
         checkQueueStatus(attentions);
         await initQueues();
+        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
+        if (state.modules && state.modules.length > 0) {
+          state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
+        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
