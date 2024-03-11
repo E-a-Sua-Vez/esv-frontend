@@ -74,7 +74,7 @@ export default {
           }
         } else {
           state.commerce = commerce;
-          state.selectedCommerces = commerce.id;
+          state.selectedCommerces = [state.commerce.id];
         }
         alertError.value = '';
         loading.value = false;
