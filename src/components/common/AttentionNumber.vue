@@ -107,7 +107,7 @@ export default {
 <style scoped>
 .attention-identifier {
   width: 60%;
-  padding: .2rem 1rem;
+  padding: .1rem 1rem;
   margin: 0;
   border-radius: .6rem;
   font-weight: 700;
@@ -115,7 +115,7 @@ export default {
 }
 .attention-identifier-list {
   margin-bottom: -2rem;
-  padding: 0rem 1rem 0rem 1rem;
+  padding: 0rem 1.5rem 0rem 1.5rem;
   border-radius: .6rem;
   font-weight: 700;
   font-size: .7rem;
@@ -185,10 +185,10 @@ export default {
   margin-left: 1.2rem;
   margin-right: 1.2rem;
   margin-top: 0;
-  padding: .15rem;
+  padding: .01rem;
   border-bottom-left-radius: 2rem;
   border-bottom-right-radius: 2rem;
-  line-height: 1.4rem;
+  line-height: 1rem;
   border-top: 0;
 }
 .show {

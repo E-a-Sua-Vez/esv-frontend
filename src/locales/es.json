@@ -743,11 +743,12 @@
     "return": "Volver",
     "create": "Crear una Reserva",
     "listResult": "Registros:",
+    "attentions": "Atenciones (Hoy)",
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
     "queues": "Filas",
     "hours": "Horas",
-    "selectQueue": "Seleccione una fila y fecha en el calendario:",
+    "selectQueue": "Seleccione una fila y fecha en el calendario",
     "manageAll": "Monitore todas as Agendas:",
     "or": "Ó",
     "schedules": "Agendas",
@@ -763,6 +764,10 @@
       "3": {
         "title": "¡Hola!",
         "content": "En este momento no hay nadie en la lista de espera para la fecha y fila indicada."
+      },
+      "4": {
+        "title": "¡Hola!",
+        "content": "En este momento no hay atenciones pendientes para la fila seleccionada."
       }
     },
     "capacitiesList": {

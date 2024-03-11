@@ -750,7 +750,8 @@
     "waitlists": "Waitlist",
     "queues": "Queues",
     "hours": "Hours",
-    "selectQueue": "Select the queue and the date on the calendar:",
+    "attentions": "Attentions (Today)",
+    "selectQueue": "Select a queue and a date on the calendar",
     "manageAll": "Manage all the schedules:",
     "or": "Or",
     "schedules": "Schedules",
@@ -766,6 +767,10 @@
       "3": {
         "title": "Hey!",
         "content": "At this time there are no one Waitlist for the Queue and Date selected."
+      },
+      "4": {
+        "title": "Hey!",
+        "content": "At this time there are no Attentins for the Queue selected."
       }
     },
     "capacitiesList": {

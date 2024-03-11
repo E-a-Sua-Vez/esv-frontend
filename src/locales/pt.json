@@ -447,7 +447,7 @@
       "2": "pessoas na sua frente."
     },
     "yourAttention": "Quando chegar a sua vez, apresente este QR code ao colaborador para validar o seu serviço:",
-    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a oferecer-lhe um serviço melhor:",
     "willBeAttendedShortly": "Você será atendido em breve.",
     "estimatedTime": "Tempo estimado",
     "estimatedTimeInit": "01:00",
@@ -757,9 +757,11 @@
     "listResult": "Registros:",
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
-    "hours": "Horàrios",
-    "selectQueue": "Selecione a fila e a data no calendário:",
+    "hours": "Horários",
+    "attentions": "Atendimentos (Hoje)",
+    "selectQueue": "Selecione a fila e a data no calendário",
     "manageAll": "Monitore todas as Agendas:",
+    "queues": "Filas",
     "or": "Ou",
     "schedules": "Agendas",
     "message": {
@@ -774,6 +776,10 @@
       "3": {
         "title": "Oh não!",
         "content": "Neste momento não há ninguem na Lista de espera na Fila e Data selecionada"
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Neste momento não há atendimentos na fila selecionada"
       }
     },
     "capacitiesList": {
@@ -932,7 +938,7 @@
     }
   },
   "attentionSurvey": {
-    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a oferecer-lhe um serviço melhor:",
     "other": "OUTRO",
     "survey": {
       "label": "Algum comentário na atendimento? (Opcional):",
@@ -957,7 +963,7 @@
     "message": {
       "1": {
         "title": "Obrigado!",
-        "content": "Seu feedback ajudará a ofrecer-lhe um serviço melhor."
+        "content": "Seu feedback ajudará a oferecer-lhe um serviço melhor."
       },
       "2": {
         "title": "Obrigado!",
