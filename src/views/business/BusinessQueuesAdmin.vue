@@ -3,7 +3,7 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getQueueByCommerce, updateQueue, addQueue, getQueuesByCommerceId } from '../../application/services/queue';
-import { getActiveServicesByCommerceId } from '../../application/services/service';
+import { getActiveServicesByCommerceId, getServiceByCommerce } from '../../application/services/service';
 import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -77,6 +77,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ onBeforeMount ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
@@ -266,6 +267,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ selectCommerce ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
