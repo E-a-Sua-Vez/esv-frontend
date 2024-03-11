@@ -159,9 +159,9 @@ export default {
           <Alert :show="loading" :stack="alertError"></Alert>
         </div>
         <div class="row mt-2">
-          <div class="col" v-if="state.commerces.length > 0">
+          <div class="col" v-if="state.commerces && state.commerces.length > 0">
             <div class="dropdown">
-              <span>{{ $t("commerceQRSetup.commerce") }} </span>
+              <span>{{ $t("commerceQRSetup.commerce") }} </span><br>
               <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="fw-bold m-1"> {{ state.commerce.tag }} </span>
               </button>
@@ -189,17 +189,17 @@ export default {
       <div v-if="isActiveCommerce() && !loading">
         <div v-if="isAvailableCommerce(state.commerce)">
           <div>
-            <div class="scan-qr">
+            <div hidden class="scan-qr">
               <span>{{ $t("commerceQRSetup.scan") }}</span>
             </div>
-            <div class="get-attention mt-3">
+            <div hidden class="get-attention mt-3">
               <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
             </div>
-            <div @click="getQRValue(state.commerce)">
+            <div hidden @click="getQRValue(state.commerce)">
               <QR :value="getQRValue(state.commerce)"></QR>
             </div>
           </div>
-          <div v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
+          <div hidden v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
             <span>{{ $t("commerceQRSetup.request") }}</span>
           </div>
           <div v-if="captchaEnabled === true">
@@ -210,7 +210,7 @@ export default {
               <button
                 :hidden="!getActiveFeature(state.commerce, 'get-number-remote')"
                 type="button"
-                class="btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-2 mb-3"
+                class="btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-4 mb-3 py-3 px-5"
                 @click="goToRequestAttentionNumber()">
                 {{ $t("commerceQRSetup.action") }}
               </button>
@@ -220,7 +220,7 @@ export default {
             <button
               :hidden="!getActiveFeature(state.commerce, 'get-number-remote')"
               type="button"
-              class="btn-size btn btn-lg fw-bold btn-dark rounded-pill mt-2 mb-3 py-2"
+              class="btn-size btn btn-lg fw-bold btn-dark rounded-pill mt-4 mb-3 py-3 px-5"
               @click="goToRequestAttentionNumber()">
               {{ $t("commerceQRSetup.action") }} <i class="bi bi-emoji-wink-fill"></i>
             </button>

@@ -141,17 +141,17 @@ export default {
       <div v-if="isActiveCommerce(state.commerce)">
         <div v-if="isAvailableCommerce(state.commerce)">
           <div>
-            <div class="scan-qr">
+            <div hidden class="scan-qr">
               <span>{{ $t("commerceQRSetup.scan") }}</span>
             </div>
-            <div class="get-attention mt-3">
+            <div hidden class="get-attention mt-3">
               <span>{{ $t("commerceQRSetup.youllReceive") }}</span>
             </div>
           </div>
-          <div @click="getQRValue()">
+          <div hidden @click="getQRValue()">
             <QR :value="getQRValue()"></QR>
           </div>
-          <div v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
+          <div hidden v-if="getActiveFeature(state.commerce, 'get-number-remote')" class="get-attention">
             <span>{{ $t("commerceQRSetup.request") }}</span>
           </div>
           <div v-if="captchaEnabled === true">
@@ -162,7 +162,7 @@ export default {
               <button
                 :hidden="!getActiveFeature(state.commerce, 'get-number-remote')"
                 type="button"
-                class=" btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-2 mb-3"
+                class=" btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-4 mb-3 py-3 px-5"
                 @click="goToRequestAttentionNumber(queue)">
                 {{ $t("commerceQRSetup.action")}}
               </button>
@@ -172,7 +172,7 @@ export default {
             <button
             :hidden="!getActiveFeature(state.commerce, 'get-number-remote')"
               type="button"
-              class=" btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-2 mb-3"
+              class=" btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-4 mb-3 py-3 px-5"
               @click="goToRequestAttentionNumber(queue)">
               {{ $t("commerceQRSetup.action") }} <i class="bi bi-emoji-wink-fill"></i>
             </button>

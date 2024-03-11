@@ -400,10 +400,10 @@
   "commerceQRSetup": {
     "welcome": "Bem-vindo!",
     "scan": "Escaneie o código QR para ser atendido!",
-    "youllReceive": "Você receberá seu número de turno em seu telefone.",
+    "youllReceive": "Você receberá seu número de atendimento em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
-    "action": "Quero uma Senha",
-    "commerce": "Selecione um comércio:",
+    "action": "Quero ser atendido",
+    "commerce": "Selecione uma unidade:",
     "services": "Serviços",
     "contact": "Contato",
     "location": "Localização",
@@ -1540,7 +1540,7 @@
   },
   "businessQueuesAdmin": {
     "title": "Filas",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "return": "Voltar",
     "limit": "Limite:",
@@ -1610,7 +1610,7 @@
   },
   "businessServicesAdmin": {
     "title": "Serviços",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "tag": "Tag:",
     "shortDescription": "Descrição curta:",
@@ -1671,7 +1671,7 @@
   },
   "businessModulesAdmin": {
     "title": "Módulos",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "return": "Voltar",
     "active": "Ativo:",
@@ -1714,7 +1714,7 @@
   },
   "businessAdministratorAdmin": {
     "title": "Administradores",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1767,7 +1767,7 @@
   },
   "businessCollaboratorsAdmin": {
     "title": "Colaboradores",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "name": "Nome:",
     "alias": "Apelido (Opcional):",
@@ -1900,7 +1900,7 @@
   },
   "businessReports": {
     "title": "Relatórios",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
     "message": {
@@ -2078,7 +2078,7 @@
   },
   "businessConfiguration": {
     "title": "Configurações",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
     "feature": "Configuração:",
@@ -2363,7 +2363,7 @@
   },
   "businessSurveysAdmin": {
     "title": "Pesquisas",
-    "commerce": "Selecione um comércio:",
+    "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "type": "Tipo:",
     "attentionDefault": "Default:",
