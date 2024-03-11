@@ -8,6 +8,7 @@ import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import ClientContactDetailsCard from '../common/ClientContactDetailsCard.vue';
 import { globalStore } from '../../../stores';
 import { getClientContactsDetails } from '../../../application/services/query-stack';
+import { contactClient } from '../../../application/services/client';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 
 export default {

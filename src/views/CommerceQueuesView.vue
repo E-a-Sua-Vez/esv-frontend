@@ -396,7 +396,6 @@ export default {
     }
 
     const buildUserBody = (user) => {
-      const body = user;
       const personalInfo = {};
       if (user.birthday) {
         personalInfo.birthday = user.birthday;

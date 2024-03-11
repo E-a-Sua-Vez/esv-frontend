@@ -68,10 +68,16 @@ export default {
         if (commerce.value && commerce.value.localeInfo.country) {
             state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
           }
-        if (name.value || lastName.value || idNumber.value || email.value) {
+        if (name.value) {
           state.newUser.name = name.value !== 'undefined' ? name.value : '';
+        }
+        if (lastName.value) {
           state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
+        }
+        if (idNumber.value) {
           state.newUser.idNumber = idNumber.value !== 'undefined' ? idNumber.value : '';
+        }
+        if (email.value) {
           state.newUser.email = email.value !== 'undefined' ? email.value : ''
         }
         if (phone.value) {
@@ -250,7 +256,6 @@ export default {
                 type="text"
                 class="form-control"
                 v-model.trim="state.newUser.idNumber"
-                v-bind:class="{ 'is-invalid': state.idNumberError }"
                 placeholder="Ex. 112223334"
                 @keyup="sendData"
                 >
