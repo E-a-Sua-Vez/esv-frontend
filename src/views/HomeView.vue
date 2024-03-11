@@ -58,10 +58,6 @@ export default {
         </div>
       </div>
       <div class="row mt-4">
-        <div class="subtitle mb-3">
-          <span>{{ $t("titleEnterMaster") }}</span><br>
-          <a @click="loginMaster()"><span class="btn btn-lg btn-size col-8 fw-bold btn-dark rounded-pill mt-2 px-4">{{ $t("enterMaster") }} <i class="bi bi-person-fill-gear"></i></span></a>
-        </div>
         <hr>
         <div class="subtitle centered mt-2">
           <a
@@ -78,6 +74,10 @@ export default {
           </a>
         </div>
       </div>
+      <div hidden class="subtitle mb-3 mt-4">
+          <span>{{ $t("titleEnterMaster") }}</span><br>
+          <a @click="loginMaster()"><span class="btn btn-lg btn-size col-8 fw-bold btn-dark rounded-pill mt-2 px-4">{{ $t("enterMaster") }} <i class="bi bi-person-fill-gear"></i></span></a>
+        </div>
       <PoweredBy />
     </div>
   </div>
