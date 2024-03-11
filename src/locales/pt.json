@@ -446,7 +446,7 @@
       "2": "pessoas na sua frente."
     },
     "yourAttention": "Quando chegar a sua vez, apresente este QR code ao colaborador para validar o seu serviço:",
-    "rateYourAttention": "Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a ofrecer-lhe um serviço melhor:",
     "willBeAttendedShortly": "Você será atendido em breve.",
     "estimatedTime": "Tempo estimado",
     "estimatedTimeInit": "01:00",
@@ -455,7 +455,7 @@
     "attendedBy": "Você será atendido por:",
     "module": "Único",
     "cancel": "Cancelar Atenção",
-    "blockInfo": "Seu horário de atenção:",
+    "blockInfo": "Seu horário de atendimento:",
     "collaborator": "N/A",
     "message": {
       "1": {
@@ -464,11 +464,11 @@
       },
       "2": {
         "title": "Não se esqueça de nos qualificar!",
-        "content": "Ao final da sua vez, poderá qualificar a atenção nesta tela."
+        "content": "Ao final da sua vez, poderá qualificar a atendimento nesta tela."
       },
       "3": {
         "title": "Cancelado!",
-        "content": "Seu atenção foi cancelada. Por favor solicite ou reserve uma nova senha."
+        "content": "Seu atendimento foi cancelada. Por favor solicite ou reserve uma nova senha."
       }
     },
     "actions": {
@@ -635,7 +635,7 @@
     },
     "next": {
       "1": "A senha da",
-      "2": "próxima atenção e:"
+      "2": "próxima atendimento e:"
     },
     "actions": {
       "1": {
@@ -646,7 +646,7 @@
       }
     },
     "comment": {
-      "label": "Algum comentário na atenção? (Opcional):",
+      "label": "Algum comentário na atendimento? (Opcional):",
       "placeholder": "O usuário foi gentil. Deixou uma gorjeta."
     },
     "message": {
@@ -675,11 +675,11 @@
       "collaborator": {
         "attention": {
           "attend": "Atender",
-          "finish": "Marcar atenção como atendida",
+          "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atenção"
         },
         "module": {
-          "update": "Atualizar o modulo de atenção"
+          "update": "Atualizar o modulo de atendimento"
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
@@ -706,7 +706,7 @@
     "welcome": "Gerenciamento de Filas",
     "commerce": "Comércio:",
     "choose": "Escolha a linha que você vai atender:",
-    "module": "Seu módulo de atenção é:",
+    "module": "Seu módulo de atendimento é:",
     "attentions": "Na linha",
     "attending": "Atendiendo",
     "return": "Voltar",
@@ -724,11 +724,11 @@
       "collaborator": {
         "attention": {
           "attend": "Atender",
-          "finish": "Marcar atenção como atendida",
-          "skip": "Pular atenção"
+          "finish": "Marcar atendimento como atendida",
+          "skip": "Pular atendimento"
         },
         "module": {
-          "update": "Atualizar o modulo de atenção"
+          "update": "Atualizar o modulo de atendimento"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -779,11 +779,11 @@
       "collaborator": {
         "attention": {
           "attend": "Atender",
-          "finish": "Marcar atenção como atendida",
+          "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atenção"
         },
         "module": {
-          "update": "Atualizar o modulo de atenção"
+          "update": "Atualizar o modulo de atendimento"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -804,7 +804,7 @@
   "collaboratorQueueAttentions": {
     "hello": "Olá!",
     "hello-user": "Olá",
-    "yourNumber": "O próximo numero de atenção e:",
+    "yourNumber": "O próximo numero de atendimento e:",
     "toGoal": {
       "1": "Há",
       "2": "pessoas esperando."
@@ -840,11 +840,11 @@
       "collaborator": {
         "attention": {
           "attend": "Atender",
-          "finish": "Marcar atenção como atendida",
+          "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atenção"
         },
         "module": {
-          "update": "Atualizar o modulo de atenção"
+          "update": "Atualizar o modulo de atendimento"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -931,10 +931,10 @@
     }
   },
   "attentionSurvey": {
-    "rateYourAttention": "Como você foi atendido? Qualificar a sua atenção, ajuda-nos a ofrecer-lhe um serviço melhor:",
+    "rateYourAttention": "Como você foi atendido? Qualificar a sua atendimento, ajuda-nos a ofrecer-lhe um serviço melhor:",
     "other": "OUTRO",
     "survey": {
-      "label": "Algum comentário na atenção? (Opcional):",
+      "label": "Algum comentário na atendimento? (Opcional):",
       "placeholder": "O colaborador foi gentil."
     },
     "nps": {
@@ -1042,7 +1042,7 @@
     "items": {
       "attentions": {
         "1": "Número de Atendimentos",
-        "2": "Tempo de atenção (Méd.)",
+        "2": "Tempo de atendimento (Méd.)",
         "3": "Qualificação do Cliente Satisfeito (CSAT)",
         "4": "Linha com mais Atendimentos",
         "5": "Atendimentos manuais (%)",
@@ -1096,7 +1096,7 @@
         "attention-number-evolution": {
           "1": " Período",
           "2": "Neste período você tem",
-          "3": "atenção(ões).",
+          "3": "atendimento(ões).",
           "4": "Isso faz a diferença",
           "5": "em comparação com o período anterior",
           "6": " Mês Atual",
@@ -1109,7 +1109,7 @@
         "attention-flow": {
           "1": "Funil",
           "2": "Neste período foram solicitados",
-          "3": "atenção(ões), das quais foram concluídas com sucesso",
+          "3": "atendimento(ões), das quais foram concluídas com sucesso",
           "4": "Isto representa uma taxa de",
           "5": " conversão",
           "6": "de",
@@ -1128,7 +1128,7 @@
         },
         "attention-duration-evolution": {
           "1": "Tempo",
-          "2": "Neste período o tempo médio de atenção em minutos é",
+          "2": "Neste período o tempo médio de atendimento em minutos é",
           "3": "O",
           "4": " pico",
           "5": "era de",
