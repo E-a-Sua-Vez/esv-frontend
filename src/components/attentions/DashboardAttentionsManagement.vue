@@ -181,7 +181,7 @@ export default {
       async handler() {
         if (this.searchText) {
           this.searchText = this.searchText.toUpperCase();
-          if (this.searchText.length > 5) {
+          if (this.searchText.length > 3) {
             this.page = 1;
             this.refresh();
           }
