@@ -155,8 +155,8 @@ export default {
           state.queues = queues;
         }
         if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-          const queues = [...collaboratorQueues];
+          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+          const queues = [...otherQueues];
           state.queues = queues;
         }
       }
