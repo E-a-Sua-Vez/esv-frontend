@@ -6,7 +6,7 @@ export default {
   components: { QrcodeVue },
   props: {
     value: { type: String, default: '' },
-    size: { type: Number, default: 180 },
+    size: { type: Number, default: 132 },
     background: { type: String, default: '#00008B' },
     foreground: { type: String, default: '#ffffff' }
   },
@@ -31,8 +31,8 @@ export default {
 
 <style scoped>
 .qr-container {
-  height: 300px;
-  width: 300px;
+  height: 250px;
+  width: 250px;
   background-color: var(--azul-qr);
   border-radius: 50%;
   display: inline-block;

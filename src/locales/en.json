@@ -417,6 +417,7 @@
     "web": "Web Site",
     "email": "Email",
     "address": "Address: ",
+    "seeQrCode": "Go to QR Code",
     "message1": {
       "title": "Too much people? Don't worry!, You don't have to wait here.",
       "content": "Leave us your number or your email, and we will notify you when it is your turn to be attended."

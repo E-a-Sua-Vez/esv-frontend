@@ -418,6 +418,7 @@
     "web": "Site",
     "email": "Email",
     "address": "Endereço: ",
+    "seeQrCode": "Ver QR Code",
     "message1": {
       "title": "Muitas pessoas? Não se preocupe!, Você não tem que esperar aqui!",
       "content": "Deixe-nos o seu whatsapp, e iremos avisá-lo quando for a sua vez de ser atendido."

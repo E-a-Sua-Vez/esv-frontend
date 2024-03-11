@@ -419,6 +419,7 @@
     "web": "Sitio Web",
     "email": "Email",
     "address": "Dirección: ",
+    "seeQrCode": "Ver Código QR",
     "message1": {
       "title": "¿Falta mucho? ¡No te preocupes!, no tienes que esperar aquí",
       "content": "Déjanos tu whatsapp y te notificaremos cuando sea tu turno para ser atendido."
