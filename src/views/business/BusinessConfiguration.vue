@@ -249,7 +249,7 @@ export default {
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#email">
-                    {{ $t("configuration.types.email") }} ({{ state.groupedConfigurations['EMAIL'].length || 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.email") }} ({{ state.groupedConfigurations['EMAIL'] ? state.groupedConfigurations['EMAIL'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="email" class="collapse">
                     <div v-if="state.groupedConfigurations['EMAIL'] && state.groupedConfigurations['EMAIL'].length > 0">
@@ -274,7 +274,7 @@ export default {
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#product">
-                    {{ $t("configuration.types.product") }} ({{ state.groupedConfigurations['PRODUCT'].length || 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.product") }} ({{ state.groupedConfigurations['PRODUCT'] ? state.groupedConfigurations['PRODUCT'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="product" class="collapse">
                     <div v-if="state.groupedConfigurations['PRODUCT'] && state.groupedConfigurations['PRODUCT'].length > 0">
@@ -299,7 +299,7 @@ export default {
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#user">
-                    {{ $t("configuration.types.user") }} ({{ state.groupedConfigurations['USER'].length || 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.user") }} ({{ state.groupedConfigurations['USER'] ? state.groupedConfigurations['USER'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="user" class="collapse">
                     <div v-if="state.groupedConfigurations['USER'] && state.groupedConfigurations['USER'].length > 0">
@@ -324,7 +324,7 @@ export default {
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#whatsapp">
-                    {{ $t("configuration.types.whatsapp") }} ({{ state.groupedConfigurations['WHATSAPP'].length || 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.whatsapp") }} ({{ state.groupedConfigurations['WHATSAPP'] ? state.groupedConfigurations['WHATSAPP'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="whatsapp" class="collapse">
                     <div v-if="state.groupedConfigurations['WHATSAPP'] && state.groupedConfigurations['WHATSAPP'].length > 0">
