@@ -26,6 +26,7 @@ export default {
       loading: false,
       counter: 0,
       attentions: [],
+      newAttentions: [],
       clientIn: [],
       totalPages: 0,
       daysSinceType: undefined,
@@ -39,9 +40,6 @@ export default {
       limit: 10
     }
   },
-  updated() {
-    this.attentions = this.attentionsIn;
-  },
   methods: {
     async refresh() {
       try {
@@ -53,10 +51,10 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+        this.newAttentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
           this.searchText, this.queueId, this.survey, this.asc, undefined);
-        updatePaginationData();
+        this.updatePaginationData();
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -161,6 +159,24 @@ export default {
           await this.refresh();
         }
       }
+    },
+    attentionsIn: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.attentions = this.attentionsIn;
+        this.updatePaginationData();
+      }
+    },
+    newAttentions: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.newAttentions && this.newAttentions.length > 0) {
+          this.attentions = this.newAttentions;
+          this.updatePaginationData();
+        }
+      }
     }
   }
 }
@@ -261,7 +277,7 @@ export default {
                       </button>
                     </li>
                     <li>
-                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page" :disabled="totalPages === 0">
+                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="page" :disabled="totalPages === 0">
                         <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
                       </select>
                     </li>
@@ -374,6 +390,6 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1.5px solid var(--gris-clear);
 }
 </style>

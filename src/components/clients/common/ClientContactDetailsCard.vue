@@ -213,7 +213,7 @@ export default {
               <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
               <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
-              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate) }}</span>
+              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate || client.createdAt) }}</span>
             </div>
           </div>
         </div>

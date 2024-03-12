@@ -5,7 +5,7 @@ import { contactClient } from '../../../application/services/client';
 import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
-import { getAttentionsDetails, getClientContactsDetails } from '../../../application/services/query-stack';
+import { getAttentionsDetails, getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
 
 export default {
   name: 'ClientDetailsCard',
@@ -66,7 +66,7 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        this.clientContacts = await getClientContactsDetails(
+        this.clientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
           this.page, this.limit, this.daysSinceContacted,
           this.searchText, this.asc, this.contactResultType);

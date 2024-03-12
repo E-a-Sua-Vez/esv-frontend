@@ -6,10 +6,11 @@ import Popper from "vue3-popper";
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import ClientContactDetailsCard from '../common/ClientContactDetailsCard.vue';
-import { globalStore } from '../../../stores';
-import { getClientContactsDetails } from '../../../application/services/query-stack';
-import { contactClient } from '../../../application/services/client';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
+import { globalStore } from '../../../stores';
+import { getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
+import { contactClient } from '../../../application/services/client';
+import { getContactResultTypes, getContactTypes } from '../../../shared/utils/data';
 
 export default {
   name: 'ClientContactsManagement',
@@ -17,13 +18,13 @@ export default {
   props: {
     showClientAttentionsManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    client: { type: Object, default: undefined },
+    client: { type: Object, default: {} },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
-    clientContactsIn: { type: Array, default: undefined }
+    clientContactsIn: { type: Array, default: [] }
   },
   data() {
     const store = globalStore();
@@ -31,17 +32,9 @@ export default {
       loading: false,
       alertError: '',
       clientContacts: [],
-      contactTypes: [
-        { id: 'CALL', name: 'CALL' },
-        { id: 'EMAIL', name: 'EMAIL' },
-        { id: 'MESSAGE', name: 'MESSAGE' },
-        { id: 'VISIT', name: 'VISIT' }
-      ],
-      contactResultTypes: [
-        { id: 'INTERESTED', name: 'INTERESTED' },
-        { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
-        { id: 'REJECTED', name: 'REJECTED' }
-      ],
+      newClientContacts: [],
+      contactTypes: [],
+      contactResultTypes: [],
       newContact: {},
       counter: 0,
       totalPages: 0,
@@ -64,8 +57,9 @@ export default {
       limit: 10
     }
   },
-  updated() {
-    this.clientContacts = this.clientContactsIn;
+  beforeMount() {
+    this.contactTypes = getContactTypes();
+    this.contactResultTypes = getContactResultTypes();
   },
   methods: {
     setPage(pageIn) {
@@ -96,11 +90,11 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        this.clientContacts = await getClientContactsDetails(
+        this.newClientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
           this.page, this.limit, this.daysSinceContacted,
           this.searchText, this.asc, this.contactResultType);
-        updatePaginationData();
+        this.updatePaginationData();
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -156,10 +150,10 @@ export default {
           if (this.userType === 'collaborator') {
             newContact.collaboratorId = this.user.id;
           }
-          await contactClient(this.client.id, newContact);
+          await contactClient(this.client.id, newContact)
           setTimeout(async () => {
             await this.refresh();
-          }, 7000)
+          }, 5000)
           this.showAddOption = false;
           this.newContact = {}
           this.extendedEntity = undefined;
@@ -194,7 +188,7 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        const result = this.clientContacts = await getClientContactsDetails(
+        const result = this.clientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
           undefined, undefined, this.daysSinceContacted,
           this.searchText, undefined, this.contactResultType);
@@ -254,6 +248,24 @@ export default {
         await this.getUserType();
         await this.getUser();
       }
+    },
+    clientContactsIn: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.clientContacts = this.clientContactsIn;
+        this.updatePaginationData();
+      }
+    },
+    newClientContacts: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.newClientContacts && this.newClientContacts.length > 0) {
+          this.clientContacts = this.newClientContacts;
+          this.updatePaginationData();
+        }
+      }
     }
   }
 }
@@ -282,7 +294,7 @@ export default {
                   </div>
                   <div class="col-8">
                     <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="newContact.commerceId">
-                      <option v-for="com in commerces" :key="com.id" :value="com.id" id="select-commerce">{{ com.name }}</option>
+                      <option v-for="com in commerces" :key="com.id" :value="com.id" id="select-commerce">{{ com.tag }}</option>
                     </select>
                   </div>
                 </div>
@@ -436,7 +448,7 @@ export default {
                       </button>
                     </li>
                     <li>
-                      <select class="btn btn-md btn-light fw-bold text-dark select" v-model="page" :disabled="totalPages === 0">
+                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="page" :disabled="totalPages === 0">
                         <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
                       </select>
                     </li>
@@ -460,7 +472,7 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="clientContacts && clientContacts.length > 0">
+            <div v-if="this.clientContacts && this.clientContacts.length > 0">
               <div class="row" v-for="(contact, index) in clientContacts" :key="`clientContacts-${index}`">
                 <ClientContactDetailsCard
                   :show="true"

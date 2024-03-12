@@ -46,5 +46,19 @@ export const getSurveyTypes = () => {
   ]
 }
 
+export const getContactTypes = () => {
+  return [
+    { id: 'CALL', name: 'CALL' },
+    { id: 'EMAIL', name: 'EMAIL' },
+    { id: 'MESSAGE', name: 'MESSAGE' },
+    { id: 'VISIT', name: 'VISIT' }
+  ]
+}
 
-
+export const getContactResultTypes = () => {
+  return [
+    { id: 'INTERESTED', name: 'INTERESTED' },
+    { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
+    { id: 'REJECTED', name: 'REJECTED' }
+  ]
+}
