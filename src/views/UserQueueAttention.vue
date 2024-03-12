@@ -9,6 +9,8 @@ import { getCollaboratorById } from '../application/services/collaborator';
 import { getModuleById } from '../application/services/module';
 import { updatedAvailableAttentionsByCommerceAndQueue } from '../application/firebase';
 import { getPermissions } from '../application/services/permissions';
+import { useI18n } from 'vue-i18n';
+import { getActiveFeature } from '../shared/features';
 import Message from '../components/common/Message.vue';
 import AttentionSurvey from'../components/domain/AttentionSurvey.vue';
 import QueueName from '../components/common/QueueName.vue';
@@ -20,9 +22,7 @@ import ClientNotifyData from '../components/domain/ClientNotifyData.vue';
 import ClientEmailNotifyData from '../components/domain/ClientEmailNotifyData.vue';
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
-import { useI18n } from 'vue-i18n';
 import AreYouSure from '../components/common/AreYouSure.vue';
-import { getActiveFeature } from '../shared/features';
 
 export default {
   name: 'UserQueueAttention',

@@ -66,9 +66,13 @@ export default {
       const lastName = !this.client.userLastName ? 'undefined' : this.client.userLastName;
       const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
       const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
-      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone.slice(2,15);
-      if (name || lastName || idNumber || email || phone) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
+      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone;
+      const addressCode = !state.client.userAddressCode ? 'undefined' : state.client.userAddressCode;
+      const addressText = !state.client.userAddressText ? 'undefined' : state.client.userAddressText;
+      const addressComplement = !state.client.userAddressComplement ? 'undefined' : state.client.userAddressComplement;
+      const birthday = !state.client.userBirthday ? 'undefined' : state.client.userBirthday;
+      if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
       }
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },

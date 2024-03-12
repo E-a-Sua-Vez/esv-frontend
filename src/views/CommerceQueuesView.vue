@@ -38,6 +38,7 @@ export default {
       phone,
       email,
       addressText,
+      addressComplement,
       birthday,
       code1,
       code2,
@@ -122,7 +123,7 @@ export default {
           state.commerce = await getCommerceByKeyName(keyName);
           state.locale = state.commerce.localeInfo.language;
           store.setCurrentCommerce(state.commerce);
-          if (queueId) {
+          if (queueId && queueId !== 'undefined') {
             state.queue = await getQueueById(queueId);
             state.queues = [state.queue];
             getQueue(state.queue);
@@ -871,6 +872,7 @@ export default {
       phone,
       email,
       addressText,
+      addressComplement,
       birthday,
       code1,
       code2,
@@ -925,6 +927,7 @@ export default {
             :birthday="birthday"
             :addressText="addressText"
             :addressCode="addressCode"
+            :addressComplement="addressComplement"
             :origin="origin"
             :code1="code1"
             :code2="code2"
@@ -939,7 +942,7 @@ export default {
               <span class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
-              <div v-if="!queueId && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
+              <div v-if="(!queueId || queueId === 'undefined') && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
                 <button
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   data-bs-toggle="collapse"

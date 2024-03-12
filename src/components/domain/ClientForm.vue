@@ -93,7 +93,7 @@ export default {
           state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
         }
         if (addressComplement.value) {
-          state.newUser.addressText = addressComplement.value != 'undefined' ? addressComplement.value : '';
+          state.newUser.addressComplement = addressComplement.value != 'undefined' ? addressComplement.value : '';
         }
         if (addressCode.value) {
           state.newUser.addressCode = addressCode.value != 'undefined' ? addressCode.value : '';

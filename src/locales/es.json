@@ -1010,6 +1010,7 @@
     "desc": "A mayor",
     "keyWord": "Palabras Clave",
     "search": "🔎 Nombre, Teléfono o Email",
+    "search2": "🔎 Id, Cédula, Teléfono o Email",
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promotor",
@@ -1363,7 +1364,8 @@
     "validate": {
       "type": "Debes seleccionar el tipo",
       "result": "Debes seleccionar el resultado",
-      "comment": "Debes ingresar un comentario"
+      "comment": "Debes ingresar un comentario",
+      "search": "Debes ingresar un valor de busqueda"
     }
   },
   "resumeAttention": {

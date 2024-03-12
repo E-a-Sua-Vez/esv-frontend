@@ -18,7 +18,8 @@ export default {
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    management: { type: Boolean, default: true },
   },
   data() {
     return {
@@ -109,9 +110,13 @@ export default {
       const lastName = !this.client.userLastName ? 'undefined' : this.client.userLastName;
       const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
       const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
-      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone.slice(2,15);
-      if (name || lastName || idNumber || email || phone) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/user/${name}/${lastName}/${idNumber}/${phone}/${email}/`;
+      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone;
+      const addressCode = !this.client.userAddressCode ? 'undefined' : this.client.userAddressCode;
+      const addressText = !this.client.userAddressText ? 'undefined' : this.client.userAddressText;
+      const addressComplement = !this.client.userAddressComplement ? 'undefined' : this.client.userAddressComplement;
+      const birthday = !this.client.userBirthday ? 'undefined' : this.client.userBirthday;
+      if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
+        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
       }
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
     },
@@ -242,7 +247,7 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row my-3 centered" v-if="!loading">
+        <div class="row my-3 centered" v-if="management && !loading">
           <div class="col-4">
             <button
               @click="getAttentions()"

@@ -6,6 +6,7 @@ import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
 import { getQueueBlockDetailsByDay, getQueueBlockDetailsByDayByCommerceId } from '../../../application/services/block';
+import { getClientsDetails } from '../../../application/services/query-stack';
 import Popper from "vue3-popper";
 import DashboardAttentionsManagement from '../../attentions/DashboardAttentionsManagement.vue';
 import Message from '../../common/Message.vue';
@@ -15,10 +16,12 @@ import Spinner from '../../common/Spinner.vue';
 import BookingDetailsCard from '../common/BookingDetailsCard.vue';
 import WaitlistDetailsCard from '../../waitlist/WaitlistDetailsCard.vue';
 import AttentionNumber from '../../common/AttentionNumber.vue';
+import Warning from '../../common/Warning.vue';
+import ClientDetailsCard from '../../clients/common/ClientDetailsCard.vue';
 
 export default {
   name: 'BookingCalendar',
-  components: { Popper, Spinner, DashboardAttentionsManagement, Message, QueueSimpleName, QueueName, BookingDetailsCard, WaitlistDetailsCard, AttentionNumber },
+  components: { Popper, Spinner, DashboardAttentionsManagement, Message, QueueSimpleName, QueueName, BookingDetailsCard, WaitlistDetailsCard, AttentionNumber, Warning, ClientDetailsCard },
   props: {
     show: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
@@ -28,6 +31,7 @@ export default {
   },
   async setup(props) {
     let loading = ref(false);
+    let loadingSearch = ref(false);
     let alertError = ref('');
     let dateMask = ref({
       modelValue: 'YYYY-MM-DD',
@@ -58,10 +62,13 @@ export default {
       date: (new Date()).setDate(new Date().getDate() + 1),
       minDate: (new Date()).setDate(new Date().getDate() + 1),
       maxDate: (new Date()).setDate(new Date().getDate() + 90),
+      searchText: '',
+      client: {},
+      errorsSearch: [],
+      searchTextError: false,
       showAttentions: true,
       showBooking: false,
-      showWaitlist: false,
-      loading: false
+      showWaitlist: false
     });
 
     const {
@@ -202,11 +209,26 @@ export default {
 
     const goToLink = () => {
       const commerceKeyName = commerce.value.keyName;
+      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
       const queue = state.selectedQueue;
       if (queue && queue.id) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queue.id}`;
+        url += `/${queue.id}`;
       }
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
+      if (state.client && state.client.id) {
+        const name = !state.client.userName ? 'undefined' : state.client.userName;
+        const lastName = !state.client.userLastName ? 'undefined' : state.client.userLastName;
+        const idNumber = !state.client.userIdNumber ? 'undefined' : state.client.userIdNumber;
+        const email = !state.client.userEmail ? 'undefined' : state.client.userEmail;
+        const phone = !state.client.userPhone ? 'undefined' : state.client.userPhone;
+        const addressCode = !state.client.userAddressCode ? 'undefined' : state.client.userAddressCode;
+        const addressText = !state.client.userAddressText ? 'undefined' : state.client.userAddressText;
+        const addressComplement = !state.client.userAddressComplement ? 'undefined' : state.client.userAddressComplement;
+        const birthday = !state.client.userBirthday ? 'undefined' : state.client.userBirthday;
+        if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
+          url += `/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
+        }
+      }
+      return url;
     }
 
     const copyLink = (queue) => {
@@ -265,7 +287,6 @@ export default {
 
     const getAvailableDatesByMonth = async (queue, date) => {
       if (queue && date) {
-        state.loading = true;
         let availableDates = [];
         const [year, month] = date.split('-');
         const thisMonth = +month - 1;
@@ -322,7 +343,6 @@ export default {
         });
         calendarAttributes.value[queue.id][2].dates = [];
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
-        state.loading = false;
       }
     }
 
@@ -336,6 +356,41 @@ export default {
           state.blocks = getBlocksByDay(queue);
         }
       }
+    }
+
+    const searchClient = async () => {
+      try {
+        loadingSearch.value = true;
+        state.errorsSearch = [];
+        let commerceIds = [commerce.value.id]
+        if (!state.searchText || state.searchText.length < 3) {
+          state.errorsSearch.push('dashboard.validate.search');
+          state.searchTextError = true;
+        } else {
+          const result = await getClientsDetails(commerce.value.businessId, commerce.value.id, undefined, undefined, commerceIds,
+            undefined, undefined, undefined, undefined, undefined, undefined, state.searchText, undefined, undefined, undefined, undefined);
+          if (result && result.length > 0) {
+            state.client = result[0];
+          } else {
+            state.client = undefined;
+          }
+          if (!state.client || !state.client.id) {
+            state.client = undefined;
+          }
+          state.errorsSearch = [];
+          state.searchTextError = false;
+        }
+        loadingSearch.value = false;
+      } catch (error) {
+        loadingSearch.value = false;
+      }
+    }
+
+    const clearClient = () => {
+      state.searchTextError = false;
+      state.errorsSearch = [];
+      state.searchText = '';
+      state.client = {};
     }
 
     const showAttentions = () => {
@@ -444,6 +499,7 @@ export default {
       toggles,
       dateMask,
       loading,
+      loadingSearch,
       alertError,
       disabledDates,
       calendarAttributes,
@@ -458,7 +514,9 @@ export default {
       showQueue,
       selectQueue,
       copyLink,
-      goToLink
+      goToLink,
+      searchClient,
+      clearClient
     }
 
   }
@@ -513,14 +571,72 @@ export default {
         <div v-if="true" >
           <div class="blocks-section">
             <span class="fw-bold h6"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
-            <div class="row mt-2 mb-3">
+            <div class="row mt-2 mb-2">
               <div class="col-6">
                 <div>{{ $t("commerceQueuesView.queueSelected") }}</div>
-                <div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div>
+                <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
               </div>
               <div class="col-6">
                 <div>{{ $t("commerceQueuesView.dataSelected") }}</div>
-                <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div>
+                <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
+              </div>
+            </div>
+            <hr>
+            <div class="row mt-2 mb-3 mx-2">
+              <div><i class="bi bi-search"></i> <span class="fw-bold h6"> Pesquisar Cliente: </span></div>
+              <div class="col-8 col-md-8 centered">
+                <input
+                  min="1"
+                  max="50"
+                  type="text"
+                  class="form-control"
+                  v-model="state.searchText"
+                  v-bind:class="{ 'is-invalid': state.searchTextError }"
+                  :placeholder="$t('dashboard.search2')">
+              </div>
+              <div class="col-2 col-md-2 centered">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 py-2"
+                  @click="searchClient()">
+                  <span><i class="bi bi-search"></i></span>
+                </button>
+              </div>
+              <div class="col-2 col-md-2 centered">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                  @click="clearClient()">
+                  <span><i class="bi bi-eraser-fill"></i></span>
+                </button>
+              </div>
+              <Spinner :show="loadingSearch"> </Spinner>
+              <div class="row g-1 errors" id="feedback" v-if="(state.errorsSearch.length > 0)">
+                <Warning>
+                  <template v-slot:message>
+                    <li v-for="(error, index) in state.errorsSearch" :key="index">
+                      {{ $t(error) }}
+                    </li>
+                  </template>
+                </Warning>
+              </div>
+              <div v-if="state.client && state.client.id">
+                <ClientDetailsCard
+                  :show="true"
+                  :client="state.client"
+                  :commerce="commerce"
+                  :toggles="toggles"
+                  :startDate="undefined"
+                  :endDate="undefined"
+                  :queues="queues"
+                  :commerces="[commerce]"
+                  :management="false"
+                  >
+                </ClientDetailsCard>
+              </div>
+              <div v-if="!state.client">
+                <Message
+                  :icon="'bi-search'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')" />
               </div>
             </div>
             <div id="queue-link-form" class="row g-1">
@@ -529,7 +645,7 @@ export default {
                   @click="copyLink()">
                   <i class="bi bi-file-earmark-spreadsheet"></i>
                 </button>
-                <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                <a class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-2"
                     :href="`${goToLink()}`"
                     target="_blank">
                   <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
@@ -540,27 +656,27 @@ export default {
             <div id="subMenu" class="my-1 mt-3">
               <h6 class="mb-0">
                 <button
-                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
                   :class="state.showAttentions ? 'btn-selected' : ''"
                   @click="showAttentions()"
                   >
-                  {{ $t('collaboratorBookingsView.attentions') }}
+                  {{ $t('collaboratorBookingsView.attentions') }} <br> <i class="bi bi-qr-code"></i>
                 </button>
                 <button
-                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1"
                   :class="state.showBooking ? 'btn-selected' : ''"
                   @click="showBookings()"
                   :disabled="!state.selectedQueue || !state.selectedDate"
                   >
-                  {{ $t('collaboratorBookingsView.bookings') }}
+                  {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
                 </button>
                 <button
-                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
                   :class="state.showWaitlist ? 'btn-selected' : ''"
                   @click="showWaitlists()"
                   :disabled="!state.selectedQueue.id || !state.selectedDate"
                   >
-                  {{ $t('collaboratorBookingsView.waitlists') }}
+                  {{ $t('collaboratorBookingsView.waitlists') }} <br> <i class="bi bi-calendar-heart-fill"></i>
               </button>
               </h6>
             </div>
