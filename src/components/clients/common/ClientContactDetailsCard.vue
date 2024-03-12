@@ -116,13 +116,16 @@ export default {
 
 <template>
   <div v-if="show">
-    <div class="row metric-card fw-bold">
-      <div class="col-8 centered" v-if="client && client.userName">
+    <div class="row metric-card">
+      <div class="col-6 centered fw-bold" v-if="client && client.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ client.userName.split(' ')[0] || client.userIdNumber || 'N/I' }}
         <i :class="`bi ${clasifyContactResult(client.clientContactResult || undefined)} mx-1`"> </i>
       </div>
-      <div class="col-2 centered">
+      <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedUser || 0)} mx-1`"> </i> {{ client.daysSinceContactedUser || 0 }}
+      </div>
+      <div class="col-4 centered date-title">
+        {{ getDate(client.contactCreatedDate || client.createdAt) }}
       </div>
     </div>
     <div class="details-arrow">
@@ -314,5 +317,8 @@ export default {
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
+}
+.date-title {
+  font-size: .8rem
 }
 </style>

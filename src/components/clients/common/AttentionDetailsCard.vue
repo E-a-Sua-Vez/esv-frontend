@@ -81,13 +81,16 @@ export default {
 
 <template>
   <div v-if="show">
-    <div class="row metric-card fw-bold">
-      <div class="col-9 centered" v-if="attention && attention.userName">
+    <div class="row metric-card">
+      <div class="col-6 centered fw-bold" v-if="attention && attention.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
       </div>
-      <div class="col-3 centered">
+      <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
+      </div>
+      <div class="col-4 centered date-title">
+        {{ getDate(attention.createdDate) }}
       </div>
     </div>
     <div class="details-arrow">
@@ -263,5 +266,8 @@ export default {
 .metric-card-details {
   font-size: .7rem;
   font-weight: 400;
+}
+.date-title {
+  font-size: .8rem
 }
 </style>

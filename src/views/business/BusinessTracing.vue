@@ -306,18 +306,18 @@ export default {
             </div>
             <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
             <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-4 centered">
+              <div class="col-3 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showClients ? 'btn-selected' : ''"
                   @click="showClients()"
                   :disabled="!state.toggles['dashboard.clients-management.view']">
                   {{ $t("dashboard.clients") }} <br> <i class="bi bi-person-fill"></i>
                 </button>
               </div>
-              <div class="col-4 centered">
+              <div class="col-5 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showAttentions ? 'btn-selected' : ''"
                   @click="showAttentions()"
                   :disabled="!state.toggles['dashboard.attentions-management.view']">
@@ -326,7 +326,7 @@ export default {
               </div>
               <div class="col-4 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showSurveyManagement ? 'btn-selected' : ''"
                   @click="showSurveys()"
                   :disabled="!state.toggles['dashboard.surveys-management.view']">
