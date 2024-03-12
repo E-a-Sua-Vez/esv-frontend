@@ -144,6 +144,14 @@ export default {
           <Alert :show="loading" :stack="alertError"></Alert>
         </div>
       </div>
+      <div class="row">
+        <span class="fw-bold m-1"> {{ $t("commerceQRSetup.commerceSelected") }} {{ state.commerce.tag }} </span>
+      </div>
+      <div class="mt-2">
+        <CommerceContactInfo
+          :commerce="state.commerce">
+        </CommerceContactInfo>
+      </div>
       <div v-if="isActiveCommerce(state.commerce)">
         <div v-if="isAvailableCommerce(state.commerce)">
           <div v-if="captchaEnabled === true">

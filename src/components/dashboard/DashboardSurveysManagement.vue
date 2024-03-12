@@ -148,7 +148,13 @@ export default {
       try {
         this.loading = true;
         let csvAsBlob = [];
-        const result = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate);
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        const result = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          undefined, undefined, this.ratingType, this.npsType, this.contactable, this.contacted,
+          this.keyWord, this.searchText, this.queueId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -229,12 +235,12 @@ export default {
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
-                  <span class="form-check-label metric-keyword-subtitle" @click="showFilters()"> <i class="bi bi-funnel-fill"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
+                  <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                 </span>
                 <button
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
                   @click="clear()">
-                  <span><i class="bi bi-arrow-counterclockwise"></i></span>
+                  <span><i class="bi bi-eraser-fill"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">

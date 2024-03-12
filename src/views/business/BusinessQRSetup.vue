@@ -167,7 +167,7 @@ export default {
         <div class="row mt-2">
           <div class="col" v-if="state.commerces && state.commerces.length > 0">
             <div class="dropdown">
-              <span>{{ $t("commerceQRSetup.commerce") }} </span><br>
+              <span class="fw-bold">{{ $t("commerceQRSetup.commerce") }} </span><br>
               <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="fw-bold m-1"> {{ state.commerce.tag }} </span>
               </button>
@@ -188,6 +188,11 @@ export default {
                   </div>
                 </li>
               </ul>
+            </div>
+            <div class="mt-2">
+              <CommerceContactInfo
+                :commerce="state.commerce">
+              </CommerceContactInfo>
             </div>
           </div>
         </div>
@@ -337,9 +342,6 @@ export default {
             :icon="'bi bi-emoji-frown'">
           </Message>
         </div>
-        <CommerceContactInfo
-          :commerce="state.commerce">
-        </CommerceContactInfo>
       </div>
       <div v-if="!isActiveCommerce() && !loading">
         <Message
