@@ -67,9 +67,9 @@ export default {
 
 <template>
   <div>
-    <div  class="text-center">
-      <div id="commerce-info">
-        <div class="row col-11 col-md-12">
+    <div  class="text-center centered">
+      <div id="commerce-info centered">
+        <div class="row col-12 centered">
           <div class="col-4" v-if="commerce.serviceInfo">
             <button
               class="btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill"
@@ -161,8 +161,8 @@ export default {
                 <i class="bi bi-envelope"></i> {{ commerce.contactInfo.email }}
               </a>
             </div>
-            <div class="row">
-              <div class="col-3">
+            <div class="row centered">
+              <div class="col-3" v-if="commerce.contactInfo.whatsapp">
                 <button
                   v-if="commerce.contactInfo.whatsapp"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 whatsapp-button"
@@ -171,7 +171,7 @@ export default {
                   <i class="bi bi-whatsapp"></i>
               </button>
               </div>
-              <div class="col-3">
+              <div class="col-3" v-if="commerce.contactInfo.facebook">
                 <button
                   v-if="commerce.contactInfo.facebook"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 facebook-button"
@@ -180,25 +180,24 @@ export default {
                   <i class="bi bi-facebook"></i>
                 </button>
               </div>
-              <div class="col-3">
-                <a
+              <div class="col-3" v-if="commerce.contactInfo.instagram">
+                <button
                   type="button"
                   v-if="commerce.contactInfo.instagram"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 instagram-button"
                   :href="'https://www.instagram.com/'+commerce.contactInfo.instagram"
                   target="_blank">
                   <i class="bi bi-instagram"></i>
-                </a>
+              </button>
               </div>
-              <div class="col-3">
-                <a
-                  type="button"
+              <div class="col-3" v-if="commerce.contactInfo.twitter">
+                <button
                   v-if="commerce.contactInfo.twitter"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 twitter-button"
                   :href="'https://www.twitter.com/'+commerce.contactInfo.twitter"
                   target="_blank">
                   <i class="bi bi-twitter"></i>
-                </a>
+              </button>
               </div>
             </div>
           </div>
