@@ -631,30 +631,30 @@ export default {
             <div class="row col mx-1 mt-3 mb-1">
               <div class="col-4 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showIndicators ? 'btn-selected' : ''"
                   @click="showIndicators()"
                   :disabled="!state.toggles['dashboard.indicators.view']"
                   :title="$t('dashboard.consolidated')">
-                  <i class="bi bi-stoplights-fill"></i>
+                  {{ $t("dashboard.indicators") }} <br> <i class="bi bi-stoplights-fill"></i>
                 </button>
               </div>
               <div class="col-4 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showGraphs ? 'btn-selected' : ''"
                   @click="showGraphs()"
                   :disabled="!state.toggles['dashboard.graphs.view']">
-                  <i class="bi bi-bar-chart-line-fill"></i>
+                  {{ $t("dashboard.graph") }} <br> <i class="bi bi-bar-chart-line-fill"></i>
                 </button>
               </div>
               <div class="col-4 centered">
                 <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showSurveyResults ? 'btn-selected' : ''"
                   @click="showSurvey()"
                   :disabled="!state.toggles['dashboard.surveys.view']">
-                  <i class="bi bi-patch-question-fill"></i>
+                  {{ $t("dashboard.surveys") }} <br> <i class="bi bi-patch-question-fill"></i>
                 </button>
               </div>
             </div>

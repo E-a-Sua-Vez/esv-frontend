@@ -31,8 +31,8 @@ export default {
       collaboratorOptions: [
         'queue-manage',
         'booking-manage',
-        'dashboard',
         'tracing',
+        'dashboard',
         'go-minisite'
       ],
       currentPlanActivation: {},

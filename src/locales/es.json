@@ -113,12 +113,12 @@
       "whatsapp": "Whatsapp (WHATSAPP)"
     },
     "whatsapp-notify-now": {
-      "title": "Notificación Whatsapp Es tu Turno",
+      "title": "Whatsapp Es tu Turno",
       "description": "Mensaje vía whatsapp cuando llega el turno del usuario.",
       "type": "WHATSAPP"
     },
     "whatsapp-notify-five": {
-      "title": "Notificación Whatsapp Faltan 5",
+      "title": "Whatsapp Faltan 5",
       "description": "Mensaje vía whatsapp cuando el cliente tiene 5 usuarios por delante."
     },
     "only-survey": {
@@ -126,7 +126,7 @@
       "description": "Las atenciones para el comercio son solo encuesta de satisfacción."
     },
     "whatsapp-notify-one": {
-      "title": "Notificación Whatsapp Falta 1",
+      "title": "Whatsapp Falta 1",
       "description": "Mensaje vía whatsapp cuando el cliente tiene 1 usuario por delante."
     },
     "get-number-remote": {
@@ -134,55 +134,55 @@
       "description": "Obtiene un número de atención desde cualquier lugar"
     },
     "attention-user-name": {
-      "title": "Atención Solicita Nombre",
+      "title": "Form pide Nombre",
       "description": "Solicita nombre del usuario para obtener número de atención"
     },
     "attention-user-lastName": {
-      "title": "Atención Solicita Apellido",
+      "title": "Form pide Apellido",
       "description": "Solicita apellido del usuario para obtener número de atención"
     },
     "attention-user-phone": {
-      "title": "Atención Solicita Teléfono",
+      "title": "Form pide Teléfono",
       "description": "Solicita nombre del usuario para obtener número de atención"
     },
     "attention-user-email": {
-      "title": "Atención Solicita Email",
+      "title": "Form pide Email",
       "description": "Solicita nombre del usuario para obtener número de atención"
     },
     "attention-user-idNumber": {
-      "title": "Atención Solicita Id",
+      "title": "Form pide Cédula/Id",
       "description": "Solicita número de identificación del usuario para obtener número de atención"
     },
     "attention-user-birthday": {
-      "title": "Atención Solicita Fecha de Nacimiento",
+      "title": "Form pide Fecha/Nac",
       "description": "Solicita fecha de nacimiento del usuario para obtener número de atención"
     },
     "attention-user-address": {
-      "title": "Atención Solicita Dirección",
+      "title": "Form pide Dirección",
       "description": "Solicita dirección del usuario para obtener número de atención"
     },
     "attention-user-origin": {
-      "title": "Atención Solicita Origen",
+      "title": "Form pide Origen",
       "description": "Solicita origen del usuario para obtener número de atención"
     },
-    "attention-userc-code1": {
-      "title": "Atención Solicita Código 1",
+    "attention-user-code1": {
+      "title": "Form pide Código 1",
       "description": "Solicita código 1 del usuario para obtener número de atención"
     },
     "attention-user-code2": {
-      "title": "Atención Solicita Código 2",
+      "title": "Form pide Código 2",
       "description": "Solicita código 2 del usuario para obtener número de atención"
     },
     "attention-user-code3": {
-      "title": "Atención Solicita Código 3",
+      "title": "Form pide Código 3",
       "description": "Solicita código 3 del usuario para obtener número de atención"
     },
     "close-commerce-by-service-hours": {
-      "title": "Cerrar comercio fuera de horario",
+      "title": "Cerrar comercio horario",
       "description": "Minisitio no permite generar nuevas atenciones para el comercio fuera de horario de atención"
     },
     "email-notify-now": {
-      "title": "Email Es tu Turno",
+      "title": "Email EstuTurno",
       "description": "Notificación vía email cuando llega el turno del cliente"
     },
     "email-attention": {
@@ -190,15 +190,15 @@
       "description": "Email que indica al cliente el numero de atención y enlace web para hacer seguimiento del turno"
     },
     "email-csat": {
-      "title": "Email CSAT",
-      "description": "Email que recuerda al cliente llenar la encuesta CSAT al finalizar la atención"
+      "title": "Email Satisfacción",
+      "description": "Email que recuerda al cliente llenar la encuesta Satisfacción al finalizar la atención"
     },
     "whatsapp-csat": {
-      "title": "Whatsapp CSAT",
-      "description": "Mensaje que recuerda al cliente llenar la encuesta CSAT al finalizar la atención"
+      "title": "Whatsapp Satisfacción",
+      "description": "Mensaje que recuerda al cliente llenar la encuesta Satisfacción al finalizar la atención"
     },
     "email-monthly-commerce-statistics": {
-      "title": "Email Estadisticas Mensuales",
+      "title": "Email Estadisticas",
       "description": "Email para enviar notificación de estadísticas mensuales"
     },
     "booking-active": {
@@ -214,15 +214,15 @@
       "description": "Mensaje que avisa al cliente su Reserva"
     },
     "booking-block-active": {
-      "title": "Reserva de Turno con Horario",
+      "title": "Reserva con Horario",
       "description": "Activa la función de escoger horario de reserva"
     },
     "attention-user-not-required": {
-      "title": "Datos de Usuario No Obligatorios",
+      "title": "Datos No Obligatorios",
       "description": "Datos solicitados del usuario para gestionar atenciones o reservas no son obligatorios"
     },
     "booking-waitlist-active": {
-      "title": "Lista de espera para Reserva de Turno",
+      "title": "Lista de espera",
       "description": "Activa la función de unirse a la lista de espera para reserva de turnos."
     },
     "email-waitlist": {
@@ -234,23 +234,23 @@
       "description": "Mensaje que avisa al cliente su lista de espera"
     },
     "booking-whatsapp-confirm": {
-      "title": "Whatsapp Confirmación de Reserva",
+      "title": "Whatsapp Confirmación Reserva",
       "description": "Mensaje para confirmar una reserva"
     },
     "booking-email-confirm": {
-      "title": "Email Confirmación de Reserva",
+      "title": "Email Confirmación Reserva",
       "description": "Email para confirmar una reserva"
     },
     "booking-block-walkin": {
-      "title": "Reserva permite entrar a Cola",
+      "title": "Entrar a Cola sin Horarios",
       "description": "En caso de reservas, permite entrar a la última posición de la cola"
     },
     "attention-voice-command": {
-      "title": "Aviso Es tu Turno por Voz",
+      "title": "Aviso Voz EstuTurno",
       "description": "Permite activar el sonido de Voz para llamar al cliente cuando es su turno"
     },
     "attention-queue-typegrouped": {
-      "title": "Atención selecciona por tipo de cola",
+      "title": "Filtar tipo de cola",
       "description": "Permite seleccionar el tipo de cola, sea por colaborador, por servicio y mas"
     }
   },
@@ -684,16 +684,16 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Seguimiento",
+          "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Administrar Reservas"
+          "booking-manage": "Reservas Visión 360°"
         }
       }
     }
   },
   "collaboratorQueuesView": {
-    "welcome": "Gestión de Filas",
+    "welcome": "Atención de Filas del Día",
     "commerce": "Comercio:",
     "choose": "Elige la fila que atenderás:",
     "module": "Tu módulo de atención es:",
@@ -729,15 +729,15 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Seguimiento",
+          "tracing": "Gestión de Clientes",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Administrar Reservas"
+          "booking-manage": "Reservas Visión 360°"
         }
       }
     }
   },
   "collaboratorBookingsView": {
-    "welcome": "Gestión de Reservas",
+    "welcome": "Reservas Visión 360°",
     "commerce": "Comercio:",
     "queue": "Elige la Fila/Servicio:",
     "date": "Elige la Fecha:",
@@ -783,10 +783,10 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Seguimiento",
+          "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Administrar Reservas"
+          "booking-manage": "Reservas Visión 360°"
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
@@ -857,10 +857,10 @@
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
-          "tracing": "Seguimiento",
+          "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Administrar Reservas"
+          "booking-manage": "Reservas Visión 360°"
         }
       }
     }
@@ -985,7 +985,8 @@
     "bookings": "Reservas",
     "waitlist": "Lista Espera",
     "bookingsConfirm": "Conf. Reserva",
-    "surveys-management": "Encuestas (Detalles)",
+    "satisfaction": "Satisfacción",
+    "surveys-management": "Encuestas",
     "surveys-consolidated": "Encuestas (Consolidado)",
     "details": "Detalles",
     "seconds": "En Minutos",
@@ -1029,7 +1030,7 @@
     "comment": "Comentario:",
     "entities": "Palabras clave:",
     "tracing": {
-      "title": "Seguimiento",
+      "title": "Gestión de Clientes",
       "filters": {
         "attention": "Atenciones",
         "contact": "Contactos",
@@ -1318,7 +1319,7 @@
           "view": "Número de Reservas"
         },
         "tracing": {
-          "view": "Seguimiento"
+          "view": "Gestión de Clientes"
         },
         "booking-hour-distribution": {
           "view": "Distribución de Reservas (Hora)"
@@ -1442,7 +1443,7 @@
     "welcome-user": "¡Bienvenido",
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
-    "tracing": "Seguimiento",
+    "tracing": "Gestión de Clientes",
     "commerce-admin": "Sucursales",
     "service-admin": "Servicios",
     "queues-admin": "Filas",
@@ -1467,7 +1468,7 @@
         "main-menu": {
           "business-resume": "Estado del Sistema",
           "dashboard": "Dashboard",
-          "tracing": "Seguimiento",
+          "tracing": "Gestión de Clientes",
           "reports": "Informes",
           "commerce-admin": "Administrar Sucursales",
           "service-admin": "Administrar Servicios",
@@ -1491,7 +1492,7 @@
     "business-master-admin": "Administrar Negocios",
     "business-master-resume": "Estado del Sistema",
     "dashboard": "Dashboard",
-    "tracing": "Seguimiento",
+    "tracing": "Gestión de Clientes",
     "permissions-admin": "Permisos",
     "commerce-master-admin": "Sucursales",
     "service-master-admin": "Servicios",
@@ -1515,10 +1516,10 @@
     "welcome-user": "¡Bienvenido",
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Dashboard",
-    "tracing": "Seguimiento",
+    "tracing": "Gestión de Clientes",
     "permissions-admin": "Permisos",
-    "queue-manage": "Gestionar Filas",
-    "booking-manage": "Administrar Reservas",
+    "queue-manage": "Atender Filas del Día",
+    "booking-manage": "Reservas Visión 360°",
     "go-minisite": "Minisite",
     "message": {
       "1": {
@@ -1530,9 +1531,9 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Gestionar Dashboard",
-          "tracing": "Seguimiento",
-          "queue-manage": "Gestionar Filas",
-          "booking-manage": "Administrar Reservas"
+          "tracing": "Gestión de Clientes",
+          "queue-manage": "Atender Filas del Día",
+          "booking-manage": "Reservas Visión 360°"
         }
       }
     }
@@ -2463,7 +2464,7 @@
       "main-menu": {
         "business-resume": "Habilitar Estado del Sistema - Menú Principal Negocio",
         "dashboard": "Habilitar Dashboard - Menú Principal Negocio",
-        "tracing": "Habilitar Seguimiento - Menú Principal Negocio",
+        "tracing": "Habilitar Gestión de Clientes - Menú Principal Negocio",
         "reports": "Habilitar Reportes - Menú Principal Negocio",
         "commerce-admin": "Habilitar Administrar Comercios - Menú Principal Negocio",
         "modules-admin": "Habilitar Administrar Módulos - Menú Principal Negocio",
@@ -2487,10 +2488,10 @@
       },
       "main-menu": {
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
-        "tracing": "Habilitar Seguimiento - Menú Principal Colaborador",
+        "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador",
         "permissions-admin": "Habilitar Permisos - Menú Principal Colaborador",
         "reports": "Habilitar Reportes - Menú Principal Colaborador",
-        "queue-manage": "Habilitar Gestionar Filas - Menú Principal Colaborador",
+        "queue-manage": "Habilitar Atender Filas del Día - Menú Principal Colaborador",
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador"
       }
     },
@@ -2669,8 +2670,8 @@
       "main-menu": {
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
         "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
-        "queue-manage":"Habilitar Gestionar Filas - Menú Principal Colaborador",
-        "tracing": "Habilitar Seguimiento - Menú Principal Colaborador"
+        "queue-manage":"Habilitar Atender Filas del Día - Menú Principal Colaborador",
+        "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador"
       }
     },
     "roles": {

@@ -681,22 +681,22 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Manage Bookings"
+          "manage": "Bookings 360° Vision"
         },
         "waitlists": {
           "book": "Book Waitlist"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "tracing": "Go to Tracing",
-          "queue-manage": "Manage Queues",
-          "booking-manage": "Manage Bookings"
+          "tracing": "Go to Clients Management",
+          "queue-manage": "Attend Queues of the Day",
+          "booking-manage": "Bookings 360° Vision"
         }
       }
     }
   },
   "collaboratorQueuesView": {
-    "welcome": "Queue Attention",
+    "welcome": "Queues of the Day Attention",
     "commerce": "Commerce:",
     "choose": "Choose the queue that you'll attend:",
     "module": "Your module of attention is:",
@@ -728,19 +728,19 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Manage Bookings"
+          "manage": "Bookings 360° Vision"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "tracing": "Go to Tracing",
-          "queue-manage": "Manage Queues",
-          "booking-manage": "Manage Bookings"
+          "tracing": "Go to Clients Management",
+          "queue-manage": "Attend Queues of the Day",
+          "booking-manage": "Bookings 360° Vision"
         }
       }
     }
   },
   "collaboratorBookingsView": {
-    "welcome": "Booking Management",
+    "welcome": "Bookings 360° Vision",
     "commerce": "Commerce:",
     "queue": "Choose a Queue/Service:",
     "date": "Choose the Date:",
@@ -786,13 +786,13 @@
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "tracing": "Go to Tracing",
-          "queue-manage": "Manage Queues",
-          "booking-manage": "Manage Bookings"
+          "tracing": "Go to Clients Management",
+          "queue-manage": "Attend Queues of the Day",
+          "booking-manage": "Bookings 360° Vision"
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Manage Bookings"
+          "manage": "Bookings 360° Vision"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -855,13 +855,13 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Manage Bookings"
+          "manage": "Bookings 360° Vision"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
-          "tracing": "Go to Tracing",
-          "queue-manage": "Manage Queues",
-          "booking-manage": "Manage Bookings"
+          "tracing": "Go to Clients Management",
+          "queue-manage": "Attend Queues of the Day",
+          "booking-manage": "Bookings 360° Vision"
         }
       }
     }
@@ -987,6 +987,7 @@
     "surveys": "Surveys",
     "waitlist": "Waitlist",
     "bookingsConfirm": "Booking Conf.",
+    "satisfaction": "Satisfaction",
     "surveys-management": "Surveys (Details)",
     "surveys-consolidated": "Surveys (Consolidated)",
     "seconds": "In Minutes",
@@ -1030,7 +1031,7 @@
     "comment": "Comment:",
     "entities": "Key Words:",
     "tracing": {
-      "title": "Tracing",
+      "title": "Clients Management",
       "filters": {
         "attention": "Attention",
         "contact": "Contact",
@@ -1315,7 +1316,7 @@
           "view": "Booking Number"
         },
         "tracing": {
-          "view": "Tracing"
+          "view": "Clients Management"
         },
         "booking-hour-distribution": {
           "view": "Booking Distribution (Hour)"
@@ -1438,7 +1439,7 @@
     "welcome-user": "Welcome",
     "choose": "What do you want to do today?",
     "dashboard": "Dashboard",
-    "tracing": "Tracing",
+    "tracing": "Clients Management",
     "commerce-admin": "Commerces",
     "service-admin": "Services",
     "queues-admin": "Queues",
@@ -1464,7 +1465,7 @@
         "main-menu": {
           "business-resume": "System State",
           "dashboard": "Dashboard",
-          "tracing": "Tracing",
+          "tracing": "Clients Management",
           "reports": "Reports",
           "commerce-admin": "Commerce Settings",
           "service-admin": "Services Settings",
@@ -1486,8 +1487,9 @@
     "welcome-user": "Welcome",
     "choose": "What do you want to do today?",
     "dashboard": "Dashboard",
-    "queue-manage": "Manage Queues",
-    "booking-manage": "Manage Bookings",
+    "queue-manage": "Attend Queues of the Day",
+    "booking-manage": "Bookings 360° Vision",
+    "tracing": "Clients Management",
     "go-minisite": "Minisite",
     "message": {
       "1": {
@@ -1499,9 +1501,9 @@
       "collaborator": {
         "main-menu": {
           "dashboard": "Manage Dashboard",
-          "tracing": "Manage Tracing",
-          "queue-manage": "Manage Queues",
-          "booking-manage": "Manage Bookings"
+          "tracing": "Manage Clients Management",
+          "queue-manage": "Attend Queues of the Day",
+          "booking-manage": "Bookings 360° Vision"
         }
       }
     }
@@ -1514,7 +1516,7 @@
     "business-master-admin": "Business Settings",
     "business-master-resume": "System State",
     "dashboard": "Dashboard",
-    "tracing": "Tracing",
+    "tracing": "Clients Management",
     "commerce-master-admin": "Commerces",
     "service-master-admin": "Services",
     "queues-master-admin": "Queues",
@@ -2458,11 +2460,11 @@
       "main-menu": {
         "business-resume": "Enable Estado del Sistema - Main Menu Business",
         "dashboard": "Enable Dashboard - Main Menu Business",
-        "tracing": "Enable Tracing - Main Menu Business",
+        "tracing": "Enable Clients Management - Main Menu Business",
         "reports": "Enable Reportes - Main Menu Business",
         "commerce-admin": "Enable Manage Commerces - Main Menu Business",
         "modules-admin": "Enable Manage Modules - Main Menu Business",
-        "queues-admin": "Enable Manage Queues - Main Menu Business",
+        "queues-admin": "Enable Attend Queues of the Day - Main Menu Business",
         "collaborators-admin": "Enable Manage Collaborators - Main Menu Business",
         "permissions-admin": "Enable Manage Permissions - Main Menu Business",
         "administrators-admin": "Enable Manage Administrators - Main Menu Business",
@@ -2493,13 +2495,13 @@
       },
       "main-menu": {
         "dashboard": "Enable Dashboard - Main Menu Collaborators",
-        "tracing": "Enable Tracing - Main Menu Collaborators",
+        "tracing": "Enable Clients Management - Main Menu Collaborators",
         "queue-manage": "Enable Queue Management - Main Menu Collaborators",
         "booking-manage": "Enable Booking Management - Main Menu Collaborators"
       },
       "bookings": {
         "cancel": "Cancel Booking",
-        "manage": "Manage Bookings"
+        "manage": "Bookings 360° Vision"
       },
       "waitlists": {
         "book": "Book Waitlist"
@@ -2625,12 +2627,12 @@
     },
     "queues": {
       "admin": {
-        "view": "Get to this Section - Manage Queues",
-        "read": "Read data - Section Manage Queues",
-        "edit": "Edit data - Section Manage Queues",
-        "update": "Update data - Section Manage Queues",
-        "add": "Add data - Section Manage Queues",
-        "limit": "Limit of data - Section Manage Queues",
+        "view": "Get to this Section - Attend Queues of the Day",
+        "read": "Read data - Section Attend Queues of the Day",
+        "edit": "Edit data - Section Attend Queues of the Day",
+        "update": "Update data - Section Attend Queues of the Day",
+        "add": "Add data - Section Attend Queues of the Day",
+        "limit": "Limit of data - Section Attend Queues of the Day",
         "queue-limit": "Limit of attentions daily of the Queues"
       }
     },
