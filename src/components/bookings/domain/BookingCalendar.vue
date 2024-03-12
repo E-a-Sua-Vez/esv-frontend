@@ -209,7 +209,7 @@ export default {
 
     const goToLink = () => {
       const commerceKeyName = commerce.value.keyName;
-      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
+      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined`;
       const queue = state.selectedQueue;
       if (queue && queue.id) {
         url += `/${queue.id}`;
