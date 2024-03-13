@@ -67,9 +67,9 @@ export default {
 
 <template>
   <div>
-    <div  class="text-center centered">
+    <div class="text-center">
       <div id="commerce-info centered">
-        <div class="row col-12 centered">
+        <div class="row centered">
           <div class="col-4" v-if="commerce.serviceInfo">
             <button
               class="btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill"
@@ -93,7 +93,7 @@ export default {
           </div>
         </div>
         <div id="service-info" v-if="showService">
-          <div v-if="commerce.serviceInfo" class="info-card mt-4">
+          <div v-if="commerce.serviceInfo" class="row info-card mt-4">
             <div v-if="commerce.category">
               <span class="fw-bold"> {{ $t("commerceQRSetup.category") }} </span>
               <p> {{ $t(`categories.${commerce.category}`) }}</p>
@@ -139,7 +139,7 @@ export default {
           </div>
         </div>
         <div id="contact-info" v-if="showContact">
-          <div v-if="commerce.contactInfo" class="info-card mt-4">
+          <div v-if="commerce.contactInfo" class="row info-card mt-4">
             <span class="fw-bold"> {{ $t("commerceQRSetup.phones") }} </span>
             <span v-if="commerce.contactInfo.phone"> +{{ commerce.contactInfo.phone }} </span>
             <span v-if="commerce.contactInfo.phone2"> / +{{ commerce.contactInfo.phone2 }} </span>
@@ -203,7 +203,7 @@ export default {
           </div>
         </div>
         <div id="map-info" v-if="showLocation">
-          <div v-if="commerce.localeInfo" class="info-card mt-4">
+          <div v-if="commerce.localeInfo" class="row info-card mt-4">
             <span class="fw-bold"> {{ $t("commerceQRSetup.address") }} </span>
             <span v-if="commerce.localeInfo.address"> {{ commerce.localeInfo.address }} </span>
             <GoogleMap

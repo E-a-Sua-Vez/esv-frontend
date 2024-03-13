@@ -105,6 +105,26 @@
     "CALL": "Call",
     "OTHER": "Other"
   },
+  "paymentTypes": {
+    "PAID": "Paid",
+    "TOTALLY": "Total",
+    "PARTIAL": "Partial",
+    "TRIAL": "Trial",
+    "EVALUATION": "Test",
+    "PROMOTION": "Promotion"
+  },
+  "paymentClientMethods": {
+    "PAID": "Paid",
+    "CREDIT_CARD": "Credit Card",
+    "DEBIT_CARD": "Debit Card",
+    "WIRE_TRANSFER": "Wire Transfer",
+    "DEPOSIT": "Deposit",
+    "CHECK": "Check",
+    "MONEY": "Money",
+    "BOLETO": "Boleto",
+    "PIX": "Pix",
+    "OTHER": "Other"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -251,6 +271,14 @@
     "attention-queue-typegrouped": {
       "title": "Attention select the type of queue",
       "description": "Let the user select the queue by type, by collaborator, service and more"
+    },
+    "booking-confirm": {
+      "title": "Booking Confirmation",
+      "description": "Bookings need to be confirmed to be processed as attentions"
+    },
+    "booking-confirm-payment": {
+      "title": "Booking Confirmation Payment",
+      "description": "Bookings need to be paid to be confirmed"
     }
   },
   "paymentMethods": {
@@ -681,7 +709,8 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Bookings 360° Vision"
+          "manage": "Bookings 360° Vision",
+          "confirm": "Booking Confirm"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -728,7 +757,8 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Bookings 360° Vision"
+          "manage": "Bookings 360° Vision",
+          "confirm": "Booking Confirm"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -756,6 +786,16 @@
     "manageAll": "Manage all the schedules:",
     "or": "Or",
     "schedules": "Schedules",
+    "searchClient": "Search Client",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "paymentConfirm": "Confirm Payment",
+    "confirmData": "Confirmation Data",
+    "paymentType": "Payment type:",
+    "paymentMethod": "Payment method:",
+    "paymentAmount": "Amount:",
+    "paymentCommission": "Commission:",
+    "paymentComment": "Comment (Optional)",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -792,12 +832,18 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Bookings 360° Vision"
+          "manage": "Bookings 360° Vision",
+          "confirm": "Booking Confirm"
         },
         "waitlists": {
           "book": "Book Waitlist"
         }
       }
+    },
+    "validate": {
+      "paymentType": "Should select the payment type",
+      "paymentMethod": "Should select the payment method",
+      "paymentAmount": "Should enter the amount"
     }
   },
   "queueAttentionDetails": {
@@ -855,7 +901,8 @@
         },
         "bookings": {
           "cancel": "Cancel Booking",
-          "manage": "Bookings 360° Vision"
+          "manage": "Bookings 360° Vision",
+          "confirm": "Booking Confirm"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -2502,7 +2549,8 @@
       },
       "bookings": {
         "cancel": "Cancel Booking",
-        "manage": "Bookings 360° Vision"
+        "manage": "Bookings 360° Vision",
+        "confirm": "Booking Confirm"
       },
       "waitlists": {
         "book": "Book Waitlist"

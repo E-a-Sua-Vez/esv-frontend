@@ -28,13 +28,13 @@ export default {
       </div>
       <div class="centered mt-1">
         <button
-          class="col btn btn-md btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+          class="col btn btn-md btn-size fw-bold btn-dark rounded-pill mt-2 px-4 mx-1"
           @click="actionYes()"
           :disabled="!yesDisabled">
           {{ $t("yes") }} <i class="bi bi-check2-circle"></i>
         </button>
         <button
-          class="col btn btn-md btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+          class="col btn btn-md btn-size fw-bold btn-danger rounded-pill mt-2 px-4 mx-1"
           @click="actionNo()"
           :disabled="!noDisabled">
           {{ $t("no") }} <i class="bi bi-x-lg"></i>

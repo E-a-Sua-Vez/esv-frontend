@@ -594,6 +594,7 @@ export default {
                           :show="true"
                           :detailsOpened="false"
                           :toggles="state.toggles"
+                          :commerce="state.commerce"
                         >
                         </BookingDetailsCard>
                     </div>

@@ -189,11 +189,6 @@ export default {
                 </li>
               </ul>
             </div>
-            <div class="mt-2">
-              <CommerceContactInfo
-                :commerce="state.commerce">
-              </CommerceContactInfo>
-            </div>
           </div>
         </div>
       </div>
@@ -322,18 +317,6 @@ export default {
               </div>
             </div>
           </div>
-          <div>
-          <Message
-            :title="$t('commerceQRSetup.message1.title')"
-            :content="$t('commerceQRSetup.message1.content')"
-            :icon="'bi bi-emoji-smile'">
-          </Message>
-          <Message
-            :title="$t('commerceQRSetup.message2.title')"
-            :content="$t('commerceQRSetup.message2.content')"
-            :icon="'bi-phone-vibrate'">
-          </Message>
-          </div>
         </div>
         <div v-else>
           <Message
@@ -342,6 +325,23 @@ export default {
             :icon="'bi bi-emoji-frown'">
           </Message>
         </div>
+      </div>
+      <div class="mt-4">
+        <CommerceContactInfo
+          :commerce="state.commerce">
+        </CommerceContactInfo>
+      </div>
+      <div>
+        <Message
+          :title="$t('commerceQRSetup.message1.title')"
+          :content="$t('commerceQRSetup.message1.content')"
+          :icon="'bi bi-emoji-smile'">
+        </Message>
+        <Message
+          :title="$t('commerceQRSetup.message2.title')"
+          :content="$t('commerceQRSetup.message2.content')"
+          :icon="'bi-phone-vibrate'">
+        </Message>
       </div>
       <div v-if="!isActiveCommerce() && !loading">
         <Message

@@ -105,6 +105,26 @@
     "CALL": "Llamada",
     "OTHER": "Otro"
   },
+  "paymentTypes": {
+    "PAID": "Pagado",
+    "TOTALLY": "Total",
+    "PARTIAL": "Parcial",
+    "TRIAL": "Prueba",
+    "EVALUATION": "Evaluación",
+    "PROMOTION": "Promoción"
+  },
+  "paymentClientMethods": {
+    "PAID": "Pagado",
+    "CREDIT_CARD": "T. Crédito",
+    "DEBIT_CARD": "T. Débito",
+    "WIRE_TRANSFER": "Transf",
+    "DEPOSIT": "Depósito",
+    "CHECK": "Cheque",
+    "MONEY": "Efectivo",
+    "BOLETO": "Boleto",
+    "PIX": "Pix",
+    "OTHER": "Otro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -252,6 +272,14 @@
     "attention-queue-typegrouped": {
       "title": "Filtar tipo de cola",
       "description": "Permite seleccionar el tipo de cola, sea por colaborador, por servicio y mas"
+    },
+    "booking-confirm": {
+      "title": "Reserva Confirmación",
+      "description": "Requiere que las reservas sean confirmadas para procesarlas como Atenciones"
+    },
+    "booking-confirm-payment": {
+      "title": "Reserva Pago Confirmación",
+      "description": "PRequiere que las reservas sean pagadas para ser confirmadas"
     }
   },
   "paymentMethods": {
@@ -677,7 +705,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Manejar Reservas"
+          "manage": "Manejar Reservas",
+          "confirm": "Confirmar Reserva"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -725,7 +754,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Manejar Reservas"
+          "manage": "Manejar Reservas",
+          "confirm": "Confirmar Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -753,6 +783,16 @@
     "manageAll": "Monitore todas as Agendas:",
     "or": "Ó",
     "schedules": "Agendas",
+    "searchClient": "Buscar Cliente",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "paymentConfirm": "Confirmar Pagamento",
+    "confirmData": "Datos de Confirmación",
+    "paymentType": "Tipo de Pago:",
+    "paymentMethod": "Medio de pago:",
+    "paymentAmount": "Monto:",
+    "paymentCommission": "Comisión:",
+    "paymentComment": "Comentario (Opcional)",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -790,12 +830,18 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Manejar Reservas"
+          "manage": "Manejar Reservas",
+          "confirm": "Confirmar Reserva"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
         }
       }
+    },
+    "validate": {
+      "paymentType": "Debe seleccionar el tipo de pago",
+      "paymentMethod": "Debe seleccionar el método de pago",
+      "paymentAmount": "Debe ingresar el monto"
     }
   },
   "queueAttentionDetails": {
@@ -853,7 +899,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Manejar Reservas"
+          "manage": "Manejar Reservas",
+          "confirm": "Confirmar Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -2664,7 +2711,8 @@
       },
       "bookings": {
         "cancel": "Cancelar Reserva",
-        "manage": "Manejar Reservas"
+        "manage": "Manejar Reservas",
+        "confirm": "Confirmar Reserva"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -2691,7 +2739,8 @@
       },
       "bookings": {
         "cancel": "Cancelar Reserva - Reservas",
-        "manage": "Manejar Reservas- Reservas"
+        "manage": "Manejar Reservas- Reservas",
+        "confirm": "Confirmar Reserva"
       }
     },
     "plans": {

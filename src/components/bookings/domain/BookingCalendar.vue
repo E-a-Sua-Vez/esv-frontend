@@ -103,7 +103,7 @@ export default {
       if (date !== undefined && queueId) {
         const bookingsQuery = bookingCollection
           .where('queueId', "==", queueId)
-          .where('status', "==", 'PENDING')
+          .where('status', "in", ['PENDING', 'CONFIRMED'])
           .where('date', '==', date)
           .orderBy('number', 'asc');
         unsubscribe = bookingsQuery.onSnapshot(snapshot => {
@@ -583,7 +583,7 @@ export default {
             </div>
             <hr>
             <div class="row mt-2 mb-3 mx-2">
-              <div><i class="bi bi-search"></i> <span class="fw-bold h6"> Pesquisar Cliente: </span></div>
+              <div><i class="bi bi-search"></i> <span class="fw-bold h6"> {{ $t("collaboratorBookingsView.searchClient") }} </span></div>
               <div class="col-8 col-md-8 centered">
                 <input
                   min="1"
@@ -723,6 +723,7 @@ export default {
                         :show="true"
                         :detailsOpened="false"
                         :toggles="toggles"
+                        :commerce="commerce"
                       >
                       </BookingDetailsCard>
                     </div>

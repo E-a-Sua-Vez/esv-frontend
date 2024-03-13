@@ -105,6 +105,26 @@
     "CALL": "Chamada",
     "OTHER": "Outro"
   },
+  "paymentTypes": {
+    "PAID": "Pago",
+    "TOTALLY": "Total",
+    "PARTIAL": "Parcial",
+    "TRIAL": "Prova",
+    "EVALUATION": "Avaliação",
+    "PROMOTION": "Promoção"
+  },
+  "paymentClientMethods": {
+    "PAID": "Pago",
+    "CREDIT_CARD": "C. Crédito",
+    "DEBIT_CARD": "C. Débito",
+    "WIRE_TRANSFER": "Transf",
+    "DEPOSIT": "Depósito",
+    "CHECK": "Cheque",
+    "MONEY": "Dinheiro",
+    "BOLETO": "Boleto",
+    "PIX": "Pix",
+    "OTHER": "Outro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -251,6 +271,14 @@
     "attention-queue-typegrouped": {
       "title": "Filtrar tipo de Fila",
       "description": "Permite ao usuário selecionar o tipo de fila, por colaborador, por serviço e mais"
+    },
+    "booking-confirm": {
+      "title": "Reserva Confirmação",
+      "description": "Reserva precisa ser confirmada para ser procesada como atendimento"
+    },
+    "booking-confirm-payment": {
+      "title": "Reserva Pagamento Confirmação",
+      "description": "Reserva precisa ser pagada para ser procesada"
     }
   },
   "paymentMethods": {
@@ -685,7 +713,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°"
+          "manage": "Reservas Visão 360°",
+          "confirm": "Confirmar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -737,7 +766,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°"
+          "manage": "Reservas Visão 360°",
+          "confirm": "Confirmar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -764,7 +794,17 @@
     "manageAll": "Monitore todas as Agendas:",
     "queues": "Filas",
     "or": "Ou",
+    "searchClient": "Pesquisar Cliente",
     "schedules": "Agendas",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "paymentConfirm": "Confirmar Pagamento",
+    "confirmData": "Dados de Confirmação",
+    "paymentType": "Tipo de Pagamento:",
+    "paymentMethod": "Meio de pagamento:",
+    "paymentAmount": "Valor:",
+    "paymentCommission": "Comissão:",
+    "paymentComment": "Comentário (Opcional)",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -801,12 +841,18 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°"
+          "manage": "Reservas Visão 360°",
+          "confirm": "Confirmar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
         }
       }
+    },
+    "validate": {
+      "paymentType": "Deve selecionar o tipo de pagamento",
+      "paymentMethod": "Deve selecionar o meio de pagamento",
+      "paymentAmount": "Deve digitar o valor"
     }
   },
   "collaboratorQueueAttentions": {
@@ -859,7 +905,8 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°"
+          "manage": "Reservas Visão 360°",
+          "confirm": "Confirmar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",

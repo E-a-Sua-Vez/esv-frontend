@@ -62,3 +62,28 @@ export const getContactResultTypes = () => {
     { id: 'REJECTED', name: 'REJECTED' }
   ]
 }
+
+export const getPaymentTypes = () => {
+  return [
+    { id: 'PAID', name: 'PAID' },
+    { id: 'TOTALLY', name: 'TOTALLY' },
+    { id: 'PARTIAL', name: 'PARTIAL' },
+    { id: 'TRIAL', name: 'TRIAL' },
+    { id: 'EVALUATION', name: 'EVALUATION' },
+    { id: 'PROMOTION', name: 'PROMOTION' },
+  ]
+}
+
+export const getPaymentMethods = () => {
+  return [
+    { id: 'PAID', name: 'PAID' },
+    { id: 'CREDIT_CARD', name: 'CREDIT_CARD' },
+    { id: 'DEBIT_CARD', name: 'DEBIT_CARD' },
+    { id: 'WIRE_TRANSFER', name: 'WIRE_TRANSFER' },
+    { id: 'DEPOSIT', name: 'DEPOSIT' },
+    { id: 'CHECK', name: 'CHECK' },
+    { id: 'MONEY', name: 'MONEY' },
+    { id: 'BOLETO', name: 'BOLETO' },
+    { id: 'PIX', name: 'PIX' }
+  ]
+}

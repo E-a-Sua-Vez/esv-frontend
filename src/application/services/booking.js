@@ -29,3 +29,7 @@ export const createBookingFromWaitlist = async (id, number) => {
 export const getPendingBookingsBetweenDates = async (queueId, dateFrom, dateTo) => {
   return (await requestBackend.get(`/${entity}/pending/queue/${queueId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
 }
+
+export const confirmBooking = async (id, body) => {
+  return (await requestBackend.patch(`/${entity}/confirm/${id}`, body, await getHeaders())).data;
+}
