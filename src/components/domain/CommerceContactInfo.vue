@@ -7,7 +7,7 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
   },
-  components: { GoogleMap, Marker },
+  components: { GoogleMap },
   data() {
     const { t } = useI18n();
     const mapsKey = import.meta.env.VITE_MAPS_API_KEY;
@@ -163,41 +163,41 @@ export default {
             </div>
             <div class="row centered">
               <div class="col-3" v-if="commerce.contactInfo.whatsapp">
-                <button
+                <a
                   v-if="commerce.contactInfo.whatsapp"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 whatsapp-button"
                   :href="'https://wa.me/'+commerce.contactInfo.whatsapp"
                   target="_blank">
                   <i class="bi bi-whatsapp"></i>
-              </button>
+              </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.facebook">
-                <button
+                <a
                   v-if="commerce.contactInfo.facebook"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 facebook-button"
                   :href="'https://www.facebook.com/'+commerce.contactInfo.facebook"
                   target="_blank">
                   <i class="bi bi-facebook"></i>
-                </button>
+              </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.instagram">
-                <button
+                <a
                   type="button"
                   v-if="commerce.contactInfo.instagram"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 instagram-button"
                   :href="'https://www.instagram.com/'+commerce.contactInfo.instagram"
                   target="_blank">
                   <i class="bi bi-instagram"></i>
-              </button>
+              </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.twitter">
-                <button
+                <a
                   v-if="commerce.contactInfo.twitter"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 twitter-button"
                   :href="'https://www.twitter.com/'+commerce.contactInfo.twitter"
                   target="_blank">
                   <i class="bi bi-twitter"></i>
-              </button>
+              </a>
               </div>
             </div>
           </div>
