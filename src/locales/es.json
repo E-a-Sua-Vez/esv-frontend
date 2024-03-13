@@ -39,7 +39,8 @@
     "br": "🇧🇷 Brasil",
     "cl": "🇨🇱 Chile",
     "us": "🇺🇸 EEUU",
-    "ve": "🇻🇪 Venezuela"
+    "ve": "🇻🇪 Venezuela",
+    "mx": "🇲🇽 México"
   },
   "days": {
     "1": "Lun",
@@ -633,6 +634,7 @@
           "56": "Ingresa Sólo Número, Ej: 🇨🇱 911112222",
           "55": "Ingresa Sólo Número, Ej: 🇧🇷 11922223333",
           "1": "Ingresa Sólo Número, Ej: 🇺🇸 4081234444",
+          "52": "Ingresa Sólo Número, Ej: 🇲🇽 70011112222",
           "xx": "Ingresa Cód. País + Número (Sólo números)"
         }
       },

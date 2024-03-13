@@ -39,7 +39,8 @@
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",
     "us": "🇺🇸 USA",
-    "ve": "🇻🇪 Venezuela"
+    "ve": "🇻🇪 Venezuela",
+    "mx": "🇲🇽 México"
   },
   "days": {
     "1": "Seg",
@@ -640,6 +641,7 @@
           "58": "Digite só seu número, Ex: 🇻🇪 4141112233",
           "56": "Digite só seu número, Ex: 🇨🇱 911112222",
           "55": "Digite só seu número, Ex: 🇧🇷 11922223333",
+          "52": "Digite só seu número, Ex: 🇲🇽 70011112222",
           "1": "Digite só seu número, Ex: 🇺🇸 4081234444",
           "xx": "Digite o código do pais + número (Só números)"
         }

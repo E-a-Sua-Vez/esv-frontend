@@ -39,7 +39,8 @@
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",
     "us": "🇺🇸 USA",
-    "ve": "🇻🇪 Venezuela"
+    "ve": "🇻🇪 Venezuela",
+    "mx": "🇲🇽 Mexico"
   },
   "days": {
     "1": "Mon",
@@ -640,6 +641,7 @@
           "56": "Type just the number, Ex: 🇨🇱 911112222",
           "55": "Type just the number, Ex: 🇧🇷 11922223333",
           "1": "Type just the number, Ex: 🇺🇸 4081234444",
+          "52": "Type just the number, Ex: 🇲🇽 70011112222",
           "xx": "Type Country Code + Number (Just Numbers)"
         }
       },

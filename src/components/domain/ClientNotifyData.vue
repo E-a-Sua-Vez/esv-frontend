@@ -6,6 +6,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import { notify } from '../../application/services/attention';
 import { VueRecaptcha } from 'vue-recaptcha';
+import { getPhoneCodes } from '../../shared/utils/data';
 
 export default {
   name: 'ClientNotifyData',
@@ -37,18 +38,15 @@ export default {
       user: { id: this.userId, notificationOn: this.notificationOn },
       siteKey: import.meta.env.VITE_RECAPTCHA_INVISIBLE,
       captchaEnabled: import.meta.env.VITE_RECAPTCHA_ENABLED || 'false',
-      phoneCodes: [
-        { id: 've', label: '🇻🇪', code: '58' },
-        { id: 'br', label: '🇧🇷', code: '55' },
-        { id: 'cl', label: '🇨🇱', code: '56' },
-        { id: 'us', label: '🇺🇸', code: '1' },
-        { id: 'xx', label: '🏴', code: 'xx' }
-      ],
+      phoneCodes: [],
       toggles: {
         'client.notify.whatsapp': true,
         'client.notify.email': false,
       }
     }
+  },
+  beforeMount() {
+    this.phoneCodes = getPhoneCodes();
   },
   methods: {
     async saveClientData() {
