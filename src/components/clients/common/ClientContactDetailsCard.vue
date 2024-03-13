@@ -67,10 +67,10 @@ export default {
       const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
       const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
       const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone;
-      const addressCode = !state.client.userAddressCode ? 'undefined' : state.client.userAddressCode;
-      const addressText = !state.client.userAddressText ? 'undefined' : state.client.userAddressText;
-      const addressComplement = !state.client.userAddressComplement ? 'undefined' : state.client.userAddressComplement;
-      const birthday = !state.client.userBirthday ? 'undefined' : state.client.userBirthday;
+      const addressCode = !this.client.userAddressCode ? 'undefined' : this.client.userAddressCode;
+      const addressText = !this.client.userAddressText ? 'undefined' : this.client.userAddressText;
+      const addressComplement = !this.client.userAddressComplement ? 'undefined' : this.client.userAddressComplement;
+      const birthday = !this.client.userBirthday ? 'undefined' : this.client.userBirthday;
       if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
         return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
       }

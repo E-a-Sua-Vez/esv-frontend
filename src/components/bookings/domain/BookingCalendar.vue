@@ -209,10 +209,12 @@ export default {
 
     const goToLink = () => {
       const commerceKeyName = commerce.value.keyName;
-      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined`;
+      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
       const queue = state.selectedQueue;
       if (queue && queue.id) {
         url += `/${queue.id}`;
+      } else {
+        url += `/undefined`;
       }
       if (state.client && state.client.id) {
         const name = !state.client.userName ? 'undefined' : state.client.userName;
