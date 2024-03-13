@@ -112,7 +112,8 @@
     "PARTIAL": "Parcial",
     "TRIAL": "Prueba",
     "EVALUATION": "Evaluación",
-    "PROMOTION": "Promoción"
+    "PROMOTION": "Promoción",
+    "RETURN": "Retorno"
   },
   "paymentClientMethods": {
     "PAID": "Pagado",

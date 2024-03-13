@@ -72,6 +72,7 @@ export const getPaymentTypes = () => {
     { id: 'TRIAL', name: 'TRIAL' },
     { id: 'EVALUATION', name: 'EVALUATION' },
     { id: 'PROMOTION', name: 'PROMOTION' },
+    { id: 'RETURN', name: 'RETURN' },
   ]
 }
 

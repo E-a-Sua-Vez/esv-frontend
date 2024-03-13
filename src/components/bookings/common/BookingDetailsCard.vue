@@ -145,7 +145,7 @@ export default {
     selectPaymentType($event) {
       if ($event && $event.target) {
         const paymentType = $event.target.value;
-        if (['PAID', 'EVALUATION', 'PROMOTION', 'TRIAL'].includes(paymentType)) {
+        if (['PAID', 'RETURN', 'EVALUATION', 'PROMOTION', 'TRIAL'].includes(paymentType)) {
           this.newConfirmationData.paymentMethod = 'PAID'
           this.newConfirmationData.paymentAmount = 0;
           this.newConfirmationData.paymentCommission = 0
