@@ -795,7 +795,7 @@
     "queues": "Filas",
     "or": "Ou",
     "searchClient": "Pesquisar Cliente",
-    "schedules": "Agendas",
+    "schedules": "Agendas e Calendários",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
     "paymentConfirm": "Confirmar Pagamento",
@@ -807,20 +807,28 @@
     "paymentComment": "Comentário (Opcional)",
     "message": {
       "1": {
-        "title": "Oh não!",
+        "title": "Oi!",
         "content": "Neste momento não há Filas de atendimento. Aproxime-se de seu administrador para solicitar ajuda."
       },
       "2": {
-        "title": "Oh não!",
+        "title": "Oi!",
         "content": "Neste momento não há Reservas a a Fila e Data selecionada"
       },
       "3": {
-        "title": "Oh não!",
+        "title": "Oi!",
         "content": "Neste momento não há ninguem na Lista de espera na Fila e Data selecionada"
       },
       "4": {
-        "title": "Oh não!",
+        "title": "Oi!",
         "content": "Neste momento não há atendimentos na fila selecionada"
+      },
+      "5": {
+        "title": "Oi",
+        "content": "Selecione uma fila e uma data no calendário."
+      },
+      "6": {
+        "title": "Oi!",
+        "content": "Neste momento não há filas disponíveis. Verifique o comércio selecionado o pergunte ao administrador."
       }
     },
     "capacitiesList": {

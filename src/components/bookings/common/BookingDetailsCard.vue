@@ -86,7 +86,7 @@ export default {
         } else {
           this.paymentMethodError = false;
         }
-        if(!data.paymentAmount || data.paymentAmount.length === 0 || data.paymentAmount < 0) {
+        if(data.paymentAmount === undefined || data.paymentAmount.length === 0 || data.paymentAmount < 0) {
           this.paymentAmountError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentAmount');
         } else {

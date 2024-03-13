@@ -782,7 +782,7 @@
     "selectQueue": "Seleccione una fila y fecha en el calendario",
     "manageAll": "Monitore todas as Agendas:",
     "or": "Ó",
-    "schedules": "Agendas",
+    "schedules": "Agendas y Calendarios",
     "searchClient": "Buscar Cliente",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -809,6 +809,14 @@
       "4": {
         "title": "¡Hola!",
         "content": "En este momento no hay atenciones pendientes para la fila seleccionada."
+      },
+      "5": {
+        "title": "¡Hola!",
+        "content": "Selecciona una fila y una fecha en el calendario."
+      },
+      "6": {
+        "title": "¡Hola!",
+        "content": "No hay filas disponibles, verifique el comercio seleccionado o consulte con el administrador."
       }
     },
     "capacitiesList": {

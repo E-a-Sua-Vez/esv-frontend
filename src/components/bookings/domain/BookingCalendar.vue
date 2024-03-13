@@ -739,6 +739,11 @@ export default {
                   </div>
                 </div>
               </div>
+              <div v-if="!state.selectedQueue || !state.selectedDate">
+                <Message
+                  :title="$t('collaboratorBookingsView.message.5.title')"
+                  :content="$t('collaboratorBookingsView.message.5.content')" />
+              </div>
             </div>
             <div v-if="state.showWaitlist">
               <div class="my-2">
@@ -762,6 +767,11 @@ export default {
                 <Message
                   :title="$t('collaboratorBookingsView.message.3.title')"
                   :content="$t('collaboratorBookingsView.message.3.content')" />
+              </div>
+              <div v-if="!state.selectedQueue || !state.selectedDate">
+                <Message
+                  :title="$t('collaboratorBookingsView.message.5.title')"
+                  :content="$t('collaboratorBookingsView.message.5.content')" />
               </div>
             </div>
           </div>

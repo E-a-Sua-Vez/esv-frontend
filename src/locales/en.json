@@ -785,7 +785,7 @@
     "selectQueue": "Select a queue and a date on the calendar",
     "manageAll": "Manage all the schedules:",
     "or": "Or",
-    "schedules": "Schedules",
+    "schedules": "Schedules and Canlendars",
     "searchClient": "Search Client",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -812,6 +812,14 @@
       "4": {
         "title": "Hey!",
         "content": "At this time there are no Attentins for the Queue selected."
+      },
+      "5": {
+        "title": "Hey!",
+        "content": "Select a queue and a date on the calendar."
+      },
+      "6": {
+        "title": "Hey!",
+        "content": "There's not queues availables. Please check the selected commerce or consult the administrator."
       }
     },
     "capacitiesList": {

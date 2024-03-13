@@ -50,11 +50,12 @@ export default {
     <div :class="`details-arrow ${colorDetailToShow()}`" v-if="showData && hasData()">
       <span
         data-bs-toggle="collapse"
-        href="#user-data"
+        :href="`#user-data-${number}`"
         @click.prevent="showDetails()">
         <i class="dark fw-bold" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
       </span>
-      <div id="user-data"
+      <div
+        :id="`#user-data-${number}`"
         :class="`collapse ${extendedEntity ? 'show' : ''} detailed-data`">
         <div id="user-details">
           <span class="details-title fw-bold">{{ $t('attentionNumber.details.title') }}</span>

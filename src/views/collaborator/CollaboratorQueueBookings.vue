@@ -502,7 +502,7 @@ export default {
         <div class="mb-1 mt-2">
           <div class="choose-attention"><span> {{ $t("collaboratorBookingsView.manageAll") }} </span></div>
           <button
-            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
             data-bs-toggle="modal"
             data-bs-target="#modalAgenda"
             :disabled="!state.toggles['collaborator.bookings.manage']"
@@ -511,17 +511,24 @@ export default {
           </button>
         </div>
         <div class="choose-attention mt-2"><span>{{ $t("collaboratorBookingsView.or") }}</span></div>
+        <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
         <div id="queue-selector" class="mb-1 mt-2">
-          <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
-          <select
-            class="btn btn-md btn-light fw-bold text-dark m-1 select"
-            v-model="state.queue"
-            @change="getQueue(state.queue)"
-            id="queues">
-            <option v-for="queue in state.queues" :key="queue.name" :value="queue">
-              <span v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill">👤</span> {{ queue.name }}
-            </option>
-          </select>
+          <div v-if="state.queues && state.queues.length > 0">
+            <select
+              class="btn btn-md btn-light fw-bold text-dark m-1 select"
+              v-model="state.queue"
+              @change="getQueue(state.queue)"
+              id="queues">
+              <option v-for="queue in state.queues" :key="queue.name" :value="queue">
+                <span v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill">👤</span> {{ queue.name }}
+              </option>
+            </select>
+          </div>
+          <div v-else>
+            <Message
+              :title="$t('collaboratorBookingsView.message.6.title')"
+              :content="$t('collaboratorBookingsView.message.6.content')" />
+          </div>
         </div>
       </div>
       <div id="queue-link-form" class="row g-1">
@@ -537,6 +544,7 @@ export default {
           </a>
         </div>
       </div>
+      <hr>
       <div id="bookings" v-if="state.queue && state.queue.id">
         <div class="row" v-if="isActiveCommerce()">
           <div v-if="state.queue && state.queue.id !== undefined">
@@ -564,7 +572,7 @@ export default {
                   @click="showBookings()"
                   :disabled="!state.queue || !state.date"
                   >
-                  {{ $t('collaboratorBookingsView.bookings') }}
+                  {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
                 </button>
                 <button
                   class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
@@ -572,12 +580,12 @@ export default {
                   @click="showWaitlists()"
                   :disabled="!state.queue.id || !state.date"
                   >
-                  {{ $t('collaboratorBookingsView.waitlists') }}
+                  {{ $t('collaboratorBookingsView.waitlists') }} <br> <i class="bi bi-calendar-heart-fill"></i>
               </button>
               </h5>
             </div>
             <hr>
-            <div v-if="state.showBooking && state.queue && state.date">
+            <div v-if="state.showBooking && state.queue && state.date" class="blocks-section">
               <div v-if="state.queue && state.date && state.bookings && state.bookings.length > 0">
                 <div class="my-1">
                   <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
@@ -608,7 +616,7 @@ export default {
                   :content="$t('collaboratorBookingsView.message.2.content')" />
               </div>
             </div>
-            <div v-if="state.showWaitlist && state.queue && state.date">
+            <div v-if="state.showWaitlist && state.queue && state.date" class="blocks-section">
               <div v-if="state.queue && state.date && state.waitlists && state.waitlists.length > 0">
                 <div class="my-1">
                   <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
@@ -703,5 +711,14 @@ export default {
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
+}
+.blocks-section {
+  overflow-y: scroll;
+  max-height: 600px;
+  font-size: small;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border-radius: .5rem;
+  border: .5px solid var(--gris-default);
 }
 </style>
