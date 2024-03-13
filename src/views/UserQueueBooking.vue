@@ -241,7 +241,7 @@ export default {
                     class="booking-notification-title mb-2">
                     {{ $t("userQueueBooking.commerceDetails") }}
                   </div>
-                  <div class="centered mb-2">
+                  <div class="col-10 col-md-12 centered mb-2">
                     <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
                   </div>
                 </div>
