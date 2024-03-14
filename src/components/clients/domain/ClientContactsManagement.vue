@@ -152,10 +152,9 @@ export default {
             newContact.collaboratorId = this.user.id;
           }
           await contactClient(this.client.id, newContact)
-          this.$emit('getClientContacts');
-          /*setTimeout(async () => {
-            await this.refresh();
-          }, 5000)*/
+          setTimeout(async () => {
+            this.$emit('getClientContacts');
+          }, 3000)
           this.showAddOption = false;
           this.newContact = {}
           this.extendedEntity = undefined;
