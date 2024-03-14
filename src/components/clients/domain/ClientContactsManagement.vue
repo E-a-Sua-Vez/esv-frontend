@@ -154,7 +154,7 @@ export default {
           await contactClient(this.client.id, newContact)
           setTimeout(async () => {
             this.$emit('getClientContacts');
-          }, 3000)
+          }, 5000)
           this.showAddOption = false;
           this.newContact = {}
           this.extendedEntity = undefined;
