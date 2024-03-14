@@ -3,6 +3,7 @@ import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactUser } from '../../../application/services/user';
 import Spinner from '../../common/Spinner.vue';
+import { getContactResultTypes } from '../../../shared/utils/data';
 
 export default {
   name: 'AttentionManagementDetailsCard',
@@ -18,12 +19,11 @@ export default {
       loading: false,
       extendedEntity: false,
       checked: false,
-      contactResultTypes: [
-        { id: 'INTERESTED', name: 'INTERESTED' },
-        { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
-        { id: 'REJECTED', name: 'REJECTED' }
-      ]
+      contactResultTypes: []
     }
+  },
+  beforeMount() {
+    this.contactResultTypes = getContactResultTypes();
   },
   methods: {
     showDetails() {
@@ -107,6 +107,7 @@ export default {
       <div class="col-6 centered fw-bold" v-if="attention && attention.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
+        <i v-if="attention.paid !== undefined && attention.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
       <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
@@ -182,6 +183,19 @@ export default {
         </div>
         <div class="row m-1 centered">
           <div class="col">
+            <div class="" v-if="attention.paid !== undefined && attention.paid === true">
+              <div class="">
+                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
+              </div>
+              <div v-if="attention.paid">
+                <span v-if="attention.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
+                <span v-if="attention.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span>
+                <span v-if="attention.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentAmount }}</span>
+                <span v-if="attention.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span>
+                <span v-if="attention.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentDate) }}</span>
+              </div>
+              <hr>
+            </div>
             <div v-if="attention.rating || attention.nps">
               <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
                 CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ attention.rating || 'N/I' }} </span>

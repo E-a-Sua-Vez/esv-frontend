@@ -2,7 +2,7 @@
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
-import { cancelBooking, confirmBooking } from '../../../application/services/booking';
+import { cancelAttention, attentionPaymentConfirm } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
 import Warning from '../../common/Warning.vue';
@@ -10,11 +10,11 @@ import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 
 export default {
-  name: 'BookingDetailsCard',
+  name: 'AttentionDetailsCard',
   components: { Popper, Spinner, Warning, AreYouSure, PaymentForm },
   props: {
     show: { type: Boolean, default: true },
-    booking: { type: Object, default: undefined },
+    attention: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -24,7 +24,7 @@ export default {
       loading: false,
       extendedEntity: false,
       extendedPaymentEntity: false,
-      newConfirmationData: {},
+      newPaymentConfirmationData: {},
       paymentTypes: [],
       paymentMethods: [],
       paymentAmountError: false,
@@ -32,8 +32,7 @@ export default {
       paymentMethodError: false,
       errorsAdd: [],
       goToCancel: false,
-      goToConfirm1: false,
-      goToConfirm2: false,
+      goToConfirm: false,
       checked: false
     }
   },
@@ -49,7 +48,7 @@ export default {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
     },
     getDate(dateIn, timeZoneIn) {
-      const date = dateIn.toDate().toString();
+      const date = dateIn;
       const dateCorrected = new Date(
       new Date(date).toLocaleString('en-US', {
         timeZone: timeZoneIn,
@@ -57,14 +56,15 @@ export default {
       return dateCorrected.toISOString().slice(0,10);
     },
     copyBooking() {
-      const textToCopy = jsonToCsv([this.booking]);
+      const textToCopy = jsonToCsv([this.attention]);
       navigator.clipboard.writeText(textToCopy);
     },
     async cancel() {
       try {
         this.loading = true;
-        if (this.booking && this.booking.id) {
-          await cancelBooking(this.booking.id);
+        if (this.attention && this.attention.id) {
+          await cancelAttention(this.attention.id);
+          this.$emit('updatedAttentions');
         }
         this.loading = false;
       } catch (error) {
@@ -74,7 +74,7 @@ export default {
     },
     validateConfirm(data) {
       this.errorsAdd = [];
-      if (getActiveFeature(this.commerce, 'booking-confirm-payment', 'PRODUCT')) {
+      if (getActiveFeature(this.commerce, 'attention-confirm-payment', 'PRODUCT')) {
         if(!data.paymentType || data.paymentType.length === 0) {
           this.paymentTypeError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentType');
@@ -95,6 +95,7 @@ export default {
         }
       }
       if(this.errorsAdd.length === 0) {
+
         return true;
       }
       return false;
@@ -102,16 +103,17 @@ export default {
     async confirm() {
       try {
         this.loading = true;
-        if (this.booking && this.booking.id) {
-          if (this.validateConfirm(this.newConfirmationData)) {
+        if (this.attention && this.attention.id) {
+          if (this.validateConfirm(this.newPaymentConfirmationData)) {
             const body = {
-              confirmationData: {
+              paymentConfirmationData: {
                 paid: true,
                 paymentDate: new Date(),
-                ... this.newConfirmationData
+                ... this.newPaymentConfirmationData
               }
             };
-            await confirmBooking(this.booking.id, body);
+            await attentionPaymentConfirm(this.attention.id, body);
+            this.$emit('updatedAttentions');
           }
         }
         this.loading = false;
@@ -131,34 +133,28 @@ export default {
     cancelCancel() {
       this.goToCancel = false;
     },
-    goConfirm1() {
-      this.goToConfirm1 = !this.goToConfirm1;
+    goConfirm() {
+      this.goToConfirm = !this.goToConfirm;
     },
-    confirmCancel1() {
-      this.goToConfirm1 = false;
-    },
-    goConfirm2() {
-      this.goToConfirm2 = !this.goToConfirm2;
-    },
-    confirmCancel2() {
-      this.goToConfirm2 = false;
+    confirmCancel() {
+      this.goToConfirm = false;
     },
     receiveData(data) {
       if (data) {
         if (data.paymentType) {
-          this.newConfirmationData.paymentType = data.paymentType;
+          this.newPaymentConfirmationData.paymentType = data.paymentType;
         }
         if (data.paymentMethod) {
-          this.newConfirmationData.paymentMethod = data.paymentMethod;
+          this.newPaymentConfirmationData.paymentMethod = data.paymentMethod;
         }
         if (data.paymentAmount) {
-          this.newConfirmationData.paymentAmount = data.paymentAmount;
+          this.newPaymentConfirmationData.paymentAmount = data.paymentAmount;
         }
         if (data.paymentCommission) {
-          this.newConfirmationData.paymentCommission = data.paymentCommission;
+          this.newPaymentConfirmationData.paymentCommission = data.paymentCommission;
         }
         if (data.paymentComment) {
-          this.newConfirmationData.paymentComment = data.paymentComment;
+          this.newPaymentConfirmationData.paymentComment = data.paymentComment;
         }
       };
     }
@@ -183,37 +179,38 @@ export default {
 </script>
 
 <template>
-  <div v-if="show && booking">
+  <div v-if="show && attention">
     <div class="row metric-card fw-bold">
       <div class="col-2 centered">
-        <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.number }}</span>
+        <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ attention.number }}</span>
       </div>
-      <div class="col-4 centered" v-if="booking.user && booking.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
-        <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill mx-1 yellow-icon"> </i>
-        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill mx-1 green-icon"> </i>
-        <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
+      <div class="col-4 centered" v-if="attention.user && attention.user.name">
+        <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
+        <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill mx-1 yellow-icon"> </i>
+        <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill mx-1 green-icon"> </i>
+        <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
-      <div class="col-6 centered" v-if="booking.block && booking.block.hourFrom">
-        <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
+      <div class="col-6 centered" v-if="attention.block && attention.block.hourFrom">
+        <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>
       </div>
     </div>
     <div class="details-arrow">
       <div class="centered">
         <span
-          href="#"
+          :href="`#data-attention-${attention.number}`"
           @click.prevent="showDetails()">
           <span class="details-title">{{ $t("dashboard.details") }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
       <div
+        :id="`#data-attention-${attention.number}`"
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
         <div class="row m-0 centered">
           <div class="d-block col-12 col-md-4">
             <div class="col-12 fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name || 'N/I' }} {{ booking.user.lastName || '' }}
+              <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name || 'N/I' }} {{ attention.user.lastName || '' }}
               <div class="row">
                 <a class="copy-icon"
                   @click="copyBooking()">
@@ -227,57 +224,58 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+booking.user.phone"
+                :href="'https://wa.me/'+attention.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ booking.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+booking.user.email"
+                :href="'mailto'+attention.user.email"
                 target="_blank">
-                <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
+                <i class="bi bi-envelope mx-1"></i> {{ attention.user.email || 'N/I' }}
               </a>
             </div>
             <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.user.idNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ attention.user.idNumber || 'N/I' }}
             </div>
           </div>
           <div class="d-none d-md-block col-12 col-md-8">
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+booking.user.phone"
+                :href="'https://wa.me/'+attention.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ booking.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+booking.user.email"
+                :href="'mailto'+attention.user.email"
                 target="_blank">
-                <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
+                <i class="bi bi-envelope mx-1"></i> {{ attention.user.email || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.user.idNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ attention.user.idNumber || 'N/I' }}
             </div>
           </div>
         </div>
         <hr>
-        <div class="row centered mt-2" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
-          <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
-            <div class="" v-if="booking.confirmed === true && booking.confirmationData">
+        <div class="row centered mt-2">
+          <div v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')">
+            <div class="" v-if="attention.paid === true && attention.paymentConfirmationData">
               <div class="">
-                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.confirmData") }}</span>
+                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
-              <div v-if="booking.confirmationData">
-                <span v-if="booking.confirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span>
-                <span v-if="booking.confirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span>
-                <span v-if="booking.confirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span>
-                <span v-if="booking.confirmationData.paymentCommission" class="badge rounded-pill bg-warning metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentCommission }}</span>
+              <div v-if="attention.paymentConfirmationData">
+                <span v-if="attention.paymentConfirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`) }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentAmount }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentCommission }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentConfirmationData.paymentDate) }}</span>
               </div>
               <hr>
             </div>
@@ -292,7 +290,7 @@ export default {
               </h5>
             </div>
             <div
-              v-if="!booking.confirmed"
+              v-if="!attention.paid"
               :class="{ show: extendedPaymentEntity }"
               class="detailed-data transition-slow">
               <PaymentForm
@@ -301,16 +299,16 @@ export default {
               >
               </PaymentForm>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
-                @click="goConfirm2()"
-                :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']">
+                @click="goConfirm()"
+                :disabled="attention.paid || !toggles['collaborator.attention.payment-confirm']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
               </button>
               <AreYouSure
-                :show="goToConfirm2"
-                :yesDisabled="toggles['collaborator.bookings.confirm']"
-                :noDisabled="toggles['collaborator.bookings.confirm']"
+                :show="goToConfirm"
+                :yesDisabled="toggles['collaborator.attention.payment-confirm']"
+                :noDisabled="toggles['collaborator.attention.payment-confirm']"
                 @actionYes="confirm()"
-                @actionNo="confirmCancel2()"
+                @actionNo="confirmCancel()"
               >
               </AreYouSure>
             </div>
@@ -320,17 +318,9 @@ export default {
           <div class="col-6">
             <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
               @click="goCancel()"
-              :disabled="booking.status === 'USER_CANCELED' || booking.cancelled || !toggles['collaborator.bookings.cancel']"
+              :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.bookings.cancel']"
               >
               <i class="bi bi-person-x-fill"> </i> {{ $t("collaboratorBookingsView.cancel") }}
-            </button>
-          </div>
-          <div class="col-6" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') && !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
-            <button class="btn btn-md btn-size fw-bold btn-primary rounded-pill px-3"
-              @click="goConfirm1()"
-              :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']"
-              >
-              <i class="bi bi-person-x-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
             </button>
           </div>
           <AreYouSure
@@ -341,19 +331,11 @@ export default {
             @actionNo="cancelCancel()"
           >
           </AreYouSure>
-          <AreYouSure
-            :show="goToConfirm1"
-            :yesDisabled="toggles['collaborator.bookings.confirm']"
-            :noDisabled="toggles['collaborator.bookings.confirm']"
-            @actionYes="confirm()"
-            @actionNo="confirmCancel1()"
-          >
-          </AreYouSure>
         </div>
         <div class="row m-0 mt-2 centered">
           <div class="col">
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.id }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span>
+            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.id }}</span>
+            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdAt) }}</span>
           </div>
         </div>
       </div>

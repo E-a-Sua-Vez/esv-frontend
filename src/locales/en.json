@@ -281,6 +281,10 @@
     "booking-confirm-payment": {
       "title": "Booking Confirmation Payment",
       "description": "Bookings need to be paid to be confirmed"
+    },
+    "attention-confirm-payment": {
+      "title": "Attention Confirmation Payment",
+      "description": "Attentions need to be paid"
     }
   },
   "paymentMethods": {
@@ -705,7 +709,8 @@
         "attention": {
           "attend": "Attend",
           "finish": "Set an attention as Attended",
-          "skip": "Skip Attention"
+          "skip": "Skip Attention",
+          "payment-confirm": "Confirm Payment"
         },
         "module": {
           "update": "Update attention Module"
@@ -750,7 +755,8 @@
         "attention": {
           "attend": "Attend",
           "finish": "Set an attention as Attended",
-          "skip": "Skip Attention"
+          "skip": "Skip Attention",
+          "payment-confirm": "Confirm Payment"
         },
         "module": {
           "update": "Update attention Module"
@@ -793,6 +799,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "paymentConfirm": "Confirm Payment",
+    "paymentData": "Payment Data",
     "confirmData": "Confirmation Data",
     "paymentType": "Payment type:",
     "paymentMethod": "Payment method:",
@@ -830,7 +837,8 @@
         "attention": {
           "attend": "Attend",
           "finish": "Set an attention as Attended",
-          "skip": "Skip Attention"
+          "skip": "Skip Attention",
+          "payment-confirm": "Confirm Payment"
         },
         "module": {
           "update": "Update attention Module"
@@ -902,7 +910,8 @@
         "attention": {
           "attend": "Attend",
           "finish": "Set an attention as Attended",
-          "skip": "Skip Attention"
+          "skip": "Skip Attention",
+          "payment-confirm": "Confirm Payment"
         },
         "module": {
           "update": "Update attention Module"
@@ -2711,7 +2720,8 @@
       "attention": {
         "attend": "Atender - Section Attentions of the Collaborator",
         "finish": "Marcar atención como atendida - Section Attentions of the Collaborator",
-        "skip": "Saltar atención - Section Attentions of the Collaborator"
+        "skip": "Saltar atención - Section Attentions of the Collaborator",
+        "payment-confirm": "Confirm Payment - Section Attentions of the Collaborator"
       }
     },
     "roles": {

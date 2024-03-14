@@ -70,6 +70,10 @@ export const notify = async (id, body) => {
   return (await requestBackend.patch(`/${entity}/notification/${id}`, body, await getHeaders())).data;
 }
 
-export const cancelAttention = async (id, body) => {
-  return (await requestBackend.patch(`/${entity}/cancel/${id}`, body, await getHeaders())).data;
+export const cancelAttention = async id => {
+  return (await requestBackend.patch(`/${entity}/cancel/${id}`, {}, await getHeaders())).data;
+}
+
+export const attentionPaymentConfirm = async (id, body) => {
+  return (await requestBackend.patch(`/${entity}/payment-confirm/${id}`, body, await getHeaders())).data;
 }

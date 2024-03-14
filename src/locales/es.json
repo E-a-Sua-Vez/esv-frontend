@@ -281,7 +281,11 @@
     },
     "booking-confirm-payment": {
       "title": "Reserva Pago Confirmación",
-      "description": "PRequiere que las reservas sean pagadas para ser confirmadas"
+      "description": "Requiere que las reservas sean pagadas para ser confirmadas"
+    },
+    "attention-confirm-payment": {
+      "title": "Atención Pago Confirmación",
+      "description": "Requiere que las atenciones sean pagadas"
     }
   },
   "paymentMethods": {
@@ -701,7 +705,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
-          "skip": "Saltar atención"
+          "skip": "Saltar atención",
+          "payment-confirm": "Confirmar Pago"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -747,7 +752,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
-          "skip": "Saltar atención"
+          "skip": "Saltar atención",
+          "payment-confirm": "Confirmar Pago"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -791,6 +797,7 @@
     "confirm": "Confirmar",
     "paymentConfirm": "Confirmar Pagamento",
     "confirmData": "Datos de Confirmación",
+    "paymentData": "Datos de Pago",
     "paymentType": "Tipo de Pago:",
     "paymentMethod": "Medio de pago:",
     "paymentAmount": "Monto:",
@@ -827,7 +834,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
-          "skip": "Saltar atención"
+          "skip": "Saltar atención",
+          "payment-confirm": "Confirmar Pago"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -900,7 +908,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
-          "skip": "Saltar atención"
+          "skip": "Saltar atención",
+          "payment-confirm": "Confirmar Pago"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -2718,7 +2727,8 @@
       "attention": {
         "attend": "Atender - Sección Atenciones del Colaborador",
         "finish": "Marcar atención como atendida - Sección Atenciones del Colaborador",
-        "skip": "Saltar atención - Sección Atenciones del Colaborador"
+        "skip": "Saltar atención - Sección Atenciones del Colaborador",
+        "payment-confirm": "Confirmar Pago - Sección Atenciones del Colaborador"
       },
       "bookings": {
         "cancel": "Cancelar Reserva",

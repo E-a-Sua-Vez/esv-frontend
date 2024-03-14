@@ -18,10 +18,11 @@ import WaitlistDetailsCard from '../../waitlist/WaitlistDetailsCard.vue';
 import AttentionNumber from '../../common/AttentionNumber.vue';
 import Warning from '../../common/Warning.vue';
 import ClientDetailsCard from '../../clients/common/ClientDetailsCard.vue';
+import AttentionDetailsCard from '../../attentions/common/AttentionDetailsCard.vue';
 
 export default {
   name: 'BookingCalendar',
-  components: { Popper, Spinner, DashboardAttentionsManagement, Message, QueueSimpleName, QueueName, BookingDetailsCard, WaitlistDetailsCard, AttentionNumber, Warning, ClientDetailsCard },
+  components: { Popper, Spinner, DashboardAttentionsManagement, Message, QueueSimpleName, QueueName, BookingDetailsCard, WaitlistDetailsCard, AttentionNumber, Warning, ClientDetailsCard, AttentionDetailsCard },
   props: {
     show: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
@@ -40,7 +41,6 @@ export default {
     let calendarAttributes = ref([])
     let unsubscribeBookings = () => {};
     let unsubscribeWaitlists = () => {};
-    let unsubscribeAttentions = () => {};
 
     const store = globalStore();
 
@@ -80,11 +80,11 @@ export default {
     } = toRefs(props);
 
     onUnmounted(() => {
-      if (unsubscribeAttentions) {
-        unsubscribeAttentions();
-      }
       if (unsubscribeBookings) {
         unsubscribeBookings();
+      }
+      if (unsubscribeWaitlists) {
+        (unsubscribeWaitlists);
       }
     })
 
@@ -446,6 +446,10 @@ export default {
       }
     })
 
+    const updatedAttentions = async () => {
+      state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+    }
+
     watch(
       changeDate,
       async () => {
@@ -457,7 +461,7 @@ export default {
           unsubscribeWaitlists();
         }
         getWaitlists();
-        state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+        await updatedAttentions();
         const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         await updateAvailableDays(currentDate);
         await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
@@ -505,6 +509,7 @@ export default {
       alertError,
       disabledDates,
       calendarAttributes,
+      updatedAttentions,
       getAvailableDatesByCalendarMonth,
       selectDay,
       getBooking,
@@ -692,14 +697,15 @@ export default {
                     <div v-if="attention.block">
                       <span class="lefted badge rounded-pill bg-primary"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
                     </div>
-                    <AttentionNumber
-                      :type="attention.type === 'NODEVICE' ? 'no-device' : attention.status === 'PENDING' ? 'primary' : 'secondary'"
-                      :number="attention.number"
-                      :data="attention.user"
-                      :showData="true"
-                      :toList="true"
+                    <AttentionDetailsCard
+                      :attention="attention"
+                      :show="true"
+                      :detailsOpened="false"
+                      :toggles="toggles"
+                      :commerce="commerce"
+                      @updatedAttentions="updatedAttentions"
                     >
-                    </AttentionNumber>
+                    </AttentionDetailsCard>
                   </div>
                 </div>
               </div>

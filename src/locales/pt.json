@@ -281,6 +281,10 @@
     "booking-confirm-payment": {
       "title": "Reserva Pagamento Confirmação",
       "description": "Reserva precisa ser pagada para ser procesada"
+    },
+    "attention-confirm-payment": {
+      "title": "Atenção Pagamento Confirmação",
+      "description": "Atendimento precisa ser pagada"
     }
   },
   "paymentMethods": {
@@ -709,7 +713,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
-          "skip": "Pular Atendimento"
+          "skip": "Pular Atendimento",
+          "payment-confirm": "Confirmar Pagamento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -759,7 +764,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
-          "skip": "Pular atendimento"
+          "skip": "Pular atendimento",
+          "payment-confirm": "Confirmar Pagamento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -801,6 +807,7 @@
     "schedules": "Agendas e Calendários",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
+    "paymentData": "Dados de Pagamento",
     "paymentConfirm": "Confirmar Pagamento",
     "confirmData": "Dados de Confirmação",
     "paymentType": "Tipo de Pagamento:",
@@ -839,7 +846,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
-          "skip": "Pular Atendimento"
+          "skip": "Pular Atendimento",
+          "payment-confirm": "Confirmar Pagamento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -906,7 +914,8 @@
         "attention": {
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
-          "skip": "Pular Atendimento"
+          "skip": "Pular Atendimento",
+          "payment-confirm": "Confirmar Pagamento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -2705,7 +2714,8 @@
       "attention": {
         "attend": "Atender - Seção Atendimentos del Colaborador",
         "finish": "Marcar atencão como atendida - Seção Atendimentos del Colaborador",
-        "skip": "Pular Atencão - Seção Atendimentos del Colaborador"
+        "skip": "Pular Atencão - Seção Atendimentos del Colaborador",
+        "payment-confirm": "Confirmar Pagamento - Seção Atendimentos del Colaborador"
       }
     },
     "roles": {

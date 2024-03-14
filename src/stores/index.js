@@ -125,7 +125,7 @@ export const globalStore = defineStore('globalStore', {
       let business = await this.getCurrentBusiness || undefined;
       const currentUser = await this.getCurrentUser;
       const currentCommerce = await this.getCurrentCommerce;
-      if (!business && (currentUser.businessId || currentCommerce.businessId)) {
+      if (!business && ((currentUser && currentUser.businessId) || (currentCommerce && currentCommerce.businessId))) {
         business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }
@@ -135,7 +135,7 @@ export const globalStore = defineStore('globalStore', {
       let business = await this.getCurrentBusiness || undefined;
       const currentUser = await this.getCurrentUser;
       const currentCommerce = await this.getCurrentCommerce;
-      if (currentUser.businessId || currentCommerce.businessId) {
+      if (((currentUser && currentUser.businessId) || (currentCommerce && currentCommerce.businessId))) {
         business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }

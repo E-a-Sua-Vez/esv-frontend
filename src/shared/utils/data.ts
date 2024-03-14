@@ -89,3 +89,4 @@ export const getPaymentMethods = () => {
     { id: 'PIX', name: 'PIX' }
   ]
 }
+

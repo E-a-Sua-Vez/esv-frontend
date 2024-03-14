@@ -64,7 +64,7 @@ export default {
       try {
         loading.value = true;
         state.phoneCodes = getPhoneCodes();
-        state.originCodes = getUserOrigin()
+        state.originCodes = getUserOrigin();
         if (commerce.value && commerce.value.localeInfo.country) {
             state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
           }
