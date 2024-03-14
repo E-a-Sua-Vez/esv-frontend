@@ -31,8 +31,8 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref({}),
-      queues: ref({}),
+      commerces: ref([]),
+      queues: ref([]),
       services: ref({}),
       collaborators: ref({}),
       types: [

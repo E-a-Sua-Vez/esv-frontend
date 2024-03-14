@@ -789,7 +789,7 @@ export default {
     <div class="modal-footer">
       <button class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal"  data-bs-target="#conditionsModal"
       @click="close">
-          {{ $t("notificationConditions.action") }}
+          {{ $t("close") }}
         <i class="bi bi-check-lg"></i>
       </button>
     </div>

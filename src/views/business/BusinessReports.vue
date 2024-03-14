@@ -45,7 +45,7 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        state.selectedCommerces = [state.commerce.id];
+        state.selectedCommerces = state.commerce ? [state.commerce.id]: [];
         state.toggles = await getPermissions('reports', 'admin');
         alertError.value = '';
         loading.value = false;

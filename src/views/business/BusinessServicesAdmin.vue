@@ -29,7 +29,7 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref({}),
+      commerces: ref([]),
       services: ref([]),
       commerce: {},
       showAdd: false,
@@ -54,7 +54,9 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        state.services = await getServiceByCommerce(state.commerce.id);
+        if (state.commerce) {
+          state.services = await getServiceByCommerce(state.commerce.id);
+        }
         state.toggles = await getPermissions('services', 'admin');
         alertError.value = '';
         loading.value = false;

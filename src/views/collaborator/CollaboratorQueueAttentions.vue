@@ -46,8 +46,6 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        const queue = await getQueueById(id);
-        await getQueueValues(queue, {});
         state.toggles = await getPermissions('collaborator');
         alertError.value = '';
         loading.value = false;
@@ -64,6 +62,7 @@ export default {
     attentions = updatedAttentionsByDateAndCommerceAndQueue(id);
 
     const getQueueValues = async (queue, oldQueue) => {
+      loading.value = true;
       state.queue = queue;
       store.setCurrentQueue(queue);
       if (queue !== undefined && queue.id !== undefined) {
@@ -80,6 +79,7 @@ export default {
             state.commerce = await getCommerceById(state.queue.commerceId);
           }
         }
+        loading.value = false;
       } else {
         router.push({ path: `/not-found` })
       }
@@ -87,8 +87,10 @@ export default {
 
     watch(
       queues,
-      async (newValue, oldQueue) => {
-        await getQueueValues(newValue[0], oldQueue);
+      async (newQueue, oldQueue) => {
+        if (newQueue && oldQueue) {
+          await getQueueValues(newQueue[0], oldQueue);
+        }
       }
     )
 
@@ -102,7 +104,7 @@ export default {
         alertError.value = '';
         const body = { queueId: state.queue.id, collaboratorId: state.currentUser.id , commerceLanguage: state.commerce.localeInfo ? state.commerce.localeInfo.language : 'sp'};
         state.attention = await attend(state.attention.number, body);
-        router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/validar` }).then(() => { router.go() });
+        router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/validar` });
         alertError.value = '';
         loading.value = false;
       } catch (error) {

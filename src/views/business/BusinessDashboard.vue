@@ -75,8 +75,8 @@ export default {
       startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10),
       endDate: new Date().toISOString().slice(0,10),
       activeBusiness: false,
-      commerces: ref({}),
-      queues: ref({}),
+      commerces: ref([]),
+      queues: ref([]),
       queue: {},
       dateType: 'month',
       commerce: {},
@@ -558,7 +558,7 @@ export default {
     const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({ chartData: attentionRateDurationEvolution });
 
     const bookingFlow = computed(() => {
-      const data = state.calculatedMetrics['booking.created'].bookingFlow;
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].bookingFlow : {};
       if (data && data.labels) {
         return {
           labels: data.labels,
@@ -576,7 +576,7 @@ export default {
     const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
 
     const bookingNumberEvolution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'].evolution;
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].evolution : {};
       if (data && data.labels) {
         return {
         labels: data.labels || [],
@@ -617,7 +617,7 @@ export default {
     const { barChartProps: bookingNumberEvolutionProps } = useBarChart({ chartData: bookingNumberEvolution });
 
     const bookingHourDistribution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'].hourDistribution;
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].hourDistribution : {};
       if (data && data.labels) {
         return {
           labels: data.labels.map(hour => getLocalHour(hour)),
@@ -643,7 +643,7 @@ export default {
     const { barChartProps: bookingHourDistributionProps } = useBarChart({ chartData: bookingHourDistribution });
 
     const bookingDayDistribution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'].dayDistribution;
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].dayDistribution : {};
       if (data && data.labels) {
         return {
           labels: data.labels,

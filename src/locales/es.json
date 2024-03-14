@@ -714,7 +714,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
-          "confirm": "Confirmar Reserva"
+          "confirm": "Confirmar Reserva",
+          "admin": "Administrar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -764,7 +765,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
-          "confirm": "Confirmar Reserva"
+          "confirm": "Confirmar Reserva",
+          "admin": "Administrar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -850,7 +852,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
-          "confirm": "Confirmar Reserva"
+          "confirm": "Confirmar Reserva",
+          "admin": "Administrar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -920,7 +923,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
-          "confirm": "Confirmar Reserva"
+          "confirm": "Confirmar Reserva",
+          "admin": "Administrar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -1674,7 +1678,8 @@
           "update": "Actualizar las Filas",
           "add": "Agregar Filas",
           "limit": "Cantidad límite de Filas",
-          "queue-limit": "Límite de Filas"
+          "queue-limit": "Límite de Filas",
+          "unavailable": "Eliminar Filas"
         }
       }
     },
@@ -1736,7 +1741,8 @@
           "update": "Actualizar los Servicios",
           "add": "Agregar Servicios",
           "limit": "Cantidad límite de Servicios",
-          "queue-limit": "Límite de Servicios"
+          "queue-limit": "Límite de Servicios",
+          "unavailable": "Eliminar Servicios"
         }
       }
     },
@@ -1783,7 +1789,8 @@
           "edit": "Editar los Módulos",
           "update": "Actualizar los Módulos",
           "add": "Agregar Módulos",
-          "limit": "Cantidad límite de Módulos"
+          "limit": "Cantidad límite de Módulos",
+          "unavailable": "Eliminar Módulos"
         }
       }
     },
@@ -1888,7 +1895,8 @@
           "edit": "Editar las Colaboradores",
           "update": "Actualizar las Colaboradores",
           "add": "Agregar Colaboradores",
-          "limit": "Cantidad límite de Colaboradores"
+          "limit": "Cantidad límite de Colaboradores",
+          "unavailable": "Eliminar Colaboradores"
         }
       }
     },
@@ -1962,7 +1970,8 @@
           "edit": "Editar las Sucursales",
           "update": "Actualizar las Sucursales",
           "add": "Agregar Sucursales",
-          "limit": "Cantidad límite de Sucursales"
+          "limit": "Cantidad límite de Sucursales",
+          "unavailable": "Eliminar Sucursales"
         }
       }
     },
@@ -2492,7 +2501,8 @@
           "edit": "Editar las Encuestas",
           "update": "Actualizar las Encuestas",
           "add": "Agregar Encuestas",
-          "limit": "Cantidad límite de Encuestas"
+          "limit": "Cantidad límite de Encuestas",
+          "unavailable": "Eliminar Encuestas"
         }
       }
     },

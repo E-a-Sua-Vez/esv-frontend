@@ -42,15 +42,15 @@ export default {
     return {
       loading: false,
       detailsOpened: false,
-      sentimentScore: {
-        totalSentimentBad: this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentBad'] || 0,
-        totalSentimentNeutral: this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentNeutral'] || 0,
-        totalSentimentGood: this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentGood'] || 0
-      }
+      sentimentScore: {}
     }
   },
-  onBeforeMount() {
-
+  beforeMount() {
+    if (this.calculatedMetrics['survey.created'] && this.calculatedMetrics['survey.created']['sentimentScore']) {
+      this.sentimentScore['totalSentimentBad'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentBad'] || 0;
+      this.sentimentScore['totalSentimentNeutral'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentNeutral'] || 0;
+      this.sentimentScore['totalSentimentGood'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentGood'] || 0;
+    }
   },
   methods: {
     exportToPDF() {

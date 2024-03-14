@@ -32,10 +32,10 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref({}),
-      services: ref({}),
+      commerces: ref([]),
+      services: ref([]),
       modules: ref({}),
-      collaborators: ref({}),
+      collaborators: ref([]),
       types: [
         {  name: 'Standard', type: 'STANDARD' },
         {  name: 'Assistant', type: 'ASSISTANT' },

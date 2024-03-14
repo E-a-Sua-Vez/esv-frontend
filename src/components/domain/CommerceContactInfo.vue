@@ -7,7 +7,7 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
   },
-  components: { GoogleMap },
+  components: { GoogleMap, Marker },
   data() {
     const { t } = useI18n();
     const mapsKey = import.meta.env.VITE_MAPS_API_KEY;

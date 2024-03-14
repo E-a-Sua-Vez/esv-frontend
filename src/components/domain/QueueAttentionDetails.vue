@@ -63,9 +63,9 @@ export default {
     queue: {
       immediate: true,
       deep: true,
-      async handler(queue) {
-        if (queue && queue.id) {
-          await this.getQueueDetails(queue);
+      async handler(newQueue, oldQueue) {
+        if (newQueue && oldQueue && newQueue.id) {
+          await this.getQueueDetails(newQueue);
         }
       }
     }
