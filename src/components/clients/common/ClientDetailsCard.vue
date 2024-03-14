@@ -358,6 +358,7 @@ export default {
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"
+              @getClientContacts="getClientContacts"
             >
             </ClientContactsManagement>
           </div>

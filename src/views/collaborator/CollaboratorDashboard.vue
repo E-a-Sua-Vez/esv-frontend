@@ -114,7 +114,11 @@ export default {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
         if (state.collaborator) {
+          let commercesId = [state.collaborator.commerceId];
           if (state.collaborator.commercesId && state.collaborator.commercesId.length > 0) {
+            commercesId = state.collaborator.commercesId;
+          }
+          if (commercesId && commercesId.length > 0) {
             state.business = await store.getActualBusiness();
             state.commerces = await store.getAvailableCommerces(state.business.commerces);
             state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;

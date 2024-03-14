@@ -26,6 +26,7 @@ export default {
     queues: { type: Array, default: undefined },
     clientContactsIn: { type: Array, default: [] }
   },
+  emits: ['getClientContacts'],
   data() {
     const store = globalStore();
     return {
@@ -151,9 +152,10 @@ export default {
             newContact.collaboratorId = this.user.id;
           }
           await contactClient(this.client.id, newContact)
-          setTimeout(async () => {
+          this.$emit('getClientContacts');
+          /*setTimeout(async () => {
             await this.refresh();
-          }, 5000)
+          }, 5000)*/
           this.showAddOption = false;
           this.newContact = {}
           this.extendedEntity = undefined;
