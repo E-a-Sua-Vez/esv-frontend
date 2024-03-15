@@ -13,6 +13,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
+import { getCountries, getPeriodicities } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessPlansAdmin',
@@ -28,19 +29,8 @@ export default {
       currentUser: {},
       plans: ref({}),
       showAdd: false,
-      periodicities: [
-        'weekly',
-        'monthly',
-        'quarterly',
-        'biannual',
-        'annual'
-      ],
-      countries: [
-        'br',
-        'cl',
-        'us',
-        've'
-      ],
+      periodicities: [],
+      countries: [],
       newPlan: {},
       extendedEntity: undefined,
       errorsAdd: [],
@@ -61,6 +51,8 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.periodicities = getPeriodicities();
+        state.countries = getCountries();
         state.currentUser = await store.getCurrentUser;
         const plans = await getPlans();
         state.plans = plans;

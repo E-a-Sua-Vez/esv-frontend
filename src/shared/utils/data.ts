@@ -1,3 +1,23 @@
+export const getCountries = () => {
+  return [
+    'br',
+    'cl',
+    'us',
+    've',
+    'mx'
+  ]
+}
+
+export const getPeriodicities = () => {
+  return [
+    'weekly',
+    'monthly',
+    'quarterly',
+    'biannual',
+    'annual'
+  ]
+}
+
 export const getPhoneCodes = () => {
   return [
     { id: 've', label: '🇻🇪', code: '58' },
