@@ -124,6 +124,8 @@ export default {
           return hourDate.getHours() - 4;
         } else if (['br', 'cl'].includes(this.commerce.country)) {
           return hourDate.getHours() - 3;
+        } else if (['mx'].includes(this.commerce.country)) {
+          return hourDate.getHours() - 6;
         } else {
           return hourDate.getHours();
         }
