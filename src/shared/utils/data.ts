@@ -11,6 +11,7 @@ export const getCountries = () => {
 export const getPeriodicities = () => {
   return [
     'weekly',
+    'biweekly',
     'monthly',
     'quarterly',
     'biannual',
