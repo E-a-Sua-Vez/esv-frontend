@@ -53,6 +53,7 @@
   },
   "periodicities": {
     "weekly": "Semanal",
+    "biweekly": "Quinzenal",
     "monthly": "Mensal",
     "quarterly": "Trimestral",
     "biannual": "Semestral",
