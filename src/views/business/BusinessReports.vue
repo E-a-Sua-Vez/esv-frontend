@@ -355,8 +355,8 @@ export default {
                   @download="downloadBookingsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.waitlists']"
-                  :canDonwload="state.toggles['reports.admin.waitlists']"
+                  :show="state.toggles['reports.admin.waitlist']"
+                  :canDonwload="state.toggles['reports.admin.waitlist']"
                   :title="$t('businessReports.items.reports.5.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.5.description')"
