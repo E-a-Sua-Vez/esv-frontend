@@ -939,7 +939,7 @@ export default {
           <!-- QUEUES -->
           <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading" class="mb-2">
             <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-2">
-              <span class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
+              <span v-if="state.queues && state.queues.length > 0" class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
             </div>
             <div class="row g-1" v-if="isActiveQueues(state.commerce)">
               <div v-if="(!queueId || queueId === 'undefined') && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
