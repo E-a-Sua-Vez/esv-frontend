@@ -76,6 +76,11 @@
       "SERVICE": "Service"
     }
   },
+  "productTypes": {
+    "ALL_IN_ONE": "All in One",
+    "ONLY_SURVEYS": "Just Smart Surveys",
+    "QUEUES_BOOKING": "Just Queues and Bookings"
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Only CSAT and Comment",
@@ -2273,6 +2278,7 @@
     "listResult": "Results:",
     "update": "Update",
     "add": "Add",
+    "type": "Product Type:",
     "message": {
       "1": {
         "title": "Ups!",

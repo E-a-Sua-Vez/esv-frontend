@@ -13,7 +13,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
-import { getCountries, getPeriodicities } from '../../shared/utils/data';
+import { getCountries, getPeriodicities, getProductTypes } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessPlansAdmin',
@@ -53,6 +53,7 @@ export default {
         loading.value = true;
         state.periodicities = getPeriodicities();
         state.countries = getCountries();
+        state.productTypes = getProductTypes();
         state.currentUser = await store.getCurrentUser;
         const plans = await getPlans();
         state.plans = plans;
@@ -263,6 +264,19 @@ export default {
                           v-model="state.newPlan.name"
                           v-bind:class="{ 'is-invalid': state.nameAddError }"
                           placeholder="Plan A">
+                      </div>
+                    </div>
+                    <div id="plan-type-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPlansAdmin.type") }}
+                      </div>
+                      <div class="col-6">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select px-1"
+                          v-model="state.newPlan.productType"
+                          id="countries">
+                          <option v-for="product in state.productTypes" :key="product" :value="product">{{ $t(`productTypes.${product}`) }}</option>
+                        </select>
                       </div>
                     </div>
                     <div id="plan-country-form-add" class="row g-1">

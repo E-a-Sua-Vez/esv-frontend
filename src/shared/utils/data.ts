@@ -19,6 +19,14 @@ export const getPeriodicities = () => {
   ]
 }
 
+export const getProductTypes = () => {
+  return [
+    'ALL_IN_ONE',
+    'ONLY_SURVEYS',
+    'QUEUES_BOOKING'
+  ]
+}
+
 export const getPhoneCodes = () => {
   return [
     { id: 've', label: '🇻🇪', code: '58' },

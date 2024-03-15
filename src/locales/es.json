@@ -76,6 +76,11 @@
       "SERVICE": "Servicio"
     }
   },
+  "productTypes": {
+    "ALL_IN_ONE": "Todo en Uno",
+    "ONLY_SURVEYS": "Sólo Encuestas Inteligentes",
+    "QUEUES_BOOKING": "Sólo Filas y Reservas"
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Sólo CSAT y Comentario",
@@ -2286,6 +2291,7 @@
     "update": "Actualizar",
     "add": "Agregar",
     "listResult": "Registros:",
+    "type": "Tipo de Producto:",
     "message": {
       "1": {
         "title": "¡Ups!",

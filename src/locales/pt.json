@@ -128,6 +128,11 @@
     "PIX": "Pix",
     "OTHER": "Outro"
   },
+  "productTypes": {
+    "ALL_IN_ONE": "Tudo em Um",
+    "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
+    "QUEUES_BOOKING": "Só Filas e Reservas"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -2279,6 +2284,7 @@
     "update": "Atualizar",
     "add": "Adicionar",
     "listResult": "Registros:",
+    "type": "Tipo de Producto:",
     "message": {
       "1": {
         "title": "Oh não!",
