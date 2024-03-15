@@ -6,6 +6,7 @@ import { getQueueByCommerce, updateQueue, addQueue, getQueuesByCommerceId } from
 import { getActiveServicesByCommerceId, getServiceByCommerce } from '../../application/services/service';
 import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
+import Popper from "vue3-popper";
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import QueueSimpleName from '../../components/common/QueueSimpleName.vue';
 import Toggle from '@vueform/toggle';
@@ -19,7 +20,7 @@ import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure, Popper },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -489,6 +490,13 @@ export default {
                     <div id="queue-type-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessQueuesAdmin.type") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.typeHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <select
@@ -504,9 +512,16 @@ export default {
                     <div v-if="state.newQueue.type === 'COLLABORATOR'" class="row g-1">
                       <div class="col-12 text-label">
                         <div class="dropdown">
-                          <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                          <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="fw-bold m-1"> {{ state.selectedCollaborator.name || $t("businessQueuesAdmin.selectCollaborator") }} </span>
                           </button>
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessQueuesAdmin.collaboratorHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                           <ul class="dropdown-menu" aria-labelledby="select-commerce">
                             <li v-for="col in state.collaborators" :key="col.id" :value="col" class="list-item">
                               <div class="row d-flex m-1 searcher" @click="selectCollaborator(state.newQueue, col)">
@@ -527,9 +542,16 @@ export default {
                     <div v-if="state.newQueue.type === 'SERVICE'" class="row g-1">
                       <div class="col-12 text-label">
                         <div class="dropdown">
-                          <button class="btn btn-ligth dropdown-toggle m-1" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                          <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="fw-bold m-1"> {{ state.selectedService.name || $t("businessQueuesAdmin.selectService") }} </span>
                           </button>
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessQueuesAdmin.serviceHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                           <ul class="dropdown-menu" aria-labelledby="select-commerce">
                             <li v-for="serv in state.services" :key="serv.id" :value="serv" class="list-item">
                               <div class="row d-flex m-1 searcher" @click="selectService(state.newQueue, serv)">
@@ -550,6 +572,13 @@ export default {
                     <div id="queue-limit-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessQueuesAdmin.limit") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.limitHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -565,6 +594,13 @@ export default {
                     <div id="queue-order-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessQueuesAdmin.order") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.orderHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -580,6 +616,13 @@ export default {
                     <div id="queue-estimated-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessQueuesAdmin.estimated") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.estimatedHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -594,6 +637,13 @@ export default {
                     <div id="queue-block-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessQueuesAdmin.blockTime") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.blockTimeHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -617,6 +667,13 @@ export default {
                       <div id="add-queue-samecommerce-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.walkin") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessQueuesAdmin.walkinHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-8">
                           <Toggle
@@ -628,6 +685,13 @@ export default {
                       <div id="add-queue-samecommerce-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.sameCommeceHours") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessQueuesAdmin.sameCommeceHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-8">
                           <Toggle
@@ -760,6 +824,13 @@ export default {
                       <div id="add-queue-personalized-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.personalized") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessQueuesAdmin.personalizedHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-8">
                           <Toggle

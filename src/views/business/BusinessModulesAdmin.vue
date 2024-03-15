@@ -104,12 +104,11 @@ export default {
         if (validateAdd(state.newQueue)) {
           state.newQueue.commerceId = state.commerce.id;
           await addModule(state.newQueue);
-          const modules = await getModulesByCommerceId(state.commerce.id);
-          state.modules = modules;
+          state.modules = await getModulesByCommerceId(state.commerce.id);
           state.showAdd = false;
           state.newQueue = {};
+          state.extendedEntity = undefined;
         }
-        state.extendedEntity = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -123,10 +122,9 @@ export default {
         loading.value = true;
         if (validateUpdate()) {
           await updateModule(module.id, module);
-          const modules = await getModulesByCommerceId(state.commerce.id);
-          state.modules = modules;
+          state.modules = await getModulesByCommerceId(state.commerce.id);
+          state.extendedEntity = undefined;
         }
-        state.extendedEntity = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -142,8 +140,7 @@ export default {
           module.available = false;
           module.active = false;
           await updateModule(module.id, module);
-          const modules = await getModulesByCommerceId(state.commerce.id);
-          state.modules = modules;
+          state.modules = await getModulesByCommerceId(state.commerce.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }

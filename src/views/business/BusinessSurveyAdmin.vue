@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getSurveyPersonalizedByCommerceId, updateSurveyPersonalized, createSurveyPersonalized } from '../../application/services/survey-personalized';
 import { getPermissions } from '../../application/services/permissions';
+import Popper from "vue3-popper";
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import SurveyName from '../../components/common/SurveyName.vue';
 import Toggle from '@vueform/toggle';
@@ -13,7 +14,6 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
-import Popper from "vue3-popper";
 import { getQueueByCommerce } from '../../application/services/queue';
 import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data';
 import AreYouSure from '../../components/common/AreYouSure.vue';
@@ -131,13 +131,11 @@ export default {
             state.newSurvey.queueId = undefined;
           }
           await createSurveyPersonalized(state.newSurvey);
-          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-          state.surveys = surveys;
+          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
           state.showAdd = false;
           state.newSurvey = {}
+          state.extendedEntity = undefined;
         }
-        state.extendedEntity = undefined;
-        showAdd();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -154,10 +152,9 @@ export default {
             survey.queueId = undefined;
           }
           await updateSurveyPersonalized(survey.id, survey);
-          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-          state.surveys = surveys;
+          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.extendedEntity = undefined;
         }
-        state.extendedEntity = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -173,8 +170,7 @@ export default {
           survey.available = false;
           survey.active = false;
           await updateSurveyPersonalized(survey.id, survey);
-          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-          state.surveys = surveys;
+          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -381,6 +377,13 @@ export default {
                     <div id="survey-type-form-add" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.type") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.typeHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <select
@@ -397,6 +400,13 @@ export default {
                     <div id="survey-attentionDefault-form-add" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.attentionDefault") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <Toggle
@@ -407,6 +417,13 @@ export default {
                     <div v-if="!state.newSurvey.attentionDefault" id="survey-queue-form-add" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.queue") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.queueHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <select
@@ -448,7 +465,18 @@ export default {
                       </div>
                     </div>
                     <div id="survey-questions-form-add" v-if="state.showAddQuestions === true" class="row g-1">
-                      <span @click="addAddQuestion(state.questions)" class="add-question"> <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.add_question") }} </span>
+                      <div>
+                        <span @click="addAddQuestion(state.questions)" class="add-question">
+                          <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.addQuestion") }}
+                        </span>
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.addQuestionHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
                       <div v-for="(question, ind) in state.questions" :key="`question-add.${ind}`" class="survey-card mb-1">
                         <div class="row g-1">
                           <div class="col-4 text-label">
@@ -466,6 +494,13 @@ export default {
                         <div class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.type") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessSurveysAdmin.typeQuestionHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
                           </div>
                           <div class="col-7">
                             <select
@@ -480,6 +515,13 @@ export default {
                         <div v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'" class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.otherOption") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessSurveysAdmin.otherOptionQuestionHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
                           </div>
                           <div class="col-8">
                             <Toggle
@@ -490,6 +532,13 @@ export default {
                         <div v-if="(question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') && (question.otherOption === true)" class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.otherOpen") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessSurveysAdmin.otherOpenQuestionHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
                           </div>
                           <div class="col-8">
                             <Toggle
@@ -500,6 +549,13 @@ export default {
                         <div v-if="(question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING')" class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.analize") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessSurveysAdmin.analizeIAQuestionHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
                           </div>
                           <div class="col-8">
                             <Toggle
@@ -510,6 +566,13 @@ export default {
                         <div class="row g-1 mt-1">
                           <div class="col-4 text-label">
                             {{ $t("businessSurveysAdmin.order") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessSurveysAdmin.orderQuestionHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
                           </div>
                           <div class="col-7">
                             <input
@@ -542,7 +605,18 @@ export default {
                               placeholder="Answer 1,Anwswer 2">
                           </div>
                         </div>
-                        <span @click="deleteAddQuestion(question)" class="delete-question"> <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.delete_question") }} </span>
+                        <div>
+                          <span @click="deleteAddQuestion(question)" class="delete-question">
+                            <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.deleteQuestion") }}
+                          </span>
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessSurveysAdmin.deleteQuestionHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
+                        </div>
                       </div>
                     </div>
                     <div class="col">
@@ -606,6 +680,13 @@ export default {
                     <div id="survey-type-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.type") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.typeHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <select
@@ -622,6 +703,13 @@ export default {
                     <div id="survey-attentionDefault-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.attentionDefault") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <Toggle
@@ -632,6 +720,13 @@ export default {
                     <div v-if="!survey.attentionDefault" id="survey-queue-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessSurveysAdmin.queue") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <select
@@ -685,7 +780,7 @@ export default {
                       </div>
                     </div>
                     <div id="survey-questions-form-update" v-if="state.showUpdateQuestions === true || survey.questions.length > 0" class="row g-1">
-                      <span @click="addUpdateQuestion(index)" class="add-question my-2"> <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.add_question") }} </span>
+                      <span @click="addUpdateQuestion(index)" class="add-question my-2"> <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.addQuestion") }} </span>
                       <div v-for="(question, ind) in survey.questions" :key="`question-update.${ind}`" class="survey-card mb-1">
                         <div class="row g-1">
                           <div class="col-4 text-label">
@@ -779,7 +874,7 @@ export default {
                               placeholder="Answer 1,Anwswer 2">
                           </div>
                         </div>
-                        <span @click="deleteUpdateQuestion(question, index)" class="delete-question"> <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.delete_question") }} </span>
+                        <span @click="deleteUpdateQuestion(question, index)" class="delete-question"> <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.deleteQuestion") }} </span>
                       </div>
                     </div>
                     <div id="survey-id-form" class="row -2 mb-g3">

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getServiceByCommerce, updateService, addService } from '../../application/services/service';
 import { getPermissions } from '../../application/services/permissions';
+import Popper from "vue3-popper";
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ServiceSimpleName from '../../components/common/ServiceSimpleName.vue';
 import Toggle from '@vueform/toggle';
@@ -17,7 +18,7 @@ import AreYouSure from '../../components/common/AreYouSure.vue';
 
 export default {
   name: 'BusinessServicesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ServiceSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ServiceSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure, Popper },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -308,6 +309,13 @@ export default {
                     <div id="service-tag-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessServicesAdmin.tag") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessServicesAdmin.tagHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -323,6 +331,13 @@ export default {
                     <div id="service-order-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessServicesAdmin.order") }}
+                        <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.orderHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                       </div>
                       <div class="col-6">
                         <input
@@ -338,6 +353,13 @@ export default {
                     <div id="add-service-online-form" class="row g-1">
                         <div class="col-6 text-label">
                           {{ $t("businessServicesAdmin.online") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.onlineHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-6">
                           <Toggle
@@ -388,6 +410,13 @@ export default {
                       <div id="service-time-form-add" class="row g-1">
                         <div class="col-6 text-label">
                           {{ $t("businessServicesAdmin.estimatedTime") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.estimatedTimeHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-6">
                           <input
@@ -402,6 +431,13 @@ export default {
                       <div id="service-block-form-add" class="row g-1">
                         <div class="col-6 text-label">
                           {{ $t("businessServicesAdmin.blockTime") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.blockTimeHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-6">
                           <input
@@ -510,6 +546,13 @@ export default {
                     <div id="service-order-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessServicesAdmin.order") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessServicesAdmin.orderHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <input
@@ -526,6 +569,13 @@ export default {
                     <div id="service-online-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessServicesAdmin.online") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessServicesAdmin.onlineHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
                       </div>
                       <div class="col-8">
                         <Toggle
@@ -587,6 +637,13 @@ export default {
                       <div id="service-time-form-update" class="row g-1">
                         <div class="col-6 text-label">
                           {{ $t("businessServicesAdmin.estimatedTime") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.estimatedTimeHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-6">
                           <input
@@ -601,6 +658,13 @@ export default {
                       <div id="service-block-form-update" class="row g-1">
                         <div class="col-6 text-label">
                           {{ $t("businessServicesAdmin.blockTime") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessServicesAdmin.blockTimeHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
                         </div>
                         <div class="col-6">
                           <input
