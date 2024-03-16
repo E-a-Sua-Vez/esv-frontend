@@ -132,7 +132,7 @@ export default {
         class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-5">
-            <div class="col-12 centered">
+            <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ survey.name || 'N/I' }} {{ survey.lastName || '' }}
             </div>
             <div class="col-12 centered" v-if="!loading">
@@ -140,12 +140,6 @@ export default {
                 @click="copySurvey()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
-              <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                @click="check()"
-                :disabled="survey.contacted || checked"
-                >
-                <i class="bi bi-person-check-fill"></i>
-              </button>
             </div>
             <Spinner :show="loading"></Spinner>
           </div>
@@ -212,11 +206,107 @@ export default {
             </span>
           </div>
         </div>
+        <div class="row my-2 centered" v-if="!loading">
+          <div class="col-6">
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              data-bs-toggle="modal"
+              :data-bs-target="`#surveyModal-${this.survey.id}`">
+              <i class="bi bi-question-circle-fill"></i>
+            </button>
+          </div>
+          <div class="col-6">
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              @click="check()"
+              :disabled="survey.contacted || checked"
+              >
+              <i class="bi bi-person-check-fill"></i>
+            </button>
+          </div>
+        </div>
+        <hr>
         <div class="row m-0 mt-3 centered">
           <div class="col">
             <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ survey.queueName }}</span><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ survey.surveyid }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(survey.createdDate) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Survey Answers -->
+    <div class="modal fade" :id="`surveyModal-${this.survey.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> {{ $t("dashboard.surveyOf") }} {{ survey.name.split(' ')[0] || 'N/I' }} </h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0">
+            <div class="answers">
+              <div class="row metric-card" v-if="survey.rating">
+                <span class="fw-bold metric-card-detail-title mt-1"> CSAT: {{ $t('attentionSurvey.rateYourAttention')}} </span>
+                <div>
+                  <h4><span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.rating }} ⭐️ </span></h4>
+                </div>
+              </div>
+              <div class="row metric-card" v-if="survey.nps">
+                <span class="fw-bold metric-card-detail-title mt-1"> NPS: {{ $t('attentionSurvey.nps.title')}} </span>
+                <div>
+                  <button v-if="survey.nps <= 5" :class="`button detractor m-2`" >{{ survey.nps }}</button>
+                  <button v-if="survey.nps >= 6 && survey.nps <= 8" :class="`button passive m-2`" >{{ survey.nps }}</button>
+                  <button v-if="survey.nps >= 9" :class="`button promoter m-2`" >{{ survey.nps }}</button>
+                </div>
+              </div>
+              <div v-if="survey.answers && survey.answers.length > 0">
+                <div v-for="(answer, index) of survey.answers" :key="`anwswer${index}`">
+                  <div class="row metric-card">
+                    <span class="fw-bold metric-card-detail-title mt-1"> {{ answer.title }} </span>
+                    <span class="mt-1"> {{ $t(`surveys.question_types.${answer.type}`) }} </span>
+                    <div v-if="answer.type === 'YES_OR_NOT'">
+                      <button v-if="answer.answer === 'NO'" :class="`button no-selected m-2`" ><i class="bi bi-hand-thumbs-down-fill"></i></button>
+                      <button v-if="answer.answer === 'YES'" :class="`button yes-selected m-2`"><i class="bi bi-hand-thumbs-up-fill"></i></button>
+                      <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ $t(answer.answer) }} </span>
+                    </div>
+                    <div v-if="answer.type === 'CHOOSE_OPTION'">
+                      <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer[0] }} </span>
+                    </div>
+                    <div v-if="answer.type === 'RATING_TO_10'">
+                      <button v-if="answer.answer <= 5" :class="`button detractor m-2`" >{{ answer.answer }}</button>
+                      <button v-if="answer.answer >= 6 && answer.answer <= 8" :class="`button passive m-2`" >{{ answer.answer }}</button>
+                      <button v-if="answer.answer >= 9" :class="`button promoter m-2`" >{{ answer.answer }}</button>
+                    </div>
+                    <div v-if="answer.type === 'OPEN_OPTIONS'">
+                      <div v-for="ans of answer.answer" :key="ans">
+                        <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ ans }} </span>
+                      </div>
+                    </div>
+                    <div v-if="answer.type === 'RATING_TO_5'">
+                      <h4><span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer }} ⭐️ </span></h4>
+                    </div>
+                    <div v-if="answer.type === 'OPEN_WRITING'">
+                      <div>
+                        <i :class="`bi ${clasifyScoredComment(answer.answer.messageScore.score)} mx-1`"> </i> {{ answer.answer && answer.answer.messageScore ? answer.answer.messageScore.score : 0 }}
+                      </div>
+                      <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer.message }} </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row metric-card" v-if="survey.message">
+                <span class="fw-bold metric-card-detail-title mt-1"> {{ $t('attentionSurvey.survey.label')}} </span>
+                <div>
+                  <div>
+                    <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey && survey.messageScore ? survey.messageScore : 0 }}
+                  </div>
+                  <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.message }} </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>
@@ -256,7 +346,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 1200px !important;
   overflow-y: auto;
 }
 .details-title {
@@ -276,7 +366,7 @@ export default {
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
+  line-height: 1rem;
 }
 .metric-card-detail-subtitle {
   font-size: .72rem;
@@ -309,5 +399,70 @@ export default {
 .metric-card-details {
   font-size: .7rem;
   font-weight: 400;
+}
+.active-name {
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  font-weight: 700;
+  font-size: .9rem;
+}
+.button {
+  /* padding: 5px 10px; */
+  font-size: 12px;
+  white-space: nowrap;
+  vertical-align: middle;
+  display: inline-block;
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 700;
+  border-radius: 100%;
+  margin: .2rem;
+  outline: none;
+  margin-left: -1px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #eee;
+  transform: scale(1);
+}
+.no-selected {
+  background: #F44336;
+  color: white;
+  border-color: lighten(#F44336, 5%);
+  transform: scale(1.20);
+}
+.yes-selected {
+  background: #3b5998;
+  color: white;
+  border-color: lighten(#3b5998, 5%);
+  transform: scale(1.20);
+}
+.detractor {
+  background: #F44336;
+  color: white;
+  border-color: lighten(#F44336, 5%);
+  transform: scale(1);
+}
+.passive {
+  background: #F57C00;
+  color: white;
+  border-color: lighten(#F57C00, 5%);
+  transform: scale(1);
+}
+.promoter {
+  background: #4CAF50;
+  color: white;
+  border-color: lighten(#4CAF50, 5%);
+  transform: scale(1);
+}
+.answers {
+  overflow-y: scroll;
+  height:600px;
+  font-size: small;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  text-justify: inter-word;
 }
 </style>
