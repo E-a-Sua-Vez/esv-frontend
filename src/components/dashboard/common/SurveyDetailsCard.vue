@@ -261,7 +261,7 @@ export default {
               </div>
               <div v-if="survey.answers && survey.answers.length > 0">
                 <div v-for="(answer, index) of survey.answers" :key="`anwswer${index}`">
-                  <div class="row metric-card">
+                  <div class="row metric-card" v-if="answer.answer">
                     <span class="fw-bold metric-card-detail-title mt-1"> {{ answer.title }} </span>
                     <span class="mt-1"> {{ $t(`surveys.question_types.${answer.type}`) }} </span>
                     <div v-if="answer.type === 'YES_OR_NOT'">
@@ -286,10 +286,10 @@ export default {
                       <h4><span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer }} ⭐️ </span></h4>
                     </div>
                     <div v-if="answer.type === 'OPEN_WRITING'">
-                      <div>
-                        <i :class="`bi ${clasifyScoredComment(answer.answer.messageScore.score)} mx-1`"> </i> {{ answer.answer && answer.answer.messageScore ? answer.answer.messageScore.score : 0 }}
+                      <div v-if="answer.answer.messageScore && answer.answer.messageScore.score">
+                        <i :class="`bi ${clasifyScoredComment(answer.answer.messageScore.score)} mx-1`"> </i> {{ answer.answer.messageScore.score || 0 }}
                       </div>
-                      <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer.message }} </span>
+                      <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer.message || '' }} </span>
                     </div>
                   </div>
                 </div>
@@ -297,10 +297,10 @@ export default {
               <div class="row metric-card" v-if="survey.message">
                 <span class="fw-bold metric-card-detail-title mt-1"> {{ $t('attentionSurvey.survey.label')}} </span>
                 <div>
-                  <div>
-                    <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey && survey.messageScore ? survey.messageScore : 0 }}
+                  <div v-if="survey.messageScore">
+                    <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey.messageScore || 0 }}
                   </div>
-                  <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.message }} </span>
+                  <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.message || '' }} </span>
                 </div>
               </div>
             </div>
