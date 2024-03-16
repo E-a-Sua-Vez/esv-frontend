@@ -32,6 +32,8 @@
   "refresh": "Reload",
   "yes": "Yes",
   "no": "No",
+  "YES": "Yes",
+  "NO": "No",
   "page": "Page",
   "of": "of",
   "serviceStatus": "Service Status",
