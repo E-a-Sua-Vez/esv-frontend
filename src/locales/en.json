@@ -1101,6 +1101,9 @@
     "type": "Type:",
     "result": "Result:",
     "add": "Add",
+    "answers": "Answers",
+    "contact": "Contact",
+    "schedule": "Schedule",
     "dates": {
       "from": "From",
       "to": "to"

@@ -1105,6 +1105,9 @@
     "type": "Tipo:",
     "result": "Resultado:",
     "add": "Adicionar",
+    "answers": "Respostas",
+    "contact": "Contatar",
+    "schedule": "Agendar",
     "dates": {
       "from": "Do",
       "to": "a"

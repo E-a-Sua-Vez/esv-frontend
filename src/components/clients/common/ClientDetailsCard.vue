@@ -247,32 +247,32 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row my-3 centered" v-if="management && !loading">
-          <div class="col-4">
+        <div class="row centered my-2" v-if="management && !loading">
+          <div class="col-5">
             <button
               @click="getAttentions()"
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
               :data-bs-target="`#attentionsModal-${this.client.id}`">
-              <i class="bi bi-qr-code"></i>
+              {{ $t('dashboard.attentions')}} <br> <i class="bi bi-qr-code"></i>
             </button>
           </div>
-          <div class="col-4">
+          <div class="col-3">
             <button
               @click="getClientContacts()"
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
               :data-bs-target="`#contactModal-${this.client.id}`">
-              <i class="bi bi-chat-left-dots-fill"></i>
+              {{ $t('dashboard.contact')}} <br> <i class="bi bi-chat-left-dots-fill"></i>
             </button>
           </div>
           <div class="col-4">
-            <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+            <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               :href="goToLink(client)"
               :disabled="client.contacted || checked"
               target="_blank"
               >
-              <i class="bi bi-calendar-check-fill"></i>
+              {{ $t('dashboard.schedule')}} <br> <i class="bi bi-calendar-check-fill"></i>
             </a>
           </div>
         </div>
@@ -463,5 +463,10 @@ export default {
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
+}
+.card-action {
+  font-size: .7rem !important;
+  line-height: .8rem !important;
+  font-weight: 600;
 }
 </style>
