@@ -16,7 +16,8 @@ export default {
     groupedQueues: { type: Object, default: {} },
     queueId: { type: String, default: undefined },
     accept: { type: Boolean, default: false },
-    receiveQueue: { type: Function, default: () => {} }
+    receiveQueue: { type: Function, default: () => {} },
+    receiveServices: { type: Function, default: () => {} }
   },
   async setup(props) {
 
@@ -31,10 +32,12 @@ export default {
       accept
     } = toRefs(props);
 
-    const { receiveQueue } = props;
+    const { receiveQueue, receiveServices } = props;
 
     const state = reactive({
-      queue: {}
+      queue: {},
+      showProfessional: false,
+      showService: false
     })
 
     onBeforeMount(async () => {
@@ -89,6 +92,19 @@ export default {
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
       receiveQueue(state.queue);
+      if (queueIn.type === 'SERVICE') {
+        receiveServices(state.queue.services)
+      }
+    }
+
+    const showByProfessional = () => {
+      state.showProfessional = true;
+      state.showService = false;
+    }
+
+    const showByService = () => {
+      state.showService = true;
+      state.showProfessional = false;
     }
 
     return {
@@ -103,7 +119,9 @@ export default {
       isActiveCommerce,
       getActiveFeature,
       getQueue,
-      isActiveQueues
+      isActiveQueues,
+      showByProfessional,
+      showByService
     }
   }
 }
@@ -115,71 +133,81 @@ export default {
         <span v-if="queues && queues.length > 0" class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
       </div>
       <div class="row g-1" v-if="isActiveQueues()">
-        <div v-if="(!queueId || queueId === 'undefined') && getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT')">
-          <button
-            class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
-            data-bs-toggle="collapse"
-            href="#attention-collaborator-queue"
-            :disabled="!accept">
-            {{ $t("commerceQueuesView.byCollaborator") }} <i class="bi bi-chevron-down"></i>
-          </button>
-          <div :class="'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
-            <div v-if="groupedQueues['COLLABORATOR'] && groupedQueues['COLLABORATOR'].length > 0">
-              <div v-for="(queue, index) in groupedQueues['COLLABORATOR']" :key="index">
-                <QueueButton
-                  :queue="queue"
-                  :selectedQueue="state.queue"
-                  :getQueue="getQueue"
-                  :accept="accept"
-                >
-                </QueueButton>
+        <div class="col col-md-10 offset-md-1 data-card">
+          <div v-if="(!queueId || queueId === 'undefined') && getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT')">
+            <div class="row">
+              <div class="col-6">
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  data-bs-toggle="collapse"
+                  href="#attention-collaborator-queue"
+                  @click="showByProfessional"
+                  :disabled="!accept">
+                  {{ $t("commerceQueuesView.byCollaborator") }} <i class="bi bi-chevron-down"></i>
+                </button>
+              </div>
+              <div class="col-6">
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 queue-btn"
+                  data-bs-toggle="collapse"
+                  href="#attention-service-queue"
+                  @click="showByService"
+                  :disabled="!accept">
+                  {{ $t("commerceQueuesView.byService") }} <i class="bi bi-chevron-down"></i>
+                </button>
+              </div>
+            </div>
+            <div :class="' mx-2 my-2'" id="attention-collaborator-queue" v-if="state.showProfessional">
+              <div v-if="groupedQueues['COLLABORATOR'] && groupedQueues['COLLABORATOR'].length > 0">
+                <div v-for="(queue, index) in groupedQueues['COLLABORATOR']" :key="index">
+                  <QueueButton
+                    :queue="queue"
+                    :selectedQueue="state.queue"
+                    :getQueue="getQueue"
+                    :accept="accept"
+                  >
+                  </QueueButton>
+                </div>
+              </div>
+            </div>
+            <div :class="' mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
+              <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
+                <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
+                  <QueueButton
+                    :queue="queue"
+                    :selectedQueue="state.queue"
+                    :getQueue="getQueue"
+                    :accept="accept"
+                  >
+                  </QueueButton>
+                </div>
+              </div>
+              <div v-if="groupedQueues['STANDARD'] && groupedQueues['STANDARD'].length > 0">
+                <div v-for="(queue, index) in groupedQueues['STANDARD']" :key="index">
+                  <QueueButton
+                    :queue="queue"
+                    :selectedQueue="state.queue"
+                    :getQueue="getQueue"
+                    :accept="accept"
+                  >
+                  </QueueButton>
+                </div>
               </div>
             </div>
           </div>
-          <button
-            class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 queue-btn"
-            data-bs-toggle="collapse"
-            href="#attention-service-queue"
-            :disabled="!accept">
-            {{ $t("commerceQueuesView.byService") }} <i class="bi bi-chevron-down"></i>
-          </button>
-          <div :class="'collapse mx-2 my-2 hide'" id="attention-service-queue">
-            <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
-              <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
-                <QueueButton
-                  :queue="queue"
-                  :selectedQueue="state.queue"
-                  :getQueue="getQueue"
-                  :accept="accept"
-                >
-                </QueueButton>
-              </div>
+          <div v-else>
+            <div
+              v-for="queue in queues"
+              :key="queue.id"
+              class="d-grid btn-group btn-group-justified">
+              <QueueButton
+                :queue="queue"
+                :selectedQueue="state.queue"
+                :getQueue="getQueue"
+                :accept="accept"
+              >
+              </QueueButton>
             </div>
-            <div v-if="groupedQueues['STANDARD'] && groupedQueues['STANDARD'].length > 0">
-              <div v-for="(queue, index) in groupedQueues['STANDARD']" :key="index">
-                <QueueButton
-                  :queue="queue"
-                  :selectedQueue="state.queue"
-                  :getQueue="getQueue"
-                  :accept="accept"
-                >
-                </QueueButton>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <div
-            v-for="queue in queues"
-            :key="queue.id"
-            class="d-grid btn-group btn-group-justified">
-            <QueueButton
-              :queue="queue"
-              :selectedQueue="state.queue"
-              :getQueue="getQueue"
-              :accept="accept"
-            >
-            </QueueButton>
           </div>
         </div>
       </div>
@@ -188,9 +216,6 @@ export default {
           :title="$t('commerceQueuesView.message.title')"
           :content="$t('commerceQueuesView.message.content')">
         </Message>
-        <div class="col">
-          <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessSectionAtWorkView.return") }} <i class="bi bi-arrow-left"></i></a>
-        </div>
       </div>
     </div>
   </div>

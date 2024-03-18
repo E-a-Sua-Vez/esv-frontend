@@ -379,8 +379,8 @@
     "blockSelected": "Hora Selecionada:",
     "confirm": "Confirmar",
     "walkin": "Ingresa na fila:",
-    "byCollaborator": "Por Profissional",
-    "byService": "Por Serviço",
+    "byCollaborator": "Profissional",
+    "byService": "Serviço",
     "birthday": "Data de Nascimento",
     "addressText": "Endereço (Texto)",
     "addressCode": "Endereço (CEP)",
@@ -390,6 +390,9 @@
     "code1": "Chave 1",
     "code2": "Chave 2",
     "code3": "Chave 3",
+    "duration": "Duração: ",
+    "totalDuration": "Duração total: ",
+    "selectService": "Selecione o serviço:",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -1108,6 +1111,7 @@
     "answers": "Respostas",
     "contact": "Contatar",
     "schedule": "Agendar",
+
     "dates": {
       "from": "Do",
       "to": "a"

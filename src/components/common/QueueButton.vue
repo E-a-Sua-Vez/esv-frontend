@@ -69,12 +69,12 @@ export default {
         @error="validateCaptchaError">
         <button
           v-if="queue.active"
-          class="btn-size btn-lg btn-block col-9 fw-bold rounded-pill mt-1 queue-btn"
+          class="btn-size btn-lg btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
           :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
           @click="clickAction(queue)"
           :disabled="!accept">
           <div class="row mt-1">
-            <div class="col-2 text-right">
+            <div class="col-2 text-right centered">
             <h4> <i :class="`bi ${queueIcon(queue.type)}`"></i> </h4>
             </div>
             <div class="col-10 text-right">
@@ -84,8 +84,8 @@ export default {
               <div v-if="queue.type === 'COLLABORATOR'" class="row queue-time-title">
                 <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.servicesName ? queue.servicesName.join(', ') : queue.name }}</span>
               </div>
-              <div class="row queue-time-title" v-if="queue.blockTime || queue.estimatedTime">
-                <span><i class="bi bi-stopwatch-fill"></i> {{ queue.blockTime || queue.estimatedTime }}'</span>
+              <div class="row queue-time-title" v-if="queue.type !== 'COLLABORATOR' && (queue.blockTime || queue.estimatedTime)">
+                <span><i class="bi bi-stopwatch-fill"></i>{{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
               </div>
             </div>
           </div>
@@ -96,12 +96,12 @@ export default {
       <button
         v-if="queue.active"
         type="button"
-        class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1 queue-btn"
+        class=" btn-size btn btn-lg btn-block col-12 fw-bold rounded-pill mt-1 queue-btn"
         :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
         @click="clickAction(queue)"
         :disabled="!accept">
         <div class="row mt-1">
-          <div class="col-2 text-right">
+          <div class="col-2 text-right centered">
             <h4> <i :class="`bi ${queueIcon(queue.type)}`"></i> </h4>
           </div>
           <div class="col-10 text-right">
@@ -111,8 +111,8 @@ export default {
             <div v-if="queue.type === 'COLLABORATOR'" class="row queue-time-title">
               <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.servicesName ? queue.servicesName.join(', ') : queue.name }}</span>
             </div>
-            <div class="row queue-time-title" v-if="queue.blockTime || queue.estimatedTime">
-              <span><i class="bi bi-stopwatch-fill"></i> {{ queue.blockTime || queue.estimatedTime }}'</span>
+            <div class="row queue-time-title" v-if="queue.type !== 'COLLABORATOR' && (queue.blockTime || queue.estimatedTime)">
+              <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
             </div>
           </div>
         </div>
