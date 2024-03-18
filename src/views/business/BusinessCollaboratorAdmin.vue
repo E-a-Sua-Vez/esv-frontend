@@ -161,6 +161,7 @@ export default {
       const commercesId = [];
       state.showAdd = !state.showAdd;
       state.newCollaborator = {
+        businessId: state.business.id,
         bot: false,
         servicesId,
         commercesId

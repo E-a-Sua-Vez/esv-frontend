@@ -7,9 +7,10 @@ import { createAttention } from '../application/services/attention';
 import { createBooking, getPendingBookingsBetweenDates } from '../application/services/booking';
 import { getQueueBlockDetailsByDay } from '../application/services/block';
 import { createWaitlist } from '../application/services/waitlist';
-import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
+import { getActiveFeature } from '../shared/features';
+import { bookingCollection, attentionCollection } from '../application/firebase';
 import Message from '../components/common/Message.vue';
 import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
@@ -17,14 +18,13 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/domain/NotificationConditions.vue';
-import { getActiveFeature } from '../shared/features';
-import { bookingCollection, attentionCollection } from '../application/firebase';
 import firebase from 'firebase/app';
 import ClientForm from '../components/domain/ClientForm.vue';
+import QueueForm from '../components/domain/QueueForm.vue';
 
 export default {
   name: 'CommerceQueuesView',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, Warning, NotificationConditions, ClientForm },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, NotificationConditions, ClientForm, QueueForm },
   async setup() {
     const router = useRouter();
     const route = useRoute();
@@ -201,6 +201,10 @@ export default {
           state.accept = data.accept;
         }
       };
+    }
+
+    const receiveQueue = (queue) => {
+      getQueue(queue);
     }
 
     const formattedDate = (date) => {
@@ -898,7 +902,8 @@ export default {
       getWaitList,
       getAvailableDatesByCalendarMonth,
       isQueueWalkin,
-      receiveData
+      receiveData,
+      receiveQueue
     }
   }
 }
@@ -937,169 +942,15 @@ export default {
           >
           </ClientForm>
           <!-- QUEUES -->
-          <div id="queues" v-if="isActiveCommerce(state.commerce) && !loading" class="mb-2">
-            <div v-if="isActiveCommerce(state.commerce)" class="choose-attention py-2">
-              <span v-if="state.queues && state.queues.length > 0" class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
-            </div>
-            <div class="row g-1" v-if="isActiveQueues(state.commerce)">
-              <div v-if="(!queueId || queueId === 'undefined') && getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')">
-                <button
-                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  data-bs-toggle="collapse"
-                  href="#attention-collaborator-queue"
-                  :disabled="!state.accept">
-                  {{ $t("commerceQueuesView.byCollaborator") }} <i class="bi bi-chevron-down"></i>
-                </button>
-                <div :class="'collapse mx-2 my-2 hide'" id="attention-collaborator-queue">
-                  <div v-if="state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0">
-                    <div v-for="(queue, index) in state.groupedQueues['COLLABORATOR']" :key="index">
-                      <div v-if="captchaEnabled === true" class="my-2">
-                        <VueRecaptcha
-                          :sitekey="siteKey"
-                          @verify="validateCaptchaOk"
-                          @error="validateCaptchaError">
-                          <button
-                            v-if="queue.active"
-                            type="button"
-                            class="btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                            :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                            @click="getQueue(queue)"
-                            :disabled="!state.accept">
-                            <i class="bi bi-person-fill"></i> {{ queue.name }}
-                          </button>
-                        </VueRecaptcha>
-                      </div>
-                      <div v-else>
-                        <button
-                          v-if="queue.active"
-                          type="button"
-                          class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                          :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                          @click="getQueue(queue)"
-                          :disabled="!state.accept">
-                          <i class="bi bi-person-fill"></i> {{ queue.name }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1"
-                  data-bs-toggle="collapse"
-                  href="#attention-service-queue"
-                  :disabled="!state.accept">
-                  {{ $t("commerceQueuesView.byService") }} <i class="bi bi-chevron-down"></i>
-                </button>
-                <div :class="'collapse mx-2 my-2 hide'" id="attention-service-queue">
-                  <div v-if="state.groupedQueues['SERVICE'] && state.groupedQueues['SERVICE'].length > 0">
-                    <div v-for="(queue, index) in state.groupedQueues['SERVICE']" :key="index">
-                      <div v-if="captchaEnabled === true">
-                        <VueRecaptcha
-                          :sitekey="siteKey"
-                          @verify="validateCaptchaOk"
-                          @error="validateCaptchaError">
-                          <button
-                            v-if="queue.active"
-                            type="button"
-                            class="btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                            :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                            @click="getQueue(queue)"
-                            :disabled="!state.accept">
-                            {{ queue.name }}
-                          </button>
-                        </VueRecaptcha>
-                      </div>
-                      <div v-else>
-                        <button
-                          v-if="queue.active"
-                          type="button"
-                          class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                          :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                          @click="getQueue(queue)"
-                          :disabled="!state.accept">
-                          {{ queue.name }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="state.groupedQueues['STANDARD'] && state.groupedQueues['STANDARD'].length > 0">
-                    <div v-for="(queue, index) in state.groupedQueues['STANDARD']" :key="index">
-                      <div v-if="captchaEnabled === true">
-                        <VueRecaptcha
-                          :sitekey="siteKey"
-                          @verify="validateCaptchaOk"
-                          @error="validateCaptchaError">
-                          <button
-                            v-if="queue.active"
-                            type="button"
-                            class="btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                            :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                            @click="getQueue(queue)"
-                            :disabled="!state.accept">
-                            {{ queue.name }}
-                          </button>
-                        </VueRecaptcha>
-                      </div>
-                      <div v-else>
-                        <button
-                          v-if="queue.active"
-                          type="button"
-                          class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1"
-                          :class="queue.id === state.queue.id ? 'btn-primary': 'btn-secondary'"
-                          @click="getQueue(queue)"
-                          :disabled="!state.accept">
-                          {{ queue.name }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else>
-                <div
-                  v-for="queue in state.queues"
-                  :key="queue.id"
-                  class="d-grid btn-group btn-group-justified">
-                  <div v-if="captchaEnabled === true">
-                    <VueRecaptcha
-                      :sitekey="siteKey"
-                      @verify="validateCaptchaOk"
-                      @error="validateCaptchaError">
-                      <button
-                        v-if="queue.active"
-                        type="button"
-                        class="btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1 mb-2"
-                        :class="queue.id === state.queue.id ? 'btn-primary': 'btn-dark'"
-                        @click="getQueue(queue)"
-                        :disabled="!state.accept">
-                        {{ queue.name }}
-                      </button>
-                    </VueRecaptcha>
-                  </div>
-                  <div v-else>
-                    <button
-                      v-if="queue.active"
-                      type="button"
-                      class=" btn-size btn btn-lg btn-block col-9 fw-bold rounded-pill mt-1 mb-2"
-                      :class="queue.id === state.queue.id ? 'btn-primary': 'btn-dark'"
-                      @click="getQueue(queue)"
-                      :disabled="!state.accept">
-                      {{ queue.name }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('commerceQueuesView.message.title')"
-                :content="$t('commerceQueuesView.message.content')">
-              </Message>
-              <div class="col">
-                <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessSectionAtWorkView.return") }} <i class="bi bi-arrow-left"></i></a>
-              </div>
-            </div>
-          </div>
+          <QueueForm
+            :commerce="state.commerce"
+            :queues="state.queues"
+            :groupedQueues="state.groupedQueues"
+            :queueId="state.queueId"
+            :accept="state.accept"
+            :receiveQueue="receiveQueue"
+          >
+          </QueueForm>
           <!-- BOOKING / ATTENTION -->
           <div id="booking" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.queue.id">
             <div v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()" class="choose-attention py-1 pt-2">
