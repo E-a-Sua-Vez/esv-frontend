@@ -35,6 +35,7 @@ export default {
         }
         return 'bi-clipboard2-check-fill';
       }
+      return 'bi-clipboard2-check-fill';
     }
 
     const queueStyle = (type) => {
@@ -44,6 +45,7 @@ export default {
         }
         return 'btn-secondary'
       }
+      return 'btn-secondary'
     }
 
     return {
