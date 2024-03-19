@@ -89,7 +89,7 @@ export default {
       }
     };
     const bookingActive = () => {
-      return state.booking.status === 'PENDING' || state.booking.status === 'PROCESSED';
+      return state.booking.status === 'PENDING' || state.booking.status === 'CONFIRMED' || state.booking.status === 'PROCESSED';
     };
     const getCreatedAt = (createdAt, timeZoneIn) => {
       const dateCorrected = new Date(
@@ -113,7 +113,7 @@ export default {
     const cancellingBooking = async () => {
       try {
         loading.value = true;
-        if (state.booking.status === "PENDING") {
+        if (["PENDING", "CONFIRMED"].includes(state.booking.status)) {
           await cancelBooking(state.booking.id);
           await getBookingDetailsFromService(state.booking.id);
           state.goToCancel = false;
@@ -241,8 +241,10 @@ export default {
                     class="booking-notification-title mb-2">
                     {{ $t("userQueueBooking.commerceDetails") }}
                   </div>
-                  <div class="col-10 col-md-12 centered mb-2">
-                    <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
+                  <div class="container-commerce centered">
+                    <div class="col-10 mb-2">
+                      <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -380,6 +382,13 @@ export default {
   font-weight: 800;
   text-decoration: underline;
   cursor: pointer;
+}
+.container-commerce {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  margin-top: calc(-1* var(--bs-gutter-y));
+  margin-left: calc(-1* var(--bs-gutter-x));
+  margin-right: calc(0 var(--bs-gutter-x));
 }
 @-moz-keyframes parpadeo{
   0% { opacity: 1.0; }

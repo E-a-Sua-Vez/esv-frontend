@@ -33,6 +33,7 @@ export default {
   async setup(props) {
     let loading = ref(false);
     let loadingSearch = ref(false);
+    let loadingBookings = ref(false);
     let alertError = ref('');
     let dateMask = ref({
       modelValue: 'YYYY-MM-DD',
@@ -125,6 +126,25 @@ export default {
         }
       }
     }
+
+    const getBookingBlockNumber = (number) => {
+      let result = undefined;
+      if (state.bookings && state.bookings.length > 0) {
+        state.bookings.forEach(booking => {
+          if (booking.block && booking.block.blockNumbers) {
+            if (booking.block.blockNumbers.includes(number)) {
+              result = booking;
+            }
+          } else {
+            if (booking.number === number) {
+              result = booking;
+            }
+          }
+        })
+      }
+      return result;
+    }
+
 
     const getWaitlists = () => {
       loading.value = true;
@@ -349,15 +369,28 @@ export default {
     }
 
     const selectDay = async (queue) => {
+      loadingBookings.value = true;
       if (queue) {
         state.selectedQueue = queue;
         if (state.selectedQueue.id) {
           getDisabledDates(queue);
           state.selectedDate = state.selectedDates[queue.id];
           state.blocksByDay = await getQueueBlockDetailsByDay(queue.id);
-          state.blocks = getBlocksByDay(queue);
+          const blocks = getBlocksByDay(queue);
+          const blocksReserved = [];
+          const bookingsReserved = state.bookings.map(booking => {
+            blocksReserved.push(booking.block);
+            if (booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+              return [...booking.block.blockNumbers];
+            } else {
+              return booking.number;
+            }
+          });
+          const blockAvailables = blocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
+          state.blocks = [...blocksReserved, ...blockAvailables].sort((a, b) => a.number - b.number);
         }
       }
+      loadingBookings.value = false;
     }
 
     const searchClient = async () => {
@@ -470,10 +503,12 @@ export default {
 
     watch(
       changeData,
-      async () => {
-        const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        await updateAvailableDays(currentDate);
-        await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
+      async (newData, oldData) => {
+        if (newData.bookings !== oldData.bookings) {
+          const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+          await updateAvailableDays(currentDate);
+          await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
+        }
       }
     )
 
@@ -506,6 +541,7 @@ export default {
       dateMask,
       loading,
       loadingSearch,
+      loadingBookings,
       alertError,
       disabledDates,
       calendarAttributes,
@@ -523,7 +559,8 @@ export default {
       copyLink,
       goToLink,
       searchClient,
-      clearClient
+      clearClient,
+      getBookingBlockNumber
     }
 
   }
@@ -719,38 +756,41 @@ export default {
               <div class="my-2">
                 <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
               </div>
-              <div v-if="state.bookings && state.bookings.length > 0">
-                <div v-for="block in state.blocks" :key="block.number">
-                  <div class="metric-card">
-                    <span
-                      class="lefted badge rounded-pill bg-primary m-0"
-                      :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                    <div>
-                      <BookingDetailsCard
-                        :booking="getBooking(block.number)"
-                        :show="true"
-                        :detailsOpened="false"
-                        :toggles="toggles"
-                        :commerce="commerce"
-                      >
-                      </BookingDetailsCard>
+              <Spinner :show="loadingBookings"> </Spinner>
+              <div v-if="!loadingBookings">
+                <div v-if="state.bookings && state.bookings.length > 0">
+                  <div v-for="block in state.blocks" :key="block.number">
+                    <div class="metric-card">
+                      <span
+                        class="lefted badge rounded-pill bg-primary m-0"
+                        :class="getBookingBlockNumber(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                      <div>
+                        <BookingDetailsCard
+                          :booking="getBookingBlockNumber(block.number)"
+                          :show="true"
+                          :detailsOpened="false"
+                          :toggles="toggles"
+                          :commerce="commerce"
+                        >
+                        </BookingDetailsCard>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div v-if="(state.selectedQueue || state.selectedDate) && (!state.bookings || state.bookings.length === 0)">
-                <div v-for="block in state.blocks" :key="block.number">
-                  <div class="metric-card">
-                    <span
-                      class="lefted badge rounded-pill bg-primary m-0"
-                      :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                <div v-if="(state.selectedQueue || state.selectedDate) && (!state.bookings || state.bookings.length === 0)">
+                  <div v-for="block in state.blocks" :key="block.number">
+                    <div class="metric-card">
+                      <span
+                        class="lefted badge rounded-pill bg-primary m-0"
+                        :class="'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div v-if="!state.selectedQueue || !state.selectedDate">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.5.title')"
-                  :content="$t('collaboratorBookingsView.message.5.content')" />
+                <div v-if="!state.selectedQueue || !state.selectedDate">
+                  <Message
+                    :title="$t('collaboratorBookingsView.message.5.title')"
+                    :content="$t('collaboratorBookingsView.message.5.content')" />
+                </div>
               </div>
             </div>
             <div v-if="state.showWaitlist">

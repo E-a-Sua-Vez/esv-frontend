@@ -72,21 +72,21 @@ export default {
         <div class="row centered">
           <div class="col-4" v-if="commerce.serviceInfo">
             <button
-              class="btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill"
+              class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
               @click="showServices">
               {{ $t("commerceQRSetup.services") }} <br> <i class="bi bi-info-circle"></i>
             </button>
           </div>
           <div class="col-4" v-if="commerce.contactInfo && commerce.contactInfo.phone">
             <button
-              class="btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill"
+              class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
               @click="showContacts">
               {{ $t("commerceQRSetup.contact") }} <br> <i class="bi bi-whatsapp"></i>
             </button>
           </div>
           <div class="col-4" v-if="commerce.localeInfo && commerce.localeInfo.address">
             <button
-              class="btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill"
+              class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
               @click="showLocations">
               {{ $t("commerceQRSetup.location") }} <br><i class="bi bi-pin-map"></i>
           </button>
