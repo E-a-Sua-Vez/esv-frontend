@@ -5,7 +5,7 @@ import Spinner from '../../common/Spinner.vue';
 import { cancelBooking, confirmBooking } from '../../../application/services/booking';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
-import { getPendingCommerceBookingsBetweenDates, transferBooking } from '../../../application/services/booking';
+import { getPendingCommerceBookingsByDate, transferBooking } from '../../../application/services/booking';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
@@ -137,7 +137,7 @@ export default {
       const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const date = this.booking.date;
-        const bookings = await getPendingCommerceBookingsBetweenDates(this.commerce.id, date);
+        const bookings = await getPendingCommerceBookingsByDate(this.commerce.id, date);
         if (bookings && bookings.length > 0) {
           const groupedBookings = bookings.reduce((acc, book) => {
             const type = book.queueId;

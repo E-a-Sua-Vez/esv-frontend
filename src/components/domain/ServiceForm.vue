@@ -66,14 +66,22 @@ export default {
       state.duration = state.selectedServices.reduce((acc, service) => acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime), 0);
     }
 
+    const serviceChecked = (service) => {
+      if (state.selectedServices) {
+        return state.selectedServices.includes(service);
+      }
+      return false;
+    }
+
     watch(
       queue,
       async () => {
         if (queue.value && queue.value.id) {
-          state.duration = 0;
           state.selectedServices = [];
+          state.duration = 0;
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
+            state.selectedServices = [];
           }
         }
       }
@@ -86,7 +94,8 @@ export default {
       queue,
       isActiveCommerce,
       isActiveQueues,
-      checkService
+      checkService,
+      serviceChecked
     }
   }
 }
@@ -105,7 +114,7 @@ export default {
             class="d-grid btn-group btn-group-justified">
             <div class="btn-size btn-lg btn-block fw-bold col-12 mt-1 queue-btn px-4">
               <div class="form-check form-switch">
-                <input class="form-check-input bnt-lg" type="checkbox" :id="service.name"
+                <input class="form-check-input bnt-lg" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
                   @click="checkService($event, service)">
                 <div class="row queue-time-title">
                   <label class="form-check-label queue-title fw-bold" :for="service.name">{{ service.name }}</label>

@@ -122,6 +122,7 @@ export default {
       allBookings: ref([]),
       allAttentions: ref([]),
       groupedBookingsByQueue: {},
+      groupedAttentionsByQueue: {},
       showToday: false,
       showReserve: false,
       waitlistCreated: false,
@@ -241,6 +242,7 @@ export default {
 
     const receiveServices = async (services) => {
       state.services = services;
+      setCanBook();
     }
 
     const receiveSelectedServices = async (services) => {
@@ -257,6 +259,7 @@ export default {
     }
 
     const setCanBook = () => {
+      state.canBook = false;
       if (state.queue && state.queue.id) {
         if (state.queue.type === 'STANDARD') {
           state.canBook = true;
@@ -306,7 +309,7 @@ export default {
     }
 
     const getAttentions = () => {
-      const { unsubscribe } = updatedAttentions(state.queue.id);
+      const { unsubscribe } = updatedAttentions();
       unsubscribeAttentions = unsubscribe;
     }
 
@@ -656,7 +659,7 @@ export default {
     }
 
     const attentionsAvailables = async () => {
-      state.availableAttentionBlocks = getAvailableAttentionBlocks(state.attentions);
+      getAvailableAttentionBlocks(state.attentions);
       const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number);
       if (!blockAvailable || blockAvailable.length === 0) {
         state.attentionAvailable = false;
@@ -692,6 +695,33 @@ export default {
       return dateCorrected;
     }
 
+    const setDate = (date) => {
+      if (state.queue.id) {
+        state.date = date;
+        state.block = {};
+      }
+    }
+
+    const goBack = () => {
+      router.back()
+    }
+
+    const showToday = () => {
+      state.attentionBlock = {},
+      state.block = {};
+      state.date = 'TODAY';
+      state.showToday = true;
+      state.showReserve = false;
+    }
+
+    const showReserve = () => {
+      state.block = {};
+      state.attentionBlock = {},
+      state.date = undefined;
+      state.showToday = false;
+      state.showReserve = true;
+    }
+
     const validateCaptchaOk = async (response) => {
       if(response) {
         captcha = true;
@@ -701,36 +731,11 @@ export default {
       }
     };
 
-    const setDate = (date) => {
-      if (state.queue.id) {
-        state.date = date;
-        state.block = {};
-      }
-    }
-
     const validateCaptchaError = () => {
       captcha = false;
     };
 
-    const goBack = () => {
-      router.back()
-    }
-
-    const showToday = () => {
-      state.block = {};
-      state.date = 'TODAY';
-      state.showToday = true;
-      state.showReserve = false;
-    }
-
-    const showReserve = () => {
-      state.attentionBlock = {},
-      state.showToday = false;
-      state.showReserve = true;
-    }
-
     const getAvailableBookingBlocks = (bookings) => {
-      loadingHours.value = true;
       let availableBlocks = [];
       let queueBlocks = [];
       if (state.queue.type !== 'SELECT_SERVICE') {
@@ -807,19 +812,19 @@ export default {
           }
         }
       }
-      loadingHours.value = false;
       state.availableBookingBlocks = availableBlocks;
+      console.log("🚀 ~ getAvailableBookingBlocks ~ state.availableBookingBlocks:", state.availableBookingBlocks);
     }
 
     const getAvailableAttentionBlocks = (attentions) => {
       let availableBlocks = [];
+      let queueBlocks = [];
       if (state.queue.type !== 'SELECT_SERVICE') {
-        let queueBlocks = [];
         if (state.blocks) {
           queueBlocks = state.blocks;
           const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
           if (queueBlocks && queueBlocks.length > 0) {
-            let attentionsReserved = 0;
+            let attentionsReserved = [];
             queueBlocks = queueBlocks.filter(block => {
               const hourBlock = parseInt(block.hourFrom.split(':')[0]);
               const minBlock = parseInt(block.hourFrom.split(':')[1]);
@@ -842,16 +847,79 @@ export default {
             }
           }
         }
+      } else {
+        if (state.selectedServices && state.selectedServices.length > 0) {
+          if (state.groupedQueues && state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0) {
+            const candidateQueues = []
+            const services = state.selectedServices.map(serv => serv.id);
+            state.groupedQueues['COLLABORATOR'].forEach(queue => {
+              if (queue.services && queue.services.length > 0) {
+                const availableServices = queue.services.map(serv => serv.id);
+                if (services.every(serv => availableServices.includes(serv))){
+                  candidateQueues.push(queue);
+                }
+              } else {
+                candidateQueues.push(queue);
+              }
+            });
+            if (state.blocks) {
+              queueBlocks = state.blocks;
+              const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
+              if (queueBlocks && queueBlocks.length > 0) {
+                let attentionsReserved = [];
+                queueBlocks = queueBlocks.filter(block => {
+                  const hourBlock = parseInt(block.hourFrom.split(':')[0]);
+                  const minBlock = parseInt(block.hourFrom.split(':')[1]);
+                  const day = new Date(getActualDay(new Date(), timeZone)).getTime();
+                  const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
+                  return (dayBlock > day);
+                });
+                candidateQueues.push(state.queue);
+                if (candidateQueues && candidateQueues.length > 0) {
+                  candidateQueues.forEach(queue => {
+                    const attentions = state.groupedAttentionsByQueue[queue.id];
+                    if (attentions && attentions.length > 0) {
+                      const reserved = attentions.map(attention => {
+                        if (attention.block && attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
+                          return [...attention.block.blockNumbers];
+                        } else {
+                          return attention.block.number;
+                        }
+                      });
+                      attentionsReserved.push(reserved);
+                    }
+                  })
+                  const limit = candidateQueues.length - 1;
+                  if (limit > 0) {
+                    const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
+                    const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+                    const blockedBlocks = []
+                    uniqueBlocksReserved.forEach(block => {
+                      const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                      if (times >= limit) {
+                        blockedBlocks.push(block);
+                      }
+                    })
+                    availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
+                  }
+                } else {
+                  return [];
+                }
+              }
+            }
+          }
+        }
       }
-      return availableBlocks;
+      state.availableAttentionBlocks = availableBlocks;
     }
 
-    const updatedAttentions = (queueId) => {
+    const updatedAttentions = () => {
       let values = ref([]);
       let unsubscribe;
       const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
       const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
       const attentionsQuery = attentionCollection
+        .where('commerceId', '==', state.commerce.id)
         .where('status', "in", ['PENDING', 'TERMINATED', 'RATED'])
         .orderBy('createdAt', 'asc')
         .orderBy('number', 'asc')
@@ -878,7 +946,7 @@ export default {
     }
 
     const getAvailableDatesByMonth = async (date) => {
-      loadingCalendar.value = true;
+      loadingHours.value = true;
       let availableDates = [];
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
@@ -926,14 +994,15 @@ export default {
       });
       calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
-      loadingCalendar.value = false;
+      loadingHours.value = false;
     }
 
     const getAvailableBookingSuperBlocks = () => {
-      loadingHours.value = true;
       if (state.selectedServices && state.selectedServices.length > 0) {
         const superBlocks = [];
+        console.log("🚀 ~ getAvailableBookingSuperBlocks ~ state.amountofBlocksNeeded:", state.amountofBlocksNeeded);
         if (state.amountofBlocksNeeded > 1) {
+
           const toBuild = [];
           const availables = state.availableBookingBlocks.map(block => block.number);
           for (let i = 0; i < state.availableBookingBlocks.length; i++) {
@@ -974,7 +1043,6 @@ export default {
           state.availableBookingSuperBlocks = [];
         }
       }
-      loadingHours.value = false;
     }
 
     const getAvailableAttentionSuperBlocks = () => {
@@ -1028,19 +1096,15 @@ export default {
     const changeDate = computed(() => {
       const {
         date,
-        allBookings,
-        allAttentions,
         block,
         attentionBlock,
         availableBlocks
       } = state;
       return {
         date,
-        allBookings,
         block,
         attentionBlock,
-        availableBlocks,
-        allAttentions
+        availableBlocks
       }
     })
 
@@ -1053,6 +1117,24 @@ export default {
       }
     })
 
+    const changeAttention = computed(() => {
+      const {
+        allAttentions
+      } = state;
+      return {
+        allAttentions
+      }
+    })
+
+    const changeBooking = computed(() => {
+      const {
+        allBookings
+      } = state;
+      return {
+        allBookings
+      }
+    })
+
     watch (
       changeQueue,
       async () => {
@@ -1060,7 +1142,6 @@ export default {
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
         }
         state.blocks = getBlocksByDay();
-        state.blocks = await getBlocksByDay();
         state.block = {};
         let currentDate;
         if (state.date === undefined || state.date === 'TODAY') {
@@ -1069,6 +1150,7 @@ export default {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
         getAvailableBookingBlocks(state.bookings);
+        console.log('aca')
         bookingsAvailables();
         getAvailableBookingSuperBlocks();
         await getAvailableDatesByMonth(currentDate);
@@ -1076,31 +1158,34 @@ export default {
     )
 
     watch (
-      changeDate,
+      changeAttention,
       async (newData, oldData) => {
-        if (state.date === 'TODAY') {
-          if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
-            if (newData.attentions && oldData.attentions) {
-              const newIds = newData.attentions.map(att => att.id);
-              const oldIds = oldData.attentions.map(att => att.id);
-              if (newIds.includes(oldIds) && newIds.length !== oldIds.length) {
-                getAttentions();
-              }
-              attentionsAvailables();
-              getAvailableAttentionSuperBlocks();
+        if (newData.allAttentions !== oldData.allAttentions) {
+          const newIds = newData.allAttentions.map(att => att.id);
+          const oldIds = oldData.allAttentions.map(att => att.id);
+          if (!newIds.every(id => oldIds.includes(id))) {
+            if (state.allAttentions && state.allAttentions.length > 0) {
+              state.groupedAttentionsByQueue = state.allAttentions.reduce((acc, att) => {
+                const queueId = att.queueId;
+                if (!acc[queueId]) {
+                  acc[queueId] = [];
+                }
+                acc[queueId].push(att);
+                return acc;
+              }, {});
+              state.attentions = state.groupedAttentionsByQueue[state.queue.id];
             }
-          } else {
-            await getAttention(undefined);
           }
-          attentionsAvailables();
-        } else if (newData.date && newData.date !== oldData.date) {
-          state.blocks = getBlocksByDay();
-          state.block = {};
-          if (unsubscribeBookings) {
-            unsubscribeBookings();
-          }
-          getBookings();
-        } else if (newData.allBookings !== oldData.allBookings) {
+          getAvailableAttentionSuperBlocks();
+        }
+        attentionsAvailables();
+      }
+    )
+
+    watch (
+      changeBooking,
+      async (newData, oldData) => {
+        if (newData.allBookings !== oldData.allBookings) {
           const newIds = newData.allBookings.map(booking => booking.id);
           const oldIds = oldData.allBookings.map(booking => booking.id);
           if (!newIds.every(id => oldIds.includes(id))) {
@@ -1115,14 +1200,43 @@ export default {
               }, {});
               state.bookings = state.groupedBookingsByQueue[state.queue.id];
             }
-            let currentDate;
-            currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-            getAvailableBookingBlocks(state.bookings);
-            getAvailableBookingSuperBlocks();
-            await getAvailableDatesByMonth(currentDate);
-            bookingsAvailables();
           }
+          let currentDate;
+          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+          getAvailableBookingBlocks(state.bookings);
+          await getAvailableDatesByMonth(currentDate);
+          getAvailableBookingSuperBlocks();
+          bookingsAvailables();
         }
+
+      }
+    )
+
+    watch (
+      changeDate,
+      async (newData, oldData) => {
+        if (state.date === 'TODAY') {
+          if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+            state.blocks = getBlocksByDay();
+            state.block = {};
+            if (unsubscribeAttentions) {
+              unsubscribeAttentions();
+            }
+            getAttentions();
+          } else {
+            await getAttention(undefined);
+          }
+        } else if (newData.date && newData.date !== oldData.date) {
+          state.blocks = getBlocksByDay();
+          state.block = {};
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          getBookings();
+        }
+        getAvailableBookingSuperBlocks();
+        bookingsAvailables();
+        attentionsAvailables();
       }
     )
 

@@ -145,7 +145,6 @@ export default {
       return result;
     }
 
-
     const getWaitlists = () => {
       loading.value = true;
       if (state.selectedQueue && state.selectedQueue.id) {
@@ -329,7 +328,7 @@ export default {
             const queue = queues.value[i];
             if (result) {
               state.blocksByDay = result[queue.id];
-              const monthBookings = groupedBookings[queue.id];
+              const monthBookings = groupedBookings[queue.id] || [];
               getAvailableDatesByQueueMonth(monthBookings, queue, date);
             }
           }
@@ -345,7 +344,7 @@ export default {
       const nextMonth = +month;
       const dateFrom = new Date(+year, thisMonth, 1);
       const dateTo = new Date(+year, nextMonth, 0);
-      if (monthBookings && monthBookings.length > 0 && date) {
+      if (monthBookings && monthBookings.length >= 0 && date) {
         const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
           const date = booking.date;
           if (!acc[date]) {
