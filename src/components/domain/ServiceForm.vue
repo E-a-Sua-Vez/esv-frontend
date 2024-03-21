@@ -76,12 +76,12 @@ export default {
     watch(
       queue,
       async () => {
+        state.selectedServices = [];
+        state.duration = 0;
+        receiveSelectedServices(state.selectedServices);
         if (queue.value && queue.value.id) {
-          state.selectedServices = [];
-          state.duration = 0;
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
-            state.selectedServices = [];
           }
         }
       }

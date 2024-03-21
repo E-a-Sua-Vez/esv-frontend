@@ -272,6 +272,8 @@ export default {
         }
       }
       if (state.canBook === false) {
+        state.showToday = false;
+        state.showReserve = false;
         state.date = undefined;
         state.block = {};
       }
@@ -649,8 +651,6 @@ export default {
           state.date = undefined;
           state.block = {};
           state.attentionBlock = {};
-          getAttentions();
-          attentionsAvailables();
         }
       }
       if (captchaEnabled) {
@@ -658,7 +658,7 @@ export default {
       }
     }
 
-    const attentionsAvailables = async () => {
+    const attentionsAvailables = () => {
       getAvailableAttentionBlocks(state.attentions);
       const blockAvailable = state.availableAttentionBlocks.filter(block => block.number === state.attentionBlock.number);
       if (!blockAvailable || blockAvailable.length === 0) {
@@ -813,7 +813,6 @@ export default {
         }
       }
       state.availableBookingBlocks = availableBlocks;
-      console.log("🚀 ~ getAvailableBookingBlocks ~ state.availableBookingBlocks:", state.availableBookingBlocks);
     }
 
     const getAvailableAttentionBlocks = (attentions) => {
@@ -1000,7 +999,6 @@ export default {
     const getAvailableBookingSuperBlocks = () => {
       if (state.selectedServices && state.selectedServices.length > 0) {
         const superBlocks = [];
-        console.log("🚀 ~ getAvailableBookingSuperBlocks ~ state.amountofBlocksNeeded:", state.amountofBlocksNeeded);
         if (state.amountofBlocksNeeded > 1) {
 
           const toBuild = [];
@@ -1095,16 +1093,10 @@ export default {
 
     const changeDate = computed(() => {
       const {
-        date,
-        block,
-        attentionBlock,
-        availableBlocks
+        date
       } = state;
       return {
-        date,
-        block,
-        attentionBlock,
-        availableBlocks
+        date
       }
     })
 
@@ -1135,6 +1127,15 @@ export default {
       }
     })
 
+    const changeAttentionBlock = computed(() => {
+      const {
+        attentionBlock
+      } = state;
+      return {
+        attentionBlock
+      }
+    })
+
     watch (
       changeQueue,
       async () => {
@@ -1150,7 +1151,6 @@ export default {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
         getAvailableBookingBlocks(state.bookings);
-        console.log('aca')
         bookingsAvailables();
         getAvailableBookingSuperBlocks();
         await getAvailableDatesByMonth(currentDate);
@@ -1177,15 +1177,25 @@ export default {
             }
           }
           getAvailableAttentionSuperBlocks();
+          attentionsAvailables();
         }
-        attentionsAvailables();
+      }
+    )
+
+    watch (
+      changeAttentionBlock,
+      async () => {
+        if (state.attentionBlock) {
+          attentionsAvailables();
+          getAvailableAttentionSuperBlocks();
+        }
       }
     )
 
     watch (
       changeBooking,
       async (newData, oldData) => {
-        if (newData.allBookings !== oldData.allBookings) {
+        if (newData.allBookings !== oldData.allBookings && state.date && state.date !== 'TODAY') {
           const newIds = newData.allBookings.map(booking => booking.id);
           const oldIds = oldData.allBookings.map(booking => booking.id);
           if (!newIds.every(id => oldIds.includes(id))) {
@@ -1208,14 +1218,13 @@ export default {
           getAvailableBookingSuperBlocks();
           bookingsAvailables();
         }
-
       }
     )
 
     watch (
       changeDate,
       async (newData, oldData) => {
-        if (state.date === 'TODAY') {
+        if (state.date && state.date === 'TODAY') {
           if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
             state.blocks = getBlocksByDay();
             state.block = {};
@@ -1235,6 +1244,7 @@ export default {
           getBookings();
         }
         getAvailableBookingSuperBlocks();
+        getAvailableAttentionSuperBlocks();
         bookingsAvailables();
         attentionsAvailables();
       }
@@ -1347,6 +1357,7 @@ export default {
           </ServiceForm>
           <!-- BOOKING / ATTENTION -->
           <div id="booking" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.canBook">
+            {{ state.canBook }}
             <div v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()" class="choose-attention py-1">
               <span class="fw-bold"> {{ $t("commerceQueuesView.when") }} </span>
             </div>
