@@ -1,7 +1,7 @@
 <script>
 import { ref, watch, reactive, computed, toRefs, onUnmounted } from 'vue';
 import { globalStore } from '../../../stores';
-import { getPendingBookingsBetweenDates } from '../../../application/services/booking';
+import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates } from '../../../application/services/booking';
 import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
@@ -258,17 +258,6 @@ export default {
       navigator.clipboard.writeText(textToCopy);
     }
 
-    const updateAvailableDays = (date) => {
-      if (queues && date) {
-        if (queues && queues.value && queues.value.length > 0) {
-          queues.value.map(queue => {
-            getBlocksByDay(queue);
-            getAvailableDatesByMonth(queue, date);
-          })
-        }
-      }
-    }
-
     const getDisabledDates = (queue) => {
       let disabled = [1, 2, 3, 4, 5, 6, 7];
       if (queue.serviceInfo && queue.serviceInfo.attentionDays) {
@@ -301,9 +290,111 @@ export default {
 
     const getBlocksByDay = (queue) => {
       if (queue && state.selectedDate) {
-        const [year, month, day] = new Date(state.selectedDates[queue.id]).toISOString().slice(0,10).split('-');
+        const [year, month, day] = new Date(dateYYYYMMDD(state.selectedDates[queue.id])).toISOString().slice(0,10).split('-');
         const dayNumber = new Date(+year, +month - 1, +day).getDay();
         return state.blocksByDay[dayNumber];
+      }
+      return [];
+    }
+
+    const updateAvailableDays = async (date) => {
+      if (queues && date) {
+        if (queues && queues.value && queues.value.length > 0) {
+          queues.value.map(queue => {
+            getBlocksByDay(queue);
+          })
+        }
+      }
+    }
+
+    const getAvailableCommerceDatesByMonth = async (date) => {
+      if (date) {
+        const [year, month] = date.split('-');
+        const thisMonth = +month - 1;
+        const nextMonth = +month;
+        const dateFrom = new Date(+year, thisMonth, 1);
+        const dateTo = new Date(+year, nextMonth, 0);
+        const bookings = await getPendingCommerceBookingsBetweenDates(commerce.value.id, dateFrom, dateTo);
+        if (bookings && bookings.length > 0) {
+          const groupedBookings = bookings.reduce((acc, book) => {
+            const type = book.queueId;
+            if (!acc[type]) {
+              acc[type] = [];
+            }
+            acc[type].push(book);
+            return acc;
+          }, {});
+          const result = await getQueueBlockDetailsByDayByCommerceId(commerce.value.id);
+          for (let i = 0; i < queues.value.length; i++) {
+            const queue = queues.value[i];
+            if (result) {
+              state.blocksByDay = result[queue.id];
+              const monthBookings = groupedBookings[queue.id];
+              getAvailableDatesByQueueMonth(monthBookings, queue, date);
+            }
+          }
+        }
+      }
+      return {};
+    }
+
+    const getAvailableDatesByQueueMonth = async (monthBookings, queue, date) => {
+      let availableDates = [];
+      const [year, month] = date.split('-');
+      const thisMonth = +month - 1;
+      const nextMonth = +month;
+      const dateFrom = new Date(+year, thisMonth, 1);
+      const dateTo = new Date(+year, nextMonth, 0);
+      if (monthBookings && monthBookings.length > 0 && date) {
+        const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+          const date = booking.date;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(booking);
+          return acc;
+        }, {});
+        const dates = Object.keys(bookingsGroupedByDate);
+        for(let i = 1; i <= dateTo.getDate(); i ++) {
+          const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
+          if (new Date(key) > new Date()) {
+            availableDates.push(key);
+          }
+        }
+        const forDeletion = [];
+        const forReserves = [];
+        if (dates && dates.length > 0) {
+          dates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date];
+            const [year, month, day] = date.split('-');
+            const dayNumber = new Date(+year, +month - 1, +day).getDay();
+            const blocks = state.blocksByDay[dayNumber] || [];
+            if (bookings.length >= blocks.length) {
+              forDeletion.push(date);
+            } else if (bookings.length >= 1) {
+              forReserves.push(date);
+            }
+          })
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const avaliableToCalendar = availableDates.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][0].dates = [];
+        calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
+        const forDeletionToCalendar = forDeletion.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][1].dates = [];
+        calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
+        const avaliableToReserve = forReserves.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][2].dates = [];
+        calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }
 
@@ -370,26 +461,28 @@ export default {
 
     const selectDay = async (queue) => {
       loadingBookings.value = true;
-      if (queue) {
+      if (queue && state.selectedQueue && queue.id !== state.selectedQueue.id) {
         state.selectedQueue = queue;
-        if (state.selectedQueue.id) {
-          getDisabledDates(queue);
-          state.selectedDate = state.selectedDates[queue.id];
-          state.blocksByDay = await getQueueBlockDetailsByDay(queue.id);
-          const blocks = getBlocksByDay(queue);
-          const blocksReserved = [];
-          const bookingsReserved = state.bookings.map(booking => {
-            blocksReserved.push(booking.block);
-            if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
-              return [...booking.block.blockNumbers];
-            } else {
-              return booking.block.number;
-            }
-          });
-          const blockAvailables = blocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
-          state.blocks = [...blocksReserved.flat(), ...blockAvailables].sort((a, b) => a.number - b.number);
-        }
+        state.blocksByDay = await getQueueBlockDetailsByDay(state.selectedQueue.id);
       }
+      if (state.selectedDates[state.selectedQueue.id]) {
+        state.selectedDate = dateYYYYMMDD(state.selectedDates[state.selectedQueue.id]);
+      } else {
+        state.selectedDate = undefined;
+      }
+      getDisabledDates(state.selectedQueue);
+      const blocks = getBlocksByDay(state.selectedQueue);
+      const blocksReserved = [];
+      const bookingsReserved = state.bookings.map(booking => {
+        blocksReserved.push(booking.block);
+        if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+          return [...booking.block.blockNumbers];
+        } else {
+          return booking.block.number;
+        }
+      });
+      const blockAvailables = blocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
+      state.blocks = [...blocksReserved.flat(), ...blockAvailables].sort((a, b) => a.number - b.number);
       loadingBookings.value = false;
     }
 
@@ -495,8 +588,6 @@ export default {
         }
         getWaitlists();
         await updatedAttentions();
-        const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        await updateAvailableDays(currentDate);
         await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
       }
     )
@@ -507,7 +598,6 @@ export default {
         if (newData.bookings !== oldData.bookings) {
           const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
           await updateAvailableDays(currentDate);
-          await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
         }
       }
     )
@@ -515,19 +605,14 @@ export default {
     watch (
       queues,
       async () => {
+        loading.value = true;
         initQueues();
         initCalendars();
         const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         await updateAvailableDays(currentDate);
         state.locale = commerce.value.localeInfo.language;
-        const result = await getQueueBlockDetailsByDayByCommerceId(commerce.value.id);
-        for (let i = 0; i < queues.value.length; i++) {
-          const queue = queues.value[i];
-          if (result) {
-            state.blocksByDay = result[queue.id];
-            await getAvailableDatesByMonth(queue, currentDate);
-          }
-        }
+        await getAvailableCommerceDatesByMonth(currentDate);
+        loading.value = false;
       }
     )
 

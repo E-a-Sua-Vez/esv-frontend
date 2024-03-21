@@ -30,8 +30,12 @@ export const getPendingBookingsBetweenDates = async (queueId, dateFrom, dateTo) 
   return (await requestBackend.get(`/${entity}/pending/queue/${queueId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
 }
 
-export const getPendingCommerceBookingsBetweenDates = async (commerceId, date) => {
+export const getPendingCommerceBookingsByDate = async (commerceId, date) => {
   return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/${date}`, await getHeaders())).data;
+}
+
+export const getPendingCommerceBookingsBetweenDates = async (commerceId, dateFrom, dateTo) => {
+  return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
 }
 
 export const confirmBooking = async (id, body) => {
