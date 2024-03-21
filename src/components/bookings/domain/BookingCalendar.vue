@@ -128,16 +128,16 @@ export default {
     }
 
     const getBookingBlockNumber = (number) => {
-      let result = undefined;
+      let result = [];
       if (state.bookings && state.bookings.length > 0) {
         state.bookings.forEach(booking => {
           if (booking.block && booking.block.blockNumbers) {
-            if (booking.block.blockNumbers.includes(number)) {
-              result = booking;
+            if (booking.block.blockNumbers.sort()[0] === number) {
+              result.push(booking);
             }
           } else {
-            if (booking.number === number) {
-              result = booking;
+            if (booking.block.number === number) {
+              result.push(booking);
             }
           }
         })
@@ -380,14 +380,14 @@ export default {
           const blocksReserved = [];
           const bookingsReserved = state.bookings.map(booking => {
             blocksReserved.push(booking.block);
-            if (booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+            if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
               return [...booking.block.blockNumbers];
             } else {
-              return booking.number;
+              return booking.block.number;
             }
           });
           const blockAvailables = blocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
-          state.blocks = [...blocksReserved, ...blockAvailables].sort((a, b) => a.number - b.number);
+          state.blocks = [...blocksReserved.flat(), ...blockAvailables].sort((a, b) => a.number - b.number);
         }
       }
       loadingBookings.value = false;
@@ -763,14 +763,15 @@ export default {
                     <div class="metric-card">
                       <span
                         class="lefted badge rounded-pill bg-primary m-0"
-                        :class="getBookingBlockNumber(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                      <div>
+                        :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                      <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
                         <BookingDetailsCard
-                          :booking="getBookingBlockNumber(block.number)"
+                          :booking="booking"
                           :show="true"
                           :detailsOpened="false"
                           :toggles="toggles"
                           :commerce="commerce"
+                          :queues="queues"
                         >
                         </BookingDetailsCard>
                       </div>

@@ -17,6 +17,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
+import { getQueueTypes } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessQueuesAdmin',
@@ -36,11 +37,7 @@ export default {
       queues: ref([]),
       services: ref({}),
       collaborators: ref({}),
-      types: [
-        {  name: 'Standard', type: 'STANDARD' },
-        {  name: 'Collaborator', type: 'COLLABORATOR' },
-        {  name: 'Service', type: 'SERVICE' },
-      ],
+      types: [],
       commerce: {},
       showAdd: false,
       goToUnavailable: false,
@@ -65,6 +62,7 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.types = getQueueTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
@@ -109,13 +107,16 @@ export default {
         if (queue.type === 'COLLABORATOR' && !queue.collaboratorId) {
           state.errorsAdd.push('businessQueuesAdmin.validate.collaborator');
         }
-        if (queue.type === 'SERVICE' && !queue.serviceId) {
+        if (queue.type === 'SERVICE' && (!queue.servicesId || queue.servicesId.length === 0)) {
           state.errorsAdd.push('businessQueuesAdmin.validate.service');
         }
         if (queue.type === 'STANDARD') {
           if (queue.tag === undefined) {
             queue.tag = queue.name;
           }
+        }
+        if (queue.type === 'MULTI_SERVICE' && (!queue.servicesId || queue.servicesId.length === 0)) {
+          state.errorsAdd.push('businessQueuesAdmin.validate.service');
         }
       }
       if(!queue.limit || queue.limit.length === 0 || queue.limit > state.toggles['queues.admin.queue-limit']) {
@@ -181,9 +182,15 @@ export default {
     }
 
     const showAdd = () => {
+      const servicesId = [];
       state.showAdd = !state.showAdd;
       state.newQueue = {
         order: state.queues.length + 1,
+        servicesId,
+        estimatedTime: 0,
+        blockTime: 0,
+        active: true,
+        online: true,
         serviceInfo: {
           sameCommeceHours: true,
           break: false,
@@ -366,7 +373,7 @@ export default {
 
     const selectService = (queue, service) => {
       if (queue !== undefined && service !== undefined && service.id !== undefined) {
-        queue.serviceId = service.id;
+        queue.servicesId = [service.id, ...queue.servicesId];
         queue.tag = `${service.name}`;
         state.selectedService = service;
         queue.estimatedTime = service.serviceInfo.estimatedTime;
@@ -377,12 +384,64 @@ export default {
     const selectType = (queue, type) => {
       if (queue) {
         if (typ === 'COLLABORATOR') {
-          queue.serviceId = undefined;
+          queue.servicesId = undefined;
           queue.type = type.name;
         }
         if (typ === 'SERVICE') {
           queue.collaboratorId = undefined;
           queue.type = type.name;
+        }
+        if (typ === 'MULTILPLE_SERVICE') {
+          queue.collaboratorId = undefined;
+          queue.type = type.name;
+        }
+      }
+    }
+
+    const selectServiceMultiple = async (queue, service) => {
+      if (service) {
+        if (queue.servicesId && queue.servicesId.length >= 0) {
+          if (!queue.servicesId.includes(service.id)) {
+            queue.servicesId.push(service.id);
+            queue.estimatedTime += +service.serviceInfo.estimatedTime;
+            queue.blockTime += +service.serviceInfo.blockTime;
+          }
+        }
+      }
+    }
+
+    const selectServiceIndex = async (index, service) => {
+      if (!state.queues[index].servicesId) {
+        state.queues[index].servicesId = []
+      }
+      if (state.queues[index].servicesId && state.queues[index].servicesId.length >= 0) {
+        if (!state.queues[index].servicesId.includes(service.id)) {
+          state.queues[index].servicesId.push(service.id);
+          state.queues[index].estimatedTime += service.serviceInfo.estimatedTime;
+          state.queues[index].blockTime += service.serviceInfo.blockTime;
+        }
+      }
+    }
+
+    const deleteService = (queue, serviceId) => {
+      if (queue && serviceId) {
+        if (queue.servicesId && queue.servicesId.length >= 0) {
+          if (queue.servicesId.includes(serviceId)) {
+            const filtered = queue.servicesId.filter(com => com !== serviceId);
+            queue.servicesId = filtered;
+            const service = state.services.find(com => com.id === serviceId);
+            queue.estimatedTime -= (queue.estimatedTime - service.serviceInfo.estimatedTime) < 0 ? 0 : service.serviceInfo.estimatedTime;
+            queue.blockTime -= (queue.blockTime - service.serviceInfo.blockTime) < 0 ? 0 : service.serviceInfo.blockTime;
+          }
+        }
+      }
+    }
+
+    const showService = (serviceId) => {
+      if (state.services && state.services.length >= 1) {
+        const service = state.services.find(com => com.id === serviceId);
+        if (service) {
+          return service.tag;
         }
       }
     }
@@ -409,7 +468,11 @@ export default {
       selectType,
       unavailable,
       goToUnavailable,
-      unavailableCancel
+      unavailableCancel,
+      selectServiceMultiple,
+      showService,
+      deleteService,
+      selectServiceIndex
     }
   }
 }
@@ -473,10 +536,10 @@ export default {
                 <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
                   <div class="row g-1">
                     <div id="queue-name-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.name") }}
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           min="1"
                           max="50"
@@ -488,7 +551,7 @@ export default {
                       </div>
                     </div>
                     <div id="queue-type-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.type") }}
                         <Popper
                           :class="'dark p-1'"
@@ -498,14 +561,14 @@ export default {
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <select
                           class="btn btn-md btn-light fw-bold text-dark select"
                           v-model="state.newQueue.type"
                           id="types"
                           v-bind:class="{ 'is-invalid': state.typeError }"
                           @change="selectType(typ)">
-                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                          <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`queues.types.${typ.id}`) }}</option>
                         </select>
                       </div>
                     </div>
@@ -569,8 +632,26 @@ export default {
                         </div>
                       </div>
                     </div>
+                    <div v-if="state.newQueue.type === 'MULTI_SERVICE'" class="row g-1">
+                      <div id="queue-services-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.services") }}
+                        </div>
+                        <div class="col-8">
+                          <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceMultiple(state.newQueue, state.service)" id="services">
+                            <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                          </select>
+                          <div class="select p-1" v-if="state.newQueue.servicesId &&  state.newQueue.servicesId.length > 0">
+                            <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in state.newQueue.servicesId" :key="com.id">
+                              {{ showService(com) }}
+                              <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newQueue, com)"></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div id="queue-limit-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.limit") }}
                         <Popper
                           :class="'dark p-1'"
@@ -580,7 +661,7 @@ export default {
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           min="1"
                           :max="state.toggles['queues.admin.queue-limit']"
@@ -592,7 +673,7 @@ export default {
                       </div>
                     </div>
                     <div id="queue-order-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.order") }}
                         <Popper
                           :class="'dark p-1'"
@@ -602,7 +683,7 @@ export default {
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           min="1"
                           :max="state.queues.length + 1"
@@ -614,7 +695,7 @@ export default {
                       </div>
                     </div>
                     <div id="queue-estimated-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.estimated") }}
                         <Popper
                           :class="'dark p-1'"
@@ -624,7 +705,7 @@ export default {
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           min="1"
                           type="number"
@@ -635,7 +716,7 @@ export default {
                       </div>
                     </div>
                     <div id="queue-block-form-add" class="row g-1">
-                      <div class="col-6 text-label">
+                      <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.blockTime") }}
                         <Popper
                           :class="'dark p-1'"
@@ -645,7 +726,7 @@ export default {
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
-                      <div class="col-6">
+                      <div class="col-8">
                         <input
                           min="1"
                           type="number"
@@ -664,7 +745,7 @@ export default {
                       </a>
                     </div>
                     <div id="add-service" class="collapse row m-0">
-                      <div id="add-queue-samecommerce-active-form" class="row g-1">
+                      <div id="add-queue-walkin-active-form" class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessQueuesAdmin.walkin") }}
                           <Popper
@@ -959,6 +1040,22 @@ export default {
                           placeholder="Type">
                       </div>
                     </div>
+                    <div id="queue-services-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCollaboratorsAdmin.services") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
+                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if="queue.servicesId &&  queue.servicesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in queue.servicesId" :key="com.id">
+                            {{ showService(com) }}
+                            <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(queue, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                     <div id="queue-limit-form-update" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.limit") }}
@@ -1026,6 +1123,17 @@ export default {
                       <div class="col-8">
                         <Toggle
                           v-model="queue.active"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="queue-online-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.online") }}
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="queue.online"
                           :disabled="!state.toggles['queues.admin.edit']"
                         />
                       </div>

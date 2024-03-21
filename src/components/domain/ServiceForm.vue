@@ -11,7 +11,7 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
     queue: { type: Object, default: {} },
-    receiveServices: { type: Function, default: () => {} }
+    receiveSelectedServices: { type: Function, default: () => {} }
   },
   async setup(props) {
 
@@ -22,7 +22,7 @@ export default {
       queue,
     } = toRefs(props);
 
-    const { receiveServices } = props;
+    const { receiveSelectedServices } = props;
 
     const state = reactive({
       service: {},
@@ -51,7 +51,7 @@ export default {
     };
 
     const isActiveQueues = () => {
-      return queue.value.type === 'COLLABORATOR' && queue.value.services;
+      return ['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.value.type) && queue.value.services;
     };
 
     const checkService = (event, service) => {
@@ -62,7 +62,7 @@ export default {
       } else {
         state.selectedServices = state.selectedServices.filter(el => el !== service);
       }
-      receiveServices(state.selectedServices);
+      receiveSelectedServices(state.selectedServices);
       state.duration = state.selectedServices.reduce((acc, service) => acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime), 0);
     }
 
@@ -70,6 +70,8 @@ export default {
       queue,
       async () => {
         if (queue.value && queue.value.id) {
+          state.duration = 0;
+          state.selectedServices = [];
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
           }

@@ -75,7 +75,9 @@
     "types": {
       "STANDARD": "Standard",
       "COLLABORATOR": "Colaborador",
-      "SERVICE": "Serviço"
+      "SERVICE": "Serviço",
+      "MULTI_SERVICE": "Múltiples Serviços",
+      "SELECT_SERVICE": "Selecionar Serviço"
     }
   },
   "surveys": {
@@ -293,6 +295,18 @@
     "attention-confirm-payment": {
       "title": "Atenção Pagamento Confirmação",
       "description": "Atendimento precisa ser pagada"
+    },
+    "attention-service-select": {
+      "title": "Atenção Seleção Serviços",
+      "description": "Quando generar um novo atendimento/reserva, pode selecionar um ou mais serviços"
+    },
+    "attention-today-desactivated": {
+      "title": "Atenção Hoje Desativado",
+      "description": "Desactiva as filas para hoje"
+    },
+    "booking-transfer-queue": {
+      "title": "Reserva Transferir Fila",
+      "description": "Tranferir reserva pra outra fila disponível"
     }
   },
   "paymentMethods": {
@@ -733,7 +747,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
-          "confirm": "Confirmar Reservas"
+          "confirm": "Confirmar Reservas",
+          "transfer": "Transferir Reserva"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -787,7 +802,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
-          "confirm": "Confirmar Reservas"
+          "confirm": "Confirmar Reservas",
+          "transfer": "Transferir Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -826,6 +842,9 @@
     "paymentAmount": "Valor:",
     "paymentCommission": "Comissão:",
     "paymentComment": "Comentário (Opcional)",
+    "transferQueue": "Transferir Fila",
+    "transfer": "Transferir",
+    "selectQueueToTransfer": "Selecione a fila pra qual você deseja transferir a reserva:",
     "message": {
       "1": {
         "title": "Oi!",
@@ -872,7 +891,9 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
-          "confirm": "Confirmar Reservas"
+          "confirm": "Confirmar Reservas",
+          "transfer": "Transferir Reserva",
+          "admin": "Gerenciar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -937,7 +958,8 @@
         "bookings": {
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
-          "confirm": "Confirmar Reservas"
+          "confirm": "Confirmar Reservas",
+          "transfer": "Transferir Reserva"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -1639,12 +1661,14 @@
     "limit": "Limite:",
     "order": "Ordem:",
     "active": "Ativo:",
+    "online": "Online:",
     "type": "Tipo:",
     "estimated": "Tempo estimado (min):",
     "update": "Atualizar",
     "add": "Adicionar",
     "unavailable": "Deletar",
     "service": "Serviço:",
+    "services": "Serviços:",
     "selectCollaborator": "Selecione Colaborador",
     "selectService": "Selecione Serviço",
     "collaborator": "Colaborador:",

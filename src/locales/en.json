@@ -75,7 +75,9 @@
     "types": {
       "STANDARD": "Standard",
       "COLLABORATOR": "Collaborator",
-      "SERVICE": "Service"
+      "SERVICE": "Service",
+      "MULTI_SERVICE": "Multiple Services",
+      "SELECT_SERVICE": "Select Service"
     }
   },
   "productTypes": {
@@ -293,6 +295,18 @@
     "attention-confirm-payment": {
       "title": "Attention Confirmation Payment",
       "description": "Attentions need to be paid"
+    },
+    "attention-service-select": {
+      "title": "Attention Select Services",
+      "description": "When generating a new attention/booking can select one or more services"
+    },
+    "attention-today-desactivated": {
+      "title": "Attention Today Desativated",
+      "description": "Desactivate today's attentions"
+    },
+    "booking-transfer-queue": {
+      "title": "Booking Queue Transfer",
+      "description": "Tranfer booking to another queue"
     }
   },
   "paymentMethods": {
@@ -729,7 +743,8 @@
         "bookings": {
           "cancel": "Cancel Booking",
           "manage": "Bookings 360° Vision",
-          "confirm": "Booking Confirm"
+          "confirm": "Booking Confirm",
+          "transfer": "Transfer Booking"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -778,7 +793,8 @@
         "bookings": {
           "cancel": "Cancel Booking",
           "manage": "Bookings 360° Vision",
-          "confirm": "Booking Confirm"
+          "confirm": "Booking Confirm",
+          "transfer": "Transfer Booking"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -817,6 +833,9 @@
     "paymentAmount": "Amount:",
     "paymentCommission": "Commission:",
     "paymentComment": "Comment (Optional)",
+    "transferQueue": "Transfer Queue",
+    "transfer": "Transfer",
+    "selectQueueToTransfer": "Select the queue you want to move the booking to:",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -863,7 +882,9 @@
         "bookings": {
           "cancel": "Cancel Booking",
           "manage": "Bookings 360° Vision",
-          "confirm": "Booking Confirm"
+          "confirm": "Booking Confirm",
+          "transfer": "Transfer Booking",
+          "admin": "Booking Administration"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -933,7 +954,8 @@
         "bookings": {
           "cancel": "Cancel Booking",
           "manage": "Bookings 360° Vision",
-          "confirm": "Booking Confirm"
+          "confirm": "Booking Confirm",
+          "transfer": "Transfer Booking"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -1637,12 +1659,14 @@
     "order": "Order:",
     "type": "Type:",
     "active": "Active:",
+    "online": "Online:",
     "estimated": "Estimated time (min):",
     "listResult": "Results:",
     "update": "Update",
     "unavailable": "Delete",
     "add": "Add",
     "service": "Service:",
+    "services": "Services:",
     "selectCollaborator": "Select Collaborator",
     "selectService": "Select Service",
     "collaborator": "Collaborator:",
@@ -2611,7 +2635,8 @@
       "bookings": {
         "cancel": "Cancel Booking",
         "manage": "Bookings 360° Vision",
-        "confirm": "Booking Confirm"
+        "confirm": "Booking Confirm",
+        "transfer": "Transfer Booking"
       },
       "waitlists": {
         "book": "Book Waitlist"

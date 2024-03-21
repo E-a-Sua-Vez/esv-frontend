@@ -5,25 +5,29 @@ import Spinner from '../../common/Spinner.vue';
 import { cancelBooking, confirmBooking } from '../../../application/services/booking';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
+import { getPendingCommerceBookingsBetweenDates, transferBooking } from '../../../application/services/booking';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
+import Message from '../../common/Message.vue';
 
 export default {
   name: 'BookingDetailsCard',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm },
+  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message },
   props: {
     show: { type: Boolean, default: true },
     booking: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
+    queues: { type: Array, default: undefined },
   },
   data() {
     return {
       loading: false,
       extendedEntity: false,
       extendedPaymentEntity: false,
+      extendedTransferEntity: false,
       newConfirmationData: {},
       paymentTypes: [],
       paymentMethods: [],
@@ -31,10 +35,13 @@ export default {
       paymentTypeError: false,
       paymentMethodError: false,
       errorsAdd: [],
+      goToTransfer: false,
       goToCancel: false,
       goToConfirm1: false,
       goToConfirm2: false,
-      checked: false
+      checked: false,
+      queuesToTransfer: [],
+      queueToTransfer: {}
     }
   },
   beforeMount() {
@@ -47,6 +54,10 @@ export default {
     },
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
+    },
+    async showTransferDetails() {
+      this.extendedTransferEntity = !this.extendedTransferEntity;
+      await this.toTransfer();
     },
     getDate(dateIn, timeZoneIn) {
       const date = dateIn.toDate().toString();
@@ -121,6 +132,75 @@ export default {
         this.loading = false;
         this.alertError = error.message;
       }
+    },
+    async toTransfer() {
+      const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
+      if (queuesToTransfer && queuesToTransfer.length > 0) {
+        const date = this.booking.date;
+        const bookings = await getPendingCommerceBookingsBetweenDates(this.commerce.id, date);
+        if (bookings && bookings.length > 0) {
+          const groupedBookings = bookings.reduce((acc, book) => {
+            const type = book.queueId;
+            if (!acc[type]) {
+              acc[type] = [];
+            }
+            acc[type].push(book);
+            return acc;
+          }, {});
+          const limit = queuesToTransfer.length;
+          queuesToTransfer.forEach(queue => {
+            const bookingsByQueue = groupedBookings[queue.id];
+            if (bookingsByQueue && bookingsByQueue.length > 0) {
+              const bookingsReserved = bookingsByQueue.map(booking => {
+                if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+                  return [...booking.block.blockNumbers];
+                } else {
+                  return booking.block.number;
+                }
+              });
+              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+              const blockedBlocks = []
+              uniqueBlocksReserved.forEach(block => {
+                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                if (times >= limit - 1) {
+                  blockedBlocks.push(block);
+                }
+              })
+              const blocksToCheck = this.booking.block.blockNumbers || [this.booking.block.number];
+              const availableBlocks = blocksToCheck.flat().filter(block => blockedBlocks.includes(block));
+              if (availableBlocks.length === 0) {
+                this.queuesToTransfer.push(queue);
+              }
+            } else {
+              this.queuesToTransfer.push(queue);
+            }
+          })
+
+        }
+      }
+    },
+    async transfer() {
+      try {
+        this.loading = true;
+        if (this.booking && this.booking.id) {
+          const body = {
+            queueId: this.queueToTransfer
+          };
+          await transferBooking(this.booking.id, body);
+        }
+        this.loading = false;
+        this.goToTransfer = false;
+      } catch (error) {
+        this.loading = false;
+        this.alertError = error.message;
+      }
+    },
+    goTransfer() {
+      this.goToTransfer = !this.goToTransfer;
+    },
+    cancelTransfer() {
+      this.goToTransfer = false;
     },
     getActiveFeature(commerce, name, type) {
       return getActiveFeature(commerce, name, type);
@@ -267,6 +347,7 @@ export default {
           </div>
         </div>
         <hr>
+         <!-- PAYMENT -->
         <div class="row centered mt-2" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
           <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
             <div class="" v-if="booking.confirmed === true && booking.confirmationData">
@@ -286,7 +367,7 @@ export default {
                 <span class="centered confirm-payment"
                   href="#"
                   @click.prevent="showPaymentDetails()">
-                  <i class="bi bi-cash-coin mx-1"></i> <span class="details-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
+                  <i class="bi bi-cash-coin mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
                   <i class="dark" :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
                 </span>
               </h5>
@@ -313,7 +394,54 @@ export default {
                 @actionNo="confirmCancel2()"
               >
               </AreYouSure>
+              <hr>
             </div>
+          </div>
+        </div>
+        <!-- TRANSFER -->
+        <div class="row centered mt-1" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
+          <div>
+            <h5>
+              <span class="centered confirm-payment"
+                href="#"
+                @click.prevent="showTransferDetails()">
+                <i class="bi bi-arrow-left-right mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
+                <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+              </span>
+            </h5>
+          </div>
+          <div
+            :class="{ show: extendedTransferEntity }"
+            class="detailed-data transition-slow">
+            <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
+              <div>
+                <div class="text-label my-1">
+                  {{ $t("collaboratorBookingsView.selectQueueToTransfer") }}
+                </div>
+                <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
+                  <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
+                </select>
+              </div>
+              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+                @click="goTransfer()"
+                :disabled="!queueToTransfer || !toggles['collaborator.bookings.confirm']">
+                <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.transfer") }}
+              </button>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('collaboratorBookingsView.message.6.title')"
+                :content="$t('collaboratorBookingsView.message.6.content')" />
+            </div>
+            <AreYouSure
+              :show="goToTransfer"
+              :yesDisabled="toggles['collaborator.bookings.transfer']"
+              :noDisabled="toggles['collaborator.bookings.transfer']"
+              @actionYes="transfer()"
+              @actionNo="cancelTransfer()"
+            >
+            </AreYouSure>
+            <hr>
           </div>
         </div>
         <div class="row centered mt-2" v-if="!loading">
@@ -402,6 +530,12 @@ export default {
 .details-title {
   text-decoration: underline;
   font-size: .7rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.step-title {
+  text-decoration: underline;
+  font-size: .8rem;
   color: var(--color-text);
   cursor: pointer;
 }

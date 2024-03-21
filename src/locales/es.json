@@ -75,7 +75,9 @@
     "types": {
       "STANDARD": "Standard",
       "COLLABORATOR": "Colaborador",
-      "SERVICE": "Servicio"
+      "SERVICE": "Servicio",
+      "MULTI_SERVICE": "Múltiples Servicios",
+      "SELECT_SERVICE": "Seleccionar Servicio"
     }
   },
   "productTypes": {
@@ -294,6 +296,18 @@
     "attention-confirm-payment": {
       "title": "Atención Pago Confirmación",
       "description": "Requiere que las atenciones sean pagadas"
+    },
+    "attention-service-select": {
+      "title": "Atención Seleccionar Servicios",
+      "description": "Al generar una nueva atención/reserva puede seleccionar un o varios servicios"
+    },
+    "attention-today-desactivated": {
+      "title": "Atención Hoy Desactivado",
+      "description": "Desactiva las filas para el mismo día"
+    },
+    "booking-transfer-queue": {
+      "title": "Reserva Transferir Fila",
+      "description": "Tranferir reserva a otra fila disponible"
     }
   },
   "paymentMethods": {
@@ -726,7 +740,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
-          "admin": "Administrar Reservas"
+          "admin": "Administrar Reservas",
+          "transfer": "Transferir Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -777,7 +792,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
-          "admin": "Administrar Reservas"
+          "admin": "Administrar Reservas",
+          "transfer": "Transferir Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -816,6 +832,9 @@
     "paymentAmount": "Monto:",
     "paymentCommission": "Comisión:",
     "paymentComment": "Comentario (Opcional)",
+    "transferQueue": "Transferir Fila",
+    "transfer": "Transferir",
+    "selectQueueToTransfer": "Seleccione la fila a la que desea transferir esta reserva:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -864,7 +883,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
-          "admin": "Administrar Reservas"
+          "admin": "Administrar Reservas",
+          "transfer": "Transferir Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -935,7 +955,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
-          "admin": "Administrar Reservas"
+          "admin": "Administrar Reservas",
+          "transfer": "Transferir Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -1646,11 +1667,13 @@
     "limit": "Limite:",
     "order": "Orden:",
     "active": "Activo:",
+    "online": "Online:",
     "estimated": "Tiempo estimado (min):",
     "update": "Actualizar",
     "unavailable": "Eliminar",
     "add": "Agregar",
     "service": "Servicio:",
+    "services": "Servicios:",
     "selectCollaborator": "Selecciona Colaborador",
     "selectService": "Selecciona Servicio",
     "collaborator": "Colaborador:",
@@ -2784,7 +2807,8 @@
       "bookings": {
         "cancel": "Cancelar Reserva",
         "manage": "Manejar Reservas",
-        "confirm": "Confirmar Reserva"
+        "confirm": "Confirmar Reserva",
+        "transfer": "Transferir Reservas"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -2811,8 +2835,9 @@
       },
       "bookings": {
         "cancel": "Cancelar Reserva - Reservas",
-        "manage": "Manejar Reservas- Reservas",
-        "confirm": "Confirmar Reserva"
+        "manage": "Manejar Reservas - Reservas",
+        "confirm": "Confirmar Reserva - Reservas",
+        "transfer": "Transferir Reservas - Reservas"
       }
     },
     "plans": {

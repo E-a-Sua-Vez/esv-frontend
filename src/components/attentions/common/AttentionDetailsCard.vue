@@ -332,7 +332,10 @@ export default {
           >
           </AreYouSure>
         </div>
-        <div class="row m-0 mt-2 centered">
+        <div class="row m-0 mt-2 centered" v-if="attention.servicesDetails">
+          <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col-4 fw-bold"> {{ serv.name }}</span>
+        </div>
+        <div class="row m-0 mt-1 centered">
           <div class="col">
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.id }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdAt) }}</span>

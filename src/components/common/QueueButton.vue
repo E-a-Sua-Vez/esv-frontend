@@ -33,6 +33,12 @@ export default {
         if (type === 'SERVICE') {
           return 'bi-tag-fill';
         }
+        if (type === 'MULTI_SERVICE') {
+          return 'bi-tags-fill';
+        }
+        if (type === 'SELECT_SERVICE') {
+          return 'bi-hand-index-thumb-fill';
+        }
         return 'bi-clipboard2-check-fill';
       }
       return 'bi-clipboard2-check-fill';
@@ -81,11 +87,11 @@ export default {
               <div class="row queue-title">
                 <span>{{ queue.name }}</span>
               </div>
-              <div v-if="queue.type === 'COLLABORATOR'" class="row queue-time-title">
-                <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.servicesName ? queue.servicesName.join(', ') : queue.name }}</span>
+              <div v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
+                <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
               </div>
-              <div class="row queue-time-title" v-if="queue.type !== 'COLLABORATOR' && (queue.blockTime || queue.estimatedTime)">
-                <span><i class="bi bi-stopwatch-fill"></i>{{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
+              <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
+                <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
               </div>
             </div>
           </div>
@@ -108,10 +114,10 @@ export default {
             <div class="row queue-title">
               <span>{{ queue.name }}</span>
             </div>
-            <div v-if="queue.type === 'COLLABORATOR'" class="row queue-time-title">
-              <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.servicesName ? queue.servicesName.join(', ') : queue.name }}</span>
+            <div v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
+              <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
             </div>
-            <div class="row queue-time-title" v-if="queue.type !== 'COLLABORATOR' && (queue.blockTime || queue.estimatedTime)">
+            <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
               <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
             </div>
           </div>
