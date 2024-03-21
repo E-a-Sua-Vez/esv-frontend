@@ -808,7 +808,7 @@ export default {
         }
       }
       loadingHours.value = false;
-      return availableBlocks;
+      state.availableBookingBlocks = availableBlocks;
     }
 
     const getAvailableAttentionBlocks = (attentions) => {
@@ -878,6 +878,7 @@ export default {
     }
 
     const getAvailableDatesByMonth = async (date) => {
+      loadingCalendar.value = true;
       let availableDates = [];
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
@@ -925,6 +926,7 @@ export default {
       });
       calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+      loadingCalendar.value = false;
     }
 
     const getAvailableBookingSuperBlocks = () => {
@@ -1066,7 +1068,7 @@ export default {
         } else {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
-        state.availableBookingBlocks = getAvailableBookingBlocks(state.bookings);
+        getAvailableBookingBlocks(state.bookings);
         bookingsAvailables();
         getAvailableBookingSuperBlocks();
         await getAvailableDatesByMonth(currentDate);
@@ -1090,6 +1092,7 @@ export default {
           } else {
             await getAttention(undefined);
           }
+          attentionsAvailables();
         } else if (newData.date && newData.date !== oldData.date) {
           state.blocks = getBlocksByDay();
           state.block = {};
@@ -1098,25 +1101,28 @@ export default {
           }
           getBookings();
         } else if (newData.allBookings !== oldData.allBookings) {
-          if (state.allBookings && state.allBookings.length > 0) {
-            state.groupedBookingsByQueue = state.allBookings.reduce((acc, book) => {
-              const queueId = book.queueId;
-              if (!acc[queueId]) {
-                acc[queueId] = [];
-              }
-              acc[queueId].push(book);
-              return acc;
-            }, {});
-            state.bookings = state.groupedBookingsByQueue[state.queue.id];
+          const newIds = newData.allBookings.map(booking => booking.id);
+          const oldIds = oldData.allBookings.map(booking => booking.id);
+          if (!newIds.every(id => oldIds.includes(id))) {
+            if (state.allBookings && state.allBookings.length > 0) {
+              state.groupedBookingsByQueue = state.allBookings.reduce((acc, book) => {
+                const queueId = book.queueId;
+                if (!acc[queueId]) {
+                  acc[queueId] = [];
+                }
+                acc[queueId].push(book);
+                return acc;
+              }, {});
+              state.bookings = state.groupedBookingsByQueue[state.queue.id];
+            }
+            let currentDate;
+            currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+            getAvailableBookingBlocks(state.bookings);
+            getAvailableBookingSuperBlocks();
+            await getAvailableDatesByMonth(currentDate);
+            bookingsAvailables();
           }
-          let currentDate;
-          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-          state.availableBookingBlocks = getAvailableBookingBlocks(state.bookings);
-          getAvailableBookingSuperBlocks();
-          await getAvailableDatesByMonth(currentDate);
         }
-        attentionsAvailables();
-        bookingsAvailables();
       }
     )
 
