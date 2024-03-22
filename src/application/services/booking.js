@@ -27,15 +27,21 @@ export const createBookingFromWaitlist = async (id, number) => {
 }
 
 export const getPendingBookingsBetweenDates = async (queueId, dateFrom, dateTo) => {
-  return (await requestBackend.get(`/${entity}/pending/queue/${queueId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
+  if (queueId && dateFrom && dateTo) {
+    return (await requestBackend.get(`/${entity}/pending/queue/${queueId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
+  }
 }
 
 export const getPendingCommerceBookingsByDate = async (commerceId, date) => {
-  return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/${date}`, await getHeaders())).data;
+  if (commerceId && date) {
+    return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/${date}`, await getHeaders())).data;
+  }
 }
 
 export const getPendingCommerceBookingsBetweenDates = async (commerceId, dateFrom, dateTo) => {
-  return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
+  if (commerceId && dateFrom && dateTo) {
+    return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}/from/${dateFrom}/to/${dateTo}`, await getHeaders())).data;
+  }
 }
 
 export const confirmBooking = async (id, body) => {

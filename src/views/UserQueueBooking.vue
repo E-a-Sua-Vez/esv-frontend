@@ -164,11 +164,11 @@ export default {
           <div id="booking-cancelled" v-if="bookingCancelled()">
             <div class="your-booking mt-2">
               <span>{{ $t("userQueueBooking.cancelledTitle") }} <strong>{{ $t("userQueueBooking.cancelled") }}</strong></span>
-            </div>
+            </div>aaaa
             <AttentionNumber
               :number="state.booking.number"
               :type="'secondary'"
-              :data="state.booking.user"
+              :showData="false"
             >
             </AttentionNumber>
             <Message
@@ -194,19 +194,15 @@ export default {
             </div>
             <AttentionNumber
               :number="state.booking.number"
-              :data="state.booking.user"
+              :showData="false"
             ></AttentionNumber>
             <div id="booking-data" class="to-goal">
               <div class="booking-details-container">
-                <div class="col-6 booking-details-card">
-                  <span class="booking-details-title"> {{ $t("userQueueBooking.toGoal.1") }}* </span><br>
-                  <span class="booking-details-content"> <i class="bi bi-person"></i> {{ getBeforeYou() }} </span><br>
-                </div>
-                <div v-if="state.booking.block && state.booking.block.hourFrom" class="col-6 booking-details-card">
+                <div v-if="state.booking.block && state.booking.block.hourFrom" class="col-12 booking-details-card">
                   <span class="booking-details-title"> {{ $t("userQueueBooking.blockInfo") }}</span><br>
                   <strong>{{ state.booking.block.hourFrom }} - {{ state.booking.block.hourTo }}</strong>
                 </div>
-                <div v-else-if="state.beforeYou >= 0" class="col-6 booking-details-card">
+                <div v-else-if="state.beforeYou >= 0" class="col-12 booking-details-card">
                   <span class="booking-details-title"> {{ $t("userQueueBooking.estimatedTime") }}* </span><br>
                   <span class="booking-details-content"> <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }} </span> <br>
                 </div>

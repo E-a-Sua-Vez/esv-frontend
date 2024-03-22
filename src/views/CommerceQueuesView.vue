@@ -151,9 +151,13 @@ export default {
               state.queue = queues[0];
               await getAttention(undefined);
             }
-            state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+            const [collaborators, groupedQueues] = await Promise.all([
+              getCollaboratorsByCommerceId(state.commerce.id),
+              getGroupedQueueByCommerceId(state.commerce.id)
+            ]);
+            state.collaborators = collaborators;
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-              state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+              state.groupedQueues = groupedQueues;
               const queues = state.groupedQueues['COLLABORATOR'];
               const queueAux = [];
               queues.forEach(queue => {
@@ -247,7 +251,6 @@ export default {
 
     const receiveSelectedServices = async (services) => {
       state.selectedServices = services;
-      state.date = undefined;
       state.totalDurationRequested = state.selectedServices.reduce((acc, service) => acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime), 0);
       state.amountofBlocksNeeded = Math.ceil(state.totalDurationRequested/state.queue.blockTime);
       if (state.date && state.date !== 'TODAY') {
@@ -952,7 +955,7 @@ export default {
       const nextMonth = +month;
       const dateFrom = new Date(+year, thisMonth, 1);
       const dateTo = new Date(+year, nextMonth, 0);
-      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
+      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo) || [];
       const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
         const date = booking.date;
         if (!acc[date]) {
@@ -1000,7 +1003,6 @@ export default {
       if (state.selectedServices && state.selectedServices.length > 0) {
         const superBlocks = [];
         if (state.amountofBlocksNeeded > 1) {
-
           const toBuild = [];
           const availables = state.availableBookingBlocks.map(block => block.number);
           for (let i = 0; i < state.availableBookingBlocks.length; i++) {
@@ -1136,6 +1138,15 @@ export default {
       }
     })
 
+    const changeBlock = computed(() => {
+      const {
+        block
+      } = state;
+      return {
+        block
+      }
+    })
+
     watch (
       changeQueue,
       async () => {
@@ -1193,9 +1204,20 @@ export default {
     )
 
     watch (
+      changeBlock,
+      async () => {
+        if (state.attentionBlock) {
+          bookingsAvailables();
+          getAvailableBookingSuperBlocks();
+        }
+      }
+    )
+
+    watch (
       changeBooking,
       async (newData, oldData) => {
-        if (newData.allBookings !== oldData.allBookings && state.date && state.date !== 'TODAY') {
+        if (newData.allBookings !== oldData.allBookings &&
+          state.date && state.date !== 'TODAY') {
           const newIds = newData.allBookings.map(booking => booking.id);
           const oldIds = oldData.allBookings.map(booking => booking.id);
           if (!newIds.every(id => oldIds.includes(id))) {
@@ -1213,8 +1235,10 @@ export default {
           }
           let currentDate;
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+          if (newData.allBookings.length > 0) {
+            await getAvailableDatesByMonth(currentDate);
+          }
           getAvailableBookingBlocks(state.bookings);
-          await getAvailableDatesByMonth(currentDate);
           getAvailableBookingSuperBlocks();
           bookingsAvailables();
         }
@@ -1242,7 +1266,7 @@ export default {
             unsubscribeBookings();
           }
           getBookings();
-        }
+        };
         getAvailableBookingSuperBlocks();
         getAvailableAttentionSuperBlocks();
         bookingsAvailables();
@@ -1344,6 +1368,7 @@ export default {
             :groupedQueues="state.groupedQueues"
             :queueId="state.queueId"
             :accept="state.accept"
+            :collaborators="state.collaborators"
             :receiveQueue="receiveQueue"
             :receiveServices="receiveServices"
           >
@@ -1357,7 +1382,6 @@ export default {
           </ServiceForm>
           <!-- BOOKING / ATTENTION -->
           <div id="booking" v-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') && state.canBook">
-            {{ state.canBook }}
             <div v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()" class="choose-attention py-1">
               <span class="fw-bold"> {{ $t("commerceQueuesView.when") }} </span>
             </div>
@@ -1611,7 +1635,7 @@ export default {
                             </div>
                           </div>
                           <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block.number">
-                            <div v-if="state.block.number && state.bookingAvailable === false">
+                            <div v-if="state.block.number && state.bookingAvailable === false">aaa
                               <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
                             </div>
                             <button

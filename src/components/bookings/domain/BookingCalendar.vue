@@ -5,7 +5,7 @@ import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates 
 import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
-import { getQueueBlockDetailsByDay, getQueueBlockDetailsByDayByCommerceId } from '../../../application/services/block';
+import { getQueueBlockDetailsByDayByCommerceId } from '../../../application/services/block';
 import { getClientsDetails } from '../../../application/services/query-stack';
 import Popper from "vue3-popper";
 import DashboardAttentionsManagement from '../../attentions/DashboardAttentionsManagement.vue';
@@ -54,6 +54,7 @@ export default {
       selectedDates: {},
       selectedDate: undefined,
       blocksByDay: {},
+      blocksCommerceByDay: {},
       blocks: {},
       bookingsFromService: ref([]),
       bookingsByCommerce: ref({}),
@@ -61,7 +62,7 @@ export default {
       bookings: ref([]),
       waitlists: ref({}),
       date: (new Date()).setDate(new Date().getDate() + 1),
-      minDate: (new Date()).setDate(new Date().getDate() + 1),
+      minDate: (new Date()).setDate(new Date().getDate()),
       maxDate: (new Date()).setDate(new Date().getDate() + 90),
       searchText: '',
       client: {},
@@ -288,7 +289,7 @@ export default {
     }
 
     const getBlocksByDay = (queue) => {
-      if (queue && state.selectedDate) {
+      if (queue && state.selectedDate && state.selectedDates[queue.id]) {
         const [year, month, day] = new Date(dateYYYYMMDD(state.selectedDates[queue.id])).toISOString().slice(0,10).split('-');
         const dayNumber = new Date(+year, +month - 1, +day).getDay();
         return state.blocksByDay[dayNumber];
@@ -323,11 +324,11 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          const result = await getQueueBlockDetailsByDayByCommerceId(commerce.value.id);
+          state.blocksCommerceByDay = await getQueueBlockDetailsByDayByCommerceId(commerce.value.id);
           for (let i = 0; i < queues.value.length; i++) {
             const queue = queues.value[i];
-            if (result) {
-              state.blocksByDay = result[queue.id];
+            if (state.blocksCommerceByDay) {
+              state.blocksByDay = state.blocksCommerceByDay[queue.id];
               const monthBookings = groupedBookings[queue.id] || [];
               getAvailableDatesByQueueMonth(monthBookings, queue, date);
             }
@@ -459,13 +460,18 @@ export default {
     }
 
     const selectDay = async (queue) => {
-      loadingBookings.value = true;
-      if (queue && state.selectedQueue && queue.id !== state.selectedQueue.id) {
+      if (queue && queue.id) {
         state.selectedQueue = queue;
-        state.blocksByDay = await getQueueBlockDetailsByDay(state.selectedQueue.id);
+      }
+      getBlocks();
+    }
+
+    const getBlocks = () => {
+      if (state.selectedQueue && state.selectedQueue.id) {
+        state.blocksByDay = state.blocksCommerceByDay[state.selectedQueue.id];
       }
       if (state.selectedDates[state.selectedQueue.id]) {
-        state.selectedDate = dateYYYYMMDD(state.selectedDates[state.selectedQueue.id]);
+        state.selectedDate = state.selectedDates[state.selectedQueue.id];
       } else {
         state.selectedDate = undefined;
       }
@@ -473,10 +479,11 @@ export default {
       const blocks = getBlocksByDay(state.selectedQueue);
       const blocksReserved = [];
       const bookingsReserved = state.bookings.map(booking => {
-        blocksReserved.push(booking.block);
         if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+          blocksReserved.push(booking.block);
           return [...booking.block.blockNumbers];
         } else {
+          blocksReserved.push(booking.block);
           return booking.block.number;
         }
       });
@@ -556,9 +563,9 @@ export default {
     }
 
     const changeDate = computed(() => {
-      const { selectedDate, selectedQueue } = state;
+      const { selectedDate, selectedQueue, selectedDates } = state;
       return {
-        queues,
+        selectedDates,
         selectedDate,
         selectedQueue
       }
@@ -578,6 +585,7 @@ export default {
     watch(
       changeDate,
       async () => {
+        loadingBookings.value = true;
         if (unsubscribeBookings) {
           unsubscribeBookings();
         }
@@ -586,8 +594,12 @@ export default {
           unsubscribeWaitlists();
         }
         getWaitlists();
-        await updatedAttentions();
-        await getAvailableDatesByMonth(state.selectedQueue, state.selectedDate);
+        await Promise.all([
+          updatedAttentions(),
+          getAvailableDatesByMonth(state.selectedQueue, state.selectedDate)
+        ]);
+        getBlocks();
+        loadingBookings.value = false;
       }
     )
 
@@ -597,6 +609,7 @@ export default {
         if (newData.bookings !== oldData.bookings) {
           const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
           await updateAvailableDays(currentDate);
+          getBlocks();
         }
       }
     )
@@ -607,10 +620,12 @@ export default {
         loading.value = true;
         initQueues();
         initCalendars();
-        const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        await updateAvailableDays(currentDate);
         state.locale = commerce.value.localeInfo.language;
-        await getAvailableCommerceDatesByMonth(currentDate);
+        const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+        await Promise.all([
+          updateAvailableDays(currentDate),
+          getAvailableCommerceDatesByMonth(currentDate)
+        ]);
         loading.value = false;
       }
     )
@@ -824,6 +839,7 @@ export default {
                       :detailsOpened="false"
                       :toggles="toggles"
                       :commerce="commerce"
+                      :queues="queues"
                       @updatedAttentions="updatedAttentions"
                     >
                     </AttentionDetailsCard>

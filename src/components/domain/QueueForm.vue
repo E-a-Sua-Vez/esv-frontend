@@ -2,7 +2,6 @@
 import { ref, reactive, toRefs, onBeforeMount } from 'vue';
 import { getActiveFeature } from '../../shared/features';
 import { VueRecaptcha } from 'vue-recaptcha';
-import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getServiceByCommerce } from '../../application/services/service';
 import Warning from '../common/Warning.vue';
 import Message from '../common/Message.vue';
@@ -18,6 +17,7 @@ export default {
     groupedQueues: { type: Object, default: {} },
     queueId: { type: String, default: undefined },
     accept: { type: Boolean, default: false },
+    collaborators: { type: Array, default: [] },
     receiveQueue: { type: Function, default: () => {} },
     receiveServices: { type: Function, default: () => {} }
   },
@@ -48,13 +48,12 @@ export default {
         if (queues.value && queues.value.length > 0) {
           const collaboratorQueues = queues.value.filter(queue => queue.type === 'COLLABORATOR');
           if (collaboratorQueues && collaboratorQueues.length > 0) {
-            const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
             if (getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')) {
               const queues = groupedQueues.value['COLLABORATOR'];
               const queueAux = [];
               queues.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
+                  const collaboratorsAux = state.collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.services = collaboratorsAux[0].services;
                     queue.servicesName = queue.services.map(serv => serv.name);
@@ -66,7 +65,7 @@ export default {
             } else {
               queues.value.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
+                  const collaboratorsAux = state.collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.services = collaboratorsAux[0].services;
                     queue.servicesName = queue.services.map(serv => serv.name);

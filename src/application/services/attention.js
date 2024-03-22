@@ -77,3 +77,11 @@ export const cancelAttention = async id => {
 export const attentionPaymentConfirm = async (id, body) => {
   return (await requestBackend.patch(`/${entity}/payment-confirm/${id}`, body, await getHeaders())).data;
 }
+
+export const transferAttention = async (id, body) => {
+  return (await requestBackend.patch(`/${entity}/transfer/${id}`, body, await getHeaders())).data;
+}
+
+export const getPendingCommerceAttentions = async (commerceId) => {
+  return (await requestBackend.get(`/${entity}/pending/commerce/${commerceId}`, await getHeaders())).data;
+}

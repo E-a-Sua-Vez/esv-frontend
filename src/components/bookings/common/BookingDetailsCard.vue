@@ -347,7 +347,7 @@ export default {
           </div>
         </div>
         <hr>
-         <!-- PAYMENT -->
+        <!-- PAYMENT -->
         <div class="row centered mt-2" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
           <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
             <div class="" v-if="booking.confirmed === true && booking.confirmationData">
