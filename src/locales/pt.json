@@ -881,7 +881,8 @@
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
-          "payment-confirm": "Confirmar Pagamento"
+          "payment-confirm": "Confirmar Pagamento",
+          "transfer": "Transfer Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"

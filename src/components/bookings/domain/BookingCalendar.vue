@@ -1,6 +1,6 @@
 <script>
 import { ref, watch, reactive, computed, toRefs, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates } from '../../../application/services/booking';
 import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
@@ -31,7 +31,6 @@ export default {
     toggles: { type: Object, default: {} },
   },
   async setup(props) {
-    const route = useRoute();
     const router = useRouter();
 
     let loading = ref(false);
@@ -52,8 +51,6 @@ export default {
       showCollaboratorQueues: false,
       locale: 'es',
       queues: [],
-      queuesCollaborator: [],
-      queuesNotCollaborator: [],
       selectedQueue: {},
       selectedDates: {},
       selectedDate: undefined,
@@ -138,7 +135,7 @@ export default {
       if (state.bookings && state.bookings.length > 0) {
         state.bookings.forEach(booking => {
           if (booking.block && booking.block.blockNumbers) {
-            if (booking.block.blockNumbers.sort()[0] === number) {
+            if (booking.block.blockNumbers.flat().sort((a,b) => a-b)[0] === number) {
               result.push(booking);
             }
           } else {
@@ -303,7 +300,10 @@ export default {
     const getBlocksByDay = (queue) => {
       if (queue && state.selectedDate && state.selectedDates[queue.id]) {
         const [year, month, day] = new Date(dateYYYYMMDD(state.selectedDates[queue.id])).toISOString().slice(0,10).split('-');
-        const dayNumber = new Date(+year, +month - 1, +day).getDay();
+        let dayNumber = new Date(+year, +month - 1, +day).getDay();
+        if (dayNumber === 0) {
+          dayNumber = 7;
+        }
         return state.blocksByDay[dayNumber];
       }
       return [];
@@ -336,7 +336,6 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          state.blocksCommerceByDay = await getQueueBlockDetailsByDayByCommerceId(commerce.value.id);
           for (let i = 0; i < queues.value.length; i++) {
             const queue = queues.value[i];
             if (state.blocksCommerceByDay) {
@@ -379,7 +378,10 @@ export default {
           dates.forEach(date => {
             const bookings = bookingsGroupedByDate[date];
             const [year, month, day] = date.split('-');
-            const dayNumber = new Date(+year, +month - 1, +day).getDay();
+            let dayNumber = new Date(+year, +month - 1, +day).getDay();
+            if (dayNumber === 0) {
+              dayNumber = 7;
+            }
             const blocks = state.blocksByDay[dayNumber] || [];
             if (bookings.length >= blocks.length) {
               forDeletion.push(date);
@@ -440,7 +442,10 @@ export default {
           dates.forEach(date => {
             const bookings = bookingsGroupedByDate[date];
             const [year, month, day] = date.split('-');
-            const dayNumber = new Date(+year, +month - 1, +day).getDay();
+            let dayNumber = new Date(+year, +month - 1, +day).getDay();
+            if (dayNumber === 0) {
+              dayNumber = 7;
+            }
             const blocks = state.blocksByDay[dayNumber] || [];
             if (bookings.length >= blocks.length) {
               forDeletion.push(date);
@@ -596,7 +601,6 @@ export default {
       } else {
         state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
       }
-
     }
 
     watch(
@@ -639,10 +643,12 @@ export default {
         initCalendars();
         state.locale = commerce.value.localeInfo.language;
         const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        await Promise.all([
-          updateAvailableDays(currentDate),
-          getAvailableCommerceDatesByMonth(currentDate)
+        const [blocksCommerceByDay,,] = await Promise.all([
+          getQueueBlockDetailsByDayByCommerceId(commerce.value.id),
+          updateAvailableDays(currentDate)
         ]);
+        state.blocksCommerceByDay = blocksCommerceByDay;
+        await getAvailableCommerceDatesByMonth(currentDate);
         loading.value = false;
       }
     )
@@ -680,7 +686,6 @@ export default {
       showCollaboratorQueue,
       showAllQueue
     }
-
   }
 }
 </script>
@@ -967,7 +972,7 @@ export default {
                   <div v-for="block in state.blocks" :key="block.number">
                     <div class="metric-card">
                       <span
-                        class="lefted badge rounded-pill bg-primary m-0"
+                        class="lefted badge rounded-pill bg-primary m-0 hour-title"
                         :class="'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
                     </div>
                   </div>

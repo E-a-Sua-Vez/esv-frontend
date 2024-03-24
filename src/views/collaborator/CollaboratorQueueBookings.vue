@@ -1,29 +1,22 @@
 <script>
-import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
-import { getGroupedQueueByCommerceId, getQueueByCommerce, getQueuesByCommerceId } from '../../application/services/queue';
+import { getQueuesByCommerceId } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import { getQueueBlockDetailsByDay } from '../../application/services/block';
-import { getActiveFeature } from '../../shared/features';
-import { getPendingBookingsBetweenDates } from '../../application/services/booking';
-import { dateYYYYMMDD } from '../../shared/utils/date';
-import { bookingCollection, waitlistCollection } from '../../application/firebase';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import BookingDetailsCard from '../../components/bookings/common/BookingDetailsCard.vue';
-import WaitlistDetailsCard from '../../components/waitlist/WaitlistDetailsCard.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingDetailsCard, WaitlistDetailsCard, BookingCalendar },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingCalendar },
   async setup() {
     const router = useRouter();
 
@@ -112,7 +105,7 @@ export default {
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const queues = await getQueuesByCommerceId(state.commerce.id);
         state.queues = queues;
-        await initQueues();
+        //await initQueues();
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.locale = state.commerce.localeInfo.language;
@@ -139,6 +132,12 @@ export default {
       return state.commerce && state.commerce.active === true;
     };
 
+    const goBack = () => {
+      router.push({ path: `/interno/colaborador/menu` });
+    }
+
+    /* LOGICA COMENTADA PERMITE HACER GESTION DE LAS AGENDAS POR FILA (2024-01-23)
+
     const initQueues = async () => {
       if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
         state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
@@ -155,13 +154,6 @@ export default {
         }
       }
     }
-
-    const goBack = () => {
-      router.push({ path: `/interno/colaborador/menu` });
-    }
-
-    /* LOGICA COMENTADA PERMITE HACER GESTION DE LAS AGENDAS POR FILA (2024-01-23)
-
 
     const formattedDate = (date) => {
       if (date && date !== 'TODAY') {

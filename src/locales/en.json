@@ -872,7 +872,8 @@
           "attend": "Attend",
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
-          "payment-confirm": "Confirm Payment"
+          "payment-confirm": "Confirm Payment",
+          "transfer": "Transfer Attention"
         },
         "module": {
           "update": "Update attention Module"

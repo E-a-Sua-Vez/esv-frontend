@@ -667,7 +667,10 @@ export default {
         return state.blocksByDay[day];
       } else {
         const [year, month, day] = state.date.slice(0,10).split('-');
-        const dayNumber = new Date(+year, +month - 1, +day).getDay();
+        let dayNumber = new Date(+year, +month - 1, +day).getDay();
+        if (dayNumber === 0) {
+          dayNumber = 7;
+        }
         return state.blocksByDay[dayNumber];
       }
     }
@@ -1002,7 +1005,10 @@ export default {
         dates.forEach(date => {
           const bookings = bookingsGroupedByDate[date];
           const [year, month, day] = date.split('-');
-          const dayNumber = new Date(+year, +month - 1, +day).getDay();
+          let dayNumber = new Date(+year, +month - 1, +day).getDay();
+          if (dayNumber === 0) {
+            dayNumber = 7;
+          }
           const blocks = state.blocksByDay[dayNumber] || [];
           if (bookings.length === blocks.length) {
             forDeletion.push(date);

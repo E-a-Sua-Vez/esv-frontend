@@ -422,7 +422,7 @@ export default {
               </div>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
                 @click="goTransfer()"
-                :disabled="!queueToTransfer || !toggles['collaborator.bookings.confirm']">
+                :disabled="!queueToTransfer || !toggles['collaborator.attention.confirm']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.transfer") }}
               </button>
             </div>
@@ -433,8 +433,8 @@ export default {
             </div>
             <AreYouSure
               :show="goToTransfer"
-              :yesDisabled="toggles['collaborator.bookings.transfer']"
-              :noDisabled="toggles['collaborator.bookings.transfer']"
+              :yesDisabled="toggles['collaborator.attention.transfer']"
+              :noDisabled="toggles['collaborator.attention.transfer']"
               @actionYes="transfer()"
               @actionNo="cancelTransfer()"
             >

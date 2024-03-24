@@ -871,7 +871,8 @@
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
-          "payment-confirm": "Confirmar Pago"
+          "payment-confirm": "Confirmar Pago",
+          "transfer": "Transferir Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"

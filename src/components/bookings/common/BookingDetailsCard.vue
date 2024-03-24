@@ -427,7 +427,7 @@ export default {
               </div>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
                 @click="goTransfer()"
-                :disabled="!queueToTransfer || !toggles['collaborator.bookings.confirm']">
+                :disabled="!queueToTransfer || !toggles['collaborator.bookings.transfer']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.transfer") }}
               </button>
             </div>
