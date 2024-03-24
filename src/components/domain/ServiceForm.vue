@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, toRefs, onBeforeMount, watch } from 'vue';
+import { ref, reactive, toRefs, onBeforeMount, watch, computed } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../common/Warning.vue';
 import Message from '../common/Message.vue';
@@ -28,7 +28,13 @@ export default {
       service: {},
       services: [],
       selectedServices: [],
-      duration: 0
+      duration: 0,
+      filteredServices: [],
+      searchServiceText: undefined,
+      counter: 0,
+      page: 1,
+      totalPages: 0,
+      limit: 5
     })
 
     onBeforeMount(async () => {
@@ -37,6 +43,7 @@ export default {
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
+            refresh(queue.value.services);
           }
         }
         loading.value = false;
@@ -73,6 +80,45 @@ export default {
       return false;
     }
 
+    const clearSearchService = () => {
+      state.searchServiceText = '';
+      state.queue = {};
+      refresh(state.filteredServices);
+    }
+
+    const setPage = (pageIn) => {
+      state.page = pageIn;
+    }
+
+    const refresh = (services) => {
+      if (services && services.length > 0) {
+        const counter = services.length;
+        state.counter = counter;
+        const total = counter / state.limit;
+        const totalB = Math.trunc(total);
+        state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
+        const filtered = services.slice(((state.page - 1) * state.limit), (state.page * state.limit));
+        state.filteredServices = filtered;
+      } else {
+        state.counter = 0;
+        state.totalPages = 0;
+      }
+    }
+
+    const changeSearchServiceText = computed(() => {
+      const { searchServiceText } = state;
+      return {
+        searchServiceText
+      }
+    })
+
+    const changePage = computed(() => {
+      const { page } = state;
+      return {
+        page
+      }
+    })
+
     watch(
       queue,
       async () => {
@@ -82,7 +128,34 @@ export default {
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
+            refresh(queue.value.services);
           }
+        }
+      }
+    )
+
+    watch(
+      changeSearchServiceText,
+      async (newData) => {
+        if (newData.searchServiceText && newData.searchServiceText.length > 3) {
+          const searchText = newData.searchServiceText.toUpperCase();
+          const services = queue.value.services;
+          if (services && services.length > 0) {
+            const result = services.filter(service => service.name.toUpperCase().includes(searchText));
+            state.filteredServices = result;
+          }
+        } else {
+          state.filteredServices = queue.value.services;
+        }
+        refresh(state.filteredServices);
+      }
+    )
+
+    watch(
+      changePage,
+      async (newData) => {
+        if (newData.page) {
+          refresh(queue.value.services);
         }
       }
     )
@@ -92,6 +165,8 @@ export default {
       loading,
       commerce,
       queue,
+      clearSearchService,
+      setPage,
       isActiveCommerce,
       isActiveQueues,
       checkService,
@@ -108,8 +183,52 @@ export default {
       </div>
       <div class="row g-1" v-if="state.services && state.services.length > 0">
         <div class="col col-md-10 offset-md-1 data-card">
+          <div v-if="state.filteredServices">
+            <div class="row col-md mb-2">
+              <input
+                min="1"
+                max="50"
+                type="text"
+                class="col form-control mx-2"
+                v-model="state.searchServiceText"
+                :placeholder="$t('commerceQueuesView.searchServiceQueue')">
+              <button
+                class="col-2 btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
+                @click="clearSearchService()">
+                <span><i class="bi bi-eraser-fill"></i></span>
+              </button>
+            </div>
+          </div>
+          <div class="centered mt-1" v-if="state.filteredServices && state.filteredServices.length >= state.limit">
+            <nav>
+              <ul class="pagination pagination-ul">
+                <li class="page-item">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                    aria-label="Previous"
+                    @click="setPage(state.page - 1)"
+                    :disabled="state.page === 1 || state.totalPages === 0">
+                    <span aria-hidden="true">&laquo;</span>
+                  </button>
+                </li>
+                <li>
+                  <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="state.page" :disabled="state.totalPages === 0">
+                    <option v-for="pag in state.totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
+                  </select>
+                </li>
+                <li class="page-item">
+                  <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                    aria-label="Next"
+                    @click="setPage(state.page + 1)"
+                    :disabled="state.page === state.totalPages || state.totalPages === 0">
+                    <span aria-hidden="true">&raquo;</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
           <div
-            v-for="service in state.services"
+            v-for="service in state.filteredServices"
             :key="service.id"
             class="d-grid btn-group btn-group-justified">
             <div class="btn-size btn-lg btn-block fw-bold col-12 mt-1 queue-btn px-4">
@@ -184,5 +303,8 @@ export default {
   line-height: .8rem;
   font-weight: 500;
   text-align: left;
+}
+.pagination-ul {
+  margin-bottom: .5rem !important;
 }
 </style>

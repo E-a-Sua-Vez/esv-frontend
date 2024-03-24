@@ -54,22 +54,6 @@ export default {
         this.alertError = error.message;
       }
     },
-    goToLink() {
-      const commerceKeyName = this.commerce.keyName;
-      const name = !this.attention.userName ? 'undefined' : this.attention.userName;
-      const lastName = !this.attention.userLastName ? 'undefined' : this.attention.userLastName;
-      const idNumber = !this.attention.userIdNumber ? 'undefined' : this.attention.userIdNumber;
-      const email = !this.attention.userEmail ? 'undefined' : this.attention.userEmail;
-      const phone = !this.attention.userPhone ? 'undefined' : this.attention.userPhone;
-      const addressCode = !this.attention.userAddressCode ? 'undefined' : this.attention.userAddressCode;
-      const addressText = !this.attention.userAddressText ? 'undefined' : this.attention.userAddressText;
-      const addressComplement = !this.attention.userAddressComplement ? 'undefined' : this.attention.userAddressComplement;
-      const birthday = !this.attention.userBirthday ? 'undefined' : this.attention.userBirthday;
-      if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
-      }
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
-    },
     clasifyDaysSinceComment(score) {
       if (score === undefined) {
         return 'bi-qr-code blue-icon';

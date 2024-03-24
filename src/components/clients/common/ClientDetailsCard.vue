@@ -104,21 +104,20 @@ export default {
         this.alertError = error.message;
       }
     },
-    goToLink() {
+    goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
-      const name = !this.client.userName ? 'undefined' : this.client.userName;
-      const lastName = !this.client.userLastName ? 'undefined' : this.client.userLastName;
-      const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
-      const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
-      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone;
-      const addressCode = !this.client.userAddressCode ? 'undefined' : this.client.userAddressCode;
-      const addressText = !this.client.userAddressText ? 'undefined' : this.client.userAddressText;
-      const addressComplement = !this.client.userAddressComplement ? 'undefined' : this.client.userAddressComplement;
-      const birthday = !this.client.userBirthday ? 'undefined' : this.client.userBirthday;
-      if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
+      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      let resolvedRoute;
+      let query = {};
+      if (this.client && this.client.id) {
+        query['client'] = this.client.id;
       }
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
+      if (Object.keys(query).length === 0) {
+        resolvedRoute = this.$router.resolve({ path: url });
+      } else {
+        resolvedRoute = this.$router.resolve({ path: url, query });
+      }
+      window.open(resolvedRoute.href, '_blank');
     },
     clasifyDaysSinceComment(score) {
       if (score === undefined) {
@@ -267,13 +266,11 @@ export default {
             </button>
           </div>
           <div class="col-4">
-            <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
-              :href="goToLink(client)"
-              :disabled="client.contacted || checked"
-              target="_blank"
-              >
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+              @click="goToCreateBooking()"
+              :disabled="client.contacted || checked">
               {{ $t('dashboard.schedule')}} <br> <i class="bi bi-calendar-check-fill"></i>
-            </a>
+          </button>
           </div>
         </div>
         <hr>

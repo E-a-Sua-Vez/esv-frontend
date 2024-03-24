@@ -100,7 +100,7 @@ export default {
       if(response) {
         captcha = true;
         await store.setCurrentAttentionChannel('MINISITE');
-        router.push({ path: `/publico/comercio/${id}/filas` })
+        router.push({ path: `/publico/comercio/${id}/filas` });
       }
     };
 

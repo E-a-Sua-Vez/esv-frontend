@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, toRefs, onBeforeMount } from 'vue';
+import { ref, reactive, toRefs, onBeforeMount, watch, computed } from 'vue';
 import { getActiveFeature } from '../../shared/features';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { getServiceByCommerce } from '../../application/services/service';
@@ -22,7 +22,6 @@ export default {
     receiveServices: { type: Function, default: () => {} }
   },
   async setup(props) {
-
     let loading = ref(false);
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
 
@@ -30,6 +29,7 @@ export default {
       commerce,
       queues,
       groupedQueues,
+      collaborators,
       queueId,
       accept
     } = toRefs(props);
@@ -39,7 +39,13 @@ export default {
     const state = reactive({
       queue: {},
       showProfessional: false,
-      showService: false
+      showService: false,
+      filteredCollaboratorQueues: [],
+      searchCollaboratorText: undefined,
+      counter: 0,
+      page: 1,
+      totalPages: 0,
+      limit: 5
     })
 
     onBeforeMount(async () => {
@@ -53,8 +59,9 @@ export default {
               const queueAux = [];
               queues.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = state.collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
+                  const collaboratorsAux = collaborators.value.filter(collaborator => collaborator.id === queue.collaboratorId);
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
+                    queue.collaborator = collaboratorsAux[0];
                     queue.services = collaboratorsAux[0].services;
                     queue.servicesName = queue.services.map(serv => serv.name);
                   }
@@ -62,11 +69,13 @@ export default {
                 }
               })
               groupedQueues.value['COLLABORATOR'] = queueAux;
+              state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
             } else {
               queues.value.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = state.collaborators.filter(collaborator => collaborator.id === queue.collaboratorId);
+                  const collaboratorsAux = collaborators.value.filter(collaborator => collaborator.id === queue.collaboratorId);
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
+                    queue.collaborator = collaboratorsAux[0];
                     queue.services = collaboratorsAux[0].services;
                     queue.servicesName = queue.services.map(serv => serv.name);
                   }
@@ -74,6 +83,8 @@ export default {
                 }
               })
             }
+            state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
+            refresh(state.filteredCollaboratorQueues);
           }
         }
         loading.value = false;
@@ -81,6 +92,7 @@ export default {
         loading.value = false;
       }
     })
+
     const isActiveCommerce = () => {
       return commerce.value.active === true &&
         commerce.value.queues.length > 0
@@ -127,6 +139,83 @@ export default {
       receiveServices([]);
     }
 
+    const clearSearchCollaborator = () => {
+      state.searchCollaboratorText = '';
+      state.queue = {};
+      getQueue(state.queue);
+      refresh(state.filteredCollaboratorQueues);
+    }
+
+    const setPage = (pageIn) => {
+      state.page = pageIn;
+    }
+
+    const refresh = (queues) => {
+      if (queues && queues.length > 0) {
+        const counter = queues.length;
+        state.counter = counter;
+        const total = counter / state.limit;
+        const totalB = Math.trunc(total);
+        state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
+        const filtered = queues.slice(((state.page - 1) * state.limit), (state.page * state.limit));
+        state.filteredCollaboratorQueues = filtered;
+      } else {
+        state.counter = 0;
+        state.totalPages = 0;
+      }
+    }
+
+    const changeSearchCollaboratorText = computed(() => {
+      const { searchCollaboratorText } = state;
+      return {
+        searchCollaboratorText
+      }
+    })
+
+    const changePage = computed(() => {
+      const { page } = state;
+      return {
+        page
+      }
+    })
+
+    watch(
+      changeSearchCollaboratorText,
+      async (newData) => {
+        if (newData.searchCollaboratorText && newData.searchCollaboratorText.length > 3) {
+          if (state.queue && state.queue.id) {
+            state.queue = {};
+            getQueue(state.queue);
+          }
+          const searchText = newData.searchCollaboratorText.toUpperCase();
+          const collaboratorQueues = groupedQueues.value['COLLABORATOR'];
+          if (collaboratorQueues && collaboratorQueues.length > 0) {
+            const result = collaboratorQueues.filter(queue => {
+              const containQueueName = queue.name.toUpperCase().includes(searchText);
+              const containCollaboratorName = queue.collaborator.name.toUpperCase().includes(searchText);
+              const containServiceName = queue.servicesName.filter(service => service.toUpperCase().includes(searchText));
+              if (containQueueName === true || containCollaboratorName === true || containServiceName.length > 0) {
+                return queue;
+              }
+            })
+            state.filteredCollaboratorQueues = result;
+          }
+        } else {
+          state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
+        }
+        refresh(state.filteredCollaboratorQueues);
+      }
+    )
+
+    watch(
+      changePage,
+      async (newData) => {
+        if (newData.page) {
+          refresh(groupedQueues.value['COLLABORATOR']);
+        }
+      }
+    )
+
     return {
       state,
       captchaEnabled,
@@ -136,6 +225,8 @@ export default {
       groupedQueues,
       queueId,
       accept,
+      setPage,
+      clearSearchCollaborator,
       isActiveCommerce,
       getActiveFeature,
       getQueue,
@@ -189,8 +280,52 @@ export default {
               </div>
             </div>
             <div :class="' mx-2 my-2'" id="attention-collaborator-queue" v-if="state.showProfessional">
-              <div v-if="groupedQueues['COLLABORATOR'] && groupedQueues['COLLABORATOR'].length > 0">
-                <div v-for="(queue, index) in groupedQueues['COLLABORATOR']" :key="index">
+              <div v-if="state.filteredCollaboratorQueues">
+                <div class="row col-md mb-2">
+                  <input
+                    min="1"
+                    max="50"
+                    type="text"
+                    class="col form-control mx-2"
+                    v-model="state.searchCollaboratorText"
+                    :placeholder="$t('commerceQueuesView.searchCollaboratorQueue')">
+                  <button
+                    class="col-2 btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
+                    @click="clearSearchCollaborator()">
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
+                </div>
+              </div>
+              <div class="centered mt-1" v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length >= state.limit">
+                <nav>
+                  <ul class="pagination pagination-ul">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(state.page - 1)"
+                        :disabled="state.page === 1 || state.totalPages === 0">
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="state.page" :disabled="state.totalPages === 0">
+                        <option v-for="pag in state.totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(state.page + 1)"
+                        :disabled="state.page === state.totalPages || state.totalPages === 0">
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length > 0">
+                <div v-for="(queue, index) in state.filteredCollaboratorQueues" :key="index">
                   <QueueButton
                     :queue="queue"
                     :selectedQueue="state.queue"
@@ -199,6 +334,12 @@ export default {
                   >
                   </QueueButton>
                 </div>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('commerceQueuesView.message.title')"
+                  :content="$t('commerceQueuesView.message.content')">
+                </Message>
               </div>
             </div>
             <div :class="' mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
@@ -251,17 +392,28 @@ export default {
             </div>
           </div>
           <div v-else>
-            <div
-              v-for="queue in queues"
-              :key="queue.id"
-              class="d-grid btn-group btn-group-justified">
+            <div v-if="queues && queues.length === 1">
               <QueueButton
-                :queue="queue"
-                :selectedQueue="state.queue"
+                :queue="queues[0]"
+                :selectedQueue="queues[0]"
                 :getQueue="getQueue"
                 :accept="accept"
               >
               </QueueButton>
+            </div>
+            <div v-else>
+              <div
+                v-for="queue in queues"
+                :key="queue.id"
+                class="d-grid btn-group btn-group-justified">
+                <QueueButton
+                  :queue="queue"
+                  :selectedQueue="state.queue"
+                  :getQueue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
+              </div>
             </div>
           </div>
         </div>
@@ -320,5 +472,8 @@ export default {
   line-height: .8rem;
   font-weight: 500;
   text-align: left;
+}
+.pagination-ul {
+  margin-bottom: 0rem !important;
 }
 </style>

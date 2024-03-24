@@ -55,7 +55,9 @@ export default {
     },
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
-      await this.toTransfer();
+      if (this.extendedTransferEntity === true) {
+        await this.toTransfer();
+      }
     },
     getDate(dateIn, timeZoneIn) {
       const date = dateIn;
@@ -167,7 +169,7 @@ export default {
                   blockedBlocks.push(block);
                 }
               })
-              const blocksToCheck = this.booking.block.blockNumbers || [this.booking.block.number];
+              const blocksToCheck = this.attention.block.blockNumbers || [this.attention.block.number];
               const availableBlocks = blocksToCheck.flat().filter(block => blockedBlocks.includes(block));
               if (availableBlocks.length === 0) {
                 this.queuesToTransfer.push(queue);
@@ -188,6 +190,7 @@ export default {
             queueId: this.queueToTransfer
           };
           await transferAttention(this.attention.id, body);
+          this.$emit('updatedAttentions');
         }
         this.loading = false;
         this.goToTransfer = false;
@@ -508,7 +511,7 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: .8rem;
   color: var(--color-text);
   cursor: pointer;
 }
@@ -559,8 +562,8 @@ export default {
   font-weight: 400;
 }
 .select {
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-clear);
+  border-radius: .5rem !important;
+  border: 1.5px solid var(--gris-clear) !important;
 }
 .text-label {
   line-height: 1rem;
@@ -569,6 +572,12 @@ export default {
   display: flex;
 }
 .confirm-payment {
+  cursor: pointer;
+}
+.step-title {
+  text-decoration: underline;
+  font-size: .8rem;
+  color: var(--color-text);
   cursor: pointer;
 }
 </style>

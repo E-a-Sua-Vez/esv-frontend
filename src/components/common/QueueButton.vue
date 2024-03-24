@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, toRefs } from 'vue';
+import { toRefs } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
 
 export default {
@@ -75,7 +75,7 @@ export default {
         @error="validateCaptchaError">
         <button
           v-if="queue.active"
-          class="btn-size btn-lg btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
+          class="btn-size btn-sm btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
           :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
           @click="clickAction(queue)"
           :disabled="!accept">
@@ -102,7 +102,7 @@ export default {
       <button
         v-if="queue.active"
         type="button"
-        class=" btn-size btn btn-lg btn-block col-12 fw-bold rounded-pill mt-1 queue-btn"
+        class=" btn-size btn btn-sm btn-block col-12 fw-bold rounded-pill mt-2 queue-btn"
         :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
         @click="clickAction(queue)"
         :disabled="!accept">

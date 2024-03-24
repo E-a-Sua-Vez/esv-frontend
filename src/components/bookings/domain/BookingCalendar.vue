@@ -1,6 +1,6 @@
 <script>
 import { ref, watch, reactive, computed, toRefs, onUnmounted } from 'vue';
-import { globalStore } from '../../../stores';
+import { useRoute, useRouter } from 'vue-router';
 import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates } from '../../../application/services/booking';
 import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
@@ -31,6 +31,9 @@ export default {
     toggles: { type: Object, default: {} },
   },
   async setup(props) {
+    const route = useRoute();
+    const router = useRouter();
+
     let loading = ref(false);
     let loadingSearch = ref(false);
     let loadingBookings = ref(false);
@@ -43,13 +46,14 @@ export default {
     let unsubscribeBookings = () => {};
     let unsubscribeWaitlists = () => {};
 
-    const store = globalStore();
-
     const state = reactive({
       groupedQueues: [],
       showQueues: false,
+      showCollaboratorQueues: false,
       locale: 'es',
       queues: [],
+      queuesCollaborator: [],
+      queuesNotCollaborator: [],
       selectedQueue: {},
       selectedDates: {},
       selectedDate: undefined,
@@ -70,7 +74,8 @@ export default {
       searchTextError: false,
       showAttentions: true,
       showBooking: false,
-      showWaitlist: false
+      showWaitlist: false,
+      showAllQueues: false
     });
 
     const {
@@ -227,35 +232,28 @@ export default {
       }
     }
 
-    const goToLink = () => {
-      const commerceKeyName = commerce.value.keyName;
-      let url = `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
-      const queue = state.selectedQueue;
-      if (queue && queue.id) {
-        url += `/${queue.id}`;
-      } else {
-        url += `/undefined`;
-      }
-      if (state.client && state.client.id) {
-        const name = !state.client.userName ? 'undefined' : state.client.userName;
-        const lastName = !state.client.userLastName ? 'undefined' : state.client.userLastName;
-        const idNumber = !state.client.userIdNumber ? 'undefined' : state.client.userIdNumber;
-        const email = !state.client.userEmail ? 'undefined' : state.client.userEmail;
-        const phone = !state.client.userPhone ? 'undefined' : state.client.userPhone;
-        const addressCode = !state.client.userAddressCode ? 'undefined' : state.client.userAddressCode;
-        const addressText = !state.client.userAddressText ? 'undefined' : state.client.userAddressText;
-        const addressComplement = !state.client.userAddressComplement ? 'undefined' : state.client.userAddressComplement;
-        const birthday = !state.client.userBirthday ? 'undefined' : state.client.userBirthday;
-        if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
-          url += `/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
-        }
-      }
-      return url;
-    }
-
     const copyLink = (queue) => {
       const textToCopy = getQueueLink(queue);
       navigator.clipboard.writeText(textToCopy);
+    }
+
+    const goToCreateBooking = () => {
+      const commerceKeyName = commerce.value.keyName;
+      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      let resolvedRoute;
+      let query = {};
+      if (state.client && state.client.id) {
+        query['client'] = state.client.id;
+      }
+      if (state.selectedQueue && state.selectedQueue.id) {
+        query['queue'] = state.selectedQueue.id;
+      }
+      if (Object.keys(query).length === 0) {
+        resolvedRoute = router.resolve({ path: url });
+      } else {
+        resolvedRoute = router.resolve({ path: url, query });
+      }
+      window.open(resolvedRoute.href, '_blank');
     }
 
     const getDisabledDates = (queue) => {
@@ -279,6 +277,20 @@ export default {
 
     const showQueue = () => {
       state.showQueues = !state.showQueues;
+      state.showCollaboratorQueues = false;
+      state.showAllQueues = false;
+    }
+
+    const showCollaboratorQueue = () => {
+      state.showQueues = false;
+      state.showCollaboratorQueues = !state.showCollaboratorQueues;
+      state.showAllQueues = false;
+    }
+
+    const showAllQueue = () => {
+      state.showQueues = false;
+      state.showCollaboratorQueues = false;
+      state.showAllQueues = !state.showAllQueues;
     }
 
     const getAvailableDatesByCalendarMonth = async (pages) => {
@@ -401,7 +413,7 @@ export default {
     const getAvailableDatesByMonth = async (queue, date) => {
       if (queue && date) {
         let availableDates = [];
-        const [year, month] = date.split('-');
+        const [year, month] = dateYYYYMMDD(date).split('-');
         const thisMonth = +month - 1;
         const nextMonth = +month;
         const dateFrom = new Date(+year, thisMonth, 1);
@@ -578,8 +590,13 @@ export default {
       }
     })
 
-    const updatedAttentions = async () => {
-      state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+    const updatedAttentions = async (queueId) => {
+      if (queueId) {
+        state.attentions = await getAvailableAttentiosnByQueue(queueId);
+      } else {
+        state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+      }
+
     }
 
     watch(
@@ -656,10 +673,12 @@ export default {
       showQueue,
       selectQueue,
       copyLink,
-      goToLink,
+      goToCreateBooking,
       searchClient,
       clearClient,
-      getBookingBlockNumber
+      getBookingBlockNumber,
+      showCollaboratorQueue,
+      showAllQueue
     }
 
   }
@@ -669,17 +688,83 @@ export default {
 <template>
   <div v-if="show" class="modal-body">
     <div class="row">
+      <!-- CALENDAR AREA -->
       <div class="col-12 col-lg-8 mt-2">
         <Spinner :show="loading"> </Spinner>
         <div v-if="queues && queues.length > 0" class="row centered blocks-section">
           <span class="fw-bold mb-2 h6"> <i class="bi bi-person-lines-fill"></i> {{ $t("collaboratorBookingsView.selectQueue") }} </span>
-          <div>
-            <button
-              class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
-              @click="showQueue()">
-              {{ $t("collaboratorBookingsView.queues") }} <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
-            </button>
+          <div class="row">
+            <div class="col-4">
+              <button
+                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="state.showQueues ? 'btn-selected' : ''"
+                @click="showQueue()">
+                {{ $t("collaboratorBookingsView.queues") }} <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              </button>
+            </div>
+            <div class="col-4">
+              <button
+                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="state.showCollaboratorQueues ? 'btn-selected' : ''"
+                @click="showCollaboratorQueue()">
+                {{ $t("collaboratorBookingsView.collaboratorQueues") }} <i :class="state.showCollaboratorQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              </button>
+            </div>
+            <div class="col-4">
+              <button
+                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="state.showAllQueues ? 'btn-selected' : ''"
+                @click="showAllQueue()">
+                {{ $t("collaboratorBookingsView.allQueues") }} <i :class="state.showAllQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              </button>
+            </div>
             <div class="row mx-2 my-2 centered" v-if="state.showQueues && queues && queues.length > 0">
+              <div v-for="queue in queues.filter(queue => queue.type !== 'COLLABORATOR')" :key="queue.id" class="control-box col-12 col-lg-5">
+                <div class="">
+                  <div class="queue-select">
+                    <QueueName :queue="queue" @click="selectQueue(queue)"> </QueueName>
+                  </div>
+                  <div class="mt-2">
+                    <VDatePicker
+                      :locale="state.locale"
+                      v-model.string="state.selectedDates[queue.id]"
+                      :mask="dateMask"
+                      :min-date="state.minDate"
+                      :max-date="state.maxDate"
+                      :disabled-dates="disabledDates[queue.id]"
+                      :attributes='calendarAttributes[queue.id]'
+                      @dayclick="selectDay(queue)"
+                      @transition-start="selectQueue(queue)"
+                      @did-move="getAvailableDatesByCalendarMonth"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row mx-2 my-2 centered" v-if="state.showCollaboratorQueues && queues && queues.length > 0">
+              <div v-for="queue in queues.filter(queue => queue.type === 'COLLABORATOR')" :key="queue.id" class="control-box col-12 col-lg-5">
+                <div class="">
+                  <div class="queue-select">
+                    <QueueName :queue="queue" @click="selectQueue(queue)"> </QueueName>
+                  </div>
+                  <div class="mt-2">
+                    <VDatePicker
+                      :locale="state.locale"
+                      v-model.string="state.selectedDates[queue.id]"
+                      :mask="dateMask"
+                      :min-date="state.minDate"
+                      :max-date="state.maxDate"
+                      :disabled-dates="disabledDates[queue.id]"
+                      :attributes='calendarAttributes[queue.id]'
+                      @dayclick="selectDay(queue)"
+                      @transition-start="selectQueue(queue)"
+                      @did-move="getAvailableDatesByCalendarMonth"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row mx-2 my-2 centered" v-if="state.showAllQueues && queues && queues.length > 0">
               <div v-for="queue in queues" :key="queue.id" class="control-box col-12 col-lg-5">
                 <div class="">
                   <div class="queue-select">
@@ -710,23 +795,24 @@ export default {
             :content="$t('collaboratorBookingsView.message.1.content')" />
         </div>
       </div>
+      <!-- MANAGEMENT AREA -->
       <div class="col-12 col-lg-4 mt-2">
         <div v-if="true" >
           <div class="blocks-section">
             <span class="fw-bold h6"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
-            <div class="row mt-2 mb-2">
+            <div class="row mt-1 mb-1">
               <div class="col-6">
-                <div>{{ $t("commerceQueuesView.queueSelected") }}</div>
+                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
                 <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
               </div>
               <div class="col-6">
-                <div>{{ $t("commerceQueuesView.dataSelected") }}</div>
+                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
                 <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
               </div>
             </div>
             <hr>
-            <div class="row mt-2 mb-3 mx-2">
-              <div><i class="bi bi-search"></i> <span class="fw-bold h6"> {{ $t("collaboratorBookingsView.searchClient") }} </span></div>
+            <div class="row mt-1 mb-1 mx-2">
+              <div class="mb-1"><i class="bi bi-search"></i> <span class="fw-bold h6"> {{ $t("collaboratorBookingsView.searchClient") }} </span></div>
               <div class="col-8 col-md-8 centered">
                 <input
                   min="1"
@@ -788,11 +874,10 @@ export default {
                   @click="copyLink()">
                   <i class="bi bi-file-earmark-spreadsheet"></i>
                 </button>
-                <a class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                    :href="`${goToLink()}`"
-                    target="_blank">
+                <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                  @click="goToCreateBooking()">
                   <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
-                </a>
+              </button>
               </div>
             </div>
             <hr>
@@ -824,8 +909,8 @@ export default {
               </h6>
             </div>
             <div v-if="state.showAttentions">
-              <div class="my-2">
-                <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.attentions.length }} </span>
+              <div class="mt-2 mb-1">
+                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.attentions.length }} </span>
               </div>
               <div v-if="state.attentions && state.attentions.length > 0">
                 <div v-for="(attention, index) in state.attentions" :key="index" class="mt-2">
@@ -854,7 +939,7 @@ export default {
             </div>
             <div v-if="state.showBooking">
               <div class="my-2">
-                <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
+                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
               </div>
               <Spinner :show="loadingBookings"> </Spinner>
               <div v-if="!loadingBookings">
@@ -862,7 +947,7 @@ export default {
                   <div v-for="block in state.blocks" :key="block.number">
                     <div class="metric-card">
                       <span
-                        class="lefted badge rounded-pill bg-primary m-0"
+                        class="lefted badge rounded-pill bg-primary m-0 hour-title"
                         :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
                       <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
                         <BookingDetailsCard
@@ -896,7 +981,7 @@ export default {
             </div>
             <div v-if="state.showWaitlist">
               <div class="my-2">
-                <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
+                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
               </div>
               <div v-if="state.waitlists && state.waitlists.length > 0">
                 <div v-for="waitlist in state.waitlists" :key="waitlist.id">
@@ -1041,5 +1126,13 @@ export default {
 }
 .queue-select {
   cursor: pointer;
+}
+.subtitle-info {
+  font-size: .9rem;
+  line-height: 1rem;
+}
+.hour-title {
+  font-size: .75rem;
+  padding: .35rem
 }
 </style>

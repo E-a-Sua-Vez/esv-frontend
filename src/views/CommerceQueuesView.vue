@@ -3,6 +3,7 @@ import { ref, reactive, onBeforeMount, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById, getGroupedQueueByCommerceId } from '../application/services/queue';
+import { getClientById } from '../application/services/client';
 import { createAttention } from '../application/services/attention';
 import { createBooking, getPendingBookingsBetweenDates } from '../application/services/booking';
 import { getQueueBlockDetailsByDay } from '../application/services/block';
@@ -11,7 +12,7 @@ import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
 import { getActiveFeature } from '../shared/features';
 import { bookingCollection, attentionCollection } from '../application/firebase';
-import { getCollaboratorsByCommerceId } from '../application/services/collaborator';
+import { getCollaboratorsByCommerceId, getCollaboratorDetailsById } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
 import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
@@ -31,7 +32,7 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const store = globalStore();
-    const {
+    let {
       keyName,
       queueId,
       name,
@@ -48,6 +49,9 @@ export default {
       addressCode,
       origin
     } = route.params;
+
+    const { client, queue } = route.query;
+
     const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
     let captcha = false;
@@ -139,9 +143,31 @@ export default {
           state.commerce = await getCommerceByKeyName(keyName);
           state.locale = state.commerce.localeInfo.language;
           store.setCurrentCommerce(state.commerce);
-          if (queueId && queueId !== 'undefined') {
-            state.queue = await getQueueById(queueId);
+          if (client && client !== undefined) {
+            const clientById = await getClientById(client);
+            if (clientById && clientById.id) {
+              if (clientById.name) {
+                const personalInfo = clientById.personalInfo;
+                const user = { ...clientById, ...personalInfo };
+                receiveData(user);
+              }
+            }
+          }
+          if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {
+            state.queue = await getQueueById(queue || queueId);
+            const queueType = state.queue.type;
+            state.groupedQueues = {};
+            if (queueType === 'COLLABORATOR') {
+              const collaborator = await getCollaboratorDetailsById(state.queue.collaboratorId);
+              if (collaborator && collaborator.id) {
+                state.queue.collaborator = collaborator;
+                state.queue.services = collaborator.services;
+                state.queue.servicesName = state.queue.services.map(serv => serv.name);
+              }
+            }
             state.queues = [state.queue];
+            state.groupedQueues[queueType] = state.queues;
+            state.queueId = state.queue.id;
             getQueue(state.queue);
             await getAttention(undefined);
           } else {
@@ -264,7 +290,7 @@ export default {
     const setCanBook = () => {
       state.canBook = false;
       if (state.queue && state.queue.id) {
-        if (state.queue.type === 'STANDARD') {
+        if (['STANDARD', 'SERVICE'].includes(state.queue.type)) {
           state.canBook = true;
         } else {
           if (state.selectedServices && state.selectedServices.length > 0) {
@@ -1344,19 +1370,19 @@ export default {
           <!-- FORM -->
           <ClientForm
             :commerce="state.commerce"
-            :name="name"
-            :lastName="lastName"
-            :idNumber="idNumber"
-            :email="email"
-            :phone="phone"
-            :birthday="birthday"
-            :addressText="addressText"
-            :addressCode="addressCode"
-            :addressComplement="addressComplement"
-            :origin="origin"
-            :code1="code1"
-            :code2="code2"
-            :code3="code3"
+            :name="state.newUser.name || name"
+            :lastName="state.newUser.lastName || lastName"
+            :idNumber="state.newUser.idNumber || idNumber"
+            :email="state.newUser.email || email"
+            :phone="state.newUser.phone || phone"
+            :birthday="state.newUser.birthday || birthday"
+            :addressText="state.newUser.addressText || addressText"
+            :addressCode="state.newUser.addressCode || addressCode"
+            :addressComplement="state.newUser.addressComplement || addressComplement"
+            :origin="state.newUser.origin || origin"
+            :code1="state.newUser.code1 || code1"
+            :code2="state.newUser.code2 || code2"
+            :code3="state.newUser.code3 || code3"
             :errorsAdd="state.errorsAdd"
             :receiveData="receiveData"
           >
@@ -1494,7 +1520,7 @@ export default {
                         <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.attentionBlock && state.attentionBlock.number" class="py-1 mt-2">
                           <hr>
                           {{ $t("commerceQueuesView.blockSelected") }}
-                          <div class="badge rounded-pill bg-dark py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
+                          <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
                         </div>
                         <div v-if="state.attentionBlock.number && state.attentionAvailable === false">
                           <Alert :show="!!state.attentionAvailable" :stack="990"></Alert>
@@ -1530,7 +1556,7 @@ export default {
                           @did-move="getAvailableDatesByCalendarMonth"
                         />
                         <div v-if="state.date">
-                          <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
+                          <div class="badge rounded-pill bg-secondary py-2 px-5 m-2"><span> {{ formattedDate(state.date) }} </span></div>
                         </div>
                       </div>
                       <div v-if="loadingCalendar">
@@ -1578,10 +1604,11 @@ export default {
                             </div>
                           </div>
                           <div v-else>
+                            <hr>
                             <div v-if="state.availableBookingBlocks &&
                               state.availableBookingBlocks.length > 0 &&
                               state.date" class="mb-2">
-                              <div class="choose-attention py-1 pt-2">
+                              <div class="choose-attention py-1 pt-1">
                                 <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                               </div>
                               <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
@@ -1590,8 +1617,8 @@ export default {
                             </div>
                             <div v-if="state.availableBookingBlocks &&
                               state.availableBookingBlocks.length === 0 &&
-                              state.date" class="mb-2">
-                              <div id="waitlist" class="d-grid gap-2 mb-2 waitlist-box mt-3" v-if="getActiveFeature(state.commerce, 'booking-waitlist-active', 'PRODUCT')">
+                              state.date" class="mb-1">
+                              <div id="waitlist" class="d-grid gap-2 mb-1 waitlist-box mt-3" v-if="getActiveFeature(state.commerce, 'booking-waitlist-active', 'PRODUCT')">
                                 <div class="choose-attention">
                                   <i class="bi bi-bell-fill"></i> <span class="fw-bold"> {{ $t("commerceQueuesView.waitlist.title") }} </span> <span> {{ $t("commerceQueuesView.waitlist.content") }} </span>
                                 </div>
@@ -1615,23 +1642,26 @@ export default {
                               </div>
                             </div>
                           </div>
-                          <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-2">
-                            <hr>
-                            <div class="choose-attention"><i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span></div>
+                          <div v-if="(state.date && !getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) || (state.date && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block && state.block.hourFrom)" class="py-1 mt-4 data-card">
+                            <div class="choose-attention fw-bold mt-2">
+                              <i class="bi bi-clipboard-check-fill"></i> <span> {{ $t("commerceQueuesView.daySelected") }} </span>
+                            </div>
                             <div>
-                              <div>{{ $t("commerceQueuesView.queueSelected") }}</div>
-                              <div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.queue.name }} </div><br>
+                              <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
+                              <div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.queue.name }} </div>
                               <span v-for="serv in state.selectedServices" :key="serv.id">
                                 <span class="badge rounded-pill bg-secondary py-2 px-2 mx-1"> {{ serv.name }}</span>
                               </span>
                             </div>
-                            <div>
-                              <div>{{ $t("commerceQueuesView.dataSelected") }}</div>
-                              <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ formattedDate(state.date) }} </span></div>
-                            </div>
-                            <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block">
-                              <div>{{ $t("commerceQueuesView.blockSelected") }}</div>
-                              <div class="badge rounded-pill bg-light text-dark py-2 px-4 mx-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                            <div class="row my-2">
+                              <div class="col-6">
+                                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
+                                <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ formattedDate(state.date) }} </span></div>
+                              </div>
+                              <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block" class="col-6">
+                                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.blockSelected") }}</div>
+                                <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                              </div>
                             </div>
                           </div>
                           <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block.number">
@@ -1727,5 +1757,13 @@ export default {
   border-radius: 1rem;
   border: .5px solid var(--gris-default);
   margin-bottom: .5rem;
+}
+.select {
+  border-radius: .5rem;
+  border: 1px solid var(--gris-clear);
+}
+.subtitle-info {
+  font-size: .9rem;
+  line-height: 1rem;
 }
 </style>

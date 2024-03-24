@@ -139,12 +139,6 @@ export default {
       return state.commerce && state.commerce.active === true;
     };
 
-    const formattedDate = (date) => {
-      if (date && date !== 'TODAY') {
-        return new Date(date).toISOString().slice(0,10);
-      }
-    }
-
     const initQueues = async () => {
       if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
         state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
@@ -162,18 +156,18 @@ export default {
       }
     }
 
-    const getLineAttentions = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        store.setCurrentQueue(state.queue);
-        router.push({ path: `/interno/colaborador/fila/${state.queue.id}/atenciones` });
-        loading.value = false;
-      } catch (error) {
-        loading.value = false;
-        alertError.value = error.message;
+    const goBack = () => {
+      router.push({ path: `/interno/colaborador/menu` });
+    }
+
+    /* LOGICA COMENTADA PERMITE HACER GESTION DE LAS AGENDAS POR FILA (2024-01-23)
+
+
+    const formattedDate = (date) => {
+      if (date && date !== 'TODAY') {
+        return new Date(date).toISOString().slice(0,10);
       }
-    };
+    }
 
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
@@ -185,10 +179,6 @@ export default {
         state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
         state.blocks = getBlocksByDay();
       }
-    }
-
-    const goBack = () => {
-      router.push({ path: `/interno/colaborador/menu` });
     }
 
     const getBooking = (number) => {
@@ -342,7 +332,7 @@ export default {
     const getAvailableDatesByCalendarMonth = async (pages) => {
       if (pages && pages.length > 0) {
         const page = pages[0].id;
-        await getAvailableDatesByMonth(`${page}-01`);
+        //await getAvailableDatesByMonth(`${page}-01`);
       }
     }
 
@@ -439,6 +429,7 @@ export default {
         await getAvailableDatesByMonth(currentDate);
       }
     )
+    */
 
     return {
       siteKey,
@@ -446,21 +437,8 @@ export default {
       captchaEnabled,
       loading,
       alertError,
-      disabledDates,
-      dateMask,
-      calendarAttributes,
-      getAvailableDatesByCalendarMonth,
-      copyLink,
-      getQueueLink,
-      getQueue,
       isActiveCommerce,
-      getLineAttentions,
-      goBack,
-      getBooking,
-      showBookings,
-      showWaitlists,
-      formattedDate,
-      selectCommerce
+      goBack
     }
   }
 }
@@ -510,7 +488,7 @@ export default {
             <i class="bi bi-calendar-check-fill"></i> {{ $t("collaboratorBookingsView.schedules") }}
           </button>
         </div>
-        <div class="choose-attention mt-2"><span>{{ $t("collaboratorBookingsView.or") }}</span></div>
+        <!--<div class="choose-attention mt-2"><span>{{ $t("collaboratorBookingsView.or") }}</span></div>
         <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
         <div id="queue-selector" class="mb-1 mt-2">
           <div v-if="state.queues && state.queues.length > 0">
@@ -529,9 +507,9 @@ export default {
               :title="$t('collaboratorBookingsView.message.6.title')"
               :content="$t('collaboratorBookingsView.message.6.content')" />
           </div>
-        </div>
+        </div>-->
       </div>
-      <div id="queue-link-form" class="row g-1">
+      <!--<div id="queue-link-form" class="row g-1">
         <div class="col" v-if="state.queue && state.queue.id">
           <button class="btn copy-icon"
             @click="copyLink(state.queue)">
@@ -543,8 +521,8 @@ export default {
             <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
           </a>
         </div>
-      </div>
-      <hr>
+      </div>-->
+      <!--<hr>
       <div id="bookings" v-if="state.queue && state.queue.id">
         <div class="row" v-if="isActiveCommerce()">
           <div v-if="state.queue && state.queue.id !== undefined">
@@ -649,7 +627,7 @@ export default {
             :title="$t('collaboratorBookingsView.message.1.title')"
             :content="$t('collaboratorBookingsView.message.1.content')" />
         </div>
-      </div>
+      </div>-->
     </div>
     <PoweredBy :name="state.commerce.name" />
     <!-- Modal Agenda -->

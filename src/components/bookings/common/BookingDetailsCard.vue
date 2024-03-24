@@ -57,7 +57,9 @@ export default {
     },
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
-      await this.toTransfer();
+      if (this.extendedTransferEntity === true) {
+        await this.toTransfer();
+      }
     },
     getDate(dateIn, timeZoneIn) {
       const date = dateIn.toDate().toString();
@@ -134,6 +136,7 @@ export default {
       }
     },
     async toTransfer() {
+      this.loading = true;
       const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const date = this.booking.date;
@@ -176,9 +179,9 @@ export default {
               this.queuesToTransfer.push(queue);
             }
           })
-
         }
       }
+      this.loading = false;
     },
     async transfer() {
       try {
@@ -348,7 +351,7 @@ export default {
         </div>
         <hr>
         <!-- PAYMENT -->
-        <div class="row centered mt-2" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
+        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
           <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
             <div class="" v-if="booking.confirmed === true && booking.confirmationData">
               <div class="">
@@ -399,7 +402,7 @@ export default {
           </div>
         </div>
         <!-- TRANSFER -->
-        <div class="row centered mt-1" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
+        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
           <div>
             <h5>
               <span class="centered confirm-payment"
@@ -529,12 +532,11 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: .8rem;
   color: var(--color-text);
   cursor: pointer;
 }
 .step-title {
-  text-decoration: underline;
   font-size: .8rem;
   color: var(--color-text);
   cursor: pointer;
@@ -586,11 +588,11 @@ export default {
   font-weight: 400;
 }
 .select {
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-clear);
+  border-radius: .5rem !important;
+  border: 1.5px solid var(--gris-clear) !important;
 }
 .text-label {
-  line-height: 1rem;
+  line-height: 1.2rem;
   align-items: center;
   justify-content: center;
   display: flex;

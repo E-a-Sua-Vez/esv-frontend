@@ -181,4 +181,8 @@ export default {
   line-height: 1rem;
   color: .5px solid var(--gris-default);
 }
+.select {
+  border-radius: .5rem !important;
+  border: 1.5px solid var(--gris-clear) !important;
+}
 </style>

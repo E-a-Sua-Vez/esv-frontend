@@ -166,21 +166,20 @@ export default {
         this.loading = false;
       }
     },
-    goToLink() {
+    goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
-      const name = !this.client.userName ? 'undefined' : this.client.userName;
-      const lastName = !this.client.userLastName ? 'undefined' : this.client.userLastName;
-      const idNumber = !this.client.userIdNumber ? 'undefined' : this.client.userIdNumber;
-      const email = !this.client.userEmail ? 'undefined' : this.client.userEmail;
-      const phone = !this.client.userPhone ? 'undefined' : this.client.userPhone;
-      const addressCode = !this.client.userAddressCode ? 'undefined' : this.client.userAddressCode;
-      const addressText = !this.client.userAddressText ? 'undefined' : this.client.userAddressText;
-      const addressComplement = !this.client.userAddressComplement ? 'undefined' : this.client.userAddressComplement;
-      const birthday = !this.client.userBirthday ? 'undefined' : this.client.userBirthday;
-      if (name || lastName || idNumber || email || phone || addressCode || addressText || addressComplement || birthday) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/undefined/user/${name}/${lastName}/${idNumber}/${phone}/${email}/${birthday}/${addressCode}/${addressText}/${addressComplement}`;
+      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      let resolvedRoute;
+      let query = {};
+      if (this.client && this.client.id) {
+        query['client'] = this.client.id;
       }
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/`;
+      if (Object.keys(query).length === 0) {
+        resolvedRoute = this.$router.resolve({ path: url });
+      } else {
+        resolvedRoute = this.$router.resolve({ path: url, query });
+      }
+      window.open(resolvedRoute.href, '_blank');
     },
     async exportToCSV() {
       try {
@@ -341,13 +340,10 @@ export default {
                     </button>
                   </div>
                   <div class="col-4 text-label">
-                    <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      :href="goToLink(client)"
-                      :disabled="client.contacted"
-                      target="_blank"
-                      >
+                    <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="goToCreateBooking(client)">
                       <i class="bi bi-calendar-check-fill"></i>
-                    </a>
+                  </button>
                   </div>
                 </div>
                 <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">

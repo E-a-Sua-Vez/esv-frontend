@@ -8,6 +8,10 @@ export const getCollaboratorById = async id => {
   return (await requestBackend.get(`/${entity}/${id}`, await getHeaders())).data;
 }
 
+export const getCollaboratorDetailsById = async id => {
+  return (await requestBackend.get(`/${entity}/details/${id}`, await getHeaders())).data;
+}
+
 export const getCollaboratorByEmail = async email => {
   const store = globalStore();
   const user = (await requestBackend.get(`/${entity}/email/${email}`, await getHeaders())).data;
