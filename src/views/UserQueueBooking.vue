@@ -164,7 +164,7 @@ export default {
           <div id="booking-cancelled" v-if="bookingCancelled()">
             <div class="your-booking mt-2">
               <span>{{ $t("userQueueBooking.cancelledTitle") }} <strong>{{ $t("userQueueBooking.cancelled") }}</strong></span>
-            </div>aaaa
+            </div>
             <AttentionNumber
               :number="state.booking.number"
               :type="'secondary'"

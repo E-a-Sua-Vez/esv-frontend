@@ -153,6 +153,10 @@ export default {
               }
             }
           }
+          const [collaborators, groupedQueues] = await Promise.all([
+            getCollaboratorsByCommerceId(state.commerce.id),
+            getGroupedQueueByCommerceId(state.commerce.id)
+          ]);
           if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {
             state.queue = await getQueueById(queue || queueId);
             const queueType = state.queue.type;
@@ -163,13 +167,23 @@ export default {
                 state.queue.collaborator = collaborator;
                 state.queue.services = collaborator.services;
                 state.queue.servicesName = state.queue.services.map(serv => serv.name);
+                state.queues = [state.queue];
+                state.groupedQueues[queueType] = [state.queue];
+                state.queueId = state.queue.id;
+                getQueue(state.queue);
               }
+            } else if (queueType === 'SELECT_SERVICE') {
+              state.queues = [state.queue];
+              state.groupedQueues = groupedQueues;
+              state.queueId = state.queue.id;
+              getQueue(state.queue);
+            } else {
+              state.queues = [state.queue];
+              state.groupedQueues[queueType] = state.queues;
+              state.queueId = state.queue.id;
+              getQueue(state.queue);
+              await getAttention(undefined);
             }
-            state.queues = [state.queue];
-            state.groupedQueues[queueType] = state.queues;
-            state.queueId = state.queue.id;
-            getQueue(state.queue);
-            await getAttention(undefined);
           } else {
             const queues = state.commerce.queues;
             state.queues = queues;
@@ -177,10 +191,6 @@ export default {
               state.queue = queues[0];
               await getAttention(undefined);
             }
-            const [collaborators, groupedQueues] = await Promise.all([
-              getCollaboratorsByCommerceId(state.commerce.id),
-              getGroupedQueueByCommerceId(state.commerce.id)
-            ]);
             state.collaborators = collaborators;
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = groupedQueues;
@@ -437,11 +447,12 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      if (getActiveFeature(state.commerce, 'attention-user-search', 'USER')) {
+      /*if (getActiveFeature(state.commerce, 'attention-user-search', 'USER')) {
         if (!user.clientId || user.clientId.length === 0) {
           state.errorsAdd.push('commerceQueuesView.validate.name');
         }
-      } else {
+      }*/
+      if (!user.clientId || user.clientId.length === 0) {
         if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
           if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
             if (!user.name || user.name.length === 0) {
@@ -1685,7 +1696,7 @@ export default {
                             </div>
                           </div>
                           <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block.number">
-                            <div v-if="state.block.number && state.bookingAvailable === false">aaa
+                            <div v-if="state.block.number && state.bookingAvailable === false">
                               <Alert :show="!!state.bookingAvailable" :stack="990"></Alert>
                             </div>
                             <button
