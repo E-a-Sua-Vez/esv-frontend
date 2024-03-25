@@ -3,6 +3,7 @@ import { ref, reactive, onBeforeMount, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
+import { getQueueByCommerce } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -133,6 +134,22 @@ export default {
 
     const goBack = () => {
       router.push({ path: `/interno/colaborador/menu` });
+    }
+
+    const selectCommerce = async (commerce) => {
+      try {
+        loading.value = true;
+        state.commerce = commerce;
+        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
+        state.queues = selectedCommerce.queues;
+        state.queue = {};
+        //await initQueues();
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
     }
 
     /* LOGICA COMENTADA PERMITE HACER GESTION DE LAS AGENDAS POR FILA (2024-01-23)
@@ -428,6 +445,7 @@ export default {
       captchaEnabled,
       loading,
       alertError,
+      selectCommerce,
       isActiveCommerce,
       goBack
     }
