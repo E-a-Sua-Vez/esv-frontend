@@ -1468,6 +1468,9 @@
         "client-contacts-management": {
           "view": "See Contacts (Details)"
         },
+        "attention-origin-avg": {
+          "view": "See Origin of Client"
+        },
         "reports": {
           "surveys": "Surveys Report (Summary)",
           "indicators": "Indicators Report",
@@ -2753,6 +2756,9 @@
       },
       "surveys-consolidated-csat-evolution": {
         "view": "Get to the CSAT Evolution - Section Dashboard"
+      },
+      "attention-origin-avg": {
+        "view": "See Origin of Cliente - Section Dashboard"
       },
       "reports": {
         "surveys": "Download Report Surveys (Summary) Section Dashboard",

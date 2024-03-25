@@ -29,7 +29,7 @@ export default {
       <div class="row mx-2" v-for="(origin, index) in Object.keys(distribution)" :key="origin">
         <div class="metric-card-title">
           <i :class="`h6 col-2 bi bi-${index+1}-circle-fill`"></i>
-          <span class="col-4"> {{ origin }} </span>
+          <span class="col-4"> {{ $t(`origin.${origin}`) }} </span>
           <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ npsScorePercentage(count, origin) }}% </span>
           <div class="progress col">
             <div class="progress-bar" role="progressbar" :style="`width: ${npsScorePercentage(count, origin)}%`" aria-valuemin="0" aria-valuemax="100">

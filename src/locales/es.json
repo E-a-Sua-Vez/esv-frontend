@@ -1473,6 +1473,9 @@
         "client-contacts-management": {
           "view": "Ver Contactos (Detalles)"
         },
+        "attention-origin-avg": {
+          "view": "Ver Origen del Cliente"
+        },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",
           "indicators": "Reporte de Indicadores",
@@ -2761,6 +2764,9 @@
       },
       "client-contacts-management": {
         "view": "Ver Sección - Administrar Clientes"
+      },
+      "attention-origin-avg": {
+        "view": "Ver Origen del Cliente - Sección Dashboard"
       },
       "reports": {
         "surveys": "Descargar Reporte de Encuestas (Resumen) Sección Dashboard",

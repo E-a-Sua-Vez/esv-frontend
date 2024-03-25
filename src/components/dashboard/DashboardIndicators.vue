@@ -337,7 +337,7 @@ export default {
       <div id="attention-origin-avg">
         <DetailsCard
           :show="!!toggles['dashboard.attention-origin-avg.view']"
-          :data="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.name : 'No Data'"
+          :data="calculatedMetrics['clients']['maxOrigin']?.name ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`) : 'No Data'"
           :subdata="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.count : 'No Data'"
           :title="$t('dashboard.items.attentions.31')"
           :showTooltip="true"
