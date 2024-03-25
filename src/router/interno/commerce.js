@@ -1,18 +1,18 @@
-import BusinessDashboard from '../../views/business/BusinessDashboard.vue';
-import BusinessMenu from '../../views/business/BusinessMenu.vue';
-import BusinessSectionAtWorkView from '../../views/business/BusinessSectionAtWorkView.vue';
-import BusinessQueuesAdmin from '../../views/business/BusinessQueuesAdmin.vue';
-import BusinessModulesAdmin from '../../views/business/BusinessModulesAdmin.vue';
-import BusinessCollaboratorsAdmin from '../../views/business/BusinessCollaboratorAdmin.vue';
-import BusinessCommerceAdmin from '../../views/business/BusinessCommerceAdmin.vue';
-import BusinessReports from '../../views/business/BusinessReports.vue';
-import BusinessExecutiveReport from '../../views/business/BusinessExecutiveReport.vue';
-import BusinessConfiguration from '../../views/business/BusinessConfiguration.vue';
-import BusinessPlan from '../../views/business/BusinessPlan.vue';
-import BusinessSurveysAdmin from '../../views/business/BusinessSurveyAdmin.vue';
-import BusinessServicesAdmin from '../../views/business/BusinessServicesAdmin.vue';
-import BusinessTracing from '../../views/business/BusinessTracing.vue';
-import BusinessPermissionsAdmin from '../../views/business/BusinessPermissionsAdmin.vue';
+const BusinessDashboard = () => import('../../views/business/BusinessDashboard.vue');
+const BusinessMenu = () => import('../../views/business/BusinessMenu.vue');
+const BusinessSectionAtWorkView = () => import('../../views/business/BusinessSectionAtWorkView.vue');
+const BusinessQueuesAdmin = () => import('../../views/business/BusinessQueuesAdmin.vue');
+const BusinessModulesAdmin = () => import('../../views/business/BusinessModulesAdmin.vue');
+const BusinessCollaboratorsAdmin = () => import('../../views/business/BusinessCollaboratorAdmin.vue');
+const BusinessCommerceAdmin = () => import('../../views/business/BusinessCommerceAdmin.vue');
+const BusinessReports = () => import('../../views/business/BusinessReports.vue');
+const BusinessExecutiveReport = () => import('../../views/business/BusinessExecutiveReport.vue');
+const BusinessConfiguration = () => import('../../views/business/BusinessConfiguration.vue');
+const BusinessPlan = () => import('../../views/business/BusinessPlan.vue');
+const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAdmin.vue');
+const BusinessServicesAdmin = () => import('../../views/business/BusinessServicesAdmin.vue');
+const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
+const BusinessPermissionsAdmin = () => import('../../views/business/BusinessPermissionsAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {

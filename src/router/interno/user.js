@@ -1,6 +1,6 @@
-import UserQueueAttention from '../../views/UserQueueAttention.vue';
-import UserQueueBooking from '../../views/UserQueueBooking.vue';
-import UserQueueWaitlist from '../../views/UserQueueWaitlist.vue';
+const UserQueueAttention = () => import('../../views/UserQueueAttention.vue');
+const UserQueueBooking = () => import('../../views/UserQueueBooking.vue');
+const UserQueueWaitlist = () => import('../../views/UserQueueWaitlist.vue');
 
 const PrivateUserRoutes = [
   {

@@ -1,12 +1,11 @@
-
-import CollaboratorAttentionValidate from '../../views/collaborator/CollaboratorAttentionValidate.vue';
-import CollaboratorQueuesView from '../../views/collaborator/CollaboratorQueuesView.vue';
-import CollaboratorQueueAttentions from '../../views/collaborator/CollaboratorQueueAttentions.vue';
-import CollaboratorMenu from '../../views/collaborator/CollaboratorMenu.vue';
-import CollaboratorDashboard from '../../views/collaborator/CollaboratorDashboard.vue';
-import CollaboratorQueueBookings from '../../views/collaborator/CollaboratorQueueBookings.vue';
-import CollaboratorTracing from '../../views/collaborator/CollaboratorTracing.vue';
-import CommerceQueuesView from '../../views/CommerceQueuesView.vue';
+const CollaboratorAttentionValidate = () => import('../../views/collaborator/CollaboratorAttentionValidate.vue');
+const CollaboratorQueuesView = () => import('../../views/collaborator/CollaboratorQueuesView.vue');
+const CollaboratorQueueAttentions = () => import('../../views/collaborator/CollaboratorQueueAttentions.vue');
+const CollaboratorMenu = () => import('../../views/collaborator/CollaboratorMenu.vue');
+const CollaboratorDashboard = () => import('../../views/collaborator/CollaboratorDashboard.vue');
+const CollaboratorQueueBookings = () => import('../../views/collaborator/CollaboratorQueueBookings.vue');
+const CollaboratorTracing = () => import('../../views/collaborator/CollaboratorTracing.vue');
+const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
 
 const PrivateCollaboratorRoutes = [
   {

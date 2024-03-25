@@ -1,4 +1,4 @@
-import CollaboratorLogin from '../../views/collaborator/CollaboratorLogin.vue';
+const CollaboratorLogin = () => import('../../views/collaborator/CollaboratorLogin.vue');
 
 const PublicColaboratorRoutes = [
   {
