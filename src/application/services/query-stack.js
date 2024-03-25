@@ -316,13 +316,14 @@ export const getClientsDetails = async (
   queueId = undefined,
   survey = undefined,
   asc = true,
-  contactResultType = undefined
+  contactResultType = undefined,
+  idNumber = undefined
 ) => {
   const options = {};
   options.params = {
     from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
     contactable, contacted, searchText, queueId, survey, asc,
-    contactResultType, businessId
+    contactResultType, businessId, idNumber
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);

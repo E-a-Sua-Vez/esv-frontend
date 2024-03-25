@@ -307,6 +307,10 @@
     "booking-transfer-queue": {
       "title": "Reserva Transferir Fila",
       "description": "Tranferir reserva pra outra fila disponível"
+    },
+    "attention-user-search": {
+      "title": "Form Pesquisar Cliente",
+      "description": "Permite perguntar se o cliente é novo ou já está registrado"
     }
   },
   "paymentMethods": {
@@ -409,6 +413,8 @@
     "selectService": "Selecione o serviço:",
     "searchCollaboratorQueue": "🔎 Pesquisa por nome ou serviço",
     "searchServiceQueue": "🔎 Pesquisa por serviço",
+    "newClient": "Sou novo",
+    "oldClient": "Já sou Cliente",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -685,6 +691,9 @@
         "1": "Deve definir número de telefone celular válido",
         "2": "Você deve aceitar os termos de uso",
         "3": "Você deve validar que não é um robô"
+      },
+      "idNumber": {
+        "example": "Digite só números, sem caracteres especiais"
       }
     }
   },
@@ -1122,6 +1131,7 @@
     "keyWord": "Palavras Chave",
     "search": "🔎 Nome, Telefone ou Email",
     "search2": "🔎 CPF, Telefone ou Email",
+    "search3": "🔎 CPF or Passaporte",
     "detractor": "Detrator",
     "neutral": "Neutro",
     "promoter": "Promotor",
@@ -1475,7 +1485,8 @@
     "validate": {
       "type": "Você deve selecionar o tipo",
       "result": "Você deve selecionar o resultado",
-      "comment": "Você deve digitar o comentário"
+      "comment": "Você deve digitar o comentário",
+      "search": "Você deve digitar o valor da pesquisa"
     }
   },
   "resumeAttention": {

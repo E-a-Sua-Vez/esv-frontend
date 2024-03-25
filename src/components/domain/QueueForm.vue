@@ -40,6 +40,7 @@ export default {
       queue: {},
       showProfessional: false,
       showService: false,
+      showSelectServices: false,
       filteredCollaboratorQueues: [],
       searchCollaboratorText: undefined,
       counter: 0,
@@ -117,6 +118,7 @@ export default {
     const showByProfessional = () => {
       state.showProfessional = true;
       state.showService = false;
+      state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
     }
@@ -124,6 +126,7 @@ export default {
     const showByService = () => {
       state.showService = true;
       state.showProfessional = false;
+      state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
     }
@@ -131,6 +134,7 @@ export default {
     const showServices = () => {
       state.showService = false;
       state.showProfessional = false;
+      state.showSelectServices = true;
       const queues = groupedQueues.value['SELECT_SERVICE'];
       if (queues.length > 0) {
         getQueue(queues[0]);
@@ -251,8 +255,7 @@ export default {
               <div class="col-6">
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  data-bs-toggle="collapse"
-                  href="#attention-collaborator-queue"
+                  :class="state.showProfessional ? 'btn-selected' : ''"
                   @click="showByProfessional"
                   :disabled="!accept">
                   {{ $t("commerceQueuesView.byCollaborator") }} <i class="bi bi-chevron-down"></i>
@@ -261,8 +264,7 @@ export default {
               <div v-if="getActiveFeature(commerce, 'attention-service-select', 'PRODUCT')" class="col-6">
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 queue-btn"
-                  data-bs-toggle="collapse"
-                  href="#attention-service-queue"
+                  :class="state.showSelectServices ? 'btn-selected' : ''"
                   @click="showServices"
                   :disabled="!accept">
                   {{ $t("commerceQueuesView.byService") }}
@@ -271,15 +273,14 @@ export default {
               <div v-else class="col-6">
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 queue-btn"
-                  data-bs-toggle="collapse"
-                  href="#attention-service-queue"
+                  :class="state.showService ? 'btn-selected' : ''"
                   @click="showByService"
                   :disabled="!accept">
                   {{ $t("commerceQueuesView.byService") }} <i class="bi bi-chevron-down"></i>
                 </button>
               </div>
             </div>
-            <div :class="' mx-2 my-2'" id="attention-collaborator-queue" v-if="state.showProfessional">
+            <div :class="'mx-2 my-2'" id="attention-collaborator-queue" v-if="state.showProfessional">
               <div v-if="state.filteredCollaboratorQueues">
                 <div class="row col-md mb-2">
                   <input
@@ -342,7 +343,7 @@ export default {
                 </Message>
               </div>
             </div>
-            <div :class="' mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
+            <div :class="'mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
               <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
                 <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
                   <QueueButton

@@ -307,6 +307,10 @@
     "booking-transfer-queue": {
       "title": "Booking Queue Transfer",
       "description": "Tranfer booking to another queue"
+    },
+    "attention-user-search": {
+      "title": "Attention Search Client",
+      "description": "Ask if client is new or registered"
     }
   },
   "paymentMethods": {
@@ -409,6 +413,8 @@
     "selectService": "Select the service:",
     "searchCollaboratorQueue": "🔎 Search by name or service",
     "searchServiceQueue": "🔎 Search by service",
+    "newClient": "I'm new",
+    "oldClient": "I'm Client",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -684,6 +690,9 @@
         "1": "Should set a valid cellphone number",
         "2": "Should accept terms of use",
         "3": "Should validate that you are not a robot"
+      },
+      "idNumber": {
+        "example": "Type just numbers without especial characters"
       }
     }
   },
@@ -1117,6 +1126,7 @@
     "keyWord": "Key Words",
     "search": "🔎 Name, Phone or Email",
     "search2": "🔎 Id, Phone or Email",
+    "search3": "🔎 Id or Passport",
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promoter",

@@ -308,6 +308,10 @@
     "booking-transfer-queue": {
       "title": "Reserva Transferir Fila",
       "description": "Tranferir reserva a otra fila disponible"
+    },
+    "attention-user-search": {
+      "title": "Form Busca Cliente",
+      "description": "Permite preguntar si el cliente es nuevo o ya está registrado"
     }
   },
   "paymentMethods": {
@@ -410,6 +414,8 @@
     "selectService": "Selecciona el servicio:",
     "searchCollaboratorQueue": "🔎 Busca por nombre o servicio",
     "searchServiceQueue": "🔎 Busca por servicio",
+    "newClient": "Soy Nuevo",
+    "oldClient": "Ya Soy Cliente",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -677,6 +683,9 @@
         "1": "Debe ingresar teléfono válido",
         "2": "Debe aceptar condiciones de uso",
         "3": "Debe validar que no eres un robot"
+      },
+      "idNumber": {
+        "example": "Ingresa sólo números sin caractéres especiales"
       }
     }
   },
@@ -1120,6 +1129,7 @@
     "keyWord": "Palabras Clave",
     "search": "🔎 Nombre, Teléfono o Email",
     "search2": "🔎 Id, Cédula, Teléfono o Email",
+    "search3": "🔎 Id o Cédula",
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promotor",

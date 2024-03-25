@@ -9,3 +9,7 @@ export const getClientById = async (id) => {
 export const contactClient = async (id, body) => {
   return (await requestBackend.post(`/${entity}/contact/${id}`, body, await getHeaders())).data;
 }
+
+export const searchClientByIdNumber = async (commerceId, idNumber) => {
+  return (await requestBackend.get(`/${entity}/search/commerceId/${commerceId}/idNumber/${idNumber}`, await getHeaders())).data;
+}

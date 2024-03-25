@@ -217,6 +217,9 @@ export default {
 
     const receiveData = (data) => {
       if (data) {
+        if (data.clientId && data.neededToInclude.length >= 0) {
+          state.newUser.clientId = data.clientId;
+        }
         if (data.name) {
           state.newUser.name = data.name;
         }
@@ -256,6 +259,7 @@ export default {
         if (data.phoneCode && data.phone) {
           state.phone = data.phone;
           state.phoneCode = data.phoneCode;
+          state.newUser.phone = `${state.phoneCode}${state.phone}`;
         }
         if (data.accept !== undefined) {
           state.accept = data.accept;
@@ -433,80 +437,86 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
-        if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
-          if (!user.name || user.name.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.name');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
-          if (!user.lastName || user.lastName.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.lastName');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
-          if (!user.idNumber || user.idNumber.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.idNumber');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
-          if (!state.phoneCode || state.phoneCode.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
-          } else {
-            if (state.phoneCode === 'xx') {
-              state.phoneCode = '';
-            }
-            user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
-          }
-          if(!state.phone || state.phone.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.phone');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
-          if (!user.email || user.email.length === 0 || !validateEmail(user.email)) {
-            state.errorsAdd.push('commerceQueuesView.validate.email');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
-          if (!user.addressText || user.addressText.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.addressText');
-          }
-          if (!user.addressCode || user.addressCode.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.addressCode');
-          }
-          if (!user.addressComplement || user.addressComplement.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.addressComplement');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
-          if (!user.birthday || user.birthday.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.birthday');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-origin', 'USER')) {
-          if (!user.origin || user.origin.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.origin');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-code1', 'USER')) {
-          if (!user.code1 || user.code1.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.code1');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-code2', 'USER')) {
-          if (!user.code2 || user.code2.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.code2');
-          }
-        }
-        if (getActiveFeature(state.commerce, 'attention-user-code3', 'USER')) {
-          if (!user.code3 || user.code3.length === 0) {
-            state.errorsAdd.push('commerceQueuesView.validate.code3');
-          }
+      if (getActiveFeature(state.commerce, 'attention-user-search', 'USER')) {
+        if (!user.clientId || user.clientId.length === 0) {
+          state.errorsAdd.push('commerceQueuesView.validate.name');
         }
       } else {
-        if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
-          if (!validateEmail(user.email)) {
-            state.errorsAdd.push('commerceQueuesView.validate.email');
+        if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
+          if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
+            if (!user.name || user.name.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.name');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
+            if (!user.lastName || user.lastName.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.lastName');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
+            if (!user.idNumber || user.idNumber.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.idNumber');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
+            if (!state.phoneCode || state.phoneCode.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.phoneCode');
+            } else {
+              if (state.phoneCode === 'xx') {
+                state.phoneCode = '';
+              }
+              user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+            }
+            if(!state.phone || state.phone.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.phone');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
+            if (!user.email || user.email.length === 0 || !validateEmail(user.email)) {
+              state.errorsAdd.push('commerceQueuesView.validate.email');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
+            if (!user.addressText || user.addressText.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.addressText');
+            }
+            if (!user.addressCode || user.addressCode.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.addressCode');
+            }
+            if (!user.addressComplement || user.addressComplement.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.addressComplement');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
+            if (!user.birthday || user.birthday.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.birthday');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-origin', 'USER')) {
+            if (!user.origin || user.origin.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.origin');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-code1', 'USER')) {
+            if (!user.code1 || user.code1.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.code1');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-code2', 'USER')) {
+            if (!user.code2 || user.code2.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.code2');
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-user-code3', 'USER')) {
+            if (!user.code3 || user.code3.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.code3');
+            }
+          }
+        } else {
+          if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
+            if (!validateEmail(user.email)) {
+              state.errorsAdd.push('commerceQueuesView.validate.email');
+            }
           }
         }
       }
@@ -570,7 +580,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
-          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser }
+          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, clientId: state.newUser.clientId }
           if (block && block.number) {
             body = { ...body, block };
           }
@@ -601,7 +611,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
-          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block };
+          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block, clientId: state.newUser.clientId };
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
             const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name } });
@@ -628,7 +638,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
           }
-          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date) }
+          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), clientId: state.newUser.clientId  }
           const waitlist = await createWaitlist(body);
           if (waitlist && waitlist.id) {
             state.waitlistCreated = true;
@@ -1333,6 +1343,7 @@ export default {
       code3,
       addressCode,
       origin,
+      client,
       formattedDate,
       isDataActive,
       getActiveFeature,
@@ -1389,6 +1400,7 @@ export default {
             :code1="state.newUser.code1 || code1"
             :code2="state.newUser.code2 || code2"
             :code3="state.newUser.code3 || code3"
+            :client="client"
             :errorsAdd="state.errorsAdd"
             :receiveData="receiveData"
           >
@@ -1430,6 +1442,7 @@ export default {
                       class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-2"
                       data-bs-toggle="collapse"
                       href="#booking-hour"
+                      :class="state.showToday ? 'btn-selected' : ''"
                       @click="setDate('TODAY');showToday()"
                       :disabled="!state.accept || !state.queue.id">
                       {{ $t("commerceQueuesView.today") }} <i class="bi bi-chevron-down"></i>
@@ -1442,8 +1455,8 @@ export default {
                       v-if="!isQueueWalkin()"
                       class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-2"
                       @click="setDate('TODAY')"
-                      :disabled="!state.accept || !state.queue.id"
-                      >
+                      :class="state.date === 'TODAY' ? 'btn-selected' : ''"
+                      :disabled="!state.accept || !state.queue.id">
                       {{ $t("commerceQueuesView.today") }}
                     </button>
                   </div>
@@ -1455,6 +1468,7 @@ export default {
                       data-bs-toggle="collapse"
                       href="#booking-date"
                       @click="showReserve()"
+                      :class="state.showReserve ? 'btn-selected' : ''"
                       :disabled="!state.accept || !state.queue.id">
                       {{ $t("commerceQueuesView.booking") }} <i class="bi bi-chevron-down"></i>
                     </button>
@@ -1662,11 +1676,11 @@ export default {
                             <div class="row my-2">
                               <div class="col-6">
                                 <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
-                                <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ formattedDate(state.date) }} </span></div>
+                                <div class="badge rounded-pill bg-secondary py-2 px-3"><span> {{ formattedDate(state.date) }} </span></div>
                               </div>
                               <div v-if="getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') && state.block" class="col-6">
                                 <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.blockSelected") }}</div>
-                                <div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
+                                <div class="badge rounded-pill bg-secondary py-2 px-3"><span> {{ state.block.hourFrom }} - {{ state.block.hourTo }} </span></div>
                               </div>
                             </div>
                           </div>
