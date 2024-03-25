@@ -168,7 +168,7 @@ export default {
     },
     goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
-      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
       let resolvedRoute;
       let query = {};
       if (this.client && this.client.id) {
@@ -333,14 +333,14 @@ export default {
                 </div>
                 <div class="row m-1">
                   <div class="col-8 text-label">
-                    <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                       @click="add(newContact)"
                       >
                       {{ $t("dashboard.add") }} <i class="bi bi-save"></i>
                     </button>
                   </div>
                   <div class="col-4 text-label">
-                    <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                       @click="goToCreateBooking(client)">
                       <i class="bi bi-calendar-check-fill"></i>
                   </button>

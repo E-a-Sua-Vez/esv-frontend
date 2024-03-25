@@ -47,7 +47,7 @@ const PrivateCollaboratorRoutes = [
     path: '/interno/commerce/:keyName/filas',
     name: 'commerce-collaborator-queues',
     component: CommerceQueuesView
-  },
+  }
 ]
 
 export default PrivateCollaboratorRoutes;

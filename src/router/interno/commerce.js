@@ -13,6 +13,7 @@ const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAd
 const BusinessServicesAdmin = () => import('../../views/business/BusinessServicesAdmin.vue');
 const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
 const BusinessPermissionsAdmin = () => import('../../views/business/BusinessPermissionsAdmin.vue');
+const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -84,6 +85,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/permissions-admin',
     name: 'permissions-admin',
     component: BusinessPermissionsAdmin
+  },
+  {
+    path: '/interno/negocio/commerce/:keyName/filas',
+    name: 'commerce-business-queues',
+    component: CommerceQueuesView
   }
 ]
 

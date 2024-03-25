@@ -106,7 +106,7 @@ export default {
     },
     goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
-      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
       let resolvedRoute;
       let query = {};
       if (this.client && this.client.id) {
@@ -267,8 +267,7 @@ export default {
           </div>
           <div class="col-4">
             <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
-              @click="goToCreateBooking()"
-              :disabled="client.contacted || checked">
+              @click="goToCreateBooking()">
               {{ $t('dashboard.schedule')}} <br> <i class="bi bi-calendar-check-fill"></i>
           </button>
           </div>
