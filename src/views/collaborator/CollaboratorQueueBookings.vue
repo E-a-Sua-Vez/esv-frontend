@@ -122,7 +122,6 @@ export default {
       if (unsubscribeBookings) {
         unsubscribeBookings();
       }
-      getBookings();
       if (unsubscribeWaitlists) {
         unsubscribeWaitlists();
       }

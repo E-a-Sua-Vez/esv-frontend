@@ -805,7 +805,8 @@
           "cancel": "Cancel Booking",
           "manage": "Bookings 360° Vision",
           "confirm": "Booking Confirm",
-          "transfer": "Transfer Booking"
+          "transfer": "Transfer Booking",
+          "admin": "Manage Booking"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
@@ -1109,6 +1110,7 @@
     "sentiment": "Sentiment analysis of customer feedback. Bad: -1 to 0.1, Fair: 0.1 to 0.7, Good: 0.5 to 1.",
     "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",
     "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
+    "origin": "Origin through which the client knew the business",
     "today": "Today",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
@@ -1196,6 +1198,7 @@
         "28": "Created",
         "29": "Processed",
         "30": "Cancelled",
+        "31": "¿Where did you find us?",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",

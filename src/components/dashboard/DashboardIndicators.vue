@@ -12,6 +12,7 @@ import AttentionCollaboratorsDetails from './domain/AttentionCollaboratorsDetail
 import AttentionNotificationDetails from './domain/AttentionNotificationDetails.vue';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
+import AttentionOriginDetails from './domain/AttentionOriginDetails.vue';
 
 export default {
   name: 'DashboardIndicators',
@@ -28,7 +29,8 @@ export default {
     AttentionNotificationDetails,
     PDFHeader,
     PDFFooter,
-    Spinner
+    Spinner,
+    AttentionOriginDetails
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -329,6 +331,29 @@ export default {
               :limit="5"
             >
             </AttentionCollaboratorsDetails>
+          </template>
+        </DetailsCard>
+      </div>
+      <div id="attention-origin-avg">
+        <DetailsCard
+          :show="!!toggles['dashboard.attention-origin-avg.view']"
+          :data="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.name : 'No Data'"
+          :subdata="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.count : 'No Data'"
+          :title="$t('dashboard.items.attentions.31')"
+          :showTooltip="true"
+          :description="$t('dashboard.origin')"
+          :icon="'bi-emoji-heart-eyes-fill'"
+          :iconStyleClass="'orange-icon'"
+          :detailsOpened="detailsOpened"
+          >
+          <template v-slot:details>
+            <AttentionOriginDetails
+              :show="!!toggles['dashboard.attention-origin-avg.view']"
+              :distribution="calculatedMetrics['clients']['originDistribution']"
+              :count="calculatedMetrics['clients'].originTotal || 0"
+              :limit="10"
+            >
+            </AttentionOriginDetails>
           </template>
         </DetailsCard>
       </div>

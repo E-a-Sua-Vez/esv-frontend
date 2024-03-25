@@ -814,7 +814,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
-          "transfer": "Transferir Reserva"
+          "transfer": "Transferir Reserva",
+          "admin": "Gerenciar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -1113,6 +1114,7 @@
     "sentiment": "Análise de sentimento do feedback do cliente. Ruim: -1 a 0.1, Regular: 0.1 a 0.5, Bom: 0.5 a 1.",
     "rating": "Classificação de satisfação do cliente. Ruim: 0 a 2,5, Regular: 2,5 a 4, Bom: 4 a 5.",
     "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
+    "origin": "Meio pelo qual o cliente conheceu o negócio",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
@@ -1201,6 +1203,7 @@
         "28": "Criadas",
         "29": "Processadas",
         "30": "Canceladas",
+        "31": "Onde você nos conheceu?",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",

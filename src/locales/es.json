@@ -1111,6 +1111,7 @@
     "sentiment": "Análisis de sentimientos de los comentarios de los clientes. Malo: -1 a 0.1, Regular: 0.1 a 0.5, Bueno: 0.5 a 1.",
     "rating": "Calificación de satisfacción los clientes. Malo: 0 a 2.5, Regular: 2.5 a 4, Bueno: 4 a 5.",
     "nps": "Puntuación del cliente promotor. Excelente: 75-100, Bueno: 50-74, Razonable: 0-40, Malo: valor negativo",
+    "origin": "Origen o medio por el cual el cliente conoció el negocio",
     "today": "Hoy",
     "thisMonth": "Este Mes",
     "lastMonth": "Mes Pasado",
@@ -1198,6 +1199,7 @@
         "28": "Creadas",
         "29": "Procesadas",
         "30": "Canceladas",
+        "31": "¿Dónde nos conoció?",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
