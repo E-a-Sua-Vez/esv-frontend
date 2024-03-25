@@ -1,11 +1,12 @@
 <script>
+import { contactClient } from '../../../application/services/client';
+import { globalStore } from '../../../stores';
+import { getAttentionsDetails, getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
-import { contactClient } from '../../../application/services/client';
 import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
-import { getAttentionsDetails, getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
 
 export default {
   name: 'ClientDetailsCard',
@@ -22,11 +23,15 @@ export default {
     management: { type: Boolean, default: true },
   },
   data() {
+    const store = globalStore();
     return {
       loading: false,
       extendedEntity: false,
       checked: false,
       asc: false,
+      store,
+      userType: undefined,
+      user: undefined,
       attentions: [],
       clientContacts: [],
       contactResultTypes: [
@@ -107,6 +112,9 @@ export default {
     goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
       let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
+      if (this.userType === 'COLLABORATOR') {
+        url = `/interno/commerce/${commerceKeyName}/filas`;
+      }
       let resolvedRoute;
       let query = {};
       if (this.client && this.client.id) {
@@ -152,6 +160,12 @@ export default {
         return 'bi-patch-check-fill red-icon';
       }
     },
+    async getUserType() {
+      this.userType = await this.store.getCurrentUserType;
+    },
+    async getUser() {
+      this.user = await this.store.getCurrentUser;
+    }
   },
   watch: {
     extendedEntity: {
@@ -160,8 +174,16 @@ export default {
       async handler() {
         this.extendedEntity = this.extendedEntity;
       }
+    },
+    store: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        await this.getUserType();
+        await this.getUser();
+      }
     }
-  },
+  }
 }
 </script>
 

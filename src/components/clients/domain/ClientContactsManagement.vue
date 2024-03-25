@@ -169,6 +169,9 @@ export default {
     goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
       let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
+      if (this.userType === 'COLLABORATOR') {
+        url = `/interno/commerce/${commerceKeyName}/filas`;
+      }
       let resolvedRoute;
       let query = {};
       if (this.client && this.client.id) {
