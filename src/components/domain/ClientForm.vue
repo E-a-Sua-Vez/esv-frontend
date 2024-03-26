@@ -520,6 +520,7 @@ export default {
                 v-model="state.newUser.phone"
                 placeholder="Ex.: 56233445533"
                 @keyup="sendData"
+                @keypress="onlyNumber"
                 >
                 <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
             </div>
@@ -549,6 +550,7 @@ export default {
                 placeholder="00000-00"
                 @blur="getAddress"
                 @keyup="sendData"
+                @keypress="onlyNumber"
                 v-bind:class="{ 'is-invalid': state.addressCodeError }"
                 >
                 <label for="attention-addressCode-input-add" class="label-form">{{ $t("commerceQueuesView.addressCode") }} <i class="bi bi-geo-alt-fill"></i></label>
