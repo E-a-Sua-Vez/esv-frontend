@@ -391,7 +391,9 @@ export default {
               class="form-control"
               v-model.trim="state.idNumber"
               v-bind:class="{ 'is-invalid': state.searchTextError }"
-              :placeholder="$t('dashboard.search3')">
+              :placeholder="$t('dashboard.search3')"
+              @keypress="onlyNumber"
+            >
           </div>
           <div class="col-2 col-md-2 centered mx-1">
             <button
