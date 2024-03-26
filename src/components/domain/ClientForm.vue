@@ -326,6 +326,13 @@ export default {
       state.errorsAdd.push('clientNotifyData.validate.common.3');
     };
 
+    const onlyNumber = ($event) => {
+      let keyCode = ($event.keyCode ? $event.keyCode : $event.which);
+      if ((keyCode < 48 || keyCode > 57) && keyCode !== 46) { // 46 is dot
+          $event.preventDefault();
+      }
+    }
+
     return {
       state,
       loading,
@@ -346,7 +353,8 @@ export default {
       showNewClient,
       showOldClient,
       searchClient,
-      clearClient
+      clearClient,
+      onlyNumber
     }
   }
 }
@@ -468,11 +476,12 @@ export default {
               <input
                 id="attention-idnumber-input-add"
                 maxlength="20"
-                type="number"
+                type="text"
                 class="form-control"
                 v-model.trim="state.newUser.idNumber"
                 placeholder="Ex. 112223334"
                 @keyup="sendData"
+                @keypress="onlyNumber"
                 >
                 <label for="attention-idnumber-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
             </div>
