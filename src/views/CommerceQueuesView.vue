@@ -270,6 +270,10 @@ export default {
           state.phone = data.phone;
           state.phoneCode = data.phoneCode;
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
+        } else if (data.phone) {
+          state.phoneCode = data.phone.slice(0,2);
+          state.phone = data.phone.slice(2,data.phone.length);
+          state.newUser.phone = `${state.phoneCode}${state.phone}`;
         }
         if (data.accept !== undefined) {
           state.accept = data.accept;

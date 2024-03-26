@@ -125,6 +125,11 @@ export default {
               }
             }
           }
+        } else {
+          state.business = await store.getActualBusiness();
+          state.commerces = await store.getAvailableCommerces(state.business.commerces);
+          state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+          state.selectedCommerces = state.commerces;
         }
         state.toggles = await getPermissions('dashboard');
         await refresh();
@@ -384,7 +389,7 @@ export default {
                 :endDate="state.endDate"
                 :commerce="state.commerce"
                 :queues="state.queues"
-                :commerces="state.selectedCommerces"
+                :commerces="state.selectedCommerces || state.commerces"
                 :business="state.business"
               >
               </DashboardClientsManagement>

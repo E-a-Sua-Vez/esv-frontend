@@ -120,6 +120,7 @@ export default {
           state.commerce = commerce;
           const queuesByCommerce = await getCommerceById(state.commerce.id);
           state.queues = queuesByCommerce.queues;
+          state.selectedCommerces = state.commerces;
         }
         await refresh();
         loading.value = false;
