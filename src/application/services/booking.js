@@ -51,3 +51,13 @@ export const confirmBooking = async (id, body) => {
 export const transferBooking = async (id, body) => {
   return (await requestBackend.patch(`/${entity}/transfer/${id}`, body, await getHeaders())).data;
 }
+
+export const getPendingBookingsByClient = async (commerceId, clientId, idNumber) => {
+  if (commerceId && (clientId || idNumber)) {
+    return (await requestBackend.get(`/${entity}/commerceId/${commerceId}/clientId/${clientId}/idNumber/${idNumber}`, await getHeaders())).data;
+  }
+}
+
+export const editBooking = async (id, body) => {
+  return (await requestBackend.patch(`/${entity}/edit/${id}`, body, await getHeaders())).data;
+}

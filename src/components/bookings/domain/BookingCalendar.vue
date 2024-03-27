@@ -1,7 +1,7 @@
 <script>
 import { ref, watch, reactive, computed, toRefs, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates } from '../../../application/services/booking';
+import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates, getPendingBookingsByClient } from '../../../application/services/booking';
 import { dateYYYYMMDD } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
@@ -72,7 +72,11 @@ export default {
       showAttentions: true,
       showBooking: false,
       showWaitlist: false,
-      showAllQueues: false
+      showAllQueues: false,
+      extendedBookingsEntity: false,
+      clientBookings: [],
+      showBookings360: true,
+      showClients360: false
     });
 
     const {
@@ -292,7 +296,8 @@ export default {
 
     const getAvailableDatesByCalendarMonth = async (pages) => {
       if (pages && pages.length > 0) {
-        const page = pages[0].id;
+        const pagesIn = pages[0].id.split('-');
+        const page = `${pagesIn[0]}-${pagesIn[1]}`;
         await getAvailableDatesByMonth(state.selectedQueue, `${page}-01`);
       }
     }
@@ -481,6 +486,7 @@ export default {
         state.selectedQueue = queue;
       }
       getBlocks();
+      showBookings360();
     }
 
     const getBlocks = () => {
@@ -542,6 +548,7 @@ export default {
       state.errorsSearch = [];
       state.searchText = '';
       state.client = {};
+      state.clientBookings = [];
     }
 
     const showAttentions = () => {
@@ -601,6 +608,25 @@ export default {
       } else {
         state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
       }
+    }
+
+    const showMyBookings = async () => {
+      loadingSearch.value = true;
+      state.extendedBookingsEntity = !state.extendedBookingsEntity;
+      if (state.extendedBookingsEntity === true) {
+        state.clientBookings = await getPendingBookingsByClient(commerce.value.id, state.client.id, state.searchText);
+      }
+      loadingSearch.value = false;
+    }
+
+    const showBookings360 = () => {
+      state.showBookings360 = true;
+      state.showClients360 = false;
+    }
+
+    const showClients360 = () => {
+      state.showBookings360 = false;
+      state.showClients360 = true;
     }
 
     watch(
@@ -684,7 +710,10 @@ export default {
       clearClient,
       getBookingBlockNumber,
       showCollaboratorQueue,
-      showAllQueue
+      showAllQueue,
+      showMyBookings,
+      showBookings360,
+      showClients360
     }
   }
 }
@@ -801,22 +830,181 @@ export default {
         </div>
       </div>
       <!-- MANAGEMENT AREA -->
-      <div class="col-12 col-lg-4 mt-2">
+      <div class="col-12 col-lg-4 mt-2 blocks-section">
         <div v-if="true" >
-          <div class="blocks-section">
-            <span class="fw-bold h6"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
-            <div class="row mt-1 mb-1">
-              <div class="col-6">
-                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
-                <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
+          <div class="row">
+            <div class="col-6">
+              <button
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="state.showBookings360 ? 'btn-selected' : ''"
+                @click="showBookings360">
+                {{ $t("collaboratorBookingsView.agenda") }} <i class="bi bi-calendar-fill"></i>
+              </button>
+            </div>
+            <div class="col-6">
+              <button
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="state.showClients360 ? 'btn-selected' : ''"
+                @click="showClients360">
+                {{ $t("collaboratorBookingsView.clientes") }} <i class="bi bi-person-fill"></i>
+              </button>
+            </div>
+          </div>
+          <!-- AGENDA 360 -->
+          <div v-if="state.showBookings360">
+            <div class="row mx-2 mt-4">
+              <span class="fw-bold h6"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
+              <div class="row mt-1 mb-1">
+                <div class="col-7">
+                  <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
+                  <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
+                </div>
+                <div class="col-5">
+                  <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
+                  <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
+                </div>
               </div>
-              <div class="col-6">
-                <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
-                <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
+              <hr>
+              <div id="subMenu" class="my-1 mt-3">
+                <h6 class="mb-0">
+                  <button
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                    :class="state.showAttentions ? 'btn-selected' : ''"
+                    @click="showAttentions()"
+                    >
+                    {{ $t('collaboratorBookingsView.attentions') }} <br> <i class="bi bi-qr-code"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1"
+                    :class="state.showBooking ? 'btn-selected' : ''"
+                    @click="showBookings()"
+                    :disabled="!state.selectedQueue || !state.selectedDate"
+                    >
+                    {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                    :class="state.showWaitlist ? 'btn-selected' : ''"
+                    @click="showWaitlists()"
+                    :disabled="!state.selectedQueue.id || !state.selectedDate"
+                    >
+                    {{ $t('collaboratorBookingsView.waitlists') }} <br> <i class="bi bi-calendar-heart-fill"></i>
+                </button>
+                </h6>
+              </div>
+              <!-- ATENCIONES -->
+              <div v-if="state.showAttentions">
+                <div class="mt-2 mb-1">
+                  <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.attentions.length }} </span>
+                </div>
+                <div v-if="state.attentions && state.attentions.length > 0">
+                  <div v-for="(attention, index) in state.attentions" :key="index" class="mt-2">
+                    <div class="metric-card">
+                      <div v-if="attention.block">
+                        <span class="lefted badge rounded-pill bg-primary"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
+                      </div>
+                      <AttentionDetailsCard
+                        :attention="attention"
+                        :show="true"
+                        :detailsOpened="false"
+                        :toggles="toggles"
+                        :commerce="commerce"
+                        :queues="queues"
+                        @updatedAttentions="updatedAttentions"
+                      >
+                      </AttentionDetailsCard>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="state.selectedQueue && (!state.attentions || state.attentions.length === 0)">
+                  <Message
+                    :title="$t('collaboratorBookingsView.message.4.title')"
+                    :content="$t('collaboratorBookingsView.message.4.content')" />
+                </div>
+              </div>
+              <!-- RESERVAS -->
+              <div v-if="state.showBooking">
+                <div class="my-2">
+                  <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
+                </div>
+                <Spinner :show="loadingBookings"> </Spinner>
+                <div v-if="!loadingBookings">
+                  <div v-if="state.bookings && state.bookings.length > 0">
+                    <div v-for="block in state.blocks" :key="block.number">
+                      <div class="metric-card">
+                        <span
+                          class="lefted badge rounded-pill bg-primary m-0 hour-title"
+                          :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}
+                        </span>
+                        <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
+                          <BookingDetailsCard
+                            :booking="booking"
+                            :show="true"
+                            :detailsOpened="false"
+                            :toggles="toggles"
+                            :commerce="commerce"
+                            :queues="queues"
+                            :disabledDates="disabledDates"
+                            :calendarAttributes="calendarAttributes"
+                            :groupedQueues="state.groupedQueues"
+                            @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
+                          >
+                          </BookingDetailsCard>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="(state.selectedQueue || state.selectedDate) && (!state.bookings || state.bookings.length === 0)">
+                    <div v-for="block in state.blocks" :key="block.number">
+                      <div class="metric-card">
+                        <span
+                          class="lefted badge rounded-pill bg-primary m-0 hour-title"
+                          :class="'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="!state.selectedQueue || !state.selectedDate">
+                    <Message
+                      :title="$t('collaboratorBookingsView.message.5.title')"
+                      :content="$t('collaboratorBookingsView.message.5.content')" />
+                  </div>
+                </div>
+              </div>
+              <!-- LISTA DE ESPERA -->
+              <div v-if="state.showWaitlist">
+                <div class="my-2">
+                  <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
+                </div>
+                <div v-if="state.waitlists && state.waitlists.length > 0">
+                  <div v-for="waitlist in state.waitlists" :key="waitlist.id">
+                    <div>
+                      <WaitlistDetailsCard
+                        :waitlist="waitlist"
+                        :show="true"
+                        :detailsOpened="false"
+                        :availableBlocks="state.blocks"
+                        :toggles="toggles"
+                      >
+                      </WaitlistDetailsCard>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="state.selectedQueue && state.selectedDate && (!state.waitlists || state.waitlists.length === 0)">
+                  <Message
+                    :title="$t('collaboratorBookingsView.message.3.title')"
+                    :content="$t('collaboratorBookingsView.message.3.content')" />
+                </div>
+                <div v-if="!state.selectedQueue || !state.selectedDate">
+                  <Message
+                    :title="$t('collaboratorBookingsView.message.5.title')"
+                    :content="$t('collaboratorBookingsView.message.5.content')" />
+                </div>
               </div>
             </div>
-            <hr>
-            <div class="row mt-1 mb-1 mx-2">
+          </div>
+          <!-- CLIENTS 360 -->
+          <div v-if="state.showClients360">
+            <div class="row mx-2 mt-4">
               <div class="mb-1"><i class="bi bi-search"></i> <span class="fw-bold h6"> {{ $t("collaboratorBookingsView.searchClient") }} </span></div>
               <div class="col-8 col-md-8 centered">
                 <input
@@ -879,139 +1067,43 @@ export default {
                   @click="copyLink()">
                   <i class="bi bi-file-earmark-spreadsheet"></i>
                 </button>
-                <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
                   @click="goToCreateBooking()">
                   <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
+              </button>
+              <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                @click="showMyBookings()"
+                :disabled="!state.searchText"
+                >
+                  <i class="bi bi-calendar-check-fill"></i>
+                  {{ $t("collaboratorBookingsView.myBookings") }}
+                  <i class="dark" :class="`bi ${state.extendedBookingsEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </button>
               </div>
             </div>
             <hr>
-            <div id="subMenu" class="my-1 mt-3">
-              <h6 class="mb-0">
-                <button
-                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
-                  :class="state.showAttentions ? 'btn-selected' : ''"
-                  @click="showAttentions()"
+            <div v-if="state.extendedBookingsEntity">
+              <div v-if="state.clientBookings && state.clientBookings.length > 0">
+                <span class="fw-bold h6"> <i class="bi bi-calendar"></i> {{ $t("collaboratorBookingsView.myBookings") }}</span>
+                <div class="my-2">
+                  <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.clientBookings.length }} </span>
+                </div>
+                <div v-for="booking in state.clientBookings" :key="booking.id">
+                  <BookingDetailsCard
+                    :booking="booking"
+                    :show="true"
+                    :detailsOpened="false"
+                    :toggles="toggles"
+                    :commerce="commerce"
+                    :queues="queues"
+                    :disabledDates="disabledDates"
+                    :calendarAttributes="calendarAttributes"
+                    @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
                   >
-                  {{ $t('collaboratorBookingsView.attentions') }} <br> <i class="bi bi-qr-code"></i>
-                </button>
-                <button
-                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1"
-                  :class="state.showBooking ? 'btn-selected' : ''"
-                  @click="showBookings()"
-                  :disabled="!state.selectedQueue || !state.selectedDate"
-                  >
-                  {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
-                </button>
-                <button
-                  class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
-                  :class="state.showWaitlist ? 'btn-selected' : ''"
-                  @click="showWaitlists()"
-                  :disabled="!state.selectedQueue.id || !state.selectedDate"
-                  >
-                  {{ $t('collaboratorBookingsView.waitlists') }} <br> <i class="bi bi-calendar-heart-fill"></i>
-              </button>
-              </h6>
-            </div>
-            <div v-if="state.showAttentions">
-              <div class="mt-2 mb-1">
-                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.attentions.length }} </span>
-              </div>
-              <div v-if="state.attentions && state.attentions.length > 0">
-                <div v-for="(attention, index) in state.attentions" :key="index" class="mt-2">
-                  <div class="metric-card">
-                    <div v-if="attention.block">
-                      <span class="lefted badge rounded-pill bg-primary"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
-                    </div>
-                    <AttentionDetailsCard
-                      :attention="attention"
-                      :show="true"
-                      :detailsOpened="false"
-                      :toggles="toggles"
-                      :commerce="commerce"
-                      :queues="queues"
-                      @updatedAttentions="updatedAttentions"
-                    >
-                    </AttentionDetailsCard>
-                  </div>
+                  </BookingDetailsCard>
                 </div>
               </div>
-              <div v-if="state.selectedQueue && (!state.attentions || state.attentions.length === 0)">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.4.title')"
-                  :content="$t('collaboratorBookingsView.message.4.content')" />
-              </div>
-            </div>
-            <div v-if="state.showBooking">
-              <div class="my-2">
-                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
-              </div>
-              <Spinner :show="loadingBookings"> </Spinner>
-              <div v-if="!loadingBookings">
-                <div v-if="state.bookings && state.bookings.length > 0">
-                  <div v-for="block in state.blocks" :key="block.number">
-                    <div class="metric-card">
-                      <span
-                        class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                        :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                      <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
-                        <BookingDetailsCard
-                          :booking="booking"
-                          :show="true"
-                          :detailsOpened="false"
-                          :toggles="toggles"
-                          :commerce="commerce"
-                          :queues="queues"
-                        >
-                        </BookingDetailsCard>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div v-if="(state.selectedQueue || state.selectedDate) && (!state.bookings || state.bookings.length === 0)">
-                  <div v-for="block in state.blocks" :key="block.number">
-                    <div class="metric-card">
-                      <span
-                        class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                        :class="'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-if="!state.selectedQueue || !state.selectedDate">
-                  <Message
-                    :title="$t('collaboratorBookingsView.message.5.title')"
-                    :content="$t('collaboratorBookingsView.message.5.content')" />
-                </div>
-              </div>
-            </div>
-            <div v-if="state.showWaitlist">
-              <div class="my-2">
-                <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
-              </div>
-              <div v-if="state.waitlists && state.waitlists.length > 0">
-                <div v-for="waitlist in state.waitlists" :key="waitlist.id">
-                  <div>
-                    <WaitlistDetailsCard
-                      :waitlist="waitlist"
-                      :show="true"
-                      :detailsOpened="false"
-                      :availableBlocks="state.blocks"
-                      :toggles="toggles"
-                    >
-                    </WaitlistDetailsCard>
-                  </div>
-                </div>
-              </div>
-              <div v-if="state.selectedQueue && state.selectedDate && (!state.waitlists || state.waitlists.length === 0)">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.3.title')"
-                  :content="$t('collaboratorBookingsView.message.3.content')" />
-              </div>
-              <div v-if="!state.selectedQueue || !state.selectedDate">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.5.title')"
-                  :content="$t('collaboratorBookingsView.message.5.content')" />
-              </div>
+              <hr>
             </div>
           </div>
         </div>

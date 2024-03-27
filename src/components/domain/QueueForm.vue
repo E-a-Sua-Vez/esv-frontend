@@ -297,7 +297,7 @@ export default {
                   </button>
                 </div>
               </div>
-              <div class="centered mt-1" v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length >= state.limit">
+              <div class="centered mt-1" v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length > state.limit">
                 <nav>
                   <ul class="pagination pagination-ul">
                     <li class="page-item">

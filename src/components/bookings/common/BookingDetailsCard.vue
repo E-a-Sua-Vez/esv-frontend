@@ -5,15 +5,17 @@ import Spinner from '../../common/Spinner.vue';
 import { cancelBooking, confirmBooking } from '../../../application/services/booking';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
-import { getPendingCommerceBookingsByDate, transferBooking } from '../../../application/services/booking';
+import { getPendingCommerceBookingsByDate, transferBooking, editBooking } from '../../../application/services/booking';
+import { getQueueById } from '../../../application/services/queue';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 import Message from '../../common/Message.vue';
+import BookingDatePicker from './BookingDatePicker.vue';
 
 export default {
   name: 'BookingDetailsCard',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message },
+  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, BookingDatePicker },
   props: {
     show: { type: Boolean, default: true },
     booking: { type: Object, default: undefined },
@@ -21,13 +23,18 @@ export default {
     detailsOpened: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    disabledDates: { type: Object, default: undefined },
+    groupedQueues: { type: Object, default: undefined },
+    calendarAttributes: { type: Object, default: undefined },
   },
+  emits: ['getAvailableDatesByCalendarMonth'],
   data() {
     return {
       loading: false,
       extendedEntity: false,
       extendedPaymentEntity: false,
       extendedTransferEntity: false,
+      extendedEditEntity: false,
       newConfirmationData: {},
       paymentTypes: [],
       paymentMethods: [],
@@ -36,17 +43,30 @@ export default {
       paymentMethodError: false,
       errorsAdd: [],
       goToTransfer: false,
+      goToEdit: false,
       goToCancel: false,
       goToConfirm1: false,
       goToConfirm2: false,
       checked: false,
+      queue: {},
       queuesToTransfer: [],
-      queueToTransfer: {}
+      queueToTransfer: {},
+      dateMask: { modelValue: 'YYYY-MM-DD' },
+      locale: 'es',
+      selectedDate: (new Date()).setDate(new Date().getDate() + 1),
+      minDate: (new Date()).setDate(new Date().getDate()),
+      maxDate: (new Date()).setDate(new Date().getDate() + 90),
+      amountofBlocksNeeded: 1,
+      availableBookingSuperBlocks: [],
+      showBookingDataPicker: false,
+      dateToEdit: undefined,
+      blockToEdit: undefined
     }
   },
   beforeMount() {
     this.paymentTypes = getPaymentTypes();
     this.paymentMethods = getPaymentMethods();
+    this.locale = this.commerce.localeInfo.language;
   },
   methods: {
     showDetails() {
@@ -54,15 +74,32 @@ export default {
     },
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
+      this.extendedEditEntity = false;
+      this.extendedTransferEntity = false
+    },
+    async showEditDetails() {
+      this.extendedEditEntity = !this.extendedEditEntity;
+      this.extendedPaymentEntity = false;
+      this.extendedTransferEntity = false
+      if (this.extendedEditEntity === true) {
+        await this.toEdit();
+      }
     },
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
+      this.extendedEditEntity = false;
+      this.extendedPaymentEntity = false;
       if (this.extendedTransferEntity === true) {
         await this.toTransfer();
       }
     },
     getDate(dateIn, timeZoneIn) {
-      const date = dateIn.toDate().toString();
+      let date = dateIn;
+      try  {
+        date = dateIn.toDate().toString();
+      } catch (error) {
+        date = dateIn;
+      }
       const dateCorrected = new Date(
       new Date(date).toLocaleString('en-US', {
         timeZone: timeZoneIn,
@@ -137,6 +174,9 @@ export default {
     },
     async toTransfer() {
       this.loading = true;
+      if (this.booking && this.booking.queueId) {
+        this.queue = await getQueueById(this.booking.queueId);
+      }
       const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const date = this.booking.date;
@@ -205,6 +245,43 @@ export default {
     cancelTransfer() {
       this.goToTransfer = false;
     },
+    async toEdit() {
+      if (this.booking && this.booking.queueId) {
+        this.queue = await getQueueById(this.booking.queueId);
+      }
+      if (this.booking.block) {
+        this.showBookingDataPicker = true;
+        if (this.booking.block.blockNumbers && this.booking.block.blockNumbers.length > 0) {
+          this.amountofBlocksNeeded = this.booking.block.blockNumbers.length;
+        }
+      }
+    },
+    async edit() {
+      try {
+        this.loading = true;
+        if (this.booking && this.booking.id) {
+          const body = {
+            date: this.dateToEdit,
+            block: this.blockToEdit
+          };
+          await editBooking(this.booking.id, body);
+        }
+        this.loading = false;
+        this.goToEdit = false;
+      } catch (error) {
+        this.loading = false;
+        this.alertError = error.message;
+      }
+    },
+    async getAvailableDatesByMonth(pages) {
+      await this.$emit('getAvailableDatesByCalendarMonth', pages);
+    },
+    goEdit() {
+      this.goToEdit = !this.goToEdit;
+    },
+    cancelEdit() {
+      this.goToEdit = false;
+    },
     getActiveFeature(commerce, name, type) {
       return getActiveFeature(commerce, name, type);
     },
@@ -228,6 +305,12 @@ export default {
     },
     receiveData(data) {
       if (data) {
+        if (data.procedureNumber) {
+          this.newConfirmationData.procedureNumber = data.procedureNumber;
+        }
+        if (data.proceduresTotalNumber) {
+          this.newConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
+        }
         if (data.paymentType) {
           this.newConfirmationData.paymentType = data.paymentType;
         }
@@ -244,6 +327,16 @@ export default {
           this.newConfirmationData.paymentComment = data.paymentComment;
         }
       };
+    },
+    receiveBookingEdit(data) {
+      if (data) {
+        if (data.date) {
+          this.dateToEdit = data.date
+        }
+        if (data.block) {
+          this.blockToEdit = data.block
+        }
+      }
     }
   },
   watch: {
@@ -268,17 +361,19 @@ export default {
 <template>
   <div v-if="show && booking">
     <div class="row metric-card fw-bold">
-      <div class="col-2 centered">
-        <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.number }}</span>
+      <div class="col centered" v-if="booking.user && booking.user.name">
+        <i class="bi bi-person-circle icon"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
+        <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
+        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill  icon green-icon"> </i>
+        <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
+        <i v-if="booking.transfered === true" class="bi bi-arrow-left-right icon blue-icon"> </i>
+        <i v-if="booking.edited === true" class="bi bi-pencil-fill icon"> </i>
       </div>
-      <div class="col-4 centered" v-if="booking.user && booking.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
-        <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill mx-1 yellow-icon"> </i>
-        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill mx-1 green-icon"> </i>
-        <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
-      </div>
-      <div class="col-6 centered" v-if="booking.block && booking.block.hourFrom">
+      <div class="col centered hour-title" v-if="booking.block && booking.block.hourFrom">
         <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
+      </div>
+      <div class="col centered date-title">
+        {{ getDate(booking.date) }}
       </div>
     </div>
     <div class="details-arrow">
@@ -350,80 +445,125 @@ export default {
           </div>
         </div>
         <hr>
-        <!-- PAYMENT -->
-        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
-          <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
-            <div class="" v-if="booking.confirmed === true && booking.confirmationData">
-              <div class="">
-                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.confirmData") }}</span>
-              </div>
-              <div v-if="booking.confirmationData">
-                <span v-if="booking.confirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span>
-                <span v-if="booking.confirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span>
-                <span v-if="booking.confirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span>
-                <span v-if="booking.confirmationData.paymentCommission" class="badge rounded-pill bg-warning metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentCommission }}</span>
-              </div>
-              <hr>
-            </div>
-            <div v-else>
-              <h5>
-                <span class="centered confirm-payment"
-                  href="#"
-                  @click.prevent="showPaymentDetails()">
-                  <i class="bi bi-cash-coin mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
-                  <i class="dark" :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                </span>
-              </h5>
-            </div>
-            <div
-              v-if="!booking.confirmed"
-              :class="{ show: extendedPaymentEntity }"
-              class="detailed-data transition-slow">
-              <PaymentForm
-                :errorsAdd="errorsAdd"
-                :receiveData="receiveData"
-              >
-              </PaymentForm>
-              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
-                @click="goConfirm2()"
-                :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']">
-                <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
-              </button>
-              <AreYouSure
-                :show="goToConfirm2"
-                :yesDisabled="toggles['collaborator.bookings.confirm']"
-                :noDisabled="toggles['collaborator.bookings.confirm']"
-                @actionYes="confirm()"
-                @actionNo="confirmCancel2()"
-              >
-              </AreYouSure>
-              <hr>
-            </div>
+        <!-- CONFIRMATION DETAILS -->
+        <div class="row mx-1 centered" v-if="booking.confirmed === true && booking.confirmationData">
+          <div class="">
+            <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.confirmData") }}</span>
           </div>
+          <div v-if="booking.confirmationData">
+            <span v-if="booking.confirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span>
+            <span v-if="booking.confirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span>
+            <span v-if="booking.confirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span>
+            <span v-if="booking.confirmationData.paymentCommission" class="badge rounded-pill bg-warning metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentCommission }}</span>
+            <span v-if="booking.confirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.confirmationData.paymentDate) }}</span>
+          </div>
+          <hr>
         </div>
-        <!-- TRANSFER -->
-        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
-          <div>
-            <h5>
+        <div class="row mx-1 centered">
+          <!-- PAYMENT -->
+          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
+            <h6>
+              <span class="centered confirm-payment"
+                href="#"
+                @click.prevent="showPaymentDetails()">
+                <i class="bi bi-cash-coin mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
+                <i class="dark" :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+              </span>
+              <div v-if="extendedPaymentEntity" class="index"></div>
+            </h6>
+          </div>
+          <!-- TRANSFER -->
+          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
+            <h6>
               <span class="centered confirm-payment"
                 href="#"
                 @click.prevent="showTransferDetails()">
                 <i class="bi bi-arrow-left-right mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
                 <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </span>
-            </h5>
+              <div v-if="extendedTransferEntity" class="index"></div>
+            </h6>
           </div>
+          <!-- EDIT -->
+          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')">
+            <h6>
+              <span class="centered confirm-payment"
+                href="#"
+                @click.prevent="showEditDetails()">
+                <i class="bi bi-pencil-fill mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.edit") }}</span>
+                <i class="dark" :class="`bi ${extendedEditEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+              </span>
+              <div v-if="extendedEditEntity" class="index"></div>
+            </h6>
+          </div>
+        </div>
+        <!-- PAYMENT -->
+        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
+          <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
+            <div
+              :class="{ show: extendedPaymentEntity }"
+              class="detailed-data transition-slow">
+              <div v-if="!booking.confirmed">
+                <PaymentForm
+                  :errorsAdd="errorsAdd"
+                  :receiveData="receiveData"
+                >
+                </PaymentForm>
+                <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+                  @click="goConfirm2()"
+                  :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']">
+                  <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
+                </button>
+                <AreYouSure
+                  :show="goToConfirm2"
+                  :yesDisabled="toggles['collaborator.bookings.confirm']"
+                  :noDisabled="toggles['collaborator.bookings.confirm']"
+                  @actionYes="confirm()"
+                  @actionNo="confirmCancel2()"
+                >
+                </AreYouSure>
+                <hr>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('collaboratorBookingsView.message.7.title')"
+                  :content="$t('collaboratorBookingsView.message.7.content')" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- TRANSFER -->
+        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
           <div
             :class="{ show: extendedTransferEntity }"
             class="detailed-data transition-slow">
+            <div v-if="booking.transfered">
+              <div class="">
+                <i class="bi bi-pencil-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.transferData") }}</span>
+              </div>
+              <div>
+                <span v-if="booking.transferedOrigin" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.transferedOrigin }} </span>
+                <span v-if="booking.transferedCount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.transferedCount }}</span>
+                <span v-if="booking.transferedAt" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.transferedAt) }}</span>
+              </div>
+              <hr>
+            </div>
             <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
               <div>
                 <div class="text-label my-1">
                   {{ $t("collaboratorBookingsView.selectQueueToTransfer") }}
                 </div>
-                <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
-                  <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
-                </select>
+                <div class="text-label my-1 h6">
+                  <span class="fw-bold"> {{ queue.name}}</span>
+                </div>
+                <div class="text-label my-1">
+                  <i class="bi bi-arrow-left-right mx-1"></i>
+                </div>
+                <div class="text-label my-1">
+                  <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
+                    <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
+                  </select>
+                </div>
               </div>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
                 @click="goTransfer()"
@@ -442,6 +582,59 @@ export default {
               :noDisabled="toggles['collaborator.bookings.transfer']"
               @actionYes="transfer()"
               @actionNo="cancelTransfer()"
+            >
+            </AreYouSure>
+            <hr>
+          </div>
+        </div>
+         <!-- EDIT -->
+        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')">
+          <div
+            :class="{ show: extendedEditEntity }"
+            class="detailed-data transition-slow">
+            <div v-if="booking.edited">
+              <div class="">
+                <i class="bi bi-pencil-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.editData") }}</span>
+              </div>
+              <div>
+                <span v-if="booking.editedDateOrigin" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.editedDateOrigin) }}</span>
+                <span v-if="booking.editedBlockOrigin" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.editedBlockOrigin.hourFrom }} - {{ booking.editedBlockOrigin.hourTo }}</span>
+                <span v-if="booking.editedCount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.editedCount }}</span>
+                <span v-if="booking.editedAt" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.editedAt) }}</span>
+              </div>
+              <hr>
+            </div>
+            <div>
+              <div>
+                <div class="text-label my-1">
+                  {{ $t("collaboratorBookingsView.selectDataToEdit") }}
+                </div>
+              </div>
+              <div class="mt-2">
+                <BookingDatePicker
+                  :show="showBookingDataPicker"
+                  :booking="booking"
+                  :queue="queue"
+                  :commerce="commerce"
+                  :view="`weekly`"
+                  :amountofBlocksNeeded="amountofBlocksNeeded"
+                  :groupedQueues="groupedQueues"
+                  :receiveBookingEdit="receiveBookingEdit"
+                >
+                </BookingDatePicker>
+              </div>
+              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+                @click="goEdit()"
+                :disabled="!toggles['collaborator.bookings.edit']">
+                <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.edit") }}
+              </button>
+            </div>
+            <AreYouSure
+              :show="goToEdit"
+              :yesDisabled="toggles['collaborator.bookings.edit']"
+              :noDisabled="toggles['collaborator.bookings.edit']"
+              @actionYes="edit()"
+              @actionNo="cancelEdit()"
             >
             </AreYouSure>
             <hr>
@@ -599,5 +792,28 @@ export default {
 }
 .confirm-payment {
   cursor: pointer;
+  line-height: .8rem;
+}
+.index {
+  background-color: var(--azul-qr);
+  padding: .1rem;
+  margin-top: .25rem;
+  border-radius: .5rem !important;
+}
+.hour-title {
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: .9rem;
+  letter-spacing: .01px;
+}
+.date-title {
+  font-size: .7rem;
+  font-weight: 600;
+  line-height: .9rem;
+  letter-spacing: .01px;
+}
+.icon {
+  margin-left: .1rem;
+  margin-right: .15rem;
 }
 </style>

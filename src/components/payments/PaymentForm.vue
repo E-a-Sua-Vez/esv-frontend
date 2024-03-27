@@ -76,6 +76,34 @@ export default {
     <div id="payment-data" >
       <div class="row g-1">
         <div class="col col-md-10 offset-md-1">
+          <div id="payment-procedure-total-number-form-add" class="row g-1 my-1">
+            <div class="col-5 text-label">
+              {{ $t("collaboratorBookingsView.proceduresTotalNumber") }}
+            </div>
+            <div class="col-3">
+              <input
+                min="1"
+                type="number"
+                class="form-control"
+                v-model="state.newConfirmationData.procedureNumber"
+                placeholder="0"
+                @keyup="sendData"
+                >
+            </div>
+            <div class="col-1 text-label">
+              {{ $t("collaboratorBookingsView.procedureNumber") }}
+            </div>
+            <div class="col-3">
+              <input
+                min="1"
+                type="number"
+                class="form-control"
+                v-model="state.newConfirmationData.proceduresTotalNumber"
+                placeholder="0"
+                @keyup="sendData"
+                >
+            </div>
+          </div>
           <div id="payment-type-form-add" class="row g-1 my-1">
             <div class="col-4 text-label">
               {{ $t("collaboratorBookingsView.paymentType") }}
@@ -184,5 +212,11 @@ export default {
 .select {
   border-radius: .5rem !important;
   border: 1.5px solid var(--gris-clear) !important;
+}
+.text-label {
+  line-height: .8rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
 }
 </style>

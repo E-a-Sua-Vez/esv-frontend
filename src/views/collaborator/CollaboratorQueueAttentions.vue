@@ -1,9 +1,8 @@
 <script>
-import { ref, watch, reactive, onBeforeMount, nextTick, computed } from 'vue';
+import { ref, watch, reactive, onBeforeMount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getNextAvailableAttentionDetails, getAvailableAttentiosnByQueue, getProcessingAttentionDetailsByQueue, finishCancelledAttention } from '../../application/services/attention';
 import { getCommerceById } from '../../application/services/commerce';
-import { getQueueById } from '../../application/services/queue';
 import { globalStore } from '../../stores/index';
 import { attend } from '../../application/services/attention';
 import { updatedQueues, updatedAttentionsByDateAndCommerceAndQueue } from '../../application/firebase';

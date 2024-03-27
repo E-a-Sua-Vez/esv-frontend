@@ -222,6 +222,12 @@ export default {
     },
     receiveData(data) {
       if (data) {
+        if (data.procedureNumber) {
+          this.newConfirmationData.procedureNumber = data.procedureNumber;
+        }
+        if (data.proceduresTotalNumber) {
+          this.newConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
+        }
         if (data.paymentType) {
           this.newPaymentConfirmationData.paymentType = data.paymentType;
         }

@@ -311,6 +311,10 @@
     "attention-user-search": {
       "title": "Form Pesquisar Cliente",
       "description": "Permite perguntar se o cliente é novo ou já está registrado"
+    },
+    "booking-edit": {
+      "title": "Reserva Editar",
+      "description": "Editar reserva pra outra data e ou hora"
     }
   },
   "paymentMethods": {
@@ -759,7 +763,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
-          "transfer": "Transferir Reserva"
+          "transfer": "Transferir Reserva",
+          "edit": "Editar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -815,7 +820,8 @@
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
-          "admin": "Gerenciar Reservas"
+          "admin": "Gerenciar Reservas",
+          "edit": "Editar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -851,6 +857,10 @@
     "paymentData": "Dados de Pagamento",
     "paymentConfirm": "Confirmar Pagamento",
     "confirmData": "Dados de Confirmação",
+    "editData": "Dados de Última edição",
+    "transferData": "Dados de Última Transfer",
+    "proceduresTotalNumber": "Procedimento",
+    "procedureNumber": "de",
     "paymentType": "Tipo de Pagamento:",
     "paymentMethod": "Meio de pagamento:",
     "paymentAmount": "Valor:",
@@ -858,6 +868,11 @@
     "paymentComment": "Comentário (Opcional)",
     "transferQueue": "Transferir Fila",
     "transfer": "Transferir",
+    "selectDataToEdit": "Selecione data e hora para mudar a reserva:",
+    "edit": "Editar Reserva",
+    "myBookings": "Reservas",
+    "agenda": "Agenda",
+    "clientes": "Clientes",
     "selectQueueToTransfer": "Selecione a fila pra qual você deseja transferir a reserva:",
     "message": {
       "1": {
@@ -881,8 +896,12 @@
         "content": "Selecione uma fila e uma data no calendário."
       },
       "6": {
-        "title": "Oi!",
-        "content": "Neste momento não há filas disponíveis. Verifique o comércio selecionado o pergunte ao administrador."
+        "title": "Neste momento não há filas disponíveis!",
+        "content": "Verifique o comércio selecionado o pergunte ao administrador."
+      },
+      "7": {
+        "title": "Reserva já foi confirmada",
+        "content": "A reserva já foi confirmada, verifique os dados da confirmação."
       }
     },
     "capacitiesList": {
@@ -908,7 +927,8 @@
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
-          "admin": "Gerenciar Reservas"
+          "admin": "Gerenciar Reservas",
+          "edit": "Editar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -974,7 +994,8 @@
           "cancel": "Cancelar Reserva",
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
-          "transfer": "Transferir Reserva"
+          "transfer": "Transferir Reserva",
+          "edit": "Editar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",

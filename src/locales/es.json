@@ -312,6 +312,10 @@
     "attention-user-search": {
       "title": "Form Busca Cliente",
       "description": "Permite preguntar si el cliente es nuevo o ya está registrado"
+    },
+    "booking-edit": {
+      "title": "Reserva Editar",
+      "description": "Editar reserva a otra fecha y/u hora"
     }
   },
   "paymentMethods": {
@@ -752,7 +756,8 @@
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
           "admin": "Administrar Reservas",
-          "transfer": "Transferir Reservas"
+          "transfer": "Transferir Reservas",
+          "edit": "Editar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -804,7 +809,8 @@
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
           "admin": "Administrar Reservas",
-          "transfer": "Transferir Reservas"
+          "transfer": "Transferir Reservas",
+          "edit": "Editar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -837,8 +843,12 @@
     "searchClient": "Buscar Cliente",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
-    "paymentConfirm": "Confirmar Pagamento",
+    "paymentConfirm": "Confirmar/Pagamento",
     "confirmData": "Datos de Confirmación",
+    "editData": "Datos de Última Edición",
+    "transferData": "Datos de Última Transfer",
+    "proceduresTotalNumber": "Procedimiento",
+    "procedureNumber": "de",
     "paymentData": "Datos de Pago",
     "paymentType": "Tipo de Pago:",
     "paymentMethod": "Medio de pago:",
@@ -846,8 +856,13 @@
     "paymentCommission": "Comisión:",
     "paymentComment": "Comentario (Opcional)",
     "transferQueue": "Transferir Fila",
+    "edit": "Editar Reserva",
     "transfer": "Transferir",
     "selectQueueToTransfer": "Seleccione la fila a la que desea transferir esta reserva:",
+    "selectDataToEdit": "Seleccione fecha y hora para cambiar la reserva:",
+    "myBookings": "Reservas",
+    "agenda": "Agenda",
+    "clientes": "Clientes",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -870,8 +885,12 @@
         "content": "Selecciona una fila y una fecha en el calendario."
       },
       "6": {
-        "title": "¡Hola!",
-        "content": "No hay filas disponibles, verifique el comercio seleccionado o consulte con el administrador."
+        "title": "No hay filas disponibles",
+        "content": "Verifique el comercio seleccionado o consulte con el administrador."
+      },
+      "7": {
+        "title": "Reserva ya está confirmada",
+        "content": "La reserva ya fue confirmada anteriormente, verifica los datos de confirmación."
       }
     },
     "capacitiesList": {
@@ -898,7 +917,8 @@
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
           "admin": "Administrar Reservas",
-          "transfer": "Transferir Reservas"
+          "transfer": "Transferir Reservas",
+          "edit": "Editar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -970,7 +990,8 @@
           "manage": "Manejar Reservas",
           "confirm": "Confirmar Reserva",
           "admin": "Administrar Reservas",
-          "transfer": "Transferir Reservas"
+          "transfer": "Transferir Reservas",
+          "edit": "Editar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",
@@ -2831,7 +2852,8 @@
         "cancel": "Cancelar Reserva",
         "manage": "Manejar Reservas",
         "confirm": "Confirmar Reserva",
-        "transfer": "Transferir Reservas"
+        "transfer": "Transferir Reservas",
+        "edit": "Editar Reservas"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -2860,7 +2882,8 @@
         "cancel": "Cancelar Reserva - Reservas",
         "manage": "Manejar Reservas - Reservas",
         "confirm": "Confirmar Reserva - Reservas",
-        "transfer": "Transferir Reservas - Reservas"
+        "transfer": "Transferir Reservas - Reservas",
+        "edit": "Editar Reservas - Reservas"
       }
     },
     "plans": {
