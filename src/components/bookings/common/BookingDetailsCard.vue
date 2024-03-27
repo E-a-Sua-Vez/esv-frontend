@@ -279,6 +279,16 @@ export default {
     goEdit() {
       this.goToEdit = !this.goToEdit;
     },
+    getQueueName(id) {
+      if (id && this.queues && this.queues.length > 0) {
+        const queuesFiltered = this.queues.filter(queue => queue.id === id);
+        if (queuesFiltered && queuesFiltered.length > 0) {
+          if (queuesFiltered[0] && queuesFiltered[0].id && queuesFiltered[0].name) {
+            return queuesFiltered[0].name;
+          }
+        }
+      }
+    },
     cancelEdit() {
       this.goToEdit = false;
     },
@@ -543,7 +553,7 @@ export default {
                 <i class="bi bi-pencil-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.transferData") }}</span>
               </div>
               <div>
-                <span v-if="booking.transferedOrigin" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.transferedOrigin }} </span>
+                <span v-if="booking.transferedOrigin" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ getQueueName(booking.transferedOrigin || undefined) }} </span>
                 <span v-if="booking.transferedCount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ booking.transferedCount }}</span>
                 <span v-if="booking.transferedAt" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.transferedAt) }}</span>
               </div>
