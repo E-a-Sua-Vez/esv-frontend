@@ -22,7 +22,10 @@ export default {
     const { receiveData } = props;
 
     const state = reactive({
-      newConfirmationData: {},
+      newConfirmationData: {
+        procedureNumber: 1,
+        proceduresTotalNumber: 1
+      },
       paymentTypes: [],
       paymentMethods: [],
       paymentAmountError: false,

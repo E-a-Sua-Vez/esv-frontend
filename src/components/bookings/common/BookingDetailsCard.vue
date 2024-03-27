@@ -451,6 +451,7 @@ export default {
             <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.confirmData") }}</span>
           </div>
           <div v-if="booking.confirmationData">
+            <span v-if="booking.confirmationData.proceduresTotalNumber && booking.confirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ booking.confirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ booking.confirmationData.proceduresTotalNumber }}</span>
             <span v-if="booking.confirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span>
             <span v-if="booking.confirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span>
             <span v-if="booking.confirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span>
