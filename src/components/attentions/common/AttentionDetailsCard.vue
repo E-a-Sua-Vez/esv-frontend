@@ -359,6 +359,7 @@ export default {
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
               <div v-if="attention.paymentConfirmationData">
+                <span v-if="attention.paymentConfirmationData.proceduresTotalNumber && attention.paymentConfirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.paymentConfirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ attention.paymentConfirmationData.proceduresTotalNumber }}</span>
                 <span v-if="attention.paymentConfirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span>
                 <span v-if="attention.paymentConfirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`) }}</span>
                 <span v-if="attention.paymentConfirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentAmount }}</span>
