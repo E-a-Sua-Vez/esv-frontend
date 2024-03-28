@@ -13,12 +13,9 @@ export default {
   },
   methods: {
     npsScorePercentage(total, tag){
-      return parseFloat((this.distribution[tag] * 100 / total), 2) || 0;
-    },
-    getPercentage(avg) {
-      return parseFloat((avg).toFixed(2), 2) || 0;
-    },
-  },
+      return parseFloat((this.distribution[tag] * 100 / total).toFixed(2), 2) || 0;
+    }
+  }
 }
 </script>
 

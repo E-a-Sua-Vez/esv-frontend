@@ -299,7 +299,7 @@ export default {
               </div>
             </div>
           </div>
-          <div v-if="!loading" id="dashboard-result" class="mt-4">
+          <div v-if="!loading" id="dashboard-result" class="mt-2">
             <div id="title" class="metric-title">
               <span v-if="state.showClients">{{ $t("dashboard.clients") }}</span>
               <span v-else-if="state.showSurveyManagement">{{ $t("dashboard.satisfaction") }}</span>

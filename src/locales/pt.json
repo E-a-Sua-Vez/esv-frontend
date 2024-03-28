@@ -1142,6 +1142,7 @@
     "rating": "Classificação de satisfação do cliente. Ruim: 0 a 2,5, Regular: 2,5 a 4, Bom: 4 a 5.",
     "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
     "origin": "Meio pelo qual o cliente conheceu o negócio",
+    "contacts": "Análise de Contatos de Clientes",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
@@ -1177,7 +1178,8 @@
     "answers": "Respostas",
     "contact": "Contatar",
     "schedule": "Agendar",
-
+    "contactType": "Tipo de Contato",
+    "contactResult": "Resultado de Contato",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1231,6 +1233,7 @@
         "29": "Processadas",
         "30": "Canceladas",
         "31": "Onde você nos conheceu?",
+        "32": "Número de Contatos de Clientes",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",
@@ -1502,6 +1505,9 @@
         },
         "attention-origin-avg": {
           "view": "Ver Origem do Cliente"
+        },
+        "attention-client-contact": {
+          "view": "Ver Contato de Clientes"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
@@ -2777,6 +2783,9 @@
       },
       "attention-origin-avg": {
         "view": "Ver Origem do Clientee - Seção Dashboard"
+      },
+      "attention-client-contact": {
+        "view": "Ver Contato de Clientes - Seção Dashboard"
       },
       "reports": {
         "surveys": "Download Relatório Pesquisas (Sumário) Seção Dashboard",

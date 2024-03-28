@@ -1141,6 +1141,7 @@
     "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",
     "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
     "origin": "Origin through which the client knew the business",
+    "contacts": "Client Contacts Analysis",
     "today": "Today",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
@@ -1176,6 +1177,8 @@
     "answers": "Answers",
     "contact": "Contact",
     "schedule": "Schedule",
+    "contactType": "Contact Type",
+    "contactResult": "Contact Result",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1229,6 +1232,7 @@
         "29": "Processed",
         "30": "Cancelled",
         "31": "¿Where did you find us?",
+        "32": "Client Contacts Number",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -1500,6 +1504,9 @@
         },
         "attention-origin-avg": {
           "view": "See Origin of Client"
+        },
+        "attention-client-contact": {
+          "view": "See Client Contacts"
         },
         "reports": {
           "surveys": "Surveys Report (Summary)",
@@ -2790,6 +2797,9 @@
       },
       "attention-origin-avg": {
         "view": "See Origin of Cliente - Section Dashboard"
+      },
+      "attention-client-contact": {
+        "view": "See Client Contacts - Section Dashboard"
       },
       "reports": {
         "surveys": "Download Report Surveys (Summary) Section Dashboard",

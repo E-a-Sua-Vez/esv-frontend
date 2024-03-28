@@ -13,6 +13,7 @@ import AttentionNotificationDetails from './domain/AttentionNotificationDetails.
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionOriginDetails from './domain/AttentionOriginDetails.vue';
+import AttentionClientContactDetails from './domain/AttentionClientContactDetails.vue';
 
 export default {
   name: 'DashboardIndicators',
@@ -30,7 +31,8 @@ export default {
     PDFHeader,
     PDFFooter,
     Spinner,
-    AttentionOriginDetails
+    AttentionOriginDetails,
+    AttentionClientContactDetails
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -354,6 +356,29 @@ export default {
               :limit="10"
             >
             </AttentionOriginDetails>
+          </template>
+        </DetailsCard>
+      </div>
+      <div id="attention-client-contact">
+        <DetailsCard
+          :show="!!toggles['dashboard.attention-client-contact.view']"
+          :data="calculatedMetrics['clients']?.contactTotal ? calculatedMetrics['clients']?.contactTotal : 0"
+          :subdata="undefined"
+          :title="$t('dashboard.items.attentions.32')"
+          :showTooltip="true"
+          :description="$t('dashboard.contacts')"
+          :icon="'bi-chat-left-dots-fill'"
+          :iconStyleClass="'yellow-icon'"
+          :detailsOpened="detailsOpened"
+          >
+          <template v-slot:details>
+            <AttentionClientContactDetails
+              :show="!!toggles['dashboard.attention-client-contact.view']"
+              :distributionType="calculatedMetrics['clients']['typeContactDistribution']"
+              :distributionResult="calculatedMetrics['clients']['resultContactDistribution']"
+              :count="calculatedMetrics['clients'].contactTotal || 0"
+            >
+            </AttentionClientContactDetails>
           </template>
         </DetailsCard>
       </div>
