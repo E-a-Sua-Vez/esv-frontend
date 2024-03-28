@@ -437,7 +437,7 @@ export default {
             </Warning>
           </div>
           <div class="welcome-user" v-if="state.clientSearched && state.clientSearched.id">
-            {{ $t("collaboratorAttentionValidate.hello-user") }}, {{ state.clientSearched.name || state.clientSearched.idNumber }}
+            {{ $t("collaboratorAttentionValidate.hello-user") }}, {{ state.clientSearched.name || state.clientSearched.idNumber }}!
           </div>
           <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
             <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
