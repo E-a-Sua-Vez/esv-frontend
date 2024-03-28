@@ -15,10 +15,11 @@ import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorQueueAttentions',
-  components: { Message, PoweredBy, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities },
+  components: { Message, PoweredBy, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu },
   async setup() {
     const route = useRoute();
     const router = useRouter();
@@ -153,24 +154,22 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+      <ComponentMenu
+        :title="`${$t(`collaboratorQueueAttentions.hello-user`)}, ${state.currentUser.alias || state.currentUser.name }!`"
+        :toggles="state.toggles"
+        componentName="collaboratorQueueAttentions"
+        @goBack="collaboratorQueues">
+      </ComponentMenu>
       <QueueName
         :queue="state.queue"
         :queuePendingDetails="state.queuePendingDetails"
         :queueProcessingDetails="state.queueProcessingDetails"
         :details="true">
       </QueueName>
-      <div id="page-header" class="text-center mt-4">
-        <div id="welcome">
-          <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorQueueAttentions.hello") }}</span>
-          <span v-else class="welcome-user">{{ $t("collaboratorQueueAttentions.hello-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
-        </div>
+      <div id="page-header" class="text-center">
+        <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
       </div>
-      <ToggleCapabilities
-        :toggles="state.toggles"
-        componentName="collaboratorQueueAttentions"
-      ></ToggleCapabilities>
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
       <div v-if="state.pendingAttentions.length === 0" class="mt-2">
         <Message
           :title="$t('collaboratorQueueAttentions.message.1.title')"
@@ -218,15 +217,6 @@ export default {
             </button>
           </div>
         </div>
-      </div>
-      <div class="d-grid gap-2 my-2">
-        <button
-          class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-          @click="collaboratorQueues()"
-          :disabled="loading"
-          >
-          {{ $t("collaboratorQueueAttentions.actions.3.action") }} <i class="bi bi-arrow-left-circle"></i>
-        </button>
       </div>
     </div>
     <PoweredBy :name="state.commerce.name" />

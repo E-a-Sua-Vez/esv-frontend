@@ -18,13 +18,13 @@ export default {
 
 <template>
   <div>
-    <div class="row title-content mb-2">
+    <div class="row title-content mb-2 mx-2">
       <div class="col-12">
         <div class="centered">
           <div class="welcome">
             <div id="welcome">
-              <span v-if="!name" class="welcome">{{ $t("collaboratorMenu.welcome") }}</span>
-              <span v-else class="welcome-user">{{ $t("collaboratorMenu.welcome-user") }}, {{ name }}!</span>
+              <span v-if="!name" class="welcome-title">{{ $t("collaboratorMenu.welcome") }}</span>
+              <span v-else class="welcome-title">{{ $t("collaboratorMenu.welcome-user") }}, {{ name }}!</span>
             </div>
           </div>
         </div>
@@ -46,10 +46,12 @@ export default {
   background-color:var(--gris-clear);
 }
 .welcome-title {
-  padding: .5rem;
   font-size: 1.2rem;
-  line-height: 1.2rem;
   font-weight: 700;
+}
+.welcome {
+  padding: .5rem;
+  line-height: 1rem;
 }
 .toggle-title {
   line-height: 1rem;

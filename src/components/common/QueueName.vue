@@ -37,10 +37,11 @@ export default {
           <div class="col-8">
             <i class="bi bi-person-lines-fill"></i> {{ queue.name }}
           </div>
-          <div class="col-2">
+          <div class="col-3">
             <span
               data-bs-toggle="modal"
               href="#queueModal">
+              <span class="see-queue"> {{ $t('collaboratorQueueAttentions.seeQueue') }} </span>
               <i class="dark fw-bold" :class="'bi bi-arrow-right-circle-fill'"></i>
             </span>
           </div>
@@ -105,5 +106,10 @@ export default {
 .queue-details {
   cursor: pointer;
 }
-
+.see-queue {
+  text-decoration: underline;
+  font-size: .7rem;
+  margin-right: .2rem;
+  font-weight: 600;
+}
 </style>

@@ -719,7 +719,7 @@
         "action": "Marcar como atendido"
       },
       "2": {
-        "action": "Voltar para a linha"
+        "action": "Voltar para a fila"
       }
     },
     "comment": {
@@ -754,7 +754,8 @@
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
-          "payment-confirm": "Confirmar Pagamento"
+          "payment-confirm": "Confirmar Pagamento",
+          "transfer": "Transfer Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -764,7 +765,8 @@
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
-          "edit": "Editar Reservas"
+          "edit": "Editar Reservas",
+          "admin": "Gerenciar Reservas"
         },
         "waitlists": {
           "book": "Reservar Lista de Espera"
@@ -786,9 +788,9 @@
   "collaboratorQueuesView": {
     "welcome": "Atendimento de Filas do Dia",
     "commerce": "Comércio:",
-    "choose": "Escolha a linha que você vai atender:",
+    "choose": "Escolha a fila que você vai atender:",
     "module": "Seu módulo de atendimento é:",
-    "attentions": "Na linha",
+    "attentions": "Na fila",
     "attending": "Atendiendo",
     "return": "Voltar",
     "message": {
@@ -807,7 +809,8 @@
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular atendimento",
-          "payment-confirm": "Confirmar Pagamento"
+          "payment-confirm": "Confirmar Pagamento",
+          "transfer": "Transfer Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -949,6 +952,7 @@
       "1": "Há",
       "2": "pessoas esperando."
     },
+    "seeQueue": "Ver Fila",
     "numberCancelled": "A próxima senha foi Cancelada:",
     "actions": {
       "1": {
@@ -982,7 +986,8 @@
           "attend": "Atender",
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
-          "payment-confirm": "Confirmar Pagamento"
+          "payment-confirm": "Confirmar Pagamento",
+          "transfer": "Transfer Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -995,7 +1000,8 @@
           "manage": "Reservas Visão 360°",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
-          "edit": "Editar Reservas"
+          "edit": "Editar Reservas",
+          "admin": "Gerenciar Reservas"
         },
         "main-menu": {
           "dashboard": "Ver Dashboard",

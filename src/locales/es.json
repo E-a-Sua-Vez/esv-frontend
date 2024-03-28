@@ -746,7 +746,8 @@
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
-          "payment-confirm": "Confirmar Pago"
+          "payment-confirm": "Confirmar Pago",
+          "transfer": "Transferir Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -796,7 +797,8 @@
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
-          "payment-confirm": "Confirmar Pago"
+          "payment-confirm": "Confirmar Pago",
+          "transfer": "Transferir Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -944,6 +946,7 @@
       "1": "Hay",
       "2": "personas esperando."
     },
+    "seeQueue": "Ver Fila",
     "numberCancelled": "El próximo número fue Cancelado:",
     "actions": {
       "1": {
@@ -977,7 +980,8 @@
           "attend": "Atender",
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
-          "payment-confirm": "Confirmar Pago"
+          "payment-confirm": "Confirmar Pago",
+          "transfer": "Transferir Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"

@@ -13,10 +13,11 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import QR from '../../components/common/QR.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorAttentionValidate',
-  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities},
+  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu},
   async setup() {
     const route = useRoute();
     const router = useRouter();
@@ -114,18 +115,19 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <QueueName :queue="state.queue">
-      </QueueName>
+      <ComponentMenu
+        :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${state.currentUser.alias || state.currentUser.name }!`"
+        :toggles="state.toggles"
+        componentName="collaboratorAttentionValidate"
+        @goBack="queueAttentions">
+      </ComponentMenu>
+      <QueueName :queue="state.queue"> </QueueName>
+      <div id="page-header" class="text-center">
+        <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
+      </div>
       <div id="attention-processing" v-if="state.attention.status === 'PENDING' || state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'">
-        <div id="page-header" class="text-center mt-2">
-          <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("collaboratorAttentionValidate.hello") }}</span>
-            <span v-else class="welcome-user">{{ $t("collaboratorAttentionValidate.hello-user") }}, {{ state.currentUser.alias || state.currentUser.name }}!</span>
-          </div>
-          <ToggleCapabilities
-            :toggles="state.toggles"
-            componentName="collaboratorAttentionValidate"
-          ></ToggleCapabilities>
+        <div id="page-header" class="text-center">
           <div class="your-attention mt-2">
             <span>{{ $t("collaboratorAttentionValidate.yourNumber") }}</span>
           </div>
@@ -135,8 +137,6 @@ export default {
           :number="state.attention.number"
           :data="state.user"
         ></AttentionNumber>
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
         <div v-if="state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'" class="d-grid gap-2 my-2 mx-2">
           <div class="mb-2">
             <label for="comment" class="form-label mt-2 comment-title">{{ $t("collaboratorAttentionValidate.comment.label") }}</label>

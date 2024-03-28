@@ -716,6 +716,9 @@
     "actions": {
       "1": {
         "action": "Mark as attended"
+      },
+      "2": {
+        "action": "Back to queues"
       }
     },
     "comment": {
@@ -750,7 +753,8 @@
           "attend": "Attend",
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
-          "payment-confirm": "Confirm Payment"
+          "payment-confirm": "Confirm Payment",
+          "transfer": "Transfer Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -760,7 +764,8 @@
           "manage": "Bookings 360° Vision",
           "confirm": "Booking Confirm",
           "transfer": "Transfer Booking",
-          "edit": "Booking Edition"
+          "edit": "Booking Edition",
+          "admin": "Manage Booking"
         },
         "waitlists": {
           "book": "Book Waitlist"
@@ -798,7 +803,8 @@
           "attend": "Attend",
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
-          "payment-confirm": "Confirm Payment"
+          "payment-confirm": "Confirm Payment",
+          "transfer": "Transfer Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -945,6 +951,7 @@
       "1": "There's",
       "2": "people waiting."
     },
+    "seeQueue": "See Queue",
     "numberCancelled": "The next attention number was Cancelled:",
     "actions": {
       "1": {
@@ -978,7 +985,8 @@
           "attend": "Attend",
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
-          "payment-confirm": "Confirm Payment"
+          "payment-confirm": "Confirm Payment",
+          "transfer": "Transfer Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -991,7 +999,8 @@
           "manage": "Bookings 360° Vision",
           "confirm": "Booking Confirm",
           "transfer": "Transfer Booking",
-          "edit": "Booking Edition"
+          "edit": "Booking Edition",
+          "admin": "Manage Booking"
         },
         "main-menu": {
           "dashboard": "Go to Dashboard",
