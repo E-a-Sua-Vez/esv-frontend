@@ -7,7 +7,6 @@ import { getActiveServicesByCommerceId, getServiceByCommerce } from '../../appli
 import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from "vue3-popper";
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import QueueSimpleName from '../../components/common/QueueSimpleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -18,10 +17,11 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import { getQueueTypes } from '../../shared/utils/data';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, ToggleCapabilities, Warning, AreYouSure, Popper },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -482,15 +482,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessQueuesAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessQueuesAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessQueuesAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessQueuesAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessQueuesAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

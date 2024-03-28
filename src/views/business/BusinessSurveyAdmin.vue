@@ -5,7 +5,6 @@ import { globalStore } from '../../stores';
 import { getSurveyPersonalizedByCommerceId, updateSurveyPersonalized, createSurveyPersonalized } from '../../application/services/survey-personalized';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from "vue3-popper";
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import SurveyName from '../../components/common/SurveyName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -17,10 +16,11 @@ import Warning from '../../components/common/Warning.vue';
 import { getQueueByCommerce } from '../../application/services/queue';
 import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data';
 import AreYouSure from '../../components/common/AreYouSure.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessSurveysAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SurveyName, Toggle, ToggleCapabilities, Warning, Popper, AreYouSure },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SurveyName, Toggle, Warning, Popper, AreYouSure, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -321,15 +321,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessSurveysAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessSurveysAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessSurveysAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessSurveysAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessSurveysAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

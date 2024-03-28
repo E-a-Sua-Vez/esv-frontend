@@ -277,3 +277,6 @@
   cursor: pointer;
   margin: .5rem;
 }
+.whatsapp-icon {
+  color: var(--whatsapp) !important;
+}

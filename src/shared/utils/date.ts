@@ -4,3 +4,11 @@ export const dateYYYYMMDD = (date: Date) => {
   }
   return undefined;
 }
+
+export const getDate = (date, timeZoneIn) => {
+  const dateCorrected = new Date(
+  new Date(date).toLocaleString('en-US', {
+    timeZone: timeZoneIn,
+  }));
+  return dateCorrected.toLocaleString('en-GB').slice(0,10);
+}

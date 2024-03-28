@@ -6,7 +6,6 @@ import { getAttentionsReport, getNotificationsReport, getSurveysReport,
    getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -14,10 +13,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessReports',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimpleDownloadCard },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimpleDownloadCard, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -275,15 +275,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessReports.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessReports.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessReports"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessReports.title`)"
+        :toggles="state.toggles"
+        componentName="businessReports"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

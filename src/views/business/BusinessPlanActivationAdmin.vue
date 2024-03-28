@@ -5,7 +5,6 @@ import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getValidatedPlanActivation, planValidate, planDesactivate } from '../../application/services/plan-activation';
 import { useI18n } from 'vue-i18n';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import PlanName from '../../components/common/PlanName.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -15,10 +14,11 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import PlanActivationName from '../../components/common/PlanActivationName.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessPlanActivationAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanName, ToggleCapabilities, Warning, PlanActivationName, AreYouSure },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanName, Warning, PlanActivationName, AreYouSure, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -222,15 +222,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessPlanActivationAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessPlanActivationAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessPlanActivationAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessPlanActivationAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessPlanActivationAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

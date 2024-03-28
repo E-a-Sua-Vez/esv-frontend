@@ -2,6 +2,7 @@
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactSurvey } from '../../../application/services/survey';
+import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
 import SurveyDetails from '../domain/SurveyDetails.vue';
 
@@ -24,12 +25,8 @@ export default {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
     },
-    getDate(date, timeZoneIn) {
-      const dateCorrected = new Date(
-      new Date(date).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected.toISOString().slice(0,10);
+    getDate(dateIn, timeZoneIn) {
+      return getDate(dateIn, timeZoneIn);
     },
     copySurvey() {
       const textToCopy = jsonToCsv([this.survey]);
@@ -150,13 +147,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+survey.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ survey.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ survey.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+survey.email"
+                :href="'mailto:'+survey.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ survey.email || 'N/I' }}
               </a>
@@ -171,13 +168,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+survey.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ survey.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ survey.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+survey.email"
+                :href="'mailto:'+survey.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ survey.email || 'N/I' }}
               </a>

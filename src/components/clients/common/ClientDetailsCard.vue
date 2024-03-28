@@ -2,6 +2,7 @@
 import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
 import { getAttentionsDetails, getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
+import { getDate } from '../../../shared/utils/date';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
@@ -84,12 +85,8 @@ export default {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
     },
-    getDate(date, timeZoneIn) {
-      const dateCorrected = new Date(
-      new Date(date).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected.toISOString().slice(0,10);
+    getDate(dateIn, timeZoneIn) {
+      return getDate(dateIn, timeZoneIn);
     },
     copyAttention() {
       const textToCopy = jsonToCsv([this.client]);
@@ -231,13 +228,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+client.userPhone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ client.userPhone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ client.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+client.userEmail"
+                :href="'mailto:'+client.userEmail"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ client.userEmail || 'N/I' }}
               </a>
@@ -252,13 +249,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+client.userPhone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ client.userPhone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ client.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+client.userEmail"
+                :href="'mailto:'+client.userEmail"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ client.userEmail || 'N/I' }}
               </a>

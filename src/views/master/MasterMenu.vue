@@ -9,11 +9,13 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import SearchBar from '../../components/common/SearchBar.vue';
+import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
 
 export default {
   name: 'MasterMenu',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SearchBar },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SearchBar, WelcomeMenu },
   async setup() {
+
     const router = useRouter();
     let loading = ref(false);
     let alertError = ref('');
@@ -120,13 +122,13 @@ export default {
   <div>
     <div  class="content text-center">
       <CommerceLogo></CommerceLogo>
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("masterMenu.welcome") }}</span>
-            <span v-else class="welcome-user">{{ $t("masterMenu.welcome-user") }}, {{ state.currentUser.name }}!</span>
-          </div>
-        </div>
+      <WelcomeMenu
+        :name="state.currentUser.name"
+        :toggles="undefined"
+        :componentName="undefined"
+      >
+      </WelcomeMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <div class="choose-attention">
           <span>{{ $t("masterMenu.choose") }}</span>

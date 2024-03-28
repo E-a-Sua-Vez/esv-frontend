@@ -4,13 +4,16 @@ export default {
   props: {
     show: { type: Boolean, default: false },
     yesDisabled: { type: Boolean, default: false },
-    noDisabled: { type: Boolean, default: false },
+    noDisabled: { type: Boolean, default: false }
   },
   data() {
-    return {}
+    return {
+      yesClicked: false
+    }
   },
   methods: {
     actionYes() {
+      this.yesClicked = true;
       this.$emit('actionYes');
     },
     actionNo() {
@@ -30,7 +33,7 @@ export default {
         <button
           class="col btn btn-md btn-size fw-bold btn-dark rounded-pill mt-2 px-4 mx-1"
           @click="actionYes()"
-          :disabled="!yesDisabled">
+          :disabled="!yesDisabled || yesClicked">
           {{ $t("yes") }} <i class="bi bi-check2-circle"></i>
         </button>
         <button

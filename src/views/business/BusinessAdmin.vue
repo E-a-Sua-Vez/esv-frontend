@@ -5,7 +5,6 @@ import { globalStore } from '../../stores';
 import { getBusinesses, updateBusiness, addBusiness } from '../../application/services/business';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from "vue3-popper";
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceName from '../../components/common/CommerceName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -15,10 +14,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import SearchBar from '../../components/common/SearchBar.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, ToggleCapabilities, Warning, Popper, SearchBar },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, Warning, Popper, SearchBar, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -281,15 +281,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

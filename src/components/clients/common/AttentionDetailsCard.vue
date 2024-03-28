@@ -2,6 +2,7 @@
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactUser } from '../../../application/services/user';
+import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
 
 export default {
@@ -23,12 +24,8 @@ export default {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
     },
-    getDate(date, timeZoneIn) {
-      const dateCorrected = new Date(
-      new Date(date).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected.toISOString().slice(0,10);
+    getDate(dateIn, timeZoneIn) {
+      return getDate(dateIn, timeZoneIn);
     },
     copyAttention() {
       const textToCopy = jsonToCsv([this.attention]);
@@ -122,13 +119,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+attention.userPhone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.userPhone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+attention.userEmail"
+                :href="'mailto:'+attention.userEmail"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
               </a>
@@ -143,13 +140,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+attention.userPhone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ attention.userPhone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+attention.userEmail"
+                :href="'mailto:'+attention.userEmail"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
               </a>

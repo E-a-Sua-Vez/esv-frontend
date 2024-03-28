@@ -2,6 +2,7 @@
 import Popper from "vue3-popper";
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { createBookingFromWaitlist } from '../../application/services/booking';
+import { getDate } from '../../shared/utils/date';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 
@@ -29,12 +30,7 @@ export default {
       this.extendedEntity = !this.extendedEntity;
     },
     getDate(dateIn, timeZoneIn) {
-      const date = dateIn.toDate().toString();
-      const dateCorrected = new Date(
-      new Date(date).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected.toISOString().slice(0,10);
+      return getDate(dateIn, timeZoneIn);
     },
     copyWaitlist() {
       const textToCopy = jsonToCsv([this.waitlist]);
@@ -110,13 +106,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+waitlist.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ waitlist.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ waitlist.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+waitlist.user.email"
+                :href="'mailto:'+waitlist.user.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ waitlist.user.email || 'N/I' }}
               </a>
@@ -131,13 +127,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+waitlist.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ waitlist.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ waitlist.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+waitlist.user.email"
+                :href="'mailto:'+waitlist.user.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ waitlist.user.email || 'N/I' }}
               </a>

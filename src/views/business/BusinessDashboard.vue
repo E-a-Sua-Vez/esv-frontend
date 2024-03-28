@@ -12,11 +12,11 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
 import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 Chart.register(...registerables);
 
@@ -31,11 +31,11 @@ export default {
     LineChart,
     DoughnutChart,
     BarChart,
-    ToggleCapabilities,
     DashboardIndicators,
     DashboardGraphs,
     DashboardSurveysResult,
-    DashboardSurveys
+    DashboardSurveys,
+    ComponentMenu
   },
   async setup() {
     const router = useRouter();
@@ -705,15 +705,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("dashboard.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("dashboard.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="dashboard"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`dashboard.title`)"
+        :toggles="state.toggles"
+        componentName="dashboard"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

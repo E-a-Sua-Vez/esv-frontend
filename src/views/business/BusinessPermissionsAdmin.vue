@@ -3,7 +3,6 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -14,10 +13,11 @@ import SimplePermissionCard from '../../components/permissions/SimplePermissionC
 import RolPermissionsAdmin from '../../components/permissions/RolPermissionsAdmin.vue';
 import PlanPermissionsAdmin from '../../components/permissions/PlanPermissionsAdmin.vue';
 import CollaboratorPermissionsAdmin from '../../components/permissions/CollaboratorPermissionsAdmin.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, RolPermissionsAdmin, PlanPermissionsAdmin, CollaboratorPermissionsAdmin },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimplePermissionCard, RolPermissionsAdmin, PlanPermissionsAdmin, CollaboratorPermissionsAdmin, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -68,15 +68,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessPermissionsAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessPermissionsAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessPermissionsAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessPermissionsAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessPermissionsAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

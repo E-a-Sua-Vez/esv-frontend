@@ -14,10 +14,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessModulesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning, AreYouSure },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning, AreYouSure, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -201,15 +202,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessModulesAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessModulesAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessModulesAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessModulesAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessModulesAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

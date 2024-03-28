@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
@@ -7,63 +7,22 @@ import { getQueueByCommerce } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, BookingCalendar },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, BookingCalendar, ComponentMenu },
   async setup() {
     const router = useRouter();
 
-    const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
-    const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
-
     let loading = ref(false);
     let alertError = ref('');
-    let dateMask = ref({
-      modelValue: 'YYYY-MM-DD',
-    });
-    let disabledDates = ref([
-      {
-        repeat: {
-          weekdays: [],
-        }
-      }
-    ]);
-    let calendarAttributes = ref([
-      {
-        key: 'Available',
-        highlight: {
-          color: 'green',
-          fillMode: 'light',
-        },
-        dates: []
-      },
-      {
-        key: 'Unavailable',
-        highlight: {
-          color: 'red',
-          fillMode: 'light',
-        },
-        dates: []
-      },
-      {
-        key: 'Reserves',
-        highlight: {
-          color: 'blue',
-          fillMode: 'light',
-        },
-        dates: []
-      }
-    ])
-    let unsubscribeBookings = () => {};
-    let unsubscribeWaitlists = () => {};
 
     const store = globalStore();
 
@@ -106,7 +65,6 @@ export default {
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const queues = await getQueuesByCommerceId(state.commerce.id);
         state.queues = queues;
-        //await initQueues();
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.locale = state.commerce.localeInfo.language;
@@ -116,15 +74,6 @@ export default {
       } catch (error) {
         alertError.value = error.response.status || 500;
         loading.value = false;
-      }
-    })
-
-    onUnmounted(() => {
-      if (unsubscribeBookings) {
-        unsubscribeBookings();
-      }
-      if (unsubscribeWaitlists) {
-        unsubscribeWaitlists();
       }
     })
 
@@ -143,7 +92,6 @@ export default {
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
         state.queue = {};
-        //await initQueues();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -151,298 +99,9 @@ export default {
         loading.value = false;
       }
     }
-
-    /* LOGICA COMENTADA PERMITE HACER GESTION DE LAS AGENDAS POR FILA (2024-01-23)
-
-    const initQueues = async () => {
-      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...collaboratorQueues, ...otherQueues];
-          state.queues = queues;
-        }
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...otherQueues];
-          state.queues = queues;
-        }
-      }
-    }
-
-    const formattedDate = (date) => {
-      if (date && date !== 'TODAY') {
-        return new Date(date).toISOString().slice(0,10);
-      }
-    }
-
-    const getQueue = async (queueIn) => {
-      state.queue = queueIn;
-      store.setCurrentQueue(state.queue);
-      if (state.queue.id) {
-        state.date = (new Date()).setDate(new Date().getDate() + 1);
-        getDisabledDates();
-        state.date = undefined;
-        state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-        state.blocks = getBlocksByDay();
-      }
-    }
-
-    const getBooking = (number) => {
-      if (state.bookings && state.bookings.length > 0) {
-        const result = state.bookings.filter(bk => bk.number === number)[0];
-        if (result) {
-          return result;
-        }
-      }
-    }
-
-    const getDisabledDates = () => {
-      let disabled = [1, 2, 3, 4, 5, 6, 7];
-      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
-        const availableDays = state.queue.serviceInfo.attentionDays;
-        if (availableDays.length < 7) {
-          const forDeletion = [];
-          availableDays.forEach(day => {
-            if (day === 7) {
-              forDeletion.push(1);
-            } else {
-              forDeletion.push(day + 1);
-            }
-          })
-          disabled = disabled.filter(item => !forDeletion.includes(item));
-          disabledDates.value[0].repeat.weekdays = [];
-          disabledDates.value[0].repeat.weekdays.push(...disabled);
-        }
-      }
-    }
-
-    const getBlocksByDay = () => {
-      if (!state.date || state.date === 'TODAY') {
-        const day = new Date().getDay();
-        return state.blocksByDay[day];
-      } else {
-        const [year, month, day] = new Date(state.date).toISOString().slice(0,10).split('-');
-        const dayNumber = new Date(+year, +month - 1, +day).getDay();
-        return state.blocksByDay[dayNumber];
-      }
-    }
-
-    const getBookings = () => {
-      loading.value = true;
-      if (state.queue && state.queue.id) {
-        const { unsubscribe } = updatedBookings(state.queue.id, dateYYYYMMDD(state.date));
-        unsubscribeBookings = unsubscribe;
-      }
-      loading.value = false;
-    }
-
-    const updatedBookings = (queueId, date) => {
-      let values = ref([]);
-      let unsubscribe;
-      if (date !== undefined && queueId) {
-        const bookingsQuery = bookingCollection
-          .where('queueId', "==", queueId)
-          .where('status', "==", 'PENDING')
-          .where('date', '==', date)
-          .orderBy('number', 'asc');
-        unsubscribe = bookingsQuery.onSnapshot(snapshot => {
-          values.value = snapshot.docs
-            .map(doc => {
-              return { id: doc.id, ...doc.data() }
-            })
-        })
-      }
-      state.bookings = values;
-      return { unsubscribe };
-    }
-
-    const getAvailableBlocks = () => {
-      let queueBlocks = [];
-      if (state.blocks) {
-        queueBlocks = state.blocks;
-        if (queueBlocks && queueBlocks.length > 0) {
-          state.availableBlocks = queueBlocks;
-        }
-      }
-    }
-
-    const getQueueLink = (queue) => {
-      const commerceKeyName = state.commerce.keyName;
-      const queueId = queue.id;
-      if (queueId) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
-      }
-      return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
-    }
-
-    const copyLink = (queue) => {
-      const textToCopy = getQueueLink(queue);
-      navigator.clipboard.writeText(textToCopy);
-    }
-
-    const selectCommerce = async (commerce) => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = selectedCommerce.queues;
-        state.queue = {};
-        await initQueues();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
-    const getWaitlists = () => {
-      loading.value = true;
-      if (state.queue && state.queue.id) {
-        const { unsubscribe } = updatedWaitlists(state.queue.id, dateYYYYMMDD(state.date));
-        unsubscribeWaitlists = unsubscribe;
-      }
-      loading.value = false;
-    }
-
-    const updatedWaitlists = (queueId, date) => {
-      let values = ref([]);
-      let unsubscribe;
-      if (date !== undefined && queueId) {
-        const waitlistQuery = waitlistCollection
-          .where('queueId', "==", queueId)
-          .where('status', "==", 'PENDING')
-          .where('date', '==', date)
-          .orderBy('createdAt', 'asc');
-        unsubscribe = waitlistQuery.onSnapshot(snapshot => {
-          values.value = snapshot.docs
-            .map(doc => {
-              return { id: doc.id, ...doc.data() }
-            })
-        })
-      }
-      state.waitlists = values;
-      return { unsubscribe };
-    }
-
-    const showBookings = () => {
-      state.showBooking = true;
-      state.showWaitlist = false;
-    }
-
-    const showWaitlists = () => {
-      state.showBooking = false;
-      state.showWaitlist = true;
-    }
-
-    const getAvailableDatesByCalendarMonth = async (pages) => {
-      if (pages && pages.length > 0) {
-        const page = pages[0].id;
-        //await getAvailableDatesByMonth(`${page}-01`);
-      }
-    }
-
-    const getAvailableDatesByMonth = async (date) => {
-      let availableDates = [];
-      const [year, month] = date.split('-');
-      const thisMonth = +month - 1;
-      const nextMonth = +month;
-      const dateFrom = new Date(+year, thisMonth, 1);
-      const dateTo = new Date(+year, nextMonth, 0);
-      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
-      const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
-        const date = booking.date;
-        if (!acc[date]) {
-          acc[date] = [];
-        }
-        acc[date].push(booking);
-        return acc;
-      }, {});
-      const dates = Object.keys(bookingsGroupedByDate);
-      for(let i = 1; i <= dateTo.getDate(); i ++) {
-        const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
-        if (new Date(key) > new Date()) {
-          availableDates.push(key);
-        }
-      }
-      const forDeletion = [];
-      const forReserves = [];
-      if (dates && dates.length > 0) {
-        dates.forEach(date => {
-          const bookings = bookingsGroupedByDate[date];
-          const [year, month, day] = date.split('-');
-          const dayNumber = new Date(+year, +month - 1, +day).getDay();
-          const blocks = state.blocksByDay[dayNumber] || [];
-          if (bookings.length >= blocks.length) {
-            forDeletion.push(date);
-          } else if (bookings.length >= 1) {
-            forReserves.push(date);
-          }
-        })
-        availableDates = availableDates.filter(item => !forDeletion.includes(item));
-      }
-      const avaliableToCalendar = availableDates.map(date => {
-        const [year,month,day] = date.split('-');
-        return new Date(+year, +month - 1, +day);
-      });
-      calendarAttributes.value[0].dates = [];
-      calendarAttributes.value[0].dates.push(...avaliableToCalendar);
-      const forDeletionToCalendar = forDeletion.map(date => {
-        const [year,month,day] = date.split('-');
-        return new Date(+year, +month - 1, +day);
-      });
-      calendarAttributes.value[1].dates = [];
-      calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
-      const avaliableToReserve = forReserves.map(date => {
-        const [year,month,day] = date.split('-');
-        return new Date(+year, +month - 1, +day);
-      });
-      calendarAttributes.value[2].dates = [];
-      calendarAttributes.value[2].dates.push(...avaliableToReserve);
-    }
-
-    const changeDate = computed(() => {
-      const { date, queue } = state;
-      return {
-        date,
-        queue
-      }
-    })
-
-    watch(
-      changeDate,
-      async (newData, oldData) => {
-        if (state.date === 'TODAY') {
-          await getAttention();
-        } else if (newData.date !== oldData.date || newData.queue !== oldData.queue) {
-          state.blocks = getBlocksByDay();
-          if (unsubscribeBookings) {
-            unsubscribeBookings();
-          }
-          getBookings();
-          if (unsubscribeWaitlists) {
-            unsubscribeWaitlists();
-          }
-          getWaitlists();
-        }
-        getAvailableBlocks();
-        let currentDate;
-        if (state.date === undefined || state.date === 'TODAY') {
-          currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        } else {
-          currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-        }
-        await getAvailableDatesByMonth(currentDate);
-      }
-    )
-    */
 
     return {
-      siteKey,
       state,
-      captchaEnabled,
       loading,
       alertError,
       selectCommerce,
@@ -456,19 +115,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("collaboratorBookingsView.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <div id="welcome">
-            <span class="welcome-user">{{ $t("collaboratorBookingsView.welcome") }} </span>
-          </div>
-        </div>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="collaboratorBookingsView"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`collaboratorBookingsView.welcome`)"
+        :toggles="state.toggles"
+        componentName="collaboratorBookingsView"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div id="businessQueuesAdmin-controls" class="control-box">

@@ -7,10 +7,11 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessbusinessSectionAtWorkView',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ComponentMenu },
   async setup() {
     const router = useRouter();
 
@@ -74,9 +75,7 @@ export default {
             :content="$t('businessSectionAtWorkView.message.1.content')"
             :icon="'bi bi-tools'">
           </Message>
-          <div class="col">
-            <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()">{{ $t("businessSectionAtWorkView.return") }} <i class="bi bi-arrow-left"></i></a>
-          </div>
+          <ComponentMenu @goBack="goBack"></ComponentMenu>
         </div>
       </div>
     </div>

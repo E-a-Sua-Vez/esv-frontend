@@ -5,7 +5,6 @@ import { globalStore } from '../../stores';
 import { getPlans, getPlanById } from '../../application/services/plan';
 import { addPlanActivation, getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -17,10 +16,11 @@ import Plan from '../../components/plan/Plan.vue';
 import PlanSelection from '../../components/domain/PlanSelection.vue';
 import NotificationConditions from '../../components/domain/NotificationConditions.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessPlan',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePlanCard, Plan, PlanSelection, NotificationConditions, PlanStatus },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimplePlanCard, Plan, PlanSelection, NotificationConditions, PlanStatus, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -142,16 +142,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessPlan.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessPlan.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessPlan"
-          :showUpgrade="false"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessPlan.title`)"
+        :toggles="state.toggles"
+        componentName="businessPlan"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

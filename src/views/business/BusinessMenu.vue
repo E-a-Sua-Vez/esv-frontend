@@ -11,10 +11,11 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
+import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
 
 export default {
   name: 'BusinessMenu',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanStatus, ToggleCapabilities },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanStatus, ToggleCapabilities, WelcomeMenu },
   async setup() {
     const router = useRouter();
 
@@ -106,17 +107,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome-user">
-          <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("businessMenu.welcome") }}</span>
-            <span v-else class="welcome-user">{{ $t("businessMenu.welcome-user") }}, {{ state.currentUser.name }}!</span>
-          </div>
-        </div>
-        <ToggleCapabilities
-            :toggles="state.toggles"
-            componentName="businessMenu"
-          ></ToggleCapabilities>
+      <WelcomeMenu
+        :name="state.currentUser.name"
+        :toggles="state.toggles"
+        componentName="businessMenu"
+      >
+      </WelcomeMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <PlanStatus
           :show="true"

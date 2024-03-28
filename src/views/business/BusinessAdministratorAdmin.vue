@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getAdministratorsByBusinessId, updateAdministrator, addAdministrator } from '../../application/services/administrator';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CollaboratorName from '../../components/common/CollaboratorName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -14,10 +13,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import Popper from "vue3-popper";
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessAdministratorsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, ToggleCapabilities, Warning, Popper },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, Warning, Popper, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -212,15 +212,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessAdministratorAdmin.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessAdministratorAdmin.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessAdministratorAdmin"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessAdministratorAdmin.title`)"
+        :toggles="state.toggles"
+        componentName="businessAdministratorAdmin"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

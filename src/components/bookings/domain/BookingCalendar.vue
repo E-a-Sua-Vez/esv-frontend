@@ -549,6 +549,7 @@ export default {
       state.searchText = '';
       state.client = {};
       state.clientBookings = [];
+      state.extendedBookingsEntity = false;
     }
 
     const showAttentions = () => {
@@ -582,25 +583,9 @@ export default {
 
     const formattedDate = (date) => {
       if (date && date !== 'TODAY') {
-        return new Date(date).toISOString().slice(0,10);
+        return new Date(date).toLocaleString('en-GB').slice(0,10);
       }
     }
-
-    const changeDate = computed(() => {
-      const { selectedDate, selectedQueue, selectedDates } = state;
-      return {
-        selectedDates,
-        selectedDate,
-        selectedQueue
-      }
-    })
-
-    const changeData = computed(() => {
-      const { bookings } = state;
-      return {
-        bookings
-      }
-    })
 
     const updatedAttentions = async (queueId) => {
       if (queueId) {
@@ -628,6 +613,22 @@ export default {
       state.showBookings360 = false;
       state.showClients360 = true;
     }
+
+    const changeDate = computed(() => {
+      const { selectedDate, selectedQueue, selectedDates } = state;
+      return {
+        selectedDates,
+        selectedDate,
+        selectedQueue
+      }
+    })
+
+    const changeData = computed(() => {
+      const { bookings } = state;
+      return {
+        bookings
+      }
+    })
 
     watch(
       changeDate,
@@ -723,7 +724,7 @@ export default {
   <div v-if="show" class="modal-body">
     <div class="row">
       <!-- CALENDAR AREA -->
-      <div class="col-12 col-lg-8 mt-2">
+      <div class="col-12 col-lg-8">
         <Spinner :show="loading"> </Spinner>
         <div v-if="queues && queues.length > 0" class="row centered blocks-section">
           <span class="fw-bold mb-2 h6"> <i class="bi bi-person-lines-fill"></i> {{ $t("collaboratorBookingsView.selectQueue") }} </span>
@@ -830,10 +831,10 @@ export default {
         </div>
       </div>
       <!-- MANAGEMENT AREA -->
-      <div class="col-12 col-lg-4 mt-2 blocks-section">
-        <div v-if="true" >
-          <div class="row">
-            <div class="col-6">
+      <div class="col-12 col-lg-4">
+        <div class="blocks-section">
+          <div class="row sticky-top">
+            <div class="col-6 mt-1">
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showBookings360 ? 'btn-selected' : ''"
@@ -841,7 +842,7 @@ export default {
                 {{ $t("collaboratorBookingsView.agenda") }} <i class="bi bi-calendar-fill"></i>
               </button>
             </div>
-            <div class="col-6">
+            <div class="col-6 mt-1">
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showClients360 ? 'btn-selected' : ''"
@@ -852,20 +853,22 @@ export default {
           </div>
           <!-- AGENDA 360 -->
           <div v-if="state.showBookings360">
-            <div class="row mx-2 mt-4">
-              <span class="fw-bold h6"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
-              <div class="row mt-1 mb-1">
-                <div class="col-7">
-                  <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
-                  <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
-                </div>
-                <div class="col-5">
-                  <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
-                  <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
+            <div class="row mx-2 mt-2">
+              <div class="sticky-top-2">
+                <span class="fw-bold h6 mt-1"> <i class="bi bi-hourglass-split"></i> {{ $t("collaboratorBookingsView.hours") }}</span>
+                <div class="row mt-1">
+                  <div class="col-7">
+                    <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.queueSelected") }}</div>
+                    <h6><div class="badge rounded-pill bg-primary py-2 px-4 mx-1">{{ state.selectedQueue.name || 'N/I' }} </div></h6>
+                  </div>
+                  <div class="col-5">
+                    <div class="subtitle-info mb-1">{{ $t("commerceQueuesView.dataSelected") }}</div>
+                    <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
+                  </div>
                 </div>
               </div>
               <hr>
-              <div id="subMenu" class="my-1 mt-3">
+              <div id="subMenu" class="">
                 <h6 class="mb-0">
                   <button
                     class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
@@ -1004,7 +1007,7 @@ export default {
           </div>
           <!-- CLIENTS 360 -->
           <div v-if="state.showClients360">
-            <div class="row mx-2 mt-4">
+            <div class="row mx-2 mt-2">
               <div class="mb-1"><i class="bi bi-search"></i> <span class="fw-bold h6"> {{ $t("collaboratorBookingsView.searchClient") }} </span></div>
               <div class="col-8 col-md-8 centered">
                 <input
@@ -1102,8 +1105,8 @@ export default {
                   >
                   </BookingDetailsCard>
                 </div>
+                <hr>
               </div>
-              <hr>
             </div>
           </div>
         </div>
@@ -1220,6 +1223,7 @@ export default {
   padding: 1rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
+  background-color: var(--color-background);
 }
 .queue-select {
   cursor: pointer;
@@ -1231,5 +1235,19 @@ export default {
 .hour-title {
   font-size: .75rem;
   padding: .35rem
+}
+.sticky-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: -1rem;
+  z-index: 1020;
+  background-color: var(--color-background);
+}
+.sticky-top-2 {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 1.8rem;
+  z-index: 1020;
+  background-color: var(--color-background);
 }
 </style>

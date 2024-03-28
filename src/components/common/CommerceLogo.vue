@@ -30,7 +30,7 @@ export default {
   max-height: 280px;
   background-repeat: no-repeat;
   background-size: 100%;
-  margin: .5rem;
+  margin-bottom: .3rem;
   cursor: pointer;
 }
 @media (min-width: 1024px) {

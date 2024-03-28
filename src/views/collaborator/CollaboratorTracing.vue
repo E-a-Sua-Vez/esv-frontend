@@ -13,10 +13,10 @@ import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import DashboardSurveysManagement from '../../components/dashboard/DashboardSurveysManagement.vue';
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
 import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorTracing',
@@ -26,10 +26,10 @@ export default {
     PoweredBy,
     Spinner,
     Alert,
-    ToggleCapabilities,
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
-    DashboardClientsManagement
+    DashboardClientsManagement,
+    ComponentMenu
   },
   async setup() {
     const router = useRouter();
@@ -286,15 +286,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("dashboard.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("dashboard.tracing.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="dashboard"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`dashboard.tracing.title`)"
+        :toggles="state.toggles"
+        componentName="dashboard"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="centered">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>

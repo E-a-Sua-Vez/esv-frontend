@@ -10,17 +10,18 @@ import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
 import { getQueueByCommerce } from '../../application/services/queue';
+import { getActiveFeature } from '../../shared/features';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import { getActiveFeature } from '../../shared/features';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorQueuesView',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities },
+  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, ComponentMenu },
   async setup() {
     const router = useRouter();
     const route = useRoute();
@@ -249,19 +250,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("collaboratorQueuesView.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <div id="welcome">
-            <span class="welcome-user">{{ $t("collaboratorQueuesView.welcome") }} </span>
-          </div>
-        </div>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="collaboratorQueuesView"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`collaboratorQueuesView.welcome`)"
+        :toggles="state.toggles"
+        componentName="collaboratorQueuesView"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div id="businessQueuesAdmin-controls" class="control-box">

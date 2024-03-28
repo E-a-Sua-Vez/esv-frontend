@@ -7,6 +7,7 @@ import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
 import { getPendingCommerceBookingsByDate, transferBooking, editBooking } from '../../../application/services/booking';
 import { getQueueById } from '../../../application/services/queue';
+import { getDate } from '../../../shared/utils/date';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
@@ -104,7 +105,7 @@ export default {
       new Date(date).toLocaleString('en-US', {
         timeZone: timeZoneIn,
       }));
-      return dateCorrected.toISOString().slice(0,10);
+      return dateCorrected.toLocaleString('en-GB').slice(0,10);
     },
     copyBooking() {
       const textToCopy = jsonToCsv([this.booking]);
@@ -417,13 +418,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+booking.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ booking.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+booking.user.email"
+                :href="'mailto:'+booking.user.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
               </a>
@@ -438,13 +439,13 @@ export default {
                 class="btn-block whatsapp-link"
                 :href="'https://wa.me/'+booking.user.phone"
                 target="_blank">
-                <i class="bi bi-whatsapp mx-1 "></i> {{ booking.user.phone || 'N/I' }}
+                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto'+booking.user.email"
+                :href="'mailto:'+booking.user.email"
                 target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
               </a>

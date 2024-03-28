@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getFeatureToggleByCommerceId, getFeatureToggleOptions, addFeatureToggle } from '../../application/services/feature-toggle';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -12,10 +11,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import SimpleConfigurationCard from '../../components/configuration/SimpleConfigurationCard.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessConfiguration',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimpleConfigurationCard },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimpleConfigurationCard, ComponentMenu },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -160,15 +160,13 @@ export default {
   <div>
     <div class="content text-center">
       <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <div class="col">
-        <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="goBack()"> {{ $t("businessConfiguration.return") }} <i class="bi bi-arrow-left"></i></a>
-      </div>
-      <div id="page-header" class="text-center mt-4">
-        <span class="welcome-user">{{ $t("businessConfiguration.title") }}</span>
-        <ToggleCapabilities
-          :toggles="state.toggles"
-          componentName="businessConfiguration"
-        ></ToggleCapabilities>
+      <ComponentMenu
+        :title="$t(`businessConfiguration.title`)"
+        :toggles="state.toggles"
+        componentName="businessConfiguration"
+        @goBack="goBack">
+      </ComponentMenu>
+      <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
