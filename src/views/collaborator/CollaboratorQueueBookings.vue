@@ -3,10 +3,11 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
-import { getQueueByCommerce } from '../../application/services/queue';
+import { getQueueByCommerce, getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
+import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -65,6 +66,7 @@ export default {
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const queues = await getQueuesByCommerceId(state.commerce.id);
         state.queues = queues;
+        await initQueues();
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.locale = state.commerce.localeInfo.language;
@@ -76,6 +78,23 @@ export default {
         loading.value = false;
       }
     })
+
+    const initQueues = async () => {
+      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+          const queues = [...collaboratorQueues, ...otherQueues];
+          state.queues = queues;
+        }
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+          const queues = [...otherQueues];
+          state.queues = queues;
+        }
+      }
+    }
 
     const isActiveCommerce = () => {
       return state.commerce && state.commerce.active === true;
@@ -91,6 +110,7 @@ export default {
         state.commerce = commerce;
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
+        await initQueues();
         state.queue = {};
         alertError.value = '';
         loading.value = false;
@@ -145,151 +165,12 @@ export default {
             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
             data-bs-toggle="modal"
             data-bs-target="#modalAgenda"
-            :disabled="!state.toggles['collaborator.bookings.manage']"
+            :disabled="!state.toggles['collaborator.bookings.manage'] || state.queues.length === 0"
             >
             <i class="bi bi-calendar-check-fill"></i> {{ $t("collaboratorBookingsView.schedules") }}
           </button>
         </div>
-        <!--<div class="choose-attention mt-2"><span>{{ $t("collaboratorBookingsView.or") }}</span></div>
-        <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.queue") }} </span></div>
-        <div id="queue-selector" class="mb-1 mt-2">
-          <div v-if="state.queues && state.queues.length > 0">
-            <select
-              class="btn btn-md btn-light fw-bold text-dark m-1 select"
-              v-model="state.queue"
-              @change="getQueue(state.queue)"
-              id="queues">
-              <option v-for="queue in state.queues" :key="queue.name" :value="queue">
-                <span v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill">👤</span> {{ queue.name }}
-              </option>
-            </select>
-          </div>
-          <div v-else>
-            <Message
-              :title="$t('collaboratorBookingsView.message.6.title')"
-              :content="$t('collaboratorBookingsView.message.6.content')" />
-          </div>
-        </div>-->
       </div>
-      <!--<div id="queue-link-form" class="row g-1">
-        <div class="col" v-if="state.queue && state.queue.id">
-          <button class="btn copy-icon"
-            @click="copyLink(state.queue)">
-            <i class="bi bi-file-earmark-spreadsheet"></i>
-          </button>
-          <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-              :href="`${getQueueLink(state.queue)}`"
-              target="_blank">
-            <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
-          </a>
-        </div>
-      </div>-->
-      <!--<hr>
-      <div id="bookings" v-if="state.queue && state.queue.id">
-        <div class="row" v-if="isActiveCommerce()">
-          <div v-if="state.queue && state.queue.id !== undefined">
-            <div class="choose-attention"><span>{{ $t("collaboratorBookingsView.date") }} </span></div>
-            <VDatePicker
-              :locale="state.locale"
-              v-model.string="state.date"
-              :mask="dateMask"
-              :min-date="state.minDate"
-              :max-date="state.maxDate"
-              :disabled-dates="disabledDates"
-              :attributes='calendarAttributes'
-              @did-move="getAvailableDatesByCalendarMonth"
-            />
-            <div v-if="state.date">
-              <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ formattedDate(state.date) }} </span></div>
-            </div>
-          </div>
-          <div v-if="state.queue && state.queue.id">
-            <div id="subMenu" class="my-1 mt-4">
-              <h5 class="mb-0">
-                <button
-                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showBooking ? 'btn-selected' : ''"
-                  @click="showBookings()"
-                  :disabled="!state.queue || !state.date"
-                  >
-                  {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
-                </button>
-                <button
-                  class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showWaitlist ? 'btn-selected' : ''"
-                  @click="showWaitlists()"
-                  :disabled="!state.queue.id || !state.date"
-                  >
-                  {{ $t('collaboratorBookingsView.waitlists') }} <br> <i class="bi bi-calendar-heart-fill"></i>
-              </button>
-              </h5>
-            </div>
-            <hr>
-            <div v-if="state.showBooking && state.queue && state.date" class="blocks-section">
-              <div v-if="state.queue && state.date && state.bookings && state.bookings.length > 0">
-                <div class="my-1">
-                  <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.bookings.length }} </span>
-                </div>
-                <div>
-                  <div v-for="block in state.availableBlocks" :key="block.number">
-                    <div class="metric-card">
-                      <span
-                        class="lefted badge rounded-pill bg-primary m-0"
-                        :class="getBooking(block.number) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
-                      <div>
-                        <BookingDetailsCard
-                          :booking="getBooking(block.number)"
-                          :show="true"
-                          :detailsOpened="false"
-                          :toggles="state.toggles"
-                          :commerce="state.commerce"
-                        >
-                        </BookingDetailsCard>
-                    </div>
-                  </div>
-                </div>
-                </div>
-              </div>
-              <div v-if="state.queue && state.date && (!state.bookings || state.bookings.length === 0)">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.2.title')"
-                  :content="$t('collaboratorBookingsView.message.2.content')" />
-              </div>
-            </div>
-            <div v-if="state.showWaitlist && state.queue && state.date" class="blocks-section">
-              <div v-if="state.queue && state.date && state.waitlists && state.waitlists.length > 0">
-                <div class="my-1">
-                  <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("collaboratorBookingsView.listResult") }} {{ state.waitlists.length }} </span>
-                </div>
-                <div>
-                  <div v-for="waitlist in state.waitlists" :key="waitlist.id">
-                    <div>
-                      <WaitlistDetailsCard
-                        :waitlist="waitlist"
-                        :show="true"
-                        :detailsOpened="false"
-                        :availableBlocks="state.availableBlocks"
-                        :toggles="state.toggles"
-                      >
-                      </WaitlistDetailsCard>
-                    </div>
-                </div>
-                </div>
-              </div>
-              <div v-if="state.queue && state.date && (!state.waitlists || state.waitlists.length === 0)">
-                <Message
-                  :title="$t('collaboratorBookingsView.message.3.title')"
-                  :content="$t('collaboratorBookingsView.message.3.content')" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-if="!isActiveCommerce() && !loading">
-          <Message
-            :title="$t('collaboratorBookingsView.message.1.title')"
-            :content="$t('collaboratorBookingsView.message.1.content')" />
-        </div>
-      </div>-->
     </div>
     <PoweredBy :name="state.commerce.name" />
     <!-- Modal Agenda -->
