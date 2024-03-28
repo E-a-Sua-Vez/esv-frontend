@@ -385,7 +385,7 @@ export default {
           </div>
         </div>
         <div class="row g-1 mt-2" v-if="state.showOldClient">
-          <div class="col-9 col-md-9 centered mx-1">
+          <div class="col-10 col-md-10">
             <input
               type="number"
               class="form-control"
@@ -395,7 +395,7 @@ export default {
               @keypress="onlyNumber"
             >
           </div>
-          <div class="col-2 col-md-2 centered mx-1">
+          <div class="col-2 col-md-2 centered">
             <button
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
               @click="clearClient()">
@@ -405,7 +405,7 @@ export default {
           <div>
             <label class="examples"> {{ $t('clientNotifyData.validate.idNumber.example') }} </label>
           </div>
-          <div class="recaptcha-area row mx-1">
+          <div class="recaptcha-area" v-if="!state.clientSearched.id">
             <div class="centered">
               <VueRecaptcha
                 :sitekey="siteKey"
@@ -415,11 +415,13 @@ export default {
               ></VueRecaptcha>
             </div>
           </div>
-          <div class="row">
-            <div class="centered">
+          <div class="">
+            <div class="">
               <button
-                class="btn fw-bold btn-dark rounded-pill px-3 py-2"
-                @click="searchClient()">
+                class="btn btn-sm fw-bold btn-dark rounded-pill px-5"
+                @click="searchClient()"
+                :disabled="state.clientSearched.id"
+                >
                 <span>{{ $t('dashboard.refresh') }}<i class="bi bi-search mx-1"></i></span>
               </button>
             </div>
@@ -445,7 +447,7 @@ export default {
           </div>
         </div>
         <div class="row g-1 mt-2" v-if="state.showNewClient">
-          <div id="attention-name-form-add" class="row g-1 mb-2" v-if="showFormInput(commerce, 'attention-user-name', 'USER')">
+          <div id="attention-name-form-add" class="row g-1" v-if="showFormInput(commerce, 'attention-user-name', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-name-input-add"
@@ -459,7 +461,7 @@ export default {
                 <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
             </div>
           </div>
-          <div id="attention-lastname-form-add" class="row g-1 mb-2" v-if="showFormInput(commerce, 'attention-user-lastName', 'USER')">
+          <div id="attention-lastname-form-add" class="row g-1" v-if="showFormInput(commerce, 'attention-user-lastName', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-lastname-input-add"
@@ -473,7 +475,7 @@ export default {
                 <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
             </div>
           </div>
-          <div id="attention-idnumber-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-idNumber', 'USER')">
+          <div id="attention-idnumber-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-idNumber', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-idnumber-input-add"
@@ -489,7 +491,7 @@ export default {
             </div>
             <label class="examples mt-2"> {{ $t('clientNotifyData.validate.idNumber.example') }} </label>
           </div>
-          <div id="attention-email-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-email', 'USER')">
+          <div id="attention-email-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-email', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-email-input-add"
@@ -503,7 +505,7 @@ export default {
                 <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
             </div>
           </div>
-          <div id="attention-phone-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-phone', 'USER')">
+          <div id="attention-phone-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-phone', 'USER')">
             <div class="col-3 form-floating">
               <select
                 class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
@@ -529,7 +531,7 @@ export default {
             <label v-if="!state.newUser.phoneCode" class="examples mt-2"> {{ $t('clientNotifyData.validate.cellphone.example') }} </label>
             <label v-else class="examples mt-1"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.newUser.phoneCode}`) }} </label>
           </div>
-          <div id="attention-birthday-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-birthday', 'USER')">
+          <div id="attention-birthday-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-birthday', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-birthday-input-add"
@@ -541,7 +543,7 @@ export default {
                 <label for="attention-birthday-input-add" class="label-form">{{ $t("commerceQueuesView.birthday") }} <i class="bi bi-calendar"></i></label>
             </div>
           </div>
-          <div id="attention-addressCode-form-add" class="row g-1 mb-1"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
+          <div id="attention-addressCode-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
             <div class="col-12 col-md-6 form-floating">
               <input
                 id="attention-addressCode-input-add"
@@ -570,7 +572,7 @@ export default {
                 <label for="attention-addressComplement-input-add" class="label-form">{{ $t("commerceQueuesView.addressComplement") }} <i class="bi bi-geo-alt-fill"></i></label>
             </div>
           </div>
-          <div id="attention-addressCode-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
+          <div id="attention-addressCode-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-addressText-input-add"
@@ -584,7 +586,7 @@ export default {
                 <label for="attention-addressText-input-add" class="label-form">{{ $t("commerceQueuesView.addressText") }} <i class="bi bi-geo-alt-fill"></i></label>
             </div>
           </div>
-          <div id="attention-code1-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-code1', 'USER')">
+          <div id="attention-code1-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code1', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-code1-input-add"
@@ -598,7 +600,7 @@ export default {
                 <label for="attention-code1-input-add" class="label-form">{{ $t("commerceQueuesView.code1") }} <i class="bi bi-hash"></i></label>
             </div>
           </div>
-          <div id="attention-code2-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-code2', 'USER')">
+          <div id="attention-code2-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code2', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-code2-input-add"
@@ -612,7 +614,7 @@ export default {
                 <label for="attention-code2-input-add" class="label-form">{{ $t("commerceQueuesView.code2") }} <i class="bi bi-hash"></i></label>
             </div>
           </div>
-          <div id="attention-code3-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-code3', 'USER')">
+          <div id="attention-code3-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code3', 'USER')">
             <div class="col form-floating">
               <input
                 id="attention-code3-input-add"
@@ -626,7 +628,7 @@ export default {
                 <label for="attention-code3-input-add" class="label-form">{{ $t("commerceQueuesView.code3") }} <i class="bi bi-hash"></i></label>
             </div>
           </div>
-          <div id="attention-origin-form-add" class="row g-1 mb-2"  v-if="showFormInput(commerce, 'attention-user-origin', 'USER')">
+          <div id="attention-origin-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-origin', 'USER')">
             <div class="col form-floating">
               <select
                 class="form-control form-select btn btn-light select"
