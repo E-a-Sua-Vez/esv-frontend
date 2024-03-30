@@ -6,6 +6,14 @@ export const dateYYYYMMDD = (date: Date) => {
 }
 
 export const getDate = (date, timeZoneIn) => {
-  const [year, month, day] = date.toISOString().slice(0,10).split('-');
-  return `${day}/${month}/${year}`;
+  console.log("🚀 ~ getDate ~ date:", date);
+  const dateCorrected = new Date(
+  new Date(date).toLocaleString('en-US', {
+    timeZone: timeZoneIn,
+  }));
+  console.log("🚀 ~ getDate ~ dateCorrected:", dateCorrected);
+  const [year, month, day] = dateCorrected.toISOString().slice(0,10).split('-');
+  const returnDate = `${day}/${month}/${year}`;
+  console.log("🚀 ~ getDate ~ returnDate:", returnDate);
+  return returnDate;
 }
