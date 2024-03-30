@@ -267,12 +267,12 @@ export default {
           state.newUser.code3 = data.code3;
         }
         if (data.phoneCode && data.phone) {
-          state.phone = data.phone;
-          state.phoneCode = data.phoneCode;
+          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         } else if (data.phone) {
-          state.phoneCode = data.phone.slice(0,2);
-          state.phone = data.phone.slice(2,data.phone.length);
+          state.phoneCode = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').slice(0,2);
+          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').slice(2,data.phone.length);
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         }
         if (data.accept !== undefined) {

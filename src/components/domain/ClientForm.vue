@@ -89,14 +89,16 @@ export default {
           state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
         }
         if (idNumber.value) {
-          state.newUser.idNumber = idNumber.value !== 'undefined' ? idNumber.value : '';
+          const idNumberIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          state.newUser.idNumber = idNumberIn !== 'undefined' ? idNumberIn : '';
         }
         if (email.value) {
           state.newUser.email = email.value !== 'undefined' ? email.value : ''
         }
         if (phone.value) {
-          state.newUser.phoneCode = phone.value !== 'undefined' ? phone.value.slice(0,2) : '';
-          state.newUser.phone = phone.value !== 'undefined' ? phone.value.slice(2,20) : '';
+          const phoneIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          state.newUser.phoneCode = phoneIn !== 'undefined' ? phoneIn.slice(0,2) : '';
+          state.newUser.phone = phoneIn !== 'undefined' ? phoneIn.slice(2,20) : '';
         }
         if (birthday.value) {
           state.newUser.birthday = birthday.value != 'undefined' ? birthday.value : '';
