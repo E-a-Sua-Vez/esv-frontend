@@ -10,5 +10,6 @@ export const getDate = (date, timeZoneIn) => {
   new Date(date).toLocaleString('en-US', {
     timeZone: timeZoneIn,
   }));
-  return dateCorrected.toLocaleString('en-GB').slice(0,10);
+  const [year, month, day] = dateCorrected.toISOString().slice(0,10).split('-');
+  return `${day}/${month}/${year}`;
 }
