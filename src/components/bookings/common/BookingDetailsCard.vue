@@ -365,7 +365,7 @@ export default {
       <div class="col centered" v-if="booking.user && booking.user.name">
         <i class="bi bi-person-circle icon"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
-        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill  icon green-icon"> </i>
+        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
         <i v-if="booking.transfered === true" class="bi bi-arrow-left-right icon blue-icon"> </i>
         <i v-if="booking.edited === true" class="bi bi-pencil-fill icon"> </i>
@@ -468,7 +468,7 @@ export default {
               <span class="centered confirm-payment"
                 href="#"
                 @click.prevent="showPaymentDetails()">
-                <i class="bi bi-cash-coin mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
+                <i class="bi bi-cash-coin icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
                 <i class="dark" :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </span>
               <div v-if="extendedPaymentEntity" class="index"></div>
@@ -480,7 +480,7 @@ export default {
               <span class="centered confirm-payment"
                 href="#"
                 @click.prevent="showTransferDetails()">
-                <i class="bi bi-arrow-left-right mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
+                <i class="bi bi-arrow-left-right icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
                 <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </span>
               <div v-if="extendedTransferEntity" class="index"></div>
@@ -492,7 +492,7 @@ export default {
               <span class="centered confirm-payment"
                 href="#"
                 @click.prevent="showEditDetails()">
-                <i class="bi bi-pencil-fill mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.edit") }}</span>
+                <i class="bi bi-pencil-fill icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.edit") }}</span>
                 <i class="dark" :class="`bi ${extendedEditEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </span>
               <div v-if="extendedEditEntity" class="index"></div>
@@ -552,16 +552,16 @@ export default {
             </div>
             <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
               <div>
-                <div class="text-label my-1">
+                <div class="text-label mb-2">
                   {{ $t("collaboratorBookingsView.selectQueueToTransfer") }}
                 </div>
-                <div class="text-label my-1 h6">
+                <div class="text-label h6">
                   <span class="fw-bold"> {{ queue.name}}</span>
                 </div>
-                <div class="text-label my-1">
-                  <i class="bi bi-arrow-left-right mx-1"></i>
+                <div class="text-label">
+                  <i class="bi bi-arrow-left-right h5"></i>
                 </div>
-                <div class="text-label my-1">
+                <div class="text-label mb-1">
                   <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
                     <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
                   </select>
@@ -697,7 +697,7 @@ export default {
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
@@ -717,7 +717,7 @@ export default {
   border-bottom-left-radius: .5rem;
   border-bottom-right-radius: .5rem;
   line-height: 1.1rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-top: 0;
 }
 .show {
@@ -732,7 +732,8 @@ export default {
   cursor: pointer;
 }
 .step-title {
-  font-size: .8rem;
+  font-size: .7rem;
+  line-height: .7rem;
   color: var(--color-text);
   cursor: pointer;
 }
@@ -787,7 +788,7 @@ export default {
   border: 1.5px solid var(--gris-clear) !important;
 }
 .text-label {
-  line-height: 1.2rem;
+  line-height: .9rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -798,7 +799,7 @@ export default {
 }
 .index {
   background-color: var(--azul-qr);
-  padding: .1rem;
+  padding: .05rem;
   margin-top: .25rem;
   border-radius: .5rem !important;
 }

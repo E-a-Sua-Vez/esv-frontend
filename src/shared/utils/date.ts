@@ -10,7 +10,7 @@ export const getDate = (dateIn, timeZoneIn) => {
   try  {
     date = new Date(dateIn.toDate().toString()).toISOString();
   } catch (error) {
-    date = dateIn;
+    date = new Date(dateIn).toISOString();
   }
   const [year, month, day] = date.slice(0,10).split('-');
   const returnDate = `${day}/${month}/${year}`;

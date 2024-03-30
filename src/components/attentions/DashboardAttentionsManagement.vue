@@ -180,19 +180,6 @@ export default {
         }
         this.refresh();
       }
-    },
-    searchText: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.searchText) {
-          this.searchText = this.searchText.toUpperCase();
-          if (this.searchText.length > 3) {
-            this.page = 1;
-            this.refresh();
-          }
-        }
-      }
     }
   }
 }
@@ -233,14 +220,23 @@ export default {
                   </select>
                 </div>
                 <div class="col-12 m-1">
-                  <div class="col-12 col-md">
-                    <input
-                      min="1"
-                      max="50"
-                      type="text"
-                      class="form-control"
-                      v-model="searchText"
-                      :placeholder="$t('dashboard.search')">
+                  <div class="row">
+                    <div class="col-9">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="searchText"
+                        :placeholder="$t('dashboard.search')">
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">

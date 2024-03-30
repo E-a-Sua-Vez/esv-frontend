@@ -6,6 +6,7 @@ import { cancelAttention, attentionPaymentConfirm, transferAttention, getPending
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
 import { getDate } from '../../../shared/utils/date';
+import { getQueueById } from '../../../application/services/queue';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
@@ -40,7 +41,8 @@ export default {
       goToConfirm: false,
       checked: false,
       queuesToTransfer: [],
-      queueToTransfer: {}
+      queueToTransfer: {},
+      queue: {}
     }
   },
   beforeMount() {
@@ -133,6 +135,10 @@ export default {
       }
     },
     async toTransfer() {
+      this.loading = true;
+      if (this.attention && this.attention.queueId) {
+        this.queue = await getQueueById(this.attention.queueId);
+      }
       const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const attentions = await getPendingCommerceAttentions(this.commerce.id);
@@ -174,9 +180,9 @@ export default {
               this.queuesToTransfer.push(queue);
             }
           })
-
         }
       }
+      this.loading = false;
     },
     async transfer() {
       try {
@@ -267,13 +273,13 @@ export default {
       <div class="col-2 centered">
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ attention.number }}</span>
       </div>
-      <div class="col-4 centered" v-if="attention.user && attention.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
-        <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill mx-1 yellow-icon"> </i>
-        <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill mx-1 green-icon"> </i>
-        <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
+      <div class="col centered" v-if="attention.user && attention.user.name">
+        <i class="bi bi-person-circle icon"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
+        <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill icon yellow-icon"> </i>
+        <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill icon green-icon"> </i>
+        <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
       </div>
-      <div class="col-6 centered" v-if="attention.block && attention.block.hourFrom">
+      <div class="col centered hour-title" v-if="attention.block && attention.block.hourFrom">
         <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>
       </div>
     </div>
@@ -369,9 +375,10 @@ export default {
                 <span class="centered confirm-payment"
                   href="#"
                   @click.prevent="showPaymentDetails()">
-                  <i class="bi bi-cash-coin mx-1"></i> <span class="details-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
+                  <i class="bi bi-cash-coin icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.paymentConfirm") }}</span>
                   <i class="dark" :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
                 </span>
+                <div v-if="extendedPaymentEntity" class="index"></div>
               </h5>
             </div>
             <div
@@ -406,9 +413,10 @@ export default {
               <span class="centered confirm-payment"
                 href="#"
                 @click.prevent="showTransferDetails()">
-                <i class="bi bi-arrow-left-right mx-1"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
+                <i class="bi bi-arrow-left-right icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
                 <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
               </span>
+              <div v-if="extendedTransferEntity" class="index"></div>
             </h5>
           </div>
           <div
@@ -416,8 +424,14 @@ export default {
             class="detailed-data transition-slow">
             <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
               <div>
-                <div class="text-label my-1">
+                <div class="text-label mb-2">
                   {{ $t("collaboratorBookingsView.selectQueueToTransfer") }}
+                </div>
+                <div class="text-label h6">
+                  <span class="fw-bold"> {{ queue.name}}</span>
+                </div>
+                <div class="text-label">
+                  <i class="bi bi-arrow-left-right h5"></i>
                 </div>
                 <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
                   <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
@@ -484,7 +498,7 @@ export default {
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
@@ -504,7 +518,7 @@ export default {
   border-bottom-left-radius: .5rem;
   border-bottom-right-radius: .5rem;
   line-height: 1.1rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-top: 0;
 }
 .show {
@@ -569,7 +583,7 @@ export default {
   border: 1.5px solid var(--gris-clear) !important;
 }
 .text-label {
-  line-height: 1rem;
+  line-height: .9rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -578,9 +592,27 @@ export default {
   cursor: pointer;
 }
 .step-title {
-  text-decoration: underline;
-  font-size: .8rem;
+  font-size: .7rem;
+  line-height: .7rem;
   color: var(--color-text);
   cursor: pointer;
+}
+.hour-title {
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: .9rem;
+  letter-spacing: .01px;
+}
+.icon {
+  margin-left: .1rem;
+  margin-right: .15rem;
+}
+.index {
+  background-color: var(--azul-qr);
+  padding: .05rem;
+  margin-top: .25rem;
+  border-radius: .5rem !important;
+  margin-left: 5rem;
+  margin-right: 5rem;
 }
 </style>

@@ -729,7 +729,7 @@ export default {
         <div v-if="queues && queues.length > 0" class="row centered blocks-section">
           <span class="fw-bold mb-2 h6"> <i class="bi bi-person-lines-fill"></i> {{ $t("collaboratorBookingsView.selectQueue") }} </span>
           <div class="row">
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <button
                 class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showQueues ? 'btn-selected' : ''"
@@ -737,7 +737,7 @@ export default {
                 {{ $t("collaboratorBookingsView.queues") }} <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
               </button>
             </div>
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <button
                 class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showCollaboratorQueues ? 'btn-selected' : ''"
@@ -745,7 +745,7 @@ export default {
                 {{ $t("collaboratorBookingsView.collaboratorQueues") }} <i :class="state.showCollaboratorQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
               </button>
             </div>
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <button
                 class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showAllQueues ? 'btn-selected' : ''"
@@ -866,8 +866,8 @@ export default {
                     <h6><div class="badge rounded-pill bg-secondary py-2 px-4 mx-1"> <span> {{ formattedDate(state.selectedDate) || 'N/I' }} </span></div></h6>
                   </div>
                 </div>
+                <hr>
               </div>
-              <hr>
               <div id="subMenu" class="">
                 <h6 class="mb-0">
                   <button
@@ -1213,14 +1213,14 @@ export default {
   padding: .5rem;
   margin: .1rem;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .blocks-section {
   overflow-y: scroll;
   max-height: 600px;
   font-size: small;
   margin-bottom: 2rem;
-  padding: 1rem;
+  padding: .5rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   background-color: var(--color-background);

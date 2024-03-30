@@ -178,7 +178,7 @@ export default {
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
@@ -197,7 +197,7 @@ export default {
   border-bottom-left-radius: .5rem;
   border-bottom-right-radius: .5rem;
   line-height: 1.1rem;
-  border: 1.5px solid var(--gris-default);
+  border: .5px solid var(--gris-default);
   border-top: 0;
 }
 .show {
