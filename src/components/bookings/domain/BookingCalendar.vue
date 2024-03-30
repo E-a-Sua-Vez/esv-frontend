@@ -2,7 +2,7 @@
 import { ref, watch, reactive, computed, toRefs, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates, getPendingBookingsByClient } from '../../../application/services/booking';
-import { dateYYYYMMDD } from '../../../shared/utils/date';
+import { dateYYYYMMDD, getDate } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
 import { getQueueBlockDetailsByDayByCommerceId } from '../../../application/services/block';
@@ -583,7 +583,7 @@ export default {
 
     const formattedDate = (date) => {
       if (date && date !== 'TODAY') {
-        return new Date(date).toLocaleString('en-GB').slice(0,10);
+        return getDate(date);
       }
     }
 

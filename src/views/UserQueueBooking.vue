@@ -3,6 +3,7 @@ import { ref, reactive, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { getBookingDetails, cancelBooking } from '../application/services/booking';
 import { getPermissions } from '../application/services/permissions';
+import { getDate } from '../shared/utils/date';
 import Message from '../components/common/Message.vue';
 import AttentionNumber from'../components/common/AttentionNumber.vue';
 import QueueName from '../components/common/QueueName.vue';
@@ -131,6 +132,7 @@ export default {
       state,
       loading,
       alertError,
+      getDate,
       bookingCancelled,
       goToCancel,
       cancelCancel,
@@ -198,7 +200,11 @@ export default {
             ></AttentionNumber>
             <div id="booking-data" class="to-goal">
               <div class="booking-details-container">
-                <div v-if="state.booking.block && state.booking.block.hourFrom" class="col-12 booking-details-card">
+                <div v-if="state.booking.date" class="col-6 booking-details-card">
+                  <span class="booking-details-title"> {{ $t("userQueueBooking.shouldCome") }}</span><br>
+                  <strong>{{ getDate(state.booking.date) }}</strong>
+                </div>
+                <div v-if="state.booking.block && state.booking.block.hourFrom" class="col-6 booking-details-card">
                   <span class="booking-details-title"> {{ $t("userQueueBooking.blockInfo") }}</span><br>
                   <strong>{{ state.booking.block.hourFrom }} - {{ state.booking.block.hourTo }}</strong>
                 </div>
@@ -214,11 +220,11 @@ export default {
                   <div class="booking-notification-content">
                     <i class="bi bi-exclamation-triangle-fill"></i> <span class="fw-bold"> {{ $t("userQueueBooking.important") }} </span>
                   </div>
-                  <div class="booking-notification-title">
+                  <div class="booking-notification-title" hidden>
                     {{ $t("userQueueBooking.shouldCome") }}
                     <h6>
                       <span
-                        class="badge rounded-pill bg-secondary py-2 px-2 fw-bold m-1">{{ state.booking.date }}
+                        class="badge rounded-pill bg-secondary py-2 px-2 fw-bold m-1">{{ getDate(state.booking.date) }}
                       </span>
                     </h6>
                   </div>

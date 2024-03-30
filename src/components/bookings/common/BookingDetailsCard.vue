@@ -95,17 +95,7 @@ export default {
       }
     },
     getDate(dateIn, timeZoneIn) {
-      let date = dateIn;
-      try  {
-        date = dateIn.toDate().toString();
-      } catch (error) {
-        date = dateIn;
-      }
-      const dateCorrected = new Date(
-      new Date(date).toLocaleString('en-US', {
-        timeZone: timeZoneIn,
-      }));
-      return dateCorrected.toLocaleString('en-GB').slice(0,10);
+      return getDate(dateIn, timeZoneIn);
     },
     copyBooking() {
       const textToCopy = jsonToCsv([this.booking]);

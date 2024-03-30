@@ -5,15 +5,14 @@ export const dateYYYYMMDD = (date: Date) => {
   return undefined;
 }
 
-export const getDate = (date, timeZoneIn) => {
-  console.log("🚀 ~ getDate ~ date:", date);
-  const dateCorrected = new Date(
-  new Date(date).toLocaleString('en-US', {
-    timeZone: timeZoneIn,
-  }));
-  console.log("🚀 ~ getDate ~ dateCorrected:", dateCorrected);
-  const [year, month, day] = dateCorrected.toISOString().slice(0,10).split('-');
+export const getDate = (dateIn, timeZoneIn) => {
+  let date = dateIn;
+  try  {
+    date = new Date(dateIn.toDate().toString()).toISOString();
+  } catch (error) {
+    date = dateIn;
+  }
+  const [year, month, day] = date.slice(0,10).split('-');
   const returnDate = `${day}/${month}/${year}`;
-  console.log("🚀 ~ getDate ~ returnDate:", returnDate);
   return returnDate;
 }
