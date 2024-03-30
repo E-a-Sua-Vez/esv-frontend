@@ -8,7 +8,8 @@ export default {
     queue: { type: Object, default: { name: '', active: false } },
     details: { type: Boolean, default: false },
     queuePendingDetails: { type: Object, default: [] },
-    queueProcessingDetails: { type: Object, default: [] }
+    queueProcessingDetails: { type: Object, default: [] },
+    selected: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -25,11 +26,10 @@ export default {
 
 <template>
   <div>
-    <div :class="queue.active === true ? 'active' : 'desactived'">
+    <div :class="selected === true ? 'selected bg-primary' : queue.active === true ? 'active' : 'desactived'">
       <span
         v-if="details"
         class="queue-details"
-        :class="queue.active === true ? 'active-name' : 'desactived-name'"
         data-bs-toggle="modal"
         href="#queueModal"
       >
@@ -81,7 +81,6 @@ export default {
   border: 1.5px solid var(--azul-turno);
 }
 .active-name {
-  background-color: var(--azul-turno);
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
@@ -94,10 +93,15 @@ export default {
   border: 1.5px solid var(--gris-tooltip);
 }
 .desactived-name {
-  background-color: var(--gris-tooltip);
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
+}
+.selected {
+  margin: .1rem;
+  border-radius: 1rem;
+  line-height: 1.5rem;
+  border: 1.5px solid rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
 }
 .show {
   padding: .5rem;

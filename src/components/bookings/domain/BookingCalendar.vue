@@ -757,7 +757,7 @@ export default {
               <div v-for="queue in queues.filter(queue => queue.type !== 'COLLABORATOR')" :key="queue.id" class="control-box col-12 col-lg-5">
                 <div class="">
                   <div class="queue-select">
-                    <QueueName :queue="queue" @click="selectQueue(queue)"> </QueueName>
+                    <QueueName :queue="queue" @click="selectQueue(queue)" :selected="state.selectedQueue.id === queue.id"> </QueueName>
                   </div>
                   <div class="mt-2">
                     <VDatePicker
@@ -780,7 +780,7 @@ export default {
               <div v-for="queue in queues.filter(queue => queue.type === 'COLLABORATOR')" :key="queue.id" class="control-box col-12 col-lg-5">
                 <div class="">
                   <div class="queue-select">
-                    <QueueName :queue="queue" @click="selectQueue(queue)"> </QueueName>
+                    <QueueName :queue="queue" @click="selectQueue(queue)" :selected="state.selectedQueue.id === queue.id"> </QueueName>
                   </div>
                   <div class="mt-2">
                     <VDatePicker
@@ -803,7 +803,7 @@ export default {
               <div v-for="queue in queues" :key="queue.id" class="control-box col-12 col-lg-5">
                 <div class="">
                   <div class="queue-select">
-                    <QueueName :queue="queue" @click="selectQueue(queue)"> </QueueName>
+                    <QueueName :queue="queue" @click="selectQueue(queue)" :selected="state.selectedQueue.id === queue.id"> </QueueName>
                   </div>
                   <div class="mt-2">
                     <VDatePicker
