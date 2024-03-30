@@ -47,7 +47,7 @@ export default {
           </div>
         </div>
       </span>
-      <span v-else :class="queue.active === true ? 'active-name' : 'desactived-name'">
+      <span v-else :class="selected === true ? 'selected bg-primary' : queue.active === true ? 'active' : 'desactived'">
         <i class="bi bi-person-lines-fill"></i> {{ queue.name }}
       </span>
     </div>
@@ -79,8 +79,12 @@ export default {
   border-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid var(--azul-turno);
+  color: var(--color-background);
+  font-weight: 700;
+  font-size: .9rem;
 }
 .active-name {
+  background-color: var(--azul-turno);
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
@@ -91,17 +95,25 @@ export default {
   border-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid var(--gris-tooltip);
+  color: var(--color-background);
+  font-weight: 700;
+  font-size: .9rem;
 }
 .desactived-name {
+  background-color: var(--gris-tooltip);
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
 }
 .selected {
+  background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
   margin: .1rem;
   border-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
+  color: var(--color-background);
+  font-weight: 700;
+  font-size: .9rem;
 }
 .show {
   padding: .5rem;
