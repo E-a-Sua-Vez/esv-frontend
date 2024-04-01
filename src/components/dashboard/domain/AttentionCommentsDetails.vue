@@ -61,8 +61,8 @@ export default {
       </div>
     </div>
     <hr>
-    <div class="row" v-if="distribution">
-      <div class="col-12 col-md-4">
+    <div class="row m-1" v-if="distribution">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-frown-fill red-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.detractor') }}
@@ -71,7 +71,7 @@ export default {
           <span class="h5 fw-bold m-1">{{ distribution.totalSentimentBad || 0 }}</span>
         </div>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-neutral-fill yellow-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.neutral') }}
@@ -80,7 +80,7 @@ export default {
           <span class="h5 fw-bold m-1">{{ distribution.totalSentimentNeutral || 0 }}</span>
         </div>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-smile-fill green-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.promoter') }}

@@ -60,7 +60,7 @@ export default {
       </div>
     </div>
     <hr>
-    <div class="my-2 mx-2">
+    <div class="my-3">
       <div class="progress" style="height: 30px;">
         <div class="progress-bar red-area" role="progressbar" :style="`height: 30px; width: ${npsScorePercentage(count, distribution.detractors ? distribution.detractors.counter : 0)}%`" aria-valuemin="0" aria-valuemax="100">
           {{ distribution.detractors ? distribution.detractors.counter : 0 || 'N/I' }}

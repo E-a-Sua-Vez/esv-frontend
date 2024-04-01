@@ -36,6 +36,21 @@ export default {
         </Popper>
       </div>
       <div class="row m-1" v-if="count">
+        <div class="mt-2 mb-2">
+          <div class="progress" style="height: 30px;">
+            <div class="progress-bar green-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+              {{ distribution.EARLY ? distribution.EARLY : 0 || 'N/I' }}
+            </div>
+            <div class="progress-bar yellow-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.MEDIUM ? distribution.MEDIUM : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+              {{ distribution.MEDIUM ? distribution.MEDIUM : 0 || 'N/I' }}
+            </div>
+            <div class="progress-bar red-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.LATE ? distribution.LATE : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+              {{ distribution.LATE ? distribution.LATE : 0 || 'N/I' }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row m-1" v-if="count">
         <div class="col-4 col-md-4">
           <div class="metric-card-title centered fw-bold">
             <i class="bi bi-qr-code green-icon h4 fw-bold m-1"></i>
@@ -67,6 +82,7 @@ export default {
           </div>
         </div>
       </div>
+
       <div v-else>
         <div class="row centered">
           <div class="col">
