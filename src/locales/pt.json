@@ -1143,6 +1143,7 @@
     "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
     "origin": "Meio pelo qual o cliente conheceu o negócio",
     "contacts": "Análise de Contatos de Clientes",
+    "daysSince": "Último atendimento de clientes: Verde: Há menos 3 meses, Amarelo: entre 3 e 6 meses, Vermelho: mais 6 meses.",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
@@ -1180,6 +1181,9 @@
     "schedule": "Agendar",
     "contactType": "Tipo de Contato",
     "contactResult": "Resultado de Contato",
+    "early": "-3m",
+    "medium": "3-6m",
+    "late": "+6m",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1234,6 +1238,7 @@
         "30": "Canceladas",
         "31": "Onde você nos conheceu?",
         "32": "Número de Contatos de Clientes",
+        "33": "Farol Último Atendimento",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",
@@ -1508,6 +1513,9 @@
         },
         "attention-client-contact": {
           "view": "Ver Contato de Clientes"
+        },
+        "attention-days-since-clients": {
+          "view": "Ver Farol Último Atendimento"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",

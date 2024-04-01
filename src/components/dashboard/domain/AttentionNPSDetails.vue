@@ -73,8 +73,8 @@ export default {
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-12 col-md-4">
+    <div class="row m-1">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-frown-fill red-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.detractor') }}
@@ -84,7 +84,7 @@ export default {
           <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ getPercentage(distribution.detractors ? distribution.detractors.avg : 0) }} % </span>
         </div>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-neutral-fill yellow-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.neutral') }}
@@ -94,7 +94,7 @@ export default {
           <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ getPercentage(distribution.neutrals ? distribution.neutrals.avg : 0) }} % </span>
         </div>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
           <i class="bi bi-emoji-smile-fill green-icon h4 fw-bold m-1"></i>
           {{ $t('dashboard.promoter') }}

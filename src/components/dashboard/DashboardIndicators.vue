@@ -14,6 +14,7 @@ import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionOriginDetails from './domain/AttentionOriginDetails.vue';
 import AttentionClientContactDetails from './domain/AttentionClientContactDetails.vue';
+import AttentionDaysSinceDetails from './domain/AttentionDaysSinceDetails.vue';
 
 export default {
   name: 'DashboardIndicators',
@@ -32,7 +33,8 @@ export default {
     PDFFooter,
     Spinner,
     AttentionOriginDetails,
-    AttentionClientContactDetails
+    AttentionClientContactDetails,
+    AttentionDaysSinceDetails
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -381,6 +383,14 @@ export default {
             </AttentionClientContactDetails>
           </template>
         </DetailsCard>
+      </div>
+      <div id="attention-daysSince-clients">
+        <AttentionDaysSinceDetails
+          :show="!!toggles['dashboard.attention-days-since-clients.view']"
+          :distribution="calculatedMetrics['clients']['resultDaysSinceDistribution']"
+          :count="calculatedMetrics['clients'].daysSinceClientsTotal || 0"
+        >
+        </AttentionDaysSinceDetails>
       </div>
       <div id="attention-notification">
         <DetailsCard

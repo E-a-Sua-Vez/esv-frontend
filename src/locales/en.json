@@ -1142,6 +1142,7 @@
     "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
     "origin": "Origin through which the client knew the business",
     "contacts": "Client Contacts Analysis",
+    "daysSince": "Last client attention: Green: Less than 3 months, Yellow: between 3 and 6 months, Red: more than 6 months.",
     "today": "Today",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
@@ -1179,6 +1180,9 @@
     "schedule": "Schedule",
     "contactType": "Contact Type",
     "contactResult": "Contact Result",
+    "early": "-3m",
+    "medium": "3-6m",
+    "late": "+6m",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1233,6 +1237,7 @@
         "30": "Cancelled",
         "31": "¿Where did you find us?",
         "32": "Client Contacts Number",
+        "33": "Last Attention Lantern",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -1507,6 +1512,9 @@
         },
         "attention-client-contact": {
           "view": "See Client Contacts"
+        },
+        "attention-days-since-clients": {
+          "view": "See Last Attention Lantern"
         },
         "reports": {
           "surveys": "Surveys Report (Summary)",
