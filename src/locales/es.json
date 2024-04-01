@@ -1176,9 +1176,9 @@
     "schedule": "Agendar",
     "contactType": "Tipo de Contacto",
     "contactResult": "Resultado de Contacto",
-    "early": "-3m",
-    "medium": "3-6m",
-    "late": "+6m",
+    "early": "-90 días",
+    "medium": "90-180 días",
+    "late": "+180 días",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1233,7 +1233,7 @@
         "30": "Canceladas",
         "31": "¿Dónde nos conoció?",
         "32": "Número de Contactos a Clientes",
-        "33": "Semáforo Última Atención",
+        "33": "Semáforo Atenciones",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
@@ -1514,7 +1514,7 @@
           "view": "Ver Contacto de Clientes"
         },
         "attention-days-since-clients": {
-          "view": "Ver Semáforo Última Atención"
+          "view": "Ver Semáforo Atenciones"
         },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",

@@ -38,12 +38,12 @@ export default {
       <div class="row m-1" v-if="count">
         <div class="col-4 col-md-4">
           <div class="metric-card-title centered fw-bold">
-            <i class="bi bi-qr-code red-icon h4 fw-bold m-1"></i>
-            {{ $t('dashboard.late') }}
+            <i class="bi bi-qr-code green-icon h4 fw-bold m-1"></i>
+            {{ $t('dashboard.early') }}
           </div>
           <div class="centered">
-            <span class="h5 fw-bold m-1">{{ distribution.LATE ? distribution.LATE : 0 }}</span>
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.LATE ? distribution.LATE : 0) }} % </span>
+            <span class="h5 fw-bold m-1">{{ distribution.EARLY ? distribution.EARLY : 0 }}</span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0) }} % </span>
           </div>
         </div>
         <div class="col-4 col-md-4">
@@ -58,12 +58,12 @@ export default {
         </div>
         <div class="col-4 col-md-4">
           <div class="metric-card-title centered fw-bold">
-            <i class="bi bi-qr-code green-icon h4 fw-bold m-1"></i>
-            {{ $t('dashboard.early') }}
+            <i class="bi bi-qr-code red-icon h4 fw-bold m-1"></i>
+            {{ $t('dashboard.late') }}
           </div>
           <div class="centered">
-            <span class="h5 fw-bold m-1">{{ distribution.EARLY ? distribution.EARLY : 0 }}</span>
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0) }} % </span>
+            <span class="h5 fw-bold m-1">{{ distribution.LATE ? distribution.LATE : 0 }}</span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.LATE ? distribution.LATE : 0) }} % </span>
           </div>
         </div>
       </div>

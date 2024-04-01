@@ -1180,9 +1180,9 @@
     "schedule": "Schedule",
     "contactType": "Contact Type",
     "contactResult": "Contact Result",
-    "early": "-3m",
-    "medium": "3-6m",
-    "late": "+6m",
+    "early": "-90 days",
+    "medium": "90-180 days",
+    "late": "+180 days",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1237,7 +1237,7 @@
         "30": "Cancelled",
         "31": "¿Where did you find us?",
         "32": "Client Contacts Number",
-        "33": "Last Attention Lantern",
+        "33": "Last Attentions",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -1514,7 +1514,7 @@
           "view": "See Client Contacts"
         },
         "attention-days-since-clients": {
-          "view": "See Last Attention Lantern"
+          "view": "See Last Attentions"
         },
         "reports": {
           "surveys": "Surveys Report (Summary)",

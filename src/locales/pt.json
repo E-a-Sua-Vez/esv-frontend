@@ -1181,9 +1181,9 @@
     "schedule": "Agendar",
     "contactType": "Tipo de Contato",
     "contactResult": "Resultado de Contato",
-    "early": "-3m",
-    "medium": "3-6m",
-    "late": "+6m",
+    "early": "-90 dias",
+    "medium": "90-180 dias",
+    "late": "+180 dias",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1238,7 +1238,7 @@
         "30": "Canceladas",
         "31": "Onde você nos conheceu?",
         "32": "Número de Contatos de Clientes",
-        "33": "Farol Último Atendimento",
+        "33": "Farol Atendimentos",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",
@@ -1515,7 +1515,7 @@
           "view": "Ver Contato de Clientes"
         },
         "attention-days-since-clients": {
-          "view": "Ver Farol Último Atendimento"
+          "view": "Ver Farol Atendimentos"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
