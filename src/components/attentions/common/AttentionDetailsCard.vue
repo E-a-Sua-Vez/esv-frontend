@@ -225,10 +225,10 @@ export default {
     receiveData(data) {
       if (data) {
         if (data.procedureNumber) {
-          this.newConfirmationData.procedureNumber = data.procedureNumber;
+          this.newPaymentConfirmationData.procedureNumber = data.procedureNumber;
         }
         if (data.proceduresTotalNumber) {
-          this.newConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
+          this.newPaymentConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
         }
         if (data.paymentType) {
           this.newPaymentConfirmationData.paymentType = data.paymentType;
@@ -439,7 +439,7 @@ export default {
               </div>
               <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
                 @click="goTransfer()"
-                :disabled="!queueToTransfer || !toggles['collaborator.attention.confirm']">
+                :disabled="!queueToTransfer || !toggles['collaborator.attention.transfer']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.transfer") }}
               </button>
             </div>
@@ -463,15 +463,15 @@ export default {
           <div class="col-6">
             <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
               @click="goCancel()"
-              :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.bookings.cancel']"
+              :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.attention.cancel']"
               >
               <i class="bi bi-person-x-fill"> </i> {{ $t("collaboratorBookingsView.cancel") }}
             </button>
           </div>
           <AreYouSure
             :show="goToCancel"
-            :yesDisabled="toggles['collaborator.bookings.cancel']"
-            :noDisabled="toggles['collaborator.bookings.cancel']"
+            :yesDisabled="toggles['collaborator.attention.cancel']"
+            :noDisabled="toggles['collaborator.attention.cancel']"
             @actionYes="cancel()"
             @actionNo="cancelCancel()"
           >

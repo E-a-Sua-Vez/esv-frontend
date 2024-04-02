@@ -5,7 +5,7 @@ import { getRolByName } from './rol';
 
 export const signIn = async (email, password, userType) => {
     const token = await login(email.trim(), password.trim());
-    if (token === 'Usuario no registrado o password inválida: The password is invalid or the user does not have a password.') {
+    if (token.includes('Usuario no registrado o password inválida')) {
       return 'error';
     } else {
       let user = undefined;
