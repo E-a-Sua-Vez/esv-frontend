@@ -285,9 +285,11 @@ export default {
       const hourDate = new Date(date.setHours(hour));
       if (state.commerce.country) {
         if (state.commerce.country === 've') {
-          return hourDate.getHours() - 4;
+          const resultHour = hourDate.getHours() - 4;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else if (['br', 'cl'].includes(state.commerce.country)) {
-          return hourDate.getHours() - 3;
+          const resultHour = hourDate.getHours() - 3;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else {
           return hourDate.getHours();
         }
