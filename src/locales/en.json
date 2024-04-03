@@ -1190,6 +1190,7 @@
     },
     "spy": "MetricSpy",
     "spyDetails": "See more details on the Performance Hub Section",
+    "spySubDetails": "Data of actual month, all commerces.",
     "comment": "Comment:",
     "entities": "Key Words:",
     "second": "Seconds",

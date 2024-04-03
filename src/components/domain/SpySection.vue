@@ -145,7 +145,8 @@ export default {
           </div>
         </div>
         <hr>
-        <div>
+        <div class="spy-subdetails">
+          <span class="spy-subdetails">{{ $t('dashboard.spySubDetails') }}</span><br>
           <span class="spy-details" @click="goToOption('dashboard')"> {{ $t('dashboard.spyDetails') }}<i class="bi bi-arrow-up-right-circle mx-1"></i></span>
         </div>
         <div id="attention-number">
@@ -255,6 +256,11 @@ export default {
   font-weight: 700;
   line-height: .75rem;
   cursor: pointer;
+}
+.spy-subdetails {
+  font-size: .8rem;
+  font-weight: 400;
+  line-height: 1rem;
 }
 .spy-update {
   font-size: .7rem;

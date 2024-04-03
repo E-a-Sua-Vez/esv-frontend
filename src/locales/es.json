@@ -1186,6 +1186,7 @@
     },
     "spy": "MetricSpy",
     "spyDetails": "Vea más detalles en la sección Performance Hub",
+    "spySubDetails": "Datos del mes calendario, todos los comercios.",
     "second": "Segundos",
     "spyUpdate": "Próxima actualización en: ",
     "comment": "Comentario:",
