@@ -51,6 +51,8 @@ export default {
       ],
       currentPlanActivation: {},
       toggles: {},
+      showMobileMenuSide: true,
+      showMobileSpySide: false
     });
 
     onBeforeMount(async () => {
@@ -96,13 +98,25 @@ export default {
       return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
     }
 
+    const onShowMobileMenuSide = () => {
+      state.showMobileMenuSide = true;
+      state.showMobileSpySide = false;
+    }
+
+    const onShowMobileSpySide = () => {
+      state.showMobileMenuSide = false;
+      state.showMobileSpySide = true;
+    }
+
     return {
       state,
       loading,
       alertError,
       isActiveBusiness,
       goToOption,
-      getBusinessLink
+      getBusinessLink,
+      onShowMobileMenuSide,
+      onShowMobileSpySide
     }
   }
 }
@@ -126,59 +140,76 @@ export default {
         </PlanStatus>
       </div>
       <div id="menu-mobile" class="d-block d-md-none">
-        <div class="choose-attention my-3 mt-4">
-          <span>{{ $t("businessMenu.choose") }}</span>
+        <div class="sub-menu-spy">
+          <span v-if="state.showMobileMenuSide" @click="onShowMobileSpySide()">{{ $t("businessMenu.seeSpy") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
+          <span v-else @click="onShowMobileMenuSide()">{{ $t("businessMenu.seeMenu") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
         </div>
-        <div class="row">
-          <div
-            v-for="option in state.menuOptions"
-            :key="option"
-            class="d-grid btn-group btn-group-justified">
-            <div v-if="option === 'go-minisite'" class="centered">
-              <a
-                type="button"
-                class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
-                :href="`${getBusinessLink()}`"
-                target="_blank">
-                {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-              </a>
+        <Transition name="flip">
+          <div id="menu-side-mobile" :key="`menu-side-mobile`" v-if="state.showMobileMenuSide === true">
+            <div class="choose-attention my-3 mt-4">
+              <span>{{ $t("businessMenu.choose") }}</span>
             </div>
-            <div v-else>
-              <button
-                type="button"
-                class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                @click="goToOption(option)"
-                :disabled="!state.toggles[`business.main-menu.${option}`]"
-                >
-                {{ $t(`businessMenu.${option}`) }}
-                <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-              </button>
-              <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
-                <div
-                  v-for="opt in state.manageSubMenuOptions"
-                  :key="opt"
-                  ><div class="centered mx-3">
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                        @click="goToOption(opt)"
-                        :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                        >
-                        {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                      </button>
-                    </div>
-                  </div>
+            <div class="row">
+              <div
+                v-for="option in state.menuOptions"
+                :key="option"
+                class="d-grid btn-group btn-group-justified">
+                <div v-if="option === 'go-minisite'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
+                    :href="`${getBusinessLink()}`"
+                    target="_blank">
+                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
                 </div>
+                <div v-else>
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    @click="goToOption(option)"
+                    :disabled="!state.toggles[`business.main-menu.${option}`]"
+                    >
+                    {{ $t(`businessMenu.${option}`) }}
+                    <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                  </button>
+                  <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
+                    <div
+                      v-for="opt in state.manageSubMenuOptions"
+                      :key="opt"
+                      ><div class="centered mx-3">
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                            >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="!isActiveBusiness() && !loading">
+              <Message
+                :title="$t('businessMenu.message.1.title')"
+                :content="$t('businessMenu.message.1.content')"
+                :icon="'bi bi-emoji-dizzy'">
+              </Message>
             </div>
           </div>
-        </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('businessMenu.message.1.title')"
-            :content="$t('businessMenu.message.1.content')"
-            :icon="'bi bi-emoji-dizzy'">
-          </Message>
-        </div>
+        </Transition>
+        <Transition name="flip">
+          <div id="spy-side-mobile" :key="`spy-side-mobile`" v-if="state.showMobileSpySide">
+            <SpySection
+              :show="true"
+              :commerces="state.commerces"
+            >
+            </SpySection>
+          </div>
+        </Transition>
       </div>
       <div id="menu-desktop" class="d-none d-md-block">
         <div class="row">
@@ -273,5 +304,28 @@ export default {
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1rem;
+}
+.flip-enter-active,
+.flip-leave-active {
+  transition: all 1s ease;
+}
+.flip-enter-from, .flip-leave-to {
+  transform: rotateY(180deg);
+  opacity: 0;
+}
+.flip-enter-active {
+  animation: bounce-in 0.5s;
+}
+.flip-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+.sub-menu-spy {
+  text-decoration: underline;
+  margin: 1rem;
+  text-align: right;
+  font-size: .9rem;
+  font-weight: 500;
+  line-height: .8rem;
+  cursor: pointer;
 }
 </style>

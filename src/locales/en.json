@@ -1627,6 +1627,8 @@
     "permissions-admin": "Permissions",
     "administrators-admin": "Administrators",
     "modules-admin": "Modules",
+    "seeSpy": "MetricSpy",
+    "seeMenu": "Menu",
     "business-resume": "System State",
     "surveys-admin": "Surveys",
     "manage-admin": "Manage",

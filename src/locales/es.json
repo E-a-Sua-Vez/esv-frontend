@@ -1632,6 +1632,8 @@
     "surveys-admin": "Encuestas",
     "manage-admin": "Administrar",
     "go-minisite": "Minisite",
+    "seeSpy": "MetricSpy",
+    "seeMenu": "Menú",
     "message": {
       "1": {
         "title": "¡Ups!",
