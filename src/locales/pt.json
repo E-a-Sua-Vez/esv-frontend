@@ -772,7 +772,7 @@
           "book": "Reservar Lista de Espera"
         },
         "main-menu": {
-          "dashboard": "Ver Dashboard",
+          "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°"
@@ -827,7 +827,7 @@
           "edit": "Editar Reservas"
         },
         "main-menu": {
-          "dashboard": "Ver Dashboard",
+          "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°"
@@ -920,7 +920,7 @@
           "update": "Atualizar o modulo de atendimento"
         },
         "main-menu": {
-          "dashboard": "Ver Dashboard",
+          "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°"
@@ -1004,7 +1004,7 @@
           "admin": "Gerenciar Reservas"
         },
         "main-menu": {
-          "dashboard": "Ver Dashboard",
+          "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°"
@@ -1120,7 +1120,7 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "Performance Hub",
     "attentions": "Atendimentos",
     "clients": "Clientes",
     "commerce": "Comércio",
@@ -1144,6 +1144,7 @@
     "origin": "Meio pelo qual o cliente conheceu o negócio",
     "contacts": "Análise de Contatos de Clientes",
     "daysSince": "Último atendimento de clientes: Verde: Há menos 3 meses, Amarelo: entre 3 e 6 meses, Vermelho: mais 6 meses.",
+    "booking": "Total de Reservas criadas vs Reservas por atender.",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
@@ -1188,6 +1189,10 @@
       "from": "Do",
       "to": "a"
     },
+    "spy": "Espiadinha",
+    "spyDetails": "Veja mais detalhes na seção Performance Hub",
+    "second": "Segundos",
+    "spyUpdate": "Próxima actualização em: ",
     "comment": "Comentário:",
     "entities": "Palavras chave:",
     "tracing": {
@@ -1611,13 +1616,13 @@
     "welcome": "Bem-vindo!",
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
-    "dashboard": "Dashboard",
+    "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
     "commerce-admin": "Comércios",
     "service-admin": "Serviços",
     "queues-admin": "Filas",
     "configuration": "Configurações",
-    "reports": "Relatórios",
+    "reports": "Central de Dados",
     "your-plan": "Seu Plano",
     "collaborators-admin": "Colaboradores",
     "permissions-admin": "Permissões",
@@ -1636,9 +1641,9 @@
       "business": {
         "main-menu": {
           "business-resume": "Estado do Sistema",
-          "dashboard": "Dashboard",
+          "dashboard": "Performance Hub",
           "tracing": "Gestão de Clientes",
-          "reports": "Relatórios",
+          "reports": "Central de Dados",
           "commerce-admin": "Gerenciar Comércios/Unidades",
           "service-admin": "Gerenciar Serviços",
           "modules-admin": "Gerenciar Módulos",
@@ -1660,13 +1665,13 @@
     "business": "Selecione um negócio:",
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
-    "dashboard": "Dashboard",
+    "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
     "commerce-master-admin": "Comércios",
     "service-master-admin": "Serviços",
     "queues-master-admin": "Filas",
     "configuration": "Configurações",
-    "reports": "Relatórios",
+    "reports": "Central de Dados",
     "your-plan": "Seu Plano",
     "plans-master-admin": "Gerenciar Planos",
     "collaborators-master-admin": "Colaboradores",
@@ -1683,7 +1688,7 @@
     "welcome": "Bem-vindo!",
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
-    "dashboard": "Dashboard",
+    "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
     "queue-manage": "Atender Filas do Dia",
     "booking-manage": "Reservas Visão 360°",
@@ -1697,7 +1702,7 @@
     "capacitiesList": {
       "collaborator": {
         "main-menu": {
-          "dashboard": "Gerenciar Dashboard",
+          "dashboard": "Gerenciar Performance Hub",
           "tracing": "Gerenciar Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°"
@@ -2097,7 +2102,7 @@
     }
   },
   "businessReports": {
-    "title": "Relatórios",
+    "title": "Central de Dados",
     "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
@@ -2655,7 +2660,7 @@
     "business": {
       "main-menu": {
         "business-resume": "Habilitar Estado del Sistema - Menú Principal Negócio",
-        "dashboard": "Habilitar Dashboard - Menú Principal Negócio",
+        "dashboard": "Habilitar Performance Hub - Menú Principal Negócio",
         "tracing": "Habilitar Gestão de Clientes - Menú Principal Negócio",
         "reports": "Habilitar Reportes - Menú Principal Negócio",
         "commerce-admin": "Habilitar Gerenciar Comercios - Menú Principal Negócio",
@@ -2679,7 +2684,7 @@
         "limit": "Límite de dados Seção - Gerenciar Colaboradores"
       },
       "main-menu": {
-        "dashboard": "Habilitar Dashboard - Menú Principal Colaborador",
+        "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
         "tracing": "Habilitar Gestão de Clientes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas do Dia - Menú Principal Colaborador",
         "booking-manage": "Habilitar Reservas Visão 360° - Menú Principal Colaborador"
@@ -2730,77 +2735,77 @@
     },
     "dashboard": {
       "indicators": {
-        "view": "Ver Indicadores - Seção Dashboard"
+        "view": "Ver Indicadores - Seção Performance Hub"
       },
       "graphs": {
-        "view": "Ver Tendências - Seção Dashboard"
+        "view": "Ver Tendências - Seção Performance Hub"
       },
       "attention-number": {
-        "view": "Ver Número de Atendimentos - Seção Dashboard"
+        "view": "Ver Número de Atendimentos - Seção Performance Hub"
       },
       "attention-time-avg": {
-        "view": "Ver Tiempo promedio de atencão - Seção Dashboard"
+        "view": "Ver Tiempo promedio de atencão - Seção Performance Hub"
       },
       "attention-rating-avg": {
-        "view": "Ver Calificación promedio Seção - Dashboard"
+        "view": "Ver Calificación promedio Seção - Performance Hub"
       },
       "attention-queue": {
-        "view": "Ver la Fila com mais atenções - Seção Dashboard"
+        "view": "Ver la Fila com mais atenções - Seção Performance Hub"
       },
       "attention-no-device": {
-        "view": "Ver Número de Atendimentos Manuales - Seção Dashboard"
+        "view": "Ver Número de Atendimentos Manuales - Seção Performance Hub"
       },
       "attention-notification": {
-        "view": "Ver Número de notificaciones - Seção Dashboard"
+        "view": "Ver Número de notificaciones - Seção Performance Hub"
       },
       "attention-number-evolution": {
-        "view": "Ver evoluçao de atenções - Seção Dashboard"
+        "view": "Ver evoluçao de atenções - Seção Performance Hub"
       },
       "attention-number-queue": {
-        "view": "Ver Atendimentos por filas - Seção Dashboard"
+        "view": "Ver Atendimentos por filas - Seção Performance Hub"
       },
       "attention-duration-evolution": {
-        "view": "Ver evoluçao duraçao de atenções - Seção Dashboard"
+        "view": "Ver evoluçao duraçao de atenções - Seção Performance Hub"
       },
       "attention-rate-duration-evolution": {
-        "view": "Ver evoluçao duraçao de pesquisas - Seção Dashboard"
+        "view": "Ver evoluçao duraçao de pesquisas - Seção Performance Hub"
       },
       "attention-flow": {
-        "view": "Ver Flujo de Atendimentos - Seção Dashboard"
+        "view": "Ver Flujo de Atendimentos - Seção Performance Hub"
       },
       "survey-flow": {
-        "view": "Ver Flujo de Pesquisas - Seção Dashboard"
+        "view": "Ver Flujo de Pesquisas - Seção Performance Hub"
       },
       "surveys": {
-        "view": "Ver Pesquisas (Sumário) - Seção Dashboard"
+        "view": "Ver Pesquisas (Sumário) - Seção Performance Hub"
       },
       "surveys-management": {
-        "view": "Ver Pesquisas (Detalhes) - Seção Dashboard"
+        "view": "Ver Pesquisas (Detalhes) - Seção Performance Hub"
       },
       "surveys-consolidated": {
-        "view": "Ver Pesquisas (Consolidado) - Seção Dashboard"
+        "view": "Ver Pesquisas (Consolidado) - Seção Performance Hub"
       },
       "attention-hour-distribution": {
-        "view": "Ver Distribuçao de horas de atenções - Seção Dashboard"
+        "view": "Ver Distribuçao de horas de atenções - Seção Performance Hub"
       },
       "surveys-consolidated-nps-evolution": {
-        "view": "Ver evoluçao de NPS - Seção Dashboard"
+        "view": "Ver evoluçao de NPS - Seção Performance Hub"
       },
       "surveys-consolidated-csat-evolution": {
-        "view": "Ver evoluçao de CSAT - Seção Dashboard"
+        "view": "Ver evoluçao de CSAT - Seção Performance Hub"
       },
       "attention-origin-avg": {
-        "view": "Ver Origem do Clientee - Seção Dashboard"
+        "view": "Ver Origem do Clientee - Seção Performance Hub"
       },
       "attention-client-contact": {
-        "view": "Ver Contato de Clientes - Seção Dashboard"
+        "view": "Ver Contato de Clientes - Seção Performance Hub"
       },
       "reports": {
-        "surveys": "Download Relatório Pesquisas (Sumário) Seção Dashboard",
-        "indicators": "Download Relatório Indicadores Seção Dashboard",
-        "graphs": "Download Relatório de Tendências Seção Dashboard",
-        "surveys-management": "Download Relatório Pesquisas (Detalhes) Seção Dashboard",
-        "surveys-consolidated": "Download Relatório Pesquisas (Consolidado) Seção Dashboard"
+        "surveys": "Download Relatório Pesquisas (Sumário) Seção Performance Hub",
+        "indicators": "Download Relatório Indicadores Seção Performance Hub",
+        "graphs": "Download Relatório de Tendências Seção Performance Hub",
+        "surveys-management": "Download Relatório Pesquisas (Detalhes) Seção Performance Hub",
+        "surveys-consolidated": "Download Relatório Pesquisas (Consolidado) Seção Performance Hub"
       }
     },
     "executive": {

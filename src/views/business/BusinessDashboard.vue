@@ -321,7 +321,7 @@ export default {
         'TERMINATED': 'INITIATED',
         'RATED': 'TERMINATED'
       };
-      return labels[label];
+      return labels[label] || undefined;
     }
 
     const attentionNumberEvolution = computed(() => {
@@ -505,13 +505,13 @@ export default {
     const surveyFlow = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionFlow;
       if (data && data.labels) {
-        const labels = data.labels.slice(2, data.labels.length).map(label => surveyLabel(label));
-        const datasets = data.datasets.slice(2, data.datasets.length);
+        const labels = data.labels.slice(2, 4).map(label => surveyLabel(label));
+        const datasets = data.datasets.slice(2, 4);
         return {
           labels: labels,
           datasets: [
             {
-              label: 'Atenciones',
+              label: 'Encuestas',
               indexAxis: 'y',
               data: datasets || [],
               backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']

@@ -165,8 +165,10 @@ export default {
         <DetailsCard
           :show="!!toggles['dashboard.booking-number.view']"
           :data="calculatedMetrics['booking.created'].bookingNumber"
+          :subdata="calculatedMetrics['booking.created'].stillPendingBookings"
           :title="$t('dashboard.items.attentions.27')"
-          :showTooltip="false"
+          :showTooltip="true"
+          :description="$t('dashboard.booking')"
           :icon="'bi-calendar2-check-fill'"
           :iconStyleClass="'orange-icon'"
           :detailsOpened="detailsOpened"
@@ -270,8 +272,8 @@ export default {
       <div id="attention-nps-avg">
         <DetailsCard
           :show="!!toggles['dashboard.attention-nps-avg.view']"
-          :data="calculatedMetrics['survey.created'].nps"
-          :subdata="calculatedMetrics['survey.created'].count_nps"
+          :data="calculatedMetrics['survey.created'].nps || 0"
+          :subdata="calculatedMetrics['survey.created'].count_nps || 0"
           :title="$t('dashboard.items.attentions.24')"
           :showTooltip="true"
           :description="$t('dashboard.nps')"
@@ -342,7 +344,7 @@ export default {
         <DetailsCard
           :show="!!toggles['dashboard.attention-origin-avg.view']"
           :data="calculatedMetrics['clients']['maxOrigin']?.name ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`) : 'No Data'"
-          :subdata="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.count : 'No Data'"
+          :subdata="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.count : 0"
           :title="$t('dashboard.items.attentions.31')"
           :showTooltip="true"
           :description="$t('dashboard.origin')"

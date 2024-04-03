@@ -40,20 +40,24 @@ export default {
   methods: {
     getPastPeriodPercentage(period) {
       if (period && period.number >= 0) {
-        const percentage = period.number * 100 / (this.calculatedMetrics['attention.created'].attentionNumber === 0 ? 1 : this.calculatedMetrics['attention.created'].attentionNumber);
+        const percentage = (this.calculatedMetrics['attention.created'].attentionNumber || 1) * 100 / (period.number === 0 ? 1 : period.number);
         return parseFloat(percentage.toFixed(2));
       }
       return 0;
     },
     getPastMonthPercentage(pastPeriod, currentPeriod) {
       if (pastPeriod && currentPeriod) {
-        const percentage = pastPeriod.number * 100 / currentPeriod.number;
+        const percentage = currentPeriod.number * 100 / pastPeriod.number;
         return percentage === Infinity ? pastPeriod.number * 100 : parseFloat(percentage.toFixed(2)) || pastPeriod.number * 100;
       }
       return 0;
     },
     getPercentage(number) {
       const percentage = (number * 100) / this.calculatedMetrics['attention.created'].attentionNumber;
+      return parseFloat(percentage.toFixed(2), 2) || 0;
+    },
+    getPercentageSurvey(number) {
+      const percentage = (number * 100) / this.calculatedMetrics["attention.created"].surveyFlow.datasets[0];
       return parseFloat(percentage.toFixed(2), 2) || 0;
     },
     getPercentageBooking(number) {
@@ -411,7 +415,7 @@ export default {
                             <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ calculatedMetrics['attention.created'].surveyFlow.datasets[ind] }} </span>
                           </div>
                           <div class="col-4 centered">
-                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(calculatedMetrics['attention.created'].surveyFlow.datasets[ind]) }} % </span>
+                            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentageSurvey(calculatedMetrics['attention.created'].surveyFlow.datasets[ind]) }} % </span>
                           </div>
                         </div>
                         <hr class="mb-2">
@@ -424,7 +428,7 @@ export default {
                           <div class="col-12 col-md-4 m-1 centered">
                             <span>
                               {{ $t('dashboard.items.trends.survey-flow.2') }}
-                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].attentionNumber }} </span>
+                                <span class="fw-bold"> {{ calculatedMetrics['attention.created'].surveyFlow.datasets[0] }} </span>
                                 {{ $t('dashboard.items.trends.survey-flow.3') }}
                                 <span class="fw-bold"> {{ calculatedMetrics["attention.created"].surveyFlow.datasets[1] }} </span>.
                             </span>
@@ -432,8 +436,9 @@ export default {
                           <div class="col-12 col-md-4 m-1 centered">
                             <span>
                               {{ $t('dashboard.items.trends.survey-flow.4') }} <i class="bi bi-arrow-up-circle-fill green-icon"> {{ $t('dashboard.items.trends.survey-flow.5') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }}
-                                <span class="fw-bold"> {{ getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1]) }}% </span>
-                              {{ $t('dashboard.items.trends.survey-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.survey-flow.8') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }} <span class="fw-bold"> {{ getDifference(getPercentage(calculatedMetrics["attention.created"].surveyFlow.datasets[1])) }}%. </span>
+                                <span class="fw-bold"> {{ getPercentageSurvey(calculatedMetrics["attention.created"].surveyFlow.datasets[1]) }}% </span>
+                              {{ $t('dashboard.items.trends.survey-flow.7') }} <i class="bi bi-arrow-right-circle-fill red-icon"> {{ $t('dashboard.items.trends.survey-flow.8') }} </i> {{ $t('dashboard.items.trends.survey-flow.6') }}
+                                <span class="fw-bold"> {{ getDifference(getPercentageSurvey(calculatedMetrics["attention.created"].surveyFlow.datasets[1])) }}%. </span>
                             </span>
                           </div>
                         </div>

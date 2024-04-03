@@ -12,10 +12,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
 import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
+import SpySection from '../../components/domain/SpySection.vue';
 
 export default {
   name: 'BusinessMenu',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanStatus, ToggleCapabilities, WelcomeMenu },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanStatus, ToggleCapabilities, WelcomeMenu, SpySection },
   async setup() {
     const router = useRouter();
 
@@ -27,6 +28,7 @@ export default {
     const state = reactive({
       currentUser: {},
       business: {},
+      commerces: [],
       manageSubMenuOption: false,
       menuOptions: [
         'dashboard',
@@ -48,7 +50,7 @@ export default {
         'permissions-admin'
       ],
       currentPlanActivation: {},
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -56,12 +58,13 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.renewActualBusiness();
+        state.commerces = state.business.commerces || [];
         state.currentPlanActivation = await getValidatedPlanActivationByBusinessId(state.business.id, true) || {};
         state.toggles = await getPermissions('business', 'main-menu');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
         loading.value = false;
       }
     })
@@ -83,6 +86,7 @@ export default {
         alertError.value = error.message;
       }
     };
+
     const isActiveBusiness = () => {
       return state.business && state.business.active === true;
     };
@@ -120,11 +124,11 @@ export default {
           :planActivation="state.currentPlanActivation"
           :canAdmin="true">
         </PlanStatus>
-        <div class="choose-attention">
+      </div>
+      <div id="menu-mobile" class="d-block d-md-none">
+        <div class="choose-attention my-3 mt-4">
           <span>{{ $t("businessMenu.choose") }}</span>
         </div>
-      </div>
-      <div id="menu">
         <div class="row">
           <div
             v-for="option in state.menuOptions"
@@ -141,29 +145,29 @@ export default {
             </div>
             <div v-else>
               <button
-                  type="button"
-                  class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                  @click="goToOption(option)"
-                  :disabled="!state.toggles[`business.main-menu.${option}`]"
-                  >
-                  {{ $t(`businessMenu.${option}`) }}
-                  <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                </button>
-                <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
-                  <div
-                    v-for="opt in state.manageSubMenuOptions"
-                    :key="opt"
-                    ><div class="centered mx-3">
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                          >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
+                type="button"
+                class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                @click="goToOption(option)"
+                :disabled="!state.toggles[`business.main-menu.${option}`]"
+                >
+                {{ $t(`businessMenu.${option}`) }}
+                <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+              </button>
+              <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
+                <div
+                  v-for="opt in state.manageSubMenuOptions"
+                  :key="opt"
+                  ><div class="centered mx-3">
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                        @click="goToOption(opt)"
+                        :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                        >
+                        {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                      </button>
                     </div>
+                  </div>
                 </div>
             </div>
           </div>
@@ -176,15 +180,81 @@ export default {
           </Message>
         </div>
       </div>
+      <div id="menu-desktop" class="d-none d-md-block">
+        <div class="row">
+          <div id="menu-side" class="col-6">
+            <div class="choose-attention my-3 mb-4">
+              <span>{{ $t("businessMenu.choose") }}</span>
+            </div>
+            <div class="row">
+              <div
+                v-for="option in state.menuOptions"
+                :key="option"
+                class="d-grid btn-group btn-group-justified">
+                <div v-if="option === 'go-minisite'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
+                    :href="`${getBusinessLink()}`"
+                    target="_blank">
+                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+                <div v-else>
+                  <button
+                      type="button"
+                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                      @click="goToOption(option)"
+                      :disabled="!state.toggles[`business.main-menu.${option}`]"
+                      >
+                      {{ $t(`businessMenu.${option}`) }}
+                      <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                    </button>
+                    <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
+                      <div
+                        v-for="opt in state.manageSubMenuOptions"
+                        :key="opt"
+                        ><div class="centered mx-3">
+                            <button
+                              type="button"
+                              class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                              @click="goToOption(opt)"
+                              :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                              >
+                              {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                            </button>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+        <div v-if="!isActiveBusiness() && !loading">
+          <Message
+            :title="$t('businessMenu.message.1.title')"
+            :content="$t('businessMenu.message.1.content')"
+            :icon="'bi bi-emoji-dizzy'">
+          </Message>
+        </div>
+          </div>
+          <div id="spy-side" class="col-6" v-if="!loading">
+            <SpySection
+              :show="true"
+              :commerces="state.commerces"
+            >
+            </SpySection>
+          </div>
+        </div>
+      </div>
     </div>
     <PoweredBy :name="state.business.name" />
   </div>
 </template>
 <style scoped>
 .choose-attention {
-  padding-bottom: 1rem;
   font-size: 1rem;
   font-weight: 700;
+  line-height: 1rem;
 }
 .select {
   border-radius: .5rem;
@@ -192,5 +262,16 @@ export default {
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;
+}
+.spy-details {
+  font-size: .7rem;
+  font-weight: 500;
+  line-height: .8rem;
+  cursor: pointer;
+}
+.spy-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1rem;
 }
 </style>

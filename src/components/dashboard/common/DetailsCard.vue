@@ -18,6 +18,7 @@ export default {
     icon: { type: String, default: '' },
     iconStyleClass: { type: String, default: undefined },
     detailsOpened: { type: Boolean, default: false },
+    showDetailsSection: { type: Boolean, default: true }
   },
   data() {
     return {
@@ -64,14 +65,14 @@ export default {
     },
     getPastPeriodPercentage(period) {
       if (period && period.number >= 0) {
-        const percentage = period.number * 100 / (this.data === 0 ? 1 : this.data);
+        const percentage = this.data * 100 / (period.number === 0 ? 1 : period.number);
         return parseFloat(percentage.toFixed(2));
       }
       return 0;
     },
     getPastMonthPercentage(pastPeriod, currentPeriod) {
       if (pastPeriod && currentPeriod && pastPeriod.number && currentPeriod.number) {
-        const percentage = pastPeriod.number * 100 / currentPeriod.number;
+        const percentage = currentPeriod.number * 100 / pastPeriod.number;
         return percentage === Infinity ? pastPeriod.number * 100 : parseFloat(percentage.toFixed(2)) || pastPeriod.number * 100;
       }
       return 0;
@@ -165,7 +166,7 @@ export default {
         </div>
       </div>
     </div>
-    <div class="details-arrow">
+    <div class="details-arrow" v-if="showDetailsSection">
       <div class="centered">
         <span
           href="#"
@@ -179,6 +180,9 @@ export default {
         class="detailed-data transition-slow">
         <slot name="details"> </slot>
       </div>
+    </div>
+    <div v-else class="no-details-arrow">
+      <span> - </span>
     </div>
   </div>
 </template>
@@ -240,5 +244,15 @@ export default {
   font-size: .72rem;
   font-weight: 400;
   line-height: .7rem;
+}
+.no-details-arrow {
+  margin: .5rem;
+  margin-top: 0;
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+  line-height: .3rem;
+  border: 1.5px solid var(--gris-default);
+  border-top: 0;
+  color: var(--color-background);
 }
 </style>

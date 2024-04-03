@@ -36,6 +36,16 @@ export const getMetrics = async (commerceId, queues, from, to) => {
   return (await requestQuery.get('metrics', options)).data;
 };
 
+export const getSpyMetrics = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/spy', options)).data;
+};
 
 export const getAttentions = async (commerceId, from, to) => {
   const options = {};
