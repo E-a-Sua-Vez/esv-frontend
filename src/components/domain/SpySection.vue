@@ -44,8 +44,7 @@ export default {
 
     onBeforeMount(async () => {
       try {
-        const isMobile = navigator.userAgentData.mobile;
-        if (show.value === true && !isMobile) {
+        if (show.value === true) {
           await getSpyMetric();
           state.togglesSpy = await getPermissions('dashboard');
           /*setInterval(async () => {
