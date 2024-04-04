@@ -755,7 +755,8 @@
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
-          "transfer": "Transfer Atendimento"
+          "transfer": "Transfer Atendimento",
+          "cancel": "Cancelar Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -810,7 +811,8 @@
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular atendimento",
           "payment-confirm": "Confirmar Pagamento",
-          "transfer": "Transfer Atendimento"
+          "transfer": "Transfer Atendimento",
+          "cancel": "Cancelar Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -914,7 +916,8 @@
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
-          "transfer": "Transfer Atendimento"
+          "transfer": "Transfer Atendimento",
+          "cancel": "Cancelar Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -987,7 +990,8 @@
           "finish": "Marcar atendimento como atendida",
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
-          "transfer": "Transfer Atendimento"
+          "transfer": "Transfer Atendimento",
+          "cancel": "Cancelar Atendimento"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"

@@ -503,13 +503,16 @@ export default {
       const blocksReserved = [];
       const bookingsReserved = state.bookings.map(booking => {
         if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
-          blocksReserved.push(booking.block);
           return [...booking.block.blockNumbers];
         } else {
-          blocksReserved.push(booking.block);
           return booking.block.number;
         }
       });
+      const uniqueBlocksReserved = [...new Set(bookingsReserved)];
+      uniqueBlocksReserved.map(number => {
+        const block = blocks.filter(block => block.number === number);
+        blocksReserved.push(block);
+      })
       const blockAvailables = blocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
       state.blocks = [...blocksReserved.flat(), ...blockAvailables].sort((a, b) => a.number - b.number);
       loadingBookings.value = false;
@@ -731,7 +734,7 @@ export default {
           <div class="row">
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showQueues ? 'btn-selected' : ''"
                 @click="showQueue()">
                 {{ $t("collaboratorBookingsView.queues") }} <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -739,7 +742,7 @@ export default {
             </div>
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showCollaboratorQueues ? 'btn-selected' : ''"
                 @click="showCollaboratorQueue()">
                 {{ $t("collaboratorBookingsView.collaboratorQueues") }} <i :class="state.showCollaboratorQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -747,7 +750,7 @@ export default {
             </div>
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="state.showAllQueues ? 'btn-selected' : ''"
                 @click="showAllQueue()">
                 {{ $t("collaboratorBookingsView.allQueues") }} <i :class="state.showAllQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>

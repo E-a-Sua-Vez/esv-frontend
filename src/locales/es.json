@@ -747,7 +747,8 @@
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
-          "transfer": "Transferir Atención"
+          "transfer": "Transferir Atención",
+          "cancel": "Cancelar Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -798,7 +799,8 @@
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
-          "transfer": "Transferir Atención"
+          "transfer": "Transferir Atención",
+          "cancel": "Cancelar Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -902,7 +904,8 @@
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
-          "transfer": "Transferir Atención"
+          "transfer": "Transferir Atención",
+          "cancel": "Cancelar Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -981,7 +984,8 @@
           "finish": "Marcar atención como atendida",
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
-          "transfer": "Transferir Atención"
+          "transfer": "Transferir Atención",
+          "cancel": "Cancelar Atención"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -2876,7 +2880,8 @@
         "attend": "Atender - Sección Atenciones del Colaborador",
         "finish": "Marcar atención como atendida - Sección Atenciones del Colaborador",
         "skip": "Saltar atención - Sección Atenciones del Colaborador",
-        "payment-confirm": "Confirmar Pago - Sección Atenciones del Colaborador"
+        "payment-confirm": "Confirmar Pago - Sección Atenciones del Colaborador",
+        "cancel": "Cancelar Atención - Sección Atenciones del Colaborador"
       },
       "bookings": {
         "cancel": "Cancelar Reserva",

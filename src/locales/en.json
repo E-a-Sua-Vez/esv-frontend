@@ -754,7 +754,8 @@
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
-          "transfer": "Transfer Attention"
+          "transfer": "Transfer Attention",
+          "cancel": "Cancel Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -804,7 +805,8 @@
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
-          "transfer": "Transfer Attention"
+          "transfer": "Transfer Attention",
+          "cancel": "Cancel Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -908,7 +910,8 @@
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
-          "transfer": "Transfer Attention"
+          "transfer": "Transfer Attention",
+          "cancel": "Cancel Attention"
         },
         "module": {
           "update": "Update attention Module"
@@ -986,7 +989,8 @@
           "finish": "Set an attention as Attended",
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
-          "transfer": "Transfer Attention"
+          "transfer": "Transfer Attention",
+          "cancel": "Cancel Attention"
         },
         "module": {
           "update": "Update attention Module"
