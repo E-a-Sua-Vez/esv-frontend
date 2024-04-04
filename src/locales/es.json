@@ -1536,8 +1536,7 @@
           "view": "Ver Semáforo Atenciones"
         },
         "collection-details": {
-          "title": "Detalles de Recaudación",
-          "description": "Ver Detalles de Recaudación"
+          "view": "Ver Detalles de Recaudación"
         },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",

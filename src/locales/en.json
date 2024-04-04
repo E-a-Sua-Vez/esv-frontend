@@ -1536,8 +1536,7 @@
           "view": "See Last Attentions"
         },
         "collection-details": {
-          "title": "Collection Details",
-          "description": "See Collection Details"
+          "view": "See Collection Details"
         },
         "reports": {
           "surveys": "Surveys Report (Summary)",

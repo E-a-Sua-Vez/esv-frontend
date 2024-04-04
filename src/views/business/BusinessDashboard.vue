@@ -56,11 +56,13 @@ export default {
       pastPeriodAttentionNumber: {},
       pastMonthAttentionNumber: {},
       currentMonthAttentionNumber: {},
-      pastPeriodEvolution: {}
+      pastPeriodEvolution: {},
+      paymentData: {}
     }
 
     const surveyCreated = {
-      avgRating: 0
+      avgRating: 0,
+      sentimentScore: {}
     }
 
     const notificationCreated = {
@@ -86,7 +88,15 @@ export default {
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
-        'notification.created': notificationCreated
+        'notification.created': notificationCreated,
+        'booking.created': {
+          bookingFlow: {
+            datasets: [],
+            labels: []
+          }
+        },
+        'collaborators': {},
+        'clients': {}
       },
       graphs: {
         'attention-number-evolution': false,
@@ -229,7 +239,10 @@ export default {
     }
 
     const getCalculatedMetrics = async () => {
-      const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+      let queues = [];
+      if (state.queues && state.queues.length > 0) {
+        queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+      }
       const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, state.startDate, state.endDate);
       return calculatedMetrics;
     }

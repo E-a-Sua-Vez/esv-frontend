@@ -1537,8 +1537,7 @@
           "view": "Ver Farol Atendimentos"
         },
         "collection-details": {
-          "title": "Detalhes de Cobrança",
-          "description": "Ver Detalhes de Cobrança"
+          "view": "Ver Detalhes de Cobrança"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
