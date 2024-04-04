@@ -1144,6 +1144,7 @@
     "contacts": "Análisis de Contactos a Clientes",
     "daysSince": "Última atención de clientes: Verde: Menos de 3 meses, Amarillo: entre 3 y 6 meses, Rojo: más de 6 meses.",
     "booking": "Total de Reservas creadas vs Reservas aun pendientes por antender.",
+    "collection": "Recaudación por concepto de confirmación de Reservas y Atenciones",
     "today": "Hoy",
     "thisMonth": "Este Mes",
     "lastMonth": "Mes Pasado",
@@ -1184,6 +1185,11 @@
     "early": "-90 días",
     "medium": "90-180 días",
     "late": "+180 días",
+    "payments": "Pagos",
+    "incomes": "Ingresos",
+    "commissions": "Comisiones",
+    "paymentType": "Tipo de pago",
+    "paymentMethod": "Medio de pago",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1244,6 +1250,9 @@
         "31": "¿Dónde nos conoció?",
         "32": "Número de Contactos a Clientes",
         "33": "Semáforo Atenciones",
+        "34": "Recaudación Atenciones",
+        "35": "Confirmadas",
+        "36": "Recaudación Reservas",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
@@ -1525,6 +1534,10 @@
         },
         "attention-days-since-clients": {
           "view": "Ver Semáforo Atenciones"
+        },
+        "collection-details": {
+          "title": "Detalles de Recaudación",
+          "description": "Ver Detalles de Recaudación"
         },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",

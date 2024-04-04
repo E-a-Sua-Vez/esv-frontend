@@ -1110,6 +1110,11 @@ export default {
                 </div>
                 <hr>
               </div>
+              <div v-else>
+                <Message
+                  :title="$t('collaboratorBookingsView.message.2.title')"
+                  :content="$t('collaboratorBookingsView.message.2.content')" />
+              </div>
             </div>
           </div>
         </div>

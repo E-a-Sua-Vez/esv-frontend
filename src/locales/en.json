@@ -1148,6 +1148,7 @@
     "contacts": "Client Contacts Analysis",
     "daysSince": "Last client attention: Green: Less than 3 months, Yellow: between 3 and 6 months, Red: more than 6 months.",
     "booking": "Total bookings created vs bookings still pending.",
+    "collection": "Collection due to the confirmation of bookings and attentions.",
     "today": "Today",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
@@ -1188,6 +1189,11 @@
     "early": "-90 days",
     "medium": "90-180 days",
     "late": "+180 days",
+    "payments": "Payments",
+    "incomes": "Incomes",
+    "commissions": "Commissions",
+    "paymentType": "Payment Type",
+    "paymentMethod": "Payment Method",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1248,6 +1254,9 @@
         "31": "¿Where did you find us?",
         "32": "Client Contacts Number",
         "33": "Last Attentions",
+        "34": "Attention Collection",
+        "35": "Confirmed",
+        "36": "Booking Collection",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -1525,6 +1534,10 @@
         },
         "attention-days-since-clients": {
           "view": "See Last Attentions"
+        },
+        "collection-details": {
+          "title": "Collection Details",
+          "description": "See Collection Details"
         },
         "reports": {
           "surveys": "Surveys Report (Summary)",

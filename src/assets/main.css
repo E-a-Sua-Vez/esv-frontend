@@ -280,3 +280,17 @@
 .whatsapp-icon {
   color: var(--whatsapp) !important;
 }
+.flip-enter-active,
+.flip-leave-active {
+  transition: all 1s ease-in-out;
+}
+.flip-enter-from, .flip-leave-to {
+  transform: rotateY(180deg);
+  opacity: 0;
+}
+.flip-enter-active {
+  animation: bounce-in 0.2s;
+}
+.flip-leave-active {
+  animation: bounce-in 0.2s reverse;
+}

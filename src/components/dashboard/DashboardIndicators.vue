@@ -15,6 +15,7 @@ import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionOriginDetails from './domain/AttentionOriginDetails.vue';
 import AttentionClientContactDetails from './domain/AttentionClientContactDetails.vue';
 import AttentionDaysSinceDetails from './domain/AttentionDaysSinceDetails.vue';
+import CollectionDetails from './domain/CollectionDetails.vue';
 
 export default {
   name: 'DashboardIndicators',
@@ -34,7 +35,8 @@ export default {
     Spinner,
     AttentionOriginDetails,
     AttentionClientContactDetails,
-    AttentionDaysSinceDetails
+    AttentionDaysSinceDetails,
+    CollectionDetails
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -174,32 +176,49 @@ export default {
           :detailsOpened="detailsOpened"
           >
           <template v-slot:details>
-            <div id="booking-number-details" class="row">
-              <div class="col-4">
+            <div id="booking-number-details" class="row centered">
+              <div class="col-3">
                 <div class="metric-card-title">
                   <i class="bi bi-calendar-plus-fill h4 fw-bold yellow-icon m-1"></i>
+                </div>
+                <div class="metric-card-title">
                   {{ $t('dashboard.items.attentions.28') }}
                 </div>
                 <div class="centered">
                   <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0 }}</span>
                 </div>
               </div>
-              <div class="col-4">
+              <div class="col-3">
                 <div class="metric-card-title">
-                  <i class="bi bi-calendar2-check-fill h4 fw-bold green-icon m-1"></i>
+                  <i class="bi bi-calendar2-check-fill h4 fw-bold blue-icon m-1"></i>
+                </div>
+                <div class="metric-card-title">
+                  {{ $t('dashboard.items.attentions.35') }}
+                </div>
+                <div class="centered">
+                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="metric-card-title">
+                  <i class="bi bi-calendar2-heart-fill h4 fw-bold green-icon m-1"></i>
+                </div>
+                <div class="metric-card-title">
                   {{ $t('dashboard.items.attentions.29') }}
                 </div>
                 <div class="centered">
                   <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0 }}</span>
                 </div>
               </div>
-              <div class="col-4">
+              <div class="col-3">
                 <div class="metric-card-title">
                   <i class="bi bi-calendar-x-fill h4 fw-bold red-icon m-1"></i>
+                </div>
+                <div class="metric-card-title">
                   {{ $t('dashboard.items.attentions.30') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
+                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[3] || 0 }}</span>
                 </div>
               </div>
             </div>
@@ -393,6 +412,14 @@ export default {
           :count="calculatedMetrics['clients'].daysSinceClientsTotal || 0"
         >
         </AttentionDaysSinceDetails>
+      </div>
+      <div id="attention-collection-clients">
+        <CollectionDetails
+          :show="!!toggles['dashboard.collection-details.view']"
+          :calculatedMetrics="calculatedMetrics"
+          :detailsOpened="detailsOpened"
+        >
+        </CollectionDetails>
       </div>
       <div id="attention-notification">
         <DetailsCard

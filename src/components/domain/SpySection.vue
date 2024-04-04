@@ -6,10 +6,11 @@ import { getPermissions } from '../../application/services/permissions';
 import DetailsCard from '../../components/dashboard/common/DetailsCard.vue';
 import AttentionDaysSinceDetails from '../../components/dashboard/domain/AttentionDaysSinceDetails.vue';
 import DefaultSkeleton from '../../components/skeletons/DefaultSkeleton.vue';
+import CollectionDetails from '../dashboard/domain/CollectionDetails.vue';
 
 export default {
   name: 'SpySection',
-  components: { DetailsCard, AttentionDaysSinceDetails, DefaultSkeleton },
+  components: { DetailsCard, AttentionDaysSinceDetails, DefaultSkeleton, CollectionDetails },
   props: {
     show: { type: Boolean, default: true },
     commerces: { type: Array, default: [] }
@@ -179,6 +180,23 @@ export default {
             >
           </DetailsCard>
         </div>
+        <div id="attention-daysSince-clients">
+          <AttentionDaysSinceDetails
+            :show="!!state.togglesSpy['dashboard.attention-days-since-clients.view']"
+            :distribution="state.calculatedMetrics['clients']['resultDaysSinceDistribution']"
+            :count="state.calculatedMetrics['clients'].daysSinceClientsTotal || 0"
+          >
+          </AttentionDaysSinceDetails>
+        </div>
+        <div id="attention-collection-clients">
+          <CollectionDetails
+            :show="!!state.togglesSpy['dashboard.collection-details.view']"
+            :calculatedMetrics="state.calculatedMetrics"
+            :detailsOpened="false"
+            :showDetailsSection="false"
+          >
+          </CollectionDetails>
+        </div>
         <div class="row">
           <div id="attention-rating-avg" class="col-6">
             <DetailsCard
@@ -209,14 +227,6 @@ export default {
               >
             </DetailsCard>
           </div>
-        </div>
-        <div id="attention-daysSince-clients">
-          <AttentionDaysSinceDetails
-            :show="!!state.togglesSpy['dashboard.attention-days-since-clients.view']"
-            :distribution="state.calculatedMetrics['clients']['resultDaysSinceDistribution']"
-            :count="state.calculatedMetrics['clients'].daysSinceClientsTotal || 0"
-          >
-          </AttentionDaysSinceDetails>
         </div>
         <div id="attention-origin-avg">
           <DetailsCard

@@ -1149,6 +1149,7 @@
     "contacts": "Análise de Contatos de Clientes",
     "daysSince": "Último atendimento de clientes: Verde: Há menos 3 meses, Amarelo: entre 3 e 6 meses, Vermelho: mais 6 meses.",
     "booking": "Total de Reservas criadas vs Reservas por atender.",
+    "collection": "Cobrança por confirmação de Reservas e Atendimentos.",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
     "lastMonth": "Mês Passado",
@@ -1189,6 +1190,11 @@
     "early": "-90 dias",
     "medium": "90-180 dias",
     "late": "+180 dias",
+    "payments": "Pagamentos",
+    "incomes": "Ingressos",
+    "commissions": "Comissões",
+    "paymentType": "Tipo de Pagamento",
+    "paymentMethod": "Meio de Pagamento",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1249,6 +1255,9 @@
         "31": "Onde você nos conheceu?",
         "32": "Número de Contatos de Clientes",
         "33": "Farol Atendimentos",
+        "34": "Cobrança Atendimentos",
+        "35": "Confirmadas",
+        "36": "Cobrança Reservas",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",
@@ -1526,6 +1535,10 @@
         },
         "attention-days-since-clients": {
           "view": "Ver Farol Atendimentos"
+        },
+        "collection-details": {
+          "title": "Detalhes de Cobrança",
+          "description": "Ver Detalhes de Cobrança"
         },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
