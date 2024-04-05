@@ -8,6 +8,7 @@ export default {
     distribution: { type: Object, default: {} },
     distributionType: { type: Object, default: {} },
     distributionMethod: { type: Object, default: {} },
+    distributionFiscalNote: { type: Object, default: {} },
     detailsOpened: { type: Boolean, default: false },
     showDetailsSection: { type: Boolean, default: true }
   },
@@ -38,6 +39,9 @@ export default {
     },
     distributionMethodPercentage(total, tag){
       return parseFloat((this.distributionMethod[tag].count * 100 / total).toFixed(2), 2) || 0;
+    },
+    distributionFiscalNotePercentage(total, tag){
+      return parseFloat((this.distributionFiscalNote[tag].count * 100 / total).toFixed(2), 2) || 0;
     }
   },
   watch: {
@@ -115,9 +119,8 @@ export default {
                 <span class="fw-bold metric-card-subtitle"> {{ $t('dashboard.paymentType') }} </span>
                 <hr>
               </div>
-              <div class="row mx-2" v-for="(origin, index) in Object.keys(distributionType)" :key="origin">
+              <div class="row mx-2" v-for="(origin) in Object.keys(distributionType)" :key="origin">
                 <div class="metric-card-title">
-                  <i :class="`h6 col-2 bi bi-${index+1}-circle-fill`"></i>
                   <span class="col-4"> {{ $t(`paymentTypes.${origin}`) }} </span>
                   <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ distributionTypePercentage(count, origin) }}% </span>
                   <div class="progress col">
@@ -134,14 +137,31 @@ export default {
                 <span class="fw-bold metric-card-subtitle"> {{ $t('dashboard.paymentMethod') }} </span>
                 <hr>
               </div>
-              <div class="row mx-2" v-for="(origin, index) in Object.keys(distributionMethod)" :key="origin">
+              <div class="row mx-2" v-for="(origin) in Object.keys(distributionMethod)" :key="origin">
                 <div class="metric-card-title">
-                  <i :class="`h6 col-2 bi bi-${index+1}-circle-fill`"></i>
                   <span class="col-4"> {{ $t(`paymentClientMethods.${origin}`) }} </span>
                   <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ distributionMethodPercentage(count, origin) }}% </span>
                   <div class="progress col">
                     <div class="progress-bar" role="progressbar" :style="`width: ${distributionMethodPercentage(count, origin)}%`" aria-valuemin="0" aria-valuemax="100">
                       <span class="fw-bold"> {{ distributionMethod[origin].count || 'N/I' }} </span>
+                    </div>
+                  </div>
+                </div>
+                <hr>
+              </div>
+            </div>
+            <div v-if="Object.keys(distributionFiscalNote).length > 0" class="mt-2">
+              <div>
+                <span class="fw-bold metric-card-subtitle"> {{ $t('dashboard.paymentFiscalNote') }} </span>
+                <hr>
+              </div>
+              <div class="row mx-2" v-for="(origin) in Object.keys(distributionFiscalNote)" :key="origin">
+                <div class="metric-card-title">
+                  <span class="col-4"> {{ $t(`paymentFiscalNotes.${origin}`) }} </span>
+                  <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ distributionFiscalNotePercentage(count, origin) }}% </span>
+                  <div class="progress col">
+                    <div class="progress-bar" role="progressbar" :style="`width: ${distributionFiscalNotePercentage(count, origin)}%`" aria-valuemin="0" aria-valuemax="100">
+                      <span class="fw-bold"> {{ distributionFiscalNote[origin].count || 'N/I' }} </span>
                     </div>
                   </div>
                 </div>

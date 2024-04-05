@@ -3,7 +3,8 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getAttentionsReport, getNotificationsReport, getSurveysReport,
-   getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport } from '../../application/services/query-stack';
+   getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport,
+   getBookingPaymentsResume, getAttentionPaymentsResume } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Message from '../../components/common/Message.vue';
@@ -252,6 +253,54 @@ export default {
       }
     }
 
+    const downloadBookingPaymentsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getBookingPaymentsResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const downloadAttentionPaymentsReport = async () => {
+      try {
+        loading.value = true;
+        let csvAsBlob = [];
+        const result = await getAttentionPaymentsResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        if (result && result.length > 0) {
+          csvAsBlob = jsonToCsv(result);
+        }
+        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const a = document.createElement('a');
+        a.style = 'display: none';
+        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.href = blobURL;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
     return {
       state,
       loading,
@@ -265,7 +314,9 @@ export default {
       downloadBookingsReport,
       downloadWaitlistsReport,
       downloadClientsReport,
-      downloadClientContactsReport
+      downloadClientContactsReport,
+      downloadBookingPaymentsReport,
+      downloadAttentionPaymentsReport
     }
   }
 }
@@ -313,8 +364,8 @@ export default {
             <div v-if="!loading" id="businessReports-result" class="mt-4">
               <div>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.attentions']"
-                  :canDonwload="state.toggles['reports.admin.attentions']"
+                  :show="!!state.toggles['reports.admin.attentions']"
+                  :canDonwload="!!state.toggles['reports.admin.attentions']"
                   :title="$t('businessReports.items.reports.1.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.1.description')"
@@ -323,8 +374,8 @@ export default {
                   @download="downloadAttentionsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.notifications']"
-                  :canDonwload="state.toggles['reports.admin.notifications']"
+                  :show="!!state.toggles['reports.admin.notifications']"
+                  :canDonwload="!!state.toggles['reports.admin.notifications']"
                   :title="$t('businessReports.items.reports.2.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.2.description')"
@@ -333,8 +384,8 @@ export default {
                   @download="downloadNotificationsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.surveys']"
-                  :canDonwload="state.toggles['reports.admin.surveys']"
+                  :show="!!state.toggles['reports.admin.surveys']"
+                  :canDonwload="!!state.toggles['reports.admin.surveys']"
                   :title="$t('businessReports.items.reports.3.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.3.description')"
@@ -343,8 +394,8 @@ export default {
                   @download="downloadSurveysReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.bookings']"
-                  :canDonwload="state.toggles['reports.admin.bookings']"
+                  :show="!!state.toggles['reports.admin.bookings']"
+                  :canDonwload="!!state.toggles['reports.admin.bookings']"
                   :title="$t('businessReports.items.reports.4.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.4.description')"
@@ -353,8 +404,8 @@ export default {
                   @download="downloadBookingsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.waitlist']"
-                  :canDonwload="state.toggles['reports.admin.waitlist']"
+                  :show="!!state.toggles['reports.admin.waitlists']"
+                  :canDonwload="!!state.toggles['reports.admin.waitlists']"
                   :title="$t('businessReports.items.reports.5.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.5.description')"
@@ -363,8 +414,8 @@ export default {
                   @download="downloadWaitlistsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.clients']"
-                  :canDonwload="state.toggles['reports.admin.clients']"
+                  :show="!!state.toggles['reports.admin.clients']"
+                  :canDonwload="!!state.toggles['reports.admin.clients']"
                   :title="$t('businessReports.items.reports.6.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.6.description')"
@@ -373,14 +424,34 @@ export default {
                   @download="downloadClientsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="state.toggles['reports.admin.client-contacts']"
-                  :canDonwload="state.toggles['reports.admin.client-contacts']"
+                  :show="!!state.toggles['reports.admin.client-contacts']"
+                  :canDonwload="!!state.toggles['reports.admin.client-contacts']"
                   :title="$t('businessReports.items.reports.7.name')"
                   :showTooltip="true"
                   :description="$t('businessReports.items.reports.7.description')"
                   :icon="'bi-chat-left-dots-fill'"
                   :iconStyleClass="'green-icon'"
                   @download="downloadClientContactsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="!!state.toggles['reports.admin.booking-payments']"
+                  :canDonwload="!!state.toggles['reports.admin.booking-payments']"
+                  :title="$t('businessReports.items.reports.8.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.8.description')"
+                  :icon="'bi-cash-coin'"
+                  :iconStyleClass="'orange-icon'"
+                  @download="downloadBookingPaymentsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="!!state.toggles['reports.admin.attention-payments']"
+                  :canDonwload="!!state.toggles['reports.admin.attention-payments']"
+                  :title="$t('businessReports.items.reports.9.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.9.description')"
+                  :icon="'bi-cash-coin'"
+                  :iconStyleClass="'blue-icon'"
+                  @download="downloadAttentionPaymentsReport"
                 ></SimpleDownloadCard>
               </div>
             </div>

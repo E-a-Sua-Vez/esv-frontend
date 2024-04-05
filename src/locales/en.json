@@ -137,6 +137,12 @@
     "PIX": "Pix",
     "OTHER": "Other"
   },
+  "paymentFiscalNotes": {
+    "FISCAL_NOTE": "Fiscal Note",
+    "MANAGEMENT": "Management",
+    "undefined": "N/I",
+    "null": "N/I"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -864,6 +870,7 @@
     "paymentMethod": "Payment method:",
     "paymentAmount": "Amount:",
     "paymentCommission": "Commission:",
+    "paymentFiscalNote": "Fiscal Note:",
     "edit": "Edit Booking",
     "paymentComment": "Comment (Optional)",
     "transferQueue": "Transfer Queue",
@@ -1194,6 +1201,7 @@
     "commissions": "Commissions",
     "paymentType": "Payment Type",
     "paymentMethod": "Payment Method",
+    "paymentFiscalNote": "Fiscal Note",
     "dates": {
       "from": "From",
       "to": "to"
@@ -2164,6 +2172,14 @@
         "7": {
           "name": "Client Contacts Report",
           "description": "Client Contacts of the commerce between the selected dates."
+        },
+        "8": {
+          "name": "Booking Payment Report",
+          "description": "Booking Payment of the commerce between the selected dates."
+        },
+        "9": {
+          "name": "Attention Payment Report",
+          "description": "Attention Payment of the commerce between the selected dates."
         }
       }
     },
@@ -2177,7 +2193,9 @@
           "bookings": "Bookings Report",
           "waitlists": "Waitlist Report",
           "client-contacts": "Client Contacts Report",
-          "clients": "Clients Report"
+          "clients": "Clients Report",
+          "booking-payments": "Booking Payment Report",
+          "attention-payments": "Attention Payment Report"
         }
       }
     }
@@ -2873,7 +2891,12 @@
         "view": "Get to this Section - Reportes",
         "attentions": "Download Inform of Attentions",
         "notifications": "Download Inform of notifications",
-        "surveys": "Download Inform of Encuestas"
+        "bookings": "Download Booking Report",
+        "waitlist": "Download Waitlist Report",
+        "client-contacts": "Download Client Contacts Report",
+        "clients": "Download Client Report",
+        "booking-payments": "Download Booking Payments Report",
+        "attention-payments": "Download Attention Payments Report"
       }
     },
     "collaborator": {

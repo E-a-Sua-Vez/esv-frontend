@@ -1,7 +1,7 @@
 <script>
 import { ref, reactive, onBeforeMount, toRefs } from 'vue';
 import Warning from '../../components/common/Warning.vue';
-import { getPaymentMethods, getPaymentTypes } from '../../shared/utils/data';
+import { getPaymentFiscalNoteTypes, getPaymentMethods, getPaymentTypes } from '../../shared/utils/data';
 
 export default {
   name: 'PaymentForm',
@@ -28,6 +28,7 @@ export default {
       },
       paymentTypes: [],
       paymentMethods: [],
+      paymentFicalNoteTypes: [],
       paymentAmountError: false,
       paymentTypeError: false,
       paymentMethodError: false
@@ -38,6 +39,7 @@ export default {
         loading.value = true;
         state.paymentTypes = getPaymentTypes();
         state.paymentMethods = getPaymentMethods();
+        state.paymentFicalNoteTypes = getPaymentFiscalNoteTypes();
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -133,6 +135,19 @@ export default {
                 id="types"
                 v-bind:class="{ 'is-invalid': state.paymentMethodError }">
                 <option v-for="typ in state.paymentMethods" :key="typ.name" :value="typ.id">{{ $t(`paymentClientMethods.${typ.name}`) }}</option>
+              </select>
+            </div>
+          </div>
+          <div id="payment-type-form-add" class="row g-1 my-1">
+            <div class="col-4 text-label">
+              {{ $t("collaboratorBookingsView.paymentFiscalNote") }}
+            </div>
+            <div class="col-8">
+              <select
+                class="btn btn-md btn-light fw-bold text-dark select"
+                v-model="state.newConfirmationData.paymentFiscalNote"
+                id="types">
+                <option v-for="typ in state.paymentFicalNoteTypes" :key="typ.name" :value="typ.id">{{ $t(`paymentFiscalNotes.${typ.name}`) }}</option>
               </select>
             </div>
           </div>

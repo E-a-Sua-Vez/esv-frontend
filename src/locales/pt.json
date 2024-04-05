@@ -132,6 +132,12 @@
     "PIX": "Pix",
     "OTHER": "Outro"
   },
+  "paymentFiscalNotes": {
+    "NOTA_FISCAL": "Nota Fiscal",
+    "GERENCIAL": "Gerencial",
+    "undefined": "N/I",
+    "null": "N/I"
+  },
   "productTypes": {
     "ALL_IN_ONE": "Tudo em Um",
     "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
@@ -874,6 +880,7 @@
     "transferQueue": "Transferir Fila",
     "transfer": "Transferir",
     "selectDataToEdit": "Selecione data e hora para mudar a reserva:",
+    "paymentFiscalNote": "Nota Fiscal:",
     "edit": "Editar Reserva",
     "myBookings": "Reservas",
     "agenda": "Agenda",
@@ -1195,6 +1202,7 @@
     "commissions": "Comissões",
     "paymentType": "Tipo de Pagamento",
     "paymentMethod": "Meio de Pagamento",
+    "paymentFiscalNote": "Nota Fiscal",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -2168,6 +2176,14 @@
         "7": {
           "name": "Relatório de Contatos de Clientes",
           "description": "Lista de Contatos de Clientes do comércio entre as datas selecionadas."
+        },
+        "8": {
+          "name": "Relatório de Pagamento de Reservas",
+          "description": "Listado de Pagamento de Reservas del comercio entre las fechas seleccionadas."
+        },
+        "9": {
+          "name": "Relatório de Pagamento de Atendimentos",
+          "description": "Listado de Pagamento de Atendimentos del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -2181,7 +2197,9 @@
           "bookings": "Relatório de Reservas",
           "waitlists": "Relatório de Lista de Espera",
           "client-contacts": "Relatório de Contatos a Clientes",
-          "clients": "Relatório de Clientes"
+          "clients": "Relatório de Clientes",
+          "booking-payments": "Relatório de Pagamento de Reservas",
+          "attention-payments": "Relatório de Pagamento de Atendimentos"
         }
       }
     }
@@ -2856,10 +2874,16 @@
     },
     "reports": {
       "admin": {
-        "view": "Acessar Seção - Reportes",
-        "attentions": "Descargar Reporte de Atendimentos",
-        "notifications": "Descargar Reporte de Notificaciones",
-        "surveys": "Descargar Reporte de Pesquisas"
+        "view": "Acessar Seção - Central de Datos",
+        "attentions": "Download Relatórios de Atendimentos",
+        "notifications": "Download Relatórios de Notificaciones",
+        "surveys": "Download Relatórios de Pesquisas",
+        "bookings": "Download Relatórios de Reservas",
+        "waitlist": "Download Relatórios de Lista de Espera",
+        "client-contacts": "Download Relatórios de Contato de Clientes",
+        "clients": "Download Relatórios de Clientes",
+        "booking-payments": "Download Relatórios de Pagamento de Reservas",
+        "attention-payments": "Download Relatórios de Pagamento de Atendimentos"
       }
     },
     "collaborator": {

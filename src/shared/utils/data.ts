@@ -128,3 +128,10 @@ export const getQueueTypes = () => {
     { id: 'SELECT_SERVICE', name: 'SELECT_SERVICE' }
   ]
 }
+
+export const getPaymentFiscalNoteTypes = () => {
+  return [
+    { id: 'NOTA_FISCAL', name: 'NOTA_FISCAL' },
+    { id: 'GERENCIAL', name: 'GERENCIAL' }
+  ]
+}

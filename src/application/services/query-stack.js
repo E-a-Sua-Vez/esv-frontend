@@ -146,6 +146,28 @@ export const getClientContactsReport = async (commerceId, commerceIds, from, to)
   return (await requestQuery.get('reports/client-contacts', options)).data;
 };
 
+export const getBookingPaymentsResume = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/booking-payments', options)).data;
+};
+
+export const getAttentionPaymentsResume = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/attention-payments', options)).data;
+};
+
 export const getSurveys = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };

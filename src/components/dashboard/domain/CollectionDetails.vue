@@ -78,6 +78,7 @@ export default {
             :count="calculatedMetrics['attention.created']['paymentData'].paymentCounter || 0"
             :distributionType="calculatedMetrics['attention.created'].paymentTypeDistribution"
             :distributionMethod="calculatedMetrics['attention.created'].paymentMethodDistribution"
+            :distributionFiscalNote="calculatedMetrics['attention.created'].paymentFiscalNoteDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >
@@ -102,6 +103,7 @@ export default {
             :count="calculatedMetrics['booking.created']['paymentData'].paymentCounter || 0"
             :distributionType="calculatedMetrics['booking.created'].paymentTypeDistribution"
             :distributionMethod="calculatedMetrics['booking.created'].paymentMethodDistribution"
+            :distributionFiscalNote="calculatedMetrics['booking.created'].paymentFiscalNoteDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >

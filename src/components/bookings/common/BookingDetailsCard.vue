@@ -312,6 +312,9 @@ export default {
         if (data.proceduresTotalNumber) {
           this.newConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
         }
+        if (data.paymentFiscalNote) {
+          this.newConfirmationData.paymentFiscalNote = data.paymentFiscalNote;
+        }
         if (data.paymentType) {
           this.newConfirmationData.paymentType = data.paymentType;
         }
@@ -453,6 +456,7 @@ export default {
           </div>
           <div v-if="booking.confirmationData">
             <span v-if="booking.confirmationData.proceduresTotalNumber && booking.confirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ booking.confirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ booking.confirmationData.proceduresTotalNumber }}</span>
+            <span v-if="booking.confirmationData.paymentFiscalNote" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentFiscalNotes.${booking.confirmationData.paymentFiscalNote}`) }}</span>
             <span v-if="booking.confirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span>
             <span v-if="booking.confirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span>
             <span v-if="booking.confirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span>

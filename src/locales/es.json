@@ -137,6 +137,12 @@
     "PIX": "Pix",
     "OTHER": "Otro"
   },
+  "paymentFiscalNotes": {
+    "NOTA_FISCAL": "Nota Fiscal",
+    "GERENCIAL": "Gerencial",
+    "undefined": "N/I",
+    "null": "N/I"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -856,6 +862,7 @@
     "paymentData": "Datos de Pago",
     "paymentType": "Tipo de Pago:",
     "paymentMethod": "Medio de pago:",
+    "paymentFiscalNote": "Nota Fiscal:",
     "paymentAmount": "Monto:",
     "paymentCommission": "Comisión:",
     "paymentComment": "Comentario (Opcional)",
@@ -1190,6 +1197,7 @@
     "commissions": "Comisiones",
     "paymentType": "Tipo de pago",
     "paymentMethod": "Medio de pago",
+    "paymentFiscalNote": "Nota Fiscal",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -2170,6 +2178,14 @@
         "7": {
           "name": "Informe de Contactos de Clientes",
           "description": "Listado de Contactos de Clientes del comercio entre las fechas seleccionadas."
+        },
+        "8": {
+          "name": "Informe de Pago de Reservas",
+          "description": "Listado de Pago de Reservas del comercio entre las fechas seleccionadas."
+        },
+        "9": {
+          "name": "Informe de Pago de Atenciones",
+          "description": "Listado de Pago de Atenciones del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -2183,7 +2199,9 @@
           "bookings": "Informe de Reservas",
           "waitlist": "Informe de Lista de Espera",
           "clients": "Informe de Clientes",
-          "client-contacts": "Informe de Contactos de Clientes"
+          "client-contacts": "Informe de Contactos de Clientes",
+          "booking-payments": "Informe de Pagos de Reservas",
+          "attention-payments": "Informe de Pagos de Atenciones"
         }
       }
     }
@@ -2881,7 +2899,9 @@
         "bookings": "Descargar Reporte de Reservas",
         "waitlist": "Descargar Reporte de Lista de Espera",
         "client-contacts": "Descargar Reporte de Contacto de Clientes",
-        "clients": "Descargar Reporte de Clientes"
+        "clients": "Descargar Reporte de Clientes",
+        "booking-payments": "Informe de Pagos de Reservas",
+        "attention-payments": "Informe de Pagos de Atenciones"
       }
     },
     "collaborator": {
