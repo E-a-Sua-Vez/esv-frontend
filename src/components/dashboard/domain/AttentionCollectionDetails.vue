@@ -156,7 +156,7 @@ export default {
       <div class="row centered">
         <div class="col">
           <div class="py-1">
-            <i class="bi bi-qr-code blue-icon h4 fw-bold m-1"></i>
+            <i class="bi bi-cash-coin blue-icon h4 fw-bold m-1"></i>
             <span class="col-8 fw-bold"> {{ 'No Data' }} </span>
           </div>
         </div>
