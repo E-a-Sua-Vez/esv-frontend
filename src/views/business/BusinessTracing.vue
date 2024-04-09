@@ -132,9 +132,11 @@ export default {
     }
 
     const getCalculatedMetrics = async () => {
-      const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-      const { calculatedMetrics } = await getSurveyMetrics(state.commerce.id, queues, state.startDate, state.endDate);
-      return calculatedMetrics;
+      if (state.queues && state.queues.length > 0) {
+        const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+        const { calculatedMetrics } = await getSurveyMetrics(state.commerce.id, queues, state.startDate, state.endDate);
+        return calculatedMetrics;
+      }
     }
 
     const refresh = async () => {

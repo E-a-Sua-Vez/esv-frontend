@@ -125,11 +125,11 @@ export default {
       const hourDate = new Date(date.setHours(hour));
       if (this.commerce.country) {
         if (this.commerce.country === 've') {
-          return hourDate.getHours() - 4;
+          const resultHour = hourDate.getHours() - 4;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else if (['br', 'cl'].includes(this.commerce.country)) {
-          return hourDate.getHours() - 3;
-        } else if (['mx'].includes(this.commerce.country)) {
-          return hourDate.getHours() - 6;
+          const resultHour = hourDate.getHours() - 3;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else {
           return hourDate.getHours();
         }
