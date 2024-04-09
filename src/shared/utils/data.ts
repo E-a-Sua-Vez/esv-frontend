@@ -135,3 +135,17 @@ export const getPaymentFiscalNoteTypes = () => {
     { id: 'GERENCIAL', name: 'GERENCIAL' }
   ]
 }
+
+export const getProductsTypes = () => {
+  return [
+    { id: 'SERVICE', name: 'SERVICE' }
+  ]
+}
+
+export const getProductMeasureTypes = () => {
+  return [
+    { id: 'MILLILITERS', name: 'MILLILITERS' },
+    { id: 'GRAMS', name: 'GRAMS' },
+    { id: 'UNITS', name: 'UNITS' }
+  ]
+}

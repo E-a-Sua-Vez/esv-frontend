@@ -143,6 +143,16 @@
     "undefined": "N/I",
     "null": "N/I"
   },
+  "productsTypes": {
+    "SERVICE": "Service"
+  },
+  "productMeasuresTypes": {
+    "MILLILITERS": "Milliliters (ml)",
+    "KILOGRAMS": "Kilos (Kg)",
+    "GRAMS": "Grams (g)",
+    "LITERS": "Liters (L)",
+    "UNITS": "Units (U)"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1643,6 +1653,7 @@
     "tracing": "Clients Management",
     "commerce-admin": "Commerces",
     "service-admin": "Services",
+    "product-admin": "Products",
     "queues-admin": "Queues",
     "configuration": "Settings",
     "reports": "Data Center",
@@ -1722,6 +1733,7 @@
     "tracing": "Clients Management",
     "commerce-master-admin": "Commerces",
     "service-master-admin": "Services",
+    "product-master-admin": "Products",
     "queues-master-admin": "Queues",
     "configuration": "Settings",
     "reports": "Data Center",
@@ -1893,6 +1905,75 @@
       "order": "You should enter the order",
       "estimatedTime": "You should enter the estimated time",
       "shortDescription": "You should enter the short description"
+    }
+  },
+  "businessProductsAdmin": {
+    "title": "Products",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "tag": "Tag:",
+    "order": "Order:",
+    "active": "Active:",
+    "online": "Online:",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "service": "Service",
+    "type": "Tipo:",
+    "measureType": "Medida:",
+    "code": "Código:",
+    "replacementLevel": "Nivel Recarga:",
+    "optimumLevel": "Nivel Óptimo:",
+    "actualLevel": "Nivel Actual:",
+    "tagHelp": "Short identifier of the service.",
+    "onlineHelp": "Product can be shown to be selected by the user.",
+    "codeHelp": "External code of the product",
+    "measureTypeHelp": "Measure limit of the product",
+    "actualLevelHelp": "Actual limit of the product",
+    "optimumLevelHelp": "Optimum limit of the product",
+    "replacementLevelHelp": "Replacement limit of the product",
+    "orderHelp": "Product can be listed in this order to the user.",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no Products."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Products. To add more Products, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no Products. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "products": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Products",
+          "edit": "Edit the Products",
+          "update": "Update the Products",
+          "add": "Add Products",
+          "limit": "Limit amount of Products",
+          "unavailable": "Delete Products"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "tag": "You should enter the tag",
+      "order": "You should enter the order",
+      "type": "You should enter the type",
+      "measureType": "Ypu should enter the measure type",
+      "actualLevel": "You should enter the actual level",
+      "optimumLevel": "You should enter the optimum level",
+      "replacementLevel": "You should enter the replacement level"
     }
   },
   "businessModulesAdmin": {
@@ -2388,7 +2469,8 @@
         "admin": {
           "roles": "See the Roles Permissions",
           "plans": "See the Plans Permissions",
-          "users": "See the Users Permissions"
+          "users": "See the Users Permissions",
+          "collaborators": "VSee the Collaborators Permissions"
         },
         "collaborators": {
           "view": "Get to this section",
@@ -2957,6 +3039,16 @@
         "update": "Update data - Section Manage Services",
         "add": "Add data - Section Manage Services",
         "limit": "Limit of data - Section Manage Services"
+      }
+    },
+    "products": {
+      "admin": {
+        "view": "Get to this Section - Manage Products",
+        "read": "Read data - Section Manage Products",
+        "edit": "Edit data - Section Manage Products",
+        "update": "Update data - Section Manage Products",
+        "add": "Add data - Section Manage Products",
+        "limit": "Limit of data - Section Manage Products"
       }
     }
   }

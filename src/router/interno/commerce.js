@@ -11,6 +11,7 @@ const BusinessConfiguration = () => import('../../views/business/BusinessConfigu
 const BusinessPlan = () => import('../../views/business/BusinessPlan.vue');
 const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAdmin.vue');
 const BusinessServicesAdmin = () => import('../../views/business/BusinessServicesAdmin.vue');
+const BusinessProductsAdmin = () => import('../../views/business/BusinessProductsAdmin.vue');
 const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
 const BusinessPermissionsAdmin = () => import('../../views/business/BusinessPermissionsAdmin.vue');
 const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
@@ -40,6 +41,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/service-admin',
     name: 'business-service-admin',
     component: BusinessServicesAdmin
+  },
+  {
+    path: '/interno/negocio/product-admin',
+    name: 'business-product-admin',
+    component: BusinessProductsAdmin
   },
   {
     path: '/interno/negocio/queues-admin',

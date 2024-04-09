@@ -47,6 +47,7 @@ export default {
         'queues-admin',
         'collaborators-admin',
         'surveys-admin',
+        'product-admin',
         'permissions-admin'
       ],
       currentPlanActivation: {},

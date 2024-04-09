@@ -16,6 +16,7 @@ const BusinessPlansAdmin = () => import('../../views/business/BusinessPlansAdmin
 const BusinessPlanActivationAdmin = () => import('../../views/business/BusinessPlanActivationAdmin.vue');
 const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAdmin.vue');
 const BusinessServicesAdmin = () => import('../../views/business/BusinessServicesAdmin.vue');
+const BusinessProductsAdmin = () => import('../../views/business/BusinessProductsAdmin.vue');
 const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
 
 const PrivateMasterRoutes = [
@@ -53,6 +54,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/service-master-admin',
     name: 'business-service-master-admin',
     component: BusinessServicesAdmin
+  },
+  {
+    path: '/interno/master/product-master-admin',
+    name: 'business-product-master-admin',
+    component: BusinessProductsAdmin
   },
   {
     path: '/interno/master/queues-master-admin',

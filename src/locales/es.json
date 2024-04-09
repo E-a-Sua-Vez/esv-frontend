@@ -143,6 +143,16 @@
     "undefined": "N/I",
     "null": "N/I"
   },
+  "productsTypes": {
+    "SERVICE": "Servicio"
+  },
+  "productMeasuresTypes": {
+    "MILLILITERS": "Mililitros (ml)",
+    "KILOGRAMS": "Kilos (Kg)",
+    "GRAMS": "Gramos (g)",
+    "LITERS": "Litros (L)",
+    "UNITS": "Unidades (U)"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1645,6 +1655,7 @@
     "tracing": "Gestión de Clientes",
     "commerce-admin": "Sucursales",
     "service-admin": "Servicios",
+    "product-admin": "Productos",
     "queues-admin": "Filas",
     "configuration": "Configuraciones",
     "reports": "Central de Datos",
@@ -1680,7 +1691,8 @@
           "configuration": "Configuraciones",
           "surveys-admin": "Administrar Encuestas",
           "your-plan": "Tu Plan",
-          "manage-admin": "Administrar Artefactos"
+          "manage-admin": "Administrar Artefactos",
+          "product-admin": "Administrar Productos"
         }
       }
     }
@@ -1697,6 +1709,7 @@
     "permissions-admin": "Permisos",
     "commerce-master-admin": "Sucursales",
     "service-master-admin": "Servicios",
+    "product-master-admin": "Productos",
     "queues-master-admin": "Filas",
     "configuration": "Configuraciones",
     "reports": "Central de Datos",
@@ -1897,6 +1910,74 @@
       "order": "Debes ingresar el orden",
       "estimatedTime": "Debes ingresar el tiempo estimado",
       "shortDescription": "Debes ingresar la descripción corta"
+    }
+  },
+  "businessProductsAdmin": {
+    "title": "Productos",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "name": "Nombre:",
+    "tag": "Tag:",
+    "order": "Orden:",
+    "active": "Activo:",
+    "online": "Online:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "type": "Tipo:",
+    "measureType": "Medida:",
+    "code": "Código:",
+    "replacementLevel": "Nivel Recarga:",
+    "optimumLevel": "Nivel Óptimo:",
+    "actualLevel": "Nivel Actual:",
+    "listResult": "Registros:",
+    "tagHelp": "Identificador corto del producto",
+    "codeHelp": "Código externo del producto",
+    "measureTypeHelp": "Unidad de medida del producto",
+    "actualLevelHelp": "Límite actual del producto",
+    "optimumLevelHelp": "Límite óptimo del producto",
+    "replacementLevelHelp": "Límite de recarga del producto",
+    "onlineHelp": "Servicio puede ser mostrado para ser seleccionado por el usuario.",
+    "orderHelp": "Producto será listado al usuario en esta posición respecto al resto.",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay productos."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de productos. Para agregar más productos cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay productos. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "products": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Productos",
+          "edit": "Editar los Productos",
+          "update": "Actualizar los Productos",
+          "add": "Agregar Productos",
+          "limit": "Cantidad límite de Productos",
+          "queue-limit": "Límite de Productos",
+          "unavailable": "Eliminar Productos"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "tag": "Debes ingresar el tag",
+      "type": "Debes ingresar el tipo",
+      "measureType": "Debes ingresar el tipo de medida",
+      "actualLevel": "Debes ingresar el nivel actual",
+      "optimumLevel": "Debes ingresar el nivel óptimo",
+      "replacementLevel": "Debes ingresar el nivel de recarga"
     }
   },
   "businessModulesAdmin": {
@@ -2394,7 +2475,8 @@
         "admin": {
           "roles": "Ver los permisos de los Roles",
           "plans": "Ver los permisos de los Planes",
-          "users": "Ver los permisos de los Usuarios"
+          "users": "Ver los permisos de los Usuarios",
+          "collaborators": "Ver los permisos de los Colaboradores"
         },
         "collaborators": {
           "view": "Acceder a esta sección",
@@ -2986,6 +3068,16 @@
         "update": "Actualizar datos - Sección Administrar Servicios",
         "add": "Agregar datos - Sección Administrar Servicios",
         "limit": "Límite de datos - Sección Administrar Servicios"
+      }
+    },
+    "products": {
+      "admin": {
+        "view": "Ver Sección - Administrar Productos",
+        "read": "Leer datos - Sección Administrar Productos",
+        "edit": "Editar datos - Sección Administrar Productos",
+        "update": "Actualizar datos - Sección Administrar Productos",
+        "add": "Agregar datos - Sección Administrar Productos",
+        "limit": "Límite de datos - Sección Administrar Productos"
       }
     }
   }

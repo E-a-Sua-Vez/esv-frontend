@@ -51,6 +51,7 @@ export default {
         'administrators-master-admin',
         'collaborators-master-admin',
         'surveys-master-admin',
+        'products-master-admin',
       ]
     });
 
