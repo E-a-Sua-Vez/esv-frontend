@@ -128,6 +128,9 @@
 .orange-icon {
   color: var(--orange-no-device);
 }
+.gray-icon {
+  color: var(--gris-default);
+}
 .whatsapp-button {
   background-color: var(--whatsapp) !important;
   color: var(--color-text) !important;

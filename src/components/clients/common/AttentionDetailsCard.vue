@@ -48,9 +48,9 @@ export default {
     clasifyDaysSinceComment(score) {
       if (score === undefined) {
         return 'bi-qr-code blue-icon';
-      } else if (score <= 30) {
-        return 'bi-qr-code green-icon';
       } else if (score <= 90) {
+        return 'bi-qr-code green-icon';
+      } else if (score <= 180) {
         return 'bi-qr-code yellow-icon';
       } else {
         return 'bi-qr-code red-icon';

@@ -75,9 +75,9 @@ export default {
     clasifyDaysContacted(score){
       if (score === undefined) {
         return 'bi-chat-left-dots-fill blue-icon';
-      } else if (score <= 30) {
-        return 'bi-chat-left-dots-fill green-icon';
       } else if (score <= 90) {
+        return 'bi-chat-left-dots-fill green-icon';
+      } else if (score <= 180) {
         return 'bi-chat-left-dots-fill yellow-icon';
       } else {
         return 'bi-chat-left-dots-fill red-icon';
@@ -122,7 +122,7 @@ export default {
         <i :class="`bi ${clasifyContactResult(client.clientContactResult || undefined)} mx-1`"> </i>
       </div>
       <div class="col-2 centered fw-bold">
-        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedUser || 0)} mx-1`"> </i> {{ client.daysSinceContactedUser || 0 }}
+        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContact || 0)} mx-1`"> </i> {{ client.daysSinceContact || 0 }}
       </div>
       <div class="col-4 centered date-title">
         {{ getDate(client.contactCreatedDate || client.createdAt) }}

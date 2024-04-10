@@ -127,20 +127,20 @@ export default {
     clasifyDaysSinceComment(score) {
       if (score === undefined) {
         return 'bi-qr-code blue-icon';
-      } else if (score <= 30) {
-        return 'bi-qr-code green-icon';
       } else if (score <= 90) {
+        return 'bi-qr-code green-icon';
+      } else if (score <= 180) {
         return 'bi-qr-code yellow-icon';
       } else {
         return 'bi-qr-code red-icon';
       }
     },
     clasifyDaysContacted(score){
-      if (score === undefined) {
-        return 'bi-chat-left-dots-fill blue-icon';
-      } else if (score <= 30) {
-        return 'bi-chat-left-dots-fill green-icon';
+      if (score === undefined || !score) {
+        return 'bi-chat-left-dots-fill gray-icon';
       } else if (score <= 90) {
+        return 'bi-chat-left-dots-fill green-icon';
+      } else if (score <= 180) {
         return 'bi-chat-left-dots-fill yellow-icon';
       } else {
         return 'bi-chat-left-dots-fill red-icon';
@@ -187,17 +187,18 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
-      <div class="col-8 centered" v-if="client && client.userName">
+      <div class="col-7 centered" v-if="client && client.userName">
         <i class="bi bi-person-circle mx-1"></i> {{ client.userName.split(' ')[0] || client.userIdNumber || 'N/I' }}
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ client.attentionsCounter || 0 }} </span>
         <i v-if="client.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i v-if="client.contacted === true || checked === true" :class="`bi ${clasifyContactResult(client.contactResult || undefined)} mx-1`"> </i>
+
       </div>
       <div class="col-2 centered">
         <i :class="`bi ${clasifyDaysSinceComment(client.daysSinceAttention || 0)} mx-1`"></i> {{ client.daysSinceAttention || 0 }}
       </div>
-      <div class="col-2 centered">
-        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedUser || 0)} mx-1`"> </i> {{ client.daysSinceContactedUser || 0 }}
+      <div class="col-3 centered">
+        <i v-if="client.contacted === true || checked === true" :class="`bi ${clasifyContactResult(client.contactResult || undefined)}`"> </i>
+        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedClient || 0)} mx-1`"> </i> {{ client.daysSinceContactedClient || 0 }}
       </div>
     </div>
     <div class="details-arrow">
