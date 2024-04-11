@@ -1947,6 +1947,7 @@
     "optimumLevelHelp": "Optimum limit of the product",
     "replacementLevelHelp": "Replacement limit of the product",
     "orderHelp": "Product can be listed in this order to the user.",
+    "maximumLevelHelp": "Product maximum limit",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2016,6 +2017,11 @@
     "date": "Replacement Date:",
     "expireDate": "Expire Date:",
     "nextDate": "Next Replacement:",
+    "lastReplacement": "Last Replacement",
+    "daysToExpired": "Days to Expired:",
+    "daysNextReplacement": "Days Next Replacement:",
+    "replacementSel": "Replacement:",
+    "consumptionDate": "Consume Date:",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -2038,6 +2044,10 @@
       "replacement-details": {
         "title": "Replacement Product Report",
         "description": "Download the Replacement Product Report"
+      },
+      "consumption-details": {
+        "title": "Product Consume Report",
+        "description": "Download the Consume Product Report"
       }
     },
     "capacitiesList": {
@@ -2062,8 +2072,10 @@
       }
     },
     "validate": {
+      "consumptionAmount": "You should add the replacement amount",
       "replacementAmount": "You should add the replacement amount",
-      "replacementDate": "You should add the replacement date"
+      "replacementDate": "You should add the replacement date",
+      "productReplacement": "You should select replacement"
     }
   },
   "businessModulesAdmin": {

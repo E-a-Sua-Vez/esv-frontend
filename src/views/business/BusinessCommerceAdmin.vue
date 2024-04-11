@@ -1537,20 +1537,8 @@ export default {
   max-height: 2000px !important;
   overflow-y: visible;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
 .errors {
   font-size: small;
   color: var(--rojo-warning);
-}
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-  margin: .5rem;
 }
 </style>

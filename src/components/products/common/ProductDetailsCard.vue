@@ -5,11 +5,12 @@ import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
 import ProductReplacementManagement from '../domain/ProductReplacementManagement.vue';
-import { getProductsReplacementDetails } from '../../../application/services/query-stack';
+import { getProductsReplacementDetails, getProductsConsumptionsDetails } from '../../../application/services/query-stack';
+import ProductConsumptionManagement from '../domain/ProductConsumptionManagement.vue';
 
 export default {
   name: 'ProductDetailsCard',
-  components: { Popper, Spinner, ProductReplacementManagement },
+  components: { Popper, Spinner, ProductReplacementManagement, ProductConsumptionManagement },
   props: {
     show: { type: Boolean, default: true },
     product: { type: Object, default: undefined },
@@ -31,7 +32,8 @@ export default {
       store,
       userType: undefined,
       user: undefined,
-      productReplacements: []
+      productReplacements: [],
+      productConsumptions: []
     }
   },
   methods: {
@@ -128,7 +130,13 @@ export default {
       }
     },
     async getProductConsuptions() {
-
+      try {
+        this.loading = true;
+        this.productConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
     }
   },
   watch: {
@@ -156,9 +164,10 @@ export default {
     <div class="row metric-card fw-bold">
       <div class="col-6 centered" v-if="product && product.productName">
         <i class="bi bi-eyedropper mx-1"></i> {{ product.productName }}
+
       </div>
-      <div class="col-6 centered fw-bold">
-        <i :class="`bi ${clasifyProductStatus(product.productStatus)} mx-2 h5`"></i>
+      <div class="col-6 centered">
+        <i :class="`bi ${clasifyProductStatus(product.productStatus)} mx-1 h5`"> </i>
         <i :class="`bi ${clasifyExpired(product.daysSinceExpired)} mx-2 h6`"></i>
         <i :class="`bi ${clasifyReplacement(product.daysSinceNextReplacement)} mx-2 h6`"></i>
       </div>
@@ -213,7 +222,7 @@ export default {
               @click="getProductConsuptions()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
-              :data-bs-target="`#consuptionsModal-${this.product.id}`">
+              :data-bs-target="`#consumptionsModal-${this.product.productId}`">
               {{ $t('businessProductStockAdmin.consuptions')}} <br> <i class="bi bi-arrow-up-circle-fill"></i>
             </button>
           </div>
@@ -222,12 +231,30 @@ export default {
               @click="getProductReplacements()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
-              :data-bs-target="`#replacementModal-${this.product.id}`">
+              :data-bs-target="`#replacementModal-${this.product.productId}`">
               {{ $t('businessProductStockAdmin.replacements')}} <br> <i class="bi bi-arrow-down-circle-fill"></i>
             </button>
           </div>
         </div>
         <hr>
+        <div class="row centered">
+          <div class="col-1 mx-1">
+            <a class="btn copy-icon"
+              @click="copyAttention()">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </a>
+          </div>
+          <div class="col">
+            <div v-if="product.lastReplacementAmount">
+              <span v-if="product.lastReplacementAmount" class="metric-keyword-tag mx-1"> <i class="bi bi bi-arrow-down-circle-fill m-1"></i> {{ $t('businessProductStockAdmin.lastReplacement')}} </span><br>
+              <span v-if="product.lastReplacementAmount" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-eyedropper mx-1"></i> {{ product.lastReplacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}</span>
+              <span v-if="product.lastReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.lastReplacementDate }}</span>
+              <span v-if="product.lastReplacementExpirationDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-heart-pulse-fill mx-1"> </i> {{ product.lastReplacementExpirationDate }}</span>
+              <span v-if="product.nextReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-calendar-fill mx-1"> </i> {{ product.nextReplacementDate }}</span>
+              <span v-if="product.lastReplacementBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill mx-1"> </i> {{ product.lastReplacementBy }}</span><br>
+            </div>
+          </div>
+        </div>
         <div class="row m-1 centered">
           <div class="col">
             <div class="mt-2">
@@ -238,7 +265,7 @@ export default {
       </div>
     </div>
     <!-- Modal Consumos -->
-    <div class="modal fade" :id="`consuptionsModal-${this.product.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" :id="`consumptionsModal-${this.product.productId}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
@@ -247,7 +274,19 @@ export default {
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0">
-
+            <ProductConsumptionManagement
+              :showProductConsumptionManagement="true"
+              :toggles="toggles"
+              :productConsumptionsIn="productConsumptions"
+              :product="product"
+              :startDate="startDate"
+              :endDate="endDate"
+              :commerce="commerce"
+              :commerces="commerces"
+              :queues="queues"
+              @getProductConsuptions="getProductConsuptions"
+            >
+            </ProductConsumptionManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
@@ -256,7 +295,7 @@ export default {
       </div>
     </div>
     <!-- Modal Reemplazos -->
-    <div class="modal fade" :id="`replacementModal-${this.product.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" :id="`replacementModal-${this.product.productId}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
@@ -302,14 +341,6 @@ export default {
   border-bottom: 0;
   line-height: 1.6rem;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-  font-size: .8rem;
-}
 .details-arrow {
   margin: .5rem;
   margin-top: 0;
@@ -330,11 +361,6 @@ export default {
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
-  font-weight: 500;
-}
-.metric-card-subtitle {
   font-size: .8rem;
   font-weight: 500;
 }
@@ -347,26 +373,6 @@ export default {
   font-size: .72rem;
   font-weight: 400;
   line-height: .7rem;
-}
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-  margin: .5rem;
-}
-.act-icon {
-  color: var(--azul-es);
-  cursor: pointer;
-  margin: .5rem;
-}
-.whatsapp-link {
-  color: var(--color-text);
-  cursor: pointer;
-  text-decoration: underline;
-}
-.whatsapp-link:hover {
-  color: var(--gris-default);
-  cursor: pointer;
-  text-decoration: underline;
 }
 .checked-icon {
   color: var(--azul-turno);
@@ -390,5 +396,10 @@ export default {
   font-size: .7rem !important;
   line-height: .7rem !important;
   font-weight: 500;
+}
+.metric-keyword-tag {
+  font-size: .6rem;
+  font-weight: 400;
+  cursor: pointer;
 }
 </style>

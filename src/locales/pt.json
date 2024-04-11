@@ -1952,6 +1952,7 @@
     "tagHelp": "Identificador curto do serviço",
     "onlineHelp": "Serviço pode ser mostrado para ser selecionado pelo usuário.",
     "orderHelp": "Serviço será listado ao usuário nesta posição.",
+    "maximumLevelHelp": "Límite máximo do producto",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -2023,6 +2024,11 @@
     "date": "Data Recarregamento:",
     "expireDate": "Data Expiração:",
     "nextDate": "Próximo Recarregamento:",
+    "lastReplacement": "Último Recarregamento",
+    "daysToExpired": "Días para Expiração:",
+    "daysNextReplacement": "Días próximo Recarregamento:",
+    "replacementSel": "Recarregamento:",
+    "consumptionDate": "Data Consumo:",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2044,7 +2050,11 @@
       },
       "replacement-details": {
         "title": "Relatório de Recarregamento de Produtos",
-        "description": "Baixar arquivo relatório de Produtos"
+        "description": "Baixar arquivo relatório de Recarregamento de Produtos"
+      },
+      "consumption-details": {
+        "title": "Relatório de Consumo de Produtos",
+        "description": "Baixar arquivo relatório de Consumo de Produtos"
       }
     },
     "capacitiesList": {
@@ -2069,8 +2079,10 @@
       }
     },
     "validate": {
+      "consumptionAmount": "Deve digitar a quantidade",
       "replacementAmount": "Deve digitar a quantidade",
-      "replacementDate": "Deve digitar a data"
+      "replacementDate": "Deve digitar a data",
+      "productReplacement": "Deve selecionar um recarregamento"
     }
   },
   "businessModulesAdmin": {

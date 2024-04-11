@@ -199,13 +199,6 @@ export default {
   border-bottom-right-radius: 0;
   border-bottom: 0;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
 .details-arrow {
   margin: .5rem;
   margin-top: 0;
@@ -228,10 +221,6 @@ export default {
 }
 .metric-card-title {
   margin: .2rem;
-  font-size: .8rem;
-  font-weight: 500;
-}
-.metric-card-subtitle {
   font-size: .8rem;
   font-weight: 500;
 }

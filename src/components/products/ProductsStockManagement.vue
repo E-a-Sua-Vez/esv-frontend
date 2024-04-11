@@ -220,13 +220,13 @@ export default {
                   </Popper>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-6">
+                  <div class="col">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="expired === false ? 'bg-danger' : ''" type="checkbox" name="expired" id="expired" v-model="expired" @click="checkContactable($event)">
                       <label class="form-check-label metric-card-subtitle" for="expired">{{ $t("businessProductStockAdmin.expired") }}</label>
                     </div>
                   </div>
-                  <div class="col-12 col-md-6">
+                  <div class="col">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="replacement === false ? 'bg-danger' : ''" type="checkbox" name="replacement" id="replacement"  v-model="replacement" @click="checkContacted($event)">
                       <label class="form-check-label metric-card-subtitle" for="replacement">{{ $t("businessProductStockAdmin.replacement") }}</label>
@@ -399,10 +399,6 @@ export default {
   align-items: center;
   justify-content: center;
   display: flex;
-}
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
 }
 .metric-card-comment {
   font-size: .8rem;

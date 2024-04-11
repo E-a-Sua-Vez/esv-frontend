@@ -58,10 +58,6 @@ export default {
 </template>
 
 <style scoped>
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 .metric-card-number {
   font-size: 1.2rem;
   font-weight: 700;

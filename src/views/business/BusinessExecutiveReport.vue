@@ -362,11 +362,4 @@ export default {
   max-height: 400px !important;
   overflow-y: auto;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
 </style>

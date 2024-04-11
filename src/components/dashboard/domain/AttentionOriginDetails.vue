@@ -64,8 +64,4 @@ export default {
   justify-content: center;
   display: flex;
 }
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 </style>

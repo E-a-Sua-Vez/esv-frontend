@@ -1951,6 +1951,7 @@
     "replacementLevelHelp": "Límite de recarga del producto",
     "onlineHelp": "Servicio puede ser mostrado para ser seleccionado por el usuario.",
     "orderHelp": "Producto será listado al usuario en esta posición respecto al resto.",
+    "maximumLevelHelp": "Límite máximo del producto",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2020,6 +2021,11 @@
     "date": "Fecha Reposición:",
     "expireDate": "Fecha Expirado:",
     "nextDate": "Próxima Reposición:",
+    "lastReplacement": "Ùltima Reposición",
+    "daysToExpired": "Días para Expirado:",
+    "daysNextReplacement": "Días próxima Reposición:",
+    "replacementSel": "Reposición:",
+    "consumptionDate": "Fecha Consumo:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2040,6 +2046,10 @@
         "description": "Descarga archivo report de productos"
       },
       "replacement-details": {
+        "title": "Informe Reposición de Producto",
+        "description": "Descarga archivo report de Reposición de Producto"
+      },
+      "consumption-details": {
         "title": "Informe Reposición de Producto",
         "description": "Descarga archivo report de Reposición de Producto"
       }
@@ -2066,8 +2076,10 @@
       }
     },
     "validate": {
-      "replacementAmount": "Debe ingresar la cantidad",
-      "replacementDate": "Debe ingresar la fecha"
+      "consumptionAmount": "Debe ingresar una cantidad válida",
+      "replacementAmount": "Debe ingresar una cantidad válida",
+      "replacementDate": "Debe ingresar la fecha",
+      "productReplacement": "Debe seleccionar una reposición"
     }
   },
   "businessModulesAdmin": {

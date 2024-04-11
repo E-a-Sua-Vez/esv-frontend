@@ -200,10 +200,6 @@ export default {
   justify-content: center;
   display: flex;
 }
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 .sub-menu-card {
   text-decoration: underline;
   margin: .2rem;
@@ -218,13 +214,6 @@ export default {
   text-decoration: underline;
   font-size: .7rem;
   color: var(--color-text);
-}
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
 }
 .show {
   padding: 10px;

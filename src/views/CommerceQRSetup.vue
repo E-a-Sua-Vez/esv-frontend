@@ -320,13 +320,6 @@ export default {
   border: .5px solid var(--gris-default);
   margin-bottom: 1rem;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
 .details-arrow {
   margin: .5rem;
   margin-top: 0;

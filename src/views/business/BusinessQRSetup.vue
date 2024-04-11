@@ -412,13 +412,6 @@ export default {
   font-size: .6rem;
   line-height: .6rem !important;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
 .details-arrow {
   margin: .5rem;
   margin-top: 0;

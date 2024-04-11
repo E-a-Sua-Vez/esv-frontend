@@ -40,6 +40,17 @@ export default {
         return 'bi-battery red-icon';
       }
     },
+    clasifyExpired(score) {
+      if (!score) {
+        return 'bi-heart-pulse-fill blue-icon';
+      } else if (score < -30) {
+        return 'bi-heart-pulse-fill green-icon';
+      } else if (score > -30) {
+        return 'bi-heart-pulse-fill yellow-icon';
+      } else if (score >= 0) {
+        return 'bi-heart-pulse-fill red-icon';
+      }
+    },
     scorePercentage(total, score){
       return parseFloat((score * 100 / total).toFixed(2), 2) || 0;
     },
@@ -77,13 +88,13 @@ export default {
       <div class="col centered fw-bold date-title" v-if="product && product.replacementAmount">
         <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
         <i :class="`bi ${clasifyProductStatus(product.replacementActualLevel)} m-1 h5`"></i>
+        <span class="badge rounded-pill bg-secondary metric-keyword-tag fw-bold"> {{ scorePercentage(product.replacementAmount, product.replacementActualLevel ? product.replacementActualLevel : 0) }}% </span>
       </div>
       <div class="col centered date-title">
-        <i class="bi bi-heart-pulse-fill blue-icon mx-1"> </i> {{ getDate(product.replacementExpirationDate) }}
+        <i :class="`bi ${clasifyExpired(product.daysSinceExpired)}  mx-1`"> </i> {{ getDate(product.replacementExpirationDate) }}
+        <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ +product.daysSinceExpired * -1 }} </span>
       </div>
-      <div class="col centered date-title">
-        <i class="bi bi-calendar-fill blue-icon mx-1"> </i> {{ getDate(product.replacementDate) }}
-      </div>
+
     </div>
     <div class="details-arrow">
       <div class="centered">
@@ -98,7 +109,7 @@ export default {
       <div
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
-        <div class="row m-0">
+        <div class="row m-0 centered">
           <div class="d-block col-12 col-md-6">
             <div class="my-1">
               <div class="row bar-label">
@@ -124,6 +135,12 @@ export default {
             <div class="centered">
               <span class="fw-bold mx-1"> {{ $t("businessProductStockAdmin.replacementLevel") }} </span> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
             </div>
+            <div class="centered">
+              <span class="fw-bold mx-1"> {{ $t("businessProductStockAdmin.daysToExpired") }} </span> {{ +product.daysSinceExpired * -1 }}
+            </div>
+            <div class="centered">
+              <span class="fw-bold mx-1"> {{ $t("businessProductStockAdmin.daysNextReplacement") }} </span> {{ +product.daysSinceNextReplacement * -1 }}
+            </div>
           </div>
         </div>
         <div class="row centered">
@@ -144,7 +161,6 @@ export default {
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(product.createdDate || product.createdAt) }}</span>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -163,14 +179,6 @@ export default {
   border-bottom-right-radius: 0;
   border-bottom: 0;
   line-height: 1.6rem;
-}
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-  font-size: .8rem;
 }
 .details-arrow {
   margin: .5rem;
@@ -196,10 +204,6 @@ export default {
   font-size: .8rem;
   font-weight: 500;
 }
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
@@ -210,25 +214,7 @@ export default {
   font-weight: 400;
   line-height: .7rem;
 }
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-}
-.act-icon {
-  color: var(--azul-es);
-  cursor: pointer;
-  margin: .5rem;
-}
-.whatsapp-link {
-  color: var(--color-text);
-  cursor: pointer;
-  text-decoration: underline;
-}
-.whatsapp-link:hover {
-  color: var(--gris-default);
-  cursor: pointer;
-  text-decoration: underline;
-}
+
 .checked-icon {
   color: var(--azul-turno);
 }

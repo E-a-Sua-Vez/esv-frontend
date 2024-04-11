@@ -83,8 +83,4 @@ export default {
   font-size: .8rem;
   font-weight: 500;
 }
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 </style>

@@ -120,25 +120,25 @@ export default {
       } else {
         state.orderAddError = false;
       }
-      if(!product.actualLevel || product.actualLevel < 0) {
+      if(product.actualLevel === undefined || product.actualLevel < 0) {
         state.actualLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.actualLevel');
       } else {
         state.actualLevelAddError = false;
       }
-      if(!product.optimumLevel || product.optimumLevel < 0) {
+      if(product.optimumLevel === undefined || product.optimumLevel < 0) {
         state.optimumLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.optimumLevel');
       } else {
         state.optimumLevelAddError = false;
       }
-      if(!product.replacementLevel || product.replacementLevel < 0) {
+      if(product.replacementLevel === undefined || product.replacementLevel < 0) {
         state.replacementLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.replacementLevel');
       } else {
         state.replacementLevelAddError = false;
       }
-      if(!product.maximumLevel || product.maximumLevel < 0) {
+      if(product.maximumLevel === undefined || product.maximumLevel < 0) {
         state.maximumLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
       } else {
@@ -178,25 +178,25 @@ export default {
       } else {
         state.orderUpdateError = false;
       }
-      if(!product.actualLevel || product.actualLevel < 0) {
+      if(product.actualLevel === undefined || product.actualLevel < 0) {
         state.actualLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.actualLevel');
       } else {
         state.actualLevelUpdateError = false;
       }
-      if(!product.optimumLevel || product.optimumLevel < 0) {
+      if(product.optimumLevel === undefined || product.optimumLevel < 0) {
         state.optimumLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.optimumLevel');
       } else {
         state.optimumLevelUpdateError = false;
       }
-      if(!product.replacementLevel || product.replacementLevel < 0) {
+      if(product.replacementLevel === undefined || product.replacementLevel < 0) {
         state.replacementLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.replacementLevel');
       } else {
         state.replacementLevelUpdateError = false;
       }
-      if(!product.maximumLevel || product.maximumLevel < 0) {
+      if(product.maximumLevel === undefined || product.maximumLevel < 0) {
         state.maximumLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
       } else {
@@ -763,7 +763,7 @@ export default {
                           :class="'dark p-1'"
                           arrow
                           disableClickAway
-                          :content="$t('businessProductsAdmin.rmaximumLevelHelp')">
+                          :content="$t('businessProductsAdmin.maximumLevelHelp')">
                           <i class='bi bi-info-circle-fill h7'></i>
                         </Popper>
                       </div>
@@ -929,17 +929,5 @@ export default {
   padding: 10px;
   max-height: 1500px !important;
   overflow-y: auto;
-}
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-  margin: .5rem;
 }
 </style>

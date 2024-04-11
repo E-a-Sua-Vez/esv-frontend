@@ -183,14 +183,6 @@ export default {
   border-bottom-right-radius: 0;
   border-bottom: 0;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-  font-size: .8rem;
-}
 .details-arrow {
   margin: .5rem;
   margin-top: 0;
@@ -215,10 +207,6 @@ export default {
   font-size: .8rem;
   font-weight: 500;
 }
-.metric-card-subtitle {
-  font-size: .8rem;
-  font-weight: 500;
-}
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
@@ -228,26 +216,6 @@ export default {
   font-size: .72rem;
   font-weight: 400;
   line-height: .7rem;
-}
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-  margin: .5rem;
-}
-.act-icon {
-  color: var(--azul-es);
-  cursor: pointer;
-  margin: .5rem;
-}
-.whatsapp-link {
-  color: var(--color-text);
-  cursor: pointer;
-  text-decoration: underline;
-}
-.whatsapp-link:hover {
-  color: var(--gris-default);
-  cursor: pointer;
-  text-decoration: underline;
 }
 .checked-icon {
   color: var(--azul-turno);

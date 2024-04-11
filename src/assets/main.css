@@ -284,8 +284,8 @@
   font-weight: 700 !important;
 }
 .copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
+  color: var(--gris-default) !important;
+  cursor: pointer !important;
   margin: .5rem;
 }
 .whatsapp-icon {
@@ -304,4 +304,32 @@
 }
 .flip-leave-active {
   animation: bounce-in 0.2s reverse;
+}
+.metric-card-subtitle {
+  font-size: .8rem !important;
+  font-weight: 500 !important;
+  line-height: .8rem !important;
+}
+.act-icon {
+  color: var(--azul-es);
+  cursor: pointer;
+  margin: .5rem;
+}
+.whatsapp-link {
+  color: var(--color-text);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.whatsapp-link:hover {
+  color: var(--gris-default);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.detailed-data {
+  width: 100%;
+  max-height: 0px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px auto auto;
+  font-size: .8rem;
 }

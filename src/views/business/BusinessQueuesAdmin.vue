@@ -1435,18 +1435,6 @@ export default {
   max-height: 1500px !important;
   overflow-y: auto;
 }
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-}
-.copy-icon {
-  color: var(--gris-default);
-  cursor: pointer;
-  margin: .5rem;
-}
 .list-item {
   cursor: pointer;
 }
