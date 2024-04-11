@@ -26,4 +26,12 @@ export const addProduct = async (product) => {
 
 export const getActiveProductsByCommerceId = async commerceId => {
     return (await requestBackend.get(`/${entity}/commerceId/${commerceId}/active`, await getHeaders())).data;
-  }
+}
+
+export const addProductReplacement = async (product) => {
+    return (await requestBackend.post(`/${entity}/replacement`, product, await getHeaders())).data;
+}
+
+export const addProductConsumption = async (product) => {
+    return (await requestBackend.post(`/${entity}/consumption`, product, await getHeaders())).data;
+}

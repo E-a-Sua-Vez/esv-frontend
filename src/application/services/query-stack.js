@@ -416,3 +416,50 @@ export const getClientContactsDetails = async (
   options.headers = headers;
   return (await requestQuery.get('client-contact/details', options)).data;
 };
+
+export const getProductsDetails = async (
+  businessId,
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  page = undefined,
+  limit = undefined,
+  expired = undefined,
+  replacement = undefined,
+  productStatus = undefined,
+  searchText = undefined,
+  asc = true
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit, expired, replacement,
+    productStatus, searchText, asc, businessId
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('product/details', options)).data;
+};
+
+export const getProductsReplacementDetails = async (
+  productId = undefined,
+  page = undefined,
+  limit = undefined,
+  asc = true,
+  from,
+  to,
+) => {
+  const options = {};
+  options.params = {
+    productId, page, limit, asc, from, to
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('product/replacements', options)).data;
+};

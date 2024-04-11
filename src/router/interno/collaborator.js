@@ -5,6 +5,7 @@ const CollaboratorMenu = () => import('../../views/collaborator/CollaboratorMenu
 const CollaboratorDashboard = () => import('../../views/collaborator/CollaboratorDashboard.vue');
 const CollaboratorQueueBookings = () => import('../../views/collaborator/CollaboratorQueueBookings.vue');
 const CollaboratorTracing = () => import('../../views/collaborator/CollaboratorTracing.vue');
+const CollaboratorProductStockAdmin = () => import('../../views/collaborator/CollaboratorProductStockAdmin.vue');
 const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
 
 const PrivateCollaboratorRoutes = [
@@ -37,6 +38,11 @@ const PrivateCollaboratorRoutes = [
     path: '/interno/colaborador/tracing',
     name: 'collaborator-tracing',
     component: CollaboratorTracing
+  },
+  {
+    path: '/interno/colaborador/product-stock',
+    name: 'collaborator-product-stock',
+    component: CollaboratorProductStockAdmin
   },
   {
     path: '/interno/commerce/:id/colaborador/bookings',

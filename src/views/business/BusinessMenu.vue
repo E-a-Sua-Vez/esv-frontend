@@ -33,6 +33,7 @@ export default {
       menuOptions: [
         'dashboard',
         'tracing',
+        'product-stock',
         'reports',
         'manage-admin',
         'configuration',

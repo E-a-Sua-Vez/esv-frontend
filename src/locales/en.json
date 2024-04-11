@@ -153,6 +153,13 @@
     "LITERS": "Liters (L)",
     "UNITS": "Units (U)"
   },
+  "productMeasuresTypesShort": {
+    "MILLILITERS": "(ml)",
+    "KILOGRAMS": "(Kg)",
+    "GRAMS": "(g)",
+    "LITERS": "(L)",
+    "UNITS": "(U)"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1654,6 +1661,7 @@
     "commerce-admin": "Commerces",
     "service-admin": "Services",
     "product-admin": "Products",
+    "product-stock": "Stock Control",
     "queues-admin": "Queues",
     "configuration": "Settings",
     "reports": "Data Center",
@@ -1680,6 +1688,7 @@
           "business-resume": "System State",
           "dashboard": "Performance Hub",
           "tracing": "Clients Management",
+          "product-stock": "Stock Control",
           "reports": "Data Center",
           "commerce-admin": "Commerce Settings",
           "service-admin": "Services Settings",
@@ -1704,6 +1713,7 @@
     "queue-manage": "Attend Queues of the Day",
     "booking-manage": "Bookings 360° Vision",
     "tracing": "Clients Management",
+    "product-stock": "Stock Control",
     "go-minisite": "Minisite",
     "message": {
       "1": {
@@ -1717,7 +1727,8 @@
           "dashboard": "Manage Performance Hub",
           "tracing": "Manage Clients Management",
           "queue-manage": "Attend Queues of the Day",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "product-stock": "Stock Control"
         }
       }
     }
@@ -1731,6 +1742,7 @@
     "business-master-resume": "System State",
     "dashboard": "Performance Hub",
     "tracing": "Clients Management",
+    "product-stock": "Stock Control",
     "commerce-master-admin": "Commerces",
     "service-master-admin": "Services",
     "product-master-admin": "Products",
@@ -1920,6 +1932,7 @@
     "update": "Update",
     "add": "Add",
     "service": "Service",
+    "maximumLevel": "Maximum Level:",
     "type": "Tipo:",
     "measureType": "Medida:",
     "code": "Código:",
@@ -1973,7 +1986,84 @@
       "measureType": "Ypu should enter the measure type",
       "actualLevel": "You should enter the actual level",
       "optimumLevel": "You should enter the optimum level",
-      "replacementLevel": "You should enter the replacement level"
+      "replacementLevel": "You should enter the replacement level",
+      "maximumLevel": "You should enter the maximum level",
+      "levels": "Verify if the levels and amounts are valid"
+    }
+  },
+  "businessProductStockAdmin" : {
+    "title": "Stock Control",
+    "commerce":"Select a commerce:",
+    "return": "Back",
+    "products": "Products",
+    "attentions": "Attentions",
+    "consuptionsOf": "Consumes of",
+    "replacementsOf": "Replacements of",
+    "replacementLevel": "Replacement level:",
+    "optimumLevel": "Optimum level:",
+    "actualLevel": "Actual level:",
+    "consuptions": "Consumes",
+    "replacements": "Replacements",
+    "expired": "Expired",
+    "price": "Total Cost:",
+    "replacement": "Replacements Req.",
+    "search": "🔎 Name or Code",
+    "addReplacement": "New Replacement",
+    "addConsuption": "Add Consume",
+    "commerces": "Commerce:",
+    "amount": "Quantity:",
+    "code": "Code/Batch:",
+    "date": "Replacement Date:",
+    "expireDate": "Expire Date:",
+    "nextDate": "Next Replacement:",
+    "message": {
+      "1": {
+        "title": "Oh no!",
+        "content": "At the moment there's not options to manage. Please verify that your plan is active or go ahead to us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "There's not data to show, please validate the filter and try again."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "At the moment there's not products."
+      }
+    },
+    "reports": {
+      "details": {
+        "title": "Products Report (Details)",
+        "description": "Download report file of Products"
+      },
+      "replacement-details": {
+        "title": "Replacement Product Report",
+        "description": "Download the Replacement Product Report"
+      }
+    },
+    "capacitiesList": {
+      "products-stock": {
+        "attentions": {
+          "view": "See Attentions",
+          "add-replacement": "Add Replacement",
+          "add-consumption": "Add Consumption"
+        },
+        "products": {
+          "view": "See Products",
+          "add-replacement": "Add Replacement",
+          "add-consumption": "Add Consumption",
+          "view-consumption": "See Consumption",
+          "view-replacement": "See Replacement"
+        },
+        "reports": {
+          "details": "Stock Control Report",
+          "replacement-details": "Product Replacement Report",
+          "consumption-details": "Product Consumption Report"
+        }
+      }
+    },
+    "validate": {
+      "replacementAmount": "You should add the replacement amount",
+      "replacementDate": "You should add the replacement date"
     }
   },
   "businessModulesAdmin": {

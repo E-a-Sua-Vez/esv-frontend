@@ -169,6 +169,11 @@
   justify-content: left !important;
   align-items: center !important;
 }
+.righted {
+  display: flex !important;
+  justify-content: right !important;
+  align-items: center !important;
+}
 .upgrade {
   padding: .2rem;
   padding-left: .5rem;
@@ -244,6 +249,9 @@
 }
 .red-area {
   background-color: var(--rojo-warning) !important;
+}
+.gray-area {
+  background-color: var(--gris-default) !important;
 }
 .yellow-0-area {
   background-color: #fcfbf2 !important;

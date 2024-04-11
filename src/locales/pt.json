@@ -153,6 +153,13 @@
     "LITERS": "Litros (L)",
     "UNITS": "Unidade (U)"
   },
+  "productMeasuresTypesShort": {
+    "MILLILITERS": "(ml)",
+    "KILOGRAMS": "(Q)",
+    "GRAMS": "(g)",
+    "LITERS": "(L)",
+    "UNITS": "(U)"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1653,6 +1660,7 @@
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
+    "product-stock": "Controle de Estoque",
     "commerce-admin": "Comércios",
     "service-admin": "Serviços",
     "product-admin": "Produtos",
@@ -1681,6 +1689,7 @@
           "business-resume": "Estado do Sistema",
           "dashboard": "Performance Hub",
           "tracing": "Gestão de Clientes",
+          "product-stock": "Controle de Estoque",
           "reports": "Central de Dados",
           "commerce-admin": "Gerenciar Comércios/Unidades",
           "service-admin": "Gerenciar Serviços",
@@ -1706,6 +1715,7 @@
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
+    "product-stock": "Controle de Estoque",
     "commerce-master-admin": "Comércios",
     "service-master-admin": "Serviços",
     "product-master-admin": "Produtos",
@@ -1730,6 +1740,7 @@
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Performance Hub",
     "tracing": "Gestão de Clientes",
+    "product-stock": "Controle de Estoque",
     "queue-manage": "Atender Filas do Dia",
     "booking-manage": "Reservas Visão 360°",
     "go-minisite": "Minisite",
@@ -1745,7 +1756,8 @@
           "dashboard": "Gerenciar Performance Hub",
           "tracing": "Gerenciar Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "product-stock": "Controle de Estoque"
         }
       }
     }
@@ -1928,9 +1940,10 @@
     "type": "Tipo:",
     "measureType": "Medida:",
     "code": "Código:",
-    "replacementLevel": "Nivel Recarga:",
-    "optimumLevel": "Nivel Ótimo:",
-    "actualLevel": "Nivel Atual:",
+    "maximumLevel": "Nível Máximo:",
+    "replacementLevel": "Nível Recarrega:",
+    "optimumLevel": "Nível Ótimo:",
+    "actualLevel": "Nível Atual:",
     "codeHelp": "Código externo do producto",
     "measureTypeHelp": "Unidade de medida do producto",
     "actualLevelHelp": "Límite atual do producto",
@@ -1979,7 +1992,85 @@
       "measureType": "Você deve digitar o tipo de medida",
       "actualLevel": "Você deve digitar o nivel atual",
       "optimumLevel": "Você deve digitar o nivel ótimo",
-      "replacementLevel": "Você deve digitar o nivel de recarregamento"
+      "replacementLevel": "Você deve digitar o nivel de recarregamento",
+      "maximumLevel": "Você deve digitar o nivel máximo",
+      "levels": "Valide que os níveis e quantidades sejan corretos"
+
+    }
+  },
+  "businessProductStockAdmin" : {
+    "title": "Controle de Estoque",
+    "commerce": "Selecione uma unidade:",
+    "return": "Voltar",
+    "products": "Produtos",
+    "attentions": "Atendimentos",
+    "consuptionsOf": "Consumo de",
+    "replacementsOf": "Recarregamento de",
+    "replacementLevel": "Nível Recarrega:",
+    "optimumLevel": "Nivel Ótimo:",
+    "actualLevel": "Nivel Atual:",
+    "consuptions": "Consumos",
+    "replacements": "Recarregamentos",
+    "expired": "Expiração",
+    "price": "Custo Total:",
+    "replacement": "Req. Recarregar",
+    "search": "🔎 Nombre o Código",
+    "addReplacement": "Novo Recarregamento",
+    "addConsuption": "Adicionar Consumo",
+    "commerces": "Unidade:",
+    "amount": "Quantidade:",
+    "code": "Código/Lote:",
+    "date": "Data Recarregamento:",
+    "expireDate": "Data Expiração:",
+    "nextDate": "Próximo Recarregamento:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "No momento, não há opções para gerenciar. Verifique os filtros ou entre em contato conosco."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "Não temos data, verifique os filtros e tente novamente."
+      },
+      "3": {
+        "title": "Ups!",
+        "content": "Neste momento não há produtos."
+      }
+    },
+    "reports": {
+      "details": {
+        "title": "Relatório de Produtos (Detalhes)",
+        "description": "Baixar arquivo relatório de Produtos"
+      },
+      "replacement-details": {
+        "title": "Relatório de Recarregamento de Produtos",
+        "description": "Baixar arquivo relatório de Produtos"
+      }
+    },
+    "capacitiesList": {
+      "products-stock": {
+        "attentions": {
+          "view": "Ver Atendimentos",
+          "add-replacement": "Adicionar Recarregamento",
+          "add-consumption": "Adicionar Consumo"
+        },
+        "products": {
+          "view": "Ver Produtos",
+          "add-replacement": "Adicionar Recarregamento",
+          "add-consumption": "Adicionar Consumo",
+          "view-consumption": "Ver Consumo",
+          "view-replacement": "Ver Recarregamento"
+        },
+        "reports": {
+          "details": "Relatório Controle de Estoque",
+          "replacement-details": "Relatório de Recarregamento de Produto",
+          "consumption-details": "Relatório de Consumo de Produto"
+        }
+      }
+    },
+    "validate": {
+      "replacementAmount": "Deve digitar a quantidade",
+      "replacementDate": "Deve digitar a data"
     }
   },
   "businessModulesAdmin": {

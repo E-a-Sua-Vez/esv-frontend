@@ -52,6 +52,10 @@ export default {
       measureTypeUpdateError: false,
       actualLevelUpdateError: false,
       optimumLevelUpdateError: false,
+      maximumLevelAddError: false,
+      maximumLevelUpdateError: false,
+      replacementLevelUpdateError: false,
+      replacementLevelAddError: false,
       toggles: {}
     });
 
@@ -134,6 +138,20 @@ export default {
       } else {
         state.replacementLevelAddError = false;
       }
+      if(!product.maximumLevel || product.maximumLevel <= 0) {
+        state.maximumLevelAddError = true;
+        state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
+      } else {
+        state.maximumLevelAddError = false;
+      }
+      if(product.optimumLevel < product.replacementLevel) {
+        state.optimumLevelAddError = true;
+        state.replacementLevelAddError = true;
+        state.errorsAdd.push('businessProductsAdmin.validate.levels');
+      } else {
+        state.optimumLevelAddError = false;
+        state.replacementLevelAddError = false;
+      }
       if(state.errorsAdd.length === 0) {
         return true;
       }
@@ -177,6 +195,20 @@ export default {
         state.errorsAdd.push('businessProductsAdmin.validate.replacementLevel');
       } else {
         state.replacementLevelUpdateError = false;
+      }
+      if(!product.maximumLevel || product.maximumLevel <= 0) {
+        state.maximumLevelUpdateError = true;
+        state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
+      } else {
+        state.maximumLevelUpdateError = false;
+      }
+      if(product.optimumLevel < product.replacementLevel) {
+        state.optimumLevelUpdateError = true;
+        state.replacementLevelUpdateError = true;
+        state.errorsAdd.push('businessProductsAdmin.validate.levels');
+      } else {
+        state.optimumLevelUpdateError = true;
+        state.replacementLevelUpdateError = true;
       }
       if(state.errorsUpdate.length === 0) {
         return true;
@@ -502,6 +534,27 @@ export default {
                           placeholder="1">
                       </div>
                     </div>
+                    <div id="product-maximumLevel-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessProductsAdmin.maximumLevel") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessProductsAdmin.maximumLevel')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-6">
+                        <input
+                          :min="0"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newProduct.maximumLevel"
+                          v-bind:class="{ 'is-invalid': state.maximumLevelAddError }"
+                          placeholder="1">
+                      </div>
+                    </div>
                     <div id="product-order-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessProductsAdmin.order") }}
@@ -699,7 +752,28 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="product.replacementLevel"
-                          v-bind:class="{ 'is-invalid': state.replacementLevelAddError }"
+                          v-bind:class="{ 'is-invalid': state.replacementLevelUpdateError }"
+                          placeholder="1">
+                      </div>
+                    </div>
+                    <div id="product-maximumLevel-form-update" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessProductsAdmin.maximumLevel") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessProductsAdmin.rmaximumLevelHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-6">
+                        <input
+                          :min="0"
+                          type="number"
+                          class="form-control"
+                          v-model="product.maximumLevel"
+                          v-bind:class="{ 'is-invalid': state.maximumLevelUpdateError }"
                           placeholder="1">
                       </div>
                     </div>

@@ -153,6 +153,13 @@
     "LITERS": "Litros (L)",
     "UNITS": "Unidades (U)"
   },
+  "productMeasuresTypesShort": {
+    "MILLILITERS": "(ml)",
+    "KILOGRAMS": "(Kg)",
+    "GRAMS": "(g)",
+    "LITERS": "(L)",
+    "UNITS": "(U)"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1653,6 +1660,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Performance Hub",
     "tracing": "Gestión de Clientes",
+    "product-stock": "Control de Stock",
     "commerce-admin": "Sucursales",
     "service-admin": "Servicios",
     "product-admin": "Productos",
@@ -1681,6 +1689,7 @@
           "business-resume": "Estado del Sistema",
           "dashboard": "Performance Hub",
           "tracing": "Gestión de Clientes",
+          "product-stock": "Control de Stock",
           "reports": "Central de Datos",
           "commerce-admin": "Administrar Sucursales",
           "service-admin": "Administrar Servicios",
@@ -1706,6 +1715,7 @@
     "business-master-resume": "Estado del Sistema",
     "dashboard": "Performance Hub",
     "tracing": "Gestión de Clientes",
+    "product-stock": "Control de Stock",
     "permissions-admin": "Permisos",
     "commerce-master-admin": "Sucursales",
     "service-master-admin": "Servicios",
@@ -1731,6 +1741,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Performance Hub",
     "tracing": "Gestión de Clientes",
+    "product-stock": "Control de Stock",
     "permissions-admin": "Permisos",
     "queue-manage": "Atender Filas del Día",
     "booking-manage": "Reservas Visión 360°",
@@ -1747,7 +1758,8 @@
           "dashboard": "Gestionar Performance Hub",
           "tracing": "Gestión de Clientes",
           "queue-manage": "Atender Filas del Día",
-          "booking-manage": "Reservas Visión 360°"
+          "booking-manage": "Reservas Visión 360°",
+          "product-stock": "Control de Stock"
         }
       }
     }
@@ -1929,6 +1941,7 @@
     "replacementLevel": "Nivel Recarga:",
     "optimumLevel": "Nivel Óptimo:",
     "actualLevel": "Nivel Actual:",
+    "maximumLevel": "Nivel Máximo:",
     "listResult": "Registros:",
     "tagHelp": "Identificador corto del producto",
     "codeHelp": "Código externo del producto",
@@ -1977,7 +1990,84 @@
       "measureType": "Debes ingresar el tipo de medida",
       "actualLevel": "Debes ingresar el nivel actual",
       "optimumLevel": "Debes ingresar el nivel óptimo",
-      "replacementLevel": "Debes ingresar el nivel de recarga"
+      "replacementLevel": "Debes ingresar el nivel de recarga",
+      "maximumLevel": "Debes ingresar el nivel máximo",
+      "levels": "Valida que los niveles y sus cantidades estén correctos"
+    }
+  },
+  "businessProductStockAdmin" : {
+    "title": "Control de Stock",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "products": "Productos",
+    "attentions": "Atenciones",
+    "consuptionsOf": "Consumos de",
+    "replacementsOf": "Reposiciones de",
+    "replacementLevel": "Nivel Recarga:",
+    "optimumLevel": "Nivel Óptimo:",
+    "actualLevel": "Nivel Actual:",
+    "consuptions": "Consumos",
+    "replacements": "Reposiciones",
+    "expired": "Expirado",
+    "price": "Costo Total:",
+    "replacement": "Req. Reposición",
+    "search": "🔎 Nombre o Código",
+    "addReplacement": "Nueva Reposición",
+    "addConsuption": "Agregar Consumo",
+    "commerces": "Comercio:",
+    "amount": "Cantidad:",
+    "code": "Código/Lote:",
+    "date": "Fecha Reposición:",
+    "expireDate": "Fecha Expirado:",
+    "nextDate": "Próxima Reposición:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "No hay datos para mostrar, valida el filtro e intenta nuevamente."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay productos."
+      }
+    },
+    "reports": {
+      "details": {
+        "title": "Informe de Productos (Detalles)",
+        "description": "Descarga archivo report de productos"
+      },
+      "replacement-details": {
+        "title": "Informe Reposición de Producto",
+        "description": "Descarga archivo report de Reposición de Producto"
+      }
+    },
+    "capacitiesList": {
+      "products-stock": {
+        "attentions": {
+          "view": "Ver Atenciones",
+          "add-replacement": "Agregar Reposición",
+          "add-consumption": "Agregar Consumo"
+        },
+        "products": {
+          "view": "Ver Productos",
+          "add-replacement": "Agregar Reposición",
+          "add-consumption": "Agregar Consumo",
+          "view-consumption": "Ver Consumo",
+          "view-replacement": "Ver Reposición"
+        },
+        "reports": {
+          "details": "Reporte Control de Stock",
+          "replacement-details": "Reporte de Reposición de Producto",
+          "consumption-details": "Reporte de Consumo de Producto"
+        }
+      }
+    },
+    "validate": {
+      "replacementAmount": "Debe ingresar la cantidad",
+      "replacementDate": "Debe ingresar la fecha"
     }
   },
   "businessModulesAdmin": {

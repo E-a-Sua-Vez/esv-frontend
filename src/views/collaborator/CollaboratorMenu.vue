@@ -33,6 +33,7 @@ export default {
         'queue-manage',
         'booking-manage',
         'tracing',
+        'product-stock',
         'dashboard',
         'go-minisite'
       ],
@@ -70,6 +71,8 @@ export default {
             router.push({ path: `/interno/colaborador/dashboard` });
           } else if (option === 'tracing') {
             router.push({ path: `/interno/colaborador/tracing` });
+          } else if (option === 'tracing') {
+            router.push({ path: `/interno/colaborador/product-stock` });
           }
         }
         loading.value = false;
