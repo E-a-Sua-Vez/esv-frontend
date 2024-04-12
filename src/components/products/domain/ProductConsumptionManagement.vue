@@ -9,6 +9,7 @@ import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
 import { addProductConsumption, getActiveReplacementsByProductId } from '../../../application/services/product';
+import { getDate } from '../../../shared/utils/date';
 import ProductReplacementDetailsCard from '../common/ProductReplacementDetailsCard.vue';
 import ProductConsumptionDetailsCard from '../common/ProductConsumptionDetailsCard.vue';
 
@@ -19,8 +20,6 @@ export default {
     showProductConsumptionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     product: { type: Object, default: {} },
-    startDate: { type: String, default: undefined },
-    endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
@@ -57,7 +56,9 @@ export default {
       consumptionDateError: false,
       consumptionReplacementId: false,
       replacementExpirationDateError: false,
-      selectedProductReplacement: {}
+      selectedProductReplacement: {},
+      startDate: undefined,
+      endDate: undefined
     }
   },
   async beforeMount() {},
@@ -65,10 +66,15 @@ export default {
     setPage(pageIn) {
       this.page = pageIn;
     },
+    getDate(dateIn, timeZoneIn) {
+      return getDate(dateIn, timeZoneIn);
+    },
     async clear() {
       this.asc = true;
       this.searchText = undefined;
       this.limit = 10;
+      this.startDate = undefined;
+      this.endDate = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -81,7 +87,7 @@ export default {
     async refresh() {
       try {
         this.loading = true;
-        this.newProductConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc);
+        this.newProductConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -89,7 +95,9 @@ export default {
       }
     },
     showFilters() {
-      this.showFilterOptions = !this.showFilterOptions
+      this.showFilterOptions = !this.showFilterOptions;
+      this.startDate = new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10);
+      this.endDate = new Date().toISOString().slice(0,10);
     },
     async showAdd() {
       if (this.product && this.product.productId && this.productReplacements.length === 0) {
@@ -121,10 +129,15 @@ export default {
         this.consumptionReplacementId = false;
       }
       if (newProductConsumption.consumptionAmount === undefined ||
-         newProductConsumption.consumptionAmount <= 0 ||
-         newProductConsumption.consumptionAmount >= this.selectedProductReplacement.replacementActualLevel) {
+         newProductConsumption.consumptionAmount <= 0) {
         this.consumptionAmountError = true;
         this.errorsAdd.push('businessProductStockAdmin.validate.consumptionAmount');
+      } else {
+        this.consumptionAmountError = false;
+      }
+      if (newProductConsumption.consumptionAmount > this.selectedProductReplacement.replacementActualLevel) {
+        this.consumptionAmountError = true;
+        this.errorsAdd.push('businessProductStockAdmin.validate.consumptionLevel');
       } else {
         this.consumptionAmountError = false;
       }
@@ -168,7 +181,7 @@ export default {
       try {
         this.loading = true;
         let csvAsBlob = [];
-        const result = await getProductsConsumptionsDetails(this.product.productId, undefined, undefined, this.asc);
+        const result = await getProductsConsumptionsDetails(this.product.productId, undefined, undefined, this.asc, this.startDate, this.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -191,6 +204,34 @@ export default {
     async getUser() {
       this.user = await this.store.getCurrentUser;
     },
+    async getToday() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-${day}`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getCurrentMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-01`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getLastMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
+    },
+    async getLastThreeMonths() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
+    }
   },
   computed: {
     changeData() {
@@ -236,7 +277,7 @@ export default {
       immediate: true,
       deep: true,
       async handler() {
-        if (this.newProductConsumptions && this.newProductConsumptions.length > 0) {
+        if (this.newProductConsumptions) {
           this.productConsumptions = this.newProductConsumptions;
           this.updatePaginationData();
         }
@@ -256,7 +297,7 @@ export default {
           <div>
             <div class="my-2 row metric-card">
               <div class="col-12">
-                <span class="">
+                <span class="metric-card-subtitle">
                   <span class="form-check-label" @click="showAdd()">
                     <i class="bi bi-arrow-up-circle-fill"></i> {{ $t("businessProductStockAdmin.addConsuption") }}
                     <i :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
@@ -269,7 +310,7 @@ export default {
                   </div>
                   <div class="col-8">
                     <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="selectedProductReplacement">
-                      <option v-for="rep in productReplacements" :key="rep.id" :value="rep" id="select-replacement">{{ rep.replacementActualLevel }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }} - ({{ rep.replacementExpirationDate }})</option>
+                      <option v-for="rep in productReplacements" :key="rep.id" :value="rep" id="select-replacement">{{ rep.replacementActualLevel }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }} - ({{ getDate(rep.replacementExpirationDate) }})</option>
                     </select>
                   </div>
                 </div>
@@ -335,12 +376,43 @@ export default {
                   <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                 </span>
                 <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
                   @click="clear()">
                   <span><i class="bi bi-eraser-fill"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                  </div>
+                </div>
+                <div class="m-1">
+                  <div class="row">
+                    <div class="col-5">
+                      <input id="startDate" class="form-control metric-controls" type="date" v-model="startDate"/>
+                    </div>
+                    <div class="col-5">
+                      <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="row">
                   <div class="col-12">
                     <div class="form-check form-switch centered">
@@ -438,6 +510,7 @@ export default {
   background-color: var(--color-background);
   padding: .5rem;
   margin: .5rem;
+  margin-bottom: 0;
   border-radius: .5rem;
   border: 1.5px solid var(--gris-default);
 }

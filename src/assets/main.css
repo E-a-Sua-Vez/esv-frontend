@@ -309,6 +309,7 @@
   font-size: .8rem !important;
   font-weight: 500 !important;
   line-height: .8rem !important;
+  cursor: pointer;
 }
 .act-icon {
   color: var(--azul-es);
@@ -332,4 +333,17 @@
   overflow: hidden;
   margin: 0px auto auto;
   font-size: .8rem;
+}
+.metric-controls {
+  font-size: .9rem !important;
+}
+.date-title {
+  font-size: .8rem;
+  line-height: .8rem !important;
+  letter-spacing: .01px;
+}
+.metric-filters {
+  font-size: .7rem !important;
+  line-height: .8rem !important;
+  font-weight: 600;
 }

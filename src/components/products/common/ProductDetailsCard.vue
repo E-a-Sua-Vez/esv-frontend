@@ -16,8 +16,6 @@ export default {
     product: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     toggles: { type: Object, default: undefined },
-    startDate: { type: String, default: undefined },
-    endDate: { type: String, default: undefined },
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     management: { type: Boolean, default: true },
@@ -112,7 +110,7 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+        this.attentions = await getAttentionsDetails(this.commerce.id, undefined, undefined, commerceIds,
           this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
           this.searchText, this.queueId, this.survey, this.asc, undefined);
         this.loading = false;
@@ -123,7 +121,7 @@ export default {
     async getProductReplacements() {
       try {
         this.loading = true;
-        this.productReplacements = await getProductsReplacementDetails(this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate);
+        this.productReplacements = await getProductsReplacementDetails(this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -132,7 +130,7 @@ export default {
     async getProductConsuptions() {
       try {
         this.loading = true;
-        this.productConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate);
+        this.productConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -279,8 +277,6 @@ export default {
               :toggles="toggles"
               :productConsumptionsIn="productConsumptions"
               :product="product"
-              :startDate="startDate"
-              :endDate="endDate"
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"
@@ -309,8 +305,6 @@ export default {
               :toggles="toggles"
               :productReplacementsIn="productReplacements"
               :product="product"
-              :startDate="startDate"
-              :endDate="endDate"
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"

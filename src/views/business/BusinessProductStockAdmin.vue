@@ -35,8 +35,6 @@ export default {
     const state = reactive({
       currentUser: {},
       business: {},
-      startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10),
-      endDate: new Date().toISOString().slice(0,10),
       activeBusiness: false,
       commerces: ref({}),
       selectedCommerces: ref({}),
@@ -60,7 +58,6 @@ export default {
         const commerce = await getCommerceById(state.commerce.id);
         state.queues = commerce.queues;
         state.toggles = await getPermissions('products-stock');
-        await refresh();
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -87,76 +84,9 @@ export default {
           state.queues = queuesByCommerce.queues;
           state.selectedCommerces = state.commerces;
         }
-        await refresh();
         loading.value = false;
       } catch (error) {
         loading.value = false;
-      }
-    }
-
-    const getCalculatedMetrics = async () => {
-      if (state.queues && state.queues.length > 0) {
-        const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-        const  calculatedMetrics = {};
-        return calculatedMetrics;
-      }
-    }
-
-    const refresh = async () => {
-      try {
-        loading.value = true;
-        state.calculatedMetrics = await getCalculatedMetrics();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
-        loading.value = false;
-      }
-    }
-
-    const getToday = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
-      state.startDate = `${year}-${month}-${day}`;
-      state.endDate = `${year}-${month}-${day}`;
-      await refresh();
-    }
-
-    const getCurrentMonth = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
-      state.startDate = `${year}-${month}-01`;
-      state.endDate = `${year}-${month}-${day}`;
-      await refresh();
-    }
-
-    const getLastMonth = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
-      await refresh();
-    }
-
-    const getLastThreeMonths = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
-      await refresh();
-    }
-
-    const getLocalHour = (hour) => {
-      const date = new Date();
-      const hourDate = new Date(date.setHours(hour));
-      if (state.commerce.country) {
-        if (state.commerce.country === 've') {
-          return hourDate.getHours() - 4;
-        } else if (['br', 'cl'].includes(state.commerce.country)) {
-          return hourDate.getHours() - 3;
-        } else {
-          return hourDate.getHours();
-        }
       }
     }
 
@@ -180,15 +110,9 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      refresh,
       selectCommerce,
       showProducts,
-      showAttentions,
-      getCurrentMonth,
-      getLastMonth,
-      getLastThreeMonths,
-      getLocalHour,
-      getToday
+      showAttentions
     }
   }
 }
@@ -225,41 +149,9 @@ export default {
                   </select>
                 </div>
               </div>
-              <div class="row my-2">
-                <div class="col-3">
-                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
-                </div>
-                <div class="col-3">
-                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
-                </div>
-                <div class="col-3">
-                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
-                </div>
-                <div class="col-3">
-                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-6">
-                  <input id="startDate" class="form-control metric-controls" type="date" v-model="state.startDate"/>
-                </div>
-                <div class="col-6">
-                  <input id="endDate" class="form-control metric-controls" type="date" v-model="state.endDate"/>
-                </div>
-              </div>
-              <div class="col">
-                <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2  px-4" @click="refresh()" :disabled="loading">
-                  <i class="bi bi-search"></i> {{ $t("dashboard.refresh") }}
-                </button>
-              </div>
             </div>
           </div>
           <div v-if="!loading" id="product-stock-result" class="mt-2">
-            <div id="title" class="metric-title">
-              <span v-if="state.showProducts">{{ $t("businessProductStockAdmin.products") }}</span>
-              <span v-else-if="state.showAttentions">{{ $t("businessProductStockAdmin.attentions") }}</span>
-            </div>
-            <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
             <div class="row col mx-1 mt-3 mb-1">
               <div class="col-6 centered">
                 <button
@@ -284,8 +176,6 @@ export default {
               <ProductsStockManagement
                 :showProductStockManagement="state.showProducts"
                 :toggles="state.toggles"
-                :startDate="state.startDate"
-                :endDate="state.endDate"
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
@@ -307,18 +197,10 @@ export default {
 </template>
 
 <style scoped>
-.metric-controls {
-  font-size: .9rem;
-}
 .metric-title {
   text-align: left;
   font-size: 1.1rem;
   font-weight: 700;
-}
-.metric-filters {
-  font-size: .7rem !important;
-  line-height: .8rem !important;
-  font-weight: 600;
 }
 .metric-subtitle {
   text-align: left;

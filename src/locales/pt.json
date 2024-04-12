@@ -2079,8 +2079,9 @@
       }
     },
     "validate": {
-      "consumptionAmount": "Deve digitar a quantidade",
-      "replacementAmount": "Deve digitar a quantidade",
+      "consumptionAmount": "Deve digitar a quantidade válida",
+      "consumptionLevel": "O consumo digitado e maior quue a quantidade disponível",
+      "replacementAmount": "Deve digitar a quantidade válida",
       "replacementDate": "Deve digitar a data",
       "productReplacement": "Deve selecionar um recarregamento"
     }

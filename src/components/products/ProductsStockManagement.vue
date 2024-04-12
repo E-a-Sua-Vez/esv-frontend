@@ -13,8 +13,6 @@ export default {
   props: {
     showProductStockManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    startDate: { type: String, default: undefined },
-    endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
@@ -42,10 +40,7 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        this.products = await getProductsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+        this.products = await getProductsDetails(this.business.id, this.commerce.id, undefined, undefined, commerceIds,
           this.page, this.limit, this.expired, this.replacement, this.productStatus, this.searchText, this.asc);
         if (this.products && this.products.length > 0) {
           const { counter } = this.products[0];
@@ -127,9 +122,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, expired, replacement, productStatus, asc, limit } = this;
+      const { page, commerce, expired, replacement, productStatus, asc, limit } = this;
       return {
-        page, expired, replacement, productStatus, asc, limit
+        page, expired, commerce, replacement, productStatus, asc, limit
       }
     }
   },
@@ -177,15 +172,15 @@ export default {
                   <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                 </span>
                 <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
                   @click="clear()">
                   <span><i class="bi bi-eraser-fill"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">
-                <div class="col-12 m-1">
+                <div class="m-1">
                   <div class="row">
-                    <div class="col-9">
+                    <div class="col-10">
                       <input
                         min="1"
                         max="50"
@@ -236,7 +231,7 @@ export default {
                 <div class="row">
                   <div class="col-12">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>
@@ -303,8 +298,6 @@ export default {
                   :product="product"
                   :commerce="this.commerce"
                   :toggles="this.toggles"
-                  :startDate="this.startDate"
-                  :endDate="this.endDate"
                   :queues="this.queues"
                   :commerces="this.commerces"
                 >

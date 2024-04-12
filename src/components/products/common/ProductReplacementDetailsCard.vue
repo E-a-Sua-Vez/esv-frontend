@@ -85,16 +85,17 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card">
-      <div class="col centered fw-bold date-title" v-if="product && product.replacementAmount">
+      <div class="col-5 centered fw-bold date-title" v-if="product && product.replacementAmount">
         <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
         <i :class="`bi ${clasifyProductStatus(product.replacementActualLevel)} m-1 h5`"></i>
         <span class="badge rounded-pill bg-secondary metric-keyword-tag fw-bold"> {{ scorePercentage(product.replacementAmount, product.replacementActualLevel ? product.replacementActualLevel : 0) }}% </span>
       </div>
-      <div class="col centered date-title">
+      <div class="col-4 centered date-title">
         <i :class="`bi ${clasifyExpired(product.daysSinceExpired)}  mx-1`"> </i> {{ getDate(product.replacementExpirationDate) }}
-        <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ +product.daysSinceExpired * -1 }} </span>
       </div>
-
+      <div class="col-3 centered date-title">
+       {{ getDate(product.replacementDate) }}
+      </div>
     </div>
     <div class="details-arrow">
       <div class="centered">
@@ -154,9 +155,11 @@ export default {
             <div class="">
               <span v-if="product.replacementAmount" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}</span>
               <span v-if="product.price" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ product.price }}</span><br>
-              <span v-if="product.nextReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-calendar-fill mx-1"> </i> {{ product.nextReplacementDate }}</span>
+              <span v-if="product.nextReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-calendar-fill mx-1"> </i> {{ getDate(product.nextReplacementDate) }}</span>
               <span v-if="product.replacedBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill mx-1"> </i> {{ product.replacedBy }}</span>
-              <span v-if="product.replacementCode" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.replacementCode }}</span><br><br>
+              <span v-if="product.replacementCode" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.replacementCode }}</span>
+              <span v-if="product.replacementDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(product.replacementDate) }}</span>
+              <br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ product.productId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(product.createdDate || product.createdAt) }}</span>
             </div>
@@ -227,9 +230,6 @@ export default {
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
-}
-.date-title {
-  font-size: .8rem
 }
 .bar-label {
   font-size: .7rem !important;

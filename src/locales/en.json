@@ -2072,7 +2072,8 @@
       }
     },
     "validate": {
-      "consumptionAmount": "You should add the replacement amount",
+      "consumptionAmount": "You should add the consumption amount",
+      "consumptionLevel": "Consume amount added is bigger than the quantity available",
       "replacementAmount": "You should add the replacement amount",
       "replacementDate": "You should add the replacement date",
       "productReplacement": "You should select replacement"

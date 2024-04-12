@@ -255,7 +255,4 @@ export default {
   font-size: .7rem;
   font-weight: 400;
 }
-.date-title {
-  font-size: .8rem
-}
 </style>

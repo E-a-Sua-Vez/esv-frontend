@@ -75,8 +75,7 @@ export default {
         }
         this.clientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
-          this.page, this.limit, this.daysSinceContacted,
-          this.searchText, this.asc, this.contactResultType);
+          this.page, this.limit, this.daysSinceContacted, this.searchText, this.asc, this.contactResultType);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -340,8 +339,6 @@ export default {
               :toggles="toggles"
               :attentionsIn="attentions"
               :client="client"
-              :startDate="startDate"
-              :endDate="endDate"
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"
@@ -369,8 +366,6 @@ export default {
               :toggles="toggles"
               :clientContactsIn="clientContacts"
               :client="client"
-              :startDate="startDate"
-              :endDate="endDate"
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"

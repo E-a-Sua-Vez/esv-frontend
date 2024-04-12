@@ -281,9 +281,4 @@ export default {
   font-weight: 700;
   line-height: 1rem;
 }
-.metric-filters {
-  font-size: .6rem !important;
-  line-height: .8rem !important;
-  font-weight: 700;
-}
 </style>

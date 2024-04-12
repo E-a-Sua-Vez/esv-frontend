@@ -18,8 +18,6 @@ export default {
     showProductReplacementManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     product: { type: Object, default: {} },
-    startDate: { type: String, default: undefined },
-    endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
@@ -38,7 +36,7 @@ export default {
       newProductReplacement: {},
       counter: 0,
       totalPages: 0,
-      asc: true,
+      asc: false,
       checked: false,
       showFilterOptions: false,
       showAddOption: false,
@@ -55,7 +53,9 @@ export default {
       limit: 10,
       replacementAmountError: false,
       replacementDateError: false,
-      replacementExpirationDateError: false
+      replacementExpirationDateError: false,
+      startDate: undefined,
+      endDate: undefined
     }
   },
   beforeMount() { },
@@ -64,9 +64,11 @@ export default {
       this.page = pageIn;
     },
     async clear() {
-      this.asc = true;
+      this.asc = false;
       this.searchText = undefined;
       this.limit = 10;
+      this.startDate = undefined;
+      this.endDate = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -79,7 +81,7 @@ export default {
     async refresh() {
       try {
         this.loading = true;
-        this.newProductReplacements = await getProductsReplacementDetails(this.product.productId, this.page, this.limit, this.asc);
+        this.newProductReplacements = await getProductsReplacementDetails(this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -87,7 +89,9 @@ export default {
       }
     },
     showFilters() {
-      this.showFilterOptions = !this.showFilterOptions
+      this.showFilterOptions = !this.showFilterOptions;
+      this.startDate = new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10);
+      this.endDate = new Date().toISOString().slice(0,10);
     },
     showAdd() {
       this.showAddOption = !this.showAddOption;
@@ -156,7 +160,7 @@ export default {
       try {
         this.loading = true;
         let csvAsBlob = [];
-        const result = await getProductsReplacementDetails(this.product.productId, undefined, undefined, this.asc);
+        const result = await await getProductsReplacementDetails(this.product.productId, undefined, undefined, this.asc, this.startDate, this.endDate);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -179,6 +183,34 @@ export default {
     async getUser() {
       this.user = await this.store.getCurrentUser;
     },
+    async getToday() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-${day}`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getCurrentMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-01`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getLastMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
+    },
+    async getLastThreeMonths() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
+    }
   },
   computed: {
     changeData() {
@@ -224,7 +256,7 @@ export default {
       immediate: true,
       deep: true,
       async handler() {
-        if (this.newProductReplacements && this.newProductReplacements.length > 0) {
+        if (this.newProductReplacements) {
           this.productReplacements = this.newProductReplacements;
           this.updatePaginationData();
         }
@@ -244,7 +276,7 @@ export default {
           <div>
             <div class="my-2 row metric-card">
               <div class="col-12">
-                <span class="">
+                <span class="metric-card-subtitle">
                   <span class="form-check-label" @click="showAdd()">
                     <i class="bi bi-arrow-down-circle-fill"></i> {{ $t("businessProductStockAdmin.addReplacement") }}
                     <i :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
@@ -363,12 +395,43 @@ export default {
                   <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                 </span>
                 <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
                   @click="clear()">
                   <span><i class="bi bi-eraser-fill"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                  </div>
+                </div>
+                <div class="m-1">
+                  <div class="row">
+                    <div class="col-5">
+                      <input id="startDate" class="form-control metric-controls" type="date" v-model="startDate"/>
+                    </div>
+                    <div class="col-5">
+                      <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="row">
                   <div class="col-12">
                     <div class="form-check form-switch centered">

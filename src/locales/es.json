@@ -2077,6 +2077,7 @@
     },
     "validate": {
       "consumptionAmount": "Debe ingresar una cantidad válida",
+      "consumptionLevel": "El consumo ingresado es mayor a la cantidad disponible",
       "replacementAmount": "Debe ingresar una cantidad válida",
       "replacementDate": "Debe ingresar la fecha",
       "productReplacement": "Debe seleccionar una reposición"

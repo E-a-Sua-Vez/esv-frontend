@@ -71,7 +71,7 @@ export default {
         <i v-else class="bi bi-person-fill blue-icon mx-1"></i>
       </div>
       <div class="col centered date-title" v-if="product && product.consumptionDate">
-        <i class="bi bi-calendar-fill blue-icon mx-1"></i> {{ product.consumptionDate }}
+        <i class="bi bi-calendar-fill blue-icon mx-1"></i> {{ getDate(product.consumptionDate) }}
       </div>
     </div>
     <div class="details-arrow">
@@ -113,7 +113,7 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
+  padding: .5rem;
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
@@ -170,9 +170,6 @@ export default {
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
-}
-.date-title {
-  font-size: .8rem
 }
 .bar-label {
   font-size: .7rem !important;

@@ -18,8 +18,6 @@ export default {
     showSurveyManagement: { type: Boolean, default: false },
     calculatedMetrics: { type: Object, default: undefined },
     toggles: { type: Object, default: undefined },
-    startDate: { type: String, default: undefined },
-    endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: [] },
     queues: { type: Object, default: undefined }
@@ -41,7 +39,9 @@ export default {
       queueId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
-      limit: 10
+      limit: 10,
+      startDate: undefined,
+      endDate: undefined
     }
   },
   async beforeMount() {
@@ -90,6 +90,8 @@ export default {
       this.keyWord = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.startDate = undefined;
+      this.endDate = undefined;
       await this.refresh();
     },
     async checkContactable(event) {
@@ -142,7 +144,9 @@ export default {
       this.keyWord = keyword;
     },
     showFilters() {
-      this.showFilterOptions = !this.showFilterOptions
+      this.showFilterOptions = !this.showFilterOptions;
+      this.startDate = new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10);
+      this.endDate = new Date().toISOString().slice(0,10);
     },
     async exportToCSV() {
       try {
@@ -170,6 +174,34 @@ export default {
       } catch (error) {
         this.loading = false;
       }
+    },
+    async getToday() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-${day}`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getCurrentMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      this.startDate = `${year}-${month}-01`;
+      this.endDate = `${year}-${month}-${day}`;
+      await this.refresh();
+    },
+    async getLastMonth() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
+    },
+    async getLastThreeMonths() {
+      const date = new Date().toISOString().slice(0,10);
+      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      await this.refresh();
     }
   },
   computed: {
@@ -225,12 +257,43 @@ export default {
                   <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                 </span>
                 <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
                   @click="clear()">
                   <span><i class="bi bi-eraser-fill"></i></span>
                 </button>
               </div>
               <div v-if="showFilterOptions">
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                  </div>
+                  <div class="col-3">
+                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                  </div>
+                </div>
+                <div class="m-1">
+                  <div class="row">
+                    <div class="col-5">
+                      <input id="startDate" class="form-control metric-controls" type="date" v-model="startDate"/>
+                    </div>
+                    <div class="col-5">
+                      <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
                   <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
                   <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">

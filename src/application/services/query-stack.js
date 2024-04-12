@@ -449,8 +449,8 @@ export const getProductsReplacementDetails = async (
   page = undefined,
   limit = undefined,
   asc = true,
-  from,
-  to,
+  from = undefined,
+  to = undefined
 ) => {
   const options = {};
   options.params = {
@@ -469,8 +469,8 @@ export const getProductsConsumptionsDetails = async (
   page = undefined,
   limit = undefined,
   asc = true,
-  from,
-  to,
+  from = undefined,
+  to = undefined
 ) => {
   const options = {};
   options.params = {

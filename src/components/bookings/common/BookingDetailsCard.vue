@@ -786,12 +786,6 @@ export default {
   line-height: .9rem;
   letter-spacing: .01px;
 }
-.date-title {
-  font-size: .7rem;
-  font-weight: 600;
-  line-height: .9rem;
-  letter-spacing: .01px;
-}
 .icon {
   margin-left: .1rem;
   margin-right: .15rem;

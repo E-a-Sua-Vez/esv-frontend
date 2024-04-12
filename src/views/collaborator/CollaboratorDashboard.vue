@@ -714,16 +714,10 @@ export default {
 </template>
 
 <style scoped>
-.metric-controls {
-  font-size: .9rem;
-}
 .metric-title {
   text-align: left;
   font-size: 1.1rem;
   font-weight: 700;
-}
-.metric-filters {
-  font-size: .7rem !important;
 }
 .metric-subtitle {
   text-align: left;
