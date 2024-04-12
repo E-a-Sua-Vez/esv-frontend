@@ -209,6 +209,14 @@ export default {
   line-height: .8rem;
   cursor: pointer;
 }
+.details-arrow {
+  margin: 0 !important;
+  margin-top: 0;
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+  border: none !important;
+  border-top: 0;
+}
 .details-title {
   cursor: pointer;
   text-decoration: underline;
