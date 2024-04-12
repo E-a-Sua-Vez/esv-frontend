@@ -221,7 +221,6 @@ export default {
       </div>
     </div>
   </div>
-
 </template>
 
 <style scoped>
@@ -236,15 +235,6 @@ export default {
   border-bottom-right-radius: 0;
   border-bottom: 0;
   line-height: 1.6rem;
-}
-.details-arrow {
-  margin: .5rem;
-  margin-top: 0;
-  border-bottom-left-radius: .5rem;
-  border-bottom-right-radius: .5rem;
-  line-height: 1.1rem;
-  border: 1.5px solid var(--gris-default);
-  border-top: 0;
 }
 .show {
   padding: 10px;
@@ -266,22 +256,11 @@ export default {
   font-weight: 600;
   line-height: .7rem;
 }
-.metric-card-detail-subtitle {
-  font-size: .72rem;
-  font-weight: 400;
-  line-height: .7rem;
-}
 .checked-icon {
   color: var(--azul-turno);
 }
 .metric-card-details {
   font-size: .7rem;
   font-weight: 400;
-}
-.active-name {
-  background-color: var(--azul-turno);
-  color: var(--color-background);
-  font-weight: 700;
-  font-size: .9rem;
 }
 </style>

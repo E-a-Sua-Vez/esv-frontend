@@ -212,11 +212,7 @@ export default {
   font-weight: 600;
   line-height: .7rem;
 }
-.metric-card-detail-subtitle {
-  font-size: .72rem;
-  font-weight: 400;
-  line-height: .7rem;
-}
+
 .checked-icon {
   color: var(--azul-turno);
 }

@@ -33,12 +33,6 @@ export default {
   line-height: 1.5rem;
   border: 1.5px solid var(--azul-turno);
 }
-.active-name {
-  background-color: var(--azul-turno);
-  color: var(--color-background);
-  font-weight: 700;
-  font-size: .9rem;
-}
 .tag {
   background-color: var(--gris-clear);
   border-bottom-left-radius: 1rem;

@@ -53,12 +53,6 @@ export default {
   line-height: 1.5rem;
   border: 1.5px solid var(--azul-turno);
 }
-.active-name {
-  background-color: var(--azul-turno);
-  color: var(--color-background);
-  font-weight: 700;
-  font-size: .9rem;
-}
 .desactived {
   background-color: var(--gris-tooltip);
   margin: .1rem;

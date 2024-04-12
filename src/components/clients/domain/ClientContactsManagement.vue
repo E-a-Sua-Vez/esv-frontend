@@ -411,7 +411,7 @@ export default {
                 </button>
               </div>
               <div v-if="showFilterOptions">
-                <div class="row my-2">
+                <div class="row my-1">
                   <div class="col-3">
                     <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
                   </div>

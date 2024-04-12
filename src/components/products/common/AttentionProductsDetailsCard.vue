@@ -1,24 +1,31 @@
 <script>
+import { getContactResultTypes } from '../../../shared/utils/data';
+import { getDate } from '../../../shared/utils/date';
+import { contactUser } from '../../../application/services/user';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
-import { contactUser } from '../../../application/services/user';
-import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
 
+
 export default {
-  name: 'AttentionDetailsCard',
+  name: 'AttentionProductsDetailsCard',
   components: { Popper, Spinner },
   props: {
     show: { type: Boolean, default: true },
     attention: { type: Object, default: undefined },
-    detailsOpened: { type: Boolean, default: false }
+    detailsOpened: { type: Boolean, default: false },
+    commerce: { type: Object, default: undefined },
   },
   data() {
     return {
       loading: false,
       extendedEntity: false,
-      checked: false
+      checked: false,
+      contactResultTypes: []
     }
+  },
+  beforeMount() {
+    this.contactResultTypes = getContactResultTypes();
   },
   methods: {
     showDetails() {
@@ -55,7 +62,8 @@ export default {
       } else {
         return 'bi-qr-code red-icon';
       }
-    }
+    },
+    getAttentionProducts() {}
   },
   watch: {
     detailsOpened: {
@@ -156,18 +164,32 @@ export default {
             </div>
           </div>
         </div>
+        <div class="row centered my-2" v-if="!loading">
+          <div class="col-12">
+            <button
+              @click="getAttentionProducts()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action px-4"
+              data-bs-toggle="modal"
+              :data-bs-target="`#attentionsProductsModal-${attention.id}`">
+              {{ $t('businessProductStockAdmin.stock')}} <br> <i class="bi bi-eyedropper"></i>
+            </button>
+          </div>
+        </div>
+        <hr>
         <div class="row m-1 centered">
           <div class="col">
-            <div class="" v-if="attention.paid !== undefined && attention.paid === true">
+            <div class="" v-if="attention.paid !== undefined && attention.paid === true  && attention.paymentConfirmationData">
               <div class="">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
-              <div v-if="attention.paid">
-                <span v-if="attention.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
-                <span v-if="attention.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span>
-                <span v-if="attention.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentAmount }}</span>
-                <span v-if="attention.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span>
-                <span v-if="attention.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentDate) }}</span>
+              <div v-if="attention.paid  && attention.paymentConfirmationData">
+                <span v-if="attention.paymentConfirmationData.proceduresTotalNumber && attention.paymentConfirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.paymentConfirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ attention.paymentConfirmationData.proceduresTotalNumber }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentFiscalNote" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentFiscalNotes.${attention.paymentConfirmationData.paymentFiscalNote}`) }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`) }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentAmount }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentCommission }}</span>
+                <span v-if="attention.paymentConfirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentConfirmationData.paymentDate) }}</span>
               </div>
               <hr>
             </div>
@@ -185,6 +207,24 @@ export default {
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Products -->
+    <div class="modal fade" :id="`attentionsProductsModal-${attention.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-eyedropper"></i> {{ $t("businessProductStockAdmin.attentionProducts") }} </h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0">
+            Products
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

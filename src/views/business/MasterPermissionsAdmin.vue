@@ -160,13 +160,6 @@ export default {
   border: .5px solid var(--gris-default);
   align-items: left;
 }
-.control-box {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin: .1rem;
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
-}
 .module-details-container {
   font-size: .8rem;
   margin-left: .5rem;

@@ -61,12 +61,6 @@ export default {
 </template>
 
 <style scoped>
-.searcher {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
 .item-title {
   display: flex;
   justify-content: center;

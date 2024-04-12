@@ -12,6 +12,7 @@ import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductsStockManagement from '../../components/products/ProductsStockManagement.vue';
+import ProductsAttentionManagement from '../../components/products/ProductsAttentionManagement.vue';
 
 export default {
   name: 'BusinessProductStockAdmin',
@@ -23,7 +24,8 @@ export default {
     Alert,
     ToggleCapabilities,
     ComponentMenu,
-    ProductsStockManagement
+    ProductsStockManagement,
+    ProductsAttentionManagement
   },
   async setup() {
     const router = useRouter();
@@ -182,6 +184,14 @@ export default {
                 :business="state.business"
               >
               </ProductsStockManagement>
+              <ProductsAttentionManagement
+                :showProductStockManagement="state.showAttentions"
+                :toggles="state.toggles"
+                :commerce="state.commerce"
+                :queues="state.queues"
+                :commerces="state.selectedCommerces"
+              >
+              </ProductsAttentionManagement>
             </div>
           </div>
         </div>
@@ -224,13 +234,6 @@ export default {
   align-items: center;
   justify-content: center;
   display: flex;
-}
-.control-box {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin: .1rem;
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
 }
 .green-icon {
   color: var(--verde-tu);

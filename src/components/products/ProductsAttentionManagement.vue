@@ -3,26 +3,25 @@ import Spinner from '../common/Spinner.vue';
 import Popper from "vue3-popper";
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
+import AttentionProductsDetailsCard from './common/AttentionProductsDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
-import { getClientsDetails } from '../../application/services/query-stack';
-import ClientDetailsCard from '../clients/common/ClientDetailsCard.vue';
+import { getAttentionsDetails } from '../../application/services/query-stack';
 
 export default {
-  name: 'DashboardClientsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard },
+  name: 'ProductsAttentionManagement',
+  components: { Message, SimpleDownloadCard, Spinner, AttentionProductsDetailsCard, Popper },
   props: {
-    showClientManagement: { type: Boolean, default: false },
+    showProductStockManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined },
-    business: { type: Object, default: undefined }
+    commerces: { type: Array, default: undefined }
   },
   data() {
     return {
       loading: false,
       counter: 0,
-      clients: undefined,
+      attentions: undefined,
       totalPages: 0,
       daysSinceType: undefined,
       daysSinceContacted: undefined,
@@ -30,7 +29,7 @@ export default {
       contacted: undefined,
       contactable: undefined,
       survey: undefined,
-      asc: true,
+      asc: false,
       showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
@@ -42,6 +41,15 @@ export default {
       endDate: undefined
     }
   },
+  async beforeMount() {
+    try {
+      this.loading = true;
+      await this.refresh();
+      this.loading = false;
+    } catch (error) {
+      this.loading = false;
+    }
+  },
   methods: {
     async refresh() {
       try {
@@ -50,11 +58,11 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        this.clients = await getClientsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+        this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
-        if (this.clients && this.clients.length > 0) {
-          const { counter } = this.clients[0];
+        if (this.attentions && this.attentions.length > 0) {
+          const { counter } = this.attentions[0];
           this.counter = counter;
           const total = counter / this.limit;
           const totalB = Math.trunc(total);
@@ -76,7 +84,7 @@ export default {
       this.daysSinceContacted = undefined;
       this.contactResultType = undefined;
       this.survey = undefined;
-      this.asc = true;
+      this.asc = false;
       this.contactable = undefined;
       this.contacted = undefined;
       this.searchText = undefined;
@@ -124,7 +132,7 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        const result = await getClientsDetails(this.business.id, this.commerce.id, undefined, undefined, commerceIds,
+        const result = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
         if (result && result.length > 0) {
@@ -133,7 +141,7 @@ export default {
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `clients-details-${this.commerce.tag}.csv`;
+        a.download = `products-attentions-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -207,20 +215,20 @@ export default {
 </script>
 
 <template>
-  <div id="clients-management" class="row" v-if="showClientManagement === true && toggles['dashboard.clients-management.view']">
+  <div id="attentions-management" class="row" v-if="showProductStockManagement === true && toggles['products-stock.attentions.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
             <SimpleDownloadCard
-              :download="toggles['dashboard.reports.clients-management']"
-              :title="$t('dashboard.reports.clients-management.title')"
+              :download="toggles['dashboard.reports.attentions-management']"
+              :title="$t('dashboard.reports.attentions-management.title')"
               :showTooltip="true"
-              :description="$t('dashboard.reports.clients-management.description')"
+              :description="$t('dashboard.reports.attentions-management.description')"
               :icon="'bi-file-earmark-spreadsheet'"
               @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.clients-management'] === true"
+              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
             ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -265,9 +273,9 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="m-1">
+                <div class="col-12 m-1">
                   <div class="row">
-                    <div class="col-10">
+                    <div class="col-9">
                       <input
                         min="1"
                         max="50"
@@ -304,22 +312,6 @@ export default {
                     arrow
                     disableClickAway
                     :content="$t(`dashboard.tracing.filters.attention`)">
-                    <i class='bi bi-info-circle-fill h7 m-2'></i>
-                  </Popper>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="EARLY" name="daysContacted-type" id="early-contacted" autocomplete="off">
-                  <label class="btn" for="early-contacted"> <i :class="`bi bi-chat-left-dots-fill green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="MEDIUM" name="daysContacted-type" id="medium-contacted" autocomplete="off">
-                  <label class="btn" for="medium-contacted"> <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceContacted" value="LATE" name="daysContacted-type" id="late-contacted" autocomplete="off">
-                  <label class="btn" for="late-contacted"> <i :class="`bi bi-chat-left-dots-fill red-icon`"></i> </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disableClickAway
-                    :content="$t(`dashboard.tracing.filters.contact`)">
                     <i class='bi bi-info-circle-fill h7 m-2'></i>
                   </Popper>
                 </div>
@@ -421,20 +413,15 @@ export default {
                     </li>
                   </ul>
                 </nav>
-            </div>
-            <div v-if="clients && clients.length > 0">
-              <div class="row" v-for="(client, index) in clients" :key="`clients-${index}`">
-                <ClientDetailsCard
+              </div>
+            <div v-if="attentions && attentions.length > 0">
+              <div class="row" v-for="(attention, index) in attentions" :key="`attention-${index}`">
+                <AttentionProductsDetailsCard
                   :show="true"
-                  :client="client"
-                  :commerce="this.commerce"
-                  :toggles="this.toggles"
-                  :startDate="this.startDate"
-                  :endDate="this.endDate"
-                  :queues="this.queues"
-                  :commerces="this.commerces"
+                  :attention="attention"
+                  :commerce="commerce"
                 >
-              </ClientDetailsCard>
+                </AttentionProductsDetailsCard>
               </div>
               <div class="centered mt-2">
                 <nav>
@@ -494,7 +481,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showClientManagement === true && !toggles['dashboard.clients-management.view']">
+  <div v-if="showProductStockManagement === true && !toggles['products-stock.attentions.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

@@ -2026,6 +2026,8 @@
     "daysNextReplacement": "Días próxima Reposición:",
     "replacementSel": "Reposición:",
     "consumptionDate": "Fecha Consumo:",
+    "attentionProducts": "Stock de Atención",
+    "stock": "Stock",
     "message": {
       "1": {
         "title": "¡Ups!",

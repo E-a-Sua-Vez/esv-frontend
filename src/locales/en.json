@@ -2022,6 +2022,8 @@
     "daysNextReplacement": "Days Next Replacement:",
     "replacementSel": "Replacement:",
     "consumptionDate": "Consume Date:",
+    "attentionProducts": "Attention Stock",
+    "stock": "Stock",
     "message": {
       "1": {
         "title": "Oh no!",

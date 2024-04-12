@@ -2029,6 +2029,8 @@
     "daysNextReplacement": "Días próximo Recarregamento:",
     "replacementSel": "Recarregamento:",
     "consumptionDate": "Data Consumo:",
+    "attentionProducts": "Estoque de Atendimento",
+    "stock": "Estoque",
     "message": {
       "1": {
         "title": "Ups!",

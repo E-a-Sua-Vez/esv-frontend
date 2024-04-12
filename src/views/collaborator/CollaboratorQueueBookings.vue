@@ -220,19 +220,6 @@ export default {
   border-bottom-right-radius: 0;
   border-bottom: 0;
 }
-.control-box {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin: .1rem;
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
-}
-.active-name {
-  background-color: var(--azul-turno);
-  color: var(--color-background);
-  font-weight: 700;
-  font-size: .9rem;
-}
 .blocks-section {
   overflow-y: scroll;
   max-height: 600px;

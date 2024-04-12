@@ -336,13 +336,6 @@ export default {
   justify-content: center;
   display: flex;
 }
-.control-box {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin: .1rem;
-  border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
-}
 .green-icon {
   color: var(--verde-tu);
 }
@@ -356,5 +349,4 @@ export default {
   font-size: .6rem;
   font-weight: 500;
 }
-
 </style>

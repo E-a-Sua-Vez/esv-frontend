@@ -214,15 +214,6 @@ export default {
   border-bottom: 0;
   line-height: 1.6rem;
 }
-.details-arrow {
-  margin: .5rem;
-  margin-top: 0;
-  border-bottom-left-radius: .5rem;
-  border-bottom-right-radius: .5rem;
-  line-height: 1.1rem;
-  border: 1.5px solid var(--gris-default);
-  border-top: 0;
-}
 .show {
   padding: 10px;
   max-height: 400px !important;
@@ -241,11 +232,6 @@ export default {
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
-}
-.metric-card-detail-subtitle {
-  font-size: .72rem;
-  font-weight: 400;
   line-height: .7rem;
 }
 .checked-icon {
