@@ -115,8 +115,6 @@ export default {
     },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
-      this.startDate = new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10);
-      this.endDate = new Date().toISOString().slice(0,10);
     },
     async exportToCSV() {
       try {
