@@ -8,22 +8,22 @@ import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
-import { addProductConsumption, getActiveReplacementsByProductId } from '../../../application/services/product';
+import { addProductConsumption, getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
 import { getDate } from '../../../shared/utils/date';
 import ProductReplacementDetailsCard from '../common/ProductReplacementDetailsCard.vue';
 import ProductConsumptionDetailsCard from '../common/ProductConsumptionDetailsCard.vue';
 
 export default {
-  name: 'ProductConsumptionManagement',
+  name: 'ProductAttentionManagement',
   components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, ProductReplacementDetailsCard, ProductConsumptionDetailsCard },
   props: {
-    showProductConsumptionManagement: { type: Boolean, default: false },
+    showProductAttentionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    product: { type: Object, default: {} },
+    attention: { type: Object, default: {} },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
-    productConsumptionsIn: { type: Array, default: [] }
+    productAttentionsIn: { type: Array, default: [] }
   },
   emits: ['getProductConsuptions'],
   data() {
@@ -31,8 +31,9 @@ export default {
     return {
       loading: false,
       alertError: '',
-      productConsumptions: [],
+      productAttentions: [],
       newProductConsumptions: [],
+      products: [],
       productReplacements: [],
       newProductConsumption: {},
       counter: 0,
@@ -54,9 +55,11 @@ export default {
       limit: 10,
       consumptionAmountError: false,
       consumptionDateError: false,
+      consumptionProductId: false,
       consumptionReplacementId: false,
       replacementExpirationDateError: false,
       selectedProductReplacement: {},
+      selectedProduct: {},
       startDate: undefined,
       endDate: undefined
     }
@@ -88,7 +91,7 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newProductConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate, undefined);
+        this.newProductConsumptions = await getProductsConsumptionsDetails(commerceIds, undefined, this.page, this.limit, this.asc, undefined, undefined, this.attention.attentionId);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -99,8 +102,8 @@ export default {
       this.showFilterOptions = !this.showFilterOptions;
     },
     async showAdd() {
-      if (this.product && this.product.productId && this.productReplacements.length === 0) {
-        this.productReplacements = await getActiveReplacementsByProductId(this.product.productId);
+      if (this.commerce && this.commerce.id && this.products.length === 0) {
+        this.products = await getProductByCommerce(this.commerce.id);
       }
       this.showAddOption = !this.showAddOption;
       this.newProductConsumption = {
@@ -108,8 +111,8 @@ export default {
       }
     },
     updatePaginationData() {
-      if (this.productConsumptions && this.productConsumptions.length > 0) {
-        const { counter } = this.productConsumptions[0];
+      if (this.productAttentions && this.productAttentions.length > 0) {
+        const { counter } = this.productAttentions[0];
         this.counter = counter;
         const total = counter / this.limit;
         const totalB = Math.trunc(total);
@@ -121,6 +124,12 @@ export default {
     },
     validateAdd(newProductConsumption) {
       this.errorsAdd = [];
+      if (!this.selectedProduct || !this.selectedProduct.id) {
+        this.consumptionProductId = true;
+        this.errorsAdd.push('businessProductStockAdmin.validate.product');
+      } else {
+        this.consumptionProductId = false;
+      }
       if (!this.selectedProductReplacement || !this.selectedProductReplacement.id) {
         this.consumptionReplacementId = true;
         this.errorsAdd.push('businessProductStockAdmin.validate.productReplacement');
@@ -155,14 +164,15 @@ export default {
       try {
         this.loading = true;
         if (this.validateAdd(newProductConsumption)) {
-          newProductConsumption.productId = this.product.productId;
-          newProductConsumption.commerceId = this.product.commerceId;
-          newProductConsumption.productCode = this.product.productCode;
+          newProductConsumption.productId = this.selectedProduct.id;
+          newProductConsumption.comsumptionAttentionId = this.attention.attentionId;
+          newProductConsumption.commerceId = this.selectedProduct.commerceId;
+          newProductConsumption.productCode = this.selectedProduct.productCode;
           newProductConsumption.consumedBy = this.user.email;
           newProductConsumption.productReplacementId = this.selectedProductReplacement.id;
           await addProductConsumption(newProductConsumption);
           setTimeout(async () => {
-            this.$emit('getProductConsumptions');
+            this.$emit('getProductConsuptions');
             await this.refresh();
           }, 5000)
           this.showAddOption = false;
@@ -181,14 +191,14 @@ export default {
         this.loading = true;
         let csvAsBlob = [];
         let commerceIds = [this.commerce.id];
-        const result = await getProductsConsumptionsDetails(commerceIds, this.product.productId, undefined, undefined, this.asc, this.startDate, this.endDate, undefined);
+        const result = await getProductsConsumptionsDetails(commerceIds, undefined, undefined, undefined, this.asc, this.startDate, this.endDate, this.attention.attentionId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `product-consumption-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `product-attention-details-${this.commerce.tag}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -265,11 +275,11 @@ export default {
         await this.getUser();
       }
     },
-    productConsumptionsIn: {
+    productAttentionsIn: {
       immediate: true,
       deep: true,
       async handler() {
-        this.productConsumptions = this.productConsumptionsIn;
+        this.productAttentions = this.productAttentionsIn;
         this.updatePaginationData();
       }
     },
@@ -278,8 +288,17 @@ export default {
       deep: true,
       async handler() {
         if (this.newProductConsumptions) {
-          this.productConsumptions = this.newProductConsumptions;
+          this.productAttentions = this.newProductConsumptions;
           this.updatePaginationData();
+        }
+      }
+    },
+    selectedProduct: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.selectedProduct && this.selectedProduct.id) {
+          this.productReplacements = await getActiveReplacementsByProductId(this.selectedProduct.id);
         }
       }
     }
@@ -288,7 +307,7 @@ export default {
 </script>
 
 <template>
-  <div id="productConsumptions-management" class="row" v-if="showProductConsumptionManagement === true && toggles['products-stock.products.view-consumption']">
+  <div id="productAttentions-management" class="row" v-if="showProductAttentionManagement === true && toggles['products-stock.products.view-attention']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
@@ -306,11 +325,21 @@ export default {
               <div v-if="showAddOption">
                 <div class="row mt-1">
                   <div class="col-4 text-label">
+                    {{ $t("businessProductStockAdmin.product") }}
+                  </div>
+                  <div class="col-8">
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="selectedProduct">
+                      <option v-for="prod in products" :key="prod.id" :value="prod" id="select-product"> {{ prod.name }} </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row mt-1">
+                  <div class="col-4 text-label">
                     {{ $t("businessProductStockAdmin.replacementSel") }}
                   </div>
                   <div class="col-8">
                     <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="selectedProductReplacement">
-                      <option v-for="rep in productReplacements" :key="rep.id" :value="rep" id="select-replacement">{{ rep.replacementActualLevel }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }} - ({{ getDate(rep.replacementExpirationDate) }})</option>
+                      <option v-for="rep in productReplacements" :key="rep.id" :value="rep" id="select-replacement">{{ rep.replacementActualLevel }} {{ $t(`productMeasuresTypesShort.${selectedProduct.measureType}`) }} - ({{ getDate(rep.replacementExpirationDate) }})</option>
                     </select>
                   </div>
                 </div>
@@ -476,8 +505,8 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="this.productConsumptions && this.productConsumptions.length > 0">
-              <div class="row" v-for="(product, index) in productConsumptions" :key="`productConsumptions-${index}`">
+            <div v-if="this.productAttentions && this.productAttentions.length > 0">
+              <div class="row" v-for="(product, index) in productAttentions" :key="`productAttentions-${index}`">
                 <ProductConsumptionDetailsCard
                   :show="true"
                   :detailsOpened="false"
@@ -497,7 +526,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showProductConsumptionManagement === true && !toggles['products-stock.products.view-consumption']">
+  <div v-if="showProductAttentionManagement === true && !toggles['products-stock.products.view-attention']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

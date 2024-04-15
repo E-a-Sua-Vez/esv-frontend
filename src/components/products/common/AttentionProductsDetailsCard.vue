@@ -5,13 +5,15 @@ import { contactUser } from '../../../application/services/user';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
-
+import ProductAttentionManagement from '../domain/ProductAttentionManagement.vue';
+import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
 
 export default {
   name: 'AttentionProductsDetailsCard',
-  components: { Popper, Spinner },
+  components: { Popper, Spinner, ProductAttentionManagement },
   props: {
     show: { type: Boolean, default: true },
+    toggles: { type: Object, default: undefined },
     attention: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
@@ -21,7 +23,10 @@ export default {
       loading: false,
       extendedEntity: false,
       checked: false,
-      contactResultTypes: []
+      contactResultTypes: [],
+      productConsumptions: [],
+      page: 1,
+      limit: 10
     }
   },
   beforeMount() {
@@ -63,7 +68,15 @@ export default {
         return 'bi-qr-code red-icon';
       }
     },
-    getAttentionProducts() {}
+    async getAttentionProducts() {
+      try {
+        this.loading = true;
+        this.productConsumptions = await getProductsConsumptionsDetails(undefined, undefined, this.page, this.limit, this.asc, undefined, undefined, this.attention.attentionId);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    }
   },
   watch: {
     detailsOpened: {
@@ -88,9 +101,8 @@ export default {
   <div v-if="show">
     <div class="row metric-card">
       <div class="col-6 centered fw-bold" v-if="attention && attention.userName">
-        <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
-        <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i v-if="attention.paid !== undefined && attention.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
+        {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
+        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper mx-1"> </i>
       </div>
       <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
@@ -170,7 +182,7 @@ export default {
               @click="getAttentionProducts()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action px-4"
               data-bs-toggle="modal"
-              :data-bs-target="`#attentionsProductsModal-${attention.id}`">
+              :data-bs-target="`#attentionsProductsModal-${attention.attentionId}`">
               {{ $t('businessProductStockAdmin.stock')}} <br> <i class="bi bi-eyedropper"></i>
             </button>
           </div>
@@ -212,7 +224,7 @@ export default {
       </div>
     </div>
     <!-- Modal Products -->
-    <div class="modal fade" :id="`attentionsProductsModal-${attention.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal fade" :id="`attentionsProductsModal-${attention.attentionId}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
@@ -221,7 +233,15 @@ export default {
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0">
-            Products
+            <ProductAttentionManagement
+              :showProductAttentionManagement="true"
+              :toggles="toggles"
+              :attention="attention"
+              :commerce="commerce"
+              :productAttentionsIn="productConsumptions"
+              @getProductConsuptions="getAttentionProducts"
+            >
+            </ProductAttentionManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
@@ -247,7 +267,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 1000px !important;
   overflow-y: auto;
 }
 .details-title {

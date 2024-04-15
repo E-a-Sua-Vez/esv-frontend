@@ -2031,6 +2031,7 @@
     "consumptionDate": "Data Consumo:",
     "attentionProducts": "Estoque de Atendimento",
     "stock": "Estoque",
+    "product": "Produto",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2071,7 +2072,8 @@
           "add-replacement": "Adicionar Recarregamento",
           "add-consumption": "Adicionar Consumo",
           "view-consumption": "Ver Consumo",
-          "view-replacement": "Ver Recarregamento"
+          "view-replacement": "Ver Recarregamento",
+          "view-attention": "Ver Consumo do Produto"
         },
         "reports": {
           "details": "Relatório Controle de Estoque",
@@ -2081,6 +2083,7 @@
       }
     },
     "validate": {
+      "product": "Deve selecionar o produto",
       "consumptionAmount": "Deve digitar a quantidade válida",
       "consumptionLevel": "O consumo digitado e maior quue a quantidade disponível",
       "replacementAmount": "Deve digitar a quantidade válida",

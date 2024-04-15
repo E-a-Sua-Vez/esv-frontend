@@ -86,7 +86,7 @@ export default {
   <div v-if="show">
     <div class="row metric-card">
       <div class="col-5 centered fw-bold date-title" v-if="product && product.replacementAmount">
-        <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
+        {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
         <i :class="`bi ${clasifyProductStatus(product.replacementActualLevel)} m-1 h5`"></i>
         <span class="badge rounded-pill bg-secondary metric-keyword-tag fw-bold"> {{ scorePercentage(product.replacementAmount, product.replacementActualLevel ? product.replacementActualLevel : 0) }}% </span>
       </div>

@@ -5,7 +5,7 @@ import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import AttentionProductsDetailsCard from './common/AttentionProductsDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
-import { getAttentionsDetails } from '../../application/services/query-stack';
+import { getAttentionsDetails, getProductsConsumptionsDetails } from '../../application/services/query-stack';
 
 export default {
   name: 'ProductsAttentionManagement',
@@ -129,19 +129,14 @@ export default {
         this.loading = true;
         let csvAsBlob = [];
         let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        const result = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+        const result = await getProductsConsumptionsDetails(commerceIds, undefined, undefined, undefined, this.asc, this.startDate, this.endDate, undefined);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `products-attentions-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `products-attentions-${this.commerce.tag}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -222,13 +217,13 @@ export default {
         <div v-if="!loading">
           <div>
             <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
+              :download="toggles['products-stock.products.view-attention']"
+              :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
               :showTooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
+              :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
               :icon="'bi-file-earmark-spreadsheet'"
               @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
+              :canDownload="toggles['products-stock.products.view-attention'] === true"
             ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -273,9 +268,9 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="col-12 m-1">
+                <div class="m-1">
                   <div class="row">
-                    <div class="col-9">
+                    <div class="col-10">
                       <input
                         min="1"
                         max="50"
@@ -417,6 +412,7 @@ export default {
             <div v-if="attentions && attentions.length > 0">
               <div class="row" v-for="(attention, index) in attentions" :key="`attention-${index}`">
                 <AttentionProductsDetailsCard
+                  :toggles="toggles"
                   :show="true"
                   :attention="attention"
                   :commerce="commerce"

@@ -2028,6 +2028,7 @@
     "consumptionDate": "Fecha Consumo:",
     "attentionProducts": "Stock de Atención",
     "stock": "Stock",
+    "product": "Producto:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2068,7 +2069,8 @@
           "add-replacement": "Agregar Reposición",
           "add-consumption": "Agregar Consumo",
           "view-consumption": "Ver Consumo",
-          "view-replacement": "Ver Reposición"
+          "view-replacement": "Ver Reposición",
+          "view-attention": "Ver Consumo de Atenciones"
         },
         "reports": {
           "details": "Reporte Control de Stock",
@@ -2078,6 +2080,7 @@
       }
     },
     "validate": {
+      "product": "Debe seleccionar el producto",
       "consumptionAmount": "Debe ingresar una cantidad válida",
       "consumptionLevel": "El consumo ingresado es mayor a la cantidad disponible",
       "replacementAmount": "Debe ingresar una cantidad válida",

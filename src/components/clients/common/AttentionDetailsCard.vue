@@ -83,6 +83,7 @@ export default {
         <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
         <i v-if="attention.paid !== undefined && attention.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
+        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
       </div>
       <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}

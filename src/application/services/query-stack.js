@@ -465,16 +465,18 @@ export const getProductsReplacementDetails = async (
 };
 
 export const getProductsConsumptionsDetails = async (
+  commercesId = undefined,
   productId = undefined,
   page = undefined,
   limit = undefined,
   asc = true,
   from = undefined,
-  to = undefined
+  to = undefined,
+  attentionId = undefined
 ) => {
   const options = {};
   options.params = {
-    productId, page, limit, asc, from, to
+    commercesId, productId, page, limit, asc, from, to, attentionId
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);

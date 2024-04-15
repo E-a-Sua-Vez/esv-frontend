@@ -2024,6 +2024,7 @@
     "consumptionDate": "Consume Date:",
     "attentionProducts": "Attention Stock",
     "stock": "Stock",
+    "product": "Product:",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -2064,7 +2065,8 @@
           "add-replacement": "Add Replacement",
           "add-consumption": "Add Consumption",
           "view-consumption": "See Consumption",
-          "view-replacement": "See Replacement"
+          "view-replacement": "See Replacement",
+          "view-attention": "See Attention Consumption"
         },
         "reports": {
           "details": "Stock Control Report",
@@ -2074,6 +2076,7 @@
       }
     },
     "validate": {
+      "product": "You should select the Product",
       "consumptionAmount": "You should add the consumption amount",
       "consumptionLevel": "Consume amount added is bigger than the quantity available",
       "replacementAmount": "You should add the replacement amount",

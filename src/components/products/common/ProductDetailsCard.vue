@@ -130,7 +130,8 @@ export default {
     async getProductConsuptions() {
       try {
         this.loading = true;
-        this.productConsumptions = await getProductsConsumptionsDetails(this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
+        let commerceIds = [this.commerce.id];
+        this.productConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -161,15 +162,25 @@ export default {
   <div v-if="show">
     <div class="row metric-card fw-bold">
       <div class="col-6 centered" v-if="product && product.productName">
-        <i class="bi bi-eyedropper mx-1"></i> {{ product.productName }}
-
+        {{ product.productName }}
       </div>
       <div class="col-6 centered">
         <i :class="`bi ${clasifyProductStatus(product.productStatus)} mx-1 h5`"> </i>
         <i :class="`bi ${clasifyExpired(product.daysSinceExpired)} mx-2 h6`"></i>
         <i :class="`bi ${clasifyReplacement(product.daysSinceNextReplacement)} mx-2 h6`"></i>
       </div>
+      <div class="lefted">
+      <div class="progress col-12 col-md-6" style="height: 3px;">
+        <div
+          :class="`progress-bar ${productScoreBarStyle(product)}`"
+          role="progressbar"
+          :style="`height: 3px; width: ${scorePercentage(product.maximumLevel, product.actualLevel ? product.actualLevel : 0)}%`"
+          aria-valuemin="0" aria-valuemax="100">
+        </div>
+      </div>
     </div>
+    </div>
+
     <div class="details-arrow">
       <div class="centered">
         <span
@@ -279,7 +290,6 @@ export default {
               :product="product"
               :commerce="commerce"
               :commerces="commerces"
-              :queues="queues"
               @getProductConsuptions="getProductConsuptions"
             >
             </ProductConsumptionManagement>

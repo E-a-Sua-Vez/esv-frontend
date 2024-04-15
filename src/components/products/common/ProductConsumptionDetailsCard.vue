@@ -66,7 +66,7 @@ export default {
   <div v-if="show">
     <div class="row metric-card">
       <div class="col centered fw-bold date-title" v-if="product && product.consumptionAmount">
-        <i class="bi bi-eyedropper mx-1"></i> {{ product.consumptionAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
+       {{ product.productName }} - {{ product.consumptionAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
         <i v-if="product.comsumptionAttentionId" class="bi bi-qr-code mx-1"></i>
         <i v-else class="bi bi-person-fill blue-icon mx-1"></i>
       </div>

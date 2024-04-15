@@ -281,6 +281,7 @@ export default {
         <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
+        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
       </div>
       <div class="col centered hour-title" v-if="attention.block && attention.block.hourFrom">
         <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>
