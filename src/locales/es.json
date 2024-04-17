@@ -939,7 +939,8 @@
           "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Reservas Visión 360°"
+          "booking-manage": "Reservas Visión 360°",
+          "product-stock": "Control de Stock"
         },
         "bookings": {
           "cancel": "Cancelar Reserva",

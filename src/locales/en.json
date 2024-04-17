@@ -944,7 +944,8 @@
           "dashboard": "Go to Performance Hub",
           "tracing": "Go to Clients Management",
           "queue-manage": "Attend Queues of the Day",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "product-stock": "Stock Control"
         },
         "bookings": {
           "cancel": "Cancel Booking",

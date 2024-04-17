@@ -71,7 +71,7 @@ export default {
             router.push({ path: `/interno/colaborador/dashboard` });
           } else if (option === 'tracing') {
             router.push({ path: `/interno/colaborador/tracing` });
-          } else if (option === 'tracing') {
+          } else if (option === 'product-stock') {
             router.push({ path: `/interno/colaborador/product-stock` });
           }
         }

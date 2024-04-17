@@ -508,7 +508,7 @@ export default {
           return booking.block.number;
         }
       });
-      const uniqueBlocksReserved = [...new Set(bookingsReserved)];
+      const uniqueBlocksReserved = [...new Set(bookingsReserved.flat(Infinity))];
       uniqueBlocksReserved.map(number => {
         const block = blocks.filter(block => block.number === number);
         blocksReserved.push(block);
@@ -907,7 +907,7 @@ export default {
                   <div v-for="(attention, index) in state.attentions" :key="index" class="mt-2">
                     <div class="metric-card">
                       <div v-if="attention.block">
-                        <span class="lefted badge rounded-pill bg-primary"> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}</span>
+                        <span class="lefted badge rounded-pill bg-primary"> {{ attention.block.hourFrom }}</span>
                       </div>
                       <AttentionDetailsCard
                         :attention="attention"
@@ -940,7 +940,7 @@ export default {
                       <div class="metric-card">
                         <span
                           class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                          :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}
+                          :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}
                         </span>
                         <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
                           <BookingDetailsCard
@@ -965,7 +965,7 @@ export default {
                       <div class="metric-card">
                         <span
                           class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                          :class="'bg-success'"> {{ block.hourFrom }} - {{ block.hourTo }}</span>
+                          :class="'bg-success'"> {{ block.hourFrom }}</span>
                       </div>
                     </div>
                   </div>

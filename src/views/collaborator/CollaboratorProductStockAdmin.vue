@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount, } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getSurveyMetrics } from '../../application/services/query-stack';
 import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
@@ -12,6 +11,8 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import ProductsStockManagement from '../../components/products/ProductsStockManagement.vue';
+import ProductAttentionManagement from '../../components/products/ProductsAttentionManagement.vue';
 
 export default {
   name: 'CollaboratorProductStockAdmin',
@@ -22,7 +23,9 @@ export default {
     Spinner,
     Alert,
     ToggleCapabilities,
-    ComponentMenu
+    ComponentMenu,
+    ProductsStockManagement,
+    ProductAttentionManagement
   },
   async setup() {
     const router = useRouter();
@@ -94,15 +97,13 @@ export default {
     }
 
     const showProducts = () => {
-      state.showClients = true;
-      state.showAttentions = false,
-      state.showSurveyManagement = false;
+      state.showProducts = true;
+      state.showAttentions = false;
     }
 
     const showAttentions = () => {
-      state.showClients = false;
-      state.showAttentions = true,
-      state.showSurveyManagement = false;
+      state.showProducts = false;
+      state.showAttentions = true;
     }
 
     return {
@@ -174,6 +175,23 @@ export default {
               </div>
             </div>
             <div>
+              <ProductsStockManagement
+                :showProductStockManagement="state.showProducts"
+                :toggles="state.toggles"
+                :commerce="state.commerce"
+                :queues="state.queues"
+                :commerces="state.selectedCommerces"
+                :business="state.business"
+              >
+              </ProductsStockManagement>
+              <ProductAttentionManagement
+                :showProductStockManagement="state.showAttentions"
+                :toggles="state.toggles"
+                :commerce="state.commerce"
+                :queues="state.queues"
+                :commerces="state.selectedCommerces"
+              >
+              </ProductAttentionManagement>
             </div>
           </div>
         </div>

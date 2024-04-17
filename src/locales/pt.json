@@ -950,7 +950,8 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "product-stock": "Controle de Estoque"
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
