@@ -2391,6 +2391,10 @@
         "9": {
           "name": "Informe de Pago de Atenciones",
           "description": "Listado de Pago de Atenciones del comercio entre las fechas seleccionadas."
+        },
+        "10": {
+          "name": "Informe de Uso Stock de Atenciones",
+          "description": "Listado de Uso Stock de Atenciones del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -2406,7 +2410,8 @@
           "clients": "Informe de Clientes",
           "client-contacts": "Informe de Contactos de Clientes",
           "booking-payments": "Informe de Pagos de Reservas",
-          "attention-payments": "Informe de Pagos de Atenciones"
+          "attention-payments": "Informe de Pagos de Atenciones",
+          "attention-products":"Informe de Uso de Stock Atenciones"
         }
       }
     }
@@ -3108,7 +3113,8 @@
         "client-contacts": "Descargar Reporte de Contacto de Clientes",
         "clients": "Descargar Reporte de Clientes",
         "booking-payments": "Informe de Pagos de Reservas",
-        "attention-payments": "Informe de Pagos de Atenciones"
+        "attention-payments": "Informe de Pagos de Atenciones",
+        "attention-products": "Informe de Uso de Stock Atenciones"
       }
     },
     "collaborator": {

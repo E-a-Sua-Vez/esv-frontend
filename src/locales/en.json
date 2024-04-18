@@ -2386,6 +2386,10 @@
         "9": {
           "name": "Attention Payment Report",
           "description": "Attention Payment of the commerce between the selected dates."
+        },
+        "10": {
+          "name": "Attention Stock Use Report",
+          "description": "Attention Stock Use of the commerce between the selected dates."
         }
       }
     },
@@ -2401,7 +2405,8 @@
           "client-contacts": "Client Contacts Report",
           "clients": "Clients Report",
           "booking-payments": "Booking Payment Report",
-          "attention-payments": "Attention Payment Report"
+          "attention-payments": "Attention Payment Report",
+          "attention-products": "Attention Stock Use Report"
         }
       }
     }
@@ -3104,7 +3109,8 @@
         "client-contacts": "Download Client Contacts Report",
         "clients": "Download Client Report",
         "booking-payments": "Download Booking Payments Report",
-        "attention-payments": "Download Attention Payments Report"
+        "attention-payments": "Download Attention Payments Report",
+        "attention-products": "Dowload Attention Stock Use Report"
       }
     },
     "collaborator": {

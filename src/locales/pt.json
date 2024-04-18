@@ -2393,6 +2393,10 @@
         "9": {
           "name": "Relatório de Pagamento de Atendimentos",
           "description": "Listado de Pagamento de Atendimentos del comercio entre las fechas seleccionadas."
+        },
+        "10": {
+          "name": "Relatório de Uso de Estoque",
+          "description": "Listado de Uso de Estoque de Atendimentos del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -2408,7 +2412,8 @@
           "client-contacts": "Relatório de Contatos a Clientes",
           "clients": "Relatório de Clientes",
           "booking-payments": "Relatório de Pagamento de Reservas",
-          "attention-payments": "Relatório de Pagamento de Atendimentos"
+          "attention-payments": "Relatório de Pagamento de Atendimentos",
+          "attention-products": "Relatórios de Uso de Estoque de Atendimentos"
         }
       }
     }
@@ -3094,7 +3099,8 @@
         "client-contacts": "Download Relatórios de Contato de Clientes",
         "clients": "Download Relatórios de Clientes",
         "booking-payments": "Download Relatórios de Pagamento de Reservas",
-        "attention-payments": "Download Relatórios de Pagamento de Atendimentos"
+        "attention-payments": "Download Relatórios de Pagamento de Atendimentos",
+        "attention-products": "Download Relatórios de Uso de Estoque de Atendimentos"
       }
     },
     "collaborator": {

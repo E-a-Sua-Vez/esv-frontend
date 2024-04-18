@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getAttentionsReport, getNotificationsReport, getSurveysReport,
    getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport,
-   getBookingPaymentsResume, getAttentionPaymentsResume } from '../../application/services/query-stack';
+   getBookingPaymentsResume, getAttentionPaymentsResume, getAttentionProductsResume } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Message from '../../components/common/Message.vue';
@@ -36,7 +36,8 @@ export default {
       endDate: new Date().toISOString().slice(0,10),
       reports: ref({}),
       commerce: {},
-      toggles: {}
+      toggles: {},
+      format: 'csv'
     });
 
     onBeforeMount(async () => {
@@ -85,23 +86,40 @@ export default {
       }
     }
 
-    const downloadAttentionsReport = async () => {
+    const downloadReport = (data, prefix) => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
-        const result = await getAttentionsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
+        let dataAsBlob = [];
+        if (data && data.length > 0) {
+          if (state.format === 'csv') {
+            dataAsBlob = jsonToCsv(data);
+          } else if (state.format === 'json') {
+            dataAsBlob = JSON.stringify(data);
+          } else if (state.format === 'xls') {
+            dataAsBlob = jsonToCsv(data);
+          }
         }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
+        const blobURL = URL.createObjectURL(new Blob([dataAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `attentions-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
+        a.download = `${prefix}-${state.commerce.tag}-${state.startDate}-${state.endDate}.${state.format}`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const downloadAttentionsReport = async () => {
+      try {
+        loading.value = true;
+        const result = await getAttentionsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        downloadReport(result, 'attentions');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -112,20 +130,8 @@ export default {
     const downloadNotificationsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getNotificationsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `notifications-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'notifications');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -136,20 +142,8 @@ export default {
     const downloadSurveysReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getSurveysReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `surveys-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'surveys');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -160,20 +154,8 @@ export default {
     const downloadBookingsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getBookingsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `bookings-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'bookings');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -184,20 +166,8 @@ export default {
     const downloadWaitlistsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getWaitlistsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `waitlist-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'waitlist');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -208,20 +178,8 @@ export default {
     const downloadClientsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getClientsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `clients-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'clients');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -232,20 +190,8 @@ export default {
     const downloadClientContactsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getClientContactsReport(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'client-contacts');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -256,20 +202,8 @@ export default {
     const downloadBookingPaymentsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getBookingPaymentsResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'booking-payments');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -280,20 +214,8 @@ export default {
     const downloadAttentionPaymentsReport = async () => {
       try {
         loading.value = true;
-        let csvAsBlob = [];
         const result = await getAttentionPaymentsResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `client-contacts-${state.commerce.tag}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
+        downloadReport(result, 'attention-payments');
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
@@ -301,10 +223,54 @@ export default {
       }
     }
 
+    const downloadAttentionProductsReport = async () => {
+      try {
+        loading.value = true;
+        const result = await getAttentionProductsResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        downloadReport(result, 'attention-products');
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const getToday = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      state.startDate = `${year}-${month}-${day}`;
+      state.endDate = `${year}-${month}-${day}`;
+    }
+
+    const getCurrentMonth = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      const [ year, month, day ] = date.split('-');
+      state.startDate = `${year}-${month}-01`;
+      state.endDate = `${year}-${month}-${day}`;
+    }
+
+    const getLastMonth = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+    }
+
+    const getLastThreeMonths = async () => {
+      const date = new Date().toISOString().slice(0,10);
+      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
+      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
+      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+    }
+
     return {
       state,
       loading,
       alertError,
+      getCurrentMonth,
+      getLastMonth,
+      getLastThreeMonths,
+      getToday,
       goBack,
       isActiveBusiness,
       selectCommerce,
@@ -316,7 +282,8 @@ export default {
       downloadClientsReport,
       downloadClientContactsReport,
       downloadBookingPaymentsReport,
-      downloadAttentionPaymentsReport
+      downloadAttentionPaymentsReport,
+      downloadAttentionProductsReport
     }
   }
 }
@@ -353,12 +320,40 @@ export default {
                 </select>
               </div>
             </div>
-            <div class="row">
+            <div class="row my-2">
+              <div class="col-3">
+                <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+              </div>
+              <div class="col-3">
+                <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+              </div>
+              <div class="col-3">
+                <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+              </div>
+              <div class="col-3">
+                <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+              </div>
+            </div>
+            <div class="row my-2">
               <div class="col-6">
                 <input id="startDate" class="form-control metric-controls" type="date" v-model="state.startDate"/>
               </div>
               <div class="col-6">
                 <input id="endDate" class="form-control metric-controls" type="date" v-model="state.endDate"/>
+              </div>
+            </div>
+            <div  class="row my-2">
+              <div class="col centered form-check form-switch check-option">
+                <input type="radio" class="form-check-input btn-sm" v-model="state.format" value="csv" name="csv-type" id="csv-since" autocomplete="off">
+                <label class="btn" for="csv-since"> <i :class="`bi bi-filetype-csv`"></i> </label>
+              </div>
+              <div class="col centered form-check form-switch check-option">
+                <input type="radio" class="form-check-input btn-sm" v-model="state.format" value="xls" name="xls-type" id="xls-since" autocomplete="off">
+                <label class="btn" for="xls-since"> <i :class="`bi bi-filetype-xls`"></i> </label>
+              </div>
+              <div class="col centered form-check form-switch check-option">
+                <input type="radio" class="form-check-input btn-sm" v-model="state.format" value="json" name="json-type" id="json-since" autocomplete="off">
+                <label class="btn" for="json-since"> <i :class="`bi bi-filetype-json`"></i> </label>
               </div>
             </div>
             <div v-if="!loading" id="businessReports-result" class="mt-4">
@@ -452,6 +447,16 @@ export default {
                   :icon="'bi-cash-coin'"
                   :iconStyleClass="'blue-icon'"
                   @download="downloadAttentionPaymentsReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="!!state.toggles['reports.admin.attention-products']"
+                  :canDonwload="!!state.toggles['reports.admin.attention-products']"
+                  :title="$t('businessReports.items.reports.10.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.10.description')"
+                  :icon="'bi-eyedropper'"
+                  :iconStyleClass="'red-icon'"
+                  @download="downloadAttentionProductsReport"
                 ></SimpleDownloadCard>
               </div>
             </div>
