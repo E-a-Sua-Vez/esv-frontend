@@ -338,6 +338,14 @@
     "booking-edit": {
       "title": "Booking Edit",
       "description": "Let edit the date and hour of a booking"
+    },
+    "attention-stock-register": {
+      "title": "Register Stock",
+      "description": "Let the collaborator to register the stock before the attention ends"
+    },
+    "user-whatsapp-contact": {
+      "title": "Whatsapp Commerce Contact",
+      "description": "Let the user contact the commerce trough Whatsapp before request an attention"
     }
   },
   "paymentMethods": {
@@ -513,6 +521,8 @@
     "address": "Address: ",
     "seeQrCode": "Go to QR Code",
     "commerceSelected": "Commerce ",
+    "questions": "Do you have doubts or consults?",
+    "whatsapp": "Whatsapp Direct Chat",
     "message1": {
       "title": "Too much people? Don't worry!, You don't have to wait here.",
       "content": "Leave us your number or your email, and we will notify you when it is your turn to be attended."
@@ -742,6 +752,9 @@
       },
       "2": {
         "action": "Back to queues"
+      },
+      "3": {
+        "action": "Register Stock"
       }
     },
     "comment": {
@@ -798,7 +811,8 @@
           "dashboard": "Go to Performance Hub",
           "tracing": "Go to Clients Management",
           "queue-manage": "Attend Queues of the Day",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "product-stock": "Stock Control"
         }
       }
     }
@@ -849,7 +863,8 @@
           "dashboard": "Go to Performance Hub",
           "tracing": "Go to Clients Management",
           "queue-manage": "Attend Queues of the Day",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "product-stock":"Stock Control"
         }
       }
     }
@@ -1035,7 +1050,8 @@
           "dashboard": "Go to Performance Hub",
           "tracing": "Go to Clients Management",
           "queue-manage": "Attend Queues of the Day",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "product-stock": "Stock Control"
         }
       }
     }
@@ -2929,7 +2945,8 @@
         "dashboard": "Enable Performance Hub - Main Menu Collaborators",
         "tracing": "Enable Clients Management - Main Menu Collaborators",
         "queue-manage": "Enable Queue Management - Main Menu Collaborators",
-        "booking-manage": "Enable Booking Management - Main Menu Collaborators"
+        "booking-manage": "Enable Booking Management - Main Menu Collaborators",
+        "product-stock": "Enable Product Stock Management - Main Menu Collaborators"
       },
       "bookings": {
         "cancel": "Cancel Booking",

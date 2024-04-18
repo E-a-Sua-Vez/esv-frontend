@@ -327,6 +327,7 @@ export default {
   border-bottom-right-radius: .5rem;
   line-height: 1.1rem;
   border-top: 0;
+  border: none !important;
 }
 .show {
   padding: 10px;

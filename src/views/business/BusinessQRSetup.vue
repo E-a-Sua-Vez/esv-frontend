@@ -331,6 +331,9 @@ export default {
           :commerce="state.commerce">
         </CommerceContactInfo>
       </div>
+      <div v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')" class="row mx-1">
+
+      </div>
       <div>
         <Message
           :title="$t('commerceQRSetup.message1.title')"
@@ -413,6 +416,7 @@ export default {
   border-bottom-right-radius: .5rem;
   line-height: 1.1rem;
   border-top: 0;
+  border: none !important;
 }
 .show {
   padding: 10px;

@@ -339,6 +339,14 @@
     "booking-edit": {
       "title": "Reserva Editar",
       "description": "Editar reserva a otra fecha y/u hora"
+    },
+    "attention-stock-register": {
+      "title": "Registrar Stock",
+      "description": "Permite al colaborador registrar stock antes de finalizar la atención"
+    },
+    "user-whatsapp-contact": {
+      "title": "Whatsapp Contacto Comercio",
+      "description": "Permite al usuario poder contactar al Comercio vía Whatsapp antes de solicitar atención"
     }
   },
   "paymentMethods": {
@@ -515,6 +523,8 @@
     "address": "Dirección: ",
     "seeQrCode": "Ver Código QR",
     "commerceSelected": "Unidad ",
+    "questions": "¿Tienes dudas o consultas?",
+    "whatsapp": "Chat Directo Vía Whatsapp",
     "message1": {
       "title": "¿Falta mucho? ¡No te preocupes!, no tienes que esperar aquí",
       "content": "Déjanos tu whatsapp y te notificaremos cuando sea tu turno para ser atendido."
@@ -735,6 +745,9 @@
       },
       "2": {
         "action": "Volver a la fila"
+      },
+      "3": {
+        "action": "Registrar Stock"
       }
     },
     "comment": {
@@ -843,7 +856,8 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Gestión de Clientes",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Reservas Visión 360°"
+          "booking-manage": "Reservas Visión 360°",
+          "product-stock": "Control de Stock"
         }
       }
     }
@@ -979,7 +993,7 @@
     "actions": {
       "1": {
         "title": {
-          "1": "¿La persona ya llegó?"
+          "1": "¿Atendiste al cliente?"
         },
         "action": "Atender"
       },
@@ -1031,7 +1045,8 @@
           "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Reservas Visión 360°"
+          "booking-manage": "Reservas Visión 360°",
+          "product-stock": "Control de Stock"
         }
       }
     }
@@ -2928,7 +2943,8 @@
         "permissions-admin": "Habilitar Permisos - Menú Principal Colaborador",
         "reports": "Habilitar Reportes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas del Día - Menú Principal Colaborador",
-        "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador"
+        "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
+        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador"
       }
     },
     "administrators": {
@@ -3120,7 +3136,8 @@
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
         "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
         "queue-manage":"Habilitar Atender Filas del Día - Menú Principal Colaborador",
-        "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador"
+        "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador",
+        "product-stock":"Habilitar Gestionar Stock - Menú Principal Colaborador"
       }
     },
     "roles": {

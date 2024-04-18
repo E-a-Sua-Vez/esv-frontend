@@ -338,6 +338,14 @@
     "booking-edit": {
       "title": "Reserva Editar",
       "description": "Editar reserva pra outra data e ou hora"
+    },
+    "attention-stock-register": {
+      "title": "Cadastro Estoque",
+      "description": "Permite ao colaborador cadastrar o estoque antes do atendimento terminar"
+    },
+    "user-whatsapp-contact": {
+      "title": "Whatsapp Contato Comércio",
+      "description": "Permite ao usuário contatar ao Comércio no Whatsapp antes do solicitar atendimento"
     }
   },
   "paymentMethods": {
@@ -514,6 +522,8 @@
     "address": "Endereço: ",
     "seeQrCode": "Ver QR Code",
     "commerceSelected": "Unidade ",
+    "questions": "Tem dúvidas ou perguntas?",
+    "whatsapp": "Chat Direto no Whatsapp",
     "message1": {
       "title": "Muitas pessoas? Não se preocupe!, Você não tem que esperar aqui!",
       "content": "Deixe-nos o seu whatsapp, e iremos avisá-lo quando for a sua vez de ser atendido."
@@ -743,11 +753,14 @@
       },
       "2": {
         "action": "Voltar para a fila"
+      },
+      "3": {
+        "action": "Cadastrar Estoque"
       }
     },
     "comment": {
-      "label": "Algum comentário na atendimento? (Opcional):",
-      "placeholder": "O usuário foi gentil. Deixou uma gorjeta."
+      "label": "Algum comentário no atendimento? (Opcional):",
+      "placeholder": "O usuário foi gentil. Deixou gorjeta."
     },
     "message": {
       "1": {
@@ -799,7 +812,8 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "product-stock":"Controle de Estoque"
         }
       }
     }
@@ -855,7 +869,8 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "product-stock":"Controle de Estoque"
         }
       }
     }
@@ -985,7 +1000,7 @@
     "actions": {
       "1": {
         "title": {
-          "1": "A pessoa chegou?"
+          "1": "Antedeu o Cliente?"
         },
         "action": "Atender"
       },
@@ -1036,7 +1051,8 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "product-stock": "Controle de Estoque"
         }
       }
     }
@@ -2918,7 +2934,8 @@
         "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
         "tracing": "Habilitar Gestão de Clientes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas do Dia - Menú Principal Colaborador",
-        "booking-manage": "Habilitar Reservas Visão 360° - Menú Principal Colaborador"
+        "booking-manage": "Habilitar Reservas Visão 360° - Menú Principal Colaborador",
+        "product-stock": "Habilitar Controle de Estoque - Menú Principal Colaborador"
       }
     },
     "administrators": {

@@ -1,6 +1,7 @@
 <script>
 import { GoogleMap, Marker } from "vue3-google-map";
 import { useI18n } from 'vue-i18n';
+import { getActiveFeature } from '../../shared/features';
 
 export default {
   name: 'CommerceContactInfo',
@@ -60,6 +61,9 @@ export default {
       this.showContact = false;
       this.showLocation = false;
       this.showService = !this.showService;
+    },
+    getActiveFeature(commerce, name, type) {
+      return getActiveFeature(commerce, name, type)
     }
   }
 }
@@ -67,6 +71,22 @@ export default {
 
 <template>
   <div>
+    <div v-if="getActiveFeature(commerce, 'attention-stock-register', 'PRODUCT')" class="row mb-3">
+        <div class="col-12" v-if="commerce.contactInfo.whatsapp">
+          <div class="centered">
+            <span> {{ $t("commerceQRSetup.questions") }} </span>
+          </div>
+          <div class="centered">
+            <a
+              v-if="commerce.contactInfo.whatsapp"
+              class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill whatsapp-button"
+              :href="'https://wa.me/'+commerce.contactInfo.whatsapp"
+              target="_blank">
+              <i class="bi bi-whatsapp"></i> {{ $t("commerceQRSetup.whatsapp") }}
+            </a>
+          </div>
+        </div>
+      </div>
     <div class="text-center">
       <div id="commerce-info centered">
         <div class="row centered">
@@ -216,6 +236,7 @@ export default {
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
