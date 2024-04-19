@@ -7,6 +7,7 @@ import { searchClientByIdNumber } from '../../application/services/client';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../../components/common/Warning.vue';
 import Spinner from '../common/Spinner.vue';
+import { getDocument, getDocumentByOption } from '../../application/services/document';
 
 export default {
   name: 'ClientForm',
@@ -70,6 +71,8 @@ export default {
       showOldClient: false,
       idNumber: '',
       idNumberError: '',
+      documentServiceConditions: undefined,
+      fileServiceConditions: undefined,
       clientSearched: {},
       errorsSearch: []
     })
@@ -79,6 +82,12 @@ export default {
         loading.value = true;
         state.phoneCodes = getPhoneCodes();
         state.originCodes = getUserOrigin();
+        if (getActiveFeature(commerce.value, 'user-service-conditions', 'PRODUCT')) {
+          state.documentServiceConditions = await getDocumentByOption(commerce.value.id, 'terms_of_service');
+          if (state.documentServiceConditions && state.documentServiceConditions.active === true) {
+            state.fileServiceConditions = await getDocument(`${commerce.value.id}.pdf`, 'terms_of_service');
+          }
+        }
         if (commerce.value && commerce.value.localeInfo.country) {
           state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
         }
@@ -335,6 +344,20 @@ export default {
       }
     }
 
+    const getDocumentServiceConditions = async () =>{
+      try {
+        if (state.fileServiceConditions) {
+          const file = new Blob(
+            [state.fileServiceConditions],
+            { type: 'application/pdf' }
+          );
+          const fileURL = URL.createObjectURL(file);
+          window.open(fileURL);
+        }
+      } catch (error) {
+      }
+    }
+
     return {
       state,
       loading,
@@ -356,7 +379,8 @@ export default {
       showOldClient,
       searchClient,
       clearClient,
-      onlyNumber
+      onlyNumber,
+      getDocumentServiceConditions
     }
   }
 }
@@ -441,11 +465,23 @@ export default {
           <div class="welcome-user" v-if="state.clientSearched && state.clientSearched.id">
             {{ $t("collaboratorAttentionValidate.hello-user") }}, {{ state.clientSearched.name || state.clientSearched.idNumber }}!
           </div>
-          <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
-            <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-            <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-              <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
-            </label>
+          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions">
+            <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
+              <input type="checkbox" class="col-2 form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
+              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+                {{ $t("clientNotifyData.accept.3") }}
+                <a href="#conditions" @click="getDocumentServiceConditions()"> {{ $t("clientNotifyData.accept.4") }}</a>
+              </label>
+            </div>
+          </div>
+          <div v-else>
+            <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
+              <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
+              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+              </label>
+            </div>
           </div>
         </div>
         <div class="row g-1 mt-2" v-if="state.showNewClient">
@@ -641,11 +677,23 @@ export default {
               <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.originText") }}</label>
             </div>
           </div>
-          <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
-            <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-            <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-              <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
-            </label>
+          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions">
+            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
+              <input type="checkbox" class="col-2 form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
+              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+                {{ $t("clientNotifyData.accept.3") }}
+                <a href="#conditions" @click="getDocumentServiceConditions()"> {{ $t("clientNotifyData.accept.4") }}</a>
+              </label>
+            </div>
+          </div>
+          <div v-else>
+            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
+              <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
+              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+              </label>
+            </div>
           </div>
           <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
             <Warning>
@@ -692,5 +740,10 @@ export default {
   font-size: .8rem;
   line-height: 1rem;
   color: .5px solid var(--gris-default);
+}
+.label-conditions {
+  font-size:1rem;
+  line-height: 1rem;
+  margin-left: .3rem;
 }
 </style>

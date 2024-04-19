@@ -1,7 +1,6 @@
 <script>
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
-import { contactUser } from '../../../application/services/user';
 import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
 
@@ -16,8 +15,7 @@ export default {
   data() {
     return {
       loading: false,
-      extendedEntity: false,
-      checked: false
+      extendedEntity: false
     }
   },
   methods: {
@@ -30,20 +28,6 @@ export default {
     copyAttention() {
       const textToCopy = jsonToCsv([this.attention]);
       navigator.clipboard.writeText(textToCopy);
-    },
-    async check() {
-      try {
-        this.loading = true;
-        if (this.attention && this.attention.userId) {
-          const user = await contactUser(this.attention.userId);
-          this.checked = user.contacted;
-        }
-        this.loading = false;
-      } catch (error) {
-        this.checked = false;
-        this.loading = false;
-        this.alertError = error.message;
-      }
     },
     clasifyDaysSinceComment(score) {
       if (score === undefined) {

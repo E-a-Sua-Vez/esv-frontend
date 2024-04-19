@@ -346,6 +346,19 @@
     "user-whatsapp-contact": {
       "title": "Whatsapp Contato Comércio",
       "description": "Permite ao usuário contatar ao Comércio no Whatsapp antes do solicitar atendimento"
+    },
+    "user-service-conditions": {
+      "title": "Aceitar Condições Serviço",
+      "description": "Permite ao usuário ver as condições de serviço pra aceitarlas"
+    }
+  },
+  "document": {
+    "types": {
+      "COMMERCE": "Comércio"
+    },
+    "terms_of_service": {
+      "title": "Condições de Serviço",
+      "description": "Condições de Serviço do Comércio."
     }
   },
   "paymentMethods": {
@@ -407,7 +420,7 @@
     "title": "Política de Dados",
     "subtitle": {
       "1": "Leia cuidadosamente",
-      "2": "nossa política de dados."
+      "2": "nossa política de dados e comunicações."
     },
     "action": "Entendido"
   },
@@ -698,8 +711,10 @@
       "content": "Você será notificado quando chegar a sua vez."
     },
     "accept": {
-      "1": "Aceite nossos",
-      "2": "termos de uso."
+      "1": "Leia cuidadosamente e aceite nossos",
+      "2": "termos de uso",
+      "3": "e",
+      "4": "de serviço."
     },
     "action": "Ok",
     "phoneTitle1": "Digite seu número de Whatsapp!",
@@ -1683,6 +1698,7 @@
     "product-admin": "Produtos",
     "queues-admin": "Filas",
     "configuration": "Configurações",
+    "documents": "Documentos",
     "reports": "Central de Dados",
     "your-plan": "Seu Plano",
     "collaborators-admin": "Colaboradores",
@@ -1715,6 +1731,7 @@
           "collaborators-admin": "Gerenciar Colaboradores",
           "permissions-admin": "Gerenciar Permissões",
           "configuration": "Configurações",
+          "documents": "Documentos",
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
           "manage-admin": "Gerenciar Artefatos",
@@ -1738,6 +1755,7 @@
     "product-master-admin": "Produtos",
     "queues-master-admin": "Filas",
     "configuration": "Configurações",
+    "documents": "Documentos",
     "reports": "Central de Dados",
     "your-plan": "Seu Plano",
     "plans-master-admin": "Gerenciar Planos",
@@ -2569,6 +2587,44 @@
       "feature": "Você deve selecionar uma configuração"
     }
   },
+  "businessDocument": {
+    "title": "Documentos",
+    "commerce": "Selecione uma unidade:",
+    "return": "Voltar",
+    "listResult": "Registros:",
+    "feature": "Documento:",
+    "add": "Adicionar",
+    "file": "Arquivo:",
+    "upload": "Upload",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há documents."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "document-commerce": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "edit": "Editar as Documentos",
+          "add": "Adicionar Documentos"
+        }
+      }
+    },
+    "validate": {
+      "feature": "Deve selecionar o tipo de documento",
+      "fileSize": "O tamanho do arquivo deve ser menor do que 0B e maior que 10MB",
+      "file": "Deve fazer upload de um arquivo"
+    }
+  },
   "businessPermissionsAdmin": {
     "title": "Permissões",
     "commerce": "Selecione um rol:",
@@ -2921,6 +2977,7 @@
         "collaborators-admin": "Habilitar Gerenciar Colaboradores - Menú Principal Negócio",
         "permissions-admin": "Habilitar Gerenciar Permissões - Menú Principal Negócio",
         "configuration": "Habilitar Gerenciar Configurações - Menú Principal Negócio",
+        "documents": "Habilitar Gerenciar Documentos - Menú Principal Negócio",
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
         "manage-admin": "Habilitar Gerenciar Artefatos - Menú Principal Negócio"
@@ -2984,6 +3041,14 @@
         "only-survey": "Editar configuração Modo Pesquisa",
         "whatsapp-notify-one": "Editar configuração Notificación Whatsapp Falta 1",
         "get-number-remote": "Editar configurações obter número remoto"
+      }
+    },
+    "documents": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Documents",
+        "read": "Ver dados - Seção Gerenciar Documents",
+        "edit": "Editar dados - Seção Gerenciar Documents",
+        "add": "Adicionar dados - Seção Gerenciar Documents"
       }
     },
     "dashboard": {

@@ -347,6 +347,19 @@
     "user-whatsapp-contact": {
       "title": "Whatsapp Contacto Comercio",
       "description": "Permite al usuario poder contactar al Comercio vía Whatsapp antes de solicitar atención"
+    },
+    "user-service-conditions": {
+      "title": "Aceptar Condiciones Servicio",
+      "description": "Permite al usuario ver las condiciones de servicio para aceptarlas"
+    }
+  },
+  "document": {
+    "types": {
+      "COMMERCE": "Comercio"
+    },
+    "terms_of_service": {
+      "title": "Condiciones de Servicio",
+      "description": "Condiciones de Servicio del Comercio."
     }
   },
   "paymentMethods": {
@@ -408,7 +421,9 @@
     "title": "Política de Datos",
     "subtitle": {
       "1": "Lee atentamente",
-      "2": "nuestra política de datos."
+      "2": "nuestra política de datos y comunicaciones.",
+      "3": "nuestra política de datos, comunicaciones ",
+      "4": "y de servicio."
     },
     "action": "Entendido"
   },
@@ -690,8 +705,10 @@
       "content": "Serás notificado cuando sea tu turno."
     },
     "accept": {
-      "1": "Acepta nuestras",
-      "2": "condiciones de uso."
+      "1": "Lea cuidadosamente y acepte nuestras",
+      "2": "condiciones de uso",
+      "3": "y",
+      "4": "de servicio."
     },
     "action": "Confirmar",
     "phoneTitle1": "¡Déjanos tu número de Whatsapp!",
@@ -1682,6 +1699,7 @@
     "product-admin": "Productos",
     "queues-admin": "Filas",
     "configuration": "Configuraciones",
+    "documents": "Documentos",
     "reports": "Central de Datos",
     "your-plan": "Tu Plan",
     "collaborators-admin": "Colaboradores",
@@ -1714,6 +1732,7 @@
           "collaborators-admin": "Administrar Colaboradores",
           "permissions-admin": "Administrar Permisos",
           "configuration": "Configuraciones",
+          "documents": "Documentos",
           "surveys-admin": "Administrar Encuestas",
           "your-plan": "Tu Plan",
           "manage-admin": "Administrar Artefactos",
@@ -1738,6 +1757,7 @@
     "product-master-admin": "Productos",
     "queues-master-admin": "Filas",
     "configuration": "Configuraciones",
+    "documents": "Documentos",
     "reports": "Central de Datos",
     "your-plan": "Tu Plan",
     "surveys-admin": "Administrar Encuestas",
@@ -2567,6 +2587,44 @@
       "feature": "Debes seleccionar una configuración"
     }
   },
+  "businessDocument": {
+    "title": "Documentos",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "listResult": "Registros:",
+    "feature": "Documento:",
+    "add": "Agregar",
+    "file": "Archivo:",
+    "upload": "Subir",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay documentos."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "No hay documentos. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "document-commerce": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "edit": "Editar los Documentos",
+          "add":"Agregar Documentos"
+        }
+      }
+    },
+    "validate": {
+      "feature": "Debes seleccionar un tipo de documento",
+      "fileSize": "El tamaño del archivo debe ser mayor que 0MB y menor a 10MB",
+      "file": "Debes subir un archivo"
+    }
+  },
   "businessPermissionsAdmin": {
     "title": "Permisos",
     "commerce": "Selecciona el rol:",
@@ -2993,6 +3051,14 @@
         "only-survey": "Editar configuración Modo Encuesta",
         "whatsapp-notify-one": "Editar configuración Notificación Whatsapp Falta 1",
         "get-number-remote": "Editar configuración Obtener número remoto"
+      }
+    },
+    "documents": {
+      "admin": {
+        "view": "Ver Sección - Administrar Documentos",
+        "read": "Leer datos - Sección Administrar Documentos",
+        "edit": "Editar datos - Sección Administrar Documentos",
+        "add": "Agregar datos - Sección Administrar Documentos"
       }
     },
     "dashboard": {

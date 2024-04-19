@@ -56,8 +56,8 @@ export default {
       <div id="conf-id-form" class="row -2 mb-g3">
         <div class="row configuration-details-container">
           <div class="col">
-            <span><strong>Type:</strong> {{ configuration.type }} <strong>Id:</strong> {{ configuration.id }} </span>
-            <span></span>
+            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold">{{ configuration.type }} </span>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">{{ configuration.id }} </span>
           </div>
         </div>
       </div>

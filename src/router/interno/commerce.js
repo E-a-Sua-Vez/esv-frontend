@@ -16,6 +16,7 @@ const BusinessTracing = () => import('../../views/business/BusinessTracing.vue')
 const BusinessPermissionsAdmin = () => import('../../views/business/BusinessPermissionsAdmin.vue');
 const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
 const BusinessProductStockAdmin = () => import('../../views/business/BusinessProductStockAdmin.vue');
+const BusinessDocuments = () => import('../../views/business/BusinessDocuments.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -62,6 +63,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/configuration',
     name: 'business-configuration',
     component: BusinessConfiguration
+  },
+  {
+    path: '/interno/negocio/documents',
+    name: 'business-documents',
+    component: BusinessDocuments
   },
   {
     path: '/interno/negocio/reports',

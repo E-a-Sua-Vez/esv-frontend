@@ -346,6 +346,19 @@
     "user-whatsapp-contact": {
       "title": "Whatsapp Commerce Contact",
       "description": "Let the user contact the commerce trough Whatsapp before request an attention"
+    },
+    "user-service-conditions": {
+      "title": "Accept Service Conditions",
+      "description": "Let the user to see the service conditions to accept them"
+    }
+  },
+  "document": {
+    "types": {
+      "COMMERCE": "Commerce"
+    },
+    "terms_of_service": {
+      "title": "Service Conditions",
+      "description": "Commerce Service Conditions"
     }
   },
   "paymentMethods": {
@@ -407,7 +420,7 @@
     "title": "Data Policy",
     "subtitle": {
       "1": "Read carefully",
-      "2": "our data policy."
+      "2": "our data and comunication policy."
     },
     "action": "Ok"
   },
@@ -697,8 +710,10 @@
       "content": "You'll be notified when your turn comes."
     },
     "accept": {
-      "1": "Accept our",
-      "2": "terms of use."
+      "1": "Read carefully and accept our",
+      "2": "terms of use",
+      "3": "and",
+      "4": "service."
     },
     "action": "Ok",
     "phoneTitle1": "Leave your Whatsapp number!",
@@ -1681,6 +1696,7 @@
     "product-stock": "Stock Control",
     "queues-admin": "Queues",
     "configuration": "Settings",
+    "documents": "Documents",
     "reports": "Data Center",
     "your-plan": "Your Plan",
     "collaborators-admin": "Collaborators",
@@ -1715,6 +1731,7 @@
           "permissions-admin": "Permissions Settings",
           "administrators-admin": "Administrator Settings",
           "configuration": "Settings",
+          "documents": "Documents",
           "your-plan": "Your Plan",
           "surveys-admin": "Surveys Settings",
           "manage-admin": "Manage Artifacts"
@@ -1765,6 +1782,7 @@
     "product-master-admin": "Products",
     "queues-master-admin": "Queues",
     "configuration": "Settings",
+    "documents": "Documents",
     "reports": "Data Center",
     "your-plan": "Your Plan",
     "plans-master-admin": "Plans Settings",
@@ -2562,6 +2580,44 @@
       "feature": "Should select a configuration"
     }
   },
+  "businessDocument": {
+    "title": "Documents",
+    "commerce": "Select a commerce:",
+    "return": "Back",
+    "listResult": "Results:",
+    "feature": "Document:",
+    "add": "Add",
+    "file": "File:",
+    "upload": "Upload",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no documents."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "document-commerce": {
+        "admin": {
+          "view": "Get to this section",
+          "edit": "Edit the Documents",
+          "add": "Add Documents"
+        }
+      }
+    },
+    "validate": {
+      "feature": "Should select a documents type",
+      "fileSize": "The size of the file should be maior than 0MB and minor than 10MB",
+      "file": "Should upload a file"
+    }
+  },
   "businessPermissionsAdmin": {
     "title": "Permissions",
     "commerce": "Select a role:",
@@ -2922,6 +2978,7 @@
         "permissions-admin": "Enable Manage Permissions - Main Menu Business",
         "administrators-admin": "Enable Manage Administrators - Main Menu Business",
         "configuration": "Enable Manage Configurations - Main Menu Business",
+        "documents": "Enable Manage Documents - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
         "manage-admin": "Enable Artifacts Admin - Main Menu Business"
@@ -2995,6 +3052,14 @@
         "only-survey": "Edit configuración Modo Encuesta",
         "whatsapp-notify-one": "Edit configuración Notificación Whatsapp Falta 1",
         "get-number-remote": "Edit configuration get remote number"
+      }
+    },
+    "documents": {
+      "admin": {
+        "view": "Get to this Section - Manage Documents",
+        "read": "Read data - Section Manage Documents",
+        "edit": "Edit data - Section Manage Documents",
+        "add": "Add data - Section Manage Documents"
       }
     },
     "dashboard": {

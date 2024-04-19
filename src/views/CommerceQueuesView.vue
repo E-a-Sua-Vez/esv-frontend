@@ -593,7 +593,7 @@ export default {
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
           let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, clientId: state.newUser.clientId }
           if (block && block.number) {
@@ -624,7 +624,7 @@ export default {
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
           let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block, clientId: state.newUser.clientId };
           if (state.selectedServices && state.selectedServices.length > 0) {
@@ -651,7 +651,7 @@ export default {
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept };
+            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
           const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), clientId: state.newUser.clientId  }
           const waitlist = await createWaitlist(body);

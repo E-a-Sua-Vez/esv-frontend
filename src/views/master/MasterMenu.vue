@@ -39,6 +39,7 @@ export default {
         'reports',
         'manage-master-admin',
         'configuration',
+        'documents',
         'your-plan',
         'business-master-resume',
         'go-minisite'

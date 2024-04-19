@@ -1,7 +1,6 @@
 <script>
 import { getContactResultTypes } from '../../../shared/utils/data';
 import { getDate } from '../../../shared/utils/date';
-import { contactUser } from '../../../application/services/user';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
@@ -22,7 +21,6 @@ export default {
     return {
       loading: false,
       extendedEntity: false,
-      checked: false,
       contactResultTypes: [],
       productConsumptions: [],
       page: 1,
@@ -42,20 +40,6 @@ export default {
     copyAttention() {
       const textToCopy = jsonToCsv([this.attention]);
       navigator.clipboard.writeText(textToCopy);
-    },
-    async check() {
-      try {
-        this.loading = true;
-        if (this.attention && this.attention.userId) {
-          const user = await contactUser(this.attention.userId);
-          this.checked = user.contacted;
-        }
-        this.loading = false;
-      } catch (error) {
-        this.checked = false;
-        this.loading = false;
-        this.alertError = error.message;
-      }
     },
     clasifyDaysSinceComment(score) {
       if (score === undefined) {
