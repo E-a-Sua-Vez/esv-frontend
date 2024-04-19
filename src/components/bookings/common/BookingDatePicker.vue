@@ -6,7 +6,6 @@ import Message from '../../common/Message.vue';
 import Alert from '../../common/Alert.vue';
 import Spinner from '../../common/Spinner.vue';
 import { getPendingBookingsBetweenDates } from '../../../application/services/booking';
-import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
 import { getQueueBlockDetailsByDay } from '../../../application/services/block';
 import { getServicesById } from '../../../application/services/service';
 

@@ -80,6 +80,12 @@
       "SELECT_SERVICE": "Select Service"
     }
   },
+  "services": {
+    "types": {
+      "STANDARD": "Standard",
+      "SELECTABLE": "Selectable"
+    }
+  },
   "productTypes": {
     "ALL_IN_ONE": "All in One",
     "ONLY_SURVEYS": "Just Smart Surveys",
@@ -463,6 +469,7 @@
     "searchServiceQueue": "🔎 Search by service",
     "newClient": "I'm new",
     "oldClient": "I'm Client",
+    "selectTheService": "Select the Service",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -1916,6 +1923,8 @@
     "blockTimeHelp": "Duration of the block of attention to the user for this service in minutes.",
     "estimatedTimeHelp": "Estimated time duration of the service.",
     "orderHelp": "Service can be listed in this order to the user.",
+    "type": "Type:",
+    "typeHelp": "Type of Service. Selectable for services on selectables queues",
     "message": {
       "1": {
         "title": "Ups!",

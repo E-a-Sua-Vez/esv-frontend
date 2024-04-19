@@ -15,6 +15,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import { getServiceTypes } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessServicesAdmin',
@@ -45,12 +46,14 @@ export default {
       orderUpdateError: false,
       estimatedTimeAddError: false,
       estimatedTimeUpdateError: false,
+      types: [],
       toggles: {}
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.types = getServiceTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
@@ -326,6 +329,27 @@ export default {
                           placeholder="Serv-A">
                       </div>
                     </div>
+                    <div id="service-type-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessServicesAdmin.type") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessServicesAdmin.typeHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-6">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select"
+                          v-model="state.newService.type"
+                          id="types"
+                          v-bind:class="{ 'is-invalid': state.typeError }">
+                          <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`services.types.${typ.id}`) }}</option>
+                        </select>
+                      </div>
+                    </div>
                     <div id="service-order-form-add" class="row g-1">
                       <div class="col-6 text-label">
                         {{ $t("businessServicesAdmin.order") }}
@@ -541,6 +565,19 @@ export default {
                   class="detailed-data transition-slow"
                   >
                   <div class="row g-1">
+                    <div id="queue-type-form-update" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.type") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :disabled="true"
+                          type="text"
+                          class="form-control"
+                          v-model="service.type"
+                          placeholder="Type">
+                      </div>
+                    </div>
                     <div id="service-order-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessServicesAdmin.order") }}

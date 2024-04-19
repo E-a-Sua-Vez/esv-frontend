@@ -149,3 +149,10 @@ export const getProductMeasureTypes = () => {
     { id: 'UNITS', name: 'UNITS' }
   ]
 }
+
+export const getServiceTypes = () => {
+  return [
+    { id: 'STANDARD', name: 'STANDARD' },
+    { id: 'SELECTABLE', name: 'SELECTABLE' }
+  ]
+}

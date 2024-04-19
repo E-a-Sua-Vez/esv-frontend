@@ -2,7 +2,7 @@
 import { ref, reactive, toRefs, onBeforeMount, watch, computed } from 'vue';
 import { getActiveFeature } from '../../shared/features';
 import { VueRecaptcha } from 'vue-recaptcha';
-import { getServiceByCommerce } from '../../application/services/service';
+import { getServiceByCommerce, getServicesById } from '../../application/services/service';
 import Warning from '../common/Warning.vue';
 import Message from '../common/Message.vue';
 import QueueButton from '../common/QueueButton.vue';
@@ -105,11 +105,18 @@ export default {
 
     const getQueue = async (queueIn) => {
       state.queue = queueIn;
-      if (['SERVICE', 'MULTI_SERVICE'].includes(queueIn.type)) {
+      if (['SERVICE'].includes(queueIn.type)) {
+        receiveServices(state.queue.services);
+      }
+      if (['MULTI_SERVICE'].includes(queueIn.type)) {
+        state.queue.services = await getServicesById(queueIn.servicesId);
         receiveServices(state.queue.services);
       }
       if (queueIn.type === 'SELECT_SERVICE') {
-        state.queue.services = await getServiceByCommerce(commerce.value.id);
+        const services = await getServiceByCommerce(commerce.value.id);
+        if (services && services.length > 0) {
+          state.queue.services = services.filter(serv => serv.type === 'SELECTABLE');
+        }
         receiveServices(state.queue.services);
       }
       receiveQueue(state.queue);
@@ -344,6 +351,17 @@ export default {
               </div>
             </div>
             <div :class="'mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
+              <div v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0">
+                <div v-for="(queue, index) in groupedQueues['SELECT_SERVICE']" :key="index">
+                  <QueueButton
+                    :queue="queue"
+                    :selectedQueue="state.queue"
+                    :getQueue="getQueue"
+                    :accept="accept"
+                  >
+                  </QueueButton>
+                </div>
+              </div>
               <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
                 <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
                   <QueueButton
@@ -375,19 +393,6 @@ export default {
                     :accept="accept"
                   >
                   </QueueButton>
-                </div>
-              </div>
-              <div v-if="getActiveFeature(state.commerce, 'attention-service-select', 'PRODUCT')">
-                <div v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0">
-                  <div v-for="(queue, index) in groupedQueues['SELECT_SERVICE']" :key="index">
-                    <QueueButton
-                      :queue="queue"
-                      :selectedQueue="state.queue"
-                      :getQueue="getQueue"
-                      :accept="accept"
-                    >
-                    </QueueButton>
-                  </div>
                 </div>
               </div>
             </div>

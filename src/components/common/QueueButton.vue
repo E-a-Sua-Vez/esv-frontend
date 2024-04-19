@@ -90,7 +90,7 @@ export default {
               <div v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
                 <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
               </div>
-              <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
+              <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
                 <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
               </div>
             </div>
@@ -114,10 +114,16 @@ export default {
             <div class="row queue-title">
               <span>{{ queue.name }}</span>
             </div>
-            <div v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
+            <div v-if="['COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
               <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
             </div>
-            <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
+            <div v-if="['SERVICE', 'MULTI_SERVICE'].includes(queue.type)" class="row queue-time-title">
+              <span> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
+            </div>
+            <div v-if="['SELECT_SERVICE'].includes(queue.type)" class="row queue-time-title">
+              <span> {{ $t("commerceQueuesView.selectTheService") }} </span>
+            </div>
+            <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
               <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
             </div>
           </div>

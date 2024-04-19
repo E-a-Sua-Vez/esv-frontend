@@ -80,6 +80,12 @@
       "SELECT_SERVICE": "Seleccionar Servicio"
     }
   },
+  "services": {
+    "types": {
+      "STANDARD": "Standard",
+      "SELECTABLE": "Seleccionable"
+    }
+  },
   "productTypes": {
     "ALL_IN_ONE": "Todo en Uno",
     "ONLY_SURVEYS": "Sólo Encuestas Inteligentes",
@@ -466,6 +472,7 @@
     "searchServiceQueue": "🔎 Busca por servicio",
     "newClient": "Soy Nuevo",
     "oldClient": "Ya Soy Cliente",
+    "selectTheService": "Selecciona el servicio",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -1920,6 +1927,8 @@
     "estimatedTimeHelp": "Tiempo estimado de duración del servicio.",
     "orderHelp": "Servicio será listado al usuario en esta posición respecto al resto.",
     "estimatedTime": "Tiempo estimado:",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de Servicio. Selectable para servicios seleccionables en fila seleccionable",
     "message": {
       "1": {
         "title": "¡Ups!",

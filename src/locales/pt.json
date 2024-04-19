@@ -80,6 +80,12 @@
       "SELECT_SERVICE": "Selecionar Serviço"
     }
   },
+  "services": {
+    "types": {
+      "STANDARD": "Standard",
+      "SELECTABLE": "Selecionável"
+    }
+  },
   "surveys": {
     "types": {
       "SIMPLE_CSAT": "Só CSAT e Comentário",
@@ -463,6 +469,7 @@
     "searchServiceQueue": "🔎 Pesquisa por serviço",
     "newClient": "Sou novo",
     "oldClient": "Já sou Cliente",
+    "selectTheService": "Selecione o Serviço",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -1920,6 +1927,8 @@
     "analizeIAQuestionHelp": "A resposta será analizada com Inteligência Artificial.",
     "otherOptionQuestionHelp": "Adicione a opcão 'Outro' as respostas dessa pergunta.",
     "otherOpenQuestionHelp": "Opcão 'Outro' é aberta, editable pelo usuário.",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de Serviço. Selecionável para serviços em queue selecionaveis",
     "message": {
       "1": {
         "title": "Oh não!",

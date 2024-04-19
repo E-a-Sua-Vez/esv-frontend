@@ -58,7 +58,7 @@ export default {
     };
 
     const isActiveQueues = () => {
-      return ['COLLABORATOR', 'SELECT_SERVICE'].includes(queue.value.type) && queue.value.services;
+      return ['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.value.type) && queue.value.services;
     };
 
     const checkService = (event, service) => {
@@ -246,8 +246,8 @@ export default {
           <div
             v-for="service in state.filteredServices"
             :key="service.id"
-            class="d-grid btn-group btn-group-justified">
-            <div class="btn-size btn-lg btn-block fw-bold col-12 queue-btn px-2">
+            class="d-grid btn-group btn-group-justified mt-2">
+            <div class="btn-size btn-lg btn-block fw-bold col-12 queue-btn px-3">
               <div class="form-check form-switch">
                 <input class="form-check-input py-2 px-3" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
                   @click="checkService($event, service)">
