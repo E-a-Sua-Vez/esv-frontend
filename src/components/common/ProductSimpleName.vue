@@ -29,7 +29,7 @@ export default {
       >
         <div class="row centered">
           <div class="col-8">
-            <i class="bi bi-person-lines-fill"></i> {{ product.name }}
+            <i class="bi bi-eyedropper"></i> {{ product.name }}
           </div>
           <div class="col-2">
             <span>
@@ -39,7 +39,7 @@ export default {
         </div>
       </span>
       <span v-else :class="product.active === true ? 'active-name' : 'desactived-name'">
-        <i class="bi bi-person-lines-fill"></i> {{ product.name }}
+        <i class="bi bi-eyedropper"></i> {{ product.name }}
       </span>
     </div>
   </div>
