@@ -385,3 +385,10 @@
   font-weight: 400;
   line-height: .7rem;
 }
+.text-label {
+  font-size: .9rem;
+  line-height: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}

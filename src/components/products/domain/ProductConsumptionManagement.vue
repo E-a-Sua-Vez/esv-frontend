@@ -564,13 +564,6 @@ export default {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
 }
-.text-label {
-  font-size: .9rem;
-  line-height: .9rem;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-}
 .form-control {
   font-size: .9rem;
 }

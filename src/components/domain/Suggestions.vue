@@ -201,13 +201,6 @@ export default {
   border-radius: 1rem;
   border: .5px solid var(--gris-default);
 }
-.text-label {
-  font-size: .9rem;
-  line-height: 1.2rem;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-}
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);

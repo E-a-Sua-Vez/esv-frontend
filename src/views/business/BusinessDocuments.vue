@@ -358,12 +358,6 @@ export default {
   border: 1.5px solid var(--gris-clear);
   text-overflow: ellipsis;
 }
-.text-label {
-  line-height: 1.2rem;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-}
 .module-card {
   background-color: var(--color-background);
   padding: .5rem;
