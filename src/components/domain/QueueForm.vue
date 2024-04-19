@@ -302,7 +302,7 @@ export default {
                   <ul class="pagination pagination-ul">
                     <li class="page-item">
                       <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
                         aria-label="Previous"
                         @click="setPage(state.page - 1)"
                         :disabled="state.page === 1 || state.totalPages === 0">
@@ -310,12 +310,12 @@ export default {
                       </button>
                     </li>
                     <li>
-                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="state.page" :disabled="state.totalPages === 0">
+                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1" v-model="state.page" :disabled="state.totalPages === 0">
                         <option v-for="pag in state.totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
                       </select>
                     </li>
                     <li class="page-item">
-                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
                         aria-label="Next"
                         @click="setPage(state.page + 1)"
                         :disabled="state.page === state.totalPages || state.totalPages === 0">

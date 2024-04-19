@@ -205,11 +205,11 @@ export default {
                 min="1"
                 max="50"
                 type="text"
-                class="col form-control mx-2"
+                class="col form-control mx-2 py-1"
                 v-model="state.searchServiceText"
                 :placeholder="$t('commerceQueuesView.searchServiceQueue')">
               <button
-                class="col-2 btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
+                class="col-2 btn btn-md btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
                 @click="clearSearchService()">
                 <span><i class="bi bi-eraser-fill"></i></span>
               </button>
@@ -220,7 +220,7 @@ export default {
               <ul class="pagination pagination-ul">
                 <li class="page-item">
                   <button
-                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
                     aria-label="Previous"
                     @click="setPage(state.page - 1)"
                     :disabled="state.page === 1 || state.totalPages === 0">
@@ -228,12 +228,12 @@ export default {
                   </button>
                 </li>
                 <li>
-                  <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="state.page" :disabled="state.totalPages === 0">
+                  <select class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1" v-model="state.page" :disabled="state.totalPages === 0">
                     <option v-for="pag in state.totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
                   </select>
                 </li>
                 <li class="page-item">
-                  <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                  <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
                     aria-label="Next"
                     @click="setPage(state.page + 1)"
                     :disabled="state.page === state.totalPages || state.totalPages === 0">
@@ -247,9 +247,9 @@ export default {
             v-for="service in state.filteredServices"
             :key="service.id"
             class="d-grid btn-group btn-group-justified">
-            <div class="btn-size btn-lg btn-block fw-bold col-12 mt-1 queue-btn px-4">
+            <div class="btn-size btn-lg btn-block fw-bold col-12 queue-btn px-2">
               <div class="form-check form-switch">
-                <input class="form-check-input bnt-lg" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
+                <input class="form-check-input py-2 px-3" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
                   @click="checkService($event, service)">
                 <div class="row queue-time-title">
                   <label class="form-check-label queue-title fw-bold" :for="service.name">{{ service.name }}</label>
