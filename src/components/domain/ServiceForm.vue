@@ -247,15 +247,21 @@ export default {
             v-for="service in state.filteredServices"
             :key="service.id"
             class="d-grid btn-group btn-group-justified mt-2">
-            <div class="btn-size btn-lg btn-block fw-bold col-12 queue-btn px-1">
+            <div class="btn-size btn-lg btn-block fw-bold queue-btn px-1">
               <div class="form-check form-switch">
-                <input class="form-check-input py-2 px-3" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
-                  @click="checkService($event, service)">
-                <div class="row queue-time-title">
-                  <label class="form-check-label queue-title fw-bold" :for="service.name">{{ service.name }}</label>
-                </div>
-                <div class="row queue-time-title">
-                  <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ service.serviceInfo.blockTime || service.serviceInfo.estimatedTime }}'</span>
+                <div class="row">
+                  <div class="col-1">
+                    <input class="form-check-input py-2 px-3 col-12" type="checkbox" :id="`queue-${service.id}`" :checked="serviceChecked(service)"
+                      @click="checkService($event, service)">
+                  </div>
+                  <div class="col">
+                    <div class="row queue-time-title col-12">
+                      <label class="form-check-label queue-title fw-bold" :for="service.name">{{ service.name }}</label>
+                    </div>
+                    <div class="row queue-time-title col-12">
+                      <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ service.serviceInfo.blockTime || service.serviceInfo.estimatedTime }}'</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <hr>
