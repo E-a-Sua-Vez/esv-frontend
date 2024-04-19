@@ -139,6 +139,7 @@ export default {
       async () => {
         state.selectedServices = [];
         state.duration = 0;
+        state.page = 1;
         receiveSelectedServices(state.selectedServices);
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
@@ -214,7 +215,7 @@ export default {
               </button>
             </div>
           </div>
-          <div class="centered mt-1" v-if="state.filteredServices && state.filteredServices.length > state.limit">
+          <div class="centered mt-1" v-if="state.filteredServices && state.services.length > state.limit">
             <nav>
               <ul class="pagination pagination-ul">
                 <li class="page-item">
