@@ -342,7 +342,7 @@ export default {
                 <input id="endDate" class="form-control metric-controls" type="date" v-model="state.endDate"/>
               </div>
             </div>
-            <div  class="row my-2">
+            <div  class="row my-2 centered">
               <div class="col centered form-check form-switch check-option">
                 <input type="radio" class="form-check-input btn-sm" v-model="state.format" value="csv" name="csv-type" id="csv-since" autocomplete="off">
                 <label class="btn" for="csv-since"> <i :class="`bi bi-filetype-csv`"></i> </label>
@@ -356,7 +356,8 @@ export default {
                 <label class="btn" for="json-since"> <i :class="`bi bi-filetype-json`"></i> </label>
               </div>
             </div>
-            <div v-if="!loading" id="businessReports-result" class="mt-4">
+          </div>
+          <div v-if="!loading" id="businessReports-result" class="mt-4">
               <div>
                 <SimpleDownloadCard
                   :show="!!state.toggles['reports.admin.attentions']"
@@ -460,7 +461,6 @@ export default {
                 ></SimpleDownloadCard>
               </div>
             </div>
-          </div>
         </div>
         <div v-if="(!isActiveBusiness() || !state.toggles['reports.admin.view']) && !loading">
           <Message
