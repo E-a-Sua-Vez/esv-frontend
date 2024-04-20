@@ -104,10 +104,12 @@ export default {
   margin: .1rem;
   border-radius: 1rem;
   line-height: 1.5rem;
-  border: 1.5px solid rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
+  border: 2px solid rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
   color: var(--color-background);
   font-weight: 700;
   font-size: .9rem;
+  padding-top: .15rem;
+  padding-bottom: .15rem;
 }
 .show {
   padding: .5rem;

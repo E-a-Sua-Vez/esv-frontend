@@ -23,6 +23,7 @@ export default {
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
+    showFilters: { type: Boolean, default: true },
     productAttentionsIn: { type: Array, default: [] }
   },
   emits: ['getProductConsuptions'],
@@ -390,63 +391,65 @@ export default {
                 </div>
               </div>
             </div>
-            <SimpleDownloadCard
-              :download="toggles['products-stock.reports.consumption-details']"
-              :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-              :showTooltip="true"
-              :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['products-stock.reports.consumption-details'] === true"
-            ></SimpleDownloadCard>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
-                </span>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                  @click="clear()">
-                  <span><i class="bi bi-eraser-fill"></i></span>
-                </button>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
-                  </div>
-                  <div class="col-3">
-                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
-                  </div>
-                  <div class="col-3">
-                    <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
-                  </div>
-                  <div class="col-3">
-                    <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
-                  </div>
+            <div v-if="showFilters === true">
+              <SimpleDownloadCard
+                :download="toggles['products-stock.reports.consumption-details']"
+                :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
+                :showTooltip="true"
+                :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
+                :icon="'bi-file-earmark-spreadsheet'"
+                @download="exportToCSV"
+                :canDownload="toggles['products-stock.reports.consumption-details'] === true"
+              ></SimpleDownloadCard>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
+                  </span>
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                    @click="clear()">
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
                 </div>
-                <div class="m-1">
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
+                      <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+                    </div>
+                    <div class="col-3">
+                      <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                    </div>
+                    <div class="col-3">
+                      <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                    </div>
+                    <div class="col-3">
+                      <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                    </div>
+                  </div>
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-5">
+                        <input id="startDate" class="form-control metric-controls" type="date" v-model="startDate"/>
+                      </div>
+                      <div class="col-5">
+                        <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()">
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                   <div class="row">
-                    <div class="col-5">
-                      <input id="startDate" class="form-control metric-controls" type="date" v-model="startDate"/>
-                    </div>
-                    <div class="col-5">
-                      <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
-                    </div>
-                    <div class="col-2">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()">
-                        <span><i class="bi bi-search"></i></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+                    <div class="col-12">
+                      <div class="form-check form-switch centered">
+                        <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                        <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>

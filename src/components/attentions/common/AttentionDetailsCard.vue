@@ -2,7 +2,7 @@
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
-import { cancelAttention, attentionPaymentConfirm, transferAttention, getPendingCommerceAttentions } from '../../../application/services/attention';
+import { attend, cancelAttention, attentionPaymentConfirm, transferAttention, getPendingCommerceAttentions } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
 import { getDate } from '../../../shared/utils/date';
@@ -11,6 +11,7 @@ import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 import Message from '../../common/Message.vue';
+import { globalStore } from '../../../stores';
 
 export default {
   name: 'AttentionDetailsCard',
@@ -24,6 +25,7 @@ export default {
     queues: { type: Array, default: undefined },
   },
   data() {
+    const store = globalStore();
     return {
       loading: false,
       extendedEntity: false,
@@ -42,7 +44,8 @@ export default {
       checked: false,
       queuesToTransfer: [],
       queueToTransfer: {},
-      queue: {}
+      queue: {},
+      store
     }
   },
   beforeMount() {
@@ -156,10 +159,12 @@ export default {
             const attentionsByQueue = groupedAttentions[queue.id];
             if (attentionsByQueue && attentionsByQueue.length > 0) {
               const attentionsReserved = attentionsByQueue.map(attention => {
-                if (attention.block && attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
-                  return [...attention.block.blockNumbers];
-                } else {
-                  return attention.block.number;
+                if (attention.block) {
+                  if (attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
+                    return [...attention.block.blockNumbers];
+                  } else {
+                    return attention.block.number
+                  }
                 }
               });
               const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
@@ -171,7 +176,10 @@ export default {
                   blockedBlocks.push(block);
                 }
               })
-              const blocksToCheck = this.attention.block.blockNumbers || [this.attention.block.number];
+              let blocksToCheck = [];
+              if (this.attention.block) {
+                blocksToCheck = this.attention.block.blockNumbers || [this.attention.block.number];
+              }
               const availableBlocks = blocksToCheck.flat().filter(block => blockedBlocks.includes(block));
               if (availableBlocks.length === 0) {
                 this.queuesToTransfer.push(queue);
@@ -249,6 +257,28 @@ export default {
           this.newPaymentConfirmationData.paymentComment = data.paymentComment;
         }
       };
+    },
+    async goToAttention() {
+      try {
+        this.loading = true;
+        this.alertError = '';
+        const currentUser = await this.store.getCurrentUser;
+        const currentUserType = await this.store.getCurrentUserType;
+        if (currentUserType === 'collaborator' && currentUser.id) {
+          const body = { queueId: this.attention.queueId, collaboratorId: currentUser.id , commerceLanguage: this.commerce.localeInfo ? this.commerce.localeInfo.language : 'sp'};
+          await attend(this.attention.number, body);
+          this.$emit('updatedAttentions');
+          let url = `/interno/colaborador/atencion/${this.attention.id}/validar`;
+          let resolvedRoute = this.$router.resolve({ path: url });
+          window.open(resolvedRoute.href, '_blank');
+        }
+
+        this.alertError = '';
+        this.loading = false;
+      } catch (error) {
+        this.alertError = error.response.status || 500;
+        this.loading = false;
+      }
     }
   },
   watch: {
@@ -466,6 +496,14 @@ export default {
         </div>
         <div class="row centered mt-2" v-if="!loading">
           <div class="col-6">
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+              @click="goToAttention()"
+              :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.attention.attend']"
+              >
+              <i class="bi bi-qr-code"> </i> {{ $t("collaboratorBookingsView.attend") }}
+            </button>
+          </div>
+          <div class="col-6">
             <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
               @click="goCancel()"
               :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.attention.cancel']"
@@ -520,7 +558,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 600px !important;
   overflow-y: auto;
 }
 .details-title {

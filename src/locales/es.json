@@ -938,6 +938,9 @@
     "myBookings": "Reservas",
     "agenda": "Agenda",
     "clientes": "Clientes",
+    "attend": "Atender",
+    "update": "Actualizar",
+    "attendQueue": "Atender Fila",
     "message": {
       "1": {
         "title": "¡Ups!",

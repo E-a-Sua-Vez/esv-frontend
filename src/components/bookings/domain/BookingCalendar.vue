@@ -36,6 +36,7 @@ export default {
     let loading = ref(false);
     let loadingSearch = ref(false);
     let loadingBookings = ref(false);
+    let loadingAttentions = ref(false);
     let alertError = ref('');
     let dateMask = ref({
       modelValue: 'YYYY-MM-DD',
@@ -332,7 +333,7 @@ export default {
         const dateFrom = new Date(+year, thisMonth, 1);
         const dateTo = new Date(+year, nextMonth, 0);
         const bookings = await getPendingCommerceBookingsBetweenDates(commerce.value.id, dateFrom, dateTo);
-        if (bookings && bookings.length > 0) {
+        if (bookings && bookings.length >= 0) {
           const groupedBookings = bookings.reduce((acc, book) => {
             const type = book.queueId;
             if (!acc[type]) {
@@ -499,7 +500,7 @@ export default {
         state.selectedDate = undefined;
       }
       getDisabledDates(state.selectedQueue);
-      const blocks = getBlocksByDay(state.selectedQueue);
+      const blocks = getBlocksByDay(state.selectedQueue) || [];
       const blocksReserved = [];
       const bookingsReserved = state.bookings.map(booking => {
         if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
@@ -591,10 +592,27 @@ export default {
     }
 
     const updatedAttentions = async (queueId) => {
-      if (queueId) {
-        state.attentions = await getAvailableAttentiosnByQueue(queueId);
-      } else {
-        state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+      try {
+        loadingAttentions.value = true;
+        if (queueId) {
+          state.attentions = await getAvailableAttentiosnByQueue(queueId);
+        } else {
+          state.attentions = await getAvailableAttentiosnByQueue(state.selectedQueue.id);
+        }
+        loadingAttentions.value = false
+      } catch (error) {
+        loadingAttentions.value = false
+      }
+    }
+    const gotToAttendQueue = async () => {
+      try {
+        loadingAttentions.value = true;
+        let url = `/interno/colaborador/fila/${state.selectedQueue.id}/atenciones`;
+        let resolvedRoute = router.resolve({ path: url });
+        window.open(resolvedRoute.href, '_blank');
+        loadingAttentions.value = false;
+      } catch (error) {
+        loadingAttentions.value = false;
       }
     }
 
@@ -694,6 +712,7 @@ export default {
       loading,
       loadingSearch,
       loadingBookings,
+      loadingAttentions,
       alertError,
       disabledDates,
       calendarAttributes,
@@ -717,7 +736,8 @@ export default {
       showAllQueue,
       showMyBookings,
       showBookings360,
-      showClients360
+      showClients360,
+      gotToAttendQueue
     }
   }
 }
@@ -727,7 +747,7 @@ export default {
   <div v-if="show" class="modal-body">
     <div class="row">
       <!-- CALENDAR AREA -->
-      <div class="col-12 col-lg-8">
+      <div class="col-12 col-lg-7">
         <Spinner :show="loading"> </Spinner>
         <div v-if="queues && queues.length > 0" class="row centered blocks-section">
           <span class="fw-bold mb-2 h6"> <i class="bi bi-person-lines-fill"></i> {{ $t("collaboratorBookingsView.selectQueue") }} </span>
@@ -834,7 +854,7 @@ export default {
         </div>
       </div>
       <!-- MANAGEMENT AREA -->
-      <div class="col-12 col-lg-4">
+      <div class="col-12 col-lg-5">
         <div class="blocks-section">
           <div class="row sticky-top">
             <div class="col-6 mt-1">
@@ -901,8 +921,31 @@ export default {
               <!-- ATENCIONES -->
               <div v-if="state.showAttentions">
                 <div class="mt-2 mb-1">
+                  <div class="row">
+                    <div class="col">
+                      <button
+                        class="btn-size btn btn-sm btn-block col-9 fw-bold btn-light rounded-pill mt-1 mb-1"
+                        @click="updatedAttentions()"
+                        :disabled="!state.selectedQueue.id"
+                        >
+                        {{ $t('collaboratorBookingsView.update') }} <i class="bi bi-arrow-counterclockwise"></i>
+                      </button>
+                    </div>
+                    <div class="col">
+                      <button
+                        class="btn-size btn btn-sm  col-12 fw-bold btn-light rounded-pill"
+                        @click="gotToAttendQueue()"
+                        :disabled="!state.selectedQueue.id"
+                        >
+                        {{ $t('collaboratorBookingsView.attendQueue') }} <i class="bi bi-arrow-up-right-circle"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="centered">
                   <span class="badge bg-secondary px-3 py-2 m-1 hour-title">{{ $t("collaboratorBookingsView.listResult") }} {{ state.attentions.length }} </span>
                 </div>
+                <Spinner :show="loadingAttentions"> </Spinner>
                 <div v-if="state.attentions && state.attentions.length > 0">
                   <div v-for="(attention, index) in state.attentions" :key="index" class="mt-2">
                     <div class="metric-card">
@@ -1121,7 +1164,7 @@ export default {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal"  data-bs-target="#conditionsModal"
+      <button class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close"
       @click="close">
           {{ $t("close") }}
         <i class="bi bi-check-lg"></i>
@@ -1143,6 +1186,7 @@ export default {
   border-bottom: 0;
   line-height: 1.6rem;
 }
+
 .show {
   padding: 10px;
   max-height: 400px !important;
