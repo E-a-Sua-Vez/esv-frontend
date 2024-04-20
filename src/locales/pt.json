@@ -22,7 +22,7 @@
   "logout": "Sair",
   "capacities": "O que posso fazer?",
   "upgrade": "Faça Upgrade do seu plano para obter mais benefícios.",
-  "searcher": "Pesquisar",
+  "searcher": "🔎 Pesquisar",
   "noResults": "😓 Sem Resultados",
   "sureAction": "Você tem certeza de realizar esta ação?",
   "logoValues": "/images/es_tu_turno_values_br.png",
@@ -37,6 +37,7 @@
   "page": "Página",
   "of": "de",
   "serviceStatus": "Status do serviço",
+  "add": "Adicionar",
   "countries": {
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",
@@ -373,6 +374,14 @@
     "freePeriod": "Período de graça"
   },
   "enterSearcher": "🔍 Digite ao menos 3 letras",
+  "searchAdminItem": {
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "Não existem elementos que correspondam à pesquisa."
+      }
+    }
+  },
   "alert": {
     "message": {
       "1": "Houve um erro,",
@@ -1883,7 +1892,8 @@
           "update": "Atualizar as Filas",
           "add": "Adicionar Filas",
           "limit": "Número limite de Filas",
-          "queue-limit": "Limite de Filas"
+          "queue-limit": "Limite de Filas",
+          "unavailable": "Deletar Filas"
         }
       }
     },
@@ -1956,7 +1966,8 @@
           "update": "Atualizar os Serviços",
           "add": "Adicionar Serviços",
           "limit": "Número limite de Serviços",
-          "queue-limit": "Limite de Serviços"
+          "queue-limit": "Limite de Serviços",
+          "unavailable":"Deletar Serviços"
         }
       }
     },
@@ -2275,7 +2286,8 @@
           "edit": "Editar os Colaboradores",
           "update": "Atualizar os Colaboradores",
           "add": "Adicionar Colaboradores",
-          "limit": "Número limite de Colaboradores"
+          "limit": "Número limite de Colaboradores",
+          "unavailable":"Deletar Colaboradores"
         }
       }
     },
@@ -2345,12 +2357,13 @@
     "capacitiesList": {
       "commerces": {
         "admin": {
-          "view": "Acessar esta seçao",
+          "view": "Acessar esta seção",
           "read": "Ver os Comércios",
           "edit": "Editar os Comércios",
           "update": "Atualizar os Comércios",
           "add": "Adicionar Comércios",
-          "limit": "Número limite de Comércios"
+          "limit": "Número limite de Comércios",
+          "unavailable":"Deletar Comércios"
         }
       }
     },
@@ -2937,15 +2950,13 @@
           "edit": "Editar os Pesquisas",
           "update": "Atualizar os Pesquisas",
           "add": "Adicionar Pesquisas",
-          "limit": "Número limite de Pesquisas"
+          "limit": "Número limite de Pesquisas",
+          "unavailable": "Deletar Pesquisas"
         }
       }
     },
     "validate": {
-      "name": "Você deve digitar o nome",
-      "phone": "Você deve digitar o telefone",
-      "email": "Você deve digitar o email",
-      "module": "Você deve selecionar um módulo"
+      "type": "Você deve selecionar o tipo"
     }
   },
   "permissions": {

@@ -50,7 +50,7 @@ export default {
   background-color: var(--azul-turno);
   margin: .1rem;
   border-radius: 1rem;
-  line-height: 1.5rem;
+  line-height: 1rem;
   border: 1.5px solid var(--azul-turno);
 }
 .desactived {

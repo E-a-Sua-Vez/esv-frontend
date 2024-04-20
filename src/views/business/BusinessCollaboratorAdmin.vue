@@ -17,10 +17,11 @@ import Warning from '../../components/common/Warning.vue';
 import Popper from "vue3-popper";
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessCollaboratorsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, Warning, Popper, AreYouSure, ComponentMenu },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CollaboratorName, Toggle, Warning, Popper, AreYouSure, ComponentMenu, SearchAdminItem },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -56,7 +57,8 @@ export default {
       moduleError: false,
       emailError: false,
       typeError: false,
-      toggles: {}
+      toggles: {},
+      filtered: []
     });
 
     onBeforeMount(async () => {
@@ -75,6 +77,7 @@ export default {
             state.service = undefined;
           }
         }
+        state.filtered = state.collaborators;
         state.toggles = await getPermissions('collaborators', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -159,7 +162,7 @@ export default {
     const showAdd = () => {
       const servicesId = [];
       const commercesId = [];
-      state.showAdd = !state.showAdd;
+      state.showAdd = true;
       state.newCollaborator = {
         businessId: state.business.id,
         bot: false,
@@ -177,6 +180,7 @@ export default {
           const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
           state.collaborators = collaborators;
           state.showAdd = false;
+          closeAddModal();
           state.newCollaborator = { }
         }
         state.extendedEntity = undefined;
@@ -335,6 +339,15 @@ export default {
       }
     }
 
+    const receiveFilteredItems = (items) => {
+      state.filtered = items;
+    }
+
+    const closeAddModal = () => {
+      const modalCloseButton = document.getElementById('close-modal');
+      modalCloseButton.click();
+    }
+
     return {
       state,
       loading,
@@ -356,7 +369,8 @@ export default {
       deleteCommerce,
       unavailable,
       goToUnavailable,
-      unavailableCancel
+      unavailableCancel,
+      receiveFilteredItems
     }
   }
 }
@@ -401,390 +415,234 @@ export default {
                   :content="$t('businessCollaboratorsAdmin.message.2.content')" />
               </div>
               <div v-if="state.commerce" class="row mb-2">
-                <div class="col-8 text-labe">
-                  <span>{{ $t("businessCollaboratorsAdmin.listResult") }}</span>
-                  <span class="fw-bold m-2">{{ state.collaborators.length }}</span>
-                </div>
-                <div class="col-4">
+                <div class="col lefted">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAdd(collaborator)"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-collaborator`"
                     :disabled="!state.toggles['collaborators.admin.add']">
-                    <i class="bi bi-plus-lg"></i>
+                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                   </button>
                 </div>
               </div>
-              <div id="add-collaborator" class="collaborator-card mb-4" v-if="state.showAdd && state.toggles['collaborators.admin.add']">
-                <div v-if="state.collaborators.length < state.toggles['collaborators.admin.limit']">
-                  <div class="row g-1">
-                    <div id="collaborator-name-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.name") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newCollaborator.name"
-                          v-bind:class="{ 'is-invalid': state.nameError }"
-                          placeholder="Jhon Pérez">
-                      </div>
+              <div>
+                <SearchAdminItem
+                  :businessItems="state.collaborators"
+                  :receiveFilteredItems="receiveFilteredItems"
+                >
+                </SearchAdminItem>
+                <div v-for="(collaborator, index) in state.filtered" :key="index" class="collaborator-card">
+                  <div class="row">
+                    <div class="col-10">
+                      <CollaboratorName :name="collaborator.name" :email="collaborator.email" :active="collaborator.active"></CollaboratorName>
                     </div>
-                    <div id="collaborator-email-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.email") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="10"
-                          type="email"
-                          class="form-control"
-                          v-model="state.newCollaborator.email"
-                          v-bind:class="{ 'is-invalid': state.emailError }"
-                          placeholder="name@email.com">
-                      </div>
-                    </div>
-                    <div id="collaborator-alias-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.alias") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessCollaboratorsAdmin.aliasHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newCollaborator.alias"
-                          placeholder="Jhon Pérez">
-                      </div>
-                    </div>
-                    <div id="collaborator-type-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.type") }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select"
-                          v-model="state.newCollaborator.type"
-                          id="types"
-                          v-bind:class="{ 'is-invalid': state.typeError }">
-                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div id="collaborator-commerces-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.commerces") }}
-                      </div>
-                      <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark select" v-model="state.commercesSelected" @change="selectCommerceSelected(state.newCollaborator, state.commercesSelected)" id="commerces">
-                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                        </select>
-                        <div class="select p-1" v-if=" state.newCollaborator.commercesId &&  state.newCollaborator.commercesId.length > 0">
-                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.commercesId" :key="com.id">
-                            {{ showCommerce(com) }}
-                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(state.newCollaborator, com)"></button>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="collaborator-services-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.services") }}
-                      </div>
-                      <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectService(state.newCollaborator, state.service)" id="services">
-                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                        </select>
-                        <div class="select p-1" v-if=" state.newCollaborator.servicesId &&  state.newCollaborator.servicesId.length > 0">
-                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.servicesId" :key="com.id">
-                            {{ showService(com) }}
-                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newCollaborator, com)"></button>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="collaborator-phone-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.phone") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="10"
-                          type="tel"
-                          class="form-control"
-                          v-model="state.newCollaborator.phone"
-                          v-bind:class="{ 'is-invalid': state.phoneAddError }"
-                          placeholder="Cod. Pais + Numero">
-                      </div>
-                    </div>
-                    <div id="collaborator-module-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.module") }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select"
-                          v-model="state.newCollaborator.moduleId"
-                          id="modules"
-                          v-bind:class="{ 'is-invalid': state.moduleError }">
-                          <option v-for="mod in state.modules" :key="mod.name" :value="mod.id">{{ mod.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div id="collaborator-bot-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.bot") }}
-                      </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="state.newCollaborator.bot"
-                        />
-                      </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="add(state.newCollaborator)">
-                        {{ $t("businessCollaboratorsAdmin.add") }} <i class="bi bi-save"></i>
-                      </button>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsAdd" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
+                    <div class="col-2">
+                      <a
+                        href="#"
+                        @click.prevent="showUpdateForm(index)">
+                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                      </a>
                     </div>
                   </div>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessCollaboratorsAdmin.message.3.title')"
-                    :content="$t('businessCollaboratorsAdmin.message.3.content')" />
-                </div>
-              </div>
-              <div v-for="(collaborator, index) in state.collaborators" :key="index" class="collaborator-card">
-                <div class="row">
-                  <div class="col-10">
-                    <CollaboratorName :name="collaborator.name" :email="collaborator.email" :active="collaborator.active"></CollaboratorName>
-                  </div>
-                  <div class="col-2">
-                    <a
-                      href="#"
-                      @click.prevent="showUpdateForm(index)">
-                      <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                    </a>
-                  </div>
-                </div>
-                <div v-if="state.toggles['collaborators.admin.read']"
-                  :class="{ show: state.extendedEntity === index }"
-                  class="detailed-data transition-slow"
-                  >
-                  <div class="row g-1">
-                    <div id="collaborator-name-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.name") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="collaborator.name"
-                          placeholder="Jhon Pérez">
-                      </div>
-                    </div>
-                    <div id="collaborator-email-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.email") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="true"
-                          min="10"
-                          type="email"
-                          class="form-control"
-                          v-model="collaborator.email"
-                          placeholder="name@email.com">
-                      </div>
-                    </div>
-                    <div id="collaborator-alias-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.alias") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessCollaboratorsAdmin.aliasHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="collaborator.alias"
-                          placeholder="Jhon Pérez">
-                      </div>
-                    </div>
-                    <div id="collaborator-type-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.type") }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select"
-                          v-model="collaborator.type"
-                          id="modules-edit"
-                          :disabled="!state.toggles['collaborators.admin.edit']"
-                          >
-                          <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div id="collaborator-commerces-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.commerces") }}
-                      </div>
-                      <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark select" v-model="state.commerceSelected" @change="selectCommerceIndex(index, state.commerceSelected)" id="commerces">
-                          <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                        </select>
-                        <div class="select p-1" v-if="collaborator.commercesId &&  collaborator.commercesId.length > 0">
-                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.commercesId" :key="com.id">
-                            {{ showCommerce(com) }}
-                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(collaborator, com)"></button>
-                          </span>
+                  <div v-if="state.toggles['collaborators.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
+                    >
+                    <div class="row g-1">
+                      <div id="collaborator-name-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.name") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="collaborator.name"
+                            placeholder="Jhon Pérez">
                         </div>
                       </div>
-                    </div>
-                    <div id="collaborator-services-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.services") }}
-                      </div>
-                      <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
-                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                        </select>
-                        <div class="select p-1" v-if="collaborator.servicesId &&  collaborator.servicesId.length > 0">
-                          <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.servicesId" :key="com.id">
-                            {{ showService(com) }}
-                            <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(collaborator, com)"></button>
-                          </span>
+                      <div id="collaborator-email-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.email") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            min="10"
+                            type="email"
+                            class="form-control"
+                            v-model="collaborator.email"
+                            placeholder="name@email.com">
                         </div>
                       </div>
-                    </div>
-                    <div id="collaborator-phone-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.phone") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="!state.toggles['collaborators.admin.edit']"
-                          min="10"
-                          type="tel"
-                          class="form-control"
-                          v-model="collaborator.phone"
-                          v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
-                          placeholder="Cod. Pais + Numero">
-                      </div>
-                    </div>
-                    <div id="collaborator-module-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.module") }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select"
-                          v-model="collaborator.moduleId"
-                          id="modules-edit"
-                          :disabled="!state.toggles['collaborators.admin.edit']"
-                          >
-                          <option v-for="mod in state.modules" :key="mod.name" :value="mod.id">{{ mod.name }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div id="collaborator-active-form" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.active") }}
-                      </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="collaborator.active"
-                          :disabled="!state.toggles['collaborators.admin.edit']"
-                        />
-                      </div>
-                    </div>
-                    <div id="collaborator-bot-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.bot") }}
-                      </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="collaborator.bot"
-                          :disabled="!state.toggles['collaborators.admin.edit']"
-                        />
-                      </div>
-                    </div>
-                    <div id="collaborator-id-form" class="row -2 mb-g3">
-                      <div class="row collaborator-details-container">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ collaborator.id }}</span>
+                      <div id="collaborator-alias-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.alias") }}
+                          <Popper
+                            :class="'dark p-1'"
+                            arrow
+                            disableClickAway
+                            :content="$t('businessCollaboratorsAdmin.aliasHelp')">
+                            <i class='bi bi-info-circle-fill h7'></i>
+                          </Popper>
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="collaborator.alias"
+                            placeholder="Jhon Pérez">
                         </div>
                       </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(collaborator)"
-                        :disabled="!state.toggles['collaborators.admin.update']">
-                        {{ $t("businessCollaboratorsAdmin.update") }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['collaborators.admin.unavailable']">
-                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        :yesDisabled="state.toggles['collaborators.admin.unavailable']"
-                        :noDisabled="state.toggles['collaborators.admin.unavailable']"
-                        @actionYes="unavailable(collaborator)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
+                      <div id="collaborator-type-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.type") }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select"
+                            v-model="collaborator.type"
+                            id="modules-edit"
+                            :disabled="!state.toggles['collaborators.admin.edit']"
+                            >
+                            <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="collaborator-commerces-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.commerces") }}
+                        </div>
+                        <div class="col-8">
+                          <select class="btn btn-md fw-bold text-dark select" v-model="state.commerceSelected" @change="selectCommerceIndex(index, state.commerceSelected)" id="commerces">
+                            <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                          </select>
+                          <div class="select p-1" v-if="collaborator.commercesId &&  collaborator.commercesId.length > 0">
+                            <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.commercesId" :key="com.id">
+                              {{ showCommerce(com) }}
+                              <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(collaborator, com)"></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="collaborator-services-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.services") }}
+                        </div>
+                        <div class="col-8">
+                          <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
+                            <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                          </select>
+                          <div class="select p-1" v-if="collaborator.servicesId &&  collaborator.servicesId.length > 0">
+                            <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in collaborator.servicesId" :key="com.id">
+                              {{ showService(com) }}
+                              <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(collaborator, com)"></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="collaborator-phone-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.phone") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="!state.toggles['collaborators.admin.edit']"
+                            min="10"
+                            type="tel"
+                            class="form-control"
+                            v-model="collaborator.phone"
+                            v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
+                            placeholder="Cod. Pais + Numero">
+                        </div>
+                      </div>
+                      <div id="collaborator-module-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.module") }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select"
+                            v-model="collaborator.moduleId"
+                            id="modules-edit"
+                            :disabled="!state.toggles['collaborators.admin.edit']"
+                            >
+                            <option v-for="mod in state.modules" :key="mod.name" :value="mod.id">{{ mod.name }}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="collaborator-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.active") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="collaborator.active"
+                            :disabled="!state.toggles['collaborators.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="collaborator-bot-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.bot") }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="collaborator.bot"
+                            :disabled="!state.toggles['collaborators.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="collaborator-id-form" class="row -2 mb-g3">
+                        <div class="row collaborator-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ collaborator.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(collaborator)"
+                          :disabled="!state.toggles['collaborators.admin.update']">
+                          {{ $t("businessCollaboratorsAdmin.update") }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['collaborators.admin.unavailable']">
+                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yesDisabled="state.toggles['collaborators.admin.unavailable']"
+                          :noDisabled="state.toggles['collaborators.admin.unavailable']"
+                          @actionYes="unavailable(collaborator)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
+                      </div>
+                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div v-if="(!isActiveBusiness() || !state.toggles['collaborators.admin.read']) && !loading">
-                  <Message
-                    :title="$t('businessCollaboratorsAdmin.message.1.title')"
-                    :content="$t('businessCollaboratorsAdmin.message.1.content')" />
+                  <div v-if="(!isActiveBusiness() || !state.toggles['collaborators.admin.read']) && !loading">
+                    <Message
+                      :title="$t('businessCollaboratorsAdmin.message.1.title')"
+                      :content="$t('businessCollaboratorsAdmin.message.1.content')" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -794,6 +652,185 @@ export default {
           <Message
             :title="$t('businessCollaboratorsAdmin.message.1.title')"
             :content="$t('businessCollaboratorsAdmin.message.1.content')" />
+        </div>
+      </div>
+    </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-collaborator`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
+            <div id="add-collaborator" class="collaborator-card mb-4" v-if="state.showAdd && state.toggles['collaborators.admin.add']">
+              <div v-if="state.collaborators.length < state.toggles['collaborators.admin.limit']">
+                <div class="row g-1">
+                  <div id="collaborator-name-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.name") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="state.newCollaborator.name"
+                        v-bind:class="{ 'is-invalid': state.nameError }"
+                        placeholder="Jhon Pérez">
+                    </div>
+                  </div>
+                  <div id="collaborator-email-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.email") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="10"
+                        type="email"
+                        class="form-control"
+                        v-model="state.newCollaborator.email"
+                        v-bind:class="{ 'is-invalid': state.emailError }"
+                        placeholder="name@email.com">
+                    </div>
+                  </div>
+                  <div id="collaborator-alias-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.alias") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessCollaboratorsAdmin.aliasHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="state.newCollaborator.alias"
+                        placeholder="Jhon Pérez">
+                    </div>
+                  </div>
+                  <div id="collaborator-type-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.type") }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="state.newCollaborator.type"
+                        id="types"
+                        v-bind:class="{ 'is-invalid': state.typeError }">
+                        <option v-for="typ in state.types" :key="typ.name" :value="typ.type">{{ typ.name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="collaborator-commerces-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.commerces") }}
+                    </div>
+                    <div class="col-8">
+                      <select class="btn btn-md fw-bold text-dark select" v-model="state.commercesSelected" @change="selectCommerceSelected(state.newCollaborator, state.commercesSelected)" id="commerces">
+                        <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                      </select>
+                      <div class="select p-1" v-if=" state.newCollaborator.commercesId &&  state.newCollaborator.commercesId.length > 0">
+                        <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.commercesId" :key="com.id">
+                          {{ showCommerce(com) }}
+                          <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteCommerce(state.newCollaborator, com)"></button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collaborator-services-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.services") }}
+                    </div>
+                    <div class="col-8">
+                      <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectService(state.newCollaborator, state.service)" id="services">
+                        <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                      </select>
+                      <div class="select p-1" v-if=" state.newCollaborator.servicesId &&  state.newCollaborator.servicesId.length > 0">
+                        <span class="badge state rounded-pill bg-secondary p-2 mx-1" v-for="com in state.newCollaborator.servicesId" :key="com.id">
+                          {{ showService(com) }}
+                          <button type="button" class="btn btn-md btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newCollaborator, com)"></button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="collaborator-phone-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.phone") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="10"
+                        type="tel"
+                        class="form-control"
+                        v-model="state.newCollaborator.phone"
+                        v-bind:class="{ 'is-invalid': state.phoneAddError }"
+                        placeholder="Cod. Pais + Numero">
+                    </div>
+                  </div>
+                  <div id="collaborator-module-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.module") }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="state.newCollaborator.moduleId"
+                        id="modules"
+                        v-bind:class="{ 'is-invalid': state.moduleError }">
+                        <option v-for="mod in state.modules" :key="mod.name" :value="mod.id">{{ mod.name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="collaborator-bot-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessCollaboratorsAdmin.bot") }}
+                    </div>
+                    <div class="col-8">
+                      <Toggle
+                        v-model="state.newCollaborator.bot"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(state.newCollaborator)">
+                      {{ $t("businessCollaboratorsAdmin.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessCollaboratorsAdmin.message.3.title')"
+                  :content="$t('businessCollaboratorsAdmin.message.3.content')" />
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
         </div>
       </div>
     </div>

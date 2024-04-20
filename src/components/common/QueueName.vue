@@ -99,12 +99,6 @@ export default {
   font-weight: 700;
   font-size: .9rem;
 }
-.desactived-name {
-  background-color: var(--gris-tooltip);
-  color: var(--color-background);
-  font-weight: 700;
-  font-size: .9rem;
-}
 .selected {
   background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity));
   margin: .1rem;

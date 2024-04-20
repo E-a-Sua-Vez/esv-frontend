@@ -25,7 +25,7 @@
   "sureAction": "Are you sure you want to complete this action?",
   "logoValues": "/images/es_tu_turno_values.png",
   "logoValuesAlt": "It's your turn",
-  "searcher": "Search",
+  "searcher": "🔎 Search",
   "close": "Close",
   "noResults": "😓 No Results",
   "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
@@ -36,6 +36,7 @@
   "NO": "No",
   "page": "Page",
   "of": "of",
+  "add": "Add",
   "serviceStatus": "Service Status",
   "countries": {
     "br": "🇧🇷 Brazil",
@@ -373,6 +374,14 @@
     "freePeriod": "Free Period"
   },
   "enterSearcher": "🔍 Type at least 3 characters",
+  "searchAdminItem": {
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "There are no elements that correspond to the search."
+      }
+    }
+  },
   "alert": {
     "message": {
       "1": "There's an error,",
@@ -2937,15 +2946,13 @@
           "edit": "Edit the Surveys",
           "update": "Update the Surveys",
           "add": "Add Surveys",
-          "limit": "Limit amount of Surveys"
+          "limit": "Limit amount of Surveys",
+          "unavailable": "Delete Surveys"
         }
       }
     },
     "validate": {
-      "name": "Debes ingresar el name",
-      "phone": "Debes ingresar el phone",
-      "email": "Debes ingresar el email",
-      "module": "Debes seleccionar un module"
+      "type": "Should select the type"
     }
   },
   "permissions": {

@@ -15,10 +15,11 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessModulesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning, AreYouSure, ComponentMenu },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ModuleName, Toggle, ToggleCapabilities, Warning, AreYouSure, ComponentMenu, SearchAdminItem },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -39,7 +40,8 @@ export default {
       extendedEntity: undefined,
       errorsAdd: [],
       nameError: false,
-      toggles: {}
+      toggles: {},
+      filtered: []
     });
 
     onBeforeMount(async () => {
@@ -53,6 +55,7 @@ export default {
           const modules = await getModulesByCommerceId(state.commerce.id);
           state.modules = modules;
         }
+        state.filtered = state.modules;
         state.toggles = await getPermissions('modules', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -93,7 +96,7 @@ export default {
     }
 
     const showAdd = () => {
-      state.showAdd = !state.showAdd;
+      state.showAdd = true;
       state.newQueue = {
         order: state.modules.length + 1
       }
@@ -107,6 +110,7 @@ export default {
           await addModule(state.newQueue);
           state.modules = await getModulesByCommerceId(state.commerce.id);
           state.showAdd = false;
+          closeAddModal();
           state.newQueue = {};
           state.extendedEntity = undefined;
         }
@@ -179,6 +183,15 @@ export default {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     }
 
+    const receiveFilteredItems = (items) => {
+      state.filtered = items;
+    }
+
+    const closeAddModal = () => {
+      const modalCloseButton = document.getElementById('close-modal');
+      modalCloseButton.click();
+    }
+
     return {
       state,
       loading,
@@ -192,7 +205,8 @@ export default {
       selectCommerce,
       unavailable,
       goToUnavailable,
-      unavailableCancel
+      unavailableCancel,
+      receiveFilteredItems
     }
   }
 }
@@ -237,125 +251,88 @@ export default {
                   :content="$t('businessModulesAdmin.message.2.content')" />
               </div>
               <div v-if="state.commerce" class="row mb-2">
-                <div class="col-8 text-label">
-                  <span>{{ $t("businessModulesAdmin.listResult") }}</span>
-                  <span class="fw-bold m-2">{{ state.modules.length }}</span>
-                </div>
-                <div class="col-4">
+                <div class="col lefted">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAdd(module)"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-module`"
                     :disabled="!state.toggles['modules.admin.add']">
-                    <i class="bi bi-plus-lg"></i>
+                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                   </button>
                 </div>
               </div>
-              <div id="add-module" class="module-card mb-4" v-if="state.showAdd && state.toggles['modules.admin.add']">
-                <div v-if="state.modules.length < state.toggles['modules.admin.limit']">
-                  <div class="row g-1">
-                    <div id="module-name-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t("businessModulesAdmin.name") }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newQueue.name"
-                          v-bind:class="{ 'is-invalid': state.nameError }"
-                          placeholder="Module A">
-                      </div>
+              <div>
+                <SearchAdminItem
+                  :businessItems="state.modules"
+                  :receiveFilteredItems="receiveFilteredItems"
+                >
+                </SearchAdminItem>
+                <div v-for="(module, index) in state.filtered" :key="index" class="result-card">
+                  <div class="row">
+                    <div class="col-10">
+                      <ModuleName :name="module.name" :active="module.active"></ModuleName>
                     </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="add(state.newQueue)">
-                        {{ $t("businessModulesAdmin.add") }} <i class="bi bi-save"></i>
-                      </button>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsAdd" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
+                    <div class="col-2">
+                      <a
+                        href="#"
+                        @click.prevent="showUpdateForm(index)">
+                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                      </a>
                     </div>
                   </div>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessModulesAdmin.message.3.title')"
-                    :content="$t('businessModulesAdmin.message.3.content')" />
-                </div>
-              </div>
-              <div v-for="(module, index) in state.modules" :key="index" class="module-card">
-                <div class="row">
-                  <div class="col-10">
-                    <ModuleName :name="module.name" :active="module.active"></ModuleName>
-                  </div>
-                  <div class="col-2">
-                    <a
-                      href="#"
-                      @click.prevent="showUpdateForm(index)">
-                      <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                    </a>
-                  </div>
-                </div>
-                <div v-if="state.toggles['modules.admin.read']"
-                  :class="{ show: state.extendedEntity === index }"
-                  class="detailed-data transition-slow"
-                  >
-                  <div class="row g-1">
-                    <div id="module-active-form" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t("businessModulesAdmin.active") }}
-                      </div>
-                      <div class="col-6">
-                        <Toggle
-                          v-model="module.active"
-                          :disabled="!state.toggles['modules.admin.edit']"
-                        />
-                      </div>
-                    </div>
-                    <div id="module-id-form" class="row -2 mb-g3">
-                      <div class="row module-details-container">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ module.id }}</span>
+                  <div v-if="state.toggles['modules.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
+                    >
+                    <div class="row g-1">
+                      <div id="module-active-form" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t("businessModulesAdmin.active") }}
+                        </div>
+                        <div class="col-6">
+                          <Toggle
+                            v-model="module.active"
+                            :disabled="!state.toggles['modules.admin.edit']"
+                          />
                         </div>
                       </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(module)"
-                        v-if="state.toggles['modules.admin.update']">
-                        {{ $t("businessModulesAdmin.update") }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['modules.admin.unavailable']">
-                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        :yesDisabled="state.toggles['modules.admin.unavailable']"
-                        :noDisabled="state.toggles['modules.admin.unavailable']"
-                        @actionYes="unavailable(module)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
+                      <div id="module-id-form" class="row -2 mb-g3">
+                        <div class="row module-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ module.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(module)"
+                          v-if="state.toggles['modules.admin.update']">
+                          {{ $t("businessModulesAdmin.update") }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['modules.admin.unavailable']">
+                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yesDisabled="state.toggles['modules.admin.unavailable']"
+                          :noDisabled="state.toggles['modules.admin.unavailable']"
+                          @actionYes="unavailable(module)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div v-if="(!isActiveBusiness() || !state.toggles['modules.admin.read']) && !loading">
-                  <Message
-                    :title="$t('businessModulesAdmin.message.1.title')"
-                    :content="$t('businessModulesAdmin.message.1.content')" />
+                  <div v-if="(!isActiveBusiness() || !state.toggles['modules.admin.read']) && !loading">
+                    <Message
+                      :title="$t('businessModulesAdmin.message.1.title')"
+                      :content="$t('businessModulesAdmin.message.1.content')" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -368,6 +345,66 @@ export default {
         </div>
       </div>
     </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-module`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
+            <div id="add-module" class="result-card mb-4" v-if="state.showAdd && state.toggles['modules.admin.add']">
+              <div v-if="state.modules.length < state.toggles['modules.admin.limit']">
+                <div class="row g-1">
+                  <div id="module-name-form-add" class="row g-1">
+                    <div class="col-6 text-label">
+                      {{ $t("businessModulesAdmin.name") }}
+                    </div>
+                    <div class="col-6">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="state.newQueue.name"
+                        v-bind:class="{ 'is-invalid': state.nameError }"
+                        placeholder="Module A">
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(state.newQueue)">
+                      {{ $t("businessModulesAdmin.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessModulesAdmin.message.3.title')"
+                  :content="$t('businessModulesAdmin.message.3.content')" />
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
     <PoweredBy :name="state.business.name" />
   </div>
 </template>
@@ -376,14 +413,6 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.module-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .module-details-container {
   font-size: .8rem;
@@ -397,7 +426,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 1500px !important;
   overflow-y: auto;
 }
 </style>

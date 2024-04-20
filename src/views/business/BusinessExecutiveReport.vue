@@ -223,7 +223,7 @@ export default {
             </div>
             <div id="resumePerCommerce" v-if="state.reports.resumeByCommerce && state.reports.resumeByCommerce.length > 0">
               <span class="fw-bold">{{ $t("businessExecutiveReport.resumeByCommerce") }}</span>
-              <div v-for="(commerce, index) in state.reports.resumeByCommerce" :key="index" class="commerce-card">
+              <div v-for="(commerce, index) in state.reports.resumeByCommerce" :key="index" class="result-card">
                 <div class="row">
                   <div class="col-10">
                     <CommerceName :name="commerce.businessesName" :tag="commerce.tag" :active="commerce.active"></CommerceName>
@@ -325,14 +325,7 @@ export default {
   justify-content: center;
   display: flex;
 }
-.commerce-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
-}
+
 .resume-box {
   background-color: var(--color-background);
   padding: .1rem;

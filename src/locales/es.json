@@ -24,7 +24,6 @@
   "upgrade": "Haz un Upgrade de tu plan para obtener más beneficios.",
   "logoValues": "/images/es_tu_turno_values.png",
   "logoValuesAlt": "Es tu turno",
-  "searcher": "Buscador",
   "noResults": "😓 Sin Resultados",
   "sureAction": "¿Estás seguro que deseas realizar esta acción?",
   "lostConnection": "Perdiste la conexión a internet. Revisa tu conexión y refresca la página.",
@@ -37,6 +36,8 @@
   "page": "Página",
   "of": "de",
   "serviceStatus": "Estado del Servicio",
+  "searcher": "🔎 Buscador",
+  "add": "Agregar",
   "countries": {
     "br": "🇧🇷 Brasil",
     "cl": "🇨🇱 Chile",
@@ -374,6 +375,14 @@
     "freePeriod": "Período Gratuito"
   },
   "enterSearcher": "🔍 Ingresa al menos 3 caracteres",
+  "searchAdminItem": {
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "No hay elementos que correspondan a la búsqueda."
+      }
+    }
+  },
   "alert": {
     "message": {
       "1": "Hubo un error,",
@@ -2951,10 +2960,7 @@
       }
     },
     "validate": {
-      "name": "Debes ingresar el nombre",
-      "phone": "Debes ingresar el teléfono",
-      "email": "Debes ingresar el email",
-      "module": "Debes seleccionar un módulo"
+      "type": "Debes ingresar el tipo"
     }
   },
   "permissions": {

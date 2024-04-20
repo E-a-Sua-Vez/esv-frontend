@@ -18,10 +18,11 @@ import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import { getQueueTypes } from '../../shared/utils/data';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu, SearchAdminItem },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -56,7 +57,8 @@ export default {
       timeAddError: false,
       timeUpdateError: false,
       typeError: false,
-      toggles: {}
+      toggles: {},
+      filtered: []
     });
 
     onBeforeMount(async () => {
@@ -72,6 +74,7 @@ export default {
           state.services = await getActiveServicesByCommerceId(state.commerce.id);
           state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         }
+        state.filtered = state.queues;
         state.toggles = await getPermissions('queues', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -183,7 +186,7 @@ export default {
 
     const showAdd = () => {
       const servicesId = [];
-      state.showAdd = !state.showAdd;
+      state.showAdd = true;
       state.newQueue = {
         order: state.queues.length + 1,
         servicesId,
@@ -212,6 +215,7 @@ export default {
           await addQueue(state.newQueue);
           state.queues = await getQueuesByCommerceId(state.commerce.id);
           state.showAdd = false;
+          closeAddModal();
           state.newQueue = {}
           state.extendedEntity = undefined;
         }
@@ -446,6 +450,15 @@ export default {
       }
     }
 
+    const receiveFilteredItems = (items) => {
+      state.filtered = items;
+    }
+
+    const closeAddModal = () => {
+      const modalCloseButton = document.getElementById('close-modal');
+      modalCloseButton.click();
+    }
+
     return {
       state,
       loading,
@@ -472,7 +485,8 @@ export default {
       selectServiceMultiple,
       showService,
       deleteService,
-      selectServiceIndex
+      selectServiceIndex,
+      receiveFilteredItems
     }
   }
 }
@@ -517,412 +531,219 @@ export default {
                   :content="$t('businessQueuesAdmin.message.2.content')" />
               </div>
               <div v-if="state.commerce" class="row mb-2">
-                <div class="col-8 text-label">
-                  <span>{{ $t("businessQueuesAdmin.listResult") }}</span>
-                  <span class="fw-bold m-2">{{ state.queues.length }}</span>
-                </div>
-                <div class="col-4">
+                <div class="col lefted">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAdd(queue)"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-queue`"
                     :disabled="!state.toggles['queues.admin.add']">
-                    <i class="bi bi-plus-lg"></i>
+                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                   </button>
                 </div>
               </div>
-              <div id="add-queue" class="queue-card mb-4" v-if="state.showAdd && state.toggles['queues.admin.add']">
-                <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
-                  <div class="row g-1">
-                    <div id="queue-name-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.name") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newQueue.name"
-                          v-bind:class="{ 'is-invalid': state.nameAddError }"
-                          placeholder="Service A">
-                      </div>
+              <div>
+                <SearchAdminItem
+                  :businessItems="state.queues"
+                  :receiveFilteredItems="receiveFilteredItems"
+                >
+                </SearchAdminItem>
+                <div v-for="(queue, index) in state.filtered" :key="index" class="queue-card">
+                  <div class="row">
+                    <div class="col-10">
+                      <QueueSimpleName :queue="queue"></QueueSimpleName>
                     </div>
-                    <div id="queue-type-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.type") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessQueuesAdmin.typeHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select"
-                          v-model="state.newQueue.type"
-                          id="types"
-                          v-bind:class="{ 'is-invalid': state.typeError }"
-                          @change="selectType(typ)">
-                          <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`queues.types.${typ.id}`) }}</option>
-                        </select>
-                      </div>
+                    <div class="col-2">
+                      <a
+                        href="#"
+                        @click.prevent="showUpdateForm(index)">
+                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                      </a>
                     </div>
-                    <div v-if="state.newQueue.type === 'COLLABORATOR'" class="row g-1">
-                      <div class="col-12 text-label">
-                        <div class="dropdown">
-                          <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="fw-bold m-1"> {{ state.selectedCollaborator.name || $t("businessQueuesAdmin.selectCollaborator") }} </span>
-                          </button>
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessQueuesAdmin.collaboratorHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                          <ul class="dropdown-menu" aria-labelledby="select-commerce">
-                            <li v-for="col in state.collaborators" :key="col.id" :value="col" class="list-item">
-                              <div class="row d-flex m-1 searcher" @click="selectCollaborator(state.newQueue, col)">
-                                <div class="col-12">
-                                  <div>
-                                    <span class="item-title fw-bold"> {{ col.name }} </span>
-                                  </div>
-                                  <div v-if="col !== undefined">
-                                    <span class="item-subtitle text-break"> {{ col.email }} </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-if="state.newQueue.type === 'SERVICE'" class="row g-1">
-                      <div class="col-12 text-label">
-                        <div class="dropdown">
-                          <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="fw-bold m-1"> {{ state.selectedService.name || $t("businessQueuesAdmin.selectService") }} </span>
-                          </button>
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessQueuesAdmin.serviceHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                          <ul class="dropdown-menu" aria-labelledby="select-commerce">
-                            <li v-for="serv in state.services" :key="serv.id" :value="serv" class="list-item">
-                              <div class="row d-flex m-1 searcher" @click="selectService(state.newQueue, serv)">
-                                <div class="col-12">
-                                  <div>
-                                    <span class="item-title fw-bold"> {{ serv.name }} </span>
-                                  </div>
-                                  <div v-if="serv !== undefined">
-                                    <span class="item-subtitle text-break"> {{ serv.tag }} </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-if="state.newQueue.type === 'MULTI_SERVICE'" class="row g-1">
-                      <div id="queue-services-form-add" class="row g-1">
+                  </div>
+                  <div v-if="state.toggles['queues.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
+                    >
+                    <div class="row g-1">
+                      <div id="queue-link-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.services") }}
+                          {{ $t("businessQueuesAdmin.link") }}
                         </div>
                         <div class="col-8">
-                          <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceMultiple(state.newQueue, state.service)" id="services">
+                          <a class="btn copy-icon"
+                            @click="copyLink(queue)">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                          </a>
+                          <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                              :href="`${getQueueLink(queue)}`"
+                              target="_blank">
+                            <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessQueuesAdmin.go") }}
+                          </a>
+                        </div>
+                      </div>
+                      <div id="queue-name-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.name") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="queue.name"
+                            v-bind:class="{ 'is-invalid': state.nameUpdateError }"
+                            placeholder="Service A">
+                        </div>
+                      </div>
+                      <div id="queue-type-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.type") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            type="text"
+                            class="form-control"
+                            v-model="queue.type"
+                            placeholder="Type">
+                        </div>
+                      </div>
+                      <div id="queue-services-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessCollaboratorsAdmin.services") }}
+                        </div>
+                        <div class="col-8">
+                          <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
                             <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
                           </select>
-                          <div class="select p-1" v-if="state.newQueue.servicesId &&  state.newQueue.servicesId.length > 0">
-                            <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in state.newQueue.servicesId" :key="com.id">
+                          <div class="select p-1" v-if="queue.servicesId &&  queue.servicesId.length > 0">
+                            <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in queue.servicesId" :key="com.id">
                               {{ showService(com) }}
-                              <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newQueue, com)"></button>
+                              <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(queue, com)"></button>
                             </span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div id="queue-limit-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.limit") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessQueuesAdmin.limitHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          :max="state.toggles['queues.admin.queue-limit']"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newQueue.limit"
-                          v-bind:class="{ 'is-invalid': state.limitAddError }"
-                          placeholder="100">
-                      </div>
-                    </div>
-                    <div id="queue-order-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.order") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessQueuesAdmin.orderHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          :max="state.queues.length + 1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newQueue.order"
-                          v-bind:class="{ 'is-invalid': state.orderAddError }"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <div id="queue-estimated-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.estimated") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessQueuesAdmin.estimatedHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newQueue.estimatedTime"
-                          v-bind:class="{ 'is-invalid': state.timeAddError }"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <div id="queue-block-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.blockTime") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessQueuesAdmin.blockTimeHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newQueue.blockTime"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <!-- Datos de Servicio -->
-                    <div class="row g-1">
-                      <a
-                        class="nav-link fw-bold"
-                        data-bs-toggle="collapse"
-                        href="#add-service">
-                        {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
-                      </a>
-                    </div>
-                    <div id="add-service" class="collapse row m-0">
-                      <div id="add-queue-walkin-active-form" class="row g-1">
+                      <div id="queue-limit-form-update" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.walkin") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessQueuesAdmin.walkinHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
+                          {{ $t("businessQueuesAdmin.limit") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            min="1"
+                            :max="state.toggles['queues.admin.queue-limit']"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.limit"
+                            v-bind:class="{ 'is-invalid': state.limitUpdateError }"
+                            placeholder="100">
+                        </div>
+                      </div>
+                      <div id="queue-order-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.order") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            min="1"
+                            :max="state.queues.length"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.order"
+                            v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                            placeholder="1">
+                        </div>
+                      </div>
+                      <div id="queue-estimated-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.estimated") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="!state.toggles['queues.admin.edit']"
+                            min="1"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.estimatedTime"
+                            v-bind:class="{ 'is-invalid': state.timeUpdateError }"
+                            placeholder="1">
+                        </div>
+                      </div>
+                      <div id="queue-block-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.blockTime") }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            type="number"
+                            class="form-control"
+                            v-model="queue.blockTime"
+                            placeholder="1">
+                        </div>
+                      </div>
+                      <div id="queue-active-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t("businessQueuesAdmin.active") }}
                         </div>
                         <div class="col-8">
                           <Toggle
-                            v-model="state.newQueue.serviceInfo.walkin"
+                            v-model="queue.active"
                             :disabled="!state.toggles['queues.admin.edit']"
                           />
                         </div>
                       </div>
-                      <div id="add-queue-samecommerce-active-form" class="row g-1">
+                      <div id="queue-online-form-update" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.sameCommeceHours") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessQueuesAdmin.sameCommeceHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
+                          {{ $t("businessQueuesAdmin.online") }}
                         </div>
                         <div class="col-8">
                           <Toggle
-                            v-model="state.newQueue.serviceInfo.sameCommeceHours"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                            @click="initializedSameCommerceHours(state.newQueue.serviceInfo)"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-attentionHour-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.attentionHour") }}
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="2"
-                            type="number"
-                            class="form-control"
-                            v-model="state.newQueue.serviceInfo.attentionHourFrom"
-                            placeholder="Ex. 8">
-                        </div>
-                        <div class="col-2">
-                          -
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="2"
-                            type="number"
-                            class="form-control"
-                            v-model="state.newQueue.serviceInfo.attentionHourTo"
-                            placeholder="Ex. 16">
-                        </div>
-                      </div>
-                      <div id="add-queue-break-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.break") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="state.newQueue.serviceInfo.break"
+                            v-model="queue.online"
                             :disabled="!state.toggles['queues.admin.edit']"
                           />
                         </div>
                       </div>
-                      <div id="queue-attentionBreak-form-add" v-if="state.newQueue.serviceInfo.break" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.breakHour") }}
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="state.newQueue.serviceInfo.breakHourFrom"
-                            placeholder="Ex. 8">
-                        </div>
-                        <div class="col-2">
-                          -
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="state.newQueue.serviceInfo.breakHourTo"
-                            placeholder="Ex. 16">
-                        </div>
+                      <!-- Datos de Servicio -->
+                      <div class="row g-1">
+                        <a
+                          class="nav-link fw-bold"
+                          data-bs-toggle="collapse"
+                          href="#update-service">
+                          {{ $t("businessQueuesAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                        </a>
                       </div>
-                      <div id="queue-attentionDays-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.attentionDays") }}
-                        </div>
-                        <div class="col-8">
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="monday"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 1)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 1)">
-                            <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="tuesday"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 2)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 2)">
-                            <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="wednesday"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 3)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 3)">
-                            <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="thursday"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 4)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 4)">
-                            <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="friday"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 5)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 5)">
-                            <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="sabado"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 6)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 6)">
-                            <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="domingo"
-                              :checked="dayChecked(state.newQueue.serviceInfo, 7)"
-                              @click="checkDay($event, state.newQueue.serviceInfo, 7)">
-                            <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div id="add-queue-personalized-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.personalized") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessQueuesAdmin.personalizedHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="state.newQueue.serviceInfo.personalized"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                            @click="initializedParsonalizedHours(state.newQueue.serviceInfo)"
-                          />
-                        </div>
-                      </div>
-                      <div id="queue-personalized-form-add" v-if="state.newQueue.serviceInfo.personalized" class="row g-1">
-                        <div class="row g-1" v-for="day in state.newQueue.serviceInfo.attentionDays" :key="day">
+                      <div id="update-service" class="collapse row m-0">
+                        <div id="update-queue-samecommerce-active-form" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t(`days.${day}`) }}
+                            {{ $t("businessQueuesAdmin.walkin") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="queue.serviceInfo.walkin"
+                              :disabled="!state.toggles['queues.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="update-queue-samecommerce-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.sameCommeceHours") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="queue.serviceInfo.sameCommeceHours"
+                              :disabled="!state.toggles['queues.admin.edit']"
+                              @click="initializedSameCommerceHours(queue.serviceInfo)"
+                            />
+                          </div>
+                        </div>
+                        <div id="queue-attentionHour-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.attentionHour") }}
                           </div>
                           <div class="col-3">
                             <input
@@ -932,7 +753,7 @@ export default {
                               maxlength="2"
                               type="number"
                               class="form-control"
-                              v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              v-model="queue.serviceInfo.attentionHourFrom"
                               placeholder="Ex. 8">
                           </div>
                           <div class="col-2">
@@ -946,375 +767,34 @@ export default {
                               maxlength="2"
                               type="number"
                               class="form-control"
-                              v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourTo"
+                              v-model="queue.serviceInfo.attentionHourTo"
                               placeholder="Ex. 16">
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="add(state.newQueue)">
-                        {{ $t("businessQueuesAdmin.add") }} <i class="bi bi-save"></i>
-                      </button>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsAdd" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
-                    </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessQueuesAdmin.message.3.title')"
-                    :content="$t('businessQueuesAdmin.message.3.content')" />
-                </div>
-              </div>
-              <div v-for="(queue, index) in state.queues" :key="index" class="queue-card">
-                <div class="row">
-                  <div class="col-10">
-                    <QueueSimpleName :queue="queue"></QueueSimpleName>
-                  </div>
-                  <div class="col-2">
-                    <a
-                      href="#"
-                      @click.prevent="showUpdateForm(index)">
-                      <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                    </a>
-                  </div>
-                </div>
-                <div v-if="state.toggles['queues.admin.read']"
-                  :class="{ show: state.extendedEntity === index }"
-                  class="detailed-data transition-slow"
-                  >
-                  <div class="row g-1">
-                    <div id="queue-link-form" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.link") }}
-                      </div>
-                      <div class="col-8">
-                        <a class="btn copy-icon"
-                          @click="copyLink(queue)">
-                          <i class="bi bi-file-earmark-spreadsheet"></i>
-                        </a>
-                        <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                            :href="`${getQueueLink(queue)}`"
-                            target="_blank">
-                          <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessQueuesAdmin.go") }}
-                        </a>
-                      </div>
-                    </div>
-                    <div id="queue-name-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.name") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="queue.name"
-                          v-bind:class="{ 'is-invalid': state.nameUpdateError }"
-                          placeholder="Service A">
-                      </div>
-                    </div>
-                    <div id="queue-type-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.type") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="true"
-                          type="text"
-                          class="form-control"
-                          v-model="queue.type"
-                          placeholder="Type">
-                      </div>
-                    </div>
-                    <div id="queue-services-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessCollaboratorsAdmin.services") }}
-                      </div>
-                      <div class="col-8">
-                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceIndex(index, state.service)" id="services">
-                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                        </select>
-                        <div class="select p-1" v-if="queue.servicesId &&  queue.servicesId.length > 0">
-                          <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in queue.servicesId" :key="com.id">
-                            {{ showService(com) }}
-                            <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(queue, com)"></button>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="queue-limit-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.limit") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="!state.toggles['queues.admin.edit']"
-                          min="1"
-                          :max="state.toggles['queues.admin.queue-limit']"
-                          type="number"
-                          class="form-control"
-                          v-model="queue.limit"
-                          v-bind:class="{ 'is-invalid': state.limitUpdateError }"
-                          placeholder="100">
-                      </div>
-                    </div>
-                    <div id="queue-order-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.order") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="!state.toggles['queues.admin.edit']"
-                          min="1"
-                          :max="state.queues.length"
-                          type="number"
-                          class="form-control"
-                          v-model="queue.order"
-                          v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <div id="queue-estimated-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.estimated") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="!state.toggles['queues.admin.edit']"
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="queue.estimatedTime"
-                          v-bind:class="{ 'is-invalid': state.timeUpdateError }"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <div id="queue-block-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.blockTime") }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="queue.blockTime"
-                          placeholder="1">
-                      </div>
-                    </div>
-                    <div id="queue-active-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.active") }}
-                      </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="queue.active"
-                          :disabled="!state.toggles['queues.admin.edit']"
-                        />
-                      </div>
-                    </div>
-                    <div id="queue-online-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t("businessQueuesAdmin.online") }}
-                      </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="queue.online"
-                          :disabled="!state.toggles['queues.admin.edit']"
-                        />
-                      </div>
-                    </div>
-                    <!-- Datos de Servicio -->
-                    <div class="row g-1">
-                      <a
-                        class="nav-link fw-bold"
-                        data-bs-toggle="collapse"
-                        href="#update-service">
-                        {{ $t("businessQueuesAdmin.service") }} <i class="bi bi-chevron-down"></i>
-                      </a>
-                    </div>
-                    <div id="update-service" class="collapse row m-0">
-                      <div id="update-queue-samecommerce-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.walkin") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="queue.serviceInfo.walkin"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="update-queue-samecommerce-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.sameCommeceHours") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="queue.serviceInfo.sameCommeceHours"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                            @click="initializedSameCommerceHours(queue.serviceInfo)"
-                          />
-                        </div>
-                      </div>
-                      <div id="queue-attentionHour-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.attentionHour") }}
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="2"
-                            type="number"
-                            class="form-control"
-                            v-model="queue.serviceInfo.attentionHourFrom"
-                            placeholder="Ex. 8">
-                        </div>
-                        <div class="col-2">
-                          -
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="2"
-                            type="number"
-                            class="form-control"
-                            v-model="queue.serviceInfo.attentionHourTo"
-                            placeholder="Ex. 16">
-                        </div>
-                      </div>
-                      <div id="update-queue-break-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.break") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="queue.serviceInfo.break"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="queue-attentionBreak-form-update" v-if="queue.serviceInfo.break" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.breakHour") }}
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="queue.serviceInfo.breakHourFrom"
-                            placeholder="Ex. 8">
-                        </div>
-                        <div class="col-2">
-                          -
-                        </div>
-                        <div class="col-3">
-                          <input
-                            min="0"
-                            max="24"
-                            minlength="1"
-                            maxlength="5"
-                            type="number"
-                            class="form-control"
-                            v-model="queue.serviceInfo.breakHourTo"
-                            placeholder="Ex. 16">
-                        </div>
-                      </div>
-                      <div id="queue-attentionDays-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.attentionDays") }}
-                        </div>
-                        <div class="col-8">
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="monday"
-                              :checked="dayChecked(queue.serviceInfo, 1)"
-                              @click="checkDay($event, queue.serviceInfo, 1)">
-                            <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="tuesday"
-                              :checked="dayChecked(queue.serviceInfo, 2)"
-                              @click="checkDay($event, queue.serviceInfo, 2)">
-                            <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="wednesday"
-                              :checked="dayChecked(queue.serviceInfo, 3)"
-                              @click="checkDay($event, queue.serviceInfo, 3)">
-                            <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="thursday"
-                              :checked="dayChecked(queue.serviceInfo, 4)"
-                              @click="checkDay($event, queue.serviceInfo, 4)">
-                            <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="friday"
-                              :checked="dayChecked(queue.serviceInfo, 5)"
-                              @click="checkDay($event, queue.serviceInfo, 5)">
-                            <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="sabado"
-                              :checked="dayChecked(queue.serviceInfo, 6)"
-                              @click="checkDay($event, queue.serviceInfo, 6)">
-                            <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
-                          </div>
-                          <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="domingo"
-                              :checked="dayChecked(queue.serviceInfo, 7)"
-                              @click="checkDay($event, queue.serviceInfo, 7)">
-                            <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div id="update-queue-personalized-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.personalized") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="queue.serviceInfo.personalized"
-                            :disabled="!state.toggles['queues.admin.edit']"
-                            @click="initializedParsonalizedHours(queue.serviceInfo)"
-                          />
-                        </div>
-                      </div>
-                      <div id="queue-personalized-form-update" v-if="queue.serviceInfo.personalized" class="row g-1">
-                        <div class="row g-1" v-for="day in queue.serviceInfo.attentionDays" :key="day">
+                        <div id="update-queue-break-active-form" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t(`days.${day}`) }}
+                            {{ $t("businessQueuesAdmin.break") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="queue.serviceInfo.break"
+                              :disabled="!state.toggles['queues.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="queue-attentionBreak-form-update" v-if="queue.serviceInfo.break" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.breakHour") }}
                           </div>
                           <div class="col-3">
                             <input
                               min="0"
                               max="24"
                               minlength="1"
-                              maxlength="2"
+                              maxlength="5"
                               type="number"
                               class="form-control"
-                              v-model="queue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                              v-model="queue.serviceInfo.breakHourFrom"
                               placeholder="Ex. 8">
                           </div>
                           <div class="col-2">
@@ -1325,59 +805,152 @@ export default {
                               min="0"
                               max="24"
                               minlength="1"
-                              maxlength="2"
+                              maxlength="5"
                               type="number"
                               class="form-control"
-                              v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
+                              v-model="queue.serviceInfo.breakHourTo"
                               placeholder="Ex. 16">
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    <div id="queue-id-form" class="row -2 mb-g3">
-                      <div class="row queue-details-container">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ queue.id }}</span>
+                        <div id="queue-attentionDays-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.attentionDays") }}
+                          </div>
+                          <div class="col-8">
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="monday"
+                                :checked="dayChecked(queue.serviceInfo, 1)"
+                                @click="checkDay($event, queue.serviceInfo, 1)">
+                              <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="tuesday"
+                                :checked="dayChecked(queue.serviceInfo, 2)"
+                                @click="checkDay($event, queue.serviceInfo, 2)">
+                              <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="wednesday"
+                                :checked="dayChecked(queue.serviceInfo, 3)"
+                                @click="checkDay($event, queue.serviceInfo, 3)">
+                              <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="thursday"
+                                :checked="dayChecked(queue.serviceInfo, 4)"
+                                @click="checkDay($event, queue.serviceInfo, 4)">
+                              <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="friday"
+                                :checked="dayChecked(queue.serviceInfo, 5)"
+                                @click="checkDay($event, queue.serviceInfo, 5)">
+                              <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="sabado"
+                                :checked="dayChecked(queue.serviceInfo, 6)"
+                                @click="checkDay($event, queue.serviceInfo, 6)">
+                              <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" id="domingo"
+                                :checked="dayChecked(queue.serviceInfo, 7)"
+                                @click="checkDay($event, queue.serviceInfo, 7)">
+                              <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                            </div>
+                          </div>
+                        </div>
+                        <div id="update-queue-personalized-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.personalized") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="queue.serviceInfo.personalized"
+                              :disabled="!state.toggles['queues.admin.edit']"
+                              @click="initializedParsonalizedHours(queue.serviceInfo)"
+                            />
+                          </div>
+                        </div>
+                        <div id="queue-personalized-form-update" v-if="queue.serviceInfo.personalized" class="row g-1">
+                          <div class="row g-1" v-for="day in queue.serviceInfo.attentionDays" :key="day">
+                            <div class="col-4 text-label">
+                              {{ $t(`days.${day}`) }}
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control"
+                                v-model="queue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                                placeholder="Ex. 8">
+                            </div>
+                            <div class="col-2">
+                              -
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control"
+                                v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
+                                placeholder="Ex. 16">
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(queue)"
-                        v-if="state.toggles['queues.admin.update']">
-                        {{ $t("businessQueuesAdmin.update") }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['queues.admin.unavailable']">
-                        {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        :yesDisabled="state.toggles['queues.admin.unavailable']"
-                        :noDisabled="state.toggles['queues.admin.unavailable']"
-                        @actionYes="unavailable(queue)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
+                      <div id="queue-id-form" class="row -2 mb-g3">
+                        <div class="row queue-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ queue.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(queue)"
+                          v-if="state.toggles['queues.admin.update']">
+                          {{ $t("businessQueuesAdmin.update") }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['queues.admin.unavailable']">
+                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yesDisabled="state.toggles['queues.admin.unavailable']"
+                          :noDisabled="state.toggles['queues.admin.unavailable']"
+                          @actionYes="unavailable(queue)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
+                      </div>
+                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div v-if="(!isActiveBusiness() || !state.toggles['queues.admin.read']) && !loading">
-                  <Message
-                    :title="$t('businessQueuesAdmin.message.1.title')"
-                    :content="$t('businessQueuesAdmin.message.1.content')" />
+                  <div v-if="(!isActiveBusiness() || !state.toggles['queues.admin.read']) && !loading">
+                    <Message
+                      :title="$t('businessQueuesAdmin.message.1.title')"
+                      :content="$t('businessQueuesAdmin.message.1.content')" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1387,6 +960,470 @@ export default {
           <Message
             :title="$t('businessQueuesAdmin.message.1.title')"
             :content="$t('businessQueuesAdmin.message.1.content')" />
+        </div>
+      </div>
+    </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-queue`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
+            <div id="add-queue" class="queue-card mb-4" v-if="state.showAdd && state.toggles['queues.admin.add']">
+              <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
+                <div class="row g-1">
+                  <div id="queue-name-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.name") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="state.newQueue.name"
+                        v-bind:class="{ 'is-invalid': state.nameAddError }"
+                        placeholder="Service A">
+                    </div>
+                  </div>
+                  <div id="queue-type-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.type") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessQueuesAdmin.typeHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="state.newQueue.type"
+                        id="types"
+                        v-bind:class="{ 'is-invalid': state.typeError }"
+                        @change="selectType(typ)">
+                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`queues.types.${typ.id}`) }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div v-if="state.newQueue.type === 'COLLABORATOR'" class="row g-1">
+                    <div class="col-12 text-label">
+                      <div class="dropdown">
+                        <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span class="fw-bold m-1"> {{ state.selectedCollaborator.name || $t("businessQueuesAdmin.selectCollaborator") }} </span>
+                        </button>
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.collaboratorHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                        <ul class="dropdown-menu" aria-labelledby="select-commerce">
+                          <li v-for="col in state.collaborators" :key="col.id" :value="col" class="list-item">
+                            <div class="row d-flex m-1 searcher" @click="selectCollaborator(state.newQueue, col)">
+                              <div class="col-12">
+                                <div>
+                                  <span class="item-title fw-bold"> {{ col.name }} </span>
+                                </div>
+                                <div v-if="col !== undefined">
+                                  <span class="item-subtitle text-break"> {{ col.email }} </span>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="state.newQueue.type === 'SERVICE'" class="row g-1">
+                    <div class="col-12 text-label">
+                      <div class="dropdown">
+                        <button class="btn btn-ligth dropdown-toggle m-1 select" type="button" id="select-commerce" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span class="fw-bold m-1"> {{ state.selectedService.name || $t("businessQueuesAdmin.selectService") }} </span>
+                        </button>
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.serviceHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                        <ul class="dropdown-menu" aria-labelledby="select-commerce">
+                          <li v-for="serv in state.services" :key="serv.id" :value="serv" class="list-item">
+                            <div class="row d-flex m-1 searcher" @click="selectService(state.newQueue, serv)">
+                              <div class="col-12">
+                                <div>
+                                  <span class="item-title fw-bold"> {{ serv.name }} </span>
+                                </div>
+                                <div v-if="serv !== undefined">
+                                  <span class="item-subtitle text-break"> {{ serv.tag }} </span>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="state.newQueue.type === 'MULTI_SERVICE'" class="row g-1">
+                    <div id="queue-services-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.services") }}
+                      </div>
+                      <div class="col-8">
+                        <select class="btn btn-md fw-bold text-dark select" v-model="state.service" @change="selectServiceMultiple(state.newQueue, state.service)" id="services">
+                          <option v-for="com in state.services" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                        </select>
+                        <div class="select p-1" v-if="state.newQueue.servicesId &&  state.newQueue.servicesId.length > 0">
+                          <span class="badge state rounded-pill bg-secondary px-1 py-1 mx-1" v-for="com in state.newQueue.servicesId" :key="com.id">
+                            {{ showService(com) }}
+                            <button type="button" class="btn btn-sm btn-close btn-close-white" aria-label="Close" @click="deleteService(state.newQueue, com)"></button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="queue-limit-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.limit") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessQueuesAdmin.limitHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        :max="state.toggles['queues.admin.queue-limit']"
+                        type="number"
+                        class="form-control"
+                        v-model="state.newQueue.limit"
+                        v-bind:class="{ 'is-invalid': state.limitAddError }"
+                        placeholder="100">
+                    </div>
+                  </div>
+                  <div id="queue-order-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.order") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessQueuesAdmin.orderHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        :max="state.queues.length + 1"
+                        type="number"
+                        class="form-control"
+                        v-model="state.newQueue.order"
+                        v-bind:class="{ 'is-invalid': state.orderAddError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="queue-estimated-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.estimated") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessQueuesAdmin.estimatedHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        type="number"
+                        class="form-control"
+                        v-model="state.newQueue.estimatedTime"
+                        v-bind:class="{ 'is-invalid': state.timeAddError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="queue-block-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessQueuesAdmin.blockTime") }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disableClickAway
+                        :content="$t('businessQueuesAdmin.blockTimeHelp')">
+                        <i class='bi bi-info-circle-fill h7'></i>
+                      </Popper>
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        type="number"
+                        class="form-control"
+                        v-model="state.newQueue.blockTime"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <!-- Datos de Servicio -->
+                  <div class="row g-1">
+                    <a
+                      class="nav-link fw-bold"
+                      data-bs-toggle="collapse"
+                      href="#add-service">
+                      {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                    </a>
+                  </div>
+                  <div id="add-service" class="collapse row m-0">
+                    <div id="add-queue-walkin-active-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.walkin") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.walkinHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newQueue.serviceInfo.walkin"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="add-queue-samecommerce-active-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.sameCommeceHours") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.sameCommeceHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newQueue.serviceInfo.sameCommeceHours"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                          @click="initializedSameCommerceHours(state.newQueue.serviceInfo)"
+                        />
+                      </div>
+                    </div>
+                    <div id="commerce-attentionHour-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.attentionHour") }}
+                      </div>
+                      <div class="col-3">
+                        <input
+                          min="0"
+                          max="24"
+                          minlength="1"
+                          maxlength="2"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.serviceInfo.attentionHourFrom"
+                          placeholder="Ex. 8">
+                      </div>
+                      <div class="col-2">
+                        -
+                      </div>
+                      <div class="col-3">
+                        <input
+                          min="0"
+                          max="24"
+                          minlength="1"
+                          maxlength="2"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.serviceInfo.attentionHourTo"
+                          placeholder="Ex. 16">
+                      </div>
+                    </div>
+                    <div id="add-queue-break-active-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.break") }}
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newQueue.serviceInfo.break"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="queue-attentionBreak-form-add" v-if="state.newQueue.serviceInfo.break" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.breakHour") }}
+                      </div>
+                      <div class="col-3">
+                        <input
+                          min="0"
+                          max="24"
+                          minlength="1"
+                          maxlength="5"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.serviceInfo.breakHourFrom"
+                          placeholder="Ex. 8">
+                      </div>
+                      <div class="col-2">
+                        -
+                      </div>
+                      <div class="col-3">
+                        <input
+                          min="0"
+                          max="24"
+                          minlength="1"
+                          maxlength="5"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.serviceInfo.breakHourTo"
+                          placeholder="Ex. 16">
+                      </div>
+                    </div>
+                    <div id="queue-attentionDays-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.attentionDays") }}
+                      </div>
+                      <div class="col-8">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="monday"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 1)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 1)">
+                          <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="tuesday"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 2)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 2)">
+                          <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="wednesday"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 3)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 3)">
+                          <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="thursday"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 4)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 4)">
+                          <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="friday"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 5)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 5)">
+                          <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="sabado"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 6)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 6)">
+                          <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="domingo"
+                            :checked="dayChecked(state.newQueue.serviceInfo, 7)"
+                            @click="checkDay($event, state.newQueue.serviceInfo, 7)">
+                          <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="add-queue-personalized-active-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.personalized") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessQueuesAdmin.personalizedHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newQueue.serviceInfo.personalized"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                          @click="initializedParsonalizedHours(state.newQueue.serviceInfo)"
+                        />
+                      </div>
+                    </div>
+                    <div id="queue-personalized-form-add" v-if="state.newQueue.serviceInfo.personalized" class="row g-1">
+                      <div class="row g-1" v-for="day in state.newQueue.serviceInfo.attentionDays" :key="day">
+                        <div class="col-4 text-label">
+                          {{ $t(`days.${day}`) }}
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="2"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourFrom"
+                            placeholder="Ex. 8">
+                        </div>
+                        <div class="col-2">
+                          -
+                        </div>
+                        <div class="col-3">
+                          <input
+                            min="0"
+                            max="24"
+                            minlength="1"
+                            maxlength="2"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourTo"
+                            placeholder="Ex. 16">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(state.newQueue)">
+                      {{ $t("businessQueuesAdmin.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessQueuesAdmin.message.3.title')"
+                  :content="$t('businessQueuesAdmin.message.3.content')" />
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
         </div>
       </div>
     </div>

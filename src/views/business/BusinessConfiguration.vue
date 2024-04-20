@@ -93,7 +93,7 @@ export default {
     }
 
     const showAdd = () => {
-      state.showAdd = !state.showAdd;
+      state.showAdd = true;
       state.newConfiguration = {
         commerceId: state.commerce.id,
       }
@@ -132,6 +132,7 @@ export default {
             }, {});
           }
           state.showAdd = false;
+          closeAddModal();
           state.newConfiguration = {};
         }
         alertError.value = '';
@@ -140,6 +141,11 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    }
+
+    const closeAddModal = () => {
+      const modalCloseButton = document.getElementById('close-modal');
+      modalCloseButton.click();
     }
 
     return {
@@ -195,59 +201,28 @@ export default {
                   :content="$t('businessConfiguration.message.2.content')" />
               </div>
               <div v-if="state.commerce" class="row mb-2">
-                <div class="col-8 text-label">
-                  <span>{{ $t("businessConfiguration.listResult") }}</span>
-                  <span class="fw-bold m-2">{{ state.configurations.length }}</span>
-                </div>
-                <div class="col-4">
+                <div class="col lefted">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAdd()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-configuration`"
                     :disabled="!state.toggles['configuration.admin.add']">
-                    <i class="bi bi-plus-lg"></i>
+                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                   </button>
                 </div>
               </div>
-              <div id="add-configuration" class="configuration-card mb-4" v-if="state.showAdd && state.toggles['configuration.admin.add']">
-                <div class="row g-1">
-                  <div id="configuration-feature-form-add" class="row g-1">
-                    <div class="col text-label">
-                      {{ $t("businessConfiguration.feature") }}
-                    </div>
-                    <div class="col">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                        v-model="state.optionSelected"
-                        id="features"
-                        v-bind:class="{ 'is-invalid': state.moduleError }">
-                        <option v-for="opt in state.options" :key="opt.name" :value="opt">{{ $t(`configuration.${opt.name}.title`) }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newConfiguration)">
-                      {{ $t("businessConfiguration.add") }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
-                </div>
+              <div class="mt-1">
+                <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.configurations.length }} </span>
               </div>
-              <div class="configuration-card mb-4" v-if="state.configurations.length > 0 && state.toggles['configuration.admin.edit']">
-                <div class="my-4">
-                  <a class="nav-link configuration-title centered"
+              <div class="mb-4" v-if="state.configurations.length > 0 && state.toggles['configuration.admin.edit']">
+                <div class="my-2">
+                  <a class="nav-link configuration-title centered active"
                     data-bs-toggle="collapse"
                     href="#email">
-                    {{ $t("configuration.types.email") }} ({{ state.groupedConfigurations['EMAIL'] ? state.groupedConfigurations['EMAIL'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.email") }}
+                    <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedConfigurations['EMAIL'] ? state.groupedConfigurations['EMAIL'].length : 0 }} </span>
+                    <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="email" class="collapse">
                     <div v-if="state.groupedConfigurations['EMAIL'] && state.groupedConfigurations['EMAIL'].length > 0">
@@ -268,11 +243,13 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="my-4">
+                <div class="my-2">
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#product">
-                    {{ $t("configuration.types.product") }} ({{ state.groupedConfigurations['PRODUCT'] ? state.groupedConfigurations['PRODUCT'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.product") }}
+                    <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedConfigurations['PRODUCT'] ? state.groupedConfigurations['PRODUCT'].length : 0 }}</span>
+                    <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="product" class="collapse">
                     <div v-if="state.groupedConfigurations['PRODUCT'] && state.groupedConfigurations['PRODUCT'].length > 0">
@@ -293,11 +270,13 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="my-4">
+                <div class="my-2">
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#user">
-                    {{ $t("configuration.types.user") }} ({{ state.groupedConfigurations['USER'] ? state.groupedConfigurations['USER'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.user") }}
+                    <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedConfigurations['USER'] ? state.groupedConfigurations['USER'].length : 0 }} </span>
+                    <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="user" class="collapse">
                     <div v-if="state.groupedConfigurations['USER'] && state.groupedConfigurations['USER'].length > 0">
@@ -318,11 +297,13 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="my-4">
+                <div class="my-2">
                   <a class="nav-link configuration-title centered"
                     data-bs-toggle="collapse"
                     href="#whatsapp">
-                    {{ $t("configuration.types.whatsapp") }} ({{ state.groupedConfigurations['WHATSAPP'] ? state.groupedConfigurations['WHATSAPP'].length : 0 }}) <i class="bi bi-chevron-down mx-2"></i>
+                    {{ $t("configuration.types.whatsapp") }}
+                    <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedConfigurations['WHATSAPP'] ? state.groupedConfigurations['WHATSAPP'].length : 0 }} </span>
+                    <i class="bi bi-chevron-down mx-2"></i>
                   </a>
                   <div id="whatsapp" class="collapse">
                     <div v-if="state.groupedConfigurations['WHATSAPP'] && state.groupedConfigurations['WHATSAPP'].length > 0">
@@ -354,6 +335,58 @@ export default {
         </div>
       </div>
     </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-configuration`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
+            <div id="add-configuration" class="configuration-card mb-4" v-if="state.showAdd && state.toggles['configuration.admin.add']">
+              <div class="row g-1">
+                <div id="configuration-feature-form-add" class="row g-1">
+                  <div class="col text-label">
+                    {{ $t("businessConfiguration.feature") }}
+                  </div>
+                  <div class="col">
+                    <select
+                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
+                      v-model="state.optionSelected"
+                      id="features"
+                      v-bind:class="{ 'is-invalid': state.moduleError }">
+                      <option v-for="opt in state.options" :key="opt.name" :value="opt">{{ $t(`configuration.${opt.name}.title`) }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newConfiguration)">
+                    {{ $t("businessConfiguration.add") }} <i class="bi bi-save"></i>
+                  </button>
+                </div>
+                <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                  <Warning>
+                    <template v-slot:message>
+                      <li v-for="(error, index) in state.errorsAdd" :key="index">
+                        {{ $t(error) }}
+                      </li>
+                    </template>
+                  </Warning>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
     <PoweredBy :name="state.business.name" />
   </div>
 </template>
@@ -363,14 +396,6 @@ export default {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
   text-overflow: ellipsis;
-}
-.module-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .module-details-container {
   font-size: .8rem;
@@ -384,7 +409,7 @@ export default {
 }
 .show {
   padding: 10px;
-  max-height: 400px !important;
+  max-height: 1500px !important;
   overflow-y: auto;
 }
 .configuration-card {
@@ -396,9 +421,16 @@ export default {
   align-items: left;
 }
 .configuration-title {
-  line-height: 1rem;
-  font-size: 1.1rem;
+  line-height: 1.2rem;
+  font-size: .9rem;
   font-weight: 700;
   text-align: left;
+  background-color: var(--azul-turno);
+  margin: .1rem;
+  border-radius: 1rem;
+  line-height: 1rem;
+  border: 1.5px solid var(--azul-turno);
+  color: var(--color-background);
+  padding: .2rem;
 }
 </style>

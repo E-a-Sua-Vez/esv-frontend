@@ -58,13 +58,6 @@ export default {
 </template>
 
 <style scoped>
-.active {
-  background-color: var(--color-background);
-  margin: .1rem;
-  border-radius: 1rem;
-  line-height: 1.5rem;
-  border: 1.5px solid var(--gris-default);
-}
 .active-name {
   background-color: var(--color-background);
   color: var(--color-text);
@@ -77,13 +70,7 @@ export default {
   border-radius: 1rem;
   line-height: 1.5rem;
   border: 1.5px solid var(--gris-default);
-}
-.desactived-name {
-  background-color: var(--gris-clear);
-  color: var(--color-text);
-  font-weight: 700;
-  font-size: .9rem;
-}
+}s
 .activation-attention {
   border: 1.5px solid var(--amarillo-star);
 }
