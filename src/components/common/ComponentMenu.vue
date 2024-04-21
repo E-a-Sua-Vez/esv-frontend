@@ -1,5 +1,6 @@
 <script>
 import ToggleCapabilities from './ToggleCapabilities.vue';
+import { globalStore } from '../../stores';
 
 export default {
   name: 'ComponentMenu',
@@ -10,11 +11,26 @@ export default {
     componentName: { type: String, default: '' },
   },
   data() {
-    return {}
+    const store = globalStore();
+    return {
+      store
+    }
   },
   methods: {
     returnBack() {
       this.$emit('goBack');
+    },
+    async goInit() {
+      const userType = await this.store.getCurrentUserType;
+      if (userType) {
+        if (userType === 'collaborator') {
+          this.$router.push({ path: '/interno/colaborador/menu' })
+        } else if (userType === 'business') {
+          this.$router.push({ path: '/interno/negocio/menu' })
+        } else if (userType === 'master') {
+          this.$router.push({ path: '/interno/master/menu' })
+        }
+      }
     }
   }
 }
@@ -23,13 +39,17 @@ export default {
 <template>
   <div>
     <div class="row title-content mb-2">
-      <div class="col-4 lefted">
+      <div class="col-5 lefted">
+        <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+          @click="goInit()">
+           <i class="bi bi-house"></i>
+        </button>
         <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
           @click="returnBack()">
           {{ $t("dashboard.return") }} <i class="bi bi-arrow-left"></i>
         </button>
       </div>
-      <div class="col-8">
+      <div class="col-7">
         <div class="centered">
           <span class="welcome-title">{{ title }}</span>
         </div>
@@ -52,7 +72,7 @@ export default {
 }
 .welcome-title {
   padding: .5rem;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   line-height: 1.2rem;
   font-weight: 700;
 }
