@@ -81,7 +81,7 @@ export default {
     }
 
     const showAdd = () => {
-      state.showAdd = !state.showAdd;
+      state.showAdd = true;
       state.newPermission = {
         type: 'boolean'
       }
@@ -335,19 +335,52 @@ export default {
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">
           <div>
             <div class="row mb-2">
-              <div class="col-8 text-label">
-                <span>{{ $t("businessPermissionsAdmin.listResult") }}</span>
-                <span class="fw-bold m-2">{{ state.permissions.length }}</span>
-              </div>
-              <div class="col-4">
+              <div class="col lefted">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                   @click="showAdd()"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#add-permissions`"
                   :disabled="!state.toggles['permissions.collaborators.add']">
-                  <i class="bi bi-plus-lg"></i>
+                  <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                 </button>
               </div>
             </div>
+            <div class="mt-1">
+              <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.permissions.length }} </span>
+            </div>
+            <div class="roles-card mb-4" v-if="state.permissions.length > 0">
+              <div v-for="(permission, index) in state.permissions" :key="index">
+                <SimplePermissionCard
+                  :show="true"
+                  :canUpdate="state.toggles['permissions.collaborators.update']"
+                  :permission="permission"
+                  :showTooltip="true"
+                  @update="update"
+                >
+                </SimplePermissionCard>
+              </div>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('businessPermissionsAdmin.message.2.title')"
+                :content="$t('businessPermissionsAdmin.message.2.content')" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-permissions`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
             <div id="add-roles" class="roles-card mb-4" v-if="state.showAdd && state.toggles['permissions.collaborators.add']">
               <div class="row g-1">
                 <div id="roles-permission-form-add" class="row g-1">
@@ -393,23 +426,9 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="roles-card mb-4" v-if="state.permissions.length > 0">
-              <div v-for="(permission, index) in state.permissions" :key="index">
-                <SimplePermissionCard
-                  :show="true"
-                  :canUpdate="state.toggles['permissions.collaborators.update']"
-                  :permission="permission"
-                  :showTooltip="true"
-                  @update="update"
-                >
-                </SimplePermissionCard>
-              </div>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessPermissionsAdmin.message.2.title')"
-                :content="$t('businessPermissionsAdmin.message.2.content')" />
-            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

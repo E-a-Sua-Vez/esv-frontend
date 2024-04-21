@@ -680,8 +680,8 @@ export default {
           >
           </AreYouSure>
         </div>
-        <div class="row m-0 mt-2 centered" v-if="booking.servicesDetails">
-          <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col-4 fw-bold"> {{ serv.name }}</span>
+        <div class="m-0 mt-2" v-if="booking.servicesDetails">
+          <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col fw-bold"> {{ serv.name }}</span>
         </div>
         <div class="row m-0 mt-1 centered">
           <div class="col">

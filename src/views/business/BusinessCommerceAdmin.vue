@@ -512,7 +512,7 @@ export default {
                       <!-- Datos de localizacion -->
                       <div class="row g-1">
                         <a
-                          class="nav-link fw-bold"
+                          class="nav-link subdata-title centered active"
                           data-bs-toggle="collapse"
                           aria-expanded="true"
                           aria-controls="update-location"
@@ -610,7 +610,7 @@ export default {
                       <!-- Datos de Contacto -->
                       <div class="row g-1">
                         <a
-                          class="nav-link fw-bold"
+                          class="nav-link subdata-title centered active"
                           data-bs-toggle="collapse"
                           href="#update-contact">
                           {{ $t("businessCommercesAdmin.contact") }} <i class="bi bi-chevron-down"></i>
@@ -733,7 +733,7 @@ export default {
                       <!-- Datos de Servicio -->
                       <div class="row g-1">
                         <a
-                          class="nav-link fw-bold"
+                          class="nav-link subdata-title centered active"
                           data-bs-toggle="collapse"
                           href="#update-service">
                           {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
@@ -1093,7 +1093,7 @@ export default {
                   <!-- Datos de localizacion -->
                   <div class="row g-1">
                     <a
-                      class="nav-link fw-bold"
+                      class="nav-link subdata-title centered active"
                       data-bs-toggle="collapse"
                       href="#add-location">
                       {{ $t("businessCommercesAdmin.location") }} <i class="bi bi-chevron-down"></i>
@@ -1189,7 +1189,7 @@ export default {
                   <!-- Datos de Contacto -->
                   <div class="row g-1">
                     <a
-                      class="nav-link fw-bold"
+                      class="nav-link subdata-title centered active"
                       data-bs-toggle="collapse"
                       href="#add-contact">
                       {{ $t("businessCommercesAdmin.contact") }} <i class="bi bi-chevron-down"></i>
@@ -1312,7 +1312,7 @@ export default {
                   <!-- Datos de Servicio -->
                   <div class="row g-1">
                     <a
-                      class="nav-link fw-bold"
+                      class="nav-link subdata-title centered active"
                       data-bs-toggle="collapse"
                       href="#add-service">
                       {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
@@ -1524,7 +1524,7 @@ export default {
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

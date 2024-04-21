@@ -336,7 +336,11 @@
     },
     "booking-transfer-queue": {
       "title": "Booking Queue Transfer",
-      "description": "Tranfer booking to another queue"
+      "description": "Transfer booking to another queue"
+    },
+    "attention-transfer-queue": {
+      "title": "Attention Queue Transfer",
+      "description": "Transfer attention to another queue"
     },
     "attention-user-search": {
       "title": "Attention Search Client",
@@ -943,6 +947,8 @@
     "clientes": "Clients",
     "transfer": "Transfer",
     "selectQueueToTransfer": "Select the queue you want to move the booking to:",
+    "update": "Update",
+    "attendQueue": "Attend Queue",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -971,6 +977,10 @@
       "7": {
         "title": "Booking was confirmed already",
         "content": "The booking was confirmed, please verify the confirmation data."
+      },
+      "8": {
+        "title": "Attention was confirmed already",
+        "content": "The attention was confirmed, please verify the confirmation data."
       }
     },
     "capacitiesList": {

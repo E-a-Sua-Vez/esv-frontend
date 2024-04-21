@@ -424,3 +424,16 @@
   border: .5px solid var(--gris-default);
   align-items: left;
 }
+.subdata-title {
+  line-height: 1.2rem !important;
+  font-size: .8rem !important;
+  font-weight: 700 !important;
+  text-align: left;
+  background-color: var(--gris-tooltip);
+  margin: .1rem;
+  border-radius: 1rem;
+  line-height: 1rem;
+  border: 1.5px solid var(--gris-tooltip);
+  color: var(--color-background) !important;
+  padding: .2rem !important;
+}

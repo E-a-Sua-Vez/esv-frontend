@@ -387,25 +387,25 @@ export default {
           </div>
         </div>
         <hr>
-        <!-- PAYMENT -->
-        <div class="row centered mt-2">
-          <div v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')">
-            <div class="" v-if="attention.paid === true && attention.paymentConfirmationData">
-              <div class="">
-                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
-              </div>
-              <div v-if="attention.paymentConfirmationData">
-                <span v-if="attention.paymentConfirmationData.proceduresTotalNumber && attention.paymentConfirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.paymentConfirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ attention.paymentConfirmationData.proceduresTotalNumber }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentFiscalNote" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentFiscalNotes.${attention.paymentConfirmationData.paymentFiscalNote}`) }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`) }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentAmount }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentCommission }}</span>
-                <span v-if="attention.paymentConfirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentConfirmationData.paymentDate) }}</span>
-              </div>
-              <hr>
-            </div>
-            <div v-else>
+        <div class="row mx-1 centered" v-if="attention.paid === true && attention.paymentConfirmationData">
+          <div class="">
+            <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
+          </div>
+          <div v-if="attention.paymentConfirmationData">
+            <span v-if="attention.paymentConfirmationData.proceduresTotalNumber && attention.paymentConfirmationData.procedureNumber" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.paymentConfirmationData.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ attention.paymentConfirmationData.proceduresTotalNumber }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentFiscalNote" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentFiscalNotes.${attention.paymentConfirmationData.paymentFiscalNote}`) }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`) }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentAmount }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentConfirmationData.paymentCommission }}</span>
+            <span v-if="attention.paymentConfirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentConfirmationData.paymentDate) }}</span>
+          </div>
+          <hr>
+        </div>
+        <div class="row mx-1 centered">
+          <!-- PAYMENT -->
+          <div  class="col-6" v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')">
+            <div>
               <h5>
                 <span class="centered confirm-payment"
                   href="#"
@@ -416,44 +416,61 @@ export default {
                 <div v-if="extendedPaymentEntity" class="index"></div>
               </h5>
             </div>
+          </div>
+          <!-- TRANSFER -->
+          <div class="col-6" v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')">
+            <div>
+              <h5>
+                <span class="centered confirm-payment"
+                  href="#"
+                  @click.prevent="showTransferDetails()">
+                  <i class="bi bi-arrow-left-right icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
+                  <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                </span>
+                <div v-if="extendedTransferEntity" class="index"></div>
+              </h5>
+            </div>
+          </div>
+        </div>
+        <!-- PAYMENT -->
+        <div class="row centered mt-2">
+          <div v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')">
             <div
-              v-if="!attention.paid"
-              :class="{ show: extendedPaymentEntity }"
-              class="detailed-data transition-slow">
-              <PaymentForm
-                :errorsAdd="errorsAdd"
-                :receiveData="receiveData"
-              >
-              </PaymentForm>
-              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
-                @click="goConfirm()"
-                :disabled="attention.paid || !toggles['collaborator.attention.payment-confirm']">
-                <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
-              </button>
-              <AreYouSure
-                :show="goToConfirm"
-                :yesDisabled="toggles['collaborator.attention.payment-confirm']"
-                :noDisabled="toggles['collaborator.attention.payment-confirm']"
-                @actionYes="confirm()"
-                @actionNo="confirmCancel()"
-              >
-              </AreYouSure>
+            :class="{ show: extendedPaymentEntity }"
+            class="detailed-data transition-slow">
+              <div
+                v-if="!attention.paid"
+                :class="{ show: extendedPaymentEntity }"
+                class="detailed-data transition-slow">
+                <PaymentForm
+                  :errorsAdd="errorsAdd"
+                  :receiveData="receiveData"
+                >
+                </PaymentForm>
+                <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+                  @click="goConfirm()"
+                  :disabled="attention.paid || !toggles['collaborator.attention.payment-confirm']">
+                  <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
+                </button>
+                <AreYouSure
+                  :show="goToConfirm"
+                  :yesDisabled="toggles['collaborator.attention.payment-confirm']"
+                  :noDisabled="toggles['collaborator.attention.payment-confirm']"
+                  @actionYes="confirm()"
+                  @actionNo="confirmCancel()"
+                >
+                </AreYouSure>
+              </div>
+              <div v-else>
+                <Message
+                    :title="$t('collaboratorBookingsView.message.8.title')"
+                    :content="$t('collaboratorBookingsView.message.8.content')" />
+              </div>
             </div>
           </div>
         </div>
         <!-- TRANSFER -->
-        <div class="row centered mt-1" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
-          <div>
-            <h5>
-              <span class="centered confirm-payment"
-                href="#"
-                @click.prevent="showTransferDetails()">
-                <i class="bi bi-arrow-left-right icon"></i> <span class="step-title fw-bold">{{ $t("collaboratorBookingsView.transferQueue") }}</span>
-                <i class="dark" :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-              </span>
-              <div v-if="extendedTransferEntity" class="index"></div>
-            </h5>
-          </div>
+        <div class="row centered mt-1" v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')">
           <div
             :class="{ show: extendedTransferEntity }"
             class="detailed-data transition-slow">
@@ -494,9 +511,9 @@ export default {
             <hr>
           </div>
         </div>
-        <div class="row centered mt-2" v-if="!loading">
+        <div class="row mt-2" v-if="!loading">
           <div class="col-6">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
               @click="goToAttention()"
               :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.attention.attend']"
               >
@@ -504,7 +521,7 @@ export default {
             </button>
           </div>
           <div class="col-6">
-            <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+            <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2"
               @click="goCancel()"
               :disabled="attention.status === 'USER_CANCELED' || attention.cancelled || !toggles['collaborator.attention.cancel']"
               >
@@ -520,8 +537,8 @@ export default {
           >
           </AreYouSure>
         </div>
-        <div class="row m-0 mt-2 centered" v-if="attention.servicesDetails">
-          <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col-4 fw-bold"> {{ serv.name }}</span>
+        <div class="m-0 mt-2" v-if="attention.servicesDetails">
+          <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col fw-bold"> {{ serv.name }}</span>
         </div>
         <div class="row m-0 mt-1 centered">
           <div class="col">

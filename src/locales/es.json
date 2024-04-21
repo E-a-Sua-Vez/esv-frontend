@@ -339,6 +339,10 @@
       "title": "Reserva Transferir Fila",
       "description": "Tranferir reserva a otra fila disponible"
     },
+    "attention-transfer-queue": {
+      "title": "Atebción Transferir Fila",
+      "description": "Tranferir atención a otra fila disponible"
+    },
     "attention-user-search": {
       "title": "Form Busca Cliente",
       "description": "Permite preguntar si el cliente es nuevo o ya está registrado"
@@ -969,6 +973,10 @@
       "7": {
         "title": "Reserva ya está confirmada",
         "content": "La reserva ya fue confirmada anteriormente, verifica los datos de confirmación."
+      },
+      "8": {
+        "title": "Atención ya está confirmada",
+        "content": "La atención ya fue confirmada anteriormente, verifica los datos de confirmación."
       }
     },
     "capacitiesList": {
