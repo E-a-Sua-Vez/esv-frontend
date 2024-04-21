@@ -393,7 +393,7 @@ export default {
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
-                <div v-for="(product, index) in state.filtered" :key="index" class="product-card">
+                <div v-for="(product, index) in state.filtered" :key="index" class="result-card">
                   <div class="row">
                     <div class="col-10">
                       <ProductSimpleName :product="product"></ProductSimpleName>
@@ -671,7 +671,7 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-product" class="product-card mb-4" v-if="state.showAdd && state.toggles['products.admin.add']">
+            <div id="add-product" class="result-card mb-4" v-if="state.showAdd && state.toggles['products.admin.add']">
               <div v-if="state.products.length < state.toggles['products.admin.limit']">
                 <div class="row g-1">
                   <div id="product-name-form-add" class="row g-1">
@@ -930,14 +930,6 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.product-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .product-details-container {
   font-size: .8rem;

@@ -387,7 +387,7 @@ export default {
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
-                <div v-for="(survey, index) in state.filtered" :key="index" class="survey-card">
+                <div v-for="(survey, index) in state.filtered" :key="index" class="result-card">
                   <div class="row">
                     <div class="col-10">
                       <SurveyName :type="survey.type" :attentionDefault="survey.attentionDefault" :active="survey.active"></SurveyName>
@@ -525,7 +525,7 @@ export default {
                       </div>
                       <div id="survey-questions-form-update" v-if="state.showUpdateQuestions === true || survey.questions.length > 0" class="row g-1">
                         <span @click="addUpdateQuestion(index)" class="add-question my-2"> <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.addQuestion") }} </span>
-                        <div v-for="(question, ind) in survey.questions" :key="`question-update.${ind}`" class="survey-card mb-1">
+                        <div v-for="(question, ind) in survey.questions" :key="`question-update.${ind}`" class="result-card mb-1">
                           <div class="row g-1">
                             <div class="col-4 text-label">
                               {{ $t("businessSurveysAdmin.question") }}
@@ -689,7 +689,7 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-survey" class="survey-card mb-4" v-if="state.showAdd && state.toggles['surveys.admin.add']">
+            <div id="add-survey" class="result-card mb-4" v-if="state.showAdd && state.toggles['surveys.admin.add']">
               <div v-if="state.surveys.length < state.toggles['surveys.admin.limit']">
                 <div class="row g-1">
                   <div id="survey-type-form-add" class="row g-1">
@@ -795,7 +795,7 @@ export default {
                         <i class='bi bi-info-circle-fill h7'></i>
                       </Popper>
                     </div>
-                    <div v-for="(question, ind) in state.questions" :key="`question-add.${ind}`" class="survey-card mb-1">
+                    <div v-for="(question, ind) in state.questions" :key="`question-add.${ind}`" class="result-card mb-1">
                       <div class="row g-1">
                         <div class="col-4 text-label">
                           {{ $t("businessSurveysAdmin.question") }}
@@ -976,14 +976,6 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.survey-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .survey-details-container {
   font-size: .8rem;

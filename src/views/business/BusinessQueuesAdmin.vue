@@ -548,7 +548,7 @@ export default {
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
-                <div v-for="(queue, index) in state.filtered" :key="index" class="queue-card">
+                <div v-for="(queue, index) in state.filtered" :key="index" class="result-card">
                   <div class="row">
                     <div class="col-10">
                       <QueueSimpleName :queue="queue"></QueueSimpleName>
@@ -974,7 +974,7 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-queue" class="queue-card mb-4" v-if="state.showAdd && state.toggles['queues.admin.add']">
+            <div id="add-queue" class="result-card mb-4" v-if="state.showAdd && state.toggles['queues.admin.add']">
               <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
                 <div class="row g-1">
                   <div id="queue-name-form-add" class="row g-1">
@@ -1435,14 +1435,6 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.queue-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .queue-details-container {
   font-size: .8rem;

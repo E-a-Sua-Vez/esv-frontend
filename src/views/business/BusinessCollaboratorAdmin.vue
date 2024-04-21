@@ -432,7 +432,7 @@ export default {
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
-                <div v-for="(collaborator, index) in state.filtered" :key="index" class="collaborator-card">
+                <div v-for="(collaborator, index) in state.filtered" :key="index" class="result-card">
                   <div class="row">
                     <div class="col-10">
                       <CollaboratorName :name="collaborator.name" :email="collaborator.email" :active="collaborator.active"></CollaboratorName>
@@ -666,7 +666,7 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-collaborator" class="collaborator-card mb-4" v-if="state.showAdd && state.toggles['collaborators.admin.add']">
+            <div id="add-collaborator" class="result-card mb-4" v-if="state.showAdd && state.toggles['collaborators.admin.add']">
               <div v-if="state.collaborators.length < state.toggles['collaborators.admin.limit']">
                 <div class="row g-1">
                   <div id="collaborator-name-form-add" class="row g-1">
@@ -842,14 +842,6 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.collaborator-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
 }
 .collaborator-details-container {
   font-size: .8rem;
