@@ -30,17 +30,24 @@ export default {
       business: {},
       commerces: [],
       manageSubMenuOption: false,
+      manageControlSubMenuOption: false,
       menuOptions: [
         'dashboard',
-        'tracing',
-        'product-stock',
         'reports',
+        'control-admin',
         'manage-admin',
         'configuration',
         'documents',
         'your-plan',
         'business-resume',
         'go-minisite'
+      ],
+      manageControlSubMenuOptions: [
+        'tracing',
+        'product-stock',
+        'financial',
+        'patients',
+        'marketing'
       ],
       manageSubMenuOptions: [
         'commerce-admin',
@@ -81,6 +88,10 @@ export default {
         if (option) {
           if (option === 'manage-admin') {
             state.manageSubMenuOption = !state.manageSubMenuOption;
+            state.manageControlSubMenuOption = false;
+          } else if (option === 'control-admin') {
+            state.manageControlSubMenuOption  = !state.manageControlSubMenuOption;
+            state.manageSubMenuOption = false;
           } else {
             router.push({ path: `/interno/negocio/${option}` });
           }
@@ -169,29 +180,48 @@ export default {
                 <div v-else>
                   <button
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2"
                     @click="goToOption(option)"
                     :disabled="!state.toggles[`business.main-menu.${option}`]"
                     >
                     {{ $t(`businessMenu.${option}`) }}
                     <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                    <i v-if="option === 'control-admin'" :class="`bi ${state.manageControlSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
                   </button>
                   <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
                     <div
                       v-for="opt in state.manageSubMenuOptions"
                       :key="opt"
-                      ><div class="centered mx-3">
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                            >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                      >
+                      <div class="centered mx-3">
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                          >
+                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
                       </div>
                     </div>
+                  </div>
+                  <div v-if="option === 'control-admin' && state.manageControlSubMenuOption === true" class="mb-1">
+                    <div
+                      v-for="opt in state.manageControlSubMenuOptions"
+                      :key="opt"
+                      >
+                      <div class="centered mx-3">
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                          >
+                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -236,40 +266,62 @@ export default {
                 </div>
                 <div v-else>
                   <button
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                      @click="goToOption(option)"
-                      :disabled="!state.toggles[`business.main-menu.${option}`]"
-                      >
-                      {{ $t(`businessMenu.${option}`) }}
-                      <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                    </button>
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    @click="goToOption(option)"
+                    :disabled="!state.toggles[`business.main-menu.${option}`]"
+                    >
+                    {{ $t(`businessMenu.${option}`) }}
+                    <i v-if="option === 'manage-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                    <i v-if="option === 'control-admin'" :class="`bi ${state.manageControlSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                  </button>
+                  <Transition name="fade">
                     <div v-if="option === 'manage-admin' && state.manageSubMenuOption === true" class="mb-1">
-                      <div
-                        v-for="opt in state.manageSubMenuOptions"
-                        :key="opt"
-                        ><div class="centered mx-3">
-                            <button
-                              type="button"
-                              class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                              @click="goToOption(opt)"
-                              :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                              >
-                              {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                            </button>
-                          </div>
+                    <div
+                      v-for="opt in state.manageSubMenuOptions"
+                      :key="opt"
+                      ><div class="centered mx-3">
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                            >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
                         </div>
+                      </div>
                     </div>
+                  </Transition>
+                  <Transition name="fade">
+                    <div v-if="option === 'control-admin' && state.manageControlSubMenuOption === true" class="mb-1">
+                      <div
+                        v-for="opt in state.manageControlSubMenuOptions"
+                        :key="opt"
+                        >
+                        <div class="centered mx-3">
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                            >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </Transition>
                 </div>
               </div>
-          </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('businessMenu.message.1.title')"
-            :content="$t('businessMenu.message.1.content')"
-            :icon="'bi bi-emoji-dizzy'">
-          </Message>
-        </div>
+            </div>
+            <div v-if="!isActiveBusiness() && !loading">
+              <Message
+                :title="$t('businessMenu.message.1.title')"
+                :content="$t('businessMenu.message.1.content')"
+                :icon="'bi bi-emoji-dizzy'">
+              </Message>
+            </div>
           </div>
           <div id="spy-side" class="col-6" v-if="!loading">
             <SpySection

@@ -1715,11 +1715,14 @@
     "welcome-user": "Welcome",
     "choose": "What do you want to do today?",
     "dashboard": "Performance Hub",
-    "tracing": "Clients Management",
+    "tracing": "Clients",
+    "financial": "Financial",
+    "marketing": "Marketing",
+    "patients": "Patients",
     "commerce-admin": "Commerces",
     "service-admin": "Services",
     "product-admin": "Products",
-    "product-stock": "Stock Control",
+    "product-stock": "Stock",
     "queues-admin": "Queues",
     "configuration": "Settings",
     "documents": "Documents",
@@ -1734,6 +1737,7 @@
     "business-resume": "System State",
     "surveys-admin": "Surveys",
     "manage-admin": "Manage",
+    "control-admin": "Control",
     "go-minisite": "Minisite",
     "message": {
       "1": {
@@ -1760,7 +1764,12 @@
           "documents": "Documents",
           "your-plan": "Your Plan",
           "surveys-admin": "Surveys Settings",
-          "manage-admin": "Manage Artifacts"
+          "manage-admin": "Manage Artifacts",
+          "control-admin": "Manage Artifacts",
+          "product-admin": "Stock Control",
+          "financial-admin": "Financial Management",
+          "marketing-admin": "Marketing",
+          "patient-admin": "Patients Management"
         }
       }
     }
@@ -1801,8 +1810,11 @@
     "business-master-admin": "Business Settings",
     "business-master-resume": "System State",
     "dashboard": "Performance Hub",
-    "tracing": "Clients Management",
-    "product-stock": "Stock Control",
+    "tracing": "Clients",
+    "product-stock": "Stock",
+    "financial": "Financial",
+    "marketing": "Marketing",
+    "patients": "Patients",
     "commerce-master-admin": "Commerces",
     "service-master-admin": "Services",
     "product-master-admin": "Products",
@@ -1820,6 +1832,7 @@
     "plan-activations-admin": "Plan Activations",
     "surveys-admin": "Surveys",
     "manage-master-admin": "Manage",
+    "control-master-admin": "Control",
     "go-minisite": "Minisite"
   },
   "businessSectionAtWorkView": {

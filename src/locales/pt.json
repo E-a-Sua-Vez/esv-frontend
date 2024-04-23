@@ -1717,8 +1717,11 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "dashboard": "Performance Hub",
-    "tracing": "Gestão de Clientes",
-    "product-stock": "Controle de Estoque",
+    "tracing": "Clientes",
+    "product-stock": "Estoque",
+    "financial": "Financeiro",
+    "marketing": "Marketing",
+    "patients": "Pacientes",
     "commerce-admin": "Comércios",
     "service-admin": "Serviços",
     "product-admin": "Produtos",
@@ -1735,6 +1738,7 @@
     "business-resume": "Estado do Sistema",
     "surveys-admin": "Pesquisas",
     "manage-admin": "Gerenciar",
+    "control-admin": "Gestão",
     "go-minisite": "Minisite",
     "message": {
       "1": {
@@ -1761,7 +1765,11 @@
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
           "manage-admin": "Gerenciar Artefatos",
-          "product-admin": "Gerenciar Produtos"
+          "control-admin": "Gestão Transacional",
+          "product-admin": "Gerenciar Produtos",
+          "financial-admin": "Gestão Financeira",
+          "marketing-admin": "Marketing",
+          "patient-admin": "Gestão de Pacientes"
         }
       }
     }
@@ -1774,8 +1782,11 @@
     "business-master-admin": "Gerenciar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Performance Hub",
-    "tracing": "Gestão de Clientes",
-    "product-stock": "Controle de Estoque",
+    "tracing": "Clientes",
+    "product-stock": "Estoque",
+    "financial": "Financeiro",
+    "marketing": "Marketing",
+    "patients": "Pacientes",
     "commerce-master-admin": "Comércios",
     "service-master-admin": "Serviços",
     "product-master-admin": "Produtos",
@@ -1793,6 +1804,7 @@
     "plan-activations-admin": "Activação de Planos",
     "surveys-admin": "Gerenciar Pesquisas",
     "manage-master-admin": "Gerenciar",
+    "control-master-admin": "Gestão",
     "go-minisite": "Minisite"
   },
   "collaboratorMenu": {
