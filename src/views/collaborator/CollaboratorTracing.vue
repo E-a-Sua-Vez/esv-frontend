@@ -174,9 +174,11 @@ export default {
     }
 
     const getCalculatedMetrics = async () => {
-      const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-      const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, undefined, undefined);
-      return calculatedMetrics;
+      if (state.queues && state.queues.length > 0) {
+        const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+        const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, undefined, undefined);
+        return calculatedMetrics;
+      }
     }
 
     const refresh = async () => {

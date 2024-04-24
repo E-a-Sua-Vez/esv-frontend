@@ -13,12 +13,13 @@ import { LineChart, useBarChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
 import PDFHeader from '../../reports/PDFHeader.vue';
 import PDFFooter from '../../reports/PDFFooter.vue';
+import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 
 Chart.register(...registerables);
 
 export default {
   name: 'ResumeFinancialManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter, SimpleDownloadButton },
   props: {
     showResumeFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -274,15 +275,17 @@ export default {
         <div>
           <div>
             <div>
-              <SimpleDownloadCard
-                :download="toggles['financial.reports.resume']"
-                :title="$t('businessFinancial.reports.resume.title')"
-                :showTooltip="true"
-                :description="$t('businessFinancial.reports.resume.description')"
-                :icon="'bi-file-earmark-pdf'"
-                @download="exportToPDF"
-                :canDownload="toggles['financial.reports.resume'] === true"
-              ></SimpleDownloadCard>
+              <div id="admin-sub-menu" class="row mt-3 mx-0">
+                <div class="col lefted">
+                  <SimpleDownloadButton
+                    :download="toggles['financial.reports.resume']"
+                    :showTooltip="true"
+                    :description="$t('businessFinancial.reports.resume.description')"
+                    @download="exportToPDF"
+                    :canDownload="toggles['financial.reports.resume'] === true"
+                  ></SimpleDownloadButton>
+                </div>
+              </div>
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">

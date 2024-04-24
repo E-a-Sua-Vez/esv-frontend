@@ -6,10 +6,13 @@ import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getProductsDetails } from '../../application/services/query-stack';
 import ProductDetailsCard from './common/ProductDetailsCard.vue';
+import { getPermissions } from '../../application/services/permissions';
+import { globalStore } from '../../stores';
+import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'ProductsStockManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, ProductDetailsCard },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, ProductDetailsCard, SimpleDownloadButton },
   props: {
     showProductStockManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -19,6 +22,7 @@ export default {
     business: { type: Object, default: undefined }
   },
   data() {
+    const store = globalStore();
     return {
       loading: false,
       counter: 0,
@@ -30,10 +34,15 @@ export default {
       asc: true,
       showFilterOptions: false,
       searchText: undefined,
+      productToggles: [],
+      store,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10
     }
+  },
+  async beforeMount() {
+    this.productToggles = await getPermissions('products');
   },
   methods: {
     async refresh() {
@@ -118,6 +127,12 @@ export default {
       } catch (error) {
         this.loading = false;
       }
+    },
+    async goToProductsAdmin() {
+      const userType = await this.store.getCurrentUserType;
+      if (userType && userType === 'business') {
+        this.$router.push({ path: '/interno/negocio/product-admin' });
+      }
     }
   },
   computed: {
@@ -157,15 +172,24 @@ export default {
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['products-stock.reports.details']"
-              :title="$t('businessProductStockAdmin.reports.details.title')"
-              :showTooltip="true"
-              :description="$t('businessProductStockAdmin.reports.details.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['products-stock.reports.details'] === true"
-            ></SimpleDownloadCard>
+            <div id="admin-sub-menu" v-if="commerce" class="row mt-3 mx-0">
+              <div class="col lefted">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  @click="goToProductsAdmin()"
+                  :hidden="!productToggles['products.admin.view']">
+                  <i class="bi bi-database-gear"></i> {{ $t("businessProductStockAdmin.admin") }}
+                </button>
+                <SimpleDownloadButton
+                  :download="toggles['products-stock.reports.details']"
+                  :showTooltip="true"
+                  :description="$t('businessProductStockAdmin.reports.details.description')"
+                  :icon="'bi-file-earmark-spreadsheet'"
+                  @download="exportToCSV"
+                  :canDownload="toggles['products-stock.reports.details'] === true"
+                ></SimpleDownloadButton>
+              </div>
+            </div>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
@@ -238,6 +262,7 @@ export default {
                 </div>
               </div>
             </div>
+
             <div class="my-3">
               <span class="badge bg-secondary px-3 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ this.counter }} </span>
               <span class="badge bg-secondary px-3 py-2 m-1"> {{ $t("page") }} {{ this.page }} {{ $t("of") }} {{ this.totalPages }} </span>

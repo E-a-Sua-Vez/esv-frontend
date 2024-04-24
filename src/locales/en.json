@@ -1801,7 +1801,7 @@
           "your-plan": "Your Plan",
           "surveys-admin": "Surveys Settings",
           "manage-admin": "Manage Artifacts",
-          "control-admin": "Manage Artifacts",
+          "control-admin": "Transactional Control",
           "product-admin": "Stock Control",
           "financial": "Financial Management",
           "marketing": "Marketing",
@@ -2210,6 +2210,7 @@
     "attentionProducts": "Attention Stock",
     "stock": "Stock",
     "product": "Product:",
+    "admin": "Products Admin",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -3129,7 +3130,8 @@
         "documents": "Enable Manage Documents - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
-        "manage-admin": "Enable Artifacts Admin - Main Menu Business"
+        "manage-admin": "Enable Artifacts Admin - Main Menu Business",
+        "control-admin": "Enable Transactional Control - Main Menu Business"
       }
     },
     "administrators": {

@@ -1773,7 +1773,7 @@
     "modules-admin": "Módulos",
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
-    "manage-admin": "Administrar",
+    "manage-admin": "Registro",
     "control-admin": "Gestión",
     "go-minisite": "Minisite",
     "seeSpy": "MetricSpy",
@@ -1802,7 +1802,7 @@
           "documents": "Documentos",
           "surveys-admin": "Administrar Encuestas",
           "your-plan": "Tu Plan",
-          "manage-admin": "Administrar Artefactos",
+          "manage-admin": "Registrar Artefactos",
           "control-admin": "Gestión Transaccional",
           "product-admin": "Administrar Productos",
           "financial": "Gestión Financiera",
@@ -2142,6 +2142,7 @@
     "attentionProducts": "Stock de Atención",
     "stock": "Stock",
     "product": "Producto:",
+    "admin": "Administrar Productos",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3135,7 +3136,8 @@
         "configuration": "Habilitar Administrar Configuraciones - Menú Principal Negocio",
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
-        "manage-admin": "Habilitar Administrar Artefactos - Menú Principal Negocio"
+        "manage-admin": "Habilitar Registrar Artefactos - Menú Principal Negocio",
+        "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio"
       }
     },
     "collaborators": {

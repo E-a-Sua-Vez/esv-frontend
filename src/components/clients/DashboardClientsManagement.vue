@@ -6,10 +6,11 @@ import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getClientsDetails } from '../../application/services/query-stack';
 import ClientDetailsCard from '../clients/common/ClientDetailsCard.vue';
+import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'DashboardClientsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard, SimpleDownloadButton },
   props: {
     showClientManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -213,15 +214,17 @@ export default {
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.clients-management']"
-              :title="$t('dashboard.reports.clients-management.title')"
-              :showTooltip="true"
-              :description="$t('dashboard.reports.clients-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.clients-management'] === true"
-            ></SimpleDownloadCard>
+            <div id="admin-sub-menu" class="row mt-3 mx-0">
+              <div class="col lefted">
+                <SimpleDownloadButton
+                  :download="toggles['dashboard.reports.clients-management']"
+                  :showTooltip="true"
+                  :description="$t('dashboard.reports.clients-management.description')"
+                  @download="exportToCSV"
+                  :canDownload="toggles['dashboard.reports.clients-management'] === true"
+                ></SimpleDownloadButton>
+              </div>
+            </div>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">

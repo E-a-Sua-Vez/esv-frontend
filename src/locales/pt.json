@@ -1773,7 +1773,7 @@
     "seeMenu": "Menu",
     "business-resume": "Estado do Sistema",
     "surveys-admin": "Pesquisas",
-    "manage-admin": "Gerenciar",
+    "manage-admin": "Cadastro",
     "control-admin": "Gestão",
     "go-minisite": "Minisite",
     "message": {
@@ -1800,8 +1800,8 @@
           "documents": "Documentos",
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
-          "manage-admin": "Gerenciar Artefatos",
-          "control-admin": "Gestão Transacional",
+          "manage-admin": "Cadastrar Artefatos",
+          "control-admin": "Gerenciamento Transacional",
           "product-admin": "Gerenciar Produtos",
           "financial": "Gestão Financeira",
           "marketing": "Marketing",
@@ -2218,6 +2218,7 @@
     "attentionProducts": "Estoque de Atendimento",
     "stock": "Estoque",
     "product": "Produto",
+    "admin": "Gestão de Produtos",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3131,7 +3132,8 @@
         "documents": "Habilitar Gerenciar Documentos - Menú Principal Negócio",
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
-        "manage-admin": "Habilitar Gerenciar Artefatos - Menú Principal Negócio"
+        "manage-admin": "Habilitar Cadastrar Artefatos - Menú Principal Negócio",
+        "control-admin": "Habilitar Gerenciamento Transacional - Menú Principal Negócio"
       }
     },
     "collaborators": {

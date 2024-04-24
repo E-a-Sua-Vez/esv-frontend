@@ -12,10 +12,11 @@ import { getDate } from '../../../shared/utils/date';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
 import Toggle from '@vueform/toggle';
 import { getOutcomeTypes } from '../../../shared/utils/data';
+import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'OutcomesFinancialManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, OutcomeDetailsCard, Toggle },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, OutcomeDetailsCard, Toggle, SimpleDownloadButton },
   props: {
     showOutcomesFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -347,15 +348,25 @@ export default {
         <div v-if="!loading">
           <div>
             <div>
-              <SimpleDownloadCard
-                :download="toggles['financial.reports.outcomes']"
-                :title="$t('businessFinancial.reports.outcomes.title')"
-                :showTooltip="true"
-                :description="$t('businessFinancial.reports.outcomes.description')"
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="exportToCSV"
-                :canDownload="toggles['financial.reports.outcomes'] === true"
-              ></SimpleDownloadCard>
+              <div id="admin-sub-menu" class="row mt-3 mx-0">
+                <div class="col lefted">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                    @click="showAdd()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-outcome`"
+                    :disabled="!toggles['financial.outcomes.add']">
+                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
+                  </button>
+                  <SimpleDownloadButton
+                    :download="toggles['financial.reports.outcomes']"
+                    :showTooltip="true"
+                    :description="$t('businessFinancial.reports.outcomes.description')"
+                    @download="exportToCSV"
+                    :canDownload="toggles['financial.reports.outcomes'] === true"
+                  ></SimpleDownloadButton>
+                </div>
+              </div>
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
@@ -428,18 +439,6 @@ export default {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div v-if="commerce" class="row mt-3 mx-0">
-              <div class="col lefted">
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                  @click="showAdd()"
-                  data-bs-toggle="modal"
-                  :data-bs-target="`#add-outcome`"
-                  :disabled="!toggles['financial.outcomes.add']">
-                  <i class="bi bi-plus-lg"></i> {{ $t("add") }}
-                </button>
               </div>
             </div>
             <div class="my-3">

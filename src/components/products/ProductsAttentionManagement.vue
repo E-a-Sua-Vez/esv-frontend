@@ -6,10 +6,11 @@ import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import AttentionProductsDetailsCard from './common/AttentionProductsDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getAttentionsDetails, getProductsConsumptionsDetails } from '../../application/services/query-stack';
+import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'ProductsAttentionManagement',
-  components: { Message, SimpleDownloadCard, Spinner, AttentionProductsDetailsCard, Popper },
+  components: { Message, SimpleDownloadCard, Spinner, AttentionProductsDetailsCard, Popper, SimpleDownloadButton },
   props: {
     showProductStockManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -216,15 +217,18 @@ export default {
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['products-stock.products.view-attention']"
-              :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-              :showTooltip="true"
-              :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['products-stock.products.view-attention'] === true"
-            ></SimpleDownloadCard>
+            <div id="admin-sub-menu" class="row mt-3 mx-0">
+              <div class="col lefted">
+                <SimpleDownloadButton
+                  :download="toggles['products-stock.products.view-attention']"
+                  :showTooltip="true"
+                  :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
+                  :icon="'bi-file-earmark-spreadsheet'"
+                  @download="exportToCSV"
+                  :canDownload="toggles['products-stock.products.view-attention'] === true"
+                ></SimpleDownloadButton>
+              </div>
+            </div>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">

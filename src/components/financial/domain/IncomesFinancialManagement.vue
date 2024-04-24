@@ -10,10 +10,11 @@ import { globalStore } from '../../../stores';
 import { getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
 import { getDate } from '../../../shared/utils/date';
 import IncomeDetailsCard from './common/IncomeDetailsCard.vue';
+import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'IncomesFinancialManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, IncomeDetailsCard },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, IncomeDetailsCard, SimpleDownloadButton },
   props: {
     showIncomesFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -331,15 +332,17 @@ export default {
         <div v-if="!loading">
           <div>
             <div>
-              <SimpleDownloadCard
-                :download="toggles['financial.reports.incomes']"
-                :title="$t('businessFinancial.reports.incomes.title')"
-                :showTooltip="true"
-                :description="$t('businessFinancial.reports.incomes.description')"
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="exportToCSV"
-                :canDownload="toggles['financial.reports.incomes'] === true"
-              ></SimpleDownloadCard>
+              <div id="admin-sub-menu" class="row mt-3 mx-0">
+                <div class="col lefted">
+                  <SimpleDownloadButton
+                    :download="toggles['financial.reports.incomes']"
+                    :showTooltip="true"
+                    :description="$t('businessFinancial.reports.incomes.description')"
+                    @download="exportToCSV"
+                    :canDownload="toggles['financial.reports.incomes'] === true"
+                  ></SimpleDownloadButton>
+                </div>
+              </div>
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
@@ -485,6 +488,183 @@ export default {
                 :title="$t('dashboard.message.2.title')"
                 :content="$t('dashboard.message.2.content')" />
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Add -->
+    <div class="modal fade" :id="`add-income`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
+            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="loading" :stack="alertError"></Alert>
+            <div id="add-income" class="result-card mb-4" v-if="showAdd && toggles['financial.incomes.add']">
+              <div>
+                <div class="row mb-1">
+                  <div id="income-type-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeType") }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="newOutcome.type"
+                        id="types"
+                        @change="selectType($event)"
+                        v-bind:class="{ 'is-invalid': outcomeTypeError }">
+                        <option v-for="typ in outcomeTypes" :key="typ.name" :value="typ.id">{{ $t(`outcomeTypes.${typ.name}`) }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="outcome-title-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeTitle") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="newOutcome.title"
+                        v-bind:class="{ 'is-invalid': outcomeTitleError }"
+                        placeholder="Outcome A">
+                    </div>
+                  </div>
+                  <div id="outcome-beneficiary-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeBeneficiary") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="newOutcome.beneficiary"
+                        placeholder="Company A">
+                    </div>
+                  </div>
+                  <div id="outcome-paymentAmount-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomePaymentAmount") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        :min="0"
+                        type="number"
+                        class="form-control"
+                        v-model="newOutcome.paymentAmount"
+                        v-bind:class="{ 'is-invalid': outcomePaymentAmountError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div v-if="newOutcome.type === 'PRODUCT_REPLACEMENT'" class="row g-0">
+                    <div id="outcome-type-form-add" class="row mt-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessFinancial.outcomeProduct") }}
+                      </div>
+                      <div class="col-8">
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select"
+                          v-model="newOutcome.productId"
+                          id="types"
+                          v-bind:class="{ 'is-invalid': outcomeProductError }">
+                          <option v-for="typ in products" :key="typ.name" :value="typ.id">{{ typ.name }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div id="outcome-amount-form-add" class="row mt-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessFinancial.outcomeAmount") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :min="0"
+                          type="number"
+                          class="form-control"
+                          v-model="newOutcome.outcomeAmount"
+                          v-bind:class="{ 'is-invalid': outcomeAmountError }"
+                          placeholder="1">
+                      </div>
+                    </div>
+                    <div id="outcome-expire-form-add" class="row mt-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessFinancial.outcomeExpireDate") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          type="date"
+                          class="form-control"
+                          v-model="newOutcome.outcomeExpireDate"
+                          placeholder="1">
+                      </div>
+                    </div>
+                  </div>
+                  <div id="outcome-date-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeDate") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control"
+                        v-model="newOutcome.date"
+                        v-bind:class="{ 'is-invalid': outcomeDateError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="outcome-nextDate-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeNextDate") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control"
+                        v-model="newOutcome.outcomeNextDateDate"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="outcome-code-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.outcomeCode") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="newOutcome.code"
+                        placeholder="Code/Batch">
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(newOutcome)">
+                      {{ $t("businessFinancial.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

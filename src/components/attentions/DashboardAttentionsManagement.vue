@@ -7,10 +7,11 @@ import AttentionManagementDetailsCard from './common/AttentionManagementDetailsC
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getAttentionsDetails } from '../../application/services/query-stack';
 import { DoughnutChart, BarChart } from 'vue-chart-3';
+import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 
 export default {
   name: 'DashboardAttentionsManagement',
-  components: { DoughnutChart, BarChart, Message, SimpleDownloadCard, Spinner, AttentionManagementDetailsCard, Popper },
+  components: { DoughnutChart, BarChart, Message, SimpleDownloadCard, Spinner, AttentionManagementDetailsCard, Popper, SimpleDownloadButton },
   props: {
     showAttentionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -222,15 +223,17 @@ export default {
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
-              :showTooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
-            ></SimpleDownloadCard>
+            <div id="admin-sub-menu" class="row mt-3 mx-0">
+              <div class="col lefted">
+                <SimpleDownloadButton
+                  :download="toggles['dashboard.reports.attentions-management']"
+                  :showTooltip="true"
+                  :description="$t('dashboard.reports.attentions-management.description')"
+                  @download="exportToCSV"
+                  :canDownload="toggles['dashboard.reports.attentions-management'] === true"
+                ></SimpleDownloadButton>
+              </div>
+            </div>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
