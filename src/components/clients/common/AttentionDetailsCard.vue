@@ -90,7 +90,7 @@ export default {
         class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
-            <div class="col-12 centered">
+            <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }} {{ attention.userLastName || '' }} <a class="btn copy-icon"
                 @click="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>

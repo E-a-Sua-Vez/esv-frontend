@@ -143,7 +143,7 @@ export default {
         class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
-            <div class="col-12 centered">
+            <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ client.userName || 'N/I' }} {{ client.userLastName || '' }}
               <a class="btn copy-icon"
                 @click="copyAttention()">
