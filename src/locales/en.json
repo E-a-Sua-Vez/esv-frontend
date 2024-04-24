@@ -167,6 +167,13 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
+  "outcomeTypes": {
+    "PRODUCT_REPLACEMENT": "Product Replacement",
+    "PROVIDERS_PAYMENT": "Provider Payment",
+    "PAYROLL_PAYMENT": "Payroll Payment",
+    "SERVICES_PAYMENT": "Service Payment",
+    "OTHER": "Other"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -378,6 +385,26 @@
     "freePeriod": "Free Period"
   },
   "enterSearcher": "🔍 Type at least 3 characters",
+  "paymentData": {
+    "procedures": "Procedures:",
+    "paymentData": "Payment Data",
+    "paymentType": "Payment Type:",
+    "paymentMethod": "Payment Method:",
+    "paymentFiscalNote": "Fiscal Note:",
+    "paymentAmount": "Amount:",
+    "paymentCommission": "Commission:",
+    "paymentDate": "Payment Date:",
+    "outcomeType": "Type:",
+    "outcomeProduct": "Product:",
+    "outcomeBeneficiary": "Beneficiary:",
+    "productQuantity": "Quantity:",
+    "productExpiration": "Expiration:",
+    "productNext": "Next Replacement:",
+    "user": "User:",
+    "lastReplacementDate": "Date Last Replacement:",
+    "attentionId": "Attention Id.:",
+    "code": "Code:"
+  },
   "searchAdminItem": {
     "message": {
       "1": {
@@ -1277,6 +1304,15 @@
     "paymentType": "Payment Type",
     "paymentMethod": "Payment Method",
     "paymentFiscalNote": "Fiscal Note",
+    "personalData": "Personal Data",
+    "attentionData": "Last Attention Data",
+    "attData": "Attention Data",
+    "contactData": "Contact Data",
+    "surveyData": "Last Survey Data",
+    "commerceData": "Commerce:",
+    "userData": "User:",
+    "queueData": "Queue/Service:",
+    "contactMethod": "Contact Method:",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1767,9 +1803,9 @@
           "manage-admin": "Manage Artifacts",
           "control-admin": "Manage Artifacts",
           "product-admin": "Stock Control",
-          "financial-admin": "Financial Management",
-          "marketing-admin": "Marketing",
-          "patient-admin": "Patients Management"
+          "financial": "Financial Management",
+          "marketing": "Marketing",
+          "patients": "Patients Management"
         }
       }
     }
@@ -2066,6 +2102,79 @@
       "replacementLevel": "You should enter the replacement level",
       "maximumLevel": "You should enter the maximum level",
       "levels": "Verify if the levels and amounts are valid"
+    }
+  },
+  "businessFinancial" : {
+    "title": "Financial Management",
+    "commerce": "Select a commerce:",
+    "return": "Back",
+    "resume": "Resume",
+    "incomes": "Incomes",
+    "outcomes": "Outcomes",
+    "profit": "Profit",
+    "all": "All",
+    "evolution": "Evolution",
+    "outcomeTitle": "Concept:",
+    "outcomeType": "Type:",
+    "outcomeAmount": "Quantity:",
+    "outcomeProduct": "Product:",
+    "outcomeNextDate": "Next Outcome:",
+    "outcomeExpireDate": "Expiration:",
+    "outcomeDate": "Date:",
+    "outcomeCode": "Code:",
+    "add": "Add",
+    "outcomePaymentAmount": "Amount:",
+    "outcomeBeneficiary": "Beneficiary:",
+    "message": {
+      "1": {
+        "title": "Oh no!",
+        "content": "At the moment there's not options to manage. Please verify that your plan is active or go ahead to us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "There's not data to show, please validate the filter and try again."
+      }
+    },
+    "reports": {
+      "resume": {
+        "title": "Financial Resume",
+        "description": "Download report file of Financial Resume"
+      },
+      "incomes": {
+        "title": "Incomes Report",
+        "description": "Download report file of Financial Incomes"
+      },
+      "outcomes": {
+        "title": "Outcomes Report",
+        "description": "Download report file of Financial Outcomes"
+      }
+    },
+    "capacitiesList": {
+      "financial": {
+        "incomes": {
+          "view": "See Incomes",
+          "add": "Add Income"
+        },
+        "resume": {
+          "view": "See Resume"
+        },
+        "outcomes": {
+          "view": "See Outcomes",
+          "add": "Add Income"
+        },
+        "reports": {
+          "resume": "Financial Resume",
+          "incomes": "Incomes Report",
+          "outcomes": "Outcomes Report"
+        }
+      }
+    },
+    "validate": {
+      "type": "Should select the type",
+      "paymentAmount": "Should enter the amount",
+      "title": "Should enter de concept",
+      "date": "Should enter the date",
+      "amount": "Should enter the quantity"
     }
   },
   "businessProductStockAdmin" : {

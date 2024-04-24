@@ -209,10 +209,21 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div class="mt-2">
-              <span v-if="client.clientContactType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.clientContactType }}</span>
-              <span v-if="client.clientContactResult" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
-              <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
-              <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+              <div class="">
+                <i class="bi bi-chat-left-dots-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.contactData") }}</span>
+              </div>
+              <span v-if="client.clientContactType" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.contactType') }} </span>
+                {{ client.clientContactType }}</span>
+              <span v-if="client.clientContactResult" class="badge mx-1 detail-data-badge bg-warning">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.contactResult') }} </span>
+                {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
+              <span v-if="client.collaboratorName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
+                <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
+              <span v-if="client.commerceName && client.commerceTag" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
+                {{ client.commerceName }} - {{ client.commerceTag }}</span><br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate || client.createdAt) }}</span>
             </div>

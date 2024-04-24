@@ -129,11 +129,9 @@ export default {
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
         <div class="row m-0">
-          <div class="d-block col-12 col-md-5">
+          <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ survey.name || 'N/I' }} {{ survey.lastName || '' }}
-            </div>
-            <div class="col-12 centered" v-if="!loading">
               <a class="btn copy-icon"
                 @click="copySurvey()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -225,7 +223,17 @@ export default {
         <hr>
         <div class="row m-0 mt-3 centered">
           <div class="col">
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ survey.queueName }}</span><br>
+            <div class="">
+              <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
+            </div>
+            <span class="badge mx-1 detail-data-badge">
+              <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
+              {{ survey.queueName }}
+            </span>
+            <span v-if="survey.commerceName && survey.commerceTag" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
+                {{ survey.commerceName }} - {{ survey.commerceTag }}</span>
+            <br><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ survey.surveyid }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(survey.createdDate) }}</span>
           </div>

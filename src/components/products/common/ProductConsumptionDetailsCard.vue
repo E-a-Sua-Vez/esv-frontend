@@ -96,10 +96,18 @@ export default {
           </div>
           <div class="col">
             <div class="">
-              <span v-if="product.consumptionAmount" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-eyedropper mx-1"></i> {{ product.consumptionAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}</span>
-              <span v-if="product.consumedBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill mx-1"> </i> {{ product.consumedBy }}</span>
-              <span v-if="product.consumptionDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.consumptionDate }}</span>
-              <span v-if="product.comsumptionAttentionId" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-qr-code mx-1"> </i> {{ product.comsumptionAttentionId }}</span><br><br>
+              <span v-if="product.consumptionAmount" class="badge mx-1 detail-data-badge bg-warning">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
+                <i class="bi bi-eyedropper mx-1"></i> {{ product.consumptionAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
+              </span>
+              <span v-if="product.consumedBy" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.user') }} </span>
+                <i class="bi bi-person-fill mx-1"> </i> {{ product.consumedBy }}
+              </span>
+              <span v-if="product.comsumptionAttentionId" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.attentionId') }} </span>
+                <i class="bi bi-qr-code mx-1"> </i> {{ product.comsumptionAttentionId }}
+              </span><br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ product.productId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(product.createdDate || product.createdAt) }}</span>
             </div>

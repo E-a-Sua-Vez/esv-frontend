@@ -167,6 +167,13 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
+  "outcomeTypes": {
+    "PRODUCT_REPLACEMENT": "Reposición Producto",
+    "PROVIDERS_PAYMENT": "Pago Proveedores",
+    "PAYROLL_PAYMENT": "Pago Nómina",
+    "SERVICES_PAYMENT": "Pago Servicios",
+    "OTHER": "Otro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -379,6 +386,26 @@
     "freePeriod": "Período Gratuito"
   },
   "enterSearcher": "🔍 Ingresa al menos 3 caracteres",
+  "paymentData": {
+    "procedures": "Procedimientos:",
+    "paymentData": "Datos de Pago:",
+    "paymentType": "Tipo de Pago:",
+    "paymentMethod": "Medio de Pago:",
+    "paymentFiscalNote": "Nota Fiscal:",
+    "paymentAmount": "Monto:",
+    "paymentCommission": "Comisión:",
+    "paymentDate": "Fecha de Pago:",
+    "outcomeType": "Tipo:",
+    "outcomeProduct": "Producto:",
+    "outcomeBeneficiary": "Beneficiario:",
+    "productQuantity": "Cantidad:",
+    "productExpiration": "Vencimiento:",
+    "productNext": "Próxima Carga:",
+    "user": "Usuario:",
+    "lastReplacementDate": "Fecha Última Reposición:",
+    "attentionId": "Id. Atención:",
+    "code": "Código:"
+  },
   "searchAdminItem": {
     "message": {
       "1": {
@@ -1275,6 +1302,15 @@
     "paymentType": "Tipo de pago",
     "paymentMethod": "Medio de pago",
     "paymentFiscalNote": "Nota Fiscal",
+    "personalData": "Datos Personales",
+    "attentionData": "Datos Última Atención",
+    "attData": "Datos Atención",
+    "contactData": "Datos Contacto",
+    "surveyData": "Datos Última Encuesta",
+    "commerceData": "Comercio:",
+    "userData": "Usuario:",
+    "queueData": "Fila/Servicio:",
+    "contactMethod": "Medio de Contacto",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1769,9 +1805,9 @@
           "manage-admin": "Administrar Artefactos",
           "control-admin": "Gestión Transaccional",
           "product-admin": "Administrar Productos",
-          "financial-admin": "Gestión Financiera",
-          "marketing-admin": "Marketing",
-          "patient-admin": "Gestión de Pacientes"
+          "financial": "Gestión Financiera",
+          "marketing": "Marketing",
+          "patients": "Gestión de Pacientes"
         }
       }
     }
@@ -2163,6 +2199,79 @@
       "replacementAmount": "Debe ingresar una cantidad válida",
       "replacementDate": "Debe ingresar la fecha",
       "productReplacement": "Debe seleccionar una reposición"
+    }
+  },
+  "businessFinancial" : {
+    "title": "Gestión Financiera",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "resume": "Resumen",
+    "incomes": "Ingresos",
+    "outcomes": "Egresos",
+    "all": "Todos",
+    "profit": "Ganancias",
+    "evolution": "Evolución",
+    "outcomeTitle": "Concepto:",
+    "outcomeType": "Tipo:",
+    "outcomeAmount": "Cantidad:",
+    "outcomeProduct": "Producto:",
+    "outcomeNextDate": "Próximo Egreso:",
+    "outcomeExpireDate": "Vencimiento:",
+    "outcomeDate": "Fecha:",
+    "outcomeCode": "Código:",
+    "add": "Agregar",
+    "outcomePaymentAmount": "Monto:",
+    "outcomeBeneficiary": "Beneficiario:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "No hay datos para mostrar, valida el filtro e intenta nuevamente."
+      }
+    },
+    "reports": {
+      "resume": {
+        "title": "Resumen Financiero",
+        "description": "Descarga archivo report de Financiero"
+      },
+      "incomes": {
+        "title": "Informe Ingresos",
+        "description": "Descarga archivo report de Igresos"
+      },
+      "outcomes": {
+        "title": "Informe Egresos",
+        "description": "Descarga archivo report de Egresos"
+      }
+    },
+    "capacitiesList": {
+      "financial": {
+        "incomes": {
+          "view": "Ver Ingresos",
+          "add": "Agregar Ingreso"
+        },
+        "resume": {
+          "view": "Ver Resumen"
+        },
+        "outcomes": {
+          "view": "Ver Egresos",
+          "add": "Agregar Egreso"
+        },
+        "reports": {
+          "resume": "Resumen Financiero",
+          "incomes": "Reporte de Ingresos",
+          "outcomes": "Reporte de Egresos"
+        }
+      }
+    },
+    "validate": {
+      "type": "Debe seleccionar el tipo",
+      "paymentAmount": "Debe ingresar el monto mayor que 0",
+      "title": "Debes ingresar el concepto",
+      "date": "Debes ingresar la fecha",
+      "amount": "Debes ingresar la cantidad"
     }
   },
   "businessModulesAdmin": {

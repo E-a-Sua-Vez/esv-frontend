@@ -33,9 +33,9 @@ export default {
           return this.data;
         } else {
           if (Number.isInteger(this.data)) {
-            return this.data;
+            return Number(this.data.toFixed(2)).toLocaleString("de-DE");
           } else {
-            return this.data.toFixed(2);
+            return Number(this.data.toFixed(2)).toLocaleString("de-DE");
           }
         }
       } else {

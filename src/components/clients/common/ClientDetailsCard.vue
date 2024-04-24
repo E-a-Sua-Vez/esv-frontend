@@ -295,26 +295,60 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div v-if="client.rating || client.nps">
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+              <div class="">
+                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
+              </div>
+              <span class="badge mx-1 detail-data-badge">
                 CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ client.rating || 'N/I' }} </span>
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+              <span class="badge mx-1 detail-data-badge">
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ client.nps || 'N/I' }}
               </span>
+              <hr>
             </div>
             <div class="mt-2" v-if="client.queueName || client.collaboratorName || (client.commerceName && client.commerceTag)">
-              <span v-if="client.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.queueName }}</span>
-              <span v-if="client.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span><br>
-              <span v-if="client.commerceName && client.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+              <div class="">
+                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attentionData") }}</span>
+              </div>
+              <span v-if="client.queueName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
+                {{ client.queueName }}</span>
+              <span v-if="client.collaboratorName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
+                <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
+              <span v-if="client.commerceName && client.commerceTag" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
+                {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+              <hr>
             </div>
             <div class="mt-2" v-if="client.userBirthday || client.userOrigin || client.userAddressCode || client.userCode1">
-              <span v-if="client.userBirthday" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-cake-fill"></i> {{ client.userBirthday }}</span>
-              <span v-if="client.userOrigin" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userOrigin }}</span><br>
-              <span v-if="client.userAddressCode" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressCode }}</span>
-              <span v-if="client.userAddressText" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressText }}</span>
-              <span v-if="client.userAddressComplement" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userAddressComplement }}</span>
-              <span v-if="client.userCode1" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode1 }}</span>
-              <span v-if="client.userCode2" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode2 }}</span>
-              <span v-if="client.userCode3" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ client.userCode3 }}</span>
+              <div class="">
+                <i class="bi bi-person-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.personalData") }}</span>
+              </div>
+              <span v-if="client.userBirthday" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.birthday') }} </span>
+                <i class="bi bi-cake-fill"></i> {{ getDate(client.userBirthday) }}
+              </span>
+              <span v-if="client.userOrigin" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.origin') }} </span>
+                {{ $t(`origin.${client.userOrigin}`) }}</span><br>
+              <span v-if="client.userAddressCode" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.addressCode') }} </span>
+                <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressCode }}</span>
+              <span v-if="client.userAddressText" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.addressText') }} </span>
+                {{ client.userAddressText }}</span>
+              <span v-if="client.userAddressComplement" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.addressComplement') }} </span>
+                {{ client.userAddressComplement }}</span><br>
+              <span v-if="client.userCode1" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.code1') }} </span>
+                {{ client.userCode1 }}</span>
+              <span v-if="client.userCode2" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.code2') }} </span>
+                {{ client.userCode2 }}</span>
+              <span v-if="client.userCode3" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.code3') }} </span>
+                {{ client.userCode3 }}</span>
             </div>
             <div class="mt-2">
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.id }}</span>

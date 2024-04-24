@@ -153,12 +153,25 @@ export default {
           </div>
           <div class="col">
             <div class="">
-              <span v-if="product.replacementAmount" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}</span>
-              <span v-if="product.price" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ product.price }}</span><br>
-              <span v-if="product.nextReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-calendar-fill mx-1"> </i> {{ getDate(product.nextReplacementDate) }}</span>
-              <span v-if="product.replacedBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill mx-1"> </i> {{ product.replacedBy }}</span>
-              <span v-if="product.replacementCode" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.replacementCode }}</span>
-              <span v-if="product.replacementDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(product.replacementDate) }}</span>
+              <span v-if="product.replacementAmount" class="badge mx-1 detail-data-badge bg-warning">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
+                <i class="bi bi-eyedropper mx-1"></i> {{ product.replacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
+              </span>
+              <span v-if="product.price" class="badge mx-1 detail-data-badge bg-warning">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
+                <i class="bi bi-coin mx-1"> </i> {{ product.price }}</span><br>
+              <span v-if="product.nextReplacementDate" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productNext') }} </span>
+                <i class="bi bi-calendar-fill mx-1"> </i> {{ getDate(product.nextReplacementDate) }}
+              </span>
+              <span v-if="product.replacedBy" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.user') }} </span>
+                <i class="bi bi-person-fill mx-1"> </i> {{ product.replacedBy }}
+              </span>
+              <span v-if="product.replacementCode" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.code') }} </span>
+                {{ product.replacementCode }}
+              </span>
               <br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ product.productId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(product.createdDate || product.createdAt) }}</span>

@@ -20,6 +20,9 @@ const BusinessProductsAdmin = () => import('../../views/business/BusinessProduct
 const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
 const BusinessDocuments = () => import('../../views/business/BusinessDocuments.vue');
 
+const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
+
+
 const PrivateMasterRoutes = [
   {
     path: '/interno/master/menu',
@@ -45,6 +48,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/tracing',
     name: 'business-master-tracing',
     component: BusinessTracing
+  },
+  {
+    path: '/interno/master/financial',
+    name: 'business-master-financial',
+    component: BusinessFinancial
   },
   {
     path: '/interno/master/commerce-master-admin',

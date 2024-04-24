@@ -7,23 +7,21 @@ import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
-import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
-import { addProductConsumption, getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
+import { getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
 import { getDate } from '../../../shared/utils/date';
-import ProductReplacementDetailsCard from '../common/ProductReplacementDetailsCard.vue';
-import ProductConsumptionDetailsCard from '../common/ProductConsumptionDetailsCard.vue';
+import IncomeDetailsCard from './common/IncomeDetailsCard.vue';
 
 export default {
-  name: 'ProductAttentionManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, ProductReplacementDetailsCard, ProductConsumptionDetailsCard },
+  name: 'IncomesFinancialManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, IncomeDetailsCard },
   props: {
-    showProductAttentionManagement: { type: Boolean, default: false },
+    showIncomesFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    attention: { type: Object, default: {} },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
-    productAttentionsIn: { type: Array, default: [] }
+    business: { type: Object, default: undefined },
+    financialIncomesIn: { type: Array, default: [] }
   },
   emits: ['getProductConsuptions'],
   data() {
@@ -31,8 +29,8 @@ export default {
     return {
       loading: false,
       alertError: '',
-      productAttentions: [],
-      newProductConsumptions: [],
+      financialIncomes: [],
+      newFinancialIncomes: [],
       products: [],
       productReplacements: [],
       newProductConsumption: {},
@@ -64,7 +62,89 @@ export default {
       endDate: undefined
     }
   },
-  async beforeMount() {},
+  async beforeMount() {
+    this.financialIncomes = [
+      {
+        id: 'LzgvWXNa4n53urFQk1Re',
+        bookingId: '1',
+        clientId: '1',
+        userName: 'Julio',
+        userLastName: 'Castillo',
+        userEmail: 'juliocas65@gmail.com',
+        daysSinceAttention: 4,
+        userPhone: '5511919931589',
+        userIdNumber: '90208801871',
+        paymentDate: '2024-04-18T01:03:39.753Z',
+        procedureNumber: 1,
+        proceduresTotalNumber: 10,
+        transactionId: '123456',
+        paymentType: 'TOTALLY',
+        paymentMethod: 'CREDIT_CARD',
+        installments: 10,
+        paid: true,
+        paymentAmount: 1600,
+        paymentCommission: 120,
+        queueName: 'Fila General',
+        paymentFiscalNote: 'GERENCIAL',
+        promotionalCode: 'PROMOCODE',
+        user: 'carolinadiaz@semprebela.com'
+      },
+      {
+        id: 'LzgvWXNa4n53urFQk1Rr',
+        attentionId: '3',
+        bookingId: '4',
+        clientId: '4',
+        userName: 'Diego',
+        userLastName: 'Lopez',
+        userEmail: 'dilopezvv@gmail.com',
+        userPhone: '5511919931589',
+        userIdNumber: '90208801881',
+        paymentDate: '2024-04-01T01:03:39.753Z',
+        daysSinceAttention: 12,
+        procedureNumber: 1,
+        proceduresTotalNumber: 10,
+        transactionId: '123456',
+        paymentType: 'PARTIAL',
+        paymentMethod: 'CREDIT_CARD',
+        installments: 10,
+        paid: true,
+        paymentAmount: 8400,
+        paymentCommission: 840,
+        queueName: 'Fila General',
+        collaboratorName: 'Carolina Diaz',
+        paymentFiscalNote: 'GERENCIAL',
+        promotionalCode: 'PROMOCODE',
+        user: 'carolinadiaz@semprebela.com'
+      },
+      {
+        id: 'LzgvWXNa4n53urFhk1Rr',
+        attentionId: '3',
+        bookingId: '4',
+        clientId: '4',
+        userName: 'Camila',
+        userLastName: 'Diaz',
+        userEmail: 'camiladiazxx@gmail.com',
+        userPhone: '5511919931589',
+        userIdNumber: '90208501881',
+        paymentDate: '2024-04-01T01:03:39.753Z',
+        daysSinceAttention: 12,
+        procedureNumber: 1,
+        proceduresTotalNumber: 10,
+        transactionId: '123456',
+        paymentType: 'TOTALLY',
+        paymentMethod: 'DEBIT_CARD',
+        installments: 10,
+        paid: true,
+        paymentAmount: 2300,
+        paymentCommission: 450,
+        queueName: 'Fila General',
+        collaboratorName: 'Carolina Diaz',
+        paymentFiscalNote: 'GERENCIAL',
+        promotionalCode: 'PROMOCODE',
+        user: 'carolinadiaz@semprebela.com'
+      }
+    ]
+  },
   methods: {
     setPage(pageIn) {
       this.page = pageIn;
@@ -91,7 +171,7 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newProductConsumptions = await getProductsConsumptionsDetails(commerceIds, undefined, this.page, this.limit, this.asc, undefined, undefined, this.attention.attentionId);
+        this.newFinancialIncomes = this.financialIncomes;
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -111,8 +191,8 @@ export default {
       }
     },
     updatePaginationData() {
-      if (this.productAttentions && this.productAttentions.length > 0) {
-        const { counter } = this.productAttentions[0];
+      if (this.financialIncomes && this.financialIncomes.length > 0) {
+        const { counter } = this.financialIncomes[0];
         this.counter = counter;
         const total = counter / this.limit;
         const totalB = Math.trunc(total);
@@ -122,83 +202,19 @@ export default {
         this.totalPages = 0;
       }
     },
-    validateAdd(newProductConsumption) {
-      this.errorsAdd = [];
-      if (!this.selectedProduct || !this.selectedProduct.id) {
-        this.consumptionProductId = true;
-        this.errorsAdd.push('businessProductStockAdmin.validate.product');
-      } else {
-        this.consumptionProductId = false;
-      }
-      if (!this.selectedProductReplacement || !this.selectedProductReplacement.id) {
-        this.consumptionReplacementId = true;
-        this.errorsAdd.push('businessProductStockAdmin.validate.productReplacement');
-      } else {
-        this.consumptionReplacementId = false;
-      }
-      if (newProductConsumption.consumptionAmount === undefined ||
-         newProductConsumption.consumptionAmount <= 0) {
-        this.consumptionAmountError = true;
-        this.errorsAdd.push('businessProductStockAdmin.validate.consumptionAmount');
-      } else {
-        this.consumptionAmountError = false;
-      }
-      if (newProductConsumption.consumptionAmount > this.selectedProductReplacement.replacementActualLevel) {
-        this.consumptionAmountError = true;
-        this.errorsAdd.push('businessProductStockAdmin.validate.consumptionLevel');
-      } else {
-        this.consumptionAmountError = false;
-      }
-      if (newProductConsumption.consumptionDate === undefined || newProductConsumption.consumptionDate.length === 0) {
-        this.consumptionDateError = true;
-        this.errorsAdd.push('businessProductStockAdmin.validate.consumptionDate');
-      } else {
-        this.consumptionDateError = false;
-      }
-      if(this.errorsAdd.length === 0) {
-        return true;
-      }
-      return false;
-    },
-    async add(newProductConsumption) {
-      try {
-        this.loading = true;
-        if (this.validateAdd(newProductConsumption)) {
-          newProductConsumption.productId = this.selectedProduct.id;
-          newProductConsumption.comsumptionAttentionId = this.attention.attentionId;
-          newProductConsumption.commerceId = this.selectedProduct.commerceId;
-          newProductConsumption.productCode = this.selectedProduct.productCode;
-          newProductConsumption.consumedBy = this.user.email;
-          newProductConsumption.productReplacementId = this.selectedProductReplacement.id;
-          await addProductConsumption(newProductConsumption);
-          setTimeout(async () => {
-            this.$emit('getProductConsuptions');
-            await this.refresh();
-          }, 5000)
-          this.showAddOption = false;
-          this.newProductConsumption = {}
-          this.extendedEntity = undefined;
-        }
-        this.alertError = '';
-        this.loading = false;
-      } catch (error) {
-        this.alertError = error.response.status || 500;
-        this.loading = false;
-      }
-    },
     async exportToCSV() {
       try {
         this.loading = true;
         let csvAsBlob = [];
         let commerceIds = [this.commerce.id];
-        const result = await getProductsConsumptionsDetails(commerceIds, undefined, undefined, undefined, this.asc, this.startDate, this.endDate, this.attention.attentionId);
+        const result = this.financialIncomes;
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `product-attention-details-${this.commerce.tag}.csv`;
+        a.download = `financial-incomes-${this.commerce.tag}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -275,20 +291,20 @@ export default {
         await this.getUser();
       }
     },
-    productAttentionsIn: {
+    financialIncomesIn: {
       immediate: true,
       deep: true,
       async handler() {
-        this.productAttentions = this.productAttentionsIn;
+        this.financialIncomes = this.financialIncomesIn;
         this.updatePaginationData();
       }
     },
-    newProductConsumptions: {
+    newFinancialIncomes: {
       immediate: true,
       deep: true,
       async handler() {
-        if (this.newProductConsumptions) {
-          this.productAttentions = this.newProductConsumptions;
+        if (this.newFinancialIncomes) {
+          this.financialIncomes = this.newFinancialIncomes;
           this.updatePaginationData();
         }
       }
@@ -307,98 +323,22 @@ export default {
 </script>
 
 <template>
-  <div id="productAttentions-management" class="row" v-if="showProductAttentionManagement === true && toggles['products-stock.products.view-attention']">
+  <div id="financialIncomes-management" class="row" v-if="showIncomesFinancialManagement === true && toggles['financial.incomes.view']">
     <div class="col">
-      <div id="attention-management-component">
+      <div id="income-management-component">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div v-if="!loading">
           <div>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span class="form-check-label" @click="showAdd()">
-                    <i class="bi bi-arrow-up-circle-fill"></i> {{ $t("businessProductStockAdmin.addConsuption") }}
-                    <i :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
-                </span>
-              </div>
-              <div v-if="showAddOption">
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessProductStockAdmin.product") }}
-                  </div>
-                  <div class="col-8">
-                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="selectedProduct">
-                      <option v-for="prod in products" :key="prod.id" :value="prod" id="select-product"> {{ prod.name }} </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessProductStockAdmin.replacementSel") }}
-                  </div>
-                  <div class="col-8">
-                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="selectedProductReplacement">
-                      <option v-for="rep in productReplacements" :key="rep.id" :value="rep" id="select-replacement">{{ rep.replacementActualLevel }} {{ $t(`productMeasuresTypesShort.${selectedProduct.measureType}`) }} - ({{ getDate(rep.replacementExpirationDate) }})</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessProductStockAdmin.amount") }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      :min="0"
-                      type="number"
-                      class="form-control"
-                      v-model="newProductConsumption.consumptionAmount"
-                      v-bind:class="{ 'is-invalid': consumptionAmountError }"
-                      placeholder="1">
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessProductStockAdmin.consumptionDate") }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newProductConsumption.consumptionDate"
-                      v-bind:class="{ 'is-invalid': consumptionDateError }"
-                      placeholder="1">
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-12 text-label">
-                    <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(newProductConsumption)"
-                      >
-                      {{ $t("dashboard.add") }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-            <div v-if="showFilters === true">
+            <div>
               <SimpleDownloadCard
-                :download="toggles['products-stock.reports.consumption-details']"
-                :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
+                :download="toggles['financial.reports.incomes']"
+                :title="$t('businessFinancial.reports.incomes.title')"
                 :showTooltip="true"
-                :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
+                :description="$t('businessFinancial.reports.incomes.description')"
                 :icon="'bi-file-earmark-spreadsheet'"
                 @download="exportToCSV"
-                :canDownload="toggles['products-stock.reports.consumption-details'] === true"
+                :canDownload="toggles['financial.reports.incomes'] === true"
               ></SimpleDownloadCard>
               <div class="my-2 row metric-card">
                 <div class="col-12">
@@ -433,6 +373,26 @@ export default {
                       </div>
                       <div class="col-5">
                         <input id="endDate" class="form-control metric-controls" type="date" v-model="endDate"/>
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()">
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-10">
+                        <input
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="searchText"
+                          :placeholder="$t('dashboard.search')">
                       </div>
                       <div class="col-2">
                         <button
@@ -507,14 +467,16 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="this.productAttentions && this.productAttentions.length > 0">
-              <div class="row" v-for="(product, index) in productAttentions" :key="`productAttentions-${index}`">
-                <ProductConsumptionDetailsCard
+            <div v-if="this.financialIncomes && this.financialIncomes.length > 0">
+              <div class="row" v-for="(income, index) in financialIncomes" :key="`financialIncomes-${index}`">
+                <IncomeDetailsCard
                   :show="true"
-                  :detailsOpened="false"
-                  :product="product"
+                  :income="income"
+                  :commerce="commerce"
+                  :commerces="commerces"
+                  :toggles="toggles"
                 >
-                </ProductConsumptionDetailsCard>
+                </IncomeDetailsCard>
               </div>
             </div>
             <div v-else>
@@ -528,7 +490,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showProductAttentionManagement === true && !toggles['products-stock.products.view-attention']">
+  <div v-if="showIncomesFinancialManagement === true && !toggles['financial.incomes.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

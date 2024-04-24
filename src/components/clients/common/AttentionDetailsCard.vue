@@ -148,25 +148,44 @@ export default {
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
               <div v-if="attention.paid">
-                <span v-if="attention.paymentType" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
-                <span v-if="attention.paymentMethod" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span>
-                <span v-if="attention.paymentAmount" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentAmount }}</span>
-                <span v-if="attention.paymentCommission" class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span>
-                <span v-if="attention.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(attention.paymentDate) }}</span>
+                <span v-if="attention.paymentType" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentType') }} </span>
+                  {{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
+                <span v-if="attention.paymentMethod" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentMethod') }} </span>
+                  {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span>
+                <span v-if="attention.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ attention.paymentAmount }}</span>
+                <span v-if="attention.paymentCommission" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentCommission') }} </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span>
               </div>
               <hr>
             </div>
             <div v-if="attention.rating || attention.nps">
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+              <div class="">
+                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
+              </div>
+              <span class="badge mx-1 detail-data-badge">
                 CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ attention.rating || 'N/I' }} </span>
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+              <span class="badge mx-1 detail-data-badge">
                 NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ attention.nps || 'N/I' }}
               </span>
             </div>
             <div class="mt-2">
-              <span v-if="attention.queueName" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.queueName }}</span>
-              <span v-if="attention.collaboratorName" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span><br>
-              <span v-if="attention.commerceName && attention.commerceTag" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ attention.commerceName }} - {{ attention.commerceTag }}</span><br>
+              <div class="">
+                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
+              </div>
+              <span v-if="attention.queueName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
+                {{ attention.queueName }}</span>
+              <span v-if="attention.collaboratorName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
+                <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span>
+              <span v-if="attention.commerceName && attention.commerceTag" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
+                {{ attention.commerceName }} - {{ attention.commerceTag }}</span><br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
             </div>

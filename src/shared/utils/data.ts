@@ -156,3 +156,13 @@ export const getServiceTypes = () => {
     { id: 'SELECTABLE', name: 'SELECTABLE' }
   ]
 }
+
+export const getOutcomeTypes = () => {
+  return [
+    { id: 'PRODUCT_REPLACEMENT', name: 'PRODUCT_REPLACEMENT' },
+    { id: 'PROVIDERS_PAYMENT', name: 'PROVIDERS_PAYMENT' },
+    { id: 'PAYROLL_PAYMENT', name: 'PAYROLL_PAYMENT' },
+    { id: 'SERVICES_PAYMENT', name: 'SERVICES_PAYMENT' },
+    { id: 'OTHER', name: 'OTHER' }
+  ]
+}

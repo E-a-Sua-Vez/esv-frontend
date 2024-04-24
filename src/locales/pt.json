@@ -167,6 +167,13 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
+  "outcomeTypes": {
+    "PRODUCT_REPLACEMENT": "Recarrega Producto",
+    "PROVIDERS_PAYMENT": "Pagamento Fornecedor",
+    "PAYROLL_PAYMENT": "Pagamento Funcionários",
+    "SERVICES_PAYMENT": "Pagamento Serviços",
+    "OTHER": "Outro"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -378,6 +385,26 @@
     "freePeriod": "Período de graça"
   },
   "enterSearcher": "🔍 Digite ao menos 3 letras",
+  "paymentData": {
+    "procedures": "Procedimientos:",
+    "paymentData": "Dados de Pagamento:",
+    "paymentType": "Tipo de Pagamento:",
+    "paymentMethod": "Meio de Pagamento:",
+    "paymentFiscalNote": "Nota Fiscal:",
+    "paymentAmount": "Valor:",
+    "paymentCommission": "Comissão:",
+    "paymentDate": "Data de Pagamento:",
+    "outcomeType": "Tipo:",
+    "outcomeProduct": "Produto:",
+    "outcomeBeneficiary": "Beneficiário:",
+    "productQuantity": "Quantidade:",
+    "productExpiration": "Validade:",
+    "productNext": "Próximo Recarregamento:",
+    "user": "Usuário:",
+    "lastReplacementDate": "Data Último Recarragamento:",
+    "attentionId": "Id. Atendimento:",
+    "code": "Código:"
+  },
   "searchAdminItem": {
     "message": {
       "1": {
@@ -1278,6 +1305,15 @@
     "paymentType": "Tipo de Pagamento",
     "paymentMethod": "Meio de Pagamento",
     "paymentFiscalNote": "Nota Fiscal",
+    "personalData": "Dados Pessoais",
+    "attentionData": "Dados Último Atendimento",
+    "attData": "Dados Atendimento",
+    "contactData": "Dados Contato",
+    "surveyData": "Dados Última Pesquisa",
+    "commerceData": "Comércio:",
+    "userData": "Usuário:",
+    "queueData": "Fila/Serviço:",
+    "contactMethod": "Meio de Contato",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1767,9 +1803,9 @@
           "manage-admin": "Gerenciar Artefatos",
           "control-admin": "Gestão Transacional",
           "product-admin": "Gerenciar Produtos",
-          "financial-admin": "Gestão Financeira",
-          "marketing-admin": "Marketing",
-          "patient-admin": "Gestão de Pacientes"
+          "financial": "Gestão Financeira",
+          "marketing": "Marketing",
+          "patients": "Gestão de Pacientes"
         }
       }
     }
@@ -2074,6 +2110,79 @@
       "maximumLevel": "Você deve digitar o nivel máximo",
       "levels": "Valide que os níveis e quantidades sejan corretos"
 
+    }
+  },
+  "businessFinancial" : {
+    "title": "Gestão Financeira",
+    "commerce": "Selecione uma unidade:",
+    "return": "Voltar",
+    "resume": "Resumo",
+    "incomes": "Recebidos",
+    "outcomes": "Despesas",
+    "profit": "Lucros",
+    "all": "Todos",
+    "evolution": "Evolução",
+    "outcomeTitle": "Conceito:",
+    "outcomeType": "Tipo:",
+    "outcomeAmount": "Quantidade:",
+    "outcomeProduct": "Produto:",
+    "outcomeNextDate": "Próxima Despesa:",
+    "outcomeExpireDate": "Validade:",
+    "outcomeDate": "Data:",
+    "outcomeCode": "Código:",
+    "add": "Adicionar",
+    "outcomePaymentAmount": "Valor:",
+    "outcomeBeneficiary": "Beneficiário:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "No momento, não há opções para gerenciar. Verifique os filtros ou entre em contato conosco."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "Não temos data, verifique os filtros e tente novamente."
+      }
+    },
+    "reports": {
+      "resume": {
+        "title": "Resumo Financeiro",
+        "description": "Baixar arquivo relatório de Resumo Financeiro"
+      },
+      "incomes": {
+        "title": "Informe Recebidos",
+        "description": "Baixar arquivo relatório de Recebidos"
+      },
+      "outcomes": {
+        "title": "Informe Egresos",
+        "description": "Baixar arquivo relatório de Despesas"
+      }
+    },
+    "capacitiesList": {
+      "financial": {
+        "incomes": {
+          "view": "Ver Recebidos",
+          "add": "Adicionar Recebidos"
+        },
+        "resume": {
+          "view": "Ver Resumo"
+        },
+        "outcomes": {
+          "view": "Ver Despesas",
+          "add": "Adicionar Despesa"
+        },
+        "reports": {
+          "resume": "Baixar arquivo relatório Resumo Financeiro",
+          "incomes": "Baixar arquivo relatório de Recebidos",
+          "outcomes": "Baixar arquivo relatório de Despesas"
+        }
+      }
+    },
+    "validate": {
+      "type": "Você deve selecionar o tipo",
+      "paymentAmount": "Deve digitar o valor maior que 0",
+      "title": "Deve digitar o conceito",
+      "date": "Deve digitar a data",
+      "amount": "Deve digitar a quantidade"
     }
   },
   "businessProductStockAdmin" : {

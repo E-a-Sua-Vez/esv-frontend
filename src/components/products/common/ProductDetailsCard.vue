@@ -254,13 +254,26 @@ export default {
             </a>
           </div>
           <div class="col">
-            <div v-if="product.lastReplacementAmount">
-              <span v-if="product.lastReplacementAmount" class="metric-keyword-tag mx-1"> <i class="bi bi bi-arrow-down-circle-fill m-1"></i> {{ $t('businessProductStockAdmin.lastReplacement')}} </span><br>
-              <span v-if="product.lastReplacementAmount" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-eyedropper mx-1"></i> {{ product.lastReplacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}</span>
-              <span v-if="product.lastReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ product.lastReplacementDate }}</span>
-              <span v-if="product.lastReplacementExpirationDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-heart-pulse-fill mx-1"> </i> {{ product.lastReplacementExpirationDate }}</span>
-              <span v-if="product.nextReplacementDate" class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-calendar-fill mx-1"> </i> {{ product.nextReplacementDate }}</span>
-              <span v-if="product.lastReplacementBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-person-fill mx-1"> </i> {{ product.lastReplacementBy }}</span><br>
+            <div v-if="product.lastReplacementAmount" class="col">
+              <span v-if="product.lastReplacementAmount" class=" mx-1">
+                <i class="bi bi bi-arrow-down-circle-fill mb-2"></i> {{ $t('businessProductStockAdmin.lastReplacement')}}
+              </span><br>
+              <span v-if="product.lastReplacementAmount" class="badge mx-1 detail-data-badge bg-warning">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
+                <i class="bi bi-eyedropper mx-1"></i> {{ product.lastReplacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}
+              </span>
+              <span v-if="product.lastReplacementDate" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.lastReplacementDate') }} </span>
+                {{ product.lastReplacementDate }}</span>
+              <span v-if="product.lastReplacementExpirationDate" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productExpiration') }} </span>
+                <i class="bi bi-heart-pulse-fill mx-1"> </i> {{ product.lastReplacementExpirationDate }}</span>
+              <span v-if="product.nextReplacementDate" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productNext') }} </span>
+                <i class="bi bi-calendar-fill mx-1"> </i> {{ product.nextReplacementDate }}</span>
+              <span v-if="product.lastReplacementBy" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.user') }} </span>
+                <i class="bi bi-person-fill mx-1"> </i> {{ product.lastReplacementBy }}</span><br>
             </div>
           </div>
         </div>
@@ -295,7 +308,7 @@ export default {
             </ProductConsumptionManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>
@@ -323,7 +336,7 @@ export default {
             </ProductReplacementManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>
