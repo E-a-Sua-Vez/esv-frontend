@@ -152,7 +152,7 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div class="" v-if="attention.paid !== undefined && attention.paid === true">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
               <div v-if="attention.paid">
@@ -172,8 +172,8 @@ export default {
               <hr>
             </div>
             <div v-if="attention.rating || attention.nps">
-              <div class="">
-                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
+              <div class="mb-2">
+                <i class="bi bi-star-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
               </div>
               <span class="badge mx-1 detail-data-badge">
                 CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ attention.rating || 'N/I' }} </span>
@@ -183,7 +183,7 @@ export default {
               <hr>
             </div>
             <div class="mt-2">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
               </div>
               <span v-if="attention.queueName" class="badge mx-1 detail-data-badge">

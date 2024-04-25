@@ -247,17 +247,13 @@ export default {
         </div>
         <hr>
         <div class="row centered">
-          <div class="col-1 mx-1">
-            <a class="btn copy-icon"
-              @click="copyAttention()">
-              <i class="bi bi-file-earmark-spreadsheet"></i>
-            </a>
-          </div>
-          <div class="col">
+          <div class="col-12">
             <div v-if="product.lastReplacementAmount" class="col">
-              <span v-if="product.lastReplacementAmount" class=" mx-1">
-                <i class="bi bi bi-arrow-down-circle-fill mb-2"></i> {{ $t('businessProductStockAdmin.lastReplacement')}}
-              </span><br>
+              <div class="mb-2">
+                <span v-if="product.lastReplacementAmount" class="mx-1">
+                  <i class="bi bi bi-arrow-down-circle-fill mb-2"></i> {{ $t('businessProductStockAdmin.lastReplacement')}}
+                </span>
+              </div>
               <span v-if="product.lastReplacementAmount" class="badge mx-1 detail-data-badge bg-warning">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
                 <i class="bi bi-eyedropper mx-1"></i> {{ product.lastReplacementAmount }} {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }}

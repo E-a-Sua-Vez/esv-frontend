@@ -144,8 +144,8 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row centered">
-          <div class="col-1 mx-1">
+        <div class="col centered">
+          <div class="col-2">
             <a class="btn copy-icon"
               @click="copyAttention()">
               <i class="bi bi-file-earmark-spreadsheet"></i>

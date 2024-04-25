@@ -447,12 +447,21 @@
 }
 .detail-data-badge {
   background-color: var(--color-background);
-  border: .5px solid var(--gris-default);
+  border-top: .5px solid var(--gris-default);
+  border-left: .5px solid var(--gris-default);
+  border-right: .5px solid var(--gris-default);
   color: var(--color-text) !important;
   font-size: .8rem !important;
-  margin: .1rem;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: normal !important;
+  justify-content: left !important;
+  align-items: center !important;
 }
 .detail-data-badge-title {
   text-decoration: underline;
   font-size: .6rem !important;
+  margin-right: .2rem;
 }

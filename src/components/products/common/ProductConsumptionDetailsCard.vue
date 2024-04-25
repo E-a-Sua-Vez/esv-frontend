@@ -87,8 +87,8 @@ export default {
       <div
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
-        <div class="row centered">
-          <div class="col-1 mx-1">
+        <div class="col centered">
+          <div class="col-2 mx-1">
             <a class="btn copy-icon"
               @click="copyAttention()">
               <i class="bi bi-file-earmark-spreadsheet"></i>

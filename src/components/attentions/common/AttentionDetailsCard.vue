@@ -142,7 +142,7 @@ export default {
       if (this.attention && this.attention.queueId) {
         this.queue = await getQueueById(this.attention.queueId);
       }
-      const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
+      const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const attentions = await getPendingCommerceAttentions(this.commerce.id);
         if (attentions && attentions.length > 0) {
@@ -154,7 +154,10 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          const limit = queuesToTransfer.length;
+          const limit = 1; //queuesToTransfer.length;
+          if (this.queue.serviceInfo !== undefined && this.queue.serviceInfo.blockLimit !== undefined && this.queue.serviceInfo.blockLimit > 0) {
+            limit = this.queue.serviceInfo.blockLimit;
+          }
           queuesToTransfer.forEach(queue => {
             const attentionsByQueue = groupedAttentions[queue.id];
             if (attentionsByQueue && attentionsByQueue.length > 0) {

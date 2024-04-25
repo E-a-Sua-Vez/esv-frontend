@@ -209,7 +209,7 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div class="mt-2">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-chat-left-dots-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.contactData") }}</span>
               </div>
               <span v-if="client.clientContactType" class="badge mx-1 detail-data-badge">

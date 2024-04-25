@@ -295,8 +295,8 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div v-if="client.rating || client.nps">
-              <div class="">
-                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
+              <div class="mb-2">
+                <i class="bi bi-star-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
               </div>
               <span class="badge mx-1 detail-data-badge">
                 CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ client.rating || 'N/I' }} </span>
@@ -306,7 +306,7 @@ export default {
               <hr>
             </div>
             <div class="mt-2" v-if="client.queueName || client.collaboratorName || (client.commerceName && client.commerceTag)">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attentionData") }}</span>
               </div>
               <span v-if="client.queueName" class="badge mx-1 detail-data-badge">
@@ -321,7 +321,7 @@ export default {
               <hr>
             </div>
             <div class="mt-2" v-if="client.userBirthday || client.userOrigin || client.userAddressCode || client.userCode1">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-person-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.personalData") }}</span>
               </div>
               <span v-if="client.userBirthday" class="badge mx-1 detail-data-badge">
@@ -330,7 +330,7 @@ export default {
               </span>
               <span v-if="client.userOrigin" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.origin') }} </span>
-                {{ $t(`origin.${client.userOrigin}`) }}</span><br>
+                {{ $t(`origin.${client.userOrigin}`) }}</span>
               <span v-if="client.userAddressCode" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.addressCode') }} </span>
                 <i class="bi bi-geo-alt-fill red-icon"></i> {{ client.userAddressCode }}</span>
@@ -339,7 +339,7 @@ export default {
                 {{ client.userAddressText }}</span>
               <span v-if="client.userAddressComplement" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.addressComplement') }} </span>
-                {{ client.userAddressComplement }}</span><br>
+                {{ client.userAddressComplement }}</span>
               <span v-if="client.userCode1" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.code1') }} </span>
                 {{ client.userCode1 }}</span>
