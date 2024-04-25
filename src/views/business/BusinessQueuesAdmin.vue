@@ -718,6 +718,20 @@ export default {
                         </a>
                       </div>
                       <div id="update-service" class="collapse row m-0">
+                        <div id="queue-blockLimit-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.blockLimit") }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="!state.toggles['queues.admin.edit']"
+                              min="1"
+                              type="number"
+                              class="form-control"
+                              v-model="queue.serviceInfo.blockLimit"
+                              placeholder="100">
+                          </div>
+                        </div>
                         <div id="update-queue-samecommerce-active-form" class="row g-1">
                           <div class="col-4 text-label">
                             {{ $t("businessQueuesAdmin.walkin") }}
@@ -817,43 +831,43 @@ export default {
                             {{ $t("businessQueuesAdmin.attentionDays") }}
                           </div>
                           <div class="col-8">
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="monday"
                                 :checked="dayChecked(queue.serviceInfo, 1)"
                                 @click="checkDay($event, queue.serviceInfo, 1)">
                               <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="tuesday"
                                 :checked="dayChecked(queue.serviceInfo, 2)"
                                 @click="checkDay($event, queue.serviceInfo, 2)">
                               <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="wednesday"
                                 :checked="dayChecked(queue.serviceInfo, 3)"
                                 @click="checkDay($event, queue.serviceInfo, 3)">
                               <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="thursday"
                                 :checked="dayChecked(queue.serviceInfo, 4)"
                                 @click="checkDay($event, queue.serviceInfo, 4)">
                               <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="friday"
                                 :checked="dayChecked(queue.serviceInfo, 5)"
                                 @click="checkDay($event, queue.serviceInfo, 5)">
                               <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="sabado"
                                 :checked="dayChecked(queue.serviceInfo, 6)"
                                 @click="checkDay($event, queue.serviceInfo, 6)">
                               <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch text-label">
                               <input class="form-check-input" type="checkbox" id="domingo"
                                 :checked="dayChecked(queue.serviceInfo, 7)"
                                 @click="checkDay($event, queue.serviceInfo, 7)">
@@ -1187,6 +1201,20 @@ export default {
                     </a>
                   </div>
                   <div id="add-service" class="collapse row m-0">
+                    <div id="add-queue-blockLimit-form" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.blockLimit") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          :disabled="!state.toggles['queues.admin.edit']"
+                          min="1"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newQueue.serviceInfo.blockLimit"
+                          placeholder="100">
+                      </div>
+                    </div>
                     <div id="add-queue-walkin-active-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t("businessQueuesAdmin.walkin") }}
@@ -1300,43 +1328,43 @@ export default {
                         {{ $t("businessQueuesAdmin.attentionDays") }}
                       </div>
                       <div class="col-8">
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="monday"
                             :checked="dayChecked(state.newQueue.serviceInfo, 1)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 1)">
                           <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="tuesday"
                             :checked="dayChecked(state.newQueue.serviceInfo, 2)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 2)">
                           <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="wednesday"
                             :checked="dayChecked(state.newQueue.serviceInfo, 3)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 3)">
                           <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="thursday"
                             :checked="dayChecked(state.newQueue.serviceInfo, 4)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 4)">
                           <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="friday"
                             :checked="dayChecked(state.newQueue.serviceInfo, 5)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 5)">
                           <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="sabado"
                             :checked="dayChecked(state.newQueue.serviceInfo, 6)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 6)">
                           <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
                         </div>
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch text-label">
                           <input class="form-check-input" type="checkbox" id="domingo"
                             :checked="dayChecked(state.newQueue.serviceInfo, 7)"
                             @click="checkDay($event, state.newQueue.serviceInfo, 7)">

@@ -303,6 +303,19 @@ export default {
                   return booking.block.number;
                 }
               });
+              let limit = 0;
+              if (queue.value.serviceInfo !== undefined && queue.value.serviceInfo.blockLimit !== undefined && queue.value.serviceInfo.blockLimit > 0) {
+                limit = queue.value.serviceInfo.blockLimit;
+              }
+              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+              const blockedBlocks = []
+              uniqueBlocksReserved.forEach(block => {
+                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                if (times >= limit) {
+                  blockedBlocks.push(block);
+                }
+              })
               availableBlocks = queueBlocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
             } else {
               availableBlocks = queueBlocks;
@@ -330,20 +343,21 @@ export default {
                 let bookingsReserved = [];
                 candidateQueues.push(queue);
                 if (candidateQueues && candidateQueues.length > 0) {
-                  candidateQueues.forEach(queue => {
-                    const bookings = state.allBookings;
-                    if (bookings && bookings.length > 0) {
-                      const reserved = bookings.map(booking => {
-                        if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
-                          return [...booking.block.blockNumbers];
-                        } else {
-                          return booking.block.number;
-                        }
-                      });
-                      bookingsReserved.push(reserved);
-                    }
-                  })
-                  const limit = candidateQueues.length - 1;
+                  const bookings = state.allBookings;
+                  if (bookings && bookings.length > 0) {
+                    const reserved = bookings.map(booking => {
+                      if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+                        return [...booking.block.blockNumbers];
+                      } else {
+                        return booking.block.number;
+                      }
+                    });
+                    bookingsReserved.push(reserved);
+                  }
+                  let limit = candidateQueues.length - 1;
+                  if (queue.value.serviceInfo !== undefined && queue.value.serviceInfo.blockLimit !== undefined && queue.value.serviceInfo.blockLimit > 0) {
+                    limit = queue.value.serviceInfo.blockLimit;
+                  }
                   if (limit > 0) {
                     const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
                     const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
@@ -392,16 +406,19 @@ export default {
               build.forEach(pos => {
                 blocks.push(state.availableBookingBlocks.filter(block => block.number === pos)[0]);
               })
-              const number = blocks[0].number;
-              const hourFrom = blocks[0].hourFrom;
-              const hourTo = blocks[amountofBlocksNeeded.value-1].hourTo;
-              superBlocks.push({
-                number,
-                hourFrom,
-                hourTo,
-                blocks,
-                blockNumbers: build
-              })
+              if (blocks && blocks.length > 0 && blocks[amountofBlocksNeeded.value-1] && blocks[amountofBlocksNeeded.value-1] !== undefined) {
+
+                const number = blocks[0].number;
+                const hourFrom = blocks[0].hourFrom;
+                const hourTo = blocks[amountofBlocksNeeded.value-1].hourTo;
+                superBlocks.push({
+                  number,
+                  hourFrom,
+                  hourTo,
+                  blocks,
+                  blockNumbers: build
+                })
+              }
             })
             state.availableBookingSuperBlocks = superBlocks;
           } else {

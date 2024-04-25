@@ -548,6 +548,7 @@ export default {
               <select
                 class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
                 v-model.trim="state.newUser.phoneCode"
+                @change="sendData"
                 id="attention-phoneCode-input-add">
                 <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">{{ code.label }}</option>
               </select>
@@ -670,8 +671,10 @@ export default {
             <div class="col form-floating">
               <select
                 class="form-control form-select btn btn-light select"
-                v-model.trim="state.newUser.origin"
-                id="attention-origin-input-add">
+                v-model="state.newUser.origin"
+                id="attention-origin-input-add"
+                @change="sendData"
+                >
                 <option v-for="code in state.originCodes" :key="code.id" :value="code.code">{{ $t(`origin.${code.id}`) }}</option>
               </select>
               <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.originText") }}</label>
@@ -694,15 +697,6 @@ export default {
                 <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
               </label>
             </div>
-          </div>
-          <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
-            <Warning>
-              <template v-slot:message>
-                <li v-for="(error, index) in errorsAdd" :key="index">
-                  {{ $t(error) }}
-                </li>
-              </template>
-            </Warning>
           </div>
         </div>
       </div>

@@ -168,7 +168,7 @@ export default {
       if (this.booking && this.booking.queueId) {
         this.queue = await getQueueById(this.booking.queueId);
       }
-      const queuesToTransfer = this.queues.filter(queue => queue.type === 'COLLABORATOR');
+      const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
       if (queuesToTransfer && queuesToTransfer.length > 0) {
         const date = this.booking.date;
         const bookings = await getPendingCommerceBookingsByDate(this.commerce.id, date);
@@ -181,7 +181,10 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          const limit = queuesToTransfer.length;
+          const limit = 1; //queuesToTransfer.length;
+          if (this.queue.serviceInfo !== undefined && this.queue.serviceInfo.blockLimit !== undefined && this.queue.serviceInfo.blockLimit > 0) {
+            limit = this.queue.serviceInfo.blockLimit;
+          }
           queuesToTransfer.forEach(queue => {
             const bookingsByQueue = groupedBookings[queue.id];
             if (bookingsByQueue && bookingsByQueue.length > 0) {

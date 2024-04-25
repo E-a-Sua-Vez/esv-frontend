@@ -808,7 +808,20 @@ export default {
                   return booking.block.number;
                 }
               });
-              availableBlocks = queueBlocks.filter(block => !bookingsReserved.flat(Infinity).includes(block.number));
+              let limit = 0;
+              if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                limit = state.queue.serviceInfo.blockLimit;
+              }
+              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+              const blockedBlocks = []
+              uniqueBlocksReserved.forEach(block => {
+                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                if (times >= limit) {
+                  blockedBlocks.push(block);
+                }
+              })
+              availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
             } else {
               availableBlocks = queueBlocks;
             }
@@ -848,7 +861,10 @@ export default {
                       bookingsReserved.push(reserved);
                     }
                   })
-                  const limit = candidateQueues.length - 1;
+                  let limit = candidateQueues.length - 1;
+                  if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                    limit = state.queue.serviceInfo.blockLimit;
+                  }
                   if (limit > 0) {
                     const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
                     const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
@@ -897,6 +913,19 @@ export default {
                 }
               }
               );
+              let limit = 0;
+              if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                limit = state.queue.serviceInfo.blockLimit;
+              }
+              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+              const blockedBlocks = []
+              uniqueBlocksReserved.forEach(block => {
+                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                if (times >= limit) {
+                  blockedBlocks.push(block);
+                }
+              })
               availableBlocks = queueBlocks.filter(block => !attentionsReserved.flat(Infinity).includes(block.number));
             } else {
               availableBlocks = queueBlocks;
@@ -945,7 +974,10 @@ export default {
                       attentionsReserved.push(reserved);
                     }
                   })
-                  const limit = candidateQueues.length - 1;
+                  let limit = candidateQueues.length - 1;
+                  if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                    limit = state.queue.serviceInfo.blockLimit;
+                  }
                   if (limit > 0) {
                     const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
                     const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
@@ -1081,16 +1113,18 @@ export default {
               build.forEach(pos => {
                 blocks.push(state.availableBookingBlocks.filter(block => block.number === pos)[0]);
               })
-              const number = blocks[0].number;
-              const hourFrom = blocks[0].hourFrom;
-              const hourTo = blocks[state.amountofBlocksNeeded-1].hourTo;
-              superBlocks.push({
-                number,
-                hourFrom,
-                hourTo,
-                blocks,
-                blockNumbers: build
-              })
+              if (blocks && blocks.length > 0 && blocks[state.amountofBlocksNeeded-1] && blocks[state.amountofBlocksNeeded-1] !== undefined) {
+                const number = blocks[0].number;
+                const hourFrom = blocks[0].hourFrom;
+                const hourTo = blocks[state.amountofBlocksNeeded-1].hourTo;
+                superBlocks.push({
+                  number,
+                  hourFrom,
+                  hourTo,
+                  blocks,
+                  blockNumbers: build
+                })
+              }
             })
             state.availableBookingSuperBlocks = superBlocks;
           } else {
@@ -1723,6 +1757,15 @@ export default {
                               {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                             </button>
                           </div>
+                        </div>
+                        <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsAdd" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
                         </div>
                     </div>
                   </div>
