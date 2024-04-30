@@ -53,7 +53,18 @@ export default {
       } catch (error) {
         this.loading = false;
       }
-    }
+    },
+    clasifyOutcomeStatus(status) {
+      if (status === 'PENDING') {
+        return 'bi-clock-fill icon yellow-icon';
+      } else if (status === 'CONFIRMED') {
+        return 'bi-check-circle-fill icon green-icon';
+      } else if (status === 'CANCELLED') {
+        return 'bi-x-circle-fill icon red-icon';
+      } else {
+        return 'bi-asteric icon blue-icon';
+      }
+    },
   },
   watch: {
     detailsOpened: {
@@ -77,14 +88,17 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card">
-      <div class="col-4 centered fw-bold">
-        {{ Number(outcome.paymentAmount).toLocaleString("de-DE") }}
-        <span v-if="outcome.type" :class="`badge bg-secondary metric-keyword-tag mx-1 fw-bold ${outcome.type === 'PRODUCT_REPLACEMENT' ? 'bg-success' : '' }`"> {{ outcome.type === 'PRODUCT_REPLACEMENT' ? 'R' : '' }}</span>
+      <div class="idNumber-title lefted fw-bold" v-if="outcome && outcome.type" >
+        <span class="badge service-badge bg-primary p-1">{{ outcome.outcomesTypesName }} </span>
       </div>
-      <div class="col-4 centered fw-bold date-title" v-if="outcome && outcome.title">
-        {{ outcome.title || 'N/I' }}
+      <div class="col-5 card-client-title lefted fw-bold" v-if="outcome && outcome.beneficiary">
+       {{ outcome.beneficiary }}
       </div>
-      <div class="col-4 centered date-title">
+      <div class="col-4 centered fw-bold date-title fw-bold">
+        {{ Number(outcome.amount).toLocaleString("de-DE") }}
+        <i v-if="outcome.status" :class="`bi ${clasifyOutcomeStatus(outcome.status)} mx-1`"> </i>
+      </div>
+      <div class="col-3 centered date-title">
         {{ getDate(outcome.paymentDate) }}
       </div>
     </div>
@@ -102,37 +116,45 @@ export default {
         class="detailed-data transition-slow">
         <div class="row m-1 centered">
           <div class="col">
-            <div class="" v-if="outcome.paid !== undefined && outcome.paid === true">
+            <div class="">
               <div class="mb-2">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
-              <div v-if="outcome.paid">
-                <span v-if="outcome.type" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeType') }} </span>
-                  {{ $t(`outcomeTypes.${outcome.type}`) }}
+              <div>
+                <span v-if="outcome.title" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeTitle') }} </span>
+                  {{ outcome.title }}
                 </span>
-                <span v-if="outcome.productName" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeProduct') }} </span>
-                  {{ outcome.productName }}
+                <span v-if="outcome.outcomesTypesName" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeType') }} </span>
+                  {{ outcome.outcomesTypesName }}
                 </span>
                 <span v-if="outcome.beneficiary" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeBeneficiary') }} </span>
                   {{ outcome.beneficiary }}</span>
-                <span v-if="outcome.amount" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
-                  {{ outcome.amount }}</span>
+                <span v-if="outcome.amount" class="badge mx-1 detail-data-badge bg-warning">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ outcome.amount }}</span>
                 <span v-if="outcome.paymentFiscalNote" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentFiscalNote') }} </span>
                   {{ $t(`paymentFiscalNotes.${outcome.paymentFiscalNote}`) }}</span>
                 <span v-if="outcome.paymentType" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentType') }} </span>
                   {{ $t(`paymentTypes.${outcome.paymentType}`) }}</span>
+                <span v-if="outcome.productName" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.outcomeProduct') }} </span>
+                  {{ outcome.productName }}
+                </span>
                 <span v-if="outcome.paymentMethod" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentMethod') }} </span>
                   {{ $t(`paymentClientMethods.${outcome.paymentMethod}`) }}</span>
-                <span v-if="outcome.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ outcome.paymentAmount }}</span>
+                <span v-if="outcome.quantity" class="badge mx-1 detail-data-badge bg-warning">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.productQuantity') }} </span>
+                  {{ outcome.quantity }}</span>
+                <span v-if="outcome.code" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.code') }} </span>
+                  {{ outcome.code }}
+                </span>
               </div>
               <hr>
             </div>

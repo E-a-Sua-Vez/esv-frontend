@@ -139,6 +139,11 @@
     "FUND_INCREASE": "Fund Increase",
     "STANDARD": "Standard"
   },
+  "incomeStatus": {
+    "CONFIRMED": "Confirmed",
+    "PENDING": "Pending",
+    "CANCELLED": "Cancelled"
+  },
   "paymentClientMethods": {
     "PAID": "Paid",
     "CREDIT_CARD": "Credit Card",
@@ -180,7 +185,8 @@
     "PROVIDERS_PAYMENT": "Provider Payment",
     "PAYROLL_PAYMENT": "Payroll Payment",
     "SERVICES_PAYMENT": "Service Payment",
-    "OTHER": "Other"
+    "OTHER": "Other",
+    "STANDARD": "Normal Outcome"
   },
   "configuration": {
     "types": {
@@ -423,7 +429,8 @@
     "installments": "Installemnts:",
     "totalAmount": "Total Amount:",
     "package": "Package:",
-    "service": "Service:"
+    "service": "Service:",
+    "outcomeTitle": "Reason:"
   },
   "searchAdminItem": {
     "message": {
@@ -1352,6 +1359,7 @@
     "queueData": "Queue/Service:",
     "contactMethod": "Contact Method:",
     "outcomes": "Outcomes",
+    "paymentStatus": "Payment Status",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1814,6 +1822,7 @@
     "manage-admin": "Manage",
     "control-admin": "Control",
     "go-minisite": "Minisite",
+    "outcome-types-admin": "Outcome Types",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1844,7 +1853,8 @@
           "product-admin": "Stock Control",
           "financial": "Financial Management",
           "marketing": "Marketing",
-          "patients": "Patients Management"
+          "patients": "Patients Management",
+          "outcome-types-admin": "Outcome Types Management"
         }
       }
     }
@@ -1908,7 +1918,8 @@
     "surveys-admin": "Surveys",
     "manage-master-admin": "Manage",
     "control-master-admin": "Control",
-    "go-minisite": "Minisite"
+    "go-minisite": "Minisite",
+    "outcome-types-master-admin": "Outcome Types"
   },
   "businessSectionAtWorkView": {
     "welcome": "Welcome!",
@@ -2176,6 +2187,7 @@
     "add": "Add",
     "outcomePaymentAmount": "Amount:",
     "outcomeBeneficiary": "Beneficiary:",
+    "expireDate": "Expiration:",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -2363,6 +2375,54 @@
     },
     "validate": {
       "name": "You should enter the name"
+    }
+  },
+  "businessOutcomeTypesAdmin": {
+    "title": "Outcome Types",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "tag": "Tag:",
+    "type": "Type:",
+    "active": "Active:",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no outcome types."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of outcome types. To add more modules, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no commerces. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "outcome-types": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Outcome Types",
+          "edit": "Edit the Outcome Types",
+          "update": "Update the Outcome Types",
+          "add": "Add Outcome Types",
+          "limit": "Limit amount of Outcome Types",
+          "unavailable": "Delete Outcome Types"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "tag": "You should enter the tag",
+      "type": "You should select the type"
     }
   },
   "businessCollaboratorsAdmin": {
@@ -2611,6 +2671,14 @@
         "10": {
           "name": "Attention Stock Use Report",
           "description": "Attention Stock Use of the commerce between the selected dates."
+        },
+        "11": {
+          "name": "Incomes Report",
+          "description": "Incomes of the commerce between the selected dates."
+        },
+        "12": {
+          "name": "Outcomes Report",
+          "description": "Outcomes of the commerce between the selected dates."
         }
       }
     },
@@ -2627,7 +2695,9 @@
           "clients": "Clients Report",
           "booking-payments": "Booking Payment Report",
           "attention-payments": "Attention Payment Report",
-          "attention-products": "Attention Stock Use Report"
+          "attention-products": "Attention Stock Use Report",
+          "incomes": "Incomes Report",
+          "outcomes": "Outcomes Report"
         }
       }
     }
@@ -3183,7 +3253,8 @@
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
         "manage-admin": "Enable Artifacts Admin - Main Menu Business",
-        "control-admin": "Enable Transactional Control - Main Menu Business"
+        "control-admin": "Enable Transactional Control - Main Menu Business",
+        "outcome-types-admin": "Enable Manage Outcome Types - Main Menu Business"
       }
     },
     "administrators": {

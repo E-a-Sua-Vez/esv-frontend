@@ -173,6 +173,7 @@ export default {
           };
           this.newIncome.status = 'CONFIRMED';
           await createIncome(this.newIncome);
+          await this.refresh();
           this.showAdd = false;
           this.closeAddModal();
           this.newIncome = {}

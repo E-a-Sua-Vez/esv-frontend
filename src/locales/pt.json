@@ -134,6 +134,11 @@
     "FUND_INCREASE": "Aumento de Fundos",
     "STANDARD": "Recebemento Normal"
   },
+  "incomeStatus": {
+    "CONFIRMED": "Confirmado",
+    "PENDING": "Pendente",
+    "CANCELLED": "Cancelado"
+  },
   "paymentClientMethods": {
     "PAID": "Pago",
     "CREDIT_CARD": "C. Crédito",
@@ -180,7 +185,8 @@
     "PROVIDERS_PAYMENT": "Pagamento Fornecedor",
     "PAYROLL_PAYMENT": "Pagamento Funcionários",
     "SERVICES_PAYMENT": "Pagamento Serviços",
-    "OTHER": "Outro"
+    "OTHER": "Outro",
+    "STANDARD": "Despesa Normal"
   },
   "configuration": {
     "types": {
@@ -423,7 +429,8 @@
     "installments": "Parcelas:",
     "totalAmount": "Valor Total:",
     "package": "Pacote:",
-    "service": "Serviço:"
+    "service": "Serviço:",
+    "outcomeTitle": "Conceito:"
   },
   "searchAdminItem": {
     "message": {
@@ -1353,6 +1360,7 @@
     "queueData": "Fila/Serviço:",
     "contactMethod": "Meio de Contato",
     "outcomes": "Despesas",
+    "paymentStatus": "Status de Pagamento",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1815,6 +1823,7 @@
     "manage-admin": "Cadastro",
     "control-admin": "Gestão",
     "go-minisite": "Minisite",
+    "outcome-types-admin": "Tipos de Despesa",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1844,7 +1853,8 @@
           "product-admin": "Gerenciar Produtos",
           "financial": "Gestão Financeira",
           "marketing": "Marketing",
-          "patients": "Gestão de Pacientes"
+          "patients": "Gestão de Pacientes",
+          "outcome-types-admin": "Gestão de Tipos de Despesa"
         }
       }
     }
@@ -1880,7 +1890,8 @@
     "surveys-admin": "Gerenciar Pesquisas",
     "manage-master-admin": "Gerenciar",
     "control-master-admin": "Gestão",
-    "go-minisite": "Minisite"
+    "go-minisite": "Minisite",
+    "outcome-types-master-admin": "Tipos de Despesa"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",
@@ -2184,6 +2195,7 @@
     "add": "Adicionar",
     "outcomePaymentAmount": "Valor:",
     "outcomeBeneficiary": "Beneficiário:",
+    "expireDate": "Vencimento:",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2365,12 +2377,61 @@
           "edit": "Editar os Módulos",
           "update": "Atualizar os Módulos",
           "add": "Adicionar Módulos",
-          "limit": "Número limite de Módulos"
+          "limit": "Número limite de Módulos",
+          "unavailable": "Deletar Módulos"
         }
       }
     },
     "validate": {
       "name": "Você deve digitar o nome"
+    }
+  },
+  "businessOutcomeTypesAdmin": {
+    "title": "Tipos de Despesa",
+    "commerce": "Selecione uma unidade:",
+    "name": "Nome:",
+    "tag": "Tag:",
+    "Type": "Tipo:",
+    "return": "Voltar",
+    "active": "Ativo:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "listResult": "Registros:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Tipos de Despesa."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de Tipos de Despesa. Para adicionar mais módulos, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há comércios. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "outcome-types": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Tipos de Despesa",
+          "edit": "Editar os Tipos de Despesa",
+          "update": "Atualizar os Tipos de Despesa",
+          "add": "Adicionar Tipos de Despesa",
+          "limit": "Número limite de Tipos de Despesa",
+          "unavailable": "Deletar Tipos de Despesa"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "tag": "Você deve digitar o tag",
+      "type": "Você deve selecionar o tipo"
     }
   },
   "businessAdministratorAdmin": {
@@ -2415,7 +2476,8 @@
           "edit": "Editar os Administradores",
           "update": "Atualizar os Administradores",
           "add": "Adicionar Administradores",
-          "limit": "Número limite de Administradores"
+          "limit": "Número limite de Administradores",
+          "unavailable": "Deletar Administradores"
         }
       }
     },
@@ -2584,43 +2646,51 @@
       "reports": {
         "1": {
           "name": "Relatório de Atendimentos",
-          "description": "Lista de Atendimentos do comércio entre as datas selecionadas."
+          "description": "Lista de Atendimentos do comércio nas datas selecionadas."
         },
         "2": {
           "name": "Relatório de Notificações",
-          "description": "Lista de Notificações do comércio entre as datas selecionadas."
+          "description": "Lista de Notificações do comércio nas datas selecionadas."
         },
         "3": {
           "name": "Relatório de Pesquisas",
-          "description": "Lista de Pesquisas do comércio entre as datas selecionadas."
+          "description": "Lista de Pesquisas do comércio nas datas selecionadas."
         },
         "4": {
           "name": "Relatório de Reservas",
-          "description": "Lista de Reservas do comércio entre as datas selecionadas."
+          "description": "Lista de Reservas do comércio nas datas selecionadas."
         },
         "5": {
           "name": "Relatório de Lista de Espera",
-          "description": "Lista de Espera do comércio entre as datas selecionadas."
+          "description": "Lista de Espera do comércio nas datas selecionadas."
         },
         "6": {
           "name": "Relatório de Clientes",
-          "description": "Lista de Clientes do comércio entre as datas selecionadas."
+          "description": "Lista de Clientes do comércio nas datas selecionadas."
         },
         "7": {
           "name": "Relatório de Contatos de Clientes",
-          "description": "Lista de Contatos de Clientes do comércio entre as datas selecionadas."
+          "description": "Lista de Contatos de Clientes do comércio nas datas selecionadas."
         },
         "8": {
           "name": "Relatório de Pagamento de Reservas",
-          "description": "Listado de Pagamento de Reservas del comercio entre las fechas seleccionadas."
+          "description": "Listado de Pagamento de Reservas do comércio nas datas selecionadas."
         },
         "9": {
           "name": "Relatório de Pagamento de Atendimentos",
-          "description": "Listado de Pagamento de Atendimentos del comercio entre las fechas seleccionadas."
+          "description": "Listado de Pagamento de Atendimentos do comércio nas datas selecionadas."
         },
         "10": {
           "name": "Relatório de Uso de Estoque",
-          "description": "Listado de Uso de Estoque de Atendimentos del comercio entre las fechas seleccionadas."
+          "description": "Listado de Uso de Estoque de Atendimentos do comércio nas datas selecionadas."
+        },
+        "11": {
+          "name": "Relatório de Recebimentos",
+          "description": "Listado de Recebimentos do comércio nas datas selecionadas."
+        },
+        "12": {
+          "name": "Relatório de Despesas",
+          "description": "Listado de Despesas do comércio nas datas selecionadas."
         }
       }
     },
@@ -2637,7 +2707,9 @@
           "clients": "Relatório de Clientes",
           "booking-payments": "Relatório de Pagamento de Reservas",
           "attention-payments": "Relatório de Pagamento de Atendimentos",
-          "attention-products": "Relatórios de Uso de Estoque de Atendimentos"
+          "attention-products": "Relatórios de Uso de Estoque de Atendimentos",
+          "incomes": "Relatório de Recebimentos",
+          "outcomes": "Relatório de Despesas"
         }
       }
     }
@@ -2669,7 +2741,7 @@
       "reports": {
         "1": {
           "name": "Estado do Sistema",
-          "description": "Estado do Sistema do comércio entre as datas selecionadas."
+          "description": "Estado do Sistema do comércio nas datas selecionadas."
         }
       }
     },
@@ -3185,7 +3257,8 @@
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
         "manage-admin": "Habilitar Cadastrar Artefatos - Menú Principal Negócio",
-        "control-admin": "Habilitar Gerenciamento Transacional - Menú Principal Negócio"
+        "control-admin": "Habilitar Gerenciamento Transacional - Menú Principal Negócio",
+        "outcome-types-admin": "Habilitar Gerenciamento Tipos de Despesa - Menú Principal Negócio"
       }
     },
     "collaborators": {

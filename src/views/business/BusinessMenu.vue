@@ -57,6 +57,7 @@ export default {
         'collaborators-admin',
         'surveys-admin',
         'product-admin',
+        'outcome-types-admin',
         'permissions-admin'
       ],
       currentPlanActivation: {},

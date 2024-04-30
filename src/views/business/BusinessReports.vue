@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getAttentionsReport, getNotificationsReport, getSurveysReport,
    getBookingsReport, getWaitlistsReport, getClientsReport, getClientContactsReport,
-   getBookingPaymentsResume, getAttentionPaymentsResume, getAttentionProductsResume } from '../../application/services/query-stack';
+   getBookingPaymentsResume, getAttentionPaymentsResume, getAttentionProductsResume,
+   getIncomesResume, getOutcomesResume } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Message from '../../components/common/Message.vue';
@@ -235,6 +236,32 @@ export default {
       }
     }
 
+    const downloadIncomesReport = async () => {
+      try {
+        loading.value = true;
+        const result = await getIncomesResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        downloadReport(result, 'incomes');
+        loading.value = false;
+      } catch (error) {
+        console.log("🚀 ~ downloadIncomesReport ~ error:", error);
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
+    const downloadOutcomesReport = async () => {
+      try {
+        loading.value = true;
+        const result = await getOutcomesResume(state.commerce.id, state.selectedCommerces, state.startDate, state.endDate);
+        downloadReport(result, 'outcomes');
+        loading.value = false;
+      } catch (error) {
+        console.log("🚀 ~ downloadOutcomesReport ~ error:", error);
+        alertError.value = error.response.status || 500;
+        loading.value = false;
+      }
+    }
+
     const getToday = async () => {
       const date = new Date().toISOString().slice(0,10);
       const [ year, month, day ] = date.split('-');
@@ -283,7 +310,9 @@ export default {
       downloadClientContactsReport,
       downloadBookingPaymentsReport,
       downloadAttentionPaymentsReport,
-      downloadAttentionProductsReport
+      downloadAttentionProductsReport,
+      downloadIncomesReport,
+      downloadOutcomesReport
     }
   }
 }
@@ -430,26 +459,6 @@ export default {
                   @download="downloadClientContactsReport"
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
-                  :show="!!state.toggles['reports.admin.booking-payments']"
-                  :canDonwload="!!state.toggles['reports.admin.booking-payments']"
-                  :title="$t('businessReports.items.reports.8.name')"
-                  :showTooltip="true"
-                  :description="$t('businessReports.items.reports.8.description')"
-                  :icon="'bi-cash-coin'"
-                  :iconStyleClass="'orange-icon'"
-                  @download="downloadBookingPaymentsReport"
-                ></SimpleDownloadCard>
-                <SimpleDownloadCard
-                  :show="!!state.toggles['reports.admin.attention-payments']"
-                  :canDonwload="!!state.toggles['reports.admin.attention-payments']"
-                  :title="$t('businessReports.items.reports.9.name')"
-                  :showTooltip="true"
-                  :description="$t('businessReports.items.reports.9.description')"
-                  :icon="'bi-cash-coin'"
-                  :iconStyleClass="'blue-icon'"
-                  @download="downloadAttentionPaymentsReport"
-                ></SimpleDownloadCard>
-                <SimpleDownloadCard
                   :show="!!state.toggles['reports.admin.attention-products']"
                   :canDonwload="!!state.toggles['reports.admin.attention-products']"
                   :title="$t('businessReports.items.reports.10.name')"
@@ -457,7 +466,27 @@ export default {
                   :description="$t('businessReports.items.reports.10.description')"
                   :icon="'bi-eyedropper'"
                   :iconStyleClass="'red-icon'"
-                  @download="downloadAttentionProductsReport"
+                  @download="downloadIncomesReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="!!state.toggles['reports.admin.incomes']"
+                  :canDonwload="!!state.toggles['reports.admin.incomes']"
+                  :title="$t('businessReports.items.reports.11.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.11.description')"
+                  :icon="'bi-cash-coin'"
+                  :iconStyleClass="'blue-icon'"
+                  @download="downloadIncomesReport"
+                ></SimpleDownloadCard>
+                <SimpleDownloadCard
+                  :show="!!state.toggles['reports.admin.outcomes']"
+                  :canDonwload="!!state.toggles['reports.admin.outcomes']"
+                  :title="$t('businessReports.items.reports.12.name')"
+                  :showTooltip="true"
+                  :description="$t('businessReports.items.reports.12.description')"
+                  :icon="'bi-cash-coin'"
+                  :iconStyleClass="'red-icon'"
+                  @download="downloadOutcomesReport"
                 ></SimpleDownloadCard>
               </div>
             </div>

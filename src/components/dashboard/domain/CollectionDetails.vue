@@ -1,10 +1,11 @@
 <script>
 import Popper from "vue3-popper";
-import AttentionCollectionDetails from './AttentionCollectionDetails.vue';
+import IncomesCollectionDetails from './IncomesCollectionDetails.vue';
+import OutcomesCollectionDetails from './OutcomesCollectionDetails.vue';
 
 export default {
   name: 'CollectionDetails',
-  components: { AttentionCollectionDetails, Popper },
+  components: { IncomesCollectionDetails, Popper, OutcomesCollectionDetails },
   props: {
     show: { type: Boolean, default: true },
     calculatedMetrics: { type: Object, default: { } },
@@ -72,17 +73,18 @@ export default {
               <i class='bi bi-info-circle-fill h7'></i>
             </Popper>
           </div>
-          <AttentionCollectionDetails
+          <IncomesCollectionDetails
             :show="show"
             :distribution="calculatedMetrics['incomes.created'].paymentData"
             :count="calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0"
+            :distributionPayment="calculatedMetrics['incomes.created'].paymentDistribution"
             :distributionType="calculatedMetrics['incomes.created'].paymentTypeDistribution"
             :distributionMethod="calculatedMetrics['incomes.created'].paymentMethodDistribution"
             :distributionFiscalNote="calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >
-          </AttentionCollectionDetails>
+          </IncomesCollectionDetails>
         </div>
       </Transition>
       <Transition name="flip">
@@ -97,16 +99,16 @@ export default {
               <i class='bi bi-info-circle-fill h7'></i>
             </Popper>
           </div>
-          <AttentionCollectionDetails
+          <OutcomesCollectionDetails
             :show="show"
-            :distribution="calculatedMetrics['incomes.created'].confirmedData"
-            :count="calculatedMetrics['incomes.created']['confirmedData'].paymentCounter || 0"
-            :distributionType="calculatedMetrics['incomes.created'].paymentTypeDistribution"
-            :distributionMethod="calculatedMetrics['incomes.created'].paymentMethodDistribution"
+            :distribution="calculatedMetrics['outcomes.created'].paymentData"
+            :distributionPayment="calculatedMetrics['outcomes.created'].paymentDistribution"
+            :count="calculatedMetrics['outcomes.created']['paymentData'].paymentCounter || 0"
+            :distributionType="calculatedMetrics['outcomes.created'].paymentTypeDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >
-          </AttentionCollectionDetails>
+          </OutcomesCollectionDetails>
         </div>
       </Transition>
     </div>

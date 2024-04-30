@@ -69,7 +69,6 @@ export default {
       </div>
       <div class="col-6 card-client-title lefted fw-bold" v-if="attention && attention.userName">
         {{ attention.userName?.trim().toUpperCase() || '' }} {{ attention.userLastName?.trim().toUpperCase() || '' }}
-
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
         <i v-if="attention.paid !== undefined && attention.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
         <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>

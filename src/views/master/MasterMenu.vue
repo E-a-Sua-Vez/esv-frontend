@@ -59,6 +59,7 @@ export default {
         'administrators-master-admin',
         'collaborators-master-admin',
         'surveys-master-admin',
+        'outcome-types-master-admin',
         'product-master-admin',
       ]
     });

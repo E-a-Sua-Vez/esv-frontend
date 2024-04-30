@@ -190,6 +190,28 @@ export const getAttentionProductsResume = async (commerceId, commerceIds, from, 
   return (await requestQuery.get('reports/attention-products', options)).data;
 };
 
+export const getIncomesResume = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/incomes', options)).data;
+};
+
+export const getOutcomesResume = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/outcomes', options)).data;
+};
+
 export const getSurveys = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
@@ -561,5 +583,5 @@ export const getOutcomesDetails = async (
   };
   const { headers } = await getHeaders();
   options.headers = headers;
-  return (await requestQuery.get('outcomes/details', options)).data;
+  return (await requestQuery.get('outcome/details', options)).data;
 };

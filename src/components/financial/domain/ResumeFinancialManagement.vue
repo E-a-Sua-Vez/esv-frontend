@@ -16,12 +16,14 @@ import PDFFooter from '../../reports/PDFFooter.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 import { getFinancialMetrics } from '../../../application/services/query-stack';
 import CollectionDetails from '../../dashboard/domain/CollectionDetails.vue';
+import IncomesCollectionDetails from '../../dashboard/domain/IncomesCollectionDetails.vue';
+import OutcomesCollectionDetails from '../../dashboard/domain/OutcomesCollectionDetails.vue';
 
 Chart.register(...registerables);
 
 export default {
   name: 'ResumeFinancialManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter, SimpleDownloadButton, CollectionDetails },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter, SimpleDownloadButton, CollectionDetails, IncomesCollectionDetails, OutcomesCollectionDetails },
   props: {
     showResumeFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -41,8 +43,7 @@ export default {
           paymentData: {},
         },
         outcomes: {
-          total: 4560,
-          avg: 36.95
+          paymentData: {},
         },
         resume: {
           diff: 7780,
@@ -57,7 +58,8 @@ export default {
       user: undefined,
       startDate: undefined,
       endDate: undefined,
-      calculatedMetrics: {},
+      calculatedMetrics: {
+      },
       detailsOpened: false
     }
   },
@@ -67,8 +69,7 @@ export default {
         paymentData: {},
       },
       outcomes: {
-        total: 4560,
-        avg: 36.95
+        paymentData: {},
       },
       resume: {
         diff: 7780,
@@ -99,10 +100,12 @@ export default {
         const { calculatedMetrics } = await getFinancialMetrics(commerceIds, this.startDate, this.endDate);
         this.calculatedMetrics = calculatedMetrics;
         const incomes = calculatedMetrics['incomes.created'];
-        this.financialResume.incomes = incomes
+        const outcomes = calculatedMetrics['outcomes.created'];
+        this.financialResume.incomes = incomes;
+        this.financialResume.outcomes = outcomes
         const { barChartProps: financialEvolution } = useBarChart({
           chartData: {
-            labels: incomes['evolution']['labels'] || [],
+            labels: Array.from(new Set([...incomes['evolution']['labels'], ...outcomes['evolution']['labels']])),
             datasets: [
               {
                 label: 'Incomes',
@@ -134,8 +137,7 @@ export default {
                 borderColor: '#a52a2a',
                 backgroundColor: "rgba(255, 99, 71, 0.8)",
                 borderDash: [2, 2],
-                borderDash: [2, 2],
-                data: [ ],
+                data: outcomes['evolution']['datasets'].map(data => data['paymentAmountSum']) || [],
                 fill: false,
                 tension: .1,
                 radius: 0,
@@ -149,6 +151,10 @@ export default {
           }
         });
         this.financialResume.evolution = financialEvolution;
+        const diff = ((+incomes.paymentData.paymentAmountSum || 0) - ((+incomes.paymentData.paymentCommissionSum || 0) + (+outcomes.paymentData.paymentAmountSum || 0))) || 0;
+        this.financialResume.resume.diff = diff || 0;
+        const avg = this.getPercentage((diff || 0), (+incomes.paymentData.paymentAmountSum || 1));
+        this.financialResume.resume.avg = avg
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -179,14 +185,16 @@ export default {
           doc = undefined;
           this.loading = false;
           this.downloading = false;
+          this.detailsOpened = false;
         }).catch(error => {
           document.getElementById("pdf-header").style.display = "none";
           document.getElementById("pdf-footer").style.display = "none";
           doc = undefined;
           this.loading = false;
           this.downloading = false;
+          this.detailsOpened = false;
         });
-      }, 2100);
+      }, 1100);
     },
     async getUserType() {
       this.userType = await this.store.getCurrentUserType;
@@ -221,7 +229,11 @@ export default {
       const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
       this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
       await this.refresh();
-    }
+    },
+    getPercentage(value, total) {
+      const percentage = (value * 100) / total;
+      return parseFloat(percentage.toFixed(2), 2) || 0;
+    },
   },
   watch: {
     store: {
@@ -313,20 +325,45 @@ export default {
               </PDFHeader>
               <div>
                 <div class="row">
-                  <div v-if="calculatedMetrics['incomes.created']">
-                    <CollectionDetails
-                      :show="!!toggles['financial.reports.resume']"
-                      :calculatedMetrics="calculatedMetrics"
-                      :detailsOpened="detailsOpened"
-                    >
-                    </CollectionDetails>
+                  <div v-if="calculatedMetrics !== {}">
+                    <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
+                      <div class="metric-card-title">
+                        <span> {{ $t("dashboard.incomes") }} </span>
+                      </div>
+                      <IncomesCollectionDetails
+                        :show="!!toggles['financial.reports.resume']"
+                        :distribution="calculatedMetrics['incomes.created'].paymentData"
+                        :count="calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0"
+                        :distributionPayment="calculatedMetrics['incomes.created'].paymentDistribution"
+                        :distributionType="calculatedMetrics['incomes.created'].paymentTypeDistribution"
+                        :distributionMethod="calculatedMetrics['incomes.created'].paymentMethodDistribution"
+                        :distributionFiscalNote="calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution"
+                        :detailsOpened="detailsOpened"
+                      >
+                      </IncomesCollectionDetails>
+                    </div>
+                    <div class="metric-card" v-if="calculatedMetrics['outcomes.created']">
+                      <div class="metric-card-title">
+                        <span> {{ $t("dashboard.outcomes") }} </span>
+                      </div>
+                      <OutcomesCollectionDetails
+                        :show="!!toggles['financial.reports.resume']"
+                        :distribution="calculatedMetrics['outcomes.created'].paymentData"
+                        :distributionPayment="calculatedMetrics['outcomes.created'].paymentDistribution"
+                        :count="calculatedMetrics['outcomes.created']['paymentData'].paymentCounter || 0"
+                        :distributionType="calculatedMetrics['outcomes.created'].paymentTypeDistribution"
+                        :detailsOpened="detailsOpened"
+                      >
+                      </OutcomesCollectionDetails>
+                    </div>
                   </div>
                 </div>
                 <div class="row">
                   <div id="profit" class="col">
                     <SimpleCard
                       :show="true"
-                      :data="+financialResume['incomes']['paymentData']['paymentCommissionSum'] || 0"
+                      :data="+financialResume['resume']['diff'] || 0"
+                      :subdata="`${+financialResume['resume']['avg'] || 0}%`"
                       :title="$t('businessFinancial.profit')"
                       :showTooltip="false"
                       :icon="'bi-arrow-up-circle-fill'"
@@ -384,8 +421,8 @@ export default {
   border: .5px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
-  font-weight: 600;
+  font-size: .8rem;
+  font-weight: 500;
   line-height: .8rem;
   align-items: center;
   justify-content: center;

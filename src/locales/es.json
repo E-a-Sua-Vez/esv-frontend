@@ -139,6 +139,11 @@
     "STANDARD": "Entrada Normal",
     "FUND_INCREASE": "Incremento de Fondos"
   },
+  "incomeStatus": {
+    "CONFIRMED": "Confirmado",
+    "PENDING": "Pendiente",
+    "CANCELLED": "Cancelado"
+  },
   "paymentClientMethods": {
     "PAID": "Pagado",
     "CREDIT_CARD": "T. Crédito",
@@ -180,7 +185,8 @@
     "PROVIDERS_PAYMENT": "Pago Proveedores",
     "PAYROLL_PAYMENT": "Pago Nómina",
     "SERVICES_PAYMENT": "Pago Servicios",
-    "OTHER": "Otro"
+    "OTHER": "Otro",
+    "STANDARD": "Egreso Normal"
   },
   "configuration": {
     "types": {
@@ -420,7 +426,8 @@
     "installments": "Cuotas:",
     "totalAmount": "Total Procedimiento:",
     "package": "Paquete:",
-    "service": "Servicio:"
+    "service": "Servicio:",
+    "outcomeTitle": "Concepto:"
   },
   "searchAdminItem": {
     "message": {
@@ -1333,6 +1340,7 @@
     "payments": "Pagos",
     "incomes": "Ingresos",
     "commissions": "Comisiones",
+    "paymentStatus": "Status de Pago",
     "paymentType": "Tipo de pago",
     "paymentMethod": "Medio de pago",
     "paymentFiscalNote": "Nota Fiscal",
@@ -1806,6 +1814,7 @@
     "collaborators-admin": "Colaboradores",
     "permissions-admin": "Permisos",
     "modules-admin": "Módulos",
+    "outcome-types-admin": "Tipos de Egreso",
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
     "manage-admin": "Registro",
@@ -1842,7 +1851,8 @@
           "product-admin": "Administrar Productos",
           "financial": "Gestión Financiera",
           "marketing": "Marketing",
-          "patients": "Gestión de Pacientes"
+          "patients": "Gestión de Pacientes",
+          "outcome-types-admin": "Administrar Tipos de Egreso"
         }
       }
     }
@@ -1876,6 +1886,7 @@
     "surveys-master-admin": "Encuestas",
     "features-master-admin": "Administrar Permisos",
     "modules-master-admin": "Módulos",
+    "outcome-types-master-admin": "Tipos de Egreso",
     "plan-activations-admin": "Activación de Planes",
     "manage-master-admin": "Administrar",
     "control-master-admin": "Gestión",
@@ -2271,6 +2282,7 @@
     "outcomePaymentAmount": "Monto:",
     "outcomeBeneficiary": "Beneficiario:",
     "commission": "Comisión",
+    "expireDate": "Vencimiento:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2366,6 +2378,54 @@
     },
     "validate": {
       "name": "Debes ingresar el nombre"
+    }
+  },
+  "businessOutcomeTypesAdmin": {
+    "title": "Tipos de Egreso",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "name": "Nombre:",
+    "tag": "Tag:",
+    "active": "Activo:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "listResult": "Registros:",
+    "type": "Tipo:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay tipos de egreso de atención."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de tipo de egresos. Para agregar más módulos cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay comercios. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "outcome-types": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Tipos de Egreso",
+          "edit": "Editar los Tipos de Egreso",
+          "update": "Actualizar los Tipos de Egreso",
+          "add": "Agregar Tipos de Egreso",
+          "limit": "Cantidad límite de Tipos de Egreso",
+          "unavailable": "Eliminar Tipos de Egreso"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "tag": "Debes ingresar el tag",
+      "type": "Debe seleccionar el tipo"
     }
   },
   "businessAdministratorAdmin": {
@@ -2615,6 +2675,14 @@
         "10": {
           "name": "Informe de Uso Stock de Atenciones",
           "description": "Listado de Uso Stock de Atenciones del comercio entre las fechas seleccionadas."
+        },
+        "11": {
+          "name": "Informe de Ingresos",
+          "description": "Listado de Ingresos del comercio entre las fechas seleccionadas."
+        },
+        "12": {
+          "name": "Informe de Egresos",
+          "description": "Listado de Egresos del comercio entre las fechas seleccionadas."
         }
       }
     },
@@ -2631,6 +2699,8 @@
           "client-contacts": "Informe de Contactos de Clientes",
           "booking-payments": "Informe de Pagos de Reservas",
           "attention-payments": "Informe de Pagos de Atenciones",
+          "incomes": "Informe de Ingresos",
+          "outcomes": "Informe de Egresos",
           "attention-products":"Informe de Uso de Stock Atenciones"
         }
       }
@@ -3186,7 +3256,8 @@
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
         "manage-admin": "Habilitar Registrar Artefactos - Menú Principal Negocio",
-        "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio"
+        "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio",
+        "outcome-types-admin": "Habilitar Gestión Tipos de Egreso - Menú Principal Negocio"
       }
     },
     "collaborators": {

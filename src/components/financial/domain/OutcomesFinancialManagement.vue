@@ -7,12 +7,13 @@ import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
-import { getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
+import { getOutcomeTypesByCommerceId } from '../../../application/services/outcome-type';
+import { createOutcome } from '../../../application/services/outcome';
 import { getDate } from '../../../shared/utils/date';
 import { getOutcomesDetails } from '../../../application/services/query-stack';
+import { getProductByCommerce } from '../../../application/services/product';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
 import Toggle from '@vueform/toggle';
-import { getOutcomeTypes } from '../../../shared/utils/data';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 
 export default {
@@ -51,47 +52,22 @@ export default {
       outcomeDateError: false,
       outcomeTypeError: false,
       outcomeProductError: false,
-      outcomeExpireDate: false,
+      expireDateError: false,
       outcomePaymentAmountError: false,
       outcomeAmountError: false,
       startDate: undefined,
       endDate: undefined,
       newOutcome: {},
-      outcomeTypes: []
+      outcomeTypes: [],
+      outcomeTypeSelected: {},
+      products: []
     }
   },
   async beforeMount() {
-    this.outcomeTypes = getOutcomeTypes();
-    this.financialOutcomes = [
-      {
-        id: 'LzgvWXNa4n53urFQk1Re',
-        paymentDate: '2024-04-18T01:03:39.753Z',
-        type: 'PRODUCT_REPLACEMENT',
-        paymentType: 'TOTALLY',
-        paymentMethod: 'CREDIT_CARD',
-        paid: true,
-        paymentAmount: 1600,
-        amount: 800,
-        title: 'Compra Botox',
-        productId: '1',
-        productName: 'Botox',
-        beneficiary: 'BOTOX SANTA LAURA C.A.',
-        user: 'carolinadiaz@semprebela.com'
-      },
-      {
-        id: 'LzgvWXNa4n53urFQk1Re',
-        paymentDate: '2024-04-05T01:03:39.753Z',
-        type: 'OTHER',
-        paymentType: 'TOTALLY',
-        paymentMethod: 'PIX',
-        paid: true,
-        paymentAmount: 17400,
-        amount: 800,
-        title: 'Pagamento Funcionários',
-        productId: '1',
-        user: 'carolinadiaz@semprebela.com'
-      }
-    ]
+    if (this.commerce && this.commerce.id) {
+      this.outcomeTypes = await getOutcomeTypesByCommerceId(this.commerce.id);
+      this.products = await getProductByCommerce(this.commerce.id);
+    }
   },
   methods: {
     setPage(pageIn) {
@@ -134,12 +110,9 @@ export default {
       this.showFilterOptions = !this.showFilterOptions;
     },
     async showAdd() {
-      if (this.commerce && this.commerce.id && this.products.length === 0) {
-        this.products = await getProductByCommerce(this.commerce.id);
-      }
-      this.showAddOption = !this.showAddOption;
-      this.newOutcomeConsumption = {
-        consumptionDate: new Date().toISOString().slice(0,10),
+      this.showAddOption = true;
+      this.newOutcome = {
+        date: new Date().toISOString().slice(0,10),
       }
     },
     updatePaginationData() {
@@ -219,7 +192,7 @@ export default {
       } else {
         this.outcomeTypeError = false;
       }
-      if(!outcome.paymentAmount || outcome.paymentAmount <= 0) {
+      if(!outcome.amount || outcome.amount <= 0) {
         this.outcomePaymentAmountError = true;
         this.errorsAdd.push('businessFinancial.validate.paymentAmount');
       } else {
@@ -238,7 +211,7 @@ export default {
         this.outcomeDateError = false;
       }
       if (outcome.type && outcome.type === 'PRODUCT_REPLACEMENT') {
-        if(!outcome.amount || outcome.amount.length === 0) {
+        if(!outcome.quantity || outcome.quantity.length === 0) {
           this.outcomeAmountError = true;
           this.errorsAdd.push('businessFinancial.validate.amount');
         } else {
@@ -254,14 +227,19 @@ export default {
       try {
         this.loading = true;
         if (this.validateAdd(this.newOutcome)) {
-          this.newOutcome.commerceId = state.commerce.id;
-          this.showAdd = false;
+          this.newOutcome.commerceId = this.commerce.id;
+          this.newOutcome.status = 'CONFIRMED';
+          await createOutcome(this.newOutcome);
+          await this.refresh();
+          this.showAddOption = false;
           this.closeAddModal();
           this.newOutcome = {}
         }
+
         this.alertError = '';
         this.loading = false;
       } catch (error) {
+        console.log("🚀 ~ add ~ error:", error);
         this.alertError = error.response.status || 500;
         this.loading = false;
       }
@@ -273,7 +251,10 @@ export default {
     selectType ($event) {
       if ($event && $event.target) {
         const outcomeType = $event.target.value;
-        this.newOutcome.title = this.$t(`outcomeTypes.${outcomeType}`);
+        if (outcomeType && outcomeType.id) {
+          this.newOutcome.type = outcomeType.id;
+          this.newOutcome.title = outcomeType.name;
+        }
       }
     }
   },
@@ -297,8 +278,8 @@ export default {
           oldData.limit !== newData.limit)
         ) {
           this.page = 1;
-          this.refresh();
         }
+        this.refresh();
       }
     },
     store: {
@@ -307,6 +288,16 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getUser();
+      }
+    },
+    outcomeTypeSelected: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.outcomeTypeSelected && this.outcomeTypeSelected.id) {
+          this.newOutcome.type = this.outcomeTypeSelected.id;
+          this.newOutcome.title = this.outcomeTypeSelected.name;
+        }
       }
     }
   }
@@ -511,11 +502,11 @@ export default {
                     <div class="col-8">
                       <select
                         class="btn btn-md btn-light fw-bold text-dark select"
-                        v-model="newOutcome.type"
+                        v-model="outcomeTypeSelected"
                         id="types"
                         @change="selectType($event)"
                         v-bind:class="{ 'is-invalid': outcomeTypeError }">
-                        <option v-for="typ in outcomeTypes" :key="typ.name" :value="typ.id">{{ $t(`outcomeTypes.${typ.name}`) }}</option>
+                        <option v-for="typ in outcomeTypes" :key="typ.name" :value="typ">{{ typ.name }}</option>
                       </select>
                     </div>
                   </div>
@@ -548,7 +539,7 @@ export default {
                         placeholder="Company A">
                     </div>
                   </div>
-                  <div id="outcome-paymentAmount-form-add" class="row mt-1">
+                  <div id="outcome-amount-form-add" class="row mt-1">
                     <div class="col-4 text-label">
                       {{ $t("businessFinancial.outcomePaymentAmount") }}
                     </div>
@@ -557,12 +548,12 @@ export default {
                         :min="0"
                         type="number"
                         class="form-control"
-                        v-model="newOutcome.paymentAmount"
+                        v-model="newOutcome.amount"
                         v-bind:class="{ 'is-invalid': outcomePaymentAmountError }"
                         placeholder="1">
                     </div>
                   </div>
-                  <div v-if="newOutcome.type === 'PRODUCT_REPLACEMENT'" class="row g-0">
+                  <div v-if="outcomeTypeSelected.type === 'PRODUCT_REPLACEMENT'" class="row g-0">
                     <div id="outcome-type-form-add" class="row mt-1">
                       <div class="col-4 text-label">
                         {{ $t("businessFinancial.outcomeProduct") }}
@@ -577,7 +568,7 @@ export default {
                         </select>
                       </div>
                     </div>
-                    <div id="outcome-amount-form-add" class="row mt-1">
+                    <div id="outcome-quantity-form-add" class="row mt-1">
                       <div class="col-4 text-label">
                         {{ $t("businessFinancial.outcomeAmount") }}
                       </div>
@@ -586,20 +577,20 @@ export default {
                           :min="0"
                           type="number"
                           class="form-control"
-                          v-model="newOutcome.outcomeAmount"
+                          v-model="newOutcome.quantity"
                           v-bind:class="{ 'is-invalid': outcomeAmountError }"
                           placeholder="1">
                       </div>
                     </div>
                     <div id="outcome-expire-form-add" class="row mt-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessFinancial.outcomeExpireDate") }}
+                        {{ $t("businessFinancial.expireDate") }}
                       </div>
                       <div class="col-8">
                         <input
                           type="date"
                           class="form-control"
-                          v-model="newOutcome.outcomeExpireDate"
+                          v-model="newOutcome.expireDate"
                           placeholder="1">
                       </div>
                     </div>
