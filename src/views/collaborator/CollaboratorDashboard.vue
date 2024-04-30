@@ -58,11 +58,13 @@ export default {
       pastPeriodAttentionNumber: {},
       pastMonthAttentionNumber: {},
       currentMonthAttentionNumber: {},
-      pastPeriodEvolution: {}
+      pastPeriodEvolution: {},
+      paymentData: {}
     }
 
     const surveyCreated = {
-      avgRating: 0
+      avgRating: 0,
+      sentimentScore: {}
     }
 
     const notificationCreated = {
@@ -90,7 +92,15 @@ export default {
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
-        'notification.created': notificationCreated
+        'notification.created': notificationCreated,
+        'booking.created': {
+          bookingFlow: {
+            datasets: [],
+            labels: []
+          }
+        },
+        'collaborators': {},
+        'clients': {}
       },
       graphs: {
         'attention-number-evolution': false,
@@ -99,7 +109,12 @@ export default {
         'survey-flow': false,
         'attention-duration-evolution': false,
         'attention-rate-duration-evolution': false,
-        'attention-hour-distribution': false
+        'attention-hour-distribution': false,
+        'booking-number-evolution': false,
+        'booking-flow': false,
+        'attention-day-distribution': false,
+        'booking-day-distribution': false,
+        'booking-hour-distribution': false,
       },
       calculatedSurveyMetrics: {},
       toggles: {}
@@ -185,7 +200,12 @@ export default {
         'survey-flow': false,
         'attention-duration-evolution': false,
         'attention-rate-duration-evolution': false,
-        'attention-hour-distribution': false
+        'attention-hour-distribution': false,
+        'booking-number-evolution': false,
+        'booking-flow': false,
+        'attention-day-distribution': false,
+        'booking-day-distribution': false,
+        'booking-hour-distribution': false,
       };
     }
 
@@ -230,10 +250,41 @@ export default {
           state.graphs['attention-hour-distribution'] = true;
         }
       }
+      if (state.calculatedMetrics['booking.created'].bookingFlow.datasets.length > 0 &&
+          state.calculatedMetrics['booking.created'].bookingFlow.datasets[0] !== 0){
+        if (state.toggles['dashboard.booking-flow.view']) {
+          state.graphs['booking-flow'] = true;
+        }
+      }
+      if (state.calculatedMetrics['booking.created'].evolution
+          && state.calculatedMetrics['booking.created'].evolution.datasets
+          && state.calculatedMetrics['booking.created'].evolution.datasets.length > 0) {
+        if (state.toggles['dashboard.booking-number-evolution.view']) {
+          state.graphs['booking-number-evolution'] = true;
+        }
+      }
+      if (state.calculatedMetrics['booking.created'].hourDistribution.datasets.length > 0){
+        if (state.toggles['dashboard.booking-hour-distribution.view']) {
+          state.graphs['booking-hour-distribution'] = true;
+        }
+      }
+      if (state.calculatedMetrics['attention.created'].dayDistribution.datasets.length > 0){
+        if (state.toggles['dashboard.attention-day-distribution.view']) {
+          state.graphs['attention-day-distribution'] = true;
+        }
+      }
+      if (state.calculatedMetrics['booking.created'].dayDistribution.datasets.length > 0){
+        if (state.toggles['dashboard.booking-day-distribution.view']) {
+          state.graphs['booking-day-distribution'] = true;
+        }
+      }
     }
 
     const getCalculatedMetrics = async () => {
-      const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+      let queues = [];
+      if (state.queues && state.queues.length > 0) {
+        queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+      }
       const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, state.startDate, state.endDate);
       return calculatedMetrics;
     }
@@ -289,9 +340,11 @@ export default {
       const hourDate = new Date(date.setHours(hour));
       if (state.commerce.country) {
         if (state.commerce.country === 've') {
-          return hourDate.getHours() - 4;
+          const resultHour = hourDate.getHours() - 4;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else if (['br', 'cl'].includes(state.commerce.country)) {
-          return hourDate.getHours() - 3;
+          const resultHour = hourDate.getHours() - 3;
+          return resultHour < 0 ? 24 + resultHour : resultHour;
         } else {
           return hourDate.getHours();
         }
@@ -445,6 +498,32 @@ export default {
     });
     const { barChartProps: attentionHourDistributionProps } = useBarChart({ chartData: attentionHourDistribution });
 
+    const attentionDayDistribution = computed(() => {
+      const data = state.calculatedMetrics['attention.created'].dayDistribution;
+      if (data && data.labels) {
+        return {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Atenciones',
+              boxWidth: 10,
+              borderColor: '#004aad',
+              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              data: data.datasets || [],
+              fill: false,
+              tension: .2,
+              type: 'bar'
+            },
+          ],
+          options: {
+            fill: false,
+            radius: 0,
+          }
+        }
+      }
+    });
+    const { barChartProps: attentionDayDistributionProps } = useBarChart({ chartData: attentionDayDistribution });
+
     const attentionQueues = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionQueues;
       if (data && data.labels) {
@@ -483,13 +562,13 @@ export default {
     const surveyFlow = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionFlow;
       if (data && data.labels) {
-        const labels = data.labels.slice(2, data.labels.length).map(label => surveyLabel(label));
-        const datasets = data.datasets.slice(2, data.datasets.length);
+        const labels = data.labels.slice(2, 4).map(label => surveyLabel(label));
+        const datasets = data.datasets.slice(2, 4);
         return {
           labels: labels,
           datasets: [
             {
-              label: 'Atenciones',
+              label: 'Encuestas',
               indexAxis: 'y',
               data: datasets || [],
               backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']
@@ -535,6 +614,117 @@ export default {
     });
     const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({ chartData: attentionRateDurationEvolution });
 
+    const bookingFlow = computed(() => {
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].bookingFlow : {};
+      if (data && data.labels) {
+        return {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Reservas',
+              indexAxis: 'y',
+              data: data.datasets || [],
+              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']
+            },
+          ],
+        }
+      }
+    });
+    const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
+
+    const bookingNumberEvolution = computed(() => {
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].evolution : {};
+      if (data && data.labels) {
+        return {
+        labels: data.labels || [],
+        datasets: [
+          {
+            label: 'AVG Presente',
+            boxWidth: 10,
+            borderColor: '#2f407a',
+            backgroundColor: '#2f407a',
+            borderDash: [2, 2],
+            data: data.labels ?
+              data.labels.map(
+                label => state.calculatedMetrics["booking.created"].dailyAvg || 0
+              ): [],
+            fill: false,
+            tension: .1,
+            radius: 0,
+            type: 'line'
+          },
+          {
+            label: 'Período Actual',
+            boxWidth: 10,
+            borderColor: '#004aad',
+            backgroundColor: "rgba(127, 134, 255, 0.7)",
+            data: data.datasets || [],
+            fill: false,
+            tension: .2,
+            type: 'bar'
+          },
+        ],
+        options: {
+          fill: false,
+          radius: 0,
+        }
+        }
+      }
+    });
+    const { barChartProps: bookingNumberEvolutionProps } = useBarChart({ chartData: bookingNumberEvolution });
+
+    const bookingHourDistribution = computed(() => {
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].hourDistribution : {};
+      if (data && data.labels) {
+        return {
+          labels: data.labels.map(hour => getLocalHour(hour)),
+          datasets: [
+            {
+              label: 'Reservas',
+              boxWidth: 10,
+              borderColor: '#004aad',
+              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              data: data.datasets || [],
+              fill: false,
+              tension: .2,
+              type: 'bar'
+            },
+          ],
+          options: {
+            fill: false,
+            radius: 0,
+          }
+        }
+      }
+    });
+    const { barChartProps: bookingHourDistributionProps } = useBarChart({ chartData: bookingHourDistribution });
+
+    const bookingDayDistribution = computed(() => {
+      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].dayDistribution : {};
+      if (data && data.labels) {
+        return {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Reservas',
+              boxWidth: 10,
+              borderColor: '#004aad',
+              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              data: data.datasets || [],
+              fill: false,
+              tension: .2,
+              type: 'bar'
+            },
+          ],
+          options: {
+            fill: false,
+            radius: 0,
+          }
+        }
+      }
+    });
+    const { barChartProps: bookingDayDistributionProps } = useBarChart({ chartData: bookingDayDistribution });
+
     return {
       state,
       loading,
@@ -546,6 +736,11 @@ export default {
       attentionFlowProps,
       attentionRateDurationEvolutionProps,
       surveyFlowProps,
+      bookingFlowProps,
+      bookingNumberEvolutionProps,
+      attentionDayDistributionProps,
+      bookingDayDistributionProps,
+      bookingHourDistributionProps,
       goBack,
       isActiveBusiness,
       refresh,
@@ -680,6 +875,11 @@ export default {
                   attentionFlowProps,
                   attentionRateDurationEvolutionProps,
                   surveyFlowProps,
+                  bookingFlowProps,
+                  bookingNumberEvolutionProps,
+                  attentionDayDistributionProps,
+                  bookingDayDistributionProps,
+                  bookingHourDistributionProps,
                   ...state.calculatedMetrics
                 }"
                 :toggles="state.toggles"
