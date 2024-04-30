@@ -230,6 +230,9 @@ export default {
         if (data.clientId && data.neededToInclude.length >= 0) {
           state.newUser.clientId = data.clientId;
         }
+        if (!state.newUser.clientId) {
+          state.newUser.clientId = client;
+        }
         if (data.name) {
           state.newUser.name = data.name;
         }
@@ -601,7 +604,7 @@ export default {
           }
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name } });
+            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
             body = { ...body, servicesId, servicesDetails };
           }
           state.date = undefined;
@@ -620,6 +623,7 @@ export default {
         loading.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
+          console.log("🚀 ~ getBooking ~ state.newUser:", state.newUser, client.value);
           state.currentChannel = await store.getCurrentAttentionChannel;
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
@@ -627,9 +631,10 @@ export default {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
           let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block, clientId: state.newUser.clientId };
+          console.log("🚀 ~ getBooking ~ body:", body);
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name } });
+            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
             body = { ...body, servicesId, servicesDetails };
           }
           const booking = await createBooking(body);
@@ -637,6 +642,7 @@ export default {
         }
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ getBooking ~ error:", error);
         loading.value = false;
         alertError.value = error.message;
       }
@@ -917,7 +923,7 @@ export default {
               if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
                 limit = state.queue.serviceInfo.blockLimit;
               }
-              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
               const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
               const blockedBlocks = []
               uniqueBlocksReserved.forEach(block => {
@@ -968,8 +974,9 @@ export default {
                         if (attention.block && attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
                           return [...attention.block.blockNumbers];
                         } else {
-                          return attention.block.number;
+                          return attention.block?.number;
                         }
+
                       });
                       attentionsReserved.push(reserved);
                     }

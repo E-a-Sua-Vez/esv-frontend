@@ -9,6 +9,7 @@ import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
 import { getDate } from '../../../shared/utils/date';
+import { getOutcomesDetails } from '../../../application/services/query-stack';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
 import Toggle from '@vueform/toggle';
 import { getOutcomeTypes } from '../../../shared/utils/data';
@@ -26,17 +27,12 @@ export default {
     business: { type: Object, default: undefined },
     financialOutcomesIn: { type: Array, default: [] }
   },
-  emits: ['getProductConsuptions'],
   data() {
     const store = globalStore();
     return {
       loading: false,
       alertError: '',
       financialOutcomes: [],
-      newFinancialOutcomes: [],
-      products: [],
-      productReplacements: [],
-      newOutcomeConsumption: {},
       counter: 0,
       totalPages: 0,
       asc: true,
@@ -123,7 +119,11 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newFinancialOutcomes = this.financialOutcomes;
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        this.financialOutcomes = await getOutcomesDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.asc, this.incomeStatus, this.fiscalNote, this.automatic);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -159,7 +159,8 @@ export default {
         this.loading = true;
         let csvAsBlob = [];
         let commerceIds = [this.commerce.id];
-        const result = this.financialOutcomes;
+        const result = await getOutcomesDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.asc, this.incomeStatus, this.fiscalNote, this.automatic);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -306,33 +307,6 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getUser();
-      }
-    },
-    financialOutcomesIn: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.financialOutcomes = this.financialOutcomesIn;
-        this.updatePaginationData();
-      }
-    },
-    newFinancialOutcomes: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.newFinancialOutcomes) {
-          this.financialOutcomes = this.newFinancialOutcomes;
-          this.updatePaginationData();
-        }
-      }
-    },
-    selectedProduct: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.selectedProduct && this.selectedProduct.id) {
-          this.productReplacements = await getActiveReplacementsByProductId(this.selectedProduct.id);
-        }
       }
     }
   }

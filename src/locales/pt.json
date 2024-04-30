@@ -127,6 +127,13 @@
     "PROMOTION": "Promoção",
     "RETURN": "Retorno"
   },
+  "incomeTypes": {
+    "FIRST_PAYMENT": "Primeiro Pagamento",
+    "INSTALLMENT": "Parcelas",
+    "UNIQUE": "Pagamento Único",
+    "FUND_INCREASE": "Aumento de Fundos",
+    "STANDARD": "Recebemento Normal"
+  },
   "paymentClientMethods": {
     "PAID": "Pago",
     "CREDIT_CARD": "C. Crédito",
@@ -143,7 +150,8 @@
     "NOTA_FISCAL": "Nota Fiscal",
     "GERENCIAL": "Gerencial",
     "undefined": "N/I",
-    "null": "N/I"
+    "null": "N/I",
+    "OTHER": "Outro"
   },
   "productTypes": {
     "ALL_IN_ONE": "Tudo em Um",
@@ -368,6 +376,14 @@
     "user-service-conditions": {
       "title": "Aceitar Condições Serviço",
       "description": "Permite ao usuário ver as condições de serviço pra aceitarlas"
+    },
+    "booking-whatsapp-cancel": {
+      "title": "Whatsapp Reserva Cancelada",
+      "description": "Permite enviar mensagem de reserva cancelada."
+    },
+    "attention-whatsapp-cancel": {
+      "title": "Whatsapp Atendimento Cancelado",
+      "description": "Permite enviar mensagem de atendimento cancelado."
     }
   },
   "document": {
@@ -391,7 +407,7 @@
     "paymentType": "Tipo de Pagamento:",
     "paymentMethod": "Meio de Pagamento:",
     "paymentFiscalNote": "Nota Fiscal:",
-    "paymentAmount": "Valor:",
+    "paymentAmount": "Valor Pagado:",
     "paymentCommission": "Comissão:",
     "paymentDate": "Data de Pagamento:",
     "outcomeType": "Tipo:",
@@ -403,7 +419,11 @@
     "user": "Usuário:",
     "lastReplacementDate": "Data Último Recarragamento:",
     "attentionId": "Id. Atendimento:",
-    "code": "Código:"
+    "code": "Código:",
+    "installments": "Parcelas:",
+    "totalAmount": "Valor Total:",
+    "package": "Pacote:",
+    "service": "Serviço:"
   },
   "searchAdminItem": {
     "message": {
@@ -510,6 +530,7 @@
     "newClient": "Sou novo",
     "oldClient": "Já sou Cliente",
     "selectTheService": "Selecione o Serviço",
+    "procedures": "Sessões:",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -968,7 +989,9 @@
     "procedureNumber": "de",
     "paymentType": "Tipo de Pagamento:",
     "paymentMethod": "Meio de pagamento:",
-    "paymentAmount": "Valor:",
+    "paymentAmount": "Valor Pagado:",
+    "totalAmount": "Total Procedimiento:",
+    "installments": "Parcelas:",
     "paymentCommission": "Comissão:",
     "paymentComment": "Comentário (Opcional)",
     "transferQueue": "Transferir Fila",
@@ -982,6 +1005,16 @@
     "selectQueueToTransfer": "Selecione a fila pra qual você deseja transferir a reserva:",
     "update": "Atualizar",
     "attendQueue": "Atender Fila",
+    "packages": "Pacotes Ativos:",
+    "pendingPayment": "Pagamentos Pendentes:",
+    "skipPayment": "Procesar pagamento agora:",
+    "confirmInstallments": "Confirmar Parcela:",
+    "confirmPayment": "Confirmar Pagamento",
+    "fiscalNote": "N. Fiscal",
+    "gerencial": "Gerencial",
+    "automatic": "Automático",
+    "attend": "Atender",
+    "manual": "Manual",
     "message": {
       "1": {
         "title": "Oi!",
@@ -1014,6 +1047,10 @@
       "8": {
         "title": "Atendimento já foi confirmado",
         "content": "O Atendimento já foi confirmado, verifique os dados da confirmação."
+      },
+      "9": {
+        "title": "Pacote já foi pagado",
+        "content": "Este pacote não presenta pagamentos pendentes."
       }
     },
     "capacitiesList": {
@@ -1281,7 +1318,8 @@
     "detractor": "Detrator",
     "neutral": "Neutro",
     "promoter": "Promotor",
-    "queue": "Selecione Fila ou Serviço:",
+    "queue": "Selecione Fila:",
+    "service": "Selecione Serviço:",
     "resume": "Sumário",
     "consolidated": "Consolidado",
     "day": "Dia",
@@ -1314,6 +1352,7 @@
     "userData": "Usuário:",
     "queueData": "Fila/Serviço:",
     "contactMethod": "Meio de Contato",
+    "outcomes": "Despesas",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1374,9 +1413,9 @@
         "31": "Onde você nos conheceu?",
         "32": "Número de Contatos de Clientes",
         "33": "Farol Atendimentos",
-        "34": "Cobrança Atendimentos",
+        "34": "Recebimentos",
         "35": "Confirmadas",
-        "36": "Cobrança Reservas",
+        "36": "Despesas",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",
@@ -1987,6 +2026,8 @@
     "onlineSaving": "Poupança online:",
     "listResult": "Registros:",
     "blockTime": "Bloque (Min):",
+    "procedures": "Procedimientos:",
+    "proceduresHelp": "Quantidade de Procedimientos necesários para completar o Serviço",
     "estimatedTime": "Tempo estimado:",
     "tagHelp": "Identificador curto do serviço",
     "onlineHelp": "Serviço pode ser mostrado para ser selecionado pelo usuário.",
@@ -2131,6 +2172,15 @@
     "outcomeExpireDate": "Validade:",
     "outcomeDate": "Data:",
     "outcomeCode": "Código:",
+    "incomeTitle": "Conceto:",
+    "incomeType": "Tipo:",
+    "incomeAmount": "Quantidade:",
+    "incomeProduct": "Produto:",
+    "incomeNextDate": "Próximo Recebimento:",
+    "incomeExpireDate": "Vencimento:",
+    "incomeDate": "Data:",
+    "incomePaymentAmount": "Valor:",
+    "incomeTotalAmount": "Valor Total:",
     "add": "Adicionar",
     "outcomePaymentAmount": "Valor:",
     "outcomeBeneficiary": "Beneficiário:",
@@ -2162,7 +2212,8 @@
       "financial": {
         "incomes": {
           "view": "Ver Recebidos",
-          "add": "Adicionar Recebidos"
+          "add": "Adicionar Recebidos",
+          "confirm": "Confirmar Recebido"
         },
         "resume": {
           "view": "Ver Resumo"

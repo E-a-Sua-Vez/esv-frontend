@@ -47,6 +47,17 @@ export const getSpyMetrics = async (commercesId, from, to) => {
   return (await requestQuery.get('metrics/spy', options)).data;
 };
 
+export const getFinancialMetrics = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/financial', options)).data;
+};
+
 export const getAttentions = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
@@ -327,13 +338,15 @@ export const getAttentionsDetails = async (
   queueId = undefined,
   survey = undefined,
   asc = true,
-  contactResultType = undefined
+  contactResultType = undefined,
+  serviceId = undefined,
+  stock = undefined
 ) => {
   const options = {};
   options.params = {
     from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
     contactable, contacted, searchText, queueId, survey, asc,
-    contactResultType
+    contactResultType, serviceId, stock
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);
@@ -360,13 +373,15 @@ export const getClientsDetails = async (
   survey = undefined,
   asc = true,
   contactResultType = undefined,
-  idNumber = undefined
+  idNumber = undefined,
+  serviceId = undefined
 ) => {
   const options = {};
   options.params = {
+
     from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
     contactable, contacted, searchText, queueId, survey, asc,
-    contactResultType, businessId, idNumber
+    contactResultType, businessId, idNumber, serviceId
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);
@@ -495,4 +510,56 @@ export const getProductsConsumptionsDetails = async (
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('product/consumptions', options)).data;
+};
+
+export const getIncomesDetails = async (
+  businessId = undefined,
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  page = undefined,
+  limit = undefined,
+  searchText = undefined,
+  asc = true,
+  incomeStatus = undefined,
+  fiscalNote = undefined,
+  automatic = undefined
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit, searchText, asc, businessId, incomeStatus, fiscalNote, automatic
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('income/details', options)).data;
+};
+
+export const getOutcomesDetails = async (
+  businessId = undefined,
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  page = undefined,
+  limit = undefined,
+  searchText = undefined,
+  asc = true,
+  incomeStatus = undefined,
+  fiscalNote = undefined,
+  automatic = undefined
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit, searchText, asc, businessId, incomeStatus, fiscalNote, automatic
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('outcomes/details', options)).data;
 };

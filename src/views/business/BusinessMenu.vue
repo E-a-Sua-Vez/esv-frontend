@@ -46,8 +46,8 @@ export default {
         'tracing',
         'product-stock',
         'financial',
-        'patients',
-        'marketing'
+        //'patients',
+        //'marketing'
       ],
       manageSubMenuOptions: [
         'commerce-admin',

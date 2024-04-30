@@ -63,6 +63,11 @@ export default {
 
     const checkService = (event, service) => {
       if (event.target.checked) {
+        if (service.serviceInfo.procedures !== undefined && service.serviceInfo.procedures > 1) {
+          state.selectedServices = [];
+        } else {
+          state.selectedServices = state.selectedServices.filter(serv => serv.serviceInfo.procedures === 1);
+        }
         if (!state.selectedServices.includes(service)) {
           state.selectedServices.push(service);
         }
@@ -260,7 +265,8 @@ export default {
                     </div>
                     <div class="row queue-time-title col-12">
                       <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ service.serviceInfo.blockTime || service.serviceInfo.estimatedTime }}'</span>
-                    </div>
+                      <span v-if="service.serviceInfo.procedures && service.serviceInfo.procedures > 1"><i class="bi bi-person-up"></i> {{ $t("commerceQueuesView.procedures") }} {{ service.serviceInfo.procedures }}</span>
+                  </div>
                   </div>
                 </div>
               </div>

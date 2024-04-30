@@ -63,8 +63,13 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card">
-      <div class="col-6 centered fw-bold" v-if="attention && attention.userName">
-        <i class="bi bi-person-circle mx-1"></i> {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
+      <div v-if="attention.servicesDetails" class="idNumber-title lefted">
+        <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
+        <span v-if="attention.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span> </span>
+      </div>
+      <div class="col-6 card-client-title lefted fw-bold" v-if="attention && attention.userName">
+        {{ attention.userName?.trim().toUpperCase() || '' }} {{ attention.userLastName?.trim().toUpperCase() || '' }}
+
         <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
         <i v-if="attention.paid !== undefined && attention.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
         <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
@@ -160,6 +165,12 @@ export default {
                 <span v-if="attention.paymentCommission" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentCommission') }} </span>
                   <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span>
+                <span v-if="attention.packageId && attention.packageName" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
+                  {{ attention.packageName }}
+                  <span class="badge mx-1 bg-secondary">{{ attention.packageProcedureNumber }} / {{ attention.packageProceduresTotalNumber }}</span>
+                  <i class="bi bi-check-circle-fill green-icon" v-if="attention.packagePaid"> </i>
+                </span>
               </div>
               <hr>
             </div>
@@ -185,7 +196,12 @@ export default {
                 <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span>
               <span v-if="attention.commerceName && attention.commerceTag" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-                {{ attention.commerceName }} - {{ attention.commerceTag }}</span><br><br>
+                {{ attention.commerceName }} - {{ attention.commerceTag }}</span>
+              <span v-if="attention.servicesDetails" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+                <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }} </span>
+              </span>
+              <br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
             </div>

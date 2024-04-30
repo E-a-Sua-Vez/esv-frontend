@@ -98,7 +98,7 @@ export default {
           state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
         }
         if (idNumber.value) {
-          const idNumberIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          const idNumberIn = idNumber.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
           state.newUser.idNumber = idNumberIn !== 'undefined' ? idNumberIn : '';
         }
         if (email.value) {

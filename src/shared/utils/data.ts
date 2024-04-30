@@ -166,3 +166,10 @@ export const getOutcomeTypes = () => {
     { id: 'OTHER', name: 'OTHER' }
   ]
 }
+
+export const getIncomeTypesToIncrease = () => {
+  return [
+    { id: 'FUND_INCREASE', name: 'FUND_INCREASE' },
+    { id: 'STANDARD', name: 'STANDARD' }
+  ]
+}

@@ -121,7 +121,7 @@ export default {
               </div>
               <div class="row mx-2" v-for="(origin) in Object.keys(distributionType)" :key="origin">
                 <div class="metric-card-title">
-                  <span class="col-4"> {{ $t(`paymentTypes.${origin}`) }} </span>
+                  <span class="col-4"> {{ $t(`incomeTypes.${origin}`) }} </span>
                   <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ distributionTypePercentage(count, origin) }}% </span>
                   <div class="progress col">
                     <div class="progress-bar" role="progressbar" :style="`width: ${distributionTypePercentage(count, origin)}%`" aria-valuemin="0" aria-valuemax="100">

@@ -39,7 +39,7 @@ export default {
       <div class="align-items-center">
         <ul class="justify-content-start list-unstyled">
           <li class="mt-2 mb-2 fw-bold">
-            <a class="nav-link btn btn-sm fw-bold btn-light rounded-pill p-1 px-3" data-bs-toggle="modal" data-bs-target="#modalBuzon" @click="$event => closeMenu()">{{ $t("footer.mailbox") }} <i class="bi bi-boxes"></i></a>
+            <a class="nav-link btn btn-sm fw-bold btn-light rounded-pill p-1 px-3" data-bs-toggle="modal" data-bs-target="#modalBuzon" @click="$event => closeMenu()">{{ $t("footer.mailbox") }} <i class="bi bi-box-fill"></i></a>
           </li>
           <li class="mt-1"><a class="text-muted text-decoration-none" :href="$t('blog')" target="_blank">{{ $t("footer.faq") }}</a></li>
           <li class="mt-1"><a class="text-muted text-decoration-none" :href="$t('blog')" target="_blank">{{ $t("footer.blog") }}</a></li>

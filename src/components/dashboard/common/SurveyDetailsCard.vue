@@ -102,17 +102,20 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
-      <div class="col-5 centered" v-if="survey && survey.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ survey.name.split(' ')[0] || 'N/I' }}
+      <div v-if="survey.servicesDetails" class="idNumber-title lefted">
+        <span v-for="serv in survey.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
+      </div>
+      <div class="col-5 lefted card-client-title mt-1" v-if="survey && survey.name">
+        {{ survey.name?.trim().toUpperCase() || '' }} {{ survey.lastName?.trim().toUpperCase() || '' }}
         <i v-if="survey.contacted === true || checked === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
       </div>
-      <div class="col-2 centered">
+      <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyRatedComment(survey.rating)} mx-1`"></i> {{ survey.rating || 'N/I' }}
       </div>
-      <div class="col-2 centered">
+      <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyNpsComment(survey.nps)} mx-1`"> </i> {{ survey.nps || 'N/I' }}
       </div>
-      <div class="col-2 centered">
+      <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey && survey.messageScore ? survey.messageScore : 0 }}
       </div>
     </div>
@@ -182,7 +185,25 @@ export default {
             </div>
           </div>
         </div>
-        <div class="row m-0 my-2 centered">
+        <div class="row m-0 mt-2 centered">
+          <div class="row mt-2 centered" v-if="!loading">
+            <div class="col-6">
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+                data-bs-toggle="modal"
+                :data-bs-target="`#surveyModal-${survey.surveyid}`">
+                {{ $t('dashboard.answers')}} <br> <i class="bi bi-question-circle-fill"></i>
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+                @click="check()"
+                :disabled="survey.contacted || checked"
+                >
+                {{ $t('dashboard.contact')}} <br> <i class="bi bi-person-check-fill"></i>
+              </button>
+            </div>
+          </div>
           <hr>
           <div class="col-4 mx-2 fw-bold">
             <i class="bi bi-pencil"> </i> <span>{{ $t("dashboard.comment") }}</span>
@@ -202,28 +223,10 @@ export default {
             </span>
           </div>
         </div>
-        <div class="row my-2 centered" v-if="!loading">
-          <div class="col-6">
-            <button
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
-              data-bs-toggle="modal"
-              :data-bs-target="`#surveyModal-${survey.surveyid}`">
-              {{ $t('dashboard.answers')}} <br> <i class="bi bi-question-circle-fill"></i>
-            </button>
-          </div>
-          <div class="col-6">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
-              @click="check()"
-              :disabled="survey.contacted || checked"
-              >
-              {{ $t('dashboard.contact')}} <br> <i class="bi bi-person-check-fill"></i>
-            </button>
-          </div>
-        </div>
         <hr>
         <div class="row m-0 mt-3 centered">
           <div class="col">
-            <div class="">
+            <div class="mb-2">
               <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
             </div>
             <span class="badge mx-1 detail-data-badge">
@@ -233,6 +236,10 @@ export default {
             <span v-if="survey.commerceName && survey.commerceTag" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
                 {{ survey.commerceName }} - {{ survey.commerceTag }}</span>
+            <span v-if="survey.servicesDetails" class="badge mx-1 detail-data-badge">
+              <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+              <span v-for="serv in survey.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }}</span>
+            </span>
             <br><br>
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ survey.surveyid }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(survey.createdDate) }}</span>

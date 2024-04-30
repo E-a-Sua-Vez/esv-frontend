@@ -390,7 +390,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div v-if="showFilters === true">
+            <div>
               <SimpleDownloadCard
                 :download="toggles['products-stock.reports.consumption-details']"
                 :title="$t('businessProductStockAdmin.reports.consumption-details.title')"

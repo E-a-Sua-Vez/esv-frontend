@@ -115,7 +115,7 @@ export default {
     },
     validateConfirm(data) {
       this.errorsAdd = [];
-      if (getActiveFeature(this.commerce, 'booking-confirm-payment', 'PRODUCT')) {
+      if (data.packagePaid === false && getActiveFeature(this.commerce, 'booking-confirm-payment', 'PRODUCT')) {
         if(!data.paymentType || data.paymentType.length === 0) {
           this.paymentTypeError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentType');
@@ -181,7 +181,7 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          const limit = 1; //queuesToTransfer.length;
+          let limit = 1; //queuesToTransfer.length;
           if (this.queue.serviceInfo !== undefined && this.queue.serviceInfo.blockLimit !== undefined && this.queue.serviceInfo.blockLimit > 0) {
             limit = this.queue.serviceInfo.blockLimit;
           }
@@ -309,10 +309,10 @@ export default {
     },
     receiveData(data) {
       if (data) {
-        if (data.procedureNumber) {
+        if (data.procedureNumber !== undefined && data.procedureNumber >= 0) {
           this.newConfirmationData.procedureNumber = data.procedureNumber;
         }
-        if (data.proceduresTotalNumber) {
+        if (data.proceduresTotalNumber !== undefined && data.proceduresTotalNumber >= 0) {
           this.newConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
         }
         if (data.paymentFiscalNote) {
@@ -324,14 +324,35 @@ export default {
         if (data.paymentMethod) {
           this.newConfirmationData.paymentMethod = data.paymentMethod;
         }
-        if (data.paymentAmount) {
+        if (data.paymentAmount !== undefined && data.paymentAmount >= 0) {
           this.newConfirmationData.paymentAmount = data.paymentAmount;
         }
-        if (data.paymentCommission) {
+        if (data.totalAmount !== undefined && data.totalAmount >= 0) {
+          this.newConfirmationData.totalAmount = data.totalAmount;
+        }
+        if (data.installments !== undefined && data.installments >= 0) {
+          this.newConfirmationData.installments = data.installments;
+        }
+        if (data.paymentCommission !== undefined && data.paymentCommission >= 0) {
           this.newConfirmationData.paymentCommission = data.paymentCommission;
         }
         if (data.paymentComment) {
           this.newConfirmationData.paymentComment = data.paymentComment;
+        }
+        if (data.packageId) {
+          this.newConfirmationData.packageId = data.packageId;
+        }
+        if (data.pendingPaymentId) {
+          this.newConfirmationData.pendingPaymentId = data.pendingPaymentId;
+        }
+        if (data.skipPayment) {
+          this.newConfirmationData.skipPayment = !data.skipPayment;
+        }
+        if (data.packagePaid) {
+          this.newConfirmationData.packagePaid = data.packagePaid;
+        }
+        if (data.packagePaid) {
+          this.newConfirmationData.confirmInstallments = data.confirmInstallments;
         }
       };
     },
@@ -508,12 +529,16 @@ export default {
         </div>
         <!-- PAYMENT -->
         <div class="row centered" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
-          <div v-if="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
+          <div>
             <div
               :class="{ show: extendedPaymentEntity }"
               class="detailed-data transition-slow">
               <div v-if="!booking.confirmed">
                 <PaymentForm
+                  :id="booking.id"
+                  :commerce="commerce"
+                  :clientId="booking.clientId"
+                  :confirmPayment="getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')"
                   :errorsAdd="errorsAdd"
                   :receiveData="receiveData"
                 >

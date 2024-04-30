@@ -87,7 +87,7 @@ export default {
     },
     validateConfirm(data) {
       this.errorsAdd = [];
-      if (getActiveFeature(this.commerce, 'attention-confirm-payment', 'PRODUCT')) {
+      if (data.packagePaid === false && getActiveFeature(this.commerce, 'attention-confirm-payment', 'PRODUCT')) {
         if(!data.paymentType || data.paymentType.length === 0) {
           this.paymentTypeError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentType');
@@ -154,7 +154,7 @@ export default {
             acc[type].push(book);
             return acc;
           }, {});
-          const limit = 1; //queuesToTransfer.length;
+          let limit = 1; //queuesToTransfer.length;
           if (this.queue.serviceInfo !== undefined && this.queue.serviceInfo.blockLimit !== undefined && this.queue.serviceInfo.blockLimit > 0) {
             limit = this.queue.serviceInfo.blockLimit;
           }
@@ -235,10 +235,10 @@ export default {
     },
     receiveData(data) {
       if (data) {
-        if (data.procedureNumber) {
+        if (data.procedureNumber !== undefined && data.procedureNumber >= 0) {
           this.newPaymentConfirmationData.procedureNumber = data.procedureNumber;
         }
-        if (data.proceduresTotalNumber) {
+        if (data.proceduresTotalNumber !== undefined && data.procedureNumber >= 0) {
           this.newPaymentConfirmationData.proceduresTotalNumber = data.proceduresTotalNumber;
         }
         if (data.paymentFiscalNote) {
@@ -250,14 +250,35 @@ export default {
         if (data.paymentMethod) {
           this.newPaymentConfirmationData.paymentMethod = data.paymentMethod;
         }
-        if (data.paymentAmount) {
+        if (data.paymentAmount !== undefined && data.paymentAmount >= 0) {
           this.newPaymentConfirmationData.paymentAmount = data.paymentAmount;
         }
-        if (data.paymentCommission) {
+        if (data.totalAmount !== undefined && data.totalAmount >= 0) {
+          this.newPaymentConfirmationData.totalAmount = data.totalAmount;
+        }
+        if (data.installments !== undefined && data.installments >= 0) {
+          this.newPaymentConfirmationData.installments = data.installments;
+        }
+        if (data.paymentCommission !== undefined && data.paymentCommission >= 0) {
           this.newPaymentConfirmationData.paymentCommission = data.paymentCommission;
         }
         if (data.paymentComment) {
           this.newPaymentConfirmationData.paymentComment = data.paymentComment;
+        }
+        if (data.packageId) {
+          this.newPaymentConfirmationData.packageId = data.packageId;
+        }
+        if (data.pendingPaymentId) {
+          this.newPaymentConfirmationData.pendingPaymentId = data.pendingPaymentId;
+        }
+        if (data.skipPayment) {
+          this.newPaymentConfirmationData.skipPayment = !data.skipPayment;
+        }
+        if (data.packagePaid) {
+          this.newPaymentConfirmationData.packagePaid = data.packagePaid;
+        }
+        if (data.packagePaid) {
+          this.newPaymentConfirmationData.confirmInstallments = data.confirmInstallments;
         }
       };
     },
@@ -310,7 +331,7 @@ export default {
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ attention.number }}</span>
       </div>
       <div class="col centered" v-if="attention.user && attention.user.name">
-        <i class="bi bi-person-circle icon"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
+        <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
@@ -436,8 +457,8 @@ export default {
           </div>
         </div>
         <!-- PAYMENT -->
-        <div class="row centered mt-2">
-          <div v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')">
+        <div class="row centered">
+          <div>
             <div
             :class="{ show: extendedPaymentEntity }"
             class="detailed-data transition-slow">
@@ -446,6 +467,10 @@ export default {
                 :class="{ show: extendedPaymentEntity }"
                 class="detailed-data transition-slow">
                 <PaymentForm
+                  :id="attention.id"
+                  :commerce="commerce"
+                  :clientId="attention.clientId"
+                  :confirmPayment="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
                   :errorsAdd="errorsAdd"
                   :receiveData="receiveData"
                 >

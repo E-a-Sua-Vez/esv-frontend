@@ -470,6 +470,26 @@ export default {
                               placeholder="1">
                           </div>
                         </div>
+                        <div id="service-block-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessServicesAdmin.procedures") }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disableClickAway
+                              :content="$t('businessServicesAdmin.proceduresHelp')">
+                              <i class='bi bi-info-circle-fill h7'></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              min="1"
+                              type="number"
+                              class="form-control"
+                              v-model="service.serviceInfo.procedures"
+                              placeholder="1">
+                          </div>
+                        </div>
                         <div id="service-price-form-update" class="row g-1">
                           <div class="col-6 text-label">
                             {{ $t("businessServicesAdmin.price") }}
@@ -769,6 +789,26 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.blockTime"
+                          placeholder="1">
+                      </div>
+                    </div>
+                    <div id="service-block-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessServicesAdmin.procedures") }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disableClickAway
+                          :content="$t('businessServicesAdmin.proceduresHelp')">
+                          <i class='bi bi-info-circle-fill h7'></i>
+                        </Popper>
+                      </div>
+                      <div class="col-6">
+                        <input
+                          min="1"
+                          type="number"
+                          class="form-control"
+                          v-model="state.newService.serviceInfo.procedures"
                           placeholder="1">
                       </div>
                     </div>

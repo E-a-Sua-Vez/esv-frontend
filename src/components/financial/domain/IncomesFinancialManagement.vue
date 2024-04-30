@@ -7,10 +7,12 @@ import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
-import { getActiveReplacementsByProductId, getProductByCommerce } from '../../../application/services/product';
+import { getIncomesDetails } from '../../../application/services/query-stack';
 import { getDate } from '../../../shared/utils/date';
 import IncomeDetailsCard from './common/IncomeDetailsCard.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
+import { getIncomeTypesToIncrease } from '../../../shared/utils/data';
+import { createIncome } from '../../../application/services/income';
 
 export default {
   name: 'IncomesFinancialManagement',
@@ -21,23 +23,18 @@ export default {
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
-    business: { type: Object, default: undefined },
-    financialIncomesIn: { type: Array, default: [] }
+    business: { type: Object, default: undefined }
   },
-  emits: ['getProductConsuptions'],
   data() {
     const store = globalStore();
     return {
       loading: false,
       alertError: '',
       financialIncomes: [],
-      newFinancialIncomes: [],
-      products: [],
-      productReplacements: [],
-      newProductConsumption: {},
+      newIncome: {},
       counter: 0,
       totalPages: 0,
-      asc: true,
+      asc: false,
       checked: false,
       showFilterOptions: false,
       showAddOption: false,
@@ -52,99 +49,24 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
-      consumptionAmountError: false,
-      consumptionDateError: false,
-      consumptionProductId: false,
-      consumptionReplacementId: false,
-      replacementExpirationDateError: false,
-      selectedProductReplacement: {},
-      selectedProduct: {},
+      incomeTitleError: false,
+      incomeDateError: false,
+      incomeTypeError: false,
+      incomeProductError: false,
+      incomeExpireDate: false,
+      incomePaymentAmountError: false,
+      incomeAmountError: false,
+      incomeTotalAmountError: false,
       startDate: undefined,
-      endDate: undefined
+      endDate: undefined,
+      incomeStatus: undefined,
+      fiscalNote: undefined,
+      automatic: undefined,
+      incomeTypes: []
     }
   },
   async beforeMount() {
-    this.financialIncomes = [
-      {
-        id: 'LzgvWXNa4n53urFQk1Re',
-        bookingId: '1',
-        clientId: '1',
-        userName: 'Julio',
-        userLastName: 'Castillo',
-        userEmail: 'juliocas65@gmail.com',
-        daysSinceAttention: 4,
-        userPhone: '5511919931589',
-        userIdNumber: '90208801871',
-        paymentDate: '2024-04-18T01:03:39.753Z',
-        procedureNumber: 1,
-        proceduresTotalNumber: 10,
-        transactionId: '123456',
-        paymentType: 'TOTALLY',
-        paymentMethod: 'CREDIT_CARD',
-        installments: 10,
-        paid: true,
-        paymentAmount: 1600,
-        paymentCommission: 120,
-        queueName: 'Fila General',
-        paymentFiscalNote: 'GERENCIAL',
-        promotionalCode: 'PROMOCODE',
-        user: 'carolinadiaz@semprebela.com'
-      },
-      {
-        id: 'LzgvWXNa4n53urFQk1Rr',
-        attentionId: '3',
-        bookingId: '4',
-        clientId: '4',
-        userName: 'Diego',
-        userLastName: 'Lopez',
-        userEmail: 'dilopezvv@gmail.com',
-        userPhone: '5511919931589',
-        userIdNumber: '90208801881',
-        paymentDate: '2024-04-01T01:03:39.753Z',
-        daysSinceAttention: 12,
-        procedureNumber: 1,
-        proceduresTotalNumber: 10,
-        transactionId: '123456',
-        paymentType: 'PARTIAL',
-        paymentMethod: 'CREDIT_CARD',
-        installments: 10,
-        paid: true,
-        paymentAmount: 8400,
-        paymentCommission: 840,
-        queueName: 'Fila General',
-        collaboratorName: 'Carolina Diaz',
-        paymentFiscalNote: 'GERENCIAL',
-        promotionalCode: 'PROMOCODE',
-        user: 'carolinadiaz@semprebela.com'
-      },
-      {
-        id: 'LzgvWXNa4n53urFhk1Rr',
-        attentionId: '3',
-        bookingId: '4',
-        clientId: '4',
-        userName: 'Camila',
-        userLastName: 'Diaz',
-        userEmail: 'camiladiazxx@gmail.com',
-        userPhone: '5511919931589',
-        userIdNumber: '90208501881',
-        paymentDate: '2024-04-01T01:03:39.753Z',
-        daysSinceAttention: 12,
-        procedureNumber: 1,
-        proceduresTotalNumber: 10,
-        transactionId: '123456',
-        paymentType: 'TOTALLY',
-        paymentMethod: 'DEBIT_CARD',
-        installments: 10,
-        paid: true,
-        paymentAmount: 2300,
-        paymentCommission: 450,
-        queueName: 'Fila General',
-        collaboratorName: 'Carolina Diaz',
-        paymentFiscalNote: 'GERENCIAL',
-        promotionalCode: 'PROMOCODE',
-        user: 'carolinadiaz@semprebela.com'
-      }
-    ]
+    this.incomeTypes = getIncomeTypesToIncrease();
   },
   methods: {
     setPage(pageIn) {
@@ -159,6 +81,9 @@ export default {
       this.limit = 10;
       this.startDate = undefined;
       this.endDate = undefined;
+      this.incomeStatus = undefined;
+      this.fiscalNote = undefined;
+      this.automatic = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -168,11 +93,29 @@ export default {
         this.asc = false;
       }
     },
+    async checkFiscalNote(event) {
+      if (event.target.checked) {
+        this.fiscalNote = true;
+      } else {
+        this.fiscalNote = false;
+      }
+    },
+    async checkAutomatic(event) {
+      if (event.target.checked) {
+        this.automatic = true;
+      } else {
+        this.automatic = false;
+      }
+    },
     async refresh() {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newFinancialIncomes = this.financialIncomes;
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        this.financialIncomes = await getIncomesDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.asc, this.incomeStatus, this.fiscalNote, this.automatic);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -183,47 +126,36 @@ export default {
       this.showFilterOptions = !this.showFilterOptions;
     },
     async showAdd() {
-      if (this.commerce && this.commerce.id && this.products.length === 0) {
-        this.products = await getProductByCommerce(this.commerce.id);
-      }
       this.showAddOption = !this.showAddOption;
-      this.newProductConsumption = {
-        consumptionDate: new Date().toISOString().slice(0,10),
-      }
+      this.newIncome = {
+        date: new Date().toISOString().slice(0,10)
+      };
     },
-    validateAdd(outcome) {
+    validateAdd(income) {
       this.errorsAdd = [];
-      if(!outcome.type || outcome.type.length === 0) {
-        this.outcomeTypeError = true;
+      if(!income.type || income.type.length === 0) {
+        this.incomeTypeError = true;
         this.errorsAdd.push('businessFinancial.validate.type');
       } else {
-        this.outcomeTypeError = false;
+        this.incomeTypeError = false;
       }
-      if(!outcome.paymentAmount || outcome.paymentAmount <= 0) {
-        this.outcomePaymentAmountError = true;
+      if(!income.amount || income.amount <= 0) {
+        this.incomePaymentAmountError = true;
         this.errorsAdd.push('businessFinancial.validate.paymentAmount');
       } else {
-        this.outcomePaymentAmountError = false;
+        this.incomePaymentAmountError = false;
       }
-      if(!outcome.title || outcome.title.length === 0) {
-        this.outcomeTitleError = true;
+      if(!income.title || income.title.length === 0) {
+        this.incomeTitleError = true;
         this.errorsAdd.push('businessFinancial.validate.title');
       } else {
-        this.outcomeTitleError = false;
+        this.incomeTitleError = false;
       }
-      if(!outcome.date || outcome.date.length === 0) {
-        this.outcomeDateError = true;
+      if(!income.date || income.date.length === 0) {
+        this.incomeDateError = true;
         this.errorsAdd.push('businessFinancial.validate.date');
       } else {
-        this.outcomeDateError = false;
-      }
-      if (outcome.type && outcome.type === 'PRODUCT_REPLACEMENT') {
-        if(!outcome.amount || outcome.amount.length === 0) {
-          this.outcomeAmountError = true;
-          this.errorsAdd.push('businessFinancial.validate.amount');
-        } else {
-          this.outcomeAmountError = false;
-        }
+        this.incomeDateError = false;
       }
       if(this.errorsAdd.length === 0) {
         return true;
@@ -233,11 +165,17 @@ export default {
     async add() {
       try {
         this.loading = true;
-        if (this.validateAdd(this.newOutcome)) {
-          this.newOutcome.commerceId = state.commerce.id;
+        if (this.validateAdd(this.newIncome)) {
+          this.newIncome.commerceId = this.commerce.id;
+          this.newIncome.incomeInfo = {
+            title: this.newIncome.title,
+            user: this.user ? this.user.email : this.user.id
+          };
+          this.newIncome.status = 'CONFIRMED';
+          await createIncome(this.newIncome);
           this.showAdd = false;
           this.closeAddModal();
-          this.newOutcome = {}
+          this.newIncome = {}
         }
         this.alertError = '';
         this.loading = false;
@@ -263,7 +201,8 @@ export default {
         this.loading = true;
         let csvAsBlob = [];
         let commerceIds = [this.commerce.id];
-        const result = this.financialIncomes;
+        const result = await getIncomesDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
+          undefined, undefined, this.searchText, this.asc, this.incomeStatus, this.fiscalNote, this.automatic);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -285,6 +224,10 @@ export default {
     },
     async getUser() {
       this.user = await this.store.getCurrentUser;
+    },
+    closeAddModal() {
+      const modalCloseButton = document.getElementById('close-modal');
+      modalCloseButton.click();
     },
     async getToday() {
       const date = new Date().toISOString().slice(0,10);
@@ -317,9 +260,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, asc, queueId, limit } = this;
+      const { page, asc, limit, incomeStatus, fiscalNote, automatic } = this;
       return {
-        page, asc, queueId, limit
+        page, asc, limit, incomeStatus, fiscalNote, automatic
       }
     }
   },
@@ -330,13 +273,16 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.product !== newData.product ||
-          oldData.asc !== newData.asc ||
-          oldData.limit !== newData.limit)
+          (oldData.asc !== newData.asc ||
+          oldData.limit !== newData.limit ||
+          oldData.incomeStatus !== newData.incomeStatus ||
+          oldData.fiscalNote !== newData.fiscalNote ||
+          oldData.automatic !== newData.automatic
+          )
         ) {
           this.page = 1;
-          this.refresh();
         }
+        this.refresh();
       }
     },
     store: {
@@ -345,33 +291,6 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getUser();
-      }
-    },
-    financialIncomesIn: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.financialIncomes = this.financialIncomesIn;
-        this.updatePaginationData();
-      }
-    },
-    newFinancialIncomes: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.newFinancialIncomes) {
-          this.financialIncomes = this.newFinancialIncomes;
-          this.updatePaginationData();
-        }
-      }
-    },
-    selectedProduct: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.selectedProduct && this.selectedProduct.id) {
-          this.productReplacements = await getActiveReplacementsByProductId(this.selectedProduct.id);
-        }
       }
     }
   }
@@ -469,8 +388,38 @@ export default {
                       </div>
                     </div>
                   </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input type="radio" class="btn btn-check btn-sm" v-model="incomeStatus" value="CONFIRMED" name="incomeStatus-type" id="confirmed-contacted" autocomplete="off">
+                    <label class="btn" for="confirmed-contacted"> <i :class="`bi bi-check-circle-fill green-icon`"></i> </label>
+                    <input type="radio" class="btn btn-check btn-sm" v-model="incomeStatus" value="PENDING" name="incomeStatus-type" id="pending-contacted" autocomplete="off">
+                    <label class="btn" for="pending-contacted"> <i :class="`bi bi-clock-fill yellow-icon`"></i> </label>
+                    <input type="radio" class="btn btn-check btn-sm" v-model="incomeStatus" value="CANCELLED" name="incomeStatus-type" id="cancelled-contacted" autocomplete="off">
+                    <label class="btn" for="cancelled-contacted"> <i :class="`bi bi-x-circle-fill red-icon`"></i> </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      disableClickAway
+                      :content="$t(`dashboard.tracing.filters.contact`)">
+                      <i class='bi bi-info-circle-fill h7 m-2'></i>
+                    </Popper>
+                  </div>
                   <div class="row">
-                    <div class="col-12">
+                    <div class="col">
+                      <div class="form-check form-switch centered">
+                        <input class="form-check-input m-1" :class="fiscalNote === false ? 'bg-danger' : ''" type="checkbox" name="fiscalNote" id="asc" v-model="fiscalNote" @click="checkFiscalNote($event)">
+                        <label class="form-check-label metric-card-subtitle" for="fiscalNote">{{ fiscalNote ? $t("collaboratorBookingsView.fiscalNote") :  $t("collaboratorBookingsView.gerencial") }}</label>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <div class="form-check form-switch centered">
+                        <input class="form-check-input m-1" :class="automatic === false ? 'bg-danger' : ''" type="checkbox" name="automatic" id="automatic" v-model="automatic" @click="checkAutomatic($event)">
+                        <label class="form-check-label metric-card-subtitle" for="automatic">{{ asc ? $t("collaboratorBookingsView.automatic") :  $t("collaboratorBookingsView.manual") }}</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col">
                       <div class="form-check form-switch centered">
                         <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                         <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
@@ -541,6 +490,7 @@ export default {
                   :commerce="commerce"
                   :commerces="commerces"
                   :toggles="toggles"
+                  @refresh="refresh"
                 >
                 </IncomeDetailsCard>
               </div>
@@ -566,7 +516,95 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-
+            <div id="add-incomes" class="result-card mb-4" v-if="showAdd && toggles['financial.incomes.add']">
+              <div class="centered">
+                <div class="row mb-1">
+                  <div id="income-title-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.incomeTitle") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="newIncome.title"
+                        v-bind:class="{ 'is-invalid': incomeTitleError }"
+                        placeholder="Income A">
+                    </div>
+                  </div>
+                  <div id="income-type-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.incomeType") }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="newIncome.type"
+                        id="types"
+                        v-bind:class="{ 'is-invalid': incomeTypeError }">
+                        <option v-for="typ in incomeTypes" :key="typ.name" :value="typ.id">{{ $t(`incomeTypes.${typ.name}`) }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="income-paymentAmount-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.incomePaymentAmount") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        :min="0"
+                        type="number"
+                        class="form-control"
+                        v-model="newIncome.amount"
+                        v-bind:class="{ 'is-invalid': incomePaymentAmountError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="income-date-form-add" class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t("businessFinancial.incomeDate") }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control"
+                        v-model="newIncome.date"
+                        v-bind:class="{ 'is-invalid': incomeDateError }"
+                        placeholder="1">
+                    </div>
+                  </div>
+                  <div id="income-comment-form-add" class="row mt-1">
+                    <div class="col-12">
+                      <textarea
+                        class="form-control mt-2"
+                        id="commennt"
+                        rows="3"
+                        v-model="newIncome.comment"
+                        :placeholder="$t('dashboard.comment')">
+                      </textarea>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(newIncome)">
+                      {{ $t("businessFinancial.add") }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>

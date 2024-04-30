@@ -7,14 +7,14 @@ export default {
   components: { AttentionCollectionDetails, Popper },
   props: {
     show: { type: Boolean, default: true },
-    calculatedMetrics: { type: Object, default: {} },
+    calculatedMetrics: { type: Object, default: { } },
     detailsOpened: { type: Boolean, default: false },
     showDetailsSection: { type: Boolean, default: true }
   },
   data() {
     return {
-      showAttentionCollection: true,
-      showBookingCollection: false,
+      showIncomesCollection: true,
+      showOutcomesCollection: false,
       extendedEntity: false
     }
   },
@@ -23,12 +23,12 @@ export default {
       return parseFloat((tag * 100 / total).toFixed(2), 2) || 0;
     },
     onShowAttentionCollection() {
-      this.showAttentionCollection = true;
-      this.showBookingCollection = false;
+      this.showIncomesCollection = true;
+      this.showOutcomesCollection = false;
     },
     onShowBookingCollection() {
-      this.showAttentionCollection = false;
-      this.showBookingCollection = true;
+      this.showIncomesCollection = false;
+      this.showOutcomesCollection = true;
     }
   },
   watch: {
@@ -37,11 +37,11 @@ export default {
       deep: true,
       async handler() {
         if (this.detailsOpened === true) {
-          this.showAttentionCollection = true;
-          this.showBookingCollection = true;
+          this.showIncomesCollection = true;
+          this.showOutcomesCollection = true;
         } else {
-          this.showAttentionCollection = true;
-          this.showBookingCollection = false;
+          this.showIncomesCollection = true;
+          this.showOutcomesCollection = false;
         }
       }
     }
@@ -56,12 +56,12 @@ export default {
         <div class="col-6 col-md-6 centered">
         </div>
         <div class="col-6 col-md-6 sub-menu-card">
-          <span v-if="showAttentionCollection" @click="onShowBookingCollection()">{{ $t("dashboard.bookings") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
-          <span v-else @click="onShowAttentionCollection()">{{ $t("dashboard.attentions") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
+          <span v-if="showIncomesCollection" @click="onShowBookingCollection()">{{ $t("dashboard.outcomes") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
+          <span v-else @click="onShowAttentionCollection()">{{ $t("dashboard.incomes") }}<i class="bi bi-arrow-right-circle-fill mx-1"></i> </span>
         </div>
       </div>
       <Transition name="flip">
-        <div v-if="showAttentionCollection">
+        <div v-if="showIncomesCollection">
           <div class="metric-card-title">
             <span class="px-2"> {{ $t('dashboard.items.attentions.34') }} </span>
             <Popper
@@ -74,11 +74,11 @@ export default {
           </div>
           <AttentionCollectionDetails
             :show="show"
-            :distribution="calculatedMetrics['attention.created'].paymentData"
-            :count="calculatedMetrics['attention.created']['paymentData'].paymentCounter || 0"
-            :distributionType="calculatedMetrics['attention.created'].paymentTypeDistribution"
-            :distributionMethod="calculatedMetrics['attention.created'].paymentMethodDistribution"
-            :distributionFiscalNote="calculatedMetrics['attention.created'].paymentFiscalNoteDistribution"
+            :distribution="calculatedMetrics['incomes.created'].paymentData"
+            :count="calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0"
+            :distributionType="calculatedMetrics['incomes.created'].paymentTypeDistribution"
+            :distributionMethod="calculatedMetrics['incomes.created'].paymentMethodDistribution"
+            :distributionFiscalNote="calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >
@@ -86,7 +86,7 @@ export default {
         </div>
       </Transition>
       <Transition name="flip">
-        <div v-if="showBookingCollection">
+        <div v-if="showOutcomesCollection">
           <div class="metric-card-title">
             <span class="px-2"> {{ $t('dashboard.items.attentions.36') }} </span>
             <Popper
@@ -99,11 +99,10 @@ export default {
           </div>
           <AttentionCollectionDetails
             :show="show"
-            :distribution="calculatedMetrics['booking.created'].paymentData"
-            :count="calculatedMetrics['booking.created']['paymentData'].paymentCounter || 0"
-            :distributionType="calculatedMetrics['booking.created'].paymentTypeDistribution"
-            :distributionMethod="calculatedMetrics['booking.created'].paymentMethodDistribution"
-            :distributionFiscalNote="calculatedMetrics['booking.created'].paymentFiscalNoteDistribution"
+            :distribution="calculatedMetrics['incomes.created'].confirmedData"
+            :count="calculatedMetrics['incomes.created']['confirmedData'].paymentCounter || 0"
+            :distributionType="calculatedMetrics['incomes.created'].paymentTypeDistribution"
+            :distributionMethod="calculatedMetrics['incomes.created'].paymentMethodDistribution"
             :detailsOpened="detailsOpened"
             :showDetailsSection="showDetailsSection"
           >

@@ -3,6 +3,7 @@ import { requestBackend, getHeaders } from '../api';
 const entity = 'booking';
 
 export const createBooking = async (body) => {
+  console.log("🚀 ~ createBooking ~ body:", body);
   return (await requestBackend.post(`/${entity}`, body, await getHeaders())).data;
 }
 

@@ -17,6 +17,7 @@ export default {
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
+    services: { type: Array, default: undefined },
     attentionsIn: { type: Array, default: undefined },
   },
   data() {
@@ -33,6 +34,7 @@ export default {
       showFilterOptions: false,
       searchText: undefined,
       queueId: undefined,
+      serviceId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
@@ -53,7 +55,7 @@ export default {
         }
         this.newAttentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined);
+          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -69,6 +71,7 @@ export default {
       this.asc = true;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.serviceId = undefined;
       this.limit = 10;
       this.startDate = undefined;
       this.endDate = undefined;
@@ -117,7 +120,7 @@ export default {
         const result = await getAttentionsDetails(
           this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined);
+          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -165,9 +168,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, survey, asc, queueId, limit } = this;
+      const { page, daysSinceType, survey, asc, queueId, limit, serviceId } = this;
       return {
-        page, daysSinceType, survey, asc, queueId, limit
+        page, daysSinceType, survey, asc, queueId, limit, serviceId
       }
     }
   },
@@ -183,7 +186,8 @@ export default {
           oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId)
+          oldData.queueId !== newData.queueId ||
+          oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
           await this.refresh();
@@ -275,6 +279,12 @@ export default {
                   <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
                   <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
                     <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
+                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.service") }} </label>
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
+                    <option v-for="service in services" :key="service.name" :value="service.id" id="select-queue">{{ service.name }}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">

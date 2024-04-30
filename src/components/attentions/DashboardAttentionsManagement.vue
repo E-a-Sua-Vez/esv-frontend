@@ -17,7 +17,8 @@ export default {
     toggles: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    services: { type: Array, default: undefined }
   },
   data() {
     return {
@@ -36,6 +37,7 @@ export default {
       showFilterOptions: false,
       searchText: undefined,
       queueId: undefined,
+      serviceId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
@@ -62,7 +64,7 @@ export default {
         }
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, this.serviceId);
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
           this.counter = counter;
@@ -91,6 +93,7 @@ export default {
       this.contacted = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.serviceId = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();
@@ -136,7 +139,7 @@ export default {
         }
         const result = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, this.serviceId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -184,9 +187,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit, serviceId } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit, serviceId
       }
     }
   },
@@ -205,7 +208,8 @@ export default {
           oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId)
+          oldData.queueId !== newData.queueId ||
+          oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
         }
@@ -301,6 +305,12 @@ export default {
                   <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
                   <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
                     <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
+                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.service") }} </label>
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
+                    <option v-for="service in services" :key="service.name" :value="service.id" id="select-queue">{{ service.name }}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">

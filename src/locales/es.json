@@ -132,6 +132,13 @@
     "PROMOTION": "Promoción",
     "RETURN": "Retorno"
   },
+  "incomeTypes": {
+    "FIRST_PAYMENT": "Primera Cuota",
+    "INSTALLMENT": "Cuota",
+    "UNIQUE": "Pago Único",
+    "STANDARD": "Entrada Normal",
+    "FUND_INCREASE": "Incremento de Fondos"
+  },
   "paymentClientMethods": {
     "PAID": "Pagado",
     "CREDIT_CARD": "T. Crédito",
@@ -148,7 +155,8 @@
     "NOTA_FISCAL": "Nota Fiscal",
     "GERENCIAL": "Gerencial",
     "undefined": "N/I",
-    "null": "N/I"
+    "null": "N/I",
+    "OTHER": "Otro"
   },
   "productsTypes": {
     "SERVICE": "Servicio"
@@ -347,7 +355,7 @@
       "description": "Tranferir reserva a otra fila disponible"
     },
     "attention-transfer-queue": {
-      "title": "Atebción Transferir Fila",
+      "title": "Atención Transferir Fila",
       "description": "Tranferir atención a otra fila disponible"
     },
     "attention-user-search": {
@@ -366,9 +374,13 @@
       "title": "Whatsapp Contacto Comercio",
       "description": "Permite al usuario poder contactar al Comercio vía Whatsapp antes de solicitar atención"
     },
-    "user-service-conditions": {
-      "title": "Aceptar Condiciones Servicio",
-      "description": "Permite al usuario ver las condiciones de servicio para aceptarlas"
+    "booking-whatsapp-cancel": {
+      "title": "Whatsapp Reserva Cancelada",
+      "description": "Permite enviar mensaje de reserva cancelada."
+    },
+    "attention-whatsapp-cancel": {
+      "title": "Whatsapp Atención Cancelada",
+      "description": "Permite enviar mensaje de atención cancelada."
     }
   },
   "document": {
@@ -392,7 +404,7 @@
     "paymentType": "Tipo de Pago:",
     "paymentMethod": "Medio de Pago:",
     "paymentFiscalNote": "Nota Fiscal:",
-    "paymentAmount": "Monto:",
+    "paymentAmount": "Monto Pagado:",
     "paymentCommission": "Comisión:",
     "paymentDate": "Fecha de Pago:",
     "outcomeType": "Tipo:",
@@ -404,7 +416,11 @@
     "user": "Usuario:",
     "lastReplacementDate": "Fecha Última Reposición:",
     "attentionId": "Id. Atención:",
-    "code": "Código:"
+    "code": "Código:",
+    "installments": "Cuotas:",
+    "totalAmount": "Total Procedimiento:",
+    "package": "Paquete:",
+    "service": "Servicio:"
   },
   "searchAdminItem": {
     "message": {
@@ -513,6 +529,7 @@
     "newClient": "Soy Nuevo",
     "oldClient": "Ya Soy Cliente",
     "selectTheService": "Selecciona el servicio",
+    "procedures": "Sesiones:",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -958,7 +975,9 @@
     "paymentType": "Tipo de Pago:",
     "paymentMethod": "Medio de pago:",
     "paymentFiscalNote": "Nota Fiscal:",
-    "paymentAmount": "Monto:",
+    "paymentAmount": "Monto Pago:",
+    "totalAmount": "Total Procedimiento:",
+    "installments": "Cuotas:",
     "paymentCommission": "Comisión:",
     "paymentComment": "Comentario (Opcional)",
     "transferQueue": "Transferir Fila",
@@ -972,6 +991,15 @@
     "attend": "Atender",
     "update": "Actualizar",
     "attendQueue": "Atender Fila",
+    "packages": "Paquetes Activos:",
+    "pendingPayment": "Pagos Pendientes:",
+    "skipPayment": "Procesar pago ahora:",
+    "confirmInstallments": "Confirmar Cuotas:",
+    "confirmPayment": "Confirmar Pago",
+    "fiscalNote": "N. Fiscal",
+    "gerencial": "Gerencial",
+    "automatic": "Automatic",
+    "manual": "Manual",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1004,6 +1032,10 @@
       "8": {
         "title": "Atención ya está confirmada",
         "content": "La atención ya fue confirmada anteriormente, verifica los datos de confirmación."
+      },
+      "9": {
+        "title": "Paquete ya fue pagado",
+        "content": "Este paquete no presenta pagos pendientes."
       }
     },
     "capacitiesList": {
@@ -1278,7 +1310,9 @@
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promotor",
-    "queue": "Selecciona Fila o Servicio:",
+    "queue": "Selecciona Fila:",
+    "service": "Selecciona Servicio:",
+    "stock": "Stock",
     "resume": "Resumen",
     "consolidated": "Consolidado",
     "day": "Día",
@@ -1311,6 +1345,7 @@
     "userData": "Usuario:",
     "queueData": "Fila/Servicio:",
     "contactMethod": "Medio de Contacto",
+    "outcomes": "Egresos",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1371,9 +1406,9 @@
         "31": "¿Dónde nos conoció?",
         "32": "Número de Contactos a Clientes",
         "33": "Semáforo Atenciones",
-        "34": "Recaudación Atenciones",
+        "34": "Ingresos",
         "35": "Confirmadas",
-        "36": "Recaudación Reservas",
+        "36": "Egresos",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
@@ -1990,6 +2025,8 @@
     "onlineSaving": "Descuento Online:",
     "listResult": "Registros:",
     "blockTime": "Bloque (Min):",
+    "procedures": "Procedimientos:",
+    "proceduresHelp": "Cantidad de Procedimientos necesarios para completar el Servicio",
     "tagHelp": "Identificador corto del servicio",
     "onlineHelp": "Servicio puede ser mostrado para ser seleccionado por el usuario.",
     "blockTimeHelp": "Duración del bloque de atención al usuario para este servicio en minutos.",
@@ -2221,9 +2258,19 @@
     "outcomeExpireDate": "Vencimiento:",
     "outcomeDate": "Fecha:",
     "outcomeCode": "Código:",
+    "incomeTitle": "Concepto:",
+    "incomeType": "Tipo:",
+    "incomeAmount": "Cantidad:",
+    "incomeProduct": "Producto:",
+    "incomeNextDate": "Próximo Egreso:",
+    "incomeExpireDate": "Vencimiento:",
+    "incomeDate": "Fecha:",
+    "incomePaymentAmount": "Monto:",
+    "incomeTotalAmount": "Monto Total:",
     "add": "Agregar",
     "outcomePaymentAmount": "Monto:",
     "outcomeBeneficiary": "Beneficiario:",
+    "commission": "Comisión",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2252,7 +2299,8 @@
       "financial": {
         "incomes": {
           "view": "Ver Ingresos",
-          "add": "Agregar Ingreso"
+          "add": "Agregar Ingreso",
+          "confirm": "Confirmar Ingreso"
         },
         "resume": {
           "view": "Ver Resumen"

@@ -132,6 +132,13 @@
     "PROMOTION": "Promotion",
     "RETURN": "Return"
   },
+  "incomeTypes": {
+    "FIRST_PAYMENT": "First Payment",
+    "INSTALLMENT": "Installment",
+    "UNIQUE": "Unique Payment",
+    "FUND_INCREASE": "Fund Increase",
+    "STANDARD": "Standard"
+  },
   "paymentClientMethods": {
     "PAID": "Paid",
     "CREDIT_CARD": "Credit Card",
@@ -148,7 +155,8 @@
     "FISCAL_NOTE": "Fiscal Note",
     "MANAGEMENT": "Management",
     "undefined": "N/I",
-    "null": "N/I"
+    "null": "N/I",
+    "OTHER": "Other"
   },
   "productsTypes": {
     "SERVICE": "Service"
@@ -368,6 +376,14 @@
     "user-service-conditions": {
       "title": "Accept Service Conditions",
       "description": "Let the user to see the service conditions to accept them"
+    },
+    "booking-whatsapp-cancel": {
+      "title": "Whatsapp Booking Cancelled",
+      "description": "Let send the booking cancelled whatsapp message."
+    },
+    "attention-whatsapp-cancel": {
+      "title": "Whatsapp Attention Cancelled",
+      "description": "Let send the attention cancelled whatsapp message."
     }
   },
   "document": {
@@ -391,7 +407,7 @@
     "paymentType": "Payment Type:",
     "paymentMethod": "Payment Method:",
     "paymentFiscalNote": "Fiscal Note:",
-    "paymentAmount": "Amount:",
+    "paymentAmount": "Amount Paid:",
     "paymentCommission": "Commission:",
     "paymentDate": "Payment Date:",
     "outcomeType": "Type:",
@@ -403,7 +419,11 @@
     "user": "User:",
     "lastReplacementDate": "Date Last Replacement:",
     "attentionId": "Attention Id.:",
-    "code": "Code:"
+    "code": "Code:",
+    "installments": "Installemnts:",
+    "totalAmount": "Total Amount:",
+    "package": "Package:",
+    "service": "Service:"
   },
   "searchAdminItem": {
     "message": {
@@ -510,6 +530,7 @@
     "newClient": "I'm new",
     "oldClient": "I'm Client",
     "selectTheService": "Select the Service",
+    "procedures": "Procedures:",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -962,7 +983,9 @@
     "confirmData": "Confirmation Data",
     "paymentType": "Payment type:",
     "paymentMethod": "Payment method:",
-    "paymentAmount": "Amount:",
+    "paymentAmount": "Amount paid:",
+    "totalAmount": "Total Amount:",
+    "installments": "Installemnts:",
     "paymentCommission": "Commission:",
     "paymentFiscalNote": "Fiscal Note:",
     "edit": "Edit Booking",
@@ -976,6 +999,16 @@
     "selectQueueToTransfer": "Select the queue you want to move the booking to:",
     "update": "Update",
     "attendQueue": "Attend Queue",
+    "packages": "Active Packages:",
+    "pendingPayment": "Pending Payments:",
+    "skipPayment": "Process payment now:",
+    "confirmInstallments": "Confirm Installment:",
+    "confirmPayment": "Confirm Payment",
+    "fiscalNote": "F. Note",
+    "gerencial": "Gerencial",
+    "automatic": "Automatic",
+    "attend": "Attend",
+    "manual": "Manual",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -1008,6 +1041,10 @@
       "8": {
         "title": "Attention was confirmed already",
         "content": "The attention was confirmed, please verify the confirmation data."
+      },
+      "9": {
+        "title": "Package was paid already",
+        "content": "This package doesn't hace pending payments."
       }
     },
     "capacitiesList": {
@@ -1279,7 +1316,8 @@
     "detractor": "Detractor",
     "neutral": "Neutral",
     "promoter": "Promoter",
-    "queue": "Select Queue or Service:",
+    "queue": "Select Queue:",
+    "service": "Select Service:",
     "resume": "Summary",
     "consolidated": "Consolidated",
     "survey": "Survey",
@@ -1313,6 +1351,7 @@
     "userData": "User:",
     "queueData": "Queue/Service:",
     "contactMethod": "Contact Method:",
+    "outcomes": "Outcomes",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1373,9 +1412,9 @@
         "31": "¿Where did you find us?",
         "32": "Client Contacts Number",
         "33": "Last Attentions",
-        "34": "Attention Collection",
+        "34": "Incomes",
         "35": "Confirmed",
-        "36": "Booking Collection",
+        "36": "Outcomes",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",
@@ -1986,6 +2025,8 @@
     "saving": "Saving:",
     "onlineSaving": "Online saving:",
     "blockTime": "Block (Min):",
+    "procedures": "Procedures:",
+    "proceduresHelp": "Procedures number needed to complete the Service",
     "estimatedTime": "Estimated Time:",
     "tagHelp": "Short identifier of the service.",
     "onlineHelp": "Service can be shown to be selected by the user.",
@@ -2121,6 +2162,15 @@
     "outcomeProduct": "Product:",
     "outcomeNextDate": "Next Outcome:",
     "outcomeExpireDate": "Expiration:",
+    "incomeTitle": "Concept:",
+    "incomeType": "Type:",
+    "incomeAmount": "Quantity:",
+    "incomeProduct": "Product:",
+    "incomeNextDate": "Next Outcome:",
+    "incomeExpireDate": "Expiration:",
+    "incomeDate": "Date:",
+    "incomePaymentAmount": "Amount:",
+    "incomeTotalAmount": "Total Amount:",
     "outcomeDate": "Date:",
     "outcomeCode": "Code:",
     "add": "Add",
@@ -2154,7 +2204,8 @@
       "financial": {
         "incomes": {
           "view": "See Incomes",
-          "add": "Add Income"
+          "add": "Add Income",
+          "confirm": "Confirm Income"
         },
         "resume": {
           "view": "See Resume"

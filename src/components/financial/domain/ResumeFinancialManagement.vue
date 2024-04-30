@@ -14,12 +14,14 @@ import { Chart, registerables } from 'chart.js';
 import PDFHeader from '../../reports/PDFHeader.vue';
 import PDFFooter from '../../reports/PDFFooter.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
+import { getFinancialMetrics } from '../../../application/services/query-stack';
+import CollectionDetails from '../../dashboard/domain/CollectionDetails.vue';
 
 Chart.register(...registerables);
 
 export default {
   name: 'ResumeFinancialManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter, SimpleDownloadButton },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, SimpleCard, LineChart, PDFHeader, PDFFooter, SimpleDownloadButton, CollectionDetails },
   props: {
     showResumeFinancialManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -28,9 +30,7 @@ export default {
     commerces: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
-    financialResumeIn: { type: Object, default: {} }
   },
-  emits: ['getProductConsuptions'],
   data() {
     const store = globalStore();
     return {
@@ -38,7 +38,7 @@ export default {
       alertError: '',
       financialResume: {
         incomes: {
-          total: 12340
+          paymentData: {},
         },
         outcomes: {
           total: 4560,
@@ -56,13 +56,15 @@ export default {
       userType: undefined,
       user: undefined,
       startDate: undefined,
-      endDate: undefined
+      endDate: undefined,
+      calculatedMetrics: {},
+      detailsOpened: false
     }
   },
   async beforeMount() {
     this.financialResume = {
       incomes: {
-        total: 12340
+        paymentData: {},
       },
       outcomes: {
         total: 4560,
@@ -74,82 +76,14 @@ export default {
       },
       evolution: {}
     };
-    const { barChartProps: financialEvolution } = useBarChart({
-      chartData: {
-        labels: [
-          '2024-04-01',
-          '2024-04-02',
-          '2024-04-03',
-          '2024-04-04',
-          '2024-04-05',
-          '2024-04-06',
-          '2024-04-07',
-          '2024-04-08',
-          '2024-04-09',
-        ],
-        datasets: [
-          {
-            label: 'Incomes',
-            boxWidth: 10,
-            borderColor: '#004aad',
-            backgroundColor: "rgba(127, 134, 255, 0.7)",
-            borderDash: [2, 2],
-            data: [
-              1230,
-              560,
-              230,
-              3400,
-              2100,
-              0,
-              230,
-              1600,
-              3406
-            ],
-            fill: false,
-            tension: .1,
-            radius: 0,
-            type: 'bar'
-          },
-          {
-            label: 'Outcomes',
-            boxWidth: 10,
-            borderColor: '#a52a2a',
-            backgroundColor: "rgba(255, 99, 71, 0.7)",
-            borderDash: [2, 2],
-            borderDash: [2, 2],
-            data: [
-              130,
-              360,
-              30,
-              1400,
-              100,
-              0,
-              330,
-              600,
-              169
-            ],
-            fill: false,
-            tension: .1,
-            radius: 0,
-            type: 'bar'
-          }
-        ],
-        options: {
-          fill: false,
-          radius: 0,
-        }
-      }
-    });
-    this.financialResume.evolution = financialEvolution;
+    await this.getCurrentMonth();
   },
   methods: {
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
     },
     async clear() {
-      this.startDate = undefined;
-      this.endDate = undefined;
-      await this.refresh();
+      await this.getCurrentMonth();
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -162,7 +96,59 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newFinancialResume = this.financialResume;
+        const { calculatedMetrics } = await getFinancialMetrics(commerceIds, this.startDate, this.endDate);
+        this.calculatedMetrics = calculatedMetrics;
+        const incomes = calculatedMetrics['incomes.created'];
+        this.financialResume.incomes = incomes
+        const { barChartProps: financialEvolution } = useBarChart({
+          chartData: {
+            labels: incomes['evolution']['labels'] || [],
+            datasets: [
+              {
+                label: 'Incomes',
+                boxWidth: 10,
+                borderColor: '#004aad',
+                backgroundColor: "rgba(127, 134, 255, 0.7)",
+                borderDash: [2, 2],
+                data: incomes['evolution']['datasets'].map(data => data['paymentAmountSum']) || [],
+                fill: false,
+                tension: .1,
+                radius: 0,
+                type: 'bar'
+              },
+              {
+                label: 'Commissions',
+                boxWidth: 10,
+                borderColor: '#a52a2a',
+                backgroundColor: "rgba(255, 99, 71, 0.3)",
+                borderDash: [2, 2],
+                data: incomes['evolution']['datasets'].map(data => data['paymentCommissionSum']) || [],
+                fill: false,
+                tension: .1,
+                radius: 0,
+                type: 'bar'
+              },
+              {
+                label: 'Outcomes',
+                boxWidth: 10,
+                borderColor: '#a52a2a',
+                backgroundColor: "rgba(255, 99, 71, 0.8)",
+                borderDash: [2, 2],
+                borderDash: [2, 2],
+                data: [ ],
+                fill: false,
+                tension: .1,
+                radius: 0,
+                type: 'bar'
+              }
+            ],
+            options: {
+              fill: false,
+              radius: 0,
+            }
+          }
+        });
+        this.financialResume.evolution = financialEvolution;
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -245,22 +231,6 @@ export default {
         await this.getUserType();
         await this.getUser();
       }
-    },
-    financialResumeIn: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.financialResume = this.financialResumeIn;
-      }
-    },
-    newFinancialResume: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.newFinancialResume) {
-          this.financialResume = this.newFinancialResume;
-        }
-      }
     }
   }
 }
@@ -289,7 +259,7 @@ export default {
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
-                    <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}  <i :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
+                    <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()"> <i class="bi bi-search"></i> {{ $t("dashboard.aditionalFilters") }}   </span>
                   </span>
                   <button
                     class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
@@ -297,7 +267,7 @@ export default {
                     <span><i class="bi bi-eraser-fill"></i></span>
                   </button>
                 </div>
-                <div v-if="showFilterOptions">
+                <div >
                   <div class="row my-1">
                     <div class="col-3">
                       <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
@@ -343,37 +313,28 @@ export default {
               </PDFHeader>
               <div>
                 <div class="row">
-                  <div id="attention-time-avg" class="col">
+                  <div v-if="calculatedMetrics['incomes.created']">
+                    <CollectionDetails
+                      :show="!!toggles['financial.reports.resume']"
+                      :calculatedMetrics="calculatedMetrics"
+                      :detailsOpened="detailsOpened"
+                    >
+                    </CollectionDetails>
+                  </div>
+                </div>
+                <div class="row">
+                  <div id="profit" class="col">
                     <SimpleCard
                       :show="true"
-                      :data="financialResume['incomes'].total || 0"
-                      :title="$t('businessFinancial.incomes')"
+                      :data="+financialResume['incomes']['paymentData']['paymentCommissionSum'] || 0"
+                      :title="$t('businessFinancial.profit')"
                       :showTooltip="false"
-                      :icon="'bi-coin'"
+                      :icon="'bi-arrow-up-circle-fill'"
                       :iconStyleClass="'green-icon'">
                     </SimpleCard>
                   </div>
-                  <div id="attention-no-device" class="col">
-                    <SimpleCard
-                      :show="true"
-                      :data="financialResume['outcomes'].total || 0"
-                      :subdata="`${financialResume['outcomes'].avg || 0}%`"
-                      :title="$t('businessFinancial.outcomes')"
-                      :showTooltip="false"
-                      :icon="'bi-coin'"
-                      :iconStyleClass="'red-icon'">
-                    </SimpleCard>
-                  </div>
                 </div>
-                <SimpleCard
-                  :show="true"
-                  :data="`${financialResume['resume'].avg || 0}%`"
-                  :title="$t('businessFinancial.profit')"
-                  :showTooltip="false"
-                  :icon="'bi-arrow-up-circle-fill'"
-                  :iconStyleClass="'green-icon'">
-                </SimpleCard>
-                <div class="row mx-2 mt-3">
+                <div class="row mx-2 mt-3" v-if="calculatedMetrics['incomes.created']">
                   <div class="card col centered p-4">
                     <div class="fw-bold mb-2">
                       <span>{{ $t('businessFinancial.evolution') }} </span>

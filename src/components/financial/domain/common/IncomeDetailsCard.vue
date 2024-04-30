@@ -4,10 +4,13 @@ import { getDate } from '../../../../shared/utils/date';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../../shared/utils/jsonToCsv';
 import Spinner from '../../../common/Spinner.vue';
+import { formatIdNumber } from '../../../../shared/utils/idNumber';
+import { confirmPendingIncome } from '../../../../application/services/income';
+import AreYouSure from '../../../common/AreYouSure.vue';
 
 export default {
   name: 'IncomeDetailsCard',
-  components: { Popper, Spinner },
+  components: { Popper, Spinner, AreYouSure },
   props: {
     show: { type: Boolean, default: true },
     toggles: { type: Object, default: undefined },
@@ -22,7 +25,8 @@ export default {
       contactResultTypes: [],
       productConsumptions: [],
       page: 1,
-      limit: 10
+      limit: 10,
+      goToConfirm: false
     }
   },
   beforeMount() {
@@ -39,20 +43,42 @@ export default {
       const textToCopy = jsonToCsv([this.income]);
       navigator.clipboard.writeText(textToCopy);
     },
-    clasifyDaysSinceComment() {
-      return 'bi-qr-code blue-icon';
+    clasifyIncomeStatus(status) {
+      if (status === 'PENDING') {
+        return 'bi-clock-fill icon yellow-icon';
+      } else if (status === 'CONFIRMED') {
+        return 'bi-check-circle-fill icon green-icon';
+      } else if (status === 'CANCELLED') {
+        return 'bi-x-circle-fill icon red-icon';
+      } else {
+        return 'bi-asteric icon blue-icon';
+      }
     },
     clasifyDaysSinceBooking() {
       return 'bi-calendar-fill blue-icon';
     },
-    async getAttentionProducts() {
+    formatIdNumber(idNumber) {
+      return formatIdNumber(this.commerce, idNumber);
+    },
+    goConfirm() {
+      this.goToConfirm = !this.goToConfirm;
+    },
+    cancelConfirm() {
+      this.goToConfirm = false;
+    },
+    async confirmPayment() {
       try {
         this.loading = true;
-        this.productConsumptions = await getProductsConsumptionsDetails(undefined, undefined, this.page, this.limit, this.asc, undefined, undefined, this.income.incomeId);
+        await confirmPendingIncome(this.income.id);
+        setTimeout(() => { this.$emit('refresh'); }, 3000);
+        this.goToConfirm = false;
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
+    },
+    manualIncome() {
+      return ['STANDARD', 'FUND_INCREASE'].includes(this.income.type);
     }
   },
   watch: {
@@ -76,18 +102,39 @@ export default {
 
 <template>
   <div v-if="show">
-    <div class="row metric-card">
-      <div class="col-4 centered fw-bold">
-        {{ Number(income.paymentAmount).toLocaleString("de-DE") }}
-        <span v-if="income.paymentType" :class="`badge bg-secondary metric-keyword-tag mx-1 fw-bold ${income.paymentType === 'PARTIAL' ? 'bg-warning' : 'bg-success' }`"> {{ income.paymentType === 'PARTIAL' ? 'P' : 'T' }}</span>
+    <div class="row metric-card" v-if="manualIncome()">
+      <div class="idNumber-title lefted fw-bold" v-if="income && income.incomeInfo.user" >
+        <i class="bi bi-hand-index-fill"></i>
+        <span class="mx-1">{{ income.incomeInfo?.user.trim().toUpperCase() || '' }}</span>
       </div>
-      <div class="col-4 centered fw-bold date-title" v-if="income && income.userName">
-        {{ income.userName.split(' ')[0] || income.userIdNumber || 'N/I' }}
-        <i v-if="income.attentionId" :class="`bi ${clasifyDaysSinceComment()} mx-1`"></i>
-        <i v-if="!income.attentionId && income.bookingId" :class="`bi ${clasifyDaysSinceBooking()} mx-1`"></i>
+      <div class="col-5 card-client-title lefted fw-bold">
+        {{ income.incomeInfo?.title.trim().toUpperCase() || '' }}
       </div>
-      <div class="col-4 centered date-title">
-        {{ getDate(income.paymentDate) }}
+      <div class="col-4 centered fw-bold date-title fw-bold">
+        {{ Number(income.amount).toLocaleString("de-DE") }}
+        <i v-if="income.status" :class="`bi ${clasifyIncomeStatus(income.status)} mx-1`"> </i>
+      </div>
+      <div class="col-3 centered date-title">
+        {{ getDate(income.paidAt || income.paymentDate) }}
+      </div>
+    </div>
+    <div class="row metric-card" v-else>
+      <div class="idNumber-title lefted fw-bold" v-if="income && income.userName" >
+        <i class="bi bi-person-circle"></i>
+        <span class="mx-1">{{ income.userName?.trim().toUpperCase() || '' }} {{ income.userLastName?.trim().toUpperCase() || '' }}</span>
+      </div>
+      <div class="col-5 card-client-title lefted fw-bold">
+        {{ formatIdNumber(income.userIdNumber) || 'N/I' }}
+        <span v-if="income.type === 'INSTALLMENT'" class="badge bg-primary mx-1"> {{ income.installmentNumber }}</span>
+        <span v-if="income.type === 'FIRST_PAYMENT'" class="badge bg-success mx-1"> I </span>
+        <span v-if="income.type === 'UNIQUE'" class="badge bg-success mx-1"> U </span>
+      </div>
+      <div class="col-4 centered fw-bold date-title fw-bold">
+        {{ Number(parseFloat(income.amount).toFixed(2)).toLocaleString("de-DE") }}
+        <i v-if="income.status" :class="`bi ${clasifyIncomeStatus(income.status)} mx-1`"> </i>
+      </div>
+      <div class="col-3 centered date-title">
+        {{ getDate(income.paidAt || income.paymentDate) }}
       </div>
     </div>
     <div class="details-arrow">
@@ -102,7 +149,7 @@ export default {
       <div
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
-        <div class="row m-0">
+        <div class="row m-0" v-if="!manualIncome()">
           <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ income.userName || 'N/I' }} {{ income.userLastName || '' }}
@@ -156,57 +203,94 @@ export default {
             </div>
           </div>
         </div>
+        <div class="row mx-1 mt-3 centered" v-if="income.status === 'PENDING'">
+          <div class="col-12" v-if="toggles['financial.incomes.confirm']">
+            <button
+              @click="goConfirm()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action">
+              {{ $t('collaboratorBookingsView.confirmPayment')}} <br> <i class="bi bi-coin"></i>
+            </button>
+            <AreYouSure
+              :show="goToConfirm"
+              :yesDisabled="toggles['financial.incomes.confirm']"
+              :noDisabled="toggles['financial.incomes.confirm']"
+              @actionYes="confirmPayment()"
+              @actionNo="cancelConfirm()"
+            >
+            </AreYouSure>
+          </div>
+        </div>
         <hr>
         <div class="row m-1 centered">
           <div class="col">
-            <div class="" v-if="income.paid !== undefined && income.paid === true">
-              <div class="mb-1">
+            <div class="">
+              <div class="mb-2">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
-              <div v-if="income.paid" class="col">
-                <span v-if="income.proceduresTotalNumber && income.procedureNumber" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.procedures') }} </span>
-                  {{ income.procedureNumber }} {{ $t('collaboratorBookingsView.procedureNumber')}} {{ income.proceduresTotalNumber }}
+              <div class="col">
+                <span v-if="income.installmentNumber" class="badge mx-1 detail-data-badge bg-warning">
+                  {{ income.installmentNumber }}
                 </span>
-                <span v-if="income.paymentFiscalNote" class="badge mx-1 detail-data-badge">
+                <span v-if="income.installments && income.installments" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.installments') }} </span>
+                  {{ income.installments }}
+                </span>
+                <span v-if="income.fiscalNote" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentFiscalNote') }} </span>
-                  {{ $t(`paymentFiscalNotes.${income.paymentFiscalNote}`) }}
+                  {{ $t(`paymentFiscalNotes.${income.fiscalNote}`) }}
                 </span>
-                <span v-if="income.paymentType" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentType') }} </span>
-                  {{ $t(`paymentTypes.${income.paymentType}`) }}
+                <span v-if="income.type" class="badge mx-1 detail-data-badge bg-success">
+                  {{ $t(`incomeTypes.${income.type}`) }}
                 </span>
                 <span v-if="income.paymentMethod" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentMethod') }} </span>
                   {{ $t(`paymentClientMethods.${income.paymentMethod}`) }}
                 </span>
-                <span v-if="income.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
+                <span v-if="income.amount" class="badge mx-1 detail-data-badge bg-warning">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ income.paymentAmount }}
+                  <i class="bi bi-coin mx-1"> </i> {{ Number(parseFloat(income.amount).toFixed(2)).toLocaleString("de-DE") }}
+                </span>
+                <span v-if="income.totalAmount" class="badge mx-1 detail-data-badge bg-warning">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.totalAmount') }} </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ Number(parseFloat(income.totalAmount).toFixed(2)).toLocaleString("de-DE") }}
                 </span>
                 <span v-if="income.paymentCommission" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentCommission') }} </span>
                   <i class="bi bi-coin mx-1"> </i> {{ income.paymentCommission }}
                 </span>
+                <span v-if="income.createdBy" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
+                  <i class="bi bi-person-fill"> </i> {{ income.createdBy }}
+                </span>
               </div>
               <hr>
             </div>
             <div class="mt-2">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
               </div>
-              <span v-if="income.queueName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
-                {{ income.queueName }}
+              <div class="m-0 mt-2" v-if="income.bookingServicesDetails">
+                <span v-for="serv in income.bookingServicesDetails" :key="serv.id" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+                  {{ serv.name }}
+                </span>
+              </div>
+              <div class="m-0 mt-2" v-if="income.attentionServicesDetails">
+                <span v-for="serv in income.attentionServicesDetails" :key="serv.id" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+                  {{ serv.name }}
+                </span>
+              </div>
+              <span v-if="income.packageId && income.packageName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
+                {{ income.packageName }}
+                <span class="badge mx-1 bg-secondary"> {{ income.proceduresAmount }}</span>
+                <i class="bi bi-check-circle-fill green-icon" v-if="income.packagePaid"> </i>
               </span>
-              <span v-if="income.collaboratorName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
-                <i class="bi bi-person-fill"> </i> {{ income.collaboratorName }}
-              </span>
-              <span v-if="income.user" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
-                <i class="bi bi-person-fill"> </i> {{ income.user }}
-              </span><br><br>
+              <span v-if="income.commerceName && income.commerceTag" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
+                {{ income.commerceName }} - {{ income.commerceTag }}</span>
+              <br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ income.id }}</span>
               <span class="metric-card-details"><strong>Date:</strong> {{ getDate(income.paymentDate) }}</span>
             </div>

@@ -7,6 +7,9 @@ const CollaboratorQueueBookings = () => import('../../views/collaborator/Collabo
 const CollaboratorTracing = () => import('../../views/collaborator/CollaboratorTracing.vue');
 const CollaboratorProductStockAdmin = () => import('../../views/collaborator/CollaboratorProductStockAdmin.vue');
 const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
+const UserQueueAttention = () => import('../../views/UserQueueAttention.vue');
+const UserQueueBooking = () => import('../../views/UserQueueBooking.vue');
+const UserQueueWaitlist = () => import('../../views/UserQueueWaitlist.vue');
 
 const PrivateCollaboratorRoutes = [
   {
@@ -53,6 +56,21 @@ const PrivateCollaboratorRoutes = [
     path: '/interno/commerce/:keyName/filas',
     name: 'commerce-collaborator-queues',
     component: CommerceQueuesView
+  },
+  {
+    path: '/interno/fila/:queueId/atencion/:id/',
+    name: 'collaborator-queue-attention',
+    component: UserQueueAttention
+  },
+  {
+    path: '/interno/booking/:id/',
+    name: 'colaborator-queue-booking',
+    component: UserQueueBooking
+  },
+  {
+    path: '/interno/waitlist/:id/:block',
+    name: 'collaborator-queue-waitlist',
+    component: UserQueueWaitlist
   }
 ]
 

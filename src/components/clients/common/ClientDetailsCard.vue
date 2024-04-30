@@ -8,6 +8,7 @@ import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
+import { formatIdNumber } from '../../../shared/utils/idNumber';
 
 export default {
   name: 'ClientDetailsCard',
@@ -21,6 +22,7 @@ export default {
     endDate: { type: String, default: undefined },
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
+    services: { type: Array, default: undefined },
     management: { type: Boolean, default: true },
   },
   data() {
@@ -161,6 +163,9 @@ export default {
     },
     async getUser() {
       this.user = await this.store.getCurrentUser;
+    },
+    formatIdNumber(idNumber) {
+      return formatIdNumber(this.commerce, idNumber);
     }
   },
   watch: {
@@ -186,16 +191,19 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
-      <div class="col-7 centered" v-if="client && client.userName">
-        <i class="bi bi-person-circle mx-1"></i> {{ client.userName.split(' ')[0] || client.userIdNumber || 'N/I' }}
+      <div class="idNumber-title lefted" v-if="client && client.userName" >
+        <i class="bi bi-person-circle"></i>
+        <span class="mx-1">{{ client.userName?.trim().toUpperCase() || '' }} {{ client.userLastName?.trim().toUpperCase() || '' }}</span>
+      </div>
+      <div class="col-7 card-client-title lefted">
+        {{ formatIdNumber(client.userIdNumber) || 'N/I' }}
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ client.attentionsCounter || 0 }} </span>
         <i v-if="client.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-
       </div>
-      <div class="col-2 centered">
+      <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyDaysSinceComment(client.daysSinceAttention || 0)} mx-1`"></i> {{ client.daysSinceAttention || 0 }}
       </div>
-      <div class="col-3 centered">
+      <div class="col-3 centered card-client-title">
         <i v-if="client.contacted === true || checked === true" :class="`bi ${clasifyContactResult(client.contactResult || undefined)}`"> </i>
         <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedClient || 0)} mx-1`"> </i> {{ client.daysSinceContactedClient || 0 }}
       </div>
@@ -240,7 +248,7 @@ export default {
               </a>
             </div>
             <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ client.userIdNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ formatIdNumber(client.userIdNumber) || 'N/I' }}
             </div>
           </div>
           <div class="d-none d-md-block col-12 col-md-6">
@@ -261,7 +269,7 @@ export default {
               </a>
             </div>
             <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ client.userIdNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ formatIdNumber(client.userIdNumber) || 'N/I' }}
             </div>
           </div>
         </div>
@@ -317,7 +325,20 @@ export default {
                 <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
               <span v-if="client.commerceName && client.commerceTag" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-                {{ client.commerceName }} - {{ client.commerceTag }}</span><br>
+                {{ client.commerceName }} - {{ client.commerceTag }}</span>
+              <span v-if="client.packageId && client.packageName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
+                  {{ client.packageName }}
+                  <span class="badge mx-1 bg-secondary">{{ client.packageProcedureNumber }} / {{ client.packageProceduresTotalNumber }}</span>
+                  <i class="bi bi-check-circle-fill green-icon" v-if="client.packagePaid"> </i>
+              </span>
+              <span v-if="client.servicesDetails" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+                <span v-for="serv in client.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }}</span>
+              </span>
+              <span v-if="client.attentionCreatedDate" class="badge mx-1 detail-data-badge">
+                <i class="bi bi-calendar-fill"> </i> {{ getDate(client.attentionCreatedDate) }}
+              </span><br>
               <hr>
             </div>
             <div class="mt-2" v-if="client.userBirthday || client.userOrigin || client.userAddressCode || client.userCode1">
@@ -352,7 +373,7 @@ export default {
             </div>
             <div class="mt-2">
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.id }}</span>
-              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate) }}</span>
+              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.attentionCreatedDate || client.clientCreatedDate) }}</span>
             </div>
           </div>
         </div>
@@ -376,11 +397,12 @@ export default {
               :commerce="commerce"
               :commerces="commerces"
               :queues="queues"
+              :services="services"
             >
             </ClientAttentionsManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-toggle="modal" data-bs-target="#detailsQuestionModal">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

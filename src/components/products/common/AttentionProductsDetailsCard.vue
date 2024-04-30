@@ -84,11 +84,15 @@ export default {
 <template>
   <div v-if="show">
     <div class="row metric-card">
-      <div class="col-6 centered fw-bold" v-if="attention && attention.userName">
-        {{ attention.userName.split(' ')[0] || attention.userIdNumber || 'N/I' }}
+      <div v-if="attention.servicesDetails" class="idNumber-title lefted">
+        <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
+        <span v-if="attention.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span> </span>
+      </div>
+      <div class="col-6 lefted fw-bold card-client-title mt-1" v-if="attention && attention.userName">
+        {{ attention.userName?.trim().toUpperCase() || '' }} {{ attention.userLastName?.trim().toUpperCase() || '' }}
         <i v-if="attention.productCounter > 0" class="bi bi-eyedropper mx-1"> </i>
       </div>
-      <div class="col-2 centered fw-bold">
+      <div class="col-2 centered fw-bold card-client-title">
         <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
       </div>
       <div class="col-4 centered date-title">
@@ -109,7 +113,7 @@ export default {
         class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
-            <div class="col-12 centered">
+            <div class="col-12 centered fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }} {{ attention.userLastName || '' }} <a class="btn copy-icon"
                 @click="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -173,7 +177,7 @@ export default {
         </div>
         <hr>
         <div class="mt-2">
-          <div class="">
+          <div class="mb-2">
             <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
           </div>
           <span v-if="attention.queueName" class="badge mx-1 detail-data-badge">
@@ -184,7 +188,18 @@ export default {
             <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span>
           <span v-if="attention.commerceName && attention.commerceTag" class="badge mx-1 detail-data-badge">
             <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-            {{ attention.commerceName }} - {{ attention.commerceTag }}</span><br><br>
+            {{ attention.commerceName }} - {{ attention.commerceTag }}</span>
+          <span v-if="attention.packageId && attention.packageName" class="badge mx-1 detail-data-badge">
+            <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
+              {{ attention.packageName }}
+              <span class="badge mx-1 bg-secondary">{{ attention.packageProcedureNumber }} / {{ attention.packageProceduresTotalNumber }}</span>
+              <i class="bi bi-check-circle-fill green-icon" v-if="attention.packagePaid"> </i>
+          </span>
+          <span v-if="attention.servicesDetails" class="badge mx-1 detail-data-badge">
+            <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
+            <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }}</span>
+          </span>
+          <br><br>
           <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
           <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
         </div>

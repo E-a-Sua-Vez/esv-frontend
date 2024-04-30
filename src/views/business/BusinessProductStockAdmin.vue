@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
+import { getServiceByCommerce } from '../../application/services/service';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -41,6 +42,7 @@ export default {
       commerces: ref({}),
       selectedCommerces: ref({}),
       queues: ref({}),
+      services: ref({}),
       queue: {},
       dateType: 'month',
       commerce: {},
@@ -59,6 +61,7 @@ export default {
         state.selectedCommerces = [state.commerce];
         const commerce = await getCommerceById(state.commerce.id);
         state.queues = commerce.queues;
+        state.services = await getServiceByCommerce(commerce.id);
         state.toggles = await getPermissions('products-stock');
         loading.value = false;
       } catch (error) {
@@ -190,6 +193,7 @@ export default {
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
+                :services="state.services"
               >
               </ProductsAttentionManagement>
             </div>

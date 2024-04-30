@@ -350,6 +350,16 @@
   line-height: .8rem !important;
   letter-spacing: .01px;
 }
+.card-client-title {
+  font-size: .8rem;
+  line-height: .9rem !important;
+  letter-spacing: -.6px;
+}
+.idNumber-title {
+  font-size: .75rem;
+  line-height: .7rem !important;
+  letter-spacing: .02px;
+}
 .metric-filters {
   font-size: .7rem !important;
   line-height: .8rem !important;
@@ -464,4 +474,8 @@
   text-decoration: underline;
   font-size: .6rem !important;
   margin-right: .2rem;
+}
+.service-badge {
+  margin-right: .2rem;
+  margin-top: .1rem;
 }

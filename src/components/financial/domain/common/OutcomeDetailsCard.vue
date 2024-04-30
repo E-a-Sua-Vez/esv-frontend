@@ -103,7 +103,7 @@ export default {
         <div class="row m-1 centered">
           <div class="col">
             <div class="" v-if="outcome.paid !== undefined && outcome.paid === true">
-              <div class="">
+              <div class="mb-2">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
               <div v-if="outcome.paid">
@@ -136,13 +136,7 @@ export default {
               </div>
               <hr>
             </div>
-            <div class="row centered">
-              <div class="col-1 mx-1">
-                <a class="btn copy-icon"
-                  @click="copyAttention()">
-                  <i class="bi bi-file-earmark-spreadsheet"></i>
-                </a>
-              </div>
+            <div class="col centered">
               <div class="col">
                 <div class="col">
                   <span v-if="outcome.user" class="badge mx-1 detail-data-badge">

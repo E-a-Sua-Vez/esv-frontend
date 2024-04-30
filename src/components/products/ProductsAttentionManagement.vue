@@ -16,7 +16,8 @@ export default {
     toggles: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
+    services: { type: Array, default: undefined }
   },
   data() {
     return {
@@ -29,12 +30,13 @@ export default {
       contactResultType: undefined,
       contacted: undefined,
       contactable: undefined,
-      survey: undefined,
+      stock: undefined,
       asc: false,
       showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
       queueId: undefined,
+      serviceId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
@@ -61,7 +63,7 @@ export default {
         }
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType);
+          this.searchText, this.queueId, undefined, this.asc, this.contactResultType, this.serviceId, this.stock);
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
           this.counter = counter;
@@ -84,12 +86,13 @@ export default {
       this.daysSinceType = undefined;
       this.daysSinceContacted = undefined;
       this.contactResultType = undefined;
-      this.survey = undefined;
+      this.stock = undefined;
       this.asc = false;
       this.contactable = undefined;
       this.contacted = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.serviceId = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();
@@ -108,11 +111,11 @@ export default {
         this.contacted = false;
       }
     },
-    async checkSurvey(event) {
+    async checkStock(event) {
       if (event.target.checked) {
-        this.survey = true;
+        this.stock = true;
       } else {
-        this.survey = false;
+        this.stock = false;
       }
     },
     async checkAsc(event) {
@@ -178,9 +181,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, stock, asc, queueId, limit, serviceId } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, stock, asc, queueId, limit, serviceId
       }
     }
   },
@@ -196,10 +199,11 @@ export default {
           oldData.contactable !== newData.contactable ||
           oldData.contactResultType !== newData.contactResultType ||
           oldData.contacted !== newData.contacted ||
-          oldData.survey !== newData.survey ||
+          oldData.stock !== newData.stock ||
           oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId)
+          oldData.queueId !== newData.queueId ||
+          oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
         }
@@ -298,6 +302,12 @@ export default {
                     <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
                   </select>
                 </div>
+                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
+                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.service") }} </label>
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
+                    <option v-for="service in services" :key="service.name" :value="service.id" id="select-queue">{{ service.name }}</option>
+                  </select>
+                </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
                   <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
@@ -347,13 +357,13 @@ export default {
                 <div class="row">
                   <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
-                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
+                      <input class="form-check-input m-1" :class="stock === false ? 'bg-danger' : ''" type="checkbox" name="stock" id="stock" v-model="stock" @click="checkStock($event)">
+                      <label class="form-check-label metric-card-subtitle" for="stock">{{ $t("dashboard.stock") }}</label>
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
                     </div>
                   </div>
