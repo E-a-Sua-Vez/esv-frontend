@@ -243,7 +243,6 @@ export default {
         downloadReport(result, 'incomes');
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ downloadIncomesReport ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
@@ -256,7 +255,6 @@ export default {
         downloadReport(result, 'outcomes');
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ downloadOutcomesReport ~ error:", error);
         alertError.value = error.response.status || 500;
         loading.value = false;
       }

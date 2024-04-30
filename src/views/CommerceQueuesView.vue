@@ -609,7 +609,18 @@ export default {
           }
           state.date = undefined;
           const attention = await createAttention(body);
-          router.push({ path: `/interno/fila/${state.queue.id}/atencion/${attention.id}` });
+          const user = await store.getCurrentUserType;
+          if (user && user === 'collaborator') {
+            router.push({
+              name: 'collaborator-queue-attention',
+              params: { queueId: state.queue.id, id: attention.id }
+            })
+          } else {
+            router.push({
+              name: 'commerce-queue-attention',
+              params: { queueId: state.queue.id, id: attention.id }
+            })
+          }
         }
         loading.value = false;
       } catch (error) {
@@ -623,7 +634,6 @@ export default {
         loading.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
-          console.log("🚀 ~ getBooking ~ state.newUser:", state.newUser, client.value);
           state.currentChannel = await store.getCurrentAttentionChannel;
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
@@ -631,18 +641,27 @@ export default {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
           let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block, clientId: state.newUser.clientId };
-          console.log("🚀 ~ getBooking ~ body:", body);
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
             const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
             body = { ...body, servicesId, servicesDetails };
           }
           const booking = await createBooking(body);
-          router.push({ path: `/interno/booking/${booking.id}` });
+          const user = await store.getCurrentUserType;
+          if (user && user === 'collaborator') {
+            router.push({
+              name: 'collaborator-queue-booking',
+              params: { id: booking.id }
+            })
+          } else {
+            router.push({
+              name: 'commerce-queue-booking',
+              params: { id: booking.id }
+            })
+          }
         }
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ getBooking ~ error:", error);
         loading.value = false;
         alertError.value = error.message;
       }

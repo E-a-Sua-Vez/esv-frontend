@@ -64,7 +64,7 @@ const PrivateCollaboratorRoutes = [
   },
   {
     path: '/interno/booking/:id/',
-    name: 'colaborator-queue-booking',
+    name: 'collaborator-queue-booking',
     component: UserQueueBooking
   },
   {

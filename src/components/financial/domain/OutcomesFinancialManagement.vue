@@ -239,7 +239,6 @@ export default {
         this.alertError = '';
         this.loading = false;
       } catch (error) {
-        console.log("🚀 ~ add ~ error:", error);
         this.alertError = error.response.status || 500;
         this.loading = false;
       }
