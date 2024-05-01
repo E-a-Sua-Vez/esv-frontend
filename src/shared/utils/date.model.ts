@@ -9,8 +9,8 @@ export class DateModel {
   private readonly DATE_SEPARATOR = '-';
 
   constructor(dateAsString?: string) {
-    dayjs.extend(utc);
-    dayjs.extend(isSameOrAfter);
+    //dayjs.extend(utc);
+    //dayjs.extend(isSameOrAfter);
     this.dayjsObj = dayjs.utc(dateAsString);
   }
 
