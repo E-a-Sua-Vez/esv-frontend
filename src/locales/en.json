@@ -38,6 +38,10 @@
   "of": "of",
   "add": "Add",
   "serviceStatus": "Service Status",
+  "booleans": {
+    "true": "Yes",
+    "false": "No"
+  },
   "countries": {
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",
@@ -187,6 +191,17 @@
     "SERVICES_PAYMENT": "Service Payment",
     "OTHER": "Other",
     "STANDARD": "Normal Outcome"
+  },
+  "civilStatuses": {
+    "SINGLE": "Single",
+    "MARRIED": "Married",
+    "CIVIL_UNION": "Civil Union",
+    "DIVORCED": "Divorced",
+    "WIDOW": "Widow"
+  },
+  "sexs": {
+    "MALE": "Male",
+    "FEMALE": "Female"
   },
   "configuration": {
     "types": {
@@ -881,7 +896,9 @@
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
           "transfer": "Transfer Attention",
-          "cancel": "Cancel Attention"
+          "cancel": "Cancel Attention",
+          "patient-history": "Medical History",
+          "products": "Stock"
         },
         "module": {
           "update": "Update attention Module"
@@ -1360,6 +1377,8 @@
     "contactMethod": "Contact Method:",
     "outcomes": "Outcomes",
     "paymentStatus": "Payment Status",
+    "patientHistory": "History",
+    "patientHistoryOf": "Medical History of",
     "dates": {
       "from": "From",
       "to": "to"
@@ -2609,6 +2628,67 @@
       "tag": "You should enter the fantasy name",
       "url": "You should enter the web site",
       "address": "You should enter the address"
+    }
+  },
+  "patientHistoryView": {
+    "showPersonalData": "Personal Data",
+    "showConsultationReason": "Consultation Reason",
+    "showCurrentIllness": "Current Illness",
+    "showPersonalBackground": "Personal Background",
+    "showFamilyBackground": "Family Background",
+    "showPsychobiologicalHabits": "Psychobiological Habits",
+    "showFunctionalExam": "Functional Exam",
+    "showPhysicalExam": "Physical Exam",
+    "showDiagnostic": "Diagnostic",
+    "showMedicalOrder": "Medical Order",
+    "name": "Name:",
+    "lastName": "LastName:",
+    "idNumber": "Id/Passport:",
+    "age": "Age:",
+    "sex": "Sex:",
+    "birthday": "Birthday:",
+    "civilStatus": "Civil Status:",
+    "occupation": "Occupation:",
+    "addressText": "Address (Text):",
+    "addressCode": "Address (Zip):",
+    "addressComplement": "Address (Complement):",
+    "phone": "Phone:",
+    "font": "Patient is Direct Font of Data:",
+    "save": "Save",
+    "consultationReason": "Consultation Reason",
+    "history": "History",
+    "currentIllness": "Current Illness",
+    "personalBackground": "Personal Background",
+    "familyBackground": "Family Background",
+    "psychobiologicalHabits": "Psychobiological Habits",
+    "functionalExam": "Functional Exam",
+    "physicalExam": "Physical Exam",
+    "diagnostic": "Diagnostic",
+    "medicalOrder": "Medical Order",
+    "resume": "Resume",
+    "updated": "Updated for the last time the",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "There's not elements to show"
+      }
+    },
+    "validate": {
+      "personalData": {
+        "name": "Should enter the Name",
+        "lastName": "Should enter the LastName",
+        "idNumber": "Should enter the Id/Cédula/Pasaporte",
+        "age": "Should enter the Age",
+        "birthday": "Should enter the Birthday",
+        "civilStatus": "Should select the Civil Status",
+        "occupation": "Should enter the Occupation",
+        "addressText": "Should enter the Address (Text)",
+        "addressCode": "Should enter the Address (Zip)",
+        "addressComplement": "Should enter the Address (Complement)",
+        "phone": "Should enter the Phone",
+        "sex": "Should select the Sex",
+        "font": "Should enter the Font"
+      }
     }
   },
   "businessReports": {

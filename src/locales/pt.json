@@ -54,6 +54,10 @@
     "6": "Sab",
     "7": "Dom"
   },
+  "booleans": {
+    "true": "Sim",
+    "false": "Nâo"
+  },
   "periodicities": {
     "weekly": "Semanal",
     "biweekly": "Quinzenal",
@@ -187,6 +191,17 @@
     "SERVICES_PAYMENT": "Pagamento Serviços",
     "OTHER": "Outro",
     "STANDARD": "Despesa Normal"
+  },
+  "civilStatuses": {
+    "SINGLE": "Solteiro",
+    "MARRIED": "Casado",
+    "CIVIL_UNION": "União Civil",
+    "DIVORCED": "Divorciado",
+    "WIDOW": "Viúvo"
+  },
+  "sexs": {
+    "MALE": "Masculino",
+    "FEMALE": "Fêmea"
   },
   "configuration": {
     "types": {
@@ -845,7 +860,7 @@
         "action": "Voltar para a fila"
       },
       "3": {
-        "action": "Cadastrar Estoque"
+        "action": "Estoque"
       }
     },
     "comment": {
@@ -882,7 +897,9 @@
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
           "transfer": "Transfer Atendimento",
-          "cancel": "Cancelar Atendimento"
+          "cancel": "Cancelar Atendimento",
+          "patient-history": "Prontuario",
+          "products": "Stock"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1361,6 +1378,8 @@
     "contactMethod": "Meio de Contato",
     "outcomes": "Despesas",
     "paymentStatus": "Status de Pagamento",
+    "patientHistory": "Prontuario",
+    "patientHistoryOf": "Prontuario de",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -2265,7 +2284,7 @@
     "expired": "Expiração",
     "price": "Custo Total:",
     "replacement": "Req. Recarregar",
-    "search": "🔎 Nombre o Código",
+    "search": "🔎 Nome o Código",
     "addReplacement": "Novo Recarregamento",
     "addConsuption": "Adicionar Consumo",
     "commerces": "Unidade:",
@@ -2621,6 +2640,67 @@
       "tag": "Você deve digitar o nome fantasia",
       "url": "Você deve digitar o web site",
       "address": "Você deve digitar o endereço"
+    }
+  },
+  "patientHistoryView": {
+    "showPersonalData": "Dados Pessoais",
+    "showConsultationReason": "Motivo da consulta",
+    "showCurrentIllness": "Doença Atual",
+    "showPersonalBackground": "Antecedentes Pessoais",
+    "showFamilyBackground": "Antecedentes Familiares",
+    "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
+    "showFunctionalExam": "Exame Funcional",
+    "showPhysicalExam": "Exame Físico",
+    "showDiagnostic": "Diagnóstico",
+    "showMedicalOrder": "Ordem Médica",
+    "name": "Nome:",
+    "lastName": "Sobrenome:",
+    "idNumber": "CPF/Passaporte:",
+    "age": "Idade:",
+    "sex": "Sexo:",
+    "birthday": "Data de Nascimento:",
+    "civilStatus": "Estado Civil:",
+    "occupation": "Ocupação:",
+    "addressText": "Endereço (Texto):",
+    "addressCode": "Endereço (CEP):",
+    "addressComplement": "Endereço (Complemento):",
+    "phone": "Telefone:",
+    "font": "Fonte dos dados é o Paciente:",
+    "save": "Salvar",
+    "consultationReason": "Motivo da consulta",
+    "history": "Historia",
+    "currentIllness": "Doença Atual",
+    "personalBackground": "Antecedentes Pessoais",
+    "familyBackground": "Antecedentes Familiares",
+    "psychobiologicalHabits": "Hábitos Psicobiológicos",
+    "functionalExam": "Exame Funcional",
+    "physicalExam": "Exame Físico",
+    "diagnostic": "Diagnóstico",
+    "medicalOrder": "Ordem Médica",
+    "resume": "Resumo",
+    "updated": "Atualizado pela última vez no día",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "Não há elementos para mostrar."
+      }
+    },
+    "validate": {
+      "personalData": {
+        "name": "Deve digitar o Nome",
+        "lastName": "Deve digitar o Sobrenome",
+        "idNumber": "Deve digitar o CPF/Passaporte",
+        "age": "Deve digitar a Idade",
+        "birthday": "Deve digitar a Data de Nascimento",
+        "civilStatus": "Deve selecionar o Estado Civil",
+        "occupation": "Deve digitar a Ocupação",
+        "addressText": "Deve digitar o Endereço (Texto)",
+        "addressCode": "Deve digitar o Endereço (CEP)",
+        "addressComplement": "Deve digitar o Endereço (Complemento)",
+        "phone": "Deve digitar o Telefone",
+        "sex": "Deve selecionar o Sexo",
+        "font": "Deve selecionar a Fonte"
+      }
     }
   },
   "businessReports": {

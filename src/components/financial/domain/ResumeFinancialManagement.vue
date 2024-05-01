@@ -45,10 +45,7 @@ export default {
         outcomes: {
           paymentData: {},
         },
-        resume: {
-          diff: 7780,
-          avg: 63.05
-        },
+        resume: {},
         evolution: {}
       },
       newFinancialResume: {},
@@ -71,10 +68,7 @@ export default {
       outcomes: {
         paymentData: {},
       },
-      resume: {
-        diff: 7780,
-        avg: 63.05
-      },
+      resume: {},
       evolution: {}
     };
     await this.getCurrentMonth();
@@ -371,13 +365,16 @@ export default {
                     </SimpleCard>
                   </div>
                 </div>
-                <div class="row mx-2 mt-3" v-if="calculatedMetrics['incomes.created']">
+                <div class="row mx-2 mt-3" v-if="calculatedMetrics['incomes.created']?.evolution?.datasets">
                   <div class="card col centered p-4">
                     <div class="fw-bold mb-2">
                       <span>{{ $t('businessFinancial.evolution') }} </span>
                     </div>
                     <LineChart class="centered" v-bind="financialResume.evolution" />
                   </div>
+                </div>
+                <div v-else>
+
                 </div>
               </div>
               <PDFFooter

@@ -1,7 +1,7 @@
 <script>
 import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
-import { getAttentionsDetails, getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
+import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHistoryDetails } from '../../../application/services/query-stack';
 import { getDate } from '../../../shared/utils/date';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
@@ -9,10 +9,11 @@ import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
 import { formatIdNumber } from '../../../shared/utils/idNumber';
+import PatientHistoryManagement from '../../patient-history/domain/PatientHistoryManagement.vue';
 
 export default {
   name: 'ClientDetailsCard',
-  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement },
+  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement, PatientHistoryManagement },
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
@@ -37,6 +38,7 @@ export default {
       user: undefined,
       attentions: [],
       clientContacts: [],
+      patientHistory: {},
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
         { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
@@ -78,6 +80,18 @@ export default {
         this.clientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
           this.page, this.limit, this.daysSinceContacted, this.searchText, this.asc, this.contactResultType);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
+    async getPatientHistory() {
+      try {
+        this.loading = true;
+        const result = await getPatientHistoryDetails(this.client.id);
+        if (result && result.length > 0) {
+          this.patientHistory = result[0];
+        }
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -293,10 +307,22 @@ export default {
             </button>
           </div>
           <div class="col-4">
+            <button
+              @click="getPatientHistory()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+              data-bs-toggle="modal"
+              :data-bs-target="`#patientHistoryModal-${this.client.id}`">
+              {{ $t('dashboard.patientHistory')}} <br> <i class="bi bi-file-medical-fill"></i>
+            </button>
+          </div>
+        </div>
+        <hr>
+        <div class="row centered my-2" v-if="management && !loading">
+          <div class="col-6">
             <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               @click="goToCreateBooking()">
-              {{ $t('dashboard.schedule')}} <br> <i class="bi bi-calendar-check-fill"></i>
-          </button>
+              {{ $t('dashboard.schedule')}} <i class="bi bi-calendar-check-fill mx-1"></i>
+            </button>
           </div>
         </div>
         <hr>
@@ -428,6 +454,31 @@ export default {
               @getClientContacts="getClientContacts"
             >
             </ClientContactsManagement>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Patient History -->
+    <div class="modal fade" :id="`patientHistoryModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0" id="patient-history-component">
+            <PatientHistoryManagement
+              :showPatientHistoryManagement="true"
+              :client="client.id"
+              :commerce="commerce"
+              :patientHistoryIn="patientHistory"
+              @getPatientHistory="getPatientHistory"
+            >
+            </PatientHistoryManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>

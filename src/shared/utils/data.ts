@@ -170,3 +170,20 @@ export const getIncomeTypesToIncrease = () => {
     { id: 'STANDARD', name: 'STANDARD' }
   ]
 }
+
+export const getCivilStatuses = () => {
+  return [
+    { id: 'SINGLE', name: 'SINGLE' },
+    { id: 'MARRIED', name: 'MARRIED' },
+    { id: 'CIVIL_UNION', name: 'CIVIL_UNION' },
+    { id: 'DIVORCED', name: 'DIVORCED' },
+    { id: 'WIDOW', name: 'WIDOW' }
+  ]
+}
+
+export const getSexs = () => {
+  return [
+    { id: 'MALE', name: 'MALE' },
+    { id: 'FEMALE', name: 'FEMALE' }
+  ]
+}

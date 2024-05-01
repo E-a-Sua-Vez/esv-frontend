@@ -378,6 +378,21 @@ export const getAttentionsDetails = async (
   return (await requestQuery.get('attention/details', options)).data;
 };
 
+export const getPatientHistoryDetails = async (
+  clientId
+) => {
+  const options = {};
+  options.params = {
+    clientId
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('patient-history/details', options)).data;
+};
+
 export const getClientsDetails = async (
   businessId,
   commerceId,

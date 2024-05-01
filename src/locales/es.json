@@ -54,6 +54,10 @@
     "6": "Sáb",
     "7": "Dom"
   },
+  "booleans": {
+    "true": "Sí",
+    "false": "No"
+  },
   "periodicities": {
     "weekly": "Semanal",
     "biweekly": "Quincenal",
@@ -187,6 +191,17 @@
     "SERVICES_PAYMENT": "Pago Servicios",
     "OTHER": "Otro",
     "STANDARD": "Egreso Normal"
+  },
+  "civilStatuses": {
+    "SINGLE": "Soltero",
+    "MARRIED": "Casado",
+    "CIVIL_UNION": "Unión Civil",
+    "DIVORCED": "Divorciado",
+    "WIDOW": "Viudo"
+  },
+  "sexs": {
+    "MALE": "Masculino",
+    "FEMALE": "Femenino"
   },
   "configuration": {
     "types": {
@@ -872,7 +887,9 @@
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
           "transfer": "Transferir Atención",
-          "cancel": "Cancelar Atención"
+          "cancel": "Cancelar Atención",
+          "patient-history": "Historial Médico",
+          "products": "Stock"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1354,6 +1371,8 @@
     "queueData": "Fila/Servicio:",
     "contactMethod": "Medio de Contacto",
     "outcomes": "Egresos",
+    "patientHistory": "Historia",
+    "patientHistoryOf": "Historial Médico de",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -2613,6 +2632,67 @@
       "email": "Debes ingresar el email",
       "url": "Debes ingresar el sitio web",
       "address": "Debes ingresar la dirección"
+    }
+  },
+  "patientHistoryView": {
+    "showPersonalData": "Datos Personales",
+    "showConsultationReason": "Motivo de la Consulta",
+    "showCurrentIllness": "Enfermedad Actual",
+    "showPersonalBackground": "Antecedentes Personales",
+    "showFamilyBackground": "Antecedentes Familiares",
+    "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
+    "showFunctionalExam": "Examen Funcional",
+    "showPhysicalExam": "Examen Físico",
+    "showDiagnostic": "Diagnóstico",
+    "showMedicalOrder": "Orden Médica",
+    "name": "Nombre:",
+    "lastName": "Apellido:",
+    "idNumber": "Id/Cédula/Pasaporte:",
+    "age": "Edad:",
+    "sex": "Sexo:",
+    "birthday": "Fecha de Nacimiento:",
+    "civilStatus": "Estado Civil:",
+    "occupation": "Ocupación:",
+    "addressText": "Dirección (Texto):",
+    "addressCode": "Dirección (Zip):",
+    "addressComplement": "Dirección (Complemento):",
+    "phone": "Teléfono:",
+    "font": "Fuente de Confiabilidad:",
+    "save": "Guardar",
+    "consultationReason": "Motivo de la Consulta",
+    "history": "Historia",
+    "currentIllness": "Enfermedad Actual",
+    "personalBackground": "Antecedentes Personales",
+    "familyBackground": "Antecedentes Familiares",
+    "psychobiologicalHabits": "Hábitos Psicobiológicos",
+    "functionalExam": "Examen Funcional",
+    "physicalExam": "Examen Físico",
+    "diagnostic": "Diagnóstico",
+    "medicalOrder": "Orden Médica",
+    "resume": "Resumen",
+    "updated": "Actualizado por última vez el",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "No hay elementos para mostrar"
+      }
+    },
+    "validate": {
+      "personalData": {
+        "name": "Debes ingresar el Nombre",
+        "lastName": "Debes ingresar el Apellido",
+        "idNumber": "Debes ingresar el Id/Cédula/Pasaporte",
+        "age": "Debes ingresar la Edad",
+        "birthday": "Debes ingresar la Fecha de Nacimiento",
+        "civilStatus": "Debes seleccionar el Estado Civil",
+        "occupation": "Debes ingresar la Ocupación",
+        "addressText": "Debes ingresar la Dirección (Texto)",
+        "addressCode": "Debes ingresar la Dirección (Zip)",
+        "addressComplement": "Debes ingresar la Dirección (Complemento)",
+        "phone": "Debes ingresar el Teléfono",
+        "sex": "Debes seleccionar el Sexo",
+        "font": "Debes ingresar el Fuente de Confiabilidad"
+      }
     }
   },
   "businessReports": {

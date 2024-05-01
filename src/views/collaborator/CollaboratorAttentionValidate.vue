@@ -5,7 +5,7 @@ import { finishAttention, skip, getAttentionDetails } from '../../application/se
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
-import { getProductsConsumptionsDetails } from '../../application/services/query-stack';
+import { getProductsConsumptionsDetails, getPatientHistoryDetails } from '../../application/services/query-stack';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -17,10 +17,11 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
+import PatientHistoryManagement from '../../components/patient-history/domain/PatientHistoryManagement.vue';
 
 export default {
   name: 'CollaboratorAttentionValidate',
-  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu, ProductAttentionManagement},
+  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu, ProductAttentionManagement, PatientHistoryManagement},
   async setup() {
     const route = useRoute();
     const router = useRouter();
@@ -40,7 +41,8 @@ export default {
       user: {},
       toggles: {},
       togglesStock: {},
-      productConsumptions: []
+      productConsumptions: [],
+      patientHistory: {}
     });
 
     onBeforeMount(async () => {
@@ -113,12 +115,26 @@ export default {
       }
     }
 
+    const getPatientHistory = async () => {
+      try {
+        loading.value = true;
+        const result = await getPatientHistoryDetails(state.attention.clientId);
+        if (result && result.length > 0) {
+          state.patientHistory = result[0];
+        }
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+      }
+    }
+
     return {
       id,
       state,
       comment,
       loading,
       alertError,
+      getPatientHistory,
       finishCurrentAttention,
       queueAttentions,
       skipAttention,
@@ -171,13 +187,21 @@ export default {
         </div>
         <div v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')" class="row mx-1">
           <button
-            class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
-            :disabled="!state.toggles['collaborator.attention.finish'] || loading"
+            class="col btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
+            :disabled="!state.toggles['collaborator.attention.products'] || loading"
             @click="getAttentionProducts()"
             data-bs-toggle="modal"
             :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
             >
             {{ $t("collaboratorAttentionValidate.actions.3.action") }} <i class="bi bi-eyedropper"></i>
+          </button>
+          <button
+            class="col btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
+            :disabled="!state.toggles['collaborator.attention.patient-history'] || loading"
+            @click="getPatientHistory()"
+            data-bs-toggle="modal"
+            :data-bs-target="`#patientHistoryModal-${state.attention.clientId}`">
+            {{ $t('dashboard.patientHistory')}} <i class="bi bi-file-medical-fill"></i>
           </button>
         </div>
         <div class="row mx-1">
@@ -285,6 +309,32 @@ export default {
               @getProductConsuptions="getAttentionProducts"
             >
             </ProductAttentionManagement>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Patient History -->
+    <div class="modal fade" :id="`patientHistoryModal-${state.attention.clientId}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ state.user.name || state.user.idNumber || state.user.email }} </h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0" id="patient-history-component">
+            <PatientHistoryManagement
+              :showPatientHistoryManagement="true"
+              :client="state.attention.clientId"
+              :commerce="state.commerce"
+              :patientHistoryIn="state.patientHistory"
+              :attention="state.attention.id"
+              @getPatientHistory="getPatientHistory"
+            >
+            </PatientHistoryManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
