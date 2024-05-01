@@ -89,7 +89,7 @@ export default {
             </div>
             <div class="lefted resume-patient-subtitle">
               <span class=""> {{ $t("patientHistoryView.updated") }} </span>
-              <span class="mx-1">{{ getDate(patientHistoryData.updatedDate) }} </span>
+              <span class="mx-1">{{ getDate(patientHistoryData.updatedDate || patientHistoryData.modifiedAt) }} </span>
             </div>
           </div>
           <div id="personal-data">
