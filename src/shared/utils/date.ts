@@ -16,3 +16,14 @@ export const getDate = (dateIn, timeZoneIn) => {
   const returnDate = `${day}/${month}/${year}`;
   return returnDate;
 }
+
+export const addPeriodToDate = (date, {years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds = 0})  => {
+  let new_date = new Date(date);
+  new_date.setFullYear(new_date.getFullYear() + years);
+  new_date.setMonth(new_date.getMonth() + months);
+  new_date.setDate(new_date.getDate() + days);
+  new_date.setHours(new_date.getHours() + hours);
+  new_date.setMinutes(new_date.getMinutes() + minutes);
+  new_date.setSeconds(new_date.getSeconds() + seconds);
+  return new_date;
+}

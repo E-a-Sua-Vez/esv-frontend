@@ -19,6 +19,7 @@ import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import { DateModel } from '../../shared/utils/date.model';
 
 Chart.register(...registerables);
 
@@ -321,17 +322,15 @@ export default {
 
     const getLastMonth = async () => {
       const date = new Date().toISOString().slice(0,10);
-      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      state.startDate = new DateModel(date).substractMonths(1).toString();
+      state.endDate = new DateModel(state.startDate).endOfMonth().toString();
       await refresh();
     }
 
     const getLastThreeMonths = async () => {
       const date = new Date().toISOString().slice(0,10);
-      state.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      state.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      state.startDate = new DateModel(date).substractMonths(3).toString();
+      state.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await refresh();
     }
 

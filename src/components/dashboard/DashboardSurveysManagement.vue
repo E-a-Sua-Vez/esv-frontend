@@ -11,6 +11,7 @@ import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Popper from "vue3-popper";
 import { getSurveysDetails } from '../../application/services/query-stack';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
+import { DateModel } from '../../shared/utils/date.model';
 
 export default {
   name: 'DashboardSurveysManagement',
@@ -190,16 +191,14 @@ export default {
     },
     async getLastMonth() {
       const date = new Date().toISOString().slice(0,10);
-      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      this.startDate = new DateModel(date).substractMonths(1).toString();
+      this.endDate = new DateModel(this.startDate).endOfMonth().toString();
       await this.refresh();
     },
     async getLastThreeMonths() {
       const date = new Date().toISOString().slice(0,10);
-      this.startDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 3)).setDate(0)).toISOString().slice(0, 10);
-      const pastFromDate = new Date(new Date(new Date(date).setMonth(new Date(date).getMonth() - 1)).setDate(0));
-      this.endDate = new Date(pastFromDate.getFullYear(), pastFromDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+      this.startDate = new DateModel(date).substractMonths(3).toString();
+      this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh();
     }
   },

@@ -21,6 +21,7 @@
     "bootstrap": "^5.2.2",
     "bootstrap-icons": "^1.10.2",
     "chart.js": "^3.9.1",
+    "dayjs": "^1.8.27",
     "firebase": "^8.2.1",
     "firebase-tools": "^12.5.4",
     "html2pdf.js": "^0.10.1",
