@@ -1,6 +1,6 @@
-import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
-import * as isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import dayjs from "dayjs"
+import utc from 'dayjs/plugin/utc';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 export class DateModel {
 
@@ -9,8 +9,8 @@ export class DateModel {
   private readonly DATE_SEPARATOR = '-';
 
   constructor(dateAsString?: string) {
-    //dayjs.extend(utc);
-    //dayjs.extend(isSameOrAfter);
+    dayjs.extend(utc);
+    dayjs.extend(isSameOrAfter);
     this.dayjsObj = dayjs.utc(dateAsString);
   }
 
