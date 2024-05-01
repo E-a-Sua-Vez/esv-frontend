@@ -63,11 +63,6 @@ export default {
 
     const checkService = (event, service) => {
       if (event.target.checked) {
-        if (service.serviceInfo.procedures !== undefined && service.serviceInfo.procedures > 1) {
-          state.selectedServices = [];
-        } else {
-          state.selectedServices = state.selectedServices.filter(serv => serv.serviceInfo.procedures === 1);
-        }
         if (!state.selectedServices.includes(service)) {
           state.selectedServices.push(service);
         }

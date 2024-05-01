@@ -285,6 +285,7 @@ export default {
     }
 
     const receiveQueue = (queue) => {
+      state.errorsAdd = [];
       getQueue(queue);
       state.totalDurationRequested = 0;
       state.amountofBlocksNeeded = 0;
@@ -292,6 +293,7 @@ export default {
     }
 
     const receiveServices = async (services) => {
+      state.errorsAdd = [];
       state.services = services;
       setCanBook();
     }
@@ -854,8 +856,8 @@ export default {
         }
       } else {
         if (state.selectedServices && state.selectedServices.length > 0) {
+          const candidateQueues = [];
           if (state.groupedQueues && state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0) {
-            const candidateQueues = []
             const services = state.selectedServices.map(serv => serv.id);
             state.groupedQueues['COLLABORATOR'].forEach(queue => {
               if (queue.services && queue.services.length > 0) {
@@ -867,44 +869,44 @@ export default {
                 candidateQueues.push(queue);
               }
             })
-            if (state.blocks) {
-              queueBlocks = state.blocks;
-              if (queueBlocks && queueBlocks.length > 0) {
-                let bookingsReserved = [];
-                candidateQueues.push(state.queue);
-                if (candidateQueues && candidateQueues.length > 0) {
-                  candidateQueues.forEach(queue => {
-                    const bookings = state.groupedBookingsByQueue[queue.id];
-                    if (bookings && bookings.length > 0) {
-                      const reserved = bookings.map(booking => {
-                        if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
-                          return [...booking.block.blockNumbers];
-                        } else {
-                          return booking.block.number;
-                        }
-                      });
-                      bookingsReserved.push(reserved);
+          }
+          if (state.blocks) {
+            queueBlocks = state.blocks;
+            if (queueBlocks && queueBlocks.length > 0) {
+              let bookingsReserved = [];
+              candidateQueues.push(state.queue);
+              if (candidateQueues && candidateQueues.length > 0) {
+                candidateQueues.forEach(queue => {
+                  const bookings = state.groupedBookingsByQueue[queue.id];
+                  if (bookings && bookings.length > 0) {
+                    const reserved = bookings.map(booking => {
+                      if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+                        return [...booking.block.blockNumbers];
+                      } else {
+                        return booking.block.number;
+                      }
+                    });
+                    bookingsReserved.push(reserved);
+                  }
+                })
+                let limit = candidateQueues.length === 1 ? 1 : candidateQueues.length - 1;
+                if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                  limit = state.queue.serviceInfo.blockLimit;
+                }
+                if (limit > 0) {
+                  const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+                  const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+                  const blockedBlocks = []
+                  uniqueBlocksReserved.forEach(block => {
+                    const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                    if (times >= limit) {
+                      blockedBlocks.push(block);
                     }
                   })
-                  let limit = candidateQueues.length - 1;
-                  if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
-                    limit = state.queue.serviceInfo.blockLimit;
-                  }
-                  if (limit > 0) {
-                    const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
-                    const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
-                    const blockedBlocks = []
-                    uniqueBlocksReserved.forEach(block => {
-                      const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-                      if (times >= limit) {
-                        blockedBlocks.push(block);
-                      }
-                    })
-                    availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
-                  }
-                } else {
-                  return [];
+                  availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
                 }
+              } else {
+                return [];
               }
             }
           }
@@ -959,8 +961,8 @@ export default {
         }
       } else {
         if (state.selectedServices && state.selectedServices.length > 0) {
+          const candidateQueues = [];
           if (state.groupedQueues && state.groupedQueues['COLLABORATOR'] && state.groupedQueues['COLLABORATOR'].length > 0) {
-            const candidateQueues = []
             const services = state.selectedServices.map(serv => serv.id);
             state.groupedQueues['COLLABORATOR'].forEach(queue => {
               if (queue.services && queue.services.length > 0) {
@@ -972,53 +974,53 @@ export default {
                 candidateQueues.push(queue);
               }
             });
-            if (state.blocks) {
-              queueBlocks = state.blocks;
-              const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
-              if (queueBlocks && queueBlocks.length > 0) {
-                let attentionsReserved = [];
-                queueBlocks = queueBlocks.filter(block => {
-                  const hourBlock = parseInt(block.hourFrom.split(':')[0]);
-                  const minBlock = parseInt(block.hourFrom.split(':')[1]);
-                  const day = new Date(getActualDay(new Date(), timeZone)).getTime();
-                  const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
-                  return (dayBlock > day);
-                });
-                candidateQueues.push(state.queue);
-                if (candidateQueues && candidateQueues.length > 0) {
-                  candidateQueues.forEach(queue => {
-                    const attentions = state.groupedAttentionsByQueue[queue.id];
-                    if (attentions && attentions.length > 0) {
-                      const reserved = attentions.map(attention => {
-                        if (attention.block && attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
-                          return [...attention.block.blockNumbers];
-                        } else {
-                          return attention.block?.number;
-                        }
+          }
+          if (state.blocks) {
+            queueBlocks = state.blocks;
+            const timeZone = state.commerce && state.commerce.localeInfo ? state.commerce.localeInfo.timezone : 'America/Sao_Paulo;'
+            if (queueBlocks && queueBlocks.length > 0) {
+              let attentionsReserved = [];
+              queueBlocks = queueBlocks.filter(block => {
+                const hourBlock = parseInt(block.hourFrom.split(':')[0]);
+                const minBlock = parseInt(block.hourFrom.split(':')[1]);
+                const day = new Date(getActualDay(new Date(), timeZone)).getTime();
+                const dayBlock = new Date(day).setHours(hourBlock, minBlock, 0);
+                return (dayBlock > day);
+              });
+              candidateQueues.push(state.queue);
+              if (candidateQueues && candidateQueues.length > 0) {
+                candidateQueues.forEach(queue => {
+                  const attentions = state.groupedAttentionsByQueue[queue.id];
+                  if (attentions && attentions.length > 0) {
+                    const reserved = attentions.map(attention => {
+                      if (attention.block && attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
+                        return [...attention.block.blockNumbers];
+                      } else {
+                        return attention.block?.number;
+                      }
 
-                      });
-                      attentionsReserved.push(reserved);
+                    });
+                    attentionsReserved.push(reserved);
+                  }
+                })
+                let limit = candidateQueues.length === 1 ? 1 :candidateQueues.length - 1;
+                if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+                  limit = state.queue.serviceInfo.blockLimit;
+                }
+                if (limit > 0) {
+                  const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
+                  const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+                  const blockedBlocks = []
+                  uniqueBlocksReserved.forEach(block => {
+                    const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                    if (times >= limit) {
+                      blockedBlocks.push(block);
                     }
                   })
-                  let limit = candidateQueues.length - 1;
-                  if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
-                    limit = state.queue.serviceInfo.blockLimit;
-                  }
-                  if (limit > 0) {
-                    const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
-                    const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
-                    const blockedBlocks = []
-                    uniqueBlocksReserved.forEach(block => {
-                      const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-                      if (times >= limit) {
-                        blockedBlocks.push(block);
-                      }
-                    })
-                    availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
-                  }
-                } else {
-                  return [];
+                  availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
                 }
+              } else {
+                return [];
               }
             }
           }
