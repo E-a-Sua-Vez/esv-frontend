@@ -277,15 +277,18 @@ export default {
                 <span>{{ $t("patientHistoryView.psychobiologicalHabits") }} <i class="bi bi-person-fill mx-1"></i></span>
               </div>
             </div>
-            <div v-if="patientHistoryData.psychobiologicalHabits && patientHistoryData.psychobiologicalHabits.length > 0 && patientHistoryData.psychobiologicalHabits[0]">
-              <div v-for="(element, index) in patientHistoryData.psychobiologicalHabits" :key="`reason-${index}`">
-                <HistoryDetailsCard
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.habits"
-                >
-                </HistoryDetailsCard>
+            <div v-if="patientHistoryData.psychobiologicalHabits">
+              <div v-if="toggles['patient.history.view'] && patientHistoryData.psychobiologicalHabits.habitsDetails" class="lefted">
+                <span v-for="item in Object.keys(patientHistoryData.psychobiologicalHabits.habitsDetails)" :key="item.id" class="badge detail-data-badge mx-2">
+                  <span class="mx-1"> {{ patientHistoryData.psychobiologicalHabits.habitsDetails[item].name }} </span> ✅
+                </span>
               </div>
+              <HistoryDetailsCard
+                :show="toggles['patient.history.view']"
+                :date="patientHistoryData.psychobiologicalHabits.modifiedAt"
+                :content="patientHistoryData.psychobiologicalHabits.habits"
+              >
+              </HistoryDetailsCard>
             </div>
           </div>
           <div id="functionalExam-data">

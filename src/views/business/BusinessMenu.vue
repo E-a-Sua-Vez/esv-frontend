@@ -60,6 +60,7 @@ export default {
         'product-admin',
         'outcome-types-admin',
         'company-admin',
+        'patient-history-item-admin',
         'permissions-admin'
       ],
       currentPlanActivation: {},
@@ -350,7 +351,8 @@ export default {
   border: 1.5px solid var(--gris-clear);
 }
 .btn-style {
-  line-height: 1rem;
+  line-height: .8rem;
+  padding: .5rem 0rem;
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;

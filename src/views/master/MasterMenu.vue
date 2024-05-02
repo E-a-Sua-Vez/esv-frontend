@@ -61,6 +61,7 @@ export default {
         'surveys-master-admin',
         'outcome-types-master-admin',
         'company-master-admin',
+        'patient-history-item-master-admin',
         'product-master-admin',
       ]
     });

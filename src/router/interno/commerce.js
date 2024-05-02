@@ -21,6 +21,7 @@ const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOut
 const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
 const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
 const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
+const BusinessPatientHistoryItemAdmin = () => import('../../views/business/BusinessPatientHistoryItemAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -132,6 +133,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/company-admin',
     name: 'business-company-admin',
     component: BusinessCompaniesAdmin
+  },
+  {
+    path: '/interno/negocio/patient-history-item-admin',
+    name: 'business-patient-history-item-admin',
+    component: BusinessPatientHistoryItemAdmin
   }
 ]
 

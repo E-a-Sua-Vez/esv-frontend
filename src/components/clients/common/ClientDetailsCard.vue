@@ -2,6 +2,7 @@
 import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
 import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHistoryDetails } from '../../../application/services/query-stack';
+import { getPatientHistoryItemByCommerce  } from '../../../application/services/patient-history-item';
 import { getDate } from '../../../shared/utils/date';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
@@ -38,6 +39,7 @@ export default {
       user: undefined,
       attentions: [],
       clientContacts: [],
+      patientHistoryItems: [],
       patientHistory: {},
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
@@ -91,6 +93,10 @@ export default {
         const result = await getPatientHistoryDetails(this.client.id);
         if (result && result.length > 0) {
           this.patientHistory = result[0];
+        }
+        const items = await getPatientHistoryItemByCommerce(this.commerce.id);
+        if (items && items.length > 0) {
+          this.patientHistoryItems = items;
         }
         this.loading = false;
       } catch (error) {
@@ -476,6 +482,7 @@ export default {
               :client="client.id"
               :commerce="commerce"
               :patientHistoryIn="patientHistory"
+              :patientHistoryItems="patientHistoryItems"
               @getPatientHistory="getPatientHistory"
             >
             </PatientHistoryManagement>

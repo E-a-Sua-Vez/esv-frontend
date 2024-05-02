@@ -22,6 +22,7 @@ const BusinessDocuments = () => import('../../views/business/BusinessDocuments.v
 const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOutcomeTypesAdmin.vue');
 const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
 const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
+const BusinessPatientHistoryItemAdmin = () => import('../../views/business/BusinessPatientHistoryItemAdmin.vue');
 
 const PrivateMasterRoutes = [
   {
@@ -138,6 +139,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/company-master-admin',
     name: 'company-master-admin',
     component: BusinessCompaniesAdmin
+  },
+  {
+    path: '/interno/master/patient-history-item-master-admin',
+    name: 'patient-history-item-master-admin',
+    component: BusinessPatientHistoryItemAdmin
   }
 ]
 

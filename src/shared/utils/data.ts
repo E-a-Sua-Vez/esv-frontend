@@ -200,3 +200,20 @@ export const getCompanyTypes = () => {
     { id: 'SERVICE', name: 'SERVICE' }
   ]
 }
+
+export const getPatientHistoryItemTypes = () => {
+  return [
+    { id: 'STANDARD', name: 'STANDARD' },
+    { id: 'PSYCHOBIOLOGICAL_HABIT', name: 'PSYCHOBIOLOGICAL_HABIT' }
+  ]
+}
+
+export const getPatientHistoryItemFrequenciesTypes = () => {
+  return [
+    { id: 'MORE_THAN_ONCE_DAILY', name: 'MORE_THAN_ONCE_DAILY' },
+    { id: 'DAILY', name: 'DAILY' },
+    { id: 'MORE_THAN_ONCE_WEEKLY', name: 'MORE_THAN_ONCE_WEEKLY' },
+    { id: 'WEEKLY', name: 'WEEKLY' },
+    { id: 'OCCASIONALLY', name: 'OCCASIONALLY' }
+  ]
+}

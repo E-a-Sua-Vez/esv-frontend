@@ -28,7 +28,8 @@ export default {
     client: { type: String, default: undefined },
     attention: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
-    patientHistoryIn: { type: Object, default: {} }
+    patientHistoryIn: { type: Object, default: {} },
+    patientHistoryItems: { type: Array, default: [] }
   },
   emits: ['getPatientHistory'],
   data() {
@@ -41,6 +42,7 @@ export default {
       counter: 0,
       totalPages: 0,
       errorsAdd: [],
+      habits: [],
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
@@ -210,57 +212,61 @@ export default {
     },
     validate (personalData) {
       this.errorsAdd = [];
-      if (!personalData.name || personalData.name.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.name');
-        this.nameError = true;
-      }
-      if (!personalData.lastName || personalData.lastName.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.lastName');
-        this.lastNameError = true;
-      }
-      if (!personalData.idNumber || personalData.idNumber.length < 8) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.idNumber');
-        this.idNumberError = true;
-      }
-      if (!personalData.birthday || personalData.birthday.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.birthday');
-        this.birthdayError = true;
-      }
-      if (!personalData.age || personalData.age.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.age');
-        this.ageError = true;
-      }
-      if (!personalData.occupation || personalData.occupation.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.occupation');
-        this.occupationError = true;
-      }
-      if (!personalData.civilStatus || personalData.civilStatus.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.civilStatus');
-        this.civilStatusError = true;
-      }
-      if (!personalData.sex || personalData.sex.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.sex');
-        this.sexError = true;
-      }
-      if (!personalData.addressCode || personalData.addressCode.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.addressCode');
-        this.addressCodeError = true;
-      }
-      if (!personalData.addressText || personalData.addressText.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.addressText');
-        this.addressTextError = true;
-      }
-      if (!personalData.addressComplement || personalData.addressComplement.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.addressComplement');
-        this.addressComplementError = true;
-      }
-      if (!personalData.phone || personalData.phone.length === 0) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.phone');
-        this.phoneError = true;
-      }
-      if (personalData.font === undefined) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData.font');
-        this.fontError = true;
+      if (personalData) {
+        if (!personalData.name || personalData.name.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.name');
+          this.nameError = true;
+        }
+        if (!personalData.lastName || personalData.lastName.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.lastName');
+          this.lastNameError = true;
+        }
+        if (!personalData.idNumber || personalData.idNumber.length < 8) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.idNumber');
+          this.idNumberError = true;
+        }
+        if (!personalData.birthday || personalData.birthday.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.birthday');
+          this.birthdayError = true;
+        }
+        if (!personalData.age || personalData.age.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.age');
+          this.ageError = true;
+        }
+        if (!personalData.occupation || personalData.occupation.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.occupation');
+          this.occupationError = true;
+        }
+        if (!personalData.civilStatus || personalData.civilStatus.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.civilStatus');
+          this.civilStatusError = true;
+        }
+        if (!personalData.sex || personalData.sex.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.sex');
+          this.sexError = true;
+        }
+        if (!personalData.addressCode || personalData.addressCode.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.addressCode');
+          this.addressCodeError = true;
+        }
+        if (!personalData.addressText || personalData.addressText.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.addressText');
+          this.addressTextError = true;
+        }
+        if (!personalData.addressComplement || personalData.addressComplement.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.addressComplement');
+          this.addressComplementError = true;
+        }
+        if (!personalData.phone || personalData.phone.length === 0) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.phone');
+          this.phoneError = true;
+        }
+        if (personalData.font === undefined) {
+          this.errorsAdd.push('patientHistoryView.validate.personalData.font');
+          this.fontError = true;
+        }
+      } else {
+
       }
       if (this.errorsAdd.length === 0) {
         return true;
@@ -288,7 +294,6 @@ export default {
             lastAttentionId: this.attention
           }
           this.patientHistory = await savePatientHistory(body);
-          this.resetValues();
         }
         this.loading = false;
       } catch (error) {
@@ -488,6 +493,7 @@ export default {
                   :commerce="commerce"
                   :toggles="toggles"
                   :errorsAdd="errorsAdd"
+                  :patientHistoryItems="patientHistoryItems"
                   :receiveData="receivePsychobiologicalHabitsData"
                 >
                 </PsychobiologicalHabitsForm>

@@ -6,6 +6,7 @@ import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
 import { getProductsConsumptionsDetails, getPatientHistoryDetails } from '../../application/services/query-stack';
+import { getPatientHistoryItemByCommerce  } from '../../application/services/patient-history-item';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -42,7 +43,8 @@ export default {
       toggles: {},
       togglesStock: {},
       productConsumptions: [],
-      patientHistory: {}
+      patientHistory: {},
+      patientHistoryItems: [],
     });
 
     onBeforeMount(async () => {
@@ -121,6 +123,10 @@ export default {
         const result = await getPatientHistoryDetails(state.attention.clientId);
         if (result && result.length > 0) {
           state.patientHistory = result[0];
+        }
+        const items = await getPatientHistoryItemByCommerce(state.commerce.id);
+        if (items && items.length > 0) {
+          state.patientHistoryItems = items;
         }
         loading.value = false;
       } catch (error) {
@@ -332,6 +338,7 @@ export default {
               :commerce="state.commerce"
               :patientHistoryIn="state.patientHistory"
               :attention="state.attention.id"
+              :patientHistoryItems="state.patientHistoryItems"
               @getPatientHistory="getPatientHistory"
             >
             </PatientHistoryManagement>

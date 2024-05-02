@@ -212,6 +212,19 @@
       "SERVICE": "Service"
     }
   },
+  "items": {
+    "types": {
+      "STANDARD": "Standard",
+      "PSYCHOBIOLOGICAL_HABIT": "Psychobiological H."
+    }
+  },
+  "patientHistoryItemFrequenciesTypes": {
+    "MORE_THAN_ONCE_DAILY": "+1 Daily",
+    "DAILY": "Daily",
+    "MORE_THAN_ONCE_WEEKLY": "+1 Weekly",
+    "WEEKLY": "Weekly",
+    "OCCASIONALLY": "Occasionally"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1858,6 +1871,7 @@
     "outcome-types-admin": "Outcome Types",
     "booking-manage": "Bookings 360° Vision",
     "company-admin": "Provider Companies",
+    "patient-history-item-admin": "Medical History Items",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1891,7 +1905,8 @@
           "patients": "Patients Management",
           "outcome-types-admin": "Outcome Types Management",
           "booking-manage": "Bookings 360° Vision",
-          "company-admin": "Provider Companies"
+          "company-admin": "Provider Companies",
+          "patient-history-item-admin": "Medical History Items"
         }
       }
     }
@@ -1956,7 +1971,8 @@
     "manage-master-admin": "Manage",
     "control-master-admin": "Control",
     "go-minisite": "Minisite",
-    "outcome-types-master-admin": "Outcome Types"
+    "outcome-types-master-admin": "Outcome Types",
+    "patient-history-item-master-admin": "Medical History Items"
   },
   "businessSectionAtWorkView": {
     "welcome": "Welcome!",
@@ -2170,6 +2186,72 @@
           "add": "Add Companies",
           "limit": "Limit amount of Companies",
           "unavailable":"Delete Companies"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "tag": "You should enter the tag",
+      "type": "You should select type",
+      "order": "You should enter the order",
+      "estimatedTime": "You should enter the estimated time",
+      "shortDescription": "You should enter the short description"
+    }
+  },
+  "businessPatientHistoryItemAdmin": {
+    "title": "Medical History Items",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "tag": "Tag:",
+    "shortDescription": "Short Description:",
+    "longDescription": "Long Description:",
+    "order": "Order:",
+    "active": "Active:",
+    "online": "Online:",
+    "estimated": "Estimated time (min):",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "tagHelp": "Short identifier of the service.",
+    "onlineHelp": "Company can be shown to be selected by the user.",
+    "orderHelp": "Company can be listed in this order to the user.",
+    "type": "Type:",
+    "typeHelp": "Type of Company",
+    "characteristics": "Characteristics",
+    "actual": "Actually Using:",
+    "frequency": "Frequence:",
+    "ageFrom": "From (Age):",
+    "ageTo": "To (Age):",
+    "comment": "Comment:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no Items."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Items. To add more Items, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no Items. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "patient-history-item": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Items",
+          "edit": "Edit the Items",
+          "update": "Update the Items",
+          "add": "Add Items",
+          "limit": "Limit amount of Items",
+          "unavailable":"Delete Items"
         }
       }
     },

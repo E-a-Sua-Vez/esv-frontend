@@ -212,6 +212,19 @@
       "SERVICE": "Serviço"
     }
   },
+  "items": {
+    "types": {
+      "STANDARD": "Standard",
+      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos"
+    }
+  },
+  "patientHistoryItemFrequenciesTypes": {
+    "MORE_THAN_ONCE_DAILY": "+1 Diário",
+    "DAILY": "Diário",
+    "MORE_THAN_ONCE_WEEKLY": "+1 Semanal",
+    "WEEKLY": "Semanal",
+    "OCCASIONALLY": "Ocasionalmente"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1860,6 +1873,7 @@
     "outcome-types-admin": "Tipos de Despesa",
     "booking-manage": "Reservas Visão 360°",
     "company-admin": "Empresas Fornecedoras",
+    "patient-history-item-admin": "Itens Prontuario",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1892,7 +1906,8 @@
           "patients": "Gestão de Pacientes",
           "outcome-types-admin": "Gestão de Tipos de Despesa",
           "booking-manage": "Reservas Visão 360°",
-          "company-admin": "Empresas Fornecedoras"
+          "company-admin": "Empresas Fornecedoras",
+          "patient-history-item-admin": "Itens Prontuario"
         }
       }
     }
@@ -1930,7 +1945,8 @@
     "control-master-admin": "Gestão",
     "go-minisite": "Minisite",
     "outcome-types-master-admin": "Tipos de Despesa",
-    "company-master-admin": "Empresas Fornecedoras"
+    "company-master-admin": "Empresas Fornecedoras",
+    "patient-history-item-admin": "Itens Prontuario"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",
@@ -2174,7 +2190,71 @@
           "add": "Adicionar Empresas",
           "limit": "Número limite de Empresas",
           "queue-limit": "Limite de Empresas",
-          "unavailable":"Deletar ServEmpresasiços"
+          "unavailable":"Deletar Empresas"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "tag": "Você deve digitar o lítagmite",
+      "type": "Você deve selecionar tipo",
+      "order": "Você deve digitar o ordem",
+      "estimatedTime": "Você deve digitar o tempo estimado",
+      "shortDescription": "Você deve digitar a descrição curta"
+    }
+  },
+  "businessPatientHistoryItemAdmin": {
+    "title": "Itens Prontuario",
+    "commerce": "Selecione uma unidade:",
+    "name": "Nome:",
+    "tag": "Tag:",
+    "return": "Voltar",
+    "order": "Ordem:",
+    "active": "Ativo:",
+    "online": "Online:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "listResult": "Registros:",
+    "tagHelp": "Identificador curto do serviço",
+    "onlineHelp": "Empresas pode ser mostrado para ser selecionado pelo usuário.",
+    "orderHelp": "Empresas será listado ao usuário nesta posição.",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de Empresas",
+    "characteristics": "Caracteristicas",
+    "actual": "Consome Atualmente:",
+    "frequency": "Frequência:",
+    "ageFrom": "De (Idade):",
+    "ageTo": "A (Idade):",
+    "comment": "Comentário:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Itens."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de Itens. Para adicionar mais Empresas, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há Itens. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "patient-history-item": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Itens",
+          "edit": "Editar os Itens",
+          "update": "Atualizar os Itens",
+          "add": "Adicionar Itens",
+          "limit": "Número limite de Itens",
+          "queue-limit": "Limite de Itens",
+          "unavailable":"Deletar Itens"
         }
       }
     },

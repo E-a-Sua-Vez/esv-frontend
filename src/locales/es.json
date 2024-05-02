@@ -213,6 +213,19 @@
       "SERVICE": "Servicio"
     }
   },
+  "items": {
+    "types": {
+      "STANDARD": "Standard",
+      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos"
+    }
+  },
+  "patientHistoryItemFrequenciesTypes": {
+    "MORE_THAN_ONCE_DAILY": "+1 Diario",
+    "DAILY": "Diario",
+    "MORE_THAN_ONCE_WEEKLY": "+1 Semanal",
+    "WEEKLY": "Semanal",
+    "OCCASIONALLY": "Ocasionalmente"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -1858,6 +1871,7 @@
     "seeSpy": "MetricSpy",
     "seeMenu": "Menú",
     "booking-manage":"Reservas Visión 360°",
+    "patient-history-item-admin": "Items Historia Médica",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1890,7 +1904,8 @@
           "patients": "Gestión de Pacientes",
           "outcome-types-admin": "Administrar Tipos de Egreso",
           "booking-manage":"Reservas Visión 360°",
-          "company-admin": "Compañías Proveedoras"
+          "company-admin": "Compañías Proveedoras",
+          "patient-history-item-admin": "Items Historia Médica"
         }
       }
     }
@@ -1929,6 +1944,7 @@
     "manage-master-admin": "Administrar",
     "control-master-admin": "Gestión",
     "company-master-admin": "Compañías Proveedoras",
+    "patient-history-item-master-admin": "Items Historia Médica",
     "go-minisite": "Minisite"
   },
   "collaboratorMenu": {
@@ -2166,9 +2182,71 @@
           "read": "Ver las Compañías",
           "edit": "Editar las Compañías",
           "update": "Actualizar las Compañías",
-          "add": "Agregar Servicios",
+          "add": "Agregar Compañías",
           "limit": "Cantidad límite de Compañías",
           "unavailable": "Eliminar Compañías"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "tag": "Debes ingresar el tag",
+      "type": "Debes seleccionar el tipo",
+      "order": "Debes ingresar el orden",
+      "estimatedTime": "Debes ingresar el tiempo estimado",
+      "shortDescription": "Debes ingresar la descripción corta"
+    }
+  },
+  "businessPatientHistoryItemAdmin": {
+    "title": "Items Historia Médica",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "name": "Nombre:",
+    "tag": "Tag:",
+    "order": "Orden:",
+    "active": "Activo:",
+    "online": "Online:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "tagHelp": "Identificador corto del servicio",
+    "onlineHelp": "Compañía puede ser mostrado para ser seleccionado por el usuario.",
+    "orderHelp": "Compañía será listado al usuario en esta posición respecto al resto.",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de Items",
+    "characteristics": "Características",
+    "actual": "Consume Actualmente:",
+    "frequency": "Frencuencia:",
+    "ageFrom": "Desde (Edad):",
+    "ageTo": "Hasta (Edad):",
+    "comment": "Comentario:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay Items."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de Items. Para agregar más compañías cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay Items. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "patient-history-item": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver las Items",
+          "edit": "Editar las Items",
+          "update": "Actualizar las Items",
+          "add": "Agregar Items",
+          "limit": "Cantidad límite de Items",
+          "unavailable": "Eliminar Items"
         }
       }
     },
