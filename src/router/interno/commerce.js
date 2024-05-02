@@ -20,6 +20,7 @@ const BusinessDocuments = () => import('../../views/business/BusinessDocuments.v
 const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOutcomeTypesAdmin.vue');
 const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
 const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
+const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -126,6 +127,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/booking-manage',
     name: 'commerce-bookings',
     component: BusinessQueueBookings
+  },
+  {
+    path: '/interno/negocio/company-admin',
+    name: 'business-company-admin',
+    component: BusinessCompaniesAdmin
   }
 ]
 

@@ -185,12 +185,12 @@
     "UNITS": "(U)"
   },
   "outcomeTypes": {
-    "PRODUCT_REPLACEMENT": "Product Replacement",
-    "PROVIDERS_PAYMENT": "Provider Payment",
-    "PAYROLL_PAYMENT": "Payroll Payment",
-    "SERVICES_PAYMENT": "Service Payment",
     "OTHER": "Other",
-    "STANDARD": "Normal Outcome"
+    "STANDARD": "Normal Outcome",
+    "SUPPLIER": "Provider Payment",
+    "BENEFICIARY": "Beneficiary Payment",
+    "COLLABORATOR": "Collaborator Payment",
+    "SERVICE": "Service Payment"
   },
   "civilStatuses": {
     "SINGLE": "Single",
@@ -202,6 +202,15 @@
   "sexs": {
     "MALE": "Male",
     "FEMALE": "Female"
+  },
+  "companies": {
+    "types": {
+      "STANDARD": "Standard",
+      "SUPPLIER": "Provider",
+      "BENEFICIARY": "Beneficiary",
+      "COLLABORATOR": "Collaborator",
+      "SERVICE": "Service"
+    }
   },
   "configuration": {
     "types": {
@@ -1848,6 +1857,7 @@
     "go-minisite": "Minisite",
     "outcome-types-admin": "Outcome Types",
     "booking-manage": "Bookings 360° Vision",
+    "company-admin": "Provider Companies",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1880,7 +1890,8 @@
           "marketing": "Marketing",
           "patients": "Patients Management",
           "outcome-types-admin": "Outcome Types Management",
-          "booking-manage": "Bookings 360° Vision"
+          "booking-manage": "Bookings 360° Vision",
+          "company-admin": "Provider Companies"
         }
       }
     }
@@ -2098,13 +2109,74 @@
           "edit": "Edit the Services",
           "update": "Update the Services",
           "add": "Add Services",
-          "limit": "Limit amount of Services"
+          "limit": "Limit amount of Services",
+          "unavailable": "Delete Services"
         }
       }
     },
     "validate": {
       "name": "You should enter the name",
       "tag": "You should enter the tag",
+      "order": "You should enter the order",
+      "estimatedTime": "You should enter the estimated time",
+      "shortDescription": "You should enter the short description"
+    }
+  },
+  "businessCompaniesAdmin": {
+    "title": "Provider Companies",
+    "commerce": "Select a commerce:",
+    "return": "Return",
+    "name": "Name:",
+    "tag": "Tag:",
+    "shortDescription": "Short Description:",
+    "longDescription": "Long Description:",
+    "order": "Order:",
+    "active": "Active:",
+    "online": "Online:",
+    "estimated": "Estimated time (min):",
+    "listResult": "Results:",
+    "update": "Update",
+    "add": "Add",
+    "tagHelp": "Short identifier of the service.",
+    "onlineHelp": "Company can be shown to be selected by the user.",
+    "orderHelp": "Company can be listed in this order to the user.",
+    "type": "Type:",
+    "typeHelp": "Type of Company.",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no Companies."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Companies. To add more Companies, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no Companies. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "companies": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Companies",
+          "edit": "Edit the Companies",
+          "update": "Update the Companies",
+          "add": "Add Companies",
+          "limit": "Limit amount of Companies",
+          "unavailable":"Delete Companies"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "tag": "You should enter the tag",
+      "type": "You should select type",
       "order": "You should enter the order",
       "estimatedTime": "You should enter the estimated time",
       "shortDescription": "You should enter the short description"

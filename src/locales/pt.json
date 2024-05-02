@@ -185,12 +185,12 @@
     "UNITS": "(U)"
   },
   "outcomeTypes": {
-    "PRODUCT_REPLACEMENT": "Recarrega Producto",
-    "PROVIDERS_PAYMENT": "Pagamento Fornecedor",
-    "PAYROLL_PAYMENT": "Pagamento Funcionários",
-    "SERVICES_PAYMENT": "Pagamento Serviços",
     "OTHER": "Outro",
-    "STANDARD": "Despesa Normal"
+    "STANDARD": "Egreso Normal",
+    "SUPPLIER": "Pagamento Fornecedor",
+    "BENEFICIARY": "Pagamento Beneficiário",
+    "COLLABORATOR": "Pagamento Colaborador",
+    "SERVICE": "Pagamento Serviço"
   },
   "civilStatuses": {
     "SINGLE": "Solteiro",
@@ -202,6 +202,15 @@
   "sexs": {
     "MALE": "Masculino",
     "FEMALE": "Fêmea"
+  },
+  "companies": {
+    "types": {
+      "STANDARD": "Standard",
+      "SUPPLIER": "Fornecedor",
+      "BENEFICIARY": "Beneficiário",
+      "COLLABORATOR": "Colaborador",
+      "SERVICE": "Serviço"
+    }
   },
   "configuration": {
     "types": {
@@ -1850,6 +1859,7 @@
     "go-minisite": "Minisite",
     "outcome-types-admin": "Tipos de Despesa",
     "booking-manage": "Reservas Visão 360°",
+    "company-admin": "Empresas Fornecedoras",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1881,7 +1891,8 @@
           "marketing": "Marketing",
           "patients": "Gestão de Pacientes",
           "outcome-types-admin": "Gestão de Tipos de Despesa",
-          "booking-manage": "Reservas Visão 360°"
+          "booking-manage": "Reservas Visão 360°",
+          "company-admin": "Empresas Fornecedoras"
         }
       }
     }
@@ -1918,7 +1929,8 @@
     "manage-master-admin": "Gerenciar",
     "control-master-admin": "Gestão",
     "go-minisite": "Minisite",
-    "outcome-types-master-admin": "Tipos de Despesa"
+    "outcome-types-master-admin": "Tipos de Despesa",
+    "company-master-admin": "Empresas Fornecedoras"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",
@@ -2112,6 +2124,64 @@
     "validate": {
       "name": "Você deve digitar o nome",
       "tag": "Você deve digitar o lítagmite",
+      "order": "Você deve digitar o ordem",
+      "estimatedTime": "Você deve digitar o tempo estimado",
+      "shortDescription": "Você deve digitar a descrição curta"
+    }
+  },
+  "businessCompaniesAdmin": {
+    "title": "Empresas Fornecedoras",
+    "commerce": "Selecione uma unidade:",
+    "name": "Nome:",
+    "tag": "Tag:",
+    "return": "Voltar",
+    "order": "Ordem:",
+    "active": "Ativo:",
+    "online": "Online:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "listResult": "Registros:",
+    "tagHelp": "Identificador curto do serviço",
+    "onlineHelp": "Empresas pode ser mostrado para ser selecionado pelo usuário.",
+    "orderHelp": "Empresas será listado ao usuário nesta posição.",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de Empresas.",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Empresas."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de Empresas. Para adicionar mais Empresas, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há Empresas. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "companies": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Empresas",
+          "edit": "Editar os Empresas",
+          "update": "Atualizar os Empresas",
+          "add": "Adicionar Empresas",
+          "limit": "Número limite de Empresas",
+          "queue-limit": "Limite de Empresas",
+          "unavailable":"Deletar ServEmpresasiços"
+        }
+      }
+    },
+    "validate": {
+      "name": "Você deve digitar o nome",
+      "tag": "Você deve digitar o lítagmite",
+      "type": "Você deve selecionar tipo",
       "order": "Você deve digitar o ordem",
       "estimatedTime": "Você deve digitar o tempo estimado",
       "shortDescription": "Você deve digitar a descrição curta"

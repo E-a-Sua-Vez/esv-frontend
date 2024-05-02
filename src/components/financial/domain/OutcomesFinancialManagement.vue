@@ -12,6 +12,7 @@ import { createOutcome } from '../../../application/services/outcome';
 import { getDate } from '../../../shared/utils/date';
 import { getOutcomesDetails } from '../../../application/services/query-stack';
 import { getProductByCommerce } from '../../../application/services/product';
+import { getCompanyByCommerce } from '../../../application/services/company';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
 import Toggle from '@vueform/toggle';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
@@ -61,7 +62,9 @@ export default {
       newOutcome: {},
       outcomeTypes: [],
       outcomeTypeSelected: {},
-      products: []
+      products: [],
+      beneficiaries: [],
+      selectedBeneficiary: {}
     }
   },
   async beforeMount() {
@@ -209,7 +212,7 @@ export default {
       } else {
         this.outcomeDateError = false;
       }
-      if (outcome.type && outcome.type === 'PRODUCT_REPLACEMENT') {
+      if (outcome.type && outcome.type === 'SUPPLIER') {
         if(!outcome.quantity || outcome.quantity.length === 0) {
           this.outcomeAmountError = true;
           this.errorsAdd.push('businessFinancial.validate.amount');
@@ -254,7 +257,16 @@ export default {
           this.newOutcome.title = outcomeType.name;
         }
       }
-    }
+    },
+    selectBeneficiary ($event) {
+      if ($event && $event.target) {
+        const beneficiary = this.selectedBeneficiary;
+        if (beneficiary && beneficiary.id) {
+          this.newOutcome.companyBeneficiaryId = beneficiary.id;
+          this.newOutcome.beneficiary = beneficiary.name;
+        }
+      }
+    },
   },
   computed: {
     changeData() {
@@ -295,6 +307,10 @@ export default {
         if (this.outcomeTypeSelected && this.outcomeTypeSelected.id) {
           this.newOutcome.type = this.outcomeTypeSelected.id;
           this.newOutcome.title = this.outcomeTypeSelected.name;
+          const beneficiaries = await getCompanyByCommerce(this.commerce.id);
+          if (beneficiaries && beneficiaries.length > 0) {
+            this.beneficiaries = beneficiaries.filter(beneficiary => beneficiary.type === this.outcomeTypeSelected.type);
+          }
         }
       }
     }
@@ -528,13 +544,14 @@ export default {
                       {{ $t("businessFinancial.outcomeBeneficiary") }}
                     </div>
                     <div class="col-8">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="newOutcome.beneficiary"
-                        placeholder="Company A">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select"
+                        v-model="selectedBeneficiary"
+                        @change="selectBeneficiary($event)"
+                        id="types"
+                        v-bind:class="{ 'is-invalid': outcomeProductError }">
+                        <option v-for="typ in beneficiaries" :key="typ.name" :value="typ">{{ typ.name }}</option>
+                      </select>
                     </div>
                   </div>
                   <div id="outcome-amount-form-add" class="row mt-1">
@@ -551,7 +568,7 @@ export default {
                         placeholder="1">
                     </div>
                   </div>
-                  <div v-if="outcomeTypeSelected.type === 'PRODUCT_REPLACEMENT'" class="row g-0">
+                  <div v-if="outcomeTypeSelected.type === 'SUPPLIER'" class="row g-0">
                     <div id="outcome-type-form-add" class="row mt-1">
                       <div class="col-4 text-label">
                         {{ $t("businessFinancial.outcomeProduct") }}

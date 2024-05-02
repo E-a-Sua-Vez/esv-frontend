@@ -59,6 +59,7 @@ export default {
         'surveys-admin',
         'product-admin',
         'outcome-types-admin',
+        'company-admin',
         'permissions-admin'
       ],
       currentPlanActivation: {},
@@ -173,7 +174,7 @@ export default {
                 <div v-if="option === 'go-minisite'" class="centered">
                   <a
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style"
                     :href="`${getBusinessLink()}`"
                     target="_blank">
                     {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
@@ -182,7 +183,7 @@ export default {
                 <div v-else>
                   <button
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
                     @click="goToOption(option)"
                     :disabled="!state.toggles[`business.main-menu.${option}`]"
                     >
@@ -198,7 +199,7 @@ export default {
                       <div class="centered mx-3">
                         <button
                           type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
                           @click="goToOption(opt)"
                           :disabled="!state.toggles[`business.main-menu.${opt}`]"
                           >
@@ -215,7 +216,7 @@ export default {
                       <div class="centered mx-3">
                         <button
                           type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
                           @click="goToOption(opt)"
                           :disabled="!state.toggles[`business.main-menu.${opt}`]"
                           >
@@ -260,7 +261,7 @@ export default {
                 <div v-if="option === 'go-minisite'" class="centered">
                   <a
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style"
                     :href="`${getBusinessLink()}`"
                     target="_blank">
                     {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
@@ -269,7 +270,7 @@ export default {
                 <div v-else>
                   <button
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
                     @click="goToOption(option)"
                     :disabled="!state.toggles[`business.main-menu.${option}`]"
                     >
@@ -285,7 +286,7 @@ export default {
                       ><div class="centered mx-3">
                           <button
                             type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
                             @click="goToOption(opt)"
                             :disabled="!state.toggles[`business.main-menu.${opt}`]"
                             >
@@ -304,7 +305,7 @@ export default {
                         <div class="centered mx-3">
                           <button
                             type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
                             @click="goToOption(opt)"
                             :disabled="!state.toggles[`business.main-menu.${opt}`]"
                             >
@@ -347,6 +348,9 @@ export default {
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
+}
+.btn-style {
+  line-height: 1rem;
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;

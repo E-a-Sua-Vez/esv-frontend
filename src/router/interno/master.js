@@ -21,7 +21,7 @@ const BusinessTracing = () => import('../../views/business/BusinessTracing.vue')
 const BusinessDocuments = () => import('../../views/business/BusinessDocuments.vue');
 const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOutcomeTypesAdmin.vue');
 const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
-
+const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
 
 const PrivateMasterRoutes = [
   {
@@ -134,6 +134,11 @@ const PrivateMasterRoutes = [
     name: 'surveys-master-admin',
     component: BusinessSurveysAdmin
   },
+  {
+    path: '/interno/master/company-master-admin',
+    name: 'company-master-admin',
+    component: BusinessCompaniesAdmin
+  }
 ]
 
 export default PrivateMasterRoutes;

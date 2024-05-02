@@ -364,7 +364,7 @@ export default {
                     </SimpleCard>
                   </div>
                 </div>
-                <div class="row mx-2 mt-3" v-if="calculatedMetrics['incomes.created']?.evolution?.datasets">
+                <div class="row mx-2 mt-3" v-if="calculatedMetrics['incomes.created']?.evolution?.datasets && calculatedMetrics['outcomes.created']?.evolution?.datasets">
                   <div class="card col centered p-4">
                     <div class="fw-bold mb-2">
                       <span>{{ $t('businessFinancial.evolution') }} </span>

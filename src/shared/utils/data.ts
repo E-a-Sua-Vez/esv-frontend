@@ -159,8 +159,11 @@ export const getServiceTypes = () => {
 
 export const getOutcomeTypes = () => {
   return [
-    { id: 'PRODUCT_REPLACEMENT', name: 'PRODUCT_REPLACEMENT' },
-    { id: 'STANDARD', name: 'STANDARD' }
+    { id: 'STANDARD', name: 'STANDARD' },
+    { id: 'SUPPLIER', name: 'SUPPLIER' },
+    { id: 'BENEFICIARY', name: 'BENEFICIARY' },
+    { id: 'COLLABORATOR', name: 'COLLABORATOR' },
+    { id: 'SERVICE', name: 'SERVICE' }
   ]
 }
 
@@ -185,5 +188,15 @@ export const getSexs = () => {
   return [
     { id: 'MALE', name: 'MALE' },
     { id: 'FEMALE', name: 'FEMALE' }
+  ]
+}
+
+export const getCompanyTypes = () => {
+  return [
+    { id: 'STANDARD', name: 'STANDARD' },
+    { id: 'SUPPLIER', name: 'SUPPLIER' },
+    { id: 'BENEFICIARY', name: 'BENEFICIARY' },
+    { id: 'COLLABORATOR', name: 'COLLABORATOR' },
+    { id: 'SERVICE', name: 'SERVICE' }
   ]
 }

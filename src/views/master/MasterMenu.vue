@@ -60,6 +60,7 @@ export default {
         'collaborators-master-admin',
         'surveys-master-admin',
         'outcome-types-master-admin',
+        'company-master-admin',
         'product-master-admin',
       ]
     });
