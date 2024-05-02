@@ -26,7 +26,6 @@ export default {
   props: {
     show: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
-    collaborator: { type: Object, default: {} },
     queues: { type: Array, default: [] },
     toggles: { type: Object, default: {} },
   },
@@ -82,7 +81,6 @@ export default {
 
     const {
       show,
-      collaborator,
       commerce,
       queues,
       toggles
@@ -705,7 +703,6 @@ export default {
       state,
       queues,
       commerce,
-      collaborator,
       show,
       toggles,
       dateMask,

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getBookingDetails, cancelBooking } from '../application/services/booking';
 import { getPermissions } from '../application/services/permissions';
 import { getDate } from '../shared/utils/date';
+import { globalStore } from '../stores';
 import Message from '../components/common/Message.vue';
 import AttentionNumber from'../components/common/AttentionNumber.vue';
 import QueueName from '../components/common/QueueName.vue';
@@ -37,6 +38,8 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const { id } = route.params;
+
+    const store = globalStore();
 
     let loading = ref(false);
     let alertError = ref('');
@@ -82,7 +85,18 @@ export default {
         state.queue = state.booking.queue;
         state.commerce = state.booking.commerce;
         if (state.booking.status === 'PROCESSED' && state.booking.attentionId) {
-          router.push({ path: `/interno/fila/${state.queue.id}/atencion/${state.booking.attentionId}` });
+        const user = await store.getCurrentUserType;
+        if (user && user === 'collaborator') {
+          router.push({
+            name: 'collaborator-queue-attention',
+            params: { queueId: state.queue.id, id: state.booking.attentionId }
+          })
+        } else {
+          router.push({
+            name: 'commerce-queue-attention',
+            params: { queueId: state.queue.id, id: state.booking.attentionId }
+          })
+        }
         }
         loading.value = false;
       } catch (error) {

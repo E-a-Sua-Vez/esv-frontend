@@ -58,17 +58,17 @@ const PrivateCollaboratorRoutes = [
     component: CommerceQueuesView
   },
   {
-    path: '/interno/fila/:queueId/atencion/:id/',
+    path: '/interno/colaborador/fila/:queueId/atencion/:id/',
     name: 'collaborator-queue-attention',
     component: UserQueueAttention
   },
   {
-    path: '/interno/booking/:id/',
+    path: '/interno/colaborador/booking/:id/',
     name: 'collaborator-queue-booking',
     component: UserQueueBooking
   },
   {
-    path: '/interno/waitlist/:id/:block',
+    path: '/interno/colaborador/waitlist/:id/:block',
     name: 'collaborator-queue-waitlist',
     component: UserQueueWaitlist
   }

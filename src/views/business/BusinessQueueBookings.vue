@@ -17,7 +17,7 @@ import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vu
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
-  name: 'CollaboratorQueueBookings',
+  name: 'BusinessQueueBookings',
   components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, BookingCalendar, ComponentMenu },
   async setup() {
     const router = useRouter();
@@ -34,7 +34,6 @@ export default {
       queues: [],
       groupedQueues: [],
       commerce: {},
-      collaborator: {},
       module: {},
       activeCommerce: false,
       captcha: false,
@@ -57,10 +56,6 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.collaborator = state.currentUser;
-        if (!state.currentUser) {
-          state.collaborator = await getCollaboratorById(state.currentUser.id);
-        }
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
@@ -80,20 +75,7 @@ export default {
     })
 
     const initQueues = async () => {
-      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...collaboratorQueues, ...otherQueues];
-          state.queues = queues;
-        }
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...otherQueues];
-          state.queues = queues;
-        }
-      }
+      state.queues = queues;
     }
 
     const isActiveCommerce = () => {
