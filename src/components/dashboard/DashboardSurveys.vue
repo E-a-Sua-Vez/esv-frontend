@@ -56,8 +56,7 @@ export default {
             class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
             :class="showSurveyResults ? 'btn-selected' : ''"
             @click="showSurveysResults()"
-            :disabled="!toggles['dashboard.surveys.view']"
-            alt>
+            :disabled="!toggles['dashboard.surveys.view']">
             {{ $t("dashboard.resume") }}
           </button>
         </div>

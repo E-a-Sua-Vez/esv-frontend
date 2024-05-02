@@ -187,6 +187,30 @@ export default {
 
 <template>
   <div id="graphs" class="row" v-if="showGraphs === true && toggles['dashboard.graphs.view']">
+    <Spinner :show="loading"></Spinner>
+    <div class="row col m-0 mb-2">
+      <hr>
+      <div class="col-6 centered">
+        <button
+          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+          :class="this.showAttentions ? 'btn-selected' : ''"
+          @click="showAttentionsMenu()"
+          :disabled="!toggles['dashboard.graphs-attentions.view']"
+          >
+          {{ $t('dashboard.attentions') }}
+        </button>
+      </div>
+      <div class="col-6 centered">
+        <button
+          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+          :class="this.showBookings ? 'btn-selected' : ''"
+          @click="showBookingsMenu()"
+          :disabled="!toggles['dashboard.graphs-bookings.view']"
+          >
+          {{ $t('dashboard.bookings') }}
+        </button>
+      </div>
+    </div>
     <SimpleDownloadCard
       :download="toggles['dashboard.reports.graphs']"
       :title="`${$t('dashboard.reports.graphs.title')} ${this.showAttentions ? $t('dashboard.attentions') : $t('dashboard.bookings')}`"
@@ -196,27 +220,6 @@ export default {
       :canDownload="toggles['dashboard.reports.graphs'] === true"
       @download="exportToPDF"
     ></SimpleDownloadCard>
-    <Spinner :show="loading"></Spinner>
-    <div id="subMenu" class="my-2">
-      <h5 class="mb-0">
-        <button
-          class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
-          :class="this.showAttentions ? 'btn-selected' : ''"
-          @click="showAttentionsMenu()"
-          :disabled="!toggles['dashboard.graphs-attentions.view']"
-          >
-          {{ $t('dashboard.attentions') }}
-        </button>
-        <button
-          class="btn btn-md btn-block btn-size fw-bold btn-dark rounded-pill"
-          :class="this.showBookings ? 'btn-selected' : ''"
-          @click="showBookingsMenu()"
-          :disabled="!toggles['dashboard.graphs-bookings.view']"
-          >
-          {{ $t('dashboard.bookings') }}
-      </button>
-      </h5>
-    </div>
     <div id="graphs-component">
       <PDFHeader
         :show="toggles['dashboard.reports.graphs']"
