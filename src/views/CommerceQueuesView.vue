@@ -1350,17 +1350,25 @@ export default {
                 return acc;
               }, {});
               state.bookings = state.groupedBookingsByQueue[state.queue.id];
+            } else {
+              state.groupedBookingsByQueue = {};
+              state.groupedBookingsByQueue[state.queue.id] = [];
+              state.bookings = [];
             }
+          } else {
+            state.groupedBookingsByQueue = {};
+            state.groupedBookingsByQueue[state.queue.id] = [];
+            state.bookings = [];
           }
           let currentDate;
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
           if (newData.allBookings.length > 0) {
             await getAvailableDatesByMonth(currentDate);
           }
-          getAvailableBookingBlocks(state.bookings);
-          getAvailableBookingSuperBlocks();
-          bookingsAvailables();
         }
+        getAvailableBookingBlocks(state.bookings);
+        getAvailableBookingSuperBlocks();
+        bookingsAvailables();
       }
     )
 
