@@ -6,15 +6,17 @@ export const dateYYYYMMDD = (date: Date) => {
 }
 
 export const getDate = (dateIn, timeZoneIn) => {
-  let date = dateIn;
-  try  {
-    date = new Date(dateIn.toDate().toString()).toISOString();
-  } catch (error) {
-    date = new Date(dateIn).toISOString();
+  if (dateIn) {
+    let date = dateIn;
+    try  {
+      date = new Date(dateIn.toDate().toString()).toISOString();
+    } catch (error) {
+      date = new Date(dateIn).toISOString();
+    }
+    const [year, month, day] = date.slice(0,10).split('-');
+    const returnDate = `${day}/${month}/${year}`;
+    return returnDate;
   }
-  const [year, month, day] = date.slice(0,10).split('-');
-  const returnDate = `${day}/${month}/${year}`;
-  return returnDate;
 }
 
 export const addPeriodToDate = (date, {years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds = 0})  => {

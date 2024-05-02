@@ -1072,6 +1072,11 @@
       }
     },
     "capacitiesList": {
+      "business": {
+        "bookings": {
+          "manage": "Manage Bookings"
+        }
+      },
       "collaborator": {
         "attention": {
           "attend": "Attend",
@@ -1842,6 +1847,7 @@
     "control-admin": "Control",
     "go-minisite": "Minisite",
     "outcome-types-admin": "Outcome Types",
+    "booking-manage": "Bookings 360° Vision",
     "message": {
       "1": {
         "title": "Ups!",
@@ -1873,7 +1879,8 @@
           "financial": "Financial Management",
           "marketing": "Marketing",
           "patients": "Patients Management",
-          "outcome-types-admin": "Outcome Types Management"
+          "outcome-types-admin": "Outcome Types Management",
+          "booking-manage": "Bookings 360° Vision"
         }
       }
     }

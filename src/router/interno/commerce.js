@@ -19,6 +19,7 @@ const BusinessProductStockAdmin = () => import('../../views/business/BusinessPro
 const BusinessDocuments = () => import('../../views/business/BusinessDocuments.vue');
 const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOutcomeTypesAdmin.vue');
 const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
+const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -120,6 +121,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/commerce/:keyName/filas',
     name: 'commerce-business-queues',
     component: CommerceQueuesView
+  },
+  {
+    path: '/interno/negocio/booking-manage',
+    name: 'commerce-bookings',
+    component: BusinessQueueBookings
   }
 ]
 

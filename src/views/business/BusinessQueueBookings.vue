@@ -1,13 +1,11 @@
 <script>
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
-import { getQueueByCommerce, getGroupedQueueByCommerceId } from '../../application/services/queue';
+import { getQueueByCommerce } from '../../application/services/queue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -61,11 +59,10 @@ export default {
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const queues = await getQueuesByCommerceId(state.commerce.id);
         state.queues = queues;
-        await initQueues();
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
         state.locale = state.commerce.localeInfo.language;
-        state.toggles = await getPermissions('collaborator');
+        state.toggles = await getPermissions('business', 'bookings');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -74,16 +71,12 @@ export default {
       }
     })
 
-    const initQueues = async () => {
-      state.queues = queues;
-    }
-
     const isActiveCommerce = () => {
       return state.commerce && state.commerce.active === true;
     };
 
     const goBack = () => {
-      router.push({ path: `/interno/colaborador/menu` });
+      router.push({ path: `/interno/business/menu` });
     }
 
     const selectCommerce = async (commerce) => {
@@ -92,7 +85,6 @@ export default {
         state.commerce = commerce;
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
-        await initQueues();
         state.queue = {};
         alertError.value = '';
         loading.value = false;
@@ -147,7 +139,7 @@ export default {
             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
             data-bs-toggle="modal"
             data-bs-target="#modalAgenda"
-            :disabled="!state.toggles['collaborator.bookings.manage'] || state.queues.length === 0"
+            :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
             >
             <i class="bi bi-calendar-check-fill"></i> {{ $t("collaboratorBookingsView.schedules") }}
           </button>

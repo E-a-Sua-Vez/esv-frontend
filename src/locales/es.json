@@ -1063,6 +1063,11 @@
       }
     },
     "capacitiesList": {
+      "business": {
+        "bookings": {
+          "manage": "Manejar Reservas"
+        }
+      },
       "collaborator": {
         "attention": {
           "attend": "Atender",
@@ -1841,6 +1846,7 @@
     "go-minisite": "Minisite",
     "seeSpy": "MetricSpy",
     "seeMenu": "Menú",
+    "booking-manage":"Reservas Visión 360°",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1871,7 +1877,8 @@
           "financial": "Gestión Financiera",
           "marketing": "Marketing",
           "patients": "Gestión de Pacientes",
-          "outcome-types-admin": "Administrar Tipos de Egreso"
+          "outcome-types-admin": "Administrar Tipos de Egreso",
+          "booking-manage":"Reservas Visión 360°"
         }
       }
     }

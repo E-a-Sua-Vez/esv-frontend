@@ -486,6 +486,13 @@ export default {
       }
       getBlocks();
       showBookings360();
+      const today = getDate(new Date());
+      if (getDate(state.selectedDate) !== today) {
+        showBookings();
+      } else {
+        showAttentions();
+      }
+
     }
 
     const getBlocks = () => {

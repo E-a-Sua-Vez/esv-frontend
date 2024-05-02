@@ -1078,6 +1078,11 @@
       }
     },
     "capacitiesList": {
+      "business": {
+        "bookings": {
+          "manage": "Gerenciar eservas"
+        }
+      },
       "collaborator": {
         "attention": {
           "attend": "Atender",
@@ -1844,6 +1849,7 @@
     "control-admin": "Gestão",
     "go-minisite": "Minisite",
     "outcome-types-admin": "Tipos de Despesa",
+    "booking-manage": "Reservas Visão 360°",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -1874,7 +1880,8 @@
           "financial": "Gestão Financeira",
           "marketing": "Marketing",
           "patients": "Gestão de Pacientes",
-          "outcome-types-admin": "Gestão de Tipos de Despesa"
+          "outcome-types-admin": "Gestão de Tipos de Despesa",
+          "booking-manage": "Reservas Visão 360°"
         }
       }
     }

@@ -34,6 +34,7 @@ export default {
       menuOptions: [
         'dashboard',
         'reports',
+        'booking-manage',
         'control-admin',
         'manage-admin',
         'configuration',
