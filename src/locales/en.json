@@ -3062,6 +3062,22 @@
     "listResult": "Results:",
     "feature": "Configuration:",
     "add": "Add",
+    "features": "Configurations",
+    "whatsapps": "Whatsapp Connection",
+    "confirm": "Confirm Connection",
+    "id": "Id:",
+    "lastConnection": "Last Connection",
+    "disconnect": "Disconnect Whatsapp",
+    "connect": "Connect",
+    "request": "Request Connection",
+    "instructions": {
+      "title": "Instructions:",
+      "1": "1. Access to the Whatsapp of your Company",
+      "2": "2. Go to Configurations -> Devices Connected -> Connect Devices",
+      "3": "3. Scan the QR Code with your cellphone",
+      "4": "4. Wait until the sincronization ends and for the status to be 'Active'",
+      "5": "5. Click on 'Confirm Connection' to finalize and That's it!"
+    },
     "message": {
       "1": {
         "title": "Ups!",
@@ -3074,6 +3090,18 @@
       "3": {
         "title": "Oh no!",
         "content": "Theres no commerces. Please check the info at the commerces section."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "There's not Whatsapp Connection created. Create a new one."
+      },
+      "5": {
+        "title": "Wait a few seconds!",
+        "content": " We're preparing a new QR code. When it shows up, you must scan it from your Whatsapp."
+      },
+      "6": {
+        "title": "Ups!",
+        "content": "There's a problem on the connection with the provider. Please wait and try again later, if the problem continue, please let us know."
       }
     },
     "capacitiesList": {

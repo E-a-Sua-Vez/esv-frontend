@@ -1,7 +1,7 @@
 <script>
 import Popper from "vue3-popper";
 import Toggle from '@vueform/toggle';
-import { updateFeatureToggle } from '../../application/services/feature-toggle';
+import { updateFeatureToggle } from '../../../application/services/feature-toggle';
 
 export default {
   name: 'SimpleConfigurationCard',

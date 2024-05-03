@@ -3071,6 +3071,22 @@
     "listResult": "Registros:",
     "feature": "Configuração:",
     "add": "Adicionar",
+    "features": "Configurations",
+    "whatsapps": "Conexão Whatsapp",
+    "confirm": "Confirme Conexão",
+    "id": "Id:",
+    "lastConnection": "Última Conexão",
+    "disconnect": "Desconectar Whatsapp",
+    "connect": "Conectar",
+    "request": "Solicitar Conexão",
+    "instructions": {
+      "title": "Instruções:",
+      "1": "1. Entre no aplicativo WhatsApp da sua empresa",
+      "2": "2. Entre em Configurações -> Dispositivos Conectados -> Conectar Dispositivos",
+      "3": "3. Digitalize o QR Code com seu celular",
+      "4": "4. Aguarde a conclusão da sincronização e o status da conexão seja 'Ativo'",
+      "5": "5. Clique em ‘Confirmar Conexão’ para finalizar e pronto!"
+    },
     "message": {
       "1": {
         "title": "Oh não!",
@@ -3083,6 +3099,18 @@
       "3": {
         "title": "Oh não!",
         "content": "Não há comércios. Valide a informação na seção de comércios."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "Não há nenhuma conexão WhatsApp criada. Crie uma nova conexão."
+      },
+      "5": {
+        "title": "Espere alguns segundos!",
+        "content": "Estamos gerando um novo QR code. Quando o QR code aparecer na tela, você deverá digitalizá-lo no seu aplicativo WhatsApp."
+      },
+      "6": {
+        "title": "Ups!",
+        "content": "Houve um problema de conexão com o provedor. Tente novamente mais tarde ou entre em contato com o administrador."
       }
     },
     "capacitiesList": {

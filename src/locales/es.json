@@ -3059,6 +3059,22 @@
     "listResult": "Registros:",
     "feature": "Configuración:",
     "add": "Agregar",
+    "features": "Configuraciones",
+    "whatsapps": "Conexión Whatsapp",
+    "confirm": "Confirmar Conexión",
+    "id": "Id:",
+    "lastConnection": "Última Conexión",
+    "disconnect": "Desconectar Whatsapp",
+    "connect": "Conectar",
+    "request": "Solicitar Conexión",
+    "instructions": {
+      "title": "Instrucciones:",
+      "1": "1. Entre en la App de Whatsapp de su Empresa",
+      "2": "2. Entre en Configuraciones -> Dispositivos Conectados -> Conectar Dispositivos",
+      "3": "3. Escanee el Código QR con su Celular",
+      "4": "4. Espere a que la sincronización termine y el estado de conexión sea 'Activo'",
+      "5": "5. Haga click en 'Confirmar Conexión' para finalizar y ¡Listo!"
+    },
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3071,6 +3087,18 @@
       "3": {
         "title": "¡Ups!",
         "content": "No hay comercios. Ve a la administración de comercios y verifica la información."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay conexión Whatsapp Creada. Cree una nueva conexión."
+      },
+      "5": {
+        "title": "¡Espera unos segundos!",
+        "content": "Estamos generando un nuevo código QR. Cuando aparezca el código QR en pantalla, debes escanearlo desde tu App de Whatsapp."
+      },
+      "6": {
+        "title": "¡Ups!",
+        "content": "Hubo un problema de conexión con el proveedor. Por favor intentalo nuevamente más tarde o comunícate con el administrador."
       }
     },
     "capacitiesList": {

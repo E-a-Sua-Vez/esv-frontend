@@ -29,5 +29,24 @@ export const addBusiness = async (business) => {
   };
   await addAdministrator(newAdministrator);
   return newBusiness;
+}
 
+export const requestWhatsappConnectionById = async (id, whatsapp) => {
+  return (await requestBackend.post(`/${entity}/${id}/resquest/whatsapp-connection/${whatsapp}`, {}, await getHeaders())).data;
+}
+
+export const returnWhatsappConnectionById = async (id, instanceId) => {
+  return (await requestBackend.post(`/${entity}/${id}/return/whatsapp-connection/${instanceId}`, {}, await getHeaders())).data;
+}
+
+export const disconnectWhatsappConnectionById = async (id, instanceId) => {
+  return (await requestBackend.post(`/${entity}/${id}/disconnect/whatsapp-connection/${instanceId}`, {}, await getHeaders())).data;
+}
+
+export const statusWhatsappConnectionById = async id => {
+  return (await requestBackend.get(`/${entity}/${id}/whatsapp-connection/status`, await getHeaders())).data;
+}
+
+export const updateWhatsappConnection = async (id, commerce) => {
+  return (await requestBackend.patch(`/${entity}/${id}/whatsapp-connection`, commerce, await getHeaders())).data;
 }
