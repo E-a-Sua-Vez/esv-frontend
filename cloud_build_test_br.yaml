@@ -22,9 +22,8 @@ steps:
       ]
     env:
       - "PORT=8080"
-      - "LOCATION=cl"
+      - "LOCATION=br"
       - "NODE_ENV=prod"
-      - "PROJECT_ID=easuavez"
     secretEnv:
       [
         'VITE_FIREBASE_API_KEY',
@@ -33,7 +32,12 @@ steps:
         'VITE_FIREBASE_MESSAGING_SENDER_ID',
         'VITE_MAPS_API_KEY',
         'VITE_RECAPTCHA_CHECK',
-        'VITE_RECAPTCHA_INVISIBLE'
+        'VITE_RECAPTCHA_INVISIBLE',
+        'VITE_FIREBASE_AUTH_DOMAIN',
+        'VITE_FIREBASE_DATABASE_URL',
+        'VITE_FIREBASE_PROJECT_ID',
+        'VITE_FIREBASE_STORAGE_BUCKET',
+        'VITE_RECAPTCHA_ENABLED'
       ]
 images:
   - gcr.io/$PROJECT_ID/esv-frontend-test
@@ -53,3 +57,13 @@ availableSecrets:
     env: 'VITE_RECAPTCHA_CHECK'
   - versionName: projects/$PROJECT_ID/secrets/VITE_RECAPTCHA_INVISIBLE/versions/latest
     env: 'VITE_RECAPTCHA_INVISIBLE'
+  - versionName: projects/$PROJECT_ID/secrets/VITE_FIREBASE_AUTH_DOMAIN/versions/latest
+    env: 'VITE_FIREBASE_AUTH_DOMAIN'
+  - versionName: projects/$PROJECT_ID/secrets/VITE_FIREBASE_DATABASE_URL/versions/latest
+    env: 'VITE_FIREBASE_DATABASE_URL'
+  - versionName: projects/$PROJECT_ID/secrets/VITE_FIREBASE_PROJECT_ID/versions/latest
+    env: 'VITE_FIREBASE_PROJECT_ID'
+  - versionName: projects/$PROJECT_ID/secrets/VITE_FIREBASE_STORAGE_BUCKET/versions/latest
+    env: 'VITE_FIREBASE_STORAGE_BUCKET'
+  - versionName: projects/$PROJECT_ID/secrets/VITE_RECAPTCHA_ENABLED/versions/latest
+    env: 'VITE_RECAPTCHA_ENABLED'
