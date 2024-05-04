@@ -405,7 +405,12 @@ export default {
           </div>
           <div class="col-12 col-lg-9">
             <div class="row righted mb-2">
-              <div class="col-3">
+              <div class="col-7">
+                <span class="metric-card-number" v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
+                  <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }}
+                </span>
+              </div>
+              <div class="col">
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showResume ? 'btn-selected' : ''"
@@ -413,7 +418,7 @@ export default {
                   {{ $t("patientHistoryView.resume") }} <i class="bi bi-file-fill"></i>
                 </button>
               </div>
-              <div class="col-3">
+              <div class="col">
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   @click="onSave()">

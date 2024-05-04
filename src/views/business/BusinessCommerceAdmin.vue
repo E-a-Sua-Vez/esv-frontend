@@ -2,7 +2,7 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getCommercesByBusinessId, updateCommerce, addCommerce, getActiveCommercesByBusinessId } from '../../application/services/commerce';
+import { getActiveCommercesByBusinessId, updateCommerce, addCommerce } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from "vue3-popper";
 import CommerceName from '../../components/common/CommerceName.vue';
@@ -70,7 +70,7 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await getCommercesByBusinessId(state.business.id);
+        state.commerces = await getActiveCommercesByBusinessId(state.business.id);
         state.filtered = state.commerces;
         state.toggles = await getPermissions('commerces', 'admin');
         alertError.value = '';
@@ -185,7 +185,7 @@ export default {
         loading.value = true;
         if (validateAdd(state.newCommerce)) {
           await addCommerce(state.newCommerce);
-          const commerces = await getCommercesByBusinessId(state.business.id);
+          const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
           state.showAdd = false;
           closeAddModal();
@@ -205,7 +205,7 @@ export default {
         loading.value = true;
         if (validateUpdate(commerce)) {
           await updateCommerce(commerce.id, commerce);
-          const commerces = await getCommercesByBusinessId(state.business.id);
+          const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
           state.extendedEntity = undefined;
         }
@@ -224,7 +224,7 @@ export default {
           commerce.available = false;
           commerce.active = false;
           await updateCommerce(commerce.id, commerce);
-          const commerces = await getCommercesByBusinessId(state.business.id);
+          const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
           state.extendedEntity = undefined;
           state.goToUnavailable = false;

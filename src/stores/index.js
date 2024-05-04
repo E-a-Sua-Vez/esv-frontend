@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { getCommercesByBusinessId } from '../application/services/commerce';
+import { getActiveCommercesByBusinessId } from '../application/services/commerce';
 import { getBusinessById } from '../application/services/business';
 
 export const globalStore = defineStore('globalStore', {
@@ -148,7 +148,7 @@ export const globalStore = defineStore('globalStore', {
       if (!commerces) {
         const business = await this.getCurrentBusiness;
         const businessId = currentUser.businessId || business.id;
-        commerces = await getCommercesByBusinessId(businessId);
+        commerces = await getActiveCommercesByBusinessId(businessId);
       }
       if (currentUser && currentUser.commercesId) {
         if (currentUser.commercesId.length > 0) {

@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getBusinessExecutiveReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
-import jsonToCsv from '../../shared/utils/jsonToCsv';
+import { statusWhatsappConnectionById } from '../../application/services/business';
+import { getDate } from '../../shared/utils/date';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -33,6 +34,7 @@ export default {
       endDate: new Date().toISOString().slice(0,10),
       reports: {},
       extendedEntity: undefined,
+      whatsappConnectionStatus: {},
       toggles: {}
     });
 
@@ -43,6 +45,7 @@ export default {
         state.business = await store.getActualBusiness();
         const { calculatedReports } = await getBusinessExecutiveReport(state.business.id, state.startDate, state.endDate);
         state.reports = calculatedReports;
+        await getWhatsappStatus();
         state.toggles = await getPermissions('executive', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -60,35 +63,12 @@ export default {
       router.back();
     }
 
-    const downloadAttentionsReport = async () => {
-      try {
-        loading.value = true;
-        let csvAsBlob = [];
-        const result = state.reports.resumeByCommerce;
-        if (result && result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `executive-report-${state.business.keyName}-${state.startDate}-${state.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
     const refresh = async () => {
       try {
         loading.value = true;
         const { calculatedReports } = await getBusinessExecutiveReport(state.business.id, state.startDate, state.endDate);
         state.reports = calculatedReports;
+        await getWhatsappStatus();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -101,15 +81,29 @@ export default {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     }
 
+    const getWhatsappStatus = async () => {
+      try {
+        loading.value = true;
+        const result = await statusWhatsappConnectionById(state.business.id);
+        if (result && result.whatsappConnection) {
+          state.whatsappConnectionStatus = result.whatsappConnection;
+        }
+        loading.value = false;
+      } catch (error) {
+        loading.value = false;
+      }
+    }
+
     return {
       state,
       loading,
       alertError,
+      getDate,
       refresh,
       goBack,
       isActiveBusiness,
-      downloadAttentionsReport,
-      showUpdateForm
+      showUpdateForm,
+      getWhatsappStatus
     }
   }
 }
@@ -131,47 +125,9 @@ export default {
       </div>
       <div id="businessExecutiveReport">
         <div v-if="!loading &&isActiveBusiness && state.toggles['executive.admin.view']">
-          <div id="businessExecutiveReport-controls" class="control-box">
-            <div class="row">
-              <div class="col-6">
-                <input id="startDate" class="form-control metric-controls" type="date" v-model="state.startDate"/>
-              </div>
-              <div class="col-6">
-                <input id="endDate" class="form-control metric-controls" type="date" v-model="state.endDate"/>
-              </div>
-              <div class="col">
-                <a class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2  px-4" @click="refresh()"><i class="bi bi-search"></i> {{ $t("dashboard.refresh") }}</a>
-              </div>
-            </div>
-          </div>
           <div v-if="!loading" id="businessExecutiveReport-result" class="mt-4">
-            <div>
-              <SimpleDownloadCard
-                :download="state.toggles['executive.admin.download']"
-                :title="$t('businessExecutiveReport.items.reports.1.name')"
-                :showTooltip="true"
-                :description="$t('businessExecutiveReport.items.reports.1.description')"
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="downloadAttentionsReport"
-              ></SimpleDownloadCard>
-            </div>
             <div id="resumeBusiness" v-if="state.reports.resume">
               <span class="fw-bold">{{ $t("businessExecutiveReport.resume") }}</span>
-              <div class="row mt-1 g-1 resume-box">
-                <div><span class="item-label fw-bold">{{ $t("businessExecutiveReport.activity") }}</span></div>
-                <div class="col-4">
-                  <div><span class="sub-item-label">{{ $t("businessExecutiveReport.attentions") }}</span></div>
-                  <div><span> <i class="bi bi-qr-code blue-icon"></i> {{ state.reports.resume.totalAttentions || 0 }}</span></div>
-                </div>
-                <div class="col-4">
-                  <div><span class="sub-item-label">{{ $t("businessExecutiveReport.enquetes") }}</span></div>
-                  <div><span> <i class="bi bi-star yellow-icon"></i> {{ state.reports.resume.totalSurveys || 0 }}</span></div>
-                </div>
-                <div class="col-4">
-                  <div><span class="sub-item-label">{{ $t("businessExecutiveReport.notifications") }}</span></div>
-                  <div><span> <i class="bi bi-send-check blue-icon"></i> {{ state.reports.resume.totalNotifications || 0 }}</span></div>
-                </div>
-              </div>
               <div class="row mt-1 g-1 resume-box">
                 <div><span class="item-label fw-bold">{{ $t("businessExecutiveReport.commerces") }}</span></div>
                 <div class="col-4">
@@ -220,8 +176,31 @@ export default {
                   <div><span> 🔴 {{ state.reports.resume.totalInactiveCollaborators || 0 }}</span></div>
                 </div>
               </div>
+              <div class="row mt-1 g-1 resume-box" v-if="state.business && state.business.whatsappConnection">
+                <div><span class="item-label fw-bold">{{ $t("businessExecutiveReport.whatsapp") }}</span></div>
+                <div class="row" v-if="state.whatsappConnectionStatus && state.whatsappConnectionStatus.whatsapp">
+                  <div class="col-2 centered">
+                    <span> {{ state.whatsappConnectionStatus.connected ? '🟢' : '🔴' }}</span>
+                  </div>
+                  <div class="col-10">
+                    <div class="col">
+                      <i class="bi bi-whatsapp"></i> <span class="fw-bold mx-2"> {{ state.whatsappConnectionStatus.whatsapp }} </span>
+                    </div>
+                    <div class="col">
+                    <span class="badge detail-data-badge mx-2">
+                      <span class="fw-bold detail-data-badge-title"> {{ $t('businessConfiguration.id') }} </span>
+                      {{ state.whatsappConnectionStatus.idConnection }}
+                      </span>
+                    <span class="badge detail-data-badge mx-2">
+                      <span class="fw-bold detail-data-badge-title"> {{ $t('businessConfiguration.lastConnection') }} </span>
+                      {{ getDate(state.whatsappConnectionStatus.lastConection) }}
+                    </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div id="resumePerCommerce" v-if="state.reports.resumeByCommerce && state.reports.resumeByCommerce.length > 0">
+            <div id="resumePerCommerce" class="mt-4" v-if="state.reports.resumeByCommerce && state.reports.resumeByCommerce.length > 0">
               <span class="fw-bold">{{ $t("businessExecutiveReport.resumeByCommerce") }}</span>
               <div v-for="(commerce, index) in state.reports.resumeByCommerce" :key="index" class="result-card">
                 <div class="row">
@@ -240,21 +219,6 @@ export default {
                   :class="{ show: state.extendedEntity === index }"
                   class="detailed-data transition-slow"
                   >
-                  <div class="row mt-1 g-1 resume-box">
-                    <div><span class="item-label fw-bold">{{ $t("businessExecutiveReport.activity") }}</span></div>
-                    <div class="col-4">
-                      <div><span class="sub-item-label">{{ $t("businessExecutiveReport.attentions") }}</span></div>
-                      <div><span> <i class="bi bi-qr-code blue-icon"></i> {{ commerce.totalAttentions || 0 }}</span></div>
-                    </div>
-                    <div class="col-4">
-                      <div><span class="sub-item-label">{{ $t("businessExecutiveReport.enquetes") }}</span></div>
-                      <div><span> <i class="bi bi-star yellow-icon"></i> {{ commerce.totalSurveys || 0 }}</span></div>
-                    </div>
-                    <div class="col-4">
-                      <div><span class="sub-item-label">{{ $t("businessExecutiveReport.notifications") }}</span></div>
-                      <div><span> <i class="bi bi-send-check blue-icon"></i> {{ commerce.totalNotifications || 0 }}</span></div>
-                    </div>
-                  </div>
                   <div class="row mt-1 g-1 resume-box">
                     <div><span class="item-label fw-bold">{{ $t("businessExecutiveReport.queues") }}</span></div>
                     <div class="col-4">
