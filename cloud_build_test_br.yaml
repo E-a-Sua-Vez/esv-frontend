@@ -2,7 +2,7 @@ steps:
   # build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
-      ["build", "-f", "Dockerfile.$PROJECT_ID", "-t", "gcr.io/$PROJECT_ID/esv-frontend-test:${SHORT_SHA}", "."]
+      ["build", "-f", "Dockerfile.test.$PROJECT_ID", "-t", "gcr.io/$PROJECT_ID/esv-frontend-test:${SHORT_SHA}", "."]
     # push the container image to Container Registry
   - name: "gcr.io/cloud-builders/docker"
     args: ["push", "gcr.io/$PROJECT_ID/esv-frontend-test:${SHORT_SHA}"]
@@ -23,7 +23,7 @@ steps:
     env:
       - "PORT=8080"
       - "LOCATION=br"
-      - "NODE_ENV=prod"
+      - "NODE_ENV=test"
     secretEnv:
       [
         'VITE_FIREBASE_API_KEY',

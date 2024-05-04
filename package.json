@@ -6,6 +6,7 @@
     "dev:br": "vite --config vite.config-br.js",
     "build:net": "vite --config vite.config-net.js build --base=/",
     "build:br": "vite --config vite.config-br.js build --base=/",
+    "build:testbr": "vite --config vite.config-test-br.js build --base=/",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "serve": "vue-cli-service serve",

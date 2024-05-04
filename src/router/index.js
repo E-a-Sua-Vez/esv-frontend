@@ -192,7 +192,7 @@ router.beforeEach(async (to, from, next) => {
   if (publicCommerceViews.includes(to.name) || privateUserViews.includes(to.name)) {
     const environment = import.meta.env.VITE_NODE_ENV || 'local';
     const currentUserType = await store.getCurrentUserType;
-    if (environment === 'prod' &&
+    if (environment !== 'local' &&
       ((currentUserType !== 'invited') ||
       (currentUserType === 'invited' && userNotExists) ||
       (currentUserType === 'invited' && getInvitedSessionAlive(currentUser.time)))) {

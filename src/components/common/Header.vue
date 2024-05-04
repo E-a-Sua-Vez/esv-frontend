@@ -46,7 +46,7 @@ export default {
       const environment = import.meta.env.VITE_NODE_ENV || 'local';
       const currentUser = await store.getCurrentUser;
       const currentUserType = await store.getCurrentUserType;
-      if (environment === 'prod' && (!currentUserType || !currentUser)) {
+      if (environment !== 'local' && (!currentUserType || !currentUser)) {
         await signOut(undefined, currentUserType);
         await store.resetSession();
         const user = await signInInvited();

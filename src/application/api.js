@@ -35,7 +35,7 @@ const authHeader = async () => {
   const actualToken = await getCurrentUser();
   const currentUser = await store.getCurrentUser;
   const { active, token } = currentUser || {};
-  if (environment === 'prod' && active && token) {
+  if (environment !== 'local' && active && token) {
     if (actualToken !== undefined && token !== actualToken) {
       tokenToSend = actualToken;
     } else {
