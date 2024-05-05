@@ -19,6 +19,12 @@ export default {
   methods: {
     async update () {
       await this.$emit('update', this.permission);
+    },
+    getModule (name) {
+      if (name) {
+        const [ module ] = name.split('.');
+        return module;
+      }
     }
   }
 }
@@ -26,19 +32,14 @@ export default {
 
 <template>
   <div v-if="show">
-    <div class="row metric-card h4">
-      <div class="metric-card-title col-8 p-0">
-        <div class="col-12">
+    <div class="row metric-card">
+      <div class="idNumber-title lefted">
+        <span class="badge bg-primary">{{ getModule(permission.name) }}</span>
+      </div>
+      <div class="metric-card-title col-8 p-0 lefted">
+        <div class="lefted">
           <i :class="`bi ${icon} ${iconStyleClass} centered p-1`" ></i>
-          <span class="p-1 text-break"> {{ permission.name }} </span>
-          <Popper
-            v-if="showTooltip"
-            :class="'dark'"
-            arrow
-            disableClickAway
-            :content="$t(`permissions.${permission.name}`)">
-            <i class='bi bi-info-circle-fill h7 m-2'></i>
-          </Popper>
+          <span class="m-1"> {{ $t(`permissions.${permission.name}`) }} </span>
         </div>
       </div>
       <div class="col-3 centered justify-content-end p-0">
@@ -67,6 +68,9 @@ export default {
           </div>
         </div>
       </div>
+      <div class="idNumber-title lefted">
+        <span class="mt-1 fw-bold"> {{ permission.name }} </span>
+      </div>
     </div>
   </div>
 </template>
@@ -80,11 +84,10 @@ export default {
   border: 1.5px solid var(--gris-default);
 }
 .metric-card-title {
-  margin: .1rem;
-  font-size: 1rem;
+  font-size: .9rem;
   font-weight: 500;
-  display: flex;
-  align-self: center;
+  line-height: .9rem;
+  text-align: left;
 }
 .configuration-details-container {
   font-size: .8rem;

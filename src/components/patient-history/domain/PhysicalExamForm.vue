@@ -108,7 +108,7 @@ export default {
   <div>
     <div id="form">
       <div class="row">
-        <div class="col-6">
+        <div class="col-12 col-md-6 mt-2">
           <div id="patient-name-form-add" class="row m-1">
             <div class="col-12 text-label">
               {{ $t("patientHistoryView.physicalExam") }} <i class="bi bi-person-fill mx-1"></i>
@@ -136,7 +136,7 @@ export default {
             </Warning>
           </div>
         </div>
-        <div class="col-6 blocks-section">
+        <div class="col-12 col-md-6 mt-2 blocks-section">
           <div class="col-12 text-label fw-bold">
             {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
             <div class="form-check form-switch centered">

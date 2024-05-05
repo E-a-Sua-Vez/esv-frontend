@@ -2813,6 +2813,7 @@
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Ordem Médica",
     "showItensMedicalHistory": "Admin Itens Prontuario",
+    "menu": "Detalhes Prontuario",
     "name": "Nome:",
     "lastName": "Sobrenome:",
     "idNumber": "CPF/Passaporte:",

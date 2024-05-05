@@ -229,7 +229,8 @@ export default {
       if (state.searchString.length >= 3) {
         if (state.user && state.user.permissions.length > 0) {
           state.permissions = state.user.permissions.filter(i =>
-            i.name.toLowerCase().startsWith(state.searchString.toLowerCase()));
+            i.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+          );
         }
       } else {
         if (state.user && state.user.permissions.length >= 0) {
@@ -351,7 +352,7 @@ export default {
             <div class="mt-1">
               <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.permissions.length }} </span>
             </div>
-            <div class="roles-card mb-4" v-if="state.permissions.length > 0">
+            <div class="mb-4" v-if="state.permissions.length > 0">
               <div v-for="(permission, index) in state.permissions" :key="index">
                 <SimplePermissionCard
                   :show="true"

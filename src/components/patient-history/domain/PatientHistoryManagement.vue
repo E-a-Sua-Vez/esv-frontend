@@ -90,7 +90,8 @@ export default {
       this.page = pageIn;
     },
     getDate(date) {
-      return getDateAndHour(date);
+      const timeZone = this.commerce && this.commerce.localeInfo ? this.commerce.localeInfo.timezone : 'America/Sao_Paulo';
+      return getDateAndHour(date, timeZone);
     },
     async clear() {
       this.daysSinceContacted = undefined;
@@ -120,6 +121,7 @@ export default {
       this.showDiagnostic = false;
       this.showMedicalOrder = false;
       this.showResume = false;
+      this.onMobileMenu();
     },
     resetValues() {
       this.newPersonalData = undefined;
@@ -181,46 +183,55 @@ export default {
     },
     receiveConsultationReasonData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newConsultationReason = data;
       };
     },
     receiveCurrentIllnessData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newCurrentIllness = data;
       };
     },
     receivePersonalBackgroundData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newPersonalBackground = data;
       };
     },
     receiveFamilyBackgroundData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newFamilyBackground = data;
       };
     },
     receivePsychobiologicalHabitsData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newPsychobiologicalHabits = data;
       };
     },
     receiveFunctionalExamData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newFunctionalExam = data;
       };
     },
     receivePhysicalExamData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newPhysicalExam = data;
       };
     },
     receiveDiagnosticData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newDiagnostic = data;
       };
     },
     receiveMedicalOrderData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newMedicalOrder = data;
       };
     },
@@ -324,6 +335,10 @@ export default {
         this.$emit('closeModal');
         this.$router.push({ path: '/interno/negocio/patient-history-item-admin' });
       }
+    },
+    async onMobileMenu () {
+      const modalCloseButton = document.getElementById('menu-mobile-button');
+      modalCloseButton.click();
     }
   },
   computed: {
@@ -380,7 +395,8 @@ export default {
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div class="row">
-          <div class="col-12 col-lg-3">
+          <!-- MENU-->
+          <div class="col-12 col-lg-3 d-none d-md-block">
             <div class="row centered mx-1">
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
@@ -450,18 +466,98 @@ export default {
               </button>
             </div>
           </div>
+          <div class="col-12 col-lg-3 d-block d-md-none">
+            <div class="righted menu-mobile">
+              <a
+                id="menu-mobile-button"
+                class="nav-link"
+                data-bs-toggle="collapse"
+                href="#menu-options-mobile">
+                {{ $t("patientHistoryView.menu") }} <i class="bi bi-chevron-down"></i>
+              </a>
+            </div>
+            <div id="menu-options-mobile" class="collapse">
+              <div id="menu-options-mobile" class="row centered mx-1">
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showPersonalData ? 'btn-selected' : ''"
+                  @click="onPersonalData">
+                  {{ $t("patientHistoryView.showPersonalData") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showConsultationReason ? 'btn-selected' : ''"
+                  @click="onConsultationReason">
+                  {{ $t("patientHistoryView.showConsultationReason") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showCurrentIllness ? 'btn-selected' : ''"
+                  @click="onCurrentIllness">
+                  {{ $t("patientHistoryView.showCurrentIllness") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showPersonalBackground ? 'btn-selected' : ''"
+                  @click="onPersonalBackground">
+                  {{ $t("patientHistoryView.showPersonalBackground") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showFamilyBackground ? 'btn-selected' : ''"
+                  @click="onFamilyBackground">
+                  {{ $t("patientHistoryView.showFamilyBackground") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showPsychobiologicalHabits ? 'btn-selected' : ''"
+                  @click="onPsychobiologicalHabits">
+                  {{ $t("patientHistoryView.showPsychobiologicalHabits") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showFunctionalExam ? 'btn-selected' : ''"
+                  @click="onFunctionalExam">
+                  {{ $t("patientHistoryView.showFunctionalExam") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showPhysicalExam ? 'btn-selected' : ''"
+                  @click="onPhysicalExam">
+                  {{ $t("patientHistoryView.showPhysicalExam") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showDiagnostic ? 'btn-selected' : ''"
+                  @click="onDiagnostic">
+                  {{ $t("patientHistoryView.showDiagnostic") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showMedicalOrder ? 'btn-selected' : ''"
+                  @click="onMedicalOrder">
+                  {{ $t("patientHistoryView.showMedicalOrder") }}
+                </button>
+                <button
+                  v-if="userType === 'business'"
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  @click="onItensMedicalHistory">
+                  {{ $t("patientHistoryView.showItensMedicalHistory") }} <i class="bi bi-gear-fill"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- COMPONENTES -->
           <div class="col-12 col-lg-9">
             <div class="row righted mb-2">
-              <div class="col-7">
-                <span class="metric-card-number" v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
-                  <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }}
-                </span>
-                <span class="lefted resume-patient-subtitle" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
-                  <span class=""> {{ $t("patientHistoryView.updated") }} </span>
-                  <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
-                </span>
+              <div class="col-12 col-md-6 centered my-1">
+                <div class="metric-card-number">
+                  <span v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
+                    <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }}
+                  </span>
+                </div>
               </div>
-              <div class="col">
+              <div class="col-6 col-md-3">
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showResume ? 'btn-selected' : ''"
@@ -469,7 +565,7 @@ export default {
                   {{ $t("patientHistoryView.resume") }} <i class="bi bi-file-fill"></i>
                 </button>
               </div>
-              <div class="col">
+              <div class="col-6 col-md-3">
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   @click="onSave()">
@@ -599,6 +695,12 @@ export default {
                 </MedicalOrderForm>
               </div>
             </div>
+            <div class="righted">
+              <span class="resume-patient-subtitle" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
+                <span class=""> {{ $t("patientHistoryView.updated") }} </span>
+                <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -644,6 +746,7 @@ export default {
 .metric-card-number {
   font-size: 1.2rem;
   font-weight: 700;
+  line-height: 1.2rem;
 }
 .metric-keyword-tag {
   font-size: .6rem;
@@ -690,5 +793,12 @@ export default {
 .resume-patient-subtitle {
   font-size: .8rem;
   font-style: italic;
+}
+.show {
+  max-height: 2000px !important;
+  overflow-y: visible;
+}
+.menu-mobile {
+  font-size: .9rem;
 }
 </style>

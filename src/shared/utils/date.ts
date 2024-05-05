@@ -18,19 +18,19 @@ export const getDate = (dateIn, timeZoneIn) => {
     return returnDate;
   }
 }
-
 export const getDateAndHour = (dateIn, timeZoneIn) => {
   if (dateIn) {
     let date = dateIn;
     try  {
-      date = new Date(dateIn.toDate().toString()).toISOString();
+      date = new Date(dateIn.toDate().toString()).toLocaleString('en-US', { timeZone: timeZoneIn });
+      const [year, month, day] = date.slice(0,10).split('-');
+      const hour = date.slice(11,19);
+      const returnDate = `${day}/${month}/${year}, ${hour}`;
+      return returnDate;
     } catch (error) {
-      date = new Date(dateIn).toISOString();
+      date = new Date(dateIn).toLocaleString('pt', { timeZone: timeZoneIn });
+      return date;
     }
-    const [year, month, day] = date.slice(0,10).split('-');
-    const hour = date.slice(11,19);
-    const returnDate = `${day}/${month}/${year}, ${hour}`;
-    return returnDate;
   }
 }
 

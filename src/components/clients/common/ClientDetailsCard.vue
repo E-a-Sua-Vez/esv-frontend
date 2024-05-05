@@ -476,7 +476,7 @@ export default {
       <div class="modal-dialog modal-xl modal-fullscreen">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
+            <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-medical-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
             <button id="close-modal-patient-history" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <Spinner :show="loading"></Spinner>

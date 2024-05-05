@@ -2801,6 +2801,7 @@
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Orden Médica",
     "showItensMedicalHistory": "Admin Items Historia",
+    "menu": "Detalles Historia",
     "name": "Nombre:",
     "lastName": "Apellido:",
     "idNumber": "Id/Cédula/Pasaporte:",
@@ -3481,6 +3482,12 @@
     }
   },
   "permissions": {
+    "sections": {
+      "dashboard": "Performance Hub",
+      "collaborator": "Acciones Colaborador",
+      "patient": "Paciente",
+      "product-stock": "Stock"
+    },
     "activations": {
       "admin": {
         "view": "Ver Sección - Activación de Planes",
@@ -3665,14 +3672,24 @@
       "attention-client-contact": {
         "view": "Ver Contacto de Clientes - Sección Performance Hub"
       },
+      "attention-days-since-clients": {
+        "view": "Ver Días Atención de Clientes - Sección Performance Hub"
+      },
+      "attentions-management": {
+        "view": "Ver Días Atención de Clientes - Sección Performance Hub"
+      },
       "reports": {
-        "surveys": "Descargar Reporte de Encuestas (Resumen) Sección Performance Hub",
-        "indicators": "Descargar Reporte de Indicadores Sección Performance Hub",
-        "graphs": "Descargar Reporte de Tendencias Sección Performance Hub",
-        "surveys-management": "Descargar Reporte de Encuestas (Detalles) Sección Performance Hub",
-        "surveys-consolidated": "Descargar Reporte de Encuestas (Consolidado) Sección Performance Hub",
-        "attentions-management": "Descargar Reporte de Atenciones Sección Performance Hub",
-        "client-contacts-management": "Descargar Reporte de Contactos Sección Performance Hub"
+        "surveys": "Descargar Reporte de Encuestas (Resumen) - Sección Performance Hub",
+        "indicators": "Descargar Reporte de Indicadores - Sección Performance Hub",
+        "graphs": "Descargar Reporte de Tendencias - Sección Performance Hub",
+        "surveys-management": "Descargar Reporte de Encuestas (Detalles) - Sección Performance Hub",
+        "surveys-consolidated": "Descargar Reporte de Encuestas (Consolidado) - Sección Performance Hub",
+        "attentions-management": "Descargar Reporte de Atenciones - Sección Performance Hub",
+        "client-contacts-management": "Descargar Reporte de Contactos - Sección Performance Hub",
+        "clients-management": "Reporte de Clientes (Detalles) - Sección Performance Hub"
+      },
+      "tracing": {
+        "view": "Ver Sección - Gestión de Clientes"
       }
     },
     "executive": {
@@ -3722,18 +3739,22 @@
         "update": "Actualizar módulo - Sección Atenciones del Colaborador"
       },
       "attention": {
-        "attend": "Atender - Sección Atenciones del Colaborador",
+        "attend": "Atender Atención - Sección Atenciones del Colaborador",
         "finish": "Marcar atención como atendida - Sección Atenciones del Colaborador",
-        "skip": "Saltar atención - Sección Atenciones del Colaborador",
+        "skip": "Saltar Atención - Sección Atenciones del Colaborador",
         "payment-confirm": "Confirmar Pago - Sección Atenciones del Colaborador",
-        "cancel": "Cancelar Atención - Sección Atenciones del Colaborador"
+        "cancel": "Cancelar Atención - Sección Atenciones del Colaborador",
+        "patient-history": "Historial Médico - Sección Atenciones del Colaborador",
+        "products": "Registrar Stock - Sección Atenciones del Colaborador",
+        "transfer": "Transferir Atención - Sección Atenciones del Colaborador"
       },
       "bookings": {
         "cancel": "Cancelar Reserva",
         "manage": "Manejar Reservas",
         "confirm": "Confirmar Reserva",
         "transfer": "Transferir Reservas",
-        "edit": "Editar Reservas"
+        "edit": "Editar Reservas",
+        "admin":"Administrar Reservas"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -3810,6 +3831,35 @@
         "update": "Actualizar datos - Sección Administrar Productos",
         "add": "Agregar datos - Sección Administrar Productos",
         "limit": "Límite de datos - Sección Administrar Productos"
+      }
+    },
+    "products-stock": {
+      "attentions": {
+        "view": "Ver Sección - Stock de Atenciones",
+        "add-consumption": "Agregar Consumo - Stock de Atenciones",
+        "add-replacement": "Agregar Reposición - Stock de Atenciones"
+      },
+      "products": {
+        "view": "Ver Sección - Gestión de Stock",
+        "add-consumption": "Agregar Consumo - Gestión de Stock",
+        "add-replacement": "Agregar Reposición - Gestión de Stock",
+        "view-attention": "Ver Consumo de Atenciones - Gestión de Stock",
+        "view-consumption": "Ver Consumo - Gestión de Stock",
+        "view-replacement":"Ver Reposición - Gestión de Stock"
+      },
+      "reports": {
+        "details": "Reporte Control de Stock - Gestión de Stock",
+        "replacement-details":"Reporte de Reposición de Producto - Gestión de Stock",
+        "consumption-details": "Reporte de Consumo de Producto - Gestión de Stock"
+      }
+    },
+    "patient": {
+      "history": {
+        "view": "Ver Sección - Administrar Historia Médica",
+        "read": "Leer datos - Sección Administrar Historia Médica",
+        "edit": "Editar datos - Sección Administrar Historia Médica",
+        "update": "Actualizar datos - Sección Administrar Historia Médica",
+        "add": "Agregar datos - Sección Administrar Historia Médica"
       }
     }
   }

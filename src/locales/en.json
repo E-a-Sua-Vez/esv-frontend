@@ -2804,6 +2804,7 @@
     "showDiagnostic": "Diagnostic",
     "showMedicalOrder": "Medical Order",
     "showItensMedicalHistory": "Admin History Items",
+    "menu": "History Details",
     "name": "Name:",
     "lastName": "LastName:",
     "idNumber": "Id/Passport:",

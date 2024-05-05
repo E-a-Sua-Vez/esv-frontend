@@ -119,6 +119,7 @@ export default {
         } else {
           if (state.habitsAux[item.id]) {
             state.habitsAux[item.id].actual = false;
+            state.habitsAux[item.id].ageTo = undefined;
           }
         }
         state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
