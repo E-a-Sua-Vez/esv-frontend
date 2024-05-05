@@ -8,6 +8,7 @@ import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import { globalStore } from '../../../stores';
 import { savePatientHistory } from '../../../application/services/patient-history';
 import { getPermissions } from '../../../application/services/permissions';
+import { getDateAndHour } from '../../../shared/utils/date';
 import PatientPersonalDataForm from './PatientPersonalDataForm.vue';
 import ConsultationReasonForm from './ConsultationReasonForm.vue';
 import CurrentIllnessForm from './CurrentIllnessForm.vue';
@@ -31,7 +32,7 @@ export default {
     patientHistoryIn: { type: Object, default: {} },
     patientHistoryItems: { type: Array, default: [] }
   },
-  emits: ['getPatientHistory'],
+  emits: ['getPatientHistory', 'closeModal'],
   data() {
     const store = globalStore();
     return {
@@ -49,6 +50,9 @@ export default {
       startDate: undefined,
       endDate: undefined,
       store,
+      userType: '',
+      dataChanged: false,
+      saveIntervalId: undefined,
       showPersonalData: true,
       showConsultationReason: false,
       showCurrentIllness: false,
@@ -74,10 +78,19 @@ export default {
   },
   async beforeMount() {
     this.toggles = await getPermissions('patient', 'history');
+    this.userType = await this.store.getCurrentUserType;
+  },
+  async beforeUnmount() {
+    if (this.saveIntervalId !== undefined) {
+      clearInterval(this.saveIntervalId);
+    }
   },
   methods: {
     setPage(pageIn) {
       this.page = pageIn;
+    },
+    getDate(date) {
+      return getDateAndHour(date);
     },
     async clear() {
       this.daysSinceContacted = undefined;
@@ -162,6 +175,7 @@ export default {
     },
     receivePersonalData (data) {
       if (data) {
+        this.dataChanged = true;
         this.newPersonalData = data;
       };
     },
@@ -305,8 +319,35 @@ export default {
       this.resetButtons();
       this.showResume = true;
     },
+    async onItensMedicalHistory () {
+      if (this.userType && this.userType === 'business') {
+        this.$emit('closeModal');
+        this.$router.push({ path: '/interno/negocio/patient-history-item-admin' });
+      }
+    }
+  },
+  computed: {
+    changedData() {
+      const { dataChanged } = this;
+      return {
+        dataChanged
+      }
+    }
   },
   watch: {
+    changedData: {
+      immediate: true,
+      deep: true,
+      async handler(newData, oldData) {
+        if (this.dataChanged === true && (newData.dataChanged !== oldData.dataChanged)) {
+          this.saveIntervalId = setInterval(async () => {
+            if (this.newPersonalData) {
+              await this.onSave();
+            }
+          }, 60000);
+        }
+      }
+    },
     store: {
       immediate: true,
       deep: true,
@@ -340,7 +381,7 @@ export default {
         <Alert :show="loading" :stack="alertError"></Alert>
         <div class="row">
           <div class="col-12 col-lg-3">
-            <div class="row centered blocks-section mx-1">
+            <div class="row centered mx-1">
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showPersonalData ? 'btn-selected' : ''"
@@ -401,6 +442,12 @@ export default {
                 @click="onMedicalOrder">
                 {{ $t("patientHistoryView.showMedicalOrder") }}
               </button>
+              <button
+                v-if="userType === 'business'"
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                @click="onItensMedicalHistory">
+                {{ $t("patientHistoryView.showItensMedicalHistory") }} <i class="bi bi-gear-fill"></i>
+              </button>
             </div>
           </div>
           <div class="col-12 col-lg-9">
@@ -408,6 +455,10 @@ export default {
               <div class="col-7">
                 <span class="metric-card-number" v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
                   <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }}
+                </span>
+                <span class="lefted resume-patient-subtitle" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
+                  <span class=""> {{ $t("patientHistoryView.updated") }} </span>
+                  <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
                 </span>
               </div>
               <div class="col">
@@ -628,12 +679,16 @@ export default {
 }
 .blocks-section {
   overflow-y: scroll;
-  max-height: 600px;
+  max-height: 490px;
   font-size: small;
   margin-bottom: 2rem;
   padding: .5rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   background-color: var(--color-background);
+}
+.resume-patient-subtitle {
+  font-size: .8rem;
+  font-style: italic;
 }
 </style>

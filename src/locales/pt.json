@@ -2812,6 +2812,7 @@
     "showPhysicalExam": "Exame Físico",
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Ordem Médica",
+    "showItensMedicalHistory": "Admin Itens Prontuario",
     "name": "Nome:",
     "lastName": "Sobrenome:",
     "idNumber": "CPF/Passaporte:",

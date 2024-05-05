@@ -14,7 +14,6 @@ export default {
   },
   methods: {
     selectItem(item) {
-      console.log("🚀 ~ selectItem ~ item:", item);
       this.searchString = '';
       this.selectedItem = item;
       this.$emit('selectItem', this.selectedItem)

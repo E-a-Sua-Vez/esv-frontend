@@ -35,7 +35,9 @@ export default {
     const { receiveData } = props;
 
     const state = reactive({
-      newPsychobiologicalHabits: {},
+      newPsychobiologicalHabits: {
+
+      },
       oldPsychobiologicalHabits: {},
       patientHistoryItemFrequenciesTypes: [],
       habitsAux: {},
@@ -67,7 +69,6 @@ export default {
       receiveData(state.newPsychobiologicalHabits);
     }
 
-
     const checkAsc = (event) => {
       if (event.target.checked) {
         state.asc = true;
@@ -97,6 +98,7 @@ export default {
             }
           } else {
             state.habitsAux[item.id].active = true;
+            state.habitsAux[item.id].actual = true;
           }
         } else {
           if (state.habitsAux[item.id]) {
@@ -111,14 +113,16 @@ export default {
     const checkActual = (item, event) => {
       if (item && item.id) {
         if (event.target.checked) {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].active = true;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].actual = true;
           }
         } else {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].active = false;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].actual = false;
           }
         }
+        state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
+        sendData();
       }
     }
 
@@ -126,14 +130,16 @@ export default {
       if (item && item.id) {
         if (event.target.value) {
           const age = event.target.value;
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].ageFrom = age;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].ageFrom = age;
           }
         } else {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].ageFrom = undefined;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].ageFrom = undefined;
           }
         }
+        state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
+        sendData();
       }
     }
 
@@ -141,14 +147,16 @@ export default {
       if (item && item.id) {
         if (event.target.value) {
           const age = event.target.value;
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].ageTo= age;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].ageTo= age;
           }
         } else {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].ageTo = undefined;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].ageTo = undefined;
           }
         }
+        state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
+        sendData();
       }
     }
 
@@ -156,14 +164,16 @@ export default {
       if (item && item.id) {
         if (event.target.value) {
           const comment = event.target.value;
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].comment= comment;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].comment = comment;
           }
         } else {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].comment = undefined;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].comment = undefined;
           }
         }
+        state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
+        sendData();
       }
     }
 
@@ -171,14 +181,16 @@ export default {
       if (item && item.id) {
         if (event.target.value) {
           const frequency = event.target.value;
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].frequency= frequency;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].frequency = frequency;
           }
         } else {
-          if (state.habitsItems[item.id]) {
-            state.habitsItems[item.id].frequency = frequency;
+          if (state.habitsAux[item.id]) {
+            state.habitsAux[item.id].frequency = frequency;
           }
         }
+        state.newPsychobiologicalHabits.habitsDetails = state.habitsAux;
+        sendData();
       }
     }
 
@@ -219,7 +231,7 @@ export default {
   <div>
     <div id="form">
       <div class="row">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-8">
           <div id="patient-name-form-add" class="row m-1">
             <div class="col-12 text-label">
               {{ $t("patientHistoryView.psychobiologicalHabits") }} <i class="bi bi-capsule-pill mx-1"></i>
@@ -227,18 +239,18 @@ export default {
             <div class="col-12">
               <div v-for="item in patientHistoryItems.sort((a, b) => a.order - b.order)" :key="item.id">
                 <div v-if="item.active === true && item.online === true" class="row habit-card">
-                  <div class="col-12 lefted">
+                  <div class="col-4 lefted">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux[item.id] && state.habitsAux[item.id].active" @click="checkItem(item, $event)">
                       <label class="form-check-label metric-card-subtitle">{{ item.name }}</label>
                     </div>
                   </div>
-                  <!--<div class="col-12 col-md-8">
-                    <div v-if="state.habitsItems[item.id]">
-                      <div v-if="item.characteristics.active">
+                  <div class="col-8 col-md-8">
+                    <div v-if="state.habitsAux[item.id]">
+                      <div v-if="item.characteristics.actual && item.characteristics.actual === true">
                         <div class="form-check form-switch centered">
                           <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.actual") }}</label>
-                          <input class="form-check-input m-1" type="checkbox" :id="`actual-${item.id}`" @click="checkActual(item, $event)">
+                          <input class="form-check-input m-1" type="checkbox" :id="`actual-${item.id}`" @click="checkActual(item, $event)" :checked="state.habitsAux[item.id] && state.habitsAux[item.id].actual">
                         </div>
                       </div>
                       <div>
@@ -251,11 +263,12 @@ export default {
                                 min="1"
                                 max="100"
                                 type="number"
+                                :value="state.habitsAux[item.id].ageFrom"
                                 @keyup="sendAgeFrom(item, $event)"
                                 class="form-control form-control-sm">
                             </div>
                           </div>
-                          <div class="col-6" v-if="state.habitsItems[item.id].actual === false">
+                          <div class="col-6" v-if="state.habitsAux[item.id].actual === false">
                             <div class="row m-1">
                               <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageTo") }}</label>
                               <input
@@ -263,6 +276,7 @@ export default {
                                 min="1"
                                 max="100"
                                 type="number"
+                                :value="state.habitsAux[item.id].ageTo"
                                 @keyup="sendAgeTo(item, $event)"
                                 class="form-control form-control-sm">
                             </div>
@@ -272,32 +286,33 @@ export default {
                           <div class="row mt-2">
                             <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.frequency") }}</label>
                             <select class="btn btn-sm btn-light fw-bold text-dark select" @change="sendFrequency(item, $event)">
-                              <option v-for="value in state.patientHistoryItemFrequenciesTypes" :key="value.id" :value="value.id" id="select-block">{{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}</option>
+                              <option v-for="value in state.patientHistoryItemFrequenciesTypes" :key="value.id" :value="value.id" id="select-block" :selected="state.habitsAux[item.id].frequency === value.id">{{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}</option>
                             </select>
                           </div>
                         </div>
                         <div class="row centered">
                           <div class="row mt-2">
                             <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
-                            <input
-                              :disabled="!toggles['patient.history.edit']"
-                              min="1"
-                              max="200"
-                              type="text"
-                              @keyup="sendComment(item, $event)"
-                              class="form-control form-control-sm">
+                              <textarea
+                                :disabled="!toggles['patient.history.edit']"
+                                class="form-control form-control-sm"
+                                id="commennt"
+                                rows="2"
+                                :max="200"
+                                :value="state.habitsAux[item.id].comment"
+                                @keyup="sendComment(item, $event)">
+                              </textarea>
                           </div>
                         </div>
-                        {{ state.habitsItems[item.id] }}
                       </div>
                     </div>
-                  </div>-->
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="row">
             <label class="form-check-label metric-card-subtitle mt-2">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
             <textarea
@@ -321,30 +336,6 @@ export default {
             </Warning>
           </div>
         </div>
-        <!--<div class="col-6 blocks-section">
-          <div class="col-12 text-label fw-bold">
-            {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
-            <div class="form-check form-switch centered">
-              <input class="form-check-input m-1" :class="state.asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="state.asc" @click="checkAsc($event)">
-              <label class="form-check-label metric-card-subtitle" for="asc">{{ state.asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
-            </div>
-          </div>
-          <div v-if="state.oldPsychobiologicalHabits && state.oldPsychobiologicalHabits.length > 0 && state.oldPsychobiologicalHabits[0]">
-            <div v-for="(element, index) in state.oldPsychobiologicalHabits" :key="`habits-${index}`">
-              <HistoryDetailsCard
-                :show="toggles['patient.history.view']"
-                :date="element.createdAt"
-                :content="element.habits"
-              >
-              </HistoryDetailsCard>
-            </div>
-          </div>
-          <div v-else>
-            <Message
-              :title="$t('patientHistoryView.message.1.title')"
-              :content="$t('patientHistoryView.message.1.content')" />
-          </div>
-        </div>-->
       </div>
     </div>
   </div>

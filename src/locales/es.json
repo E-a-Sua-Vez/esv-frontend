@@ -2800,6 +2800,7 @@
     "showPhysicalExam": "Examen Físico",
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Orden Médica",
+    "showItensMedicalHistory": "Admin Items Historia",
     "name": "Nombre:",
     "lastName": "Apellido:",
     "idNumber": "Id/Cédula/Pasaporte:",

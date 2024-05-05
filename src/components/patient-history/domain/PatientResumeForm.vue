@@ -6,7 +6,7 @@ import Spinner from '../../common/Spinner.vue';
 import Toggle from '@vueform/toggle';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
-import { getDate } from '../../../shared/utils/date';
+import { getDateAndHour, getDate } from '../../../shared/utils/date';
 import html2pdf from "html2pdf.js";
 import Message from '../../common/Message.vue';
 
@@ -57,6 +57,7 @@ export default {
       loading,
       commerce,
       toggles,
+      getDateAndHour,
       getDate,
       exportToPDF
     }
@@ -87,9 +88,9 @@ export default {
               <span class=""> {{ $t("dashboard.patientHistoryOf") }} </span>
               <span class="mx-1">{{ patientHistoryData.personalData.name }} </span> <span class="mx-1">{{ patientHistoryData.personalData.lastName }} </span>
             </div>
-            <div class="lefted resume-patient-subtitle">
+            <div class="lefted resume-patient-subtitle" v-if="patientHistoryData.modifiedAt || patientHistoryData.updatedDate">
               <span class=""> {{ $t("patientHistoryView.updated") }} </span>
-              <span class="mx-1">{{ getDate(patientHistoryData.updatedDate || patientHistoryData.modifiedAt) }} </span>
+              <span class="mx-1">{{ getDateAndHour(patientHistoryData.modifiedAt || patientHistoryData.updatedDate) }} </span>
             </div>
           </div>
           <div id="personal-data">

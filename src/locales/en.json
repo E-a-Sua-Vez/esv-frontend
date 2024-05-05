@@ -2803,6 +2803,7 @@
     "showPhysicalExam": "Physical Exam",
     "showDiagnostic": "Diagnostic",
     "showMedicalOrder": "Medical Order",
+    "showItensMedicalHistory": "Admin History Items",
     "name": "Name:",
     "lastName": "LastName:",
     "idNumber": "Id/Passport:",

@@ -186,6 +186,10 @@ export default {
     },
     formatIdNumber(idNumber) {
       return formatIdNumber(this.commerce, idNumber);
+    },
+    closeModal() {
+      const modalCloseButton = document.getElementById('close-modal-patient-history');
+      modalCloseButton.click();
     }
   },
   watch: {
@@ -420,7 +424,7 @@ export default {
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0">
+          <div class="text-center mb-0">
             <ClientAttentionsManagement
               :showClientAttentionsManagement="true"
               :toggles="toggles"
@@ -469,11 +473,11 @@ export default {
     </div>
     <!-- Modal Patient History -->
     <div class="modal fade" :id="`patientHistoryModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+      <div class="modal-dialog modal-xl modal-fullscreen">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold"><i class="bi bi-chat-left-dots-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button id="close-modal-patient-history" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0" id="patient-history-component">
@@ -484,6 +488,7 @@ export default {
               :patientHistoryIn="patientHistory"
               :patientHistoryItems="patientHistoryItems"
               @getPatientHistory="getPatientHistory"
+              @closeModal="closeModal"
             >
             </PatientHistoryManagement>
           </div>

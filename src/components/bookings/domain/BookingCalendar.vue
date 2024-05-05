@@ -1192,7 +1192,6 @@ export default {
   border-bottom: 0;
   line-height: 1.6rem;
 }
-
 .show {
   padding: 10px;
   max-height: 400px !important;
