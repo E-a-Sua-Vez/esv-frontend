@@ -14,6 +14,7 @@ export default {
   },
   methods: {
     selectItem(item) {
+      console.log("🚀 ~ selectItem ~ item:", item);
       this.searchString = '';
       this.selectedItem = item;
       this.$emit('selectItem', this.selectedItem)
@@ -27,7 +28,7 @@ export default {
           i.keyName?.toLowerCase().includes(this.searchString.toLowerCase()) ||
           i.email?.toLowerCase().includes(this.searchString.toLowerCase()) ||
           i.idNumber?.toLowerCase().includes(this.searchString.toLowerCase()));
-        return result[0];
+        return result;
       }
     }
   }
@@ -48,17 +49,19 @@ export default {
     </div>
     <div>
       <div v-if="this.searchString.length >= 3" class="card mt-1 mb-3">
-        <div v-if="searchItem" class="row d-flex m-1 searcher item" @click="selectItem(searchItem)">
-          <div class="col-3">
-            <img v-if="searchItem.logo" :src="searchItem.logo" class="img-thumbnail rounded-start item-image">
-            <i v-else class="bi bi-person-circle"> </i>
-          </div>
-          <div class="col-9">
-            <span v-if="searchItem.name" class="item-title"> {{ searchItem.name }} </span>
-            <span v-if="searchItem.email" class="item-sub-title"> {{ searchItem.email }} </span>
+        <div v-if="searchItem && searchItem.length > 0">
+          <div v-for="item in searchItem" :key="item.id" class="row d-flex m-1 searcher item" @click="selectItem(item)">
+            <div class="col-3">
+              <img v-if="item.logo" :src="item.logo" class="img-thumbnail rounded-start item-image">
+              <i v-else class="bi bi-person-circle"> </i>
+            </div>
+            <div class="col-9">
+              <span v-if="item.name" class="item-title"> {{ item.name }} </span>
+              <span v-if="item.email" class="item-sub-title"> {{ item.email }} </span>
+            </div>
           </div>
         </div>
-        <div v-else>{{ $t('noResults') }}</div>
+        <div v-else> {{ $t('noResults') }} </div>
       </div>
     </div>
   </div>

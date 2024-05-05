@@ -94,6 +94,7 @@ export default {
       try {
         loading.value = true;
         state.commerce = commerce;
+        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         clear();
         alertError.value = '';
         loading.value = false;
