@@ -13,10 +13,11 @@ import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 import Warning from '../common/Warning.vue';
 import SimplePermissionCard from './SimplePermissionCard.vue';
+import SearchBar from '../common/SearchBar.vue';
 
 export default {
   name: 'CollaboratorPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, SearchBar },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -35,6 +36,7 @@ export default {
         permissions: []
       },
       permissions: [],
+      collaborators: [],
       showAdd: false,
       newPermission: {},
       permissionError: false,
@@ -54,6 +56,7 @@ export default {
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.roles = await getRoles();
+        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         await selectRol('collaborator');
         state.toggles = await getPermissions('permissions', 'collaborators');
         alertError.value = '';
@@ -197,14 +200,17 @@ export default {
       }
     }
 
-    const search = async () => {
+    const search = async (collaborator) => {
       try {
         loading.value = true;
-        if (validateRefresh()) {
-          await refresh();
+        if (collaborator && collaborator.id) {
+          state.email = collaborator.email;
+          if (validateRefresh()) {
+            await refresh();
+          }
+          alertError.value = '';
+          loading.value = false;
         }
-        alertError.value = '';
-        loading.value = false;
       } catch (error) {
         loading.value = false;
         alertError.value = error.response ? error.response.status : 500;
@@ -225,7 +231,9 @@ export default {
             i.name.toLowerCase().startsWith(state.searchString.toLowerCase()));
         }
       } else {
-        state.permissions = state.user.permissions;
+        if (state.user && state.user.permissions.length >= 0) {
+          state.permissions = state.user.permissions;
+        }
       }
     })
 
@@ -278,18 +286,13 @@ export default {
                 :content="$t('businessQueuesAdmin.message.4.content')" />
             </div>
           </div>
-          <div class="row g-1 mb-1">
-            <div class="col-4 text-label">
-              {{ $t("businessPermissionsAdmin.email") }}
-            </div>
-            <div class="col-8">
-              <input
-                min="10"
-                type="email"
-                class="form-control"
-                v-model="state.email"
-                v-bind:class="{ 'is-invalid': state.emailError }"
-                placeholder="name@email.com">
+          <div class="row mb-1 centered">
+            <div class="col-10" v-if="state.collaborators && state.collaborators.length > 0">
+              <SearchBar
+                :list="state.collaborators"
+                :label="$t('businessQueuesAdmin.selectCollaborator')"
+                @selectItem="search">
+              </SearchBar>
             </div>
           </div>
           <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
@@ -302,14 +305,6 @@ export default {
             </Warning>
           </div>
           <div class="col mb-2">
-            <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" @click="search()" :disabled="loading">
-              <i class="bi bi-search"></i> {{ $t("dashboard.refresh") }}
-            </button>
-            <button
-              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-              @click="clear()">
-              <span><i class="bi bi-arrow-counterclockwise"></i></span>
-            </button>
           </div>
         </div>
         <div id="businessPermissionsAdmin-controls" class="control-box mt-2" v-if="state.user">
@@ -320,16 +315,7 @@ export default {
               <span class="badge bg-primary m-1"> <i class="bi bi-person-fill"></i>  {{ state.user ? state.user.type : '' }}</span>
               <span class="badge bg-secondary m-1"> <i class="bi bi-hand-index-thumb-fill"></i> Last Sign In: {{ state.user ? getDate(state.user.lastSignIn) : 'N/I' }} </span><br>
             </div>
-            <div class="row g-1">
-              <input
-                min="1"
-                max="50"
-                type="text"
-                class="form-control"
-                v-model="state.searchString"
-                :placeholder="$t('enterSearcher')">
-                {{ filter }}
-            </div>
+
           </div>
         </div>
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">
@@ -344,7 +330,22 @@ export default {
                   :disabled="!state.toggles['permissions.collaborators.add']">
                   <i class="bi bi-plus-lg"></i> {{ $t("add") }}
                 </button>
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  @click="clear()">
+                  <span><i class="bi bi-arrow-counterclockwise"></i></span>
+                </button>
               </div>
+            </div>
+            <div class="row g-1 mt-4">
+              <input
+                min="1"
+                max="50"
+                type="text"
+                class="form-control"
+                v-model="state.searchString"
+                :placeholder="$t('enterSearcher')">
+                {{ filter }}
             </div>
             <div class="mt-1">
               <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.permissions.length }} </span>

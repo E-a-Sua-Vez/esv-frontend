@@ -133,16 +133,17 @@ export default {
       }
     }
 
-    const getBookingBlockNumber = (number) => {
+    const getBookingBlockNumber = (block) => {
       let result = [];
       if (state.bookings && state.bookings.length > 0) {
         state.bookings.forEach(booking => {
-          if (booking.block && booking.block.blockNumbers) {
-            if (booking.block.blockNumbers.flat().sort((a,b) => a-b)[0] === number) {
+          if (booking.block && booking.block.blocks && booking.block.blocks.length > 0) {
+            const hourMap = booking.block.blocks.map(block => block.hourFrom);
+            if (hourMap.flat().sort((a,b) => a-b)[0] === block.hourFrom) {
               result.push(booking);
             }
           } else {
-            if (booking.block.number === number) {
+            if (booking.block.hourFrom === block.hourFrom) {
               result.push(booking);
             }
           }
@@ -985,11 +986,12 @@ export default {
                   <div v-if="state.bookings && state.bookings.length > 0">
                     <div v-for="block in state.blocks" :key="block.number">
                       <div class="metric-card">
+
                         <span
                           class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                          :class="getBookingBlockNumber(block.number).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}
+                          :class="getBookingBlockNumber(block).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}
                         </span>
-                        <div v-for="booking in getBookingBlockNumber(block.number)" :key="booking.id">
+                        <div v-for="booking in getBookingBlockNumber(block)" :key="booking.id">
                           <BookingDetailsCard
                             :booking="booking"
                             :show="true"

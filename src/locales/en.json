@@ -1972,7 +1972,8 @@
     "control-master-admin": "Control",
     "go-minisite": "Minisite",
     "outcome-types-master-admin": "Outcome Types",
-    "patient-history-item-master-admin": "Medical History Items"
+    "patient-history-item-master-admin": "Medical History Items",
+    "bookings-master-admin": "Bookings 360° Vision"
   },
   "businessSectionAtWorkView": {
     "welcome": "Welcome!",

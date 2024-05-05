@@ -1945,6 +1945,7 @@
     "control-master-admin": "Gestión",
     "company-master-admin": "Compañías Proveedoras",
     "patient-history-item-master-admin": "Items Historia Médica",
+    "bookings-master-admin": "Reservas Visión 360°",
     "go-minisite": "Minisite"
   },
   "collaboratorMenu": {

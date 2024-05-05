@@ -1946,7 +1946,8 @@
     "go-minisite": "Minisite",
     "outcome-types-master-admin": "Tipos de Despesa",
     "company-master-admin": "Empresas Fornecedoras",
-    "patient-history-item-admin": "Itens Prontuario"
+    "patient-history-item-admin": "Itens Prontuario",
+    "bookings-master-admin": "Reservas Visão 360°"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",

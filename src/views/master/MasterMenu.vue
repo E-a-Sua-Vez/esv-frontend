@@ -37,6 +37,7 @@ export default {
       businessMenuOptions: [
         'dashboard',
         'reports',
+        'bookings-master-admin',
         'manage-master-admin',
         'configuration',
         'documents',
