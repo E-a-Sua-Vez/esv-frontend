@@ -227,6 +227,18 @@
     "WEEKLY": "Semanal",
     "OCCASIONALLY": "Ocasionalmente"
   },
+  "controlReasonTypes": {
+    "EXAM_REVISION": "Revisão do Exame",
+    "TREATEMENT_REVISION": "Revisão de Tratamento",
+    "PROCEDURE_REVISION": "Revisão de Procedimento",
+    "GENERAL_REVISION": "Revisão Geral",
+    "OTHER": "Outro"
+  },
+  "controlStatusTypes": {
+    "PENDING": "Pendente",
+    "PROCCESSED": "Processado",
+    "CANCELLED": "Cancelado"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -2810,13 +2822,14 @@
     "showPersonalData": "Dados Pessoais",
     "showConsultationReason": "Motivo da consulta",
     "showCurrentIllness": "Doença Atual",
-    "showPersonalBackground": "Antecedentes Pessoais",
+    "showPersonalBackground": "Antecedentes Patológicos",
     "showFamilyBackground": "Antecedentes Familiares",
     "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
     "showFunctionalExam": "Exame Funcional",
     "showPhysicalExam": "Exame Físico",
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Ordem Médica",
+    "showControl": "Retornos",
     "showItensMedicalHistory": "Admin Itens Prontuario",
     "menu": "Detalhes Prontuario",
     "name": "Nome:",
@@ -2836,15 +2849,22 @@
     "consultationReason": "Motivo da consulta",
     "history": "Historia",
     "currentIllness": "Doença Atual",
-    "personalBackground": "Antecedentes Pessoais",
+    "personalBackground": "Antecedentes Pessoais Patológicos",
     "familyBackground": "Antecedentes Familiares",
     "psychobiologicalHabits": "Hábitos Psicobiológicos",
     "functionalExam": "Exame Funcional",
     "physicalExam": "Exame Físico",
     "diagnostic": "Diagnóstico",
     "medicalOrder": "Ordem Médica",
+    "control": "Retornos",
     "resume": "Resumo",
     "updated": "Atualizado pela última vez no día",
+    "addControl": "Adicionar Retorno",
+    "controlReason": "Razão:",
+    "controlStatus": "Estatus:",
+    "controlDate": "Data Programada:",
+    "pendingControls": "Retornos Pendentes:",
+    "add": "Adicionar",
     "message": {
       "1": {
         "title": "Ups!",

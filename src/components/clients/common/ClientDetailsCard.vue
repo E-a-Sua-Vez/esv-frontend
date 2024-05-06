@@ -188,7 +188,7 @@ export default {
       return formatIdNumber(this.commerce, idNumber);
     },
     closeModal() {
-      const modalCloseButton = document.getElementById('close-modal-patient-history');
+      const modalCloseButton = document.getElementById(`close-modal-patient-history-${this.client.id}`);
       modalCloseButton.click();
     }
   },
@@ -477,7 +477,7 @@ export default {
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-medical-fill"></i> {{ $t("dashboard.patientHistoryOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
-            <button id="close-modal-patient-history" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button :id="`close-modal-patient-history-${this.client.id}`" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0" id="patient-history-component">

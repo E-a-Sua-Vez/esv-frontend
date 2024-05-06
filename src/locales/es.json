@@ -228,6 +228,18 @@
     "WEEKLY": "Semanal",
     "OCCASIONALLY": "Ocasionalmente"
   },
+  "controlReasonTypes": {
+    "EXAM_REVISION": "Revisión de Examenes",
+    "TREATEMENT_REVISION": "Revisión de Tratamiento",
+    "PROCEDURE_REVISION": "Revisión de Procedimiento",
+    "GENERAL_REVISION": "Revisión General",
+    "OTHER": "Otro"
+  },
+  "controlStatusTypes": {
+    "PENDING": "Pendiente",
+    "PROCCESSED": "Procesado",
+    "CANCELLED": "Cancelado"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -2798,13 +2810,14 @@
     "showPersonalData": "Datos Personales",
     "showConsultationReason": "Motivo de la Consulta",
     "showCurrentIllness": "Enfermedad Actual",
-    "showPersonalBackground": "Antecedentes Personales",
+    "showPersonalBackground": "Antecedentes Patológicos",
     "showFamilyBackground": "Antecedentes Familiares",
     "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
     "showFunctionalExam": "Examen Funcional",
     "showPhysicalExam": "Examen Físico",
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Orden Médica",
+    "showControl": "Controles",
     "showItensMedicalHistory": "Admin Items Historia",
     "menu": "Detalles Historia",
     "name": "Nombre:",
@@ -2824,15 +2837,22 @@
     "consultationReason": "Motivo de la Consulta",
     "history": "Historia",
     "currentIllness": "Enfermedad Actual",
-    "personalBackground": "Antecedentes Personales",
+    "personalBackground": "Antecedentes Personales Patológicos",
     "familyBackground": "Antecedentes Familiares",
     "psychobiologicalHabits": "Hábitos Psicobiológicos",
     "functionalExam": "Examen Funcional",
     "physicalExam": "Examen Físico",
     "diagnostic": "Diagnóstico",
     "medicalOrder": "Orden Médica",
+    "control": "Controles",
     "resume": "Resumen",
     "updated": "Actualizado por última vez el",
+    "addControl": "Agregar Control",
+    "controlReason": "Motivo:",
+    "controlStatus": "Estatus:",
+    "controlDate": "Fecha Programada:",
+    "pendingControls": "Controles Pendientes:",
+    "add": "Agregar",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2840,6 +2860,11 @@
       }
     },
     "validate": {
+      "control": {
+        "reason": "Debes ingresar el Motivo",
+        "status": "Debes ingresar el Estatus",
+        "scheduledDate": "Debes ingresar la Fecha Programada"
+      },
       "personalData": {
         "name": "Debes ingresar el Nombre",
         "lastName": "Debes ingresar el Apellido",

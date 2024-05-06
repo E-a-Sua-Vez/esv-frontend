@@ -20,10 +20,11 @@ import PhysicalExamForm from './PhysicalExamForm.vue';
 import DiagnosticForm from './DiagnosticForm.vue';
 import MedicalOrderForm from './MedicalOrderForm.vue';
 import PatientResumeForm from './PatientResumeForm.vue';
+import ControlForm from './ControlForm.vue';
 
 export default {
   name: 'PatientHistoryManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, PatientPersonalDataForm, ConsultationReasonForm, CurrentIllnessForm, PersonalBackgroundForm, FamilyBackgroundForm, PsychobiologicalHabitsForm, FunctionalExamForm, PhysicalExamForm, DiagnosticForm, MedicalOrderForm, PatientResumeForm },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, PatientPersonalDataForm, ConsultationReasonForm, CurrentIllnessForm, PersonalBackgroundForm, FamilyBackgroundForm, PsychobiologicalHabitsForm, FunctionalExamForm, PhysicalExamForm, DiagnosticForm, MedicalOrderForm, PatientResumeForm, ControlForm },
   props: {
     showPatientHistoryManagement: { type: Boolean, default: false },
     client: { type: String, default: undefined },
@@ -51,6 +52,7 @@ export default {
       endDate: undefined,
       store,
       userType: '',
+      pendingControlNumber: 0,
       dataChanged: false,
       saveIntervalId: undefined,
       showPersonalData: true,
@@ -63,6 +65,7 @@ export default {
       showPhysicalExam: false,
       showDiagnostic: false,
       showMedicalOrder: false,
+      showControl: false,
       showResume: false,
       newPersonalData: undefined,
       newConsultationReason: undefined,
@@ -73,7 +76,8 @@ export default {
       newFunctionalExam: undefined,
       newPhysicalExam: undefined,
       newDiagnostic: undefined,
-      newMedicalOrder: undefined
+      newMedicalOrder: undefined,
+      newControl: undefined
     }
   },
   async beforeMount() {
@@ -120,6 +124,7 @@ export default {
       this.showPhysicalExam = false;
       this.showDiagnostic = false;
       this.showMedicalOrder = false;
+      this.showControl = false;
       this.showResume = false;
       this.onMobileMenu();
     },
@@ -133,7 +138,8 @@ export default {
       this.newFunctionalExam = undefined;
       this.newPhysicalExam = undefined;
       this.newDiagnostic = undefined;
-      this.newMedicalOrder = undefined
+      this.newMedicalOrder = undefined;
+      this.newControl = undefined
     },
     onPersonalData() {
       this.resetButtons();
@@ -174,6 +180,10 @@ export default {
     onMedicalOrder() {
       this.resetButtons();
       this.showMedicalOrder = true;
+    },
+    onControl() {
+      this.resetButtons();
+      this.showControl = true;
     },
     receivePersonalData (data) {
       if (data) {
@@ -235,6 +245,12 @@ export default {
         this.newMedicalOrder = data;
       };
     },
+    receiveControlData (data) {
+      if (data) {
+        this.dataChanged = true;
+        this.newControl = data;
+      };
+    },
     validate (personalData) {
       this.errorsAdd = [];
       if (personalData) {
@@ -290,8 +306,6 @@ export default {
           this.errorsAdd.push('patientHistoryView.validate.personalData.font');
           this.fontError = true;
         }
-      } else {
-
       }
       if (this.errorsAdd.length === 0) {
         return true;
@@ -316,9 +330,11 @@ export default {
             physicalExam: this.newPhysicalExam,
             diagnostic: this.newDiagnostic,
             medicalOrder: this.newMedicalOrder,
+            control: this.newControl,
             lastAttentionId: this.attention
           }
           this.patientHistory = await savePatientHistory(body);
+          this.refresh();
         }
         this.loading = false;
       } catch (error) {
@@ -329,6 +345,14 @@ export default {
     onResume() {
       this.resetButtons();
       this.showResume = true;
+    },
+    refresh() {
+      if (this.patientHistory && this.patientHistory.control) {
+        const pendingControl = this.patientHistory.control.filter(ctrl => ctrl.status === 'PENDING');
+        if (pendingControl && pendingControl.length > 0) {
+          this.pendingControlNumber = pendingControl.length;
+        }
+      }
     },
     async onItensMedicalHistory () {
       if (this.userType && this.userType === 'business') {
@@ -377,6 +401,7 @@ export default {
       async handler() {
         if (this.patientHistoryIn && this.patientHistoryIn.id) {
           this.patientHistory = this.patientHistoryIn;
+          this.refresh();
           const { personalData } = this.patientHistory;
           if (personalData) {
             this.newPersonalData = personalData;
@@ -459,6 +484,13 @@ export default {
                 {{ $t("patientHistoryView.showMedicalOrder") }}
               </button>
               <button
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="showControl ? 'btn-selected' : ''"
+                @click="onControl">
+                {{ $t("patientHistoryView.showControl") }}
+                <span class="badge bg-warning rounded-pill alert-pending" v-if="pendingControlNumber > 0"> {{ pendingControlNumber }}</span>
+              </button>
+              <button
                 v-if="userType === 'business'"
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 @click="onItensMedicalHistory">
@@ -539,6 +571,13 @@ export default {
                   {{ $t("patientHistoryView.showMedicalOrder") }}
                 </button>
                 <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showControl ? 'btn-selected' : ''"
+                  @click="onControl">
+                  {{ $t("patientHistoryView.showControl") }}
+                  <span class="badge bg-warning rounded-pill alert-pending" v-if="pendingControlNumber > 0"> {{ pendingControlNumber }}</span>
+                </button>
+                <button
                   v-if="userType === 'business'"
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   @click="onItensMedicalHistory">
@@ -553,7 +592,8 @@ export default {
               <div class="col-12 col-md-6 centered my-1">
                 <div class="metric-card-number">
                   <span v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
-                    <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }}
+                    <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }} <br>
+                    <span class="badge bg-warning detail-data-badge-title alert-pending"> {{ $t("patientHistoryView.pendingControls") }} {{ pendingControlNumber }}</span>
                   </span>
                 </div>
               </div>
@@ -695,6 +735,18 @@ export default {
                 >
                 </MedicalOrderForm>
               </div>
+              <div v-if="showControl">
+                <ControlForm
+                  :patientHistoryData="patientHistory"
+                  :cacheData="newControl"
+                  :commerce="commerce"
+                  :toggles="toggles"
+                  :errorsAdd="errorsAdd"
+                  :receiveData="receiveControlData"
+                  :onSave="onSave"
+                >
+                </ControlForm>
+              </div>
             </div>
             <div class="righted">
               <span class="resume-patient-subtitle" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
@@ -801,5 +853,8 @@ export default {
 }
 .menu-mobile {
   font-size: .9rem;
+}
+.alert-pending {
+  color: var(--color-text);
 }
 </style>

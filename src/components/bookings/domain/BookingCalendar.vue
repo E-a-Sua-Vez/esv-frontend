@@ -986,7 +986,6 @@ export default {
                   <div v-if="state.bookings && state.bookings.length > 0">
                     <div v-for="block in state.blocks" :key="block.number">
                       <div class="metric-card">
-
                         <span
                           class="lefted badge rounded-pill bg-primary m-0 hour-title"
                           :class="getBookingBlockNumber(block).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}

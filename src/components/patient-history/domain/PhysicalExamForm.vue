@@ -1,6 +1,7 @@
 <script>
 import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
+import { dateYYYYMMDD } from '../../../shared/utils/date';
 import Warning from '../../common/Warning.vue';
 import Spinner from '../../common/Spinner.vue';
 import Toggle from '@vueform/toggle';
@@ -51,14 +52,21 @@ export default {
         loading.value = true;
         if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
           state.habitsList = patientHistoryItems.value.filter(habit => ['PHYSICAL_EXAM'].includes(habit.type));
-          state.habitsList = state.habitsList.sort((a, b) => a.order - b.order);
+          state.habitsList = state.habitsList.sort((a, b) => b.order - a.order);
         }
         if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldPhysicalExams = patientHistoryData.value.physicalExam;
-          const sortedExams = patientHistoryData.value.physicalExam.sort((a, b) => { a.createdAt - b.createdAt });
-          state.oldPhysicalExam = sortedExams[0];
-          state.habitsAux = state.oldPhysicalExam.examDetails;
-          state.newPhysicalExam = patientHistoryData.value.physicalExam;
+          const elements = patientHistoryData.value.physicalExam;
+          const sortedExams = elements.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          });
+          if (sortedExams && sortedExams.length > 0) {
+            if (dateYYYYMMDD(sortedExams[0].createdAt) === dateYYYYMMDD(new Date())) {
+              state.oldPhysicalExam = sortedExams[0];
+              state.habitsAux = state.oldPhysicalExam.examDetails;
+              state.newPhysicalExam = patientHistoryData.value.physicalExam;
+            }
+          }
         }
         if (cacheData.value) {
           state.newPhysicalExam = cacheData.value;
@@ -191,8 +199,8 @@ export default {
             <div class="col-12">
               <div v-for="item in state.habitsList" :key="item.id">
                 <div v-if="item.active === true && item.online === true" class="row habit-card lefted">
-                  <div class="lefted col-6">
-                    <div class="form-check form-switch centered">
+                  <div class="col-8 col-md-6">
+                    <div class="form-check form-switch lefted habit-title">
                       <input class="form-check-input m-1" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux && state.habitsAux[item.id] && state.habitsAux[item.id].active" @click="checkItem(item, $event)">
                       <label class="form-check-label metric-card-subtitle">{{ item.name }}</label>
                     </div>
@@ -292,6 +300,9 @@ export default {
   margin: .2rem .1rem;
   border-radius: .5rem;
   border: 1px solid var(--gris-default);
+}
+.habit-title {
+  text-align: left;
 }
 .blocks-section {
   overflow-y: scroll;

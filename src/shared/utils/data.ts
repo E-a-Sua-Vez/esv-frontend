@@ -216,3 +216,21 @@ export const getPatientHistoryItemFrequenciesTypes = () => {
     { id: 'OCCASIONALLY', name: 'OCCASIONALLY' }
   ]
 }
+
+export const getControlStatusTypes = () => {
+  return [
+    { id: 'PENDING', name: 'PENDING' },
+    { id: 'PROCCESSED', name: 'PROCCESSED' },
+    { id: 'CANCELLED', name: 'CANCELLED' }
+  ]
+}
+
+export const getControlReasonsTypes = () => {
+  return [
+    { id: 'EXAM_REVISION', name: 'EXAM_REVISION' },
+    { id: 'TREATEMENT_REVISION', name: 'TREATEMENT_REVISION' },
+    { id: 'PROCEDURE_REVISION', name: 'PROCEDURE_REVISION' },
+    { id: 'GENERAL_REVISION', name: 'GENERAL_REVISION' },
+    { id: 'OTHER', name: 'OTHER' }
+  ]
+}

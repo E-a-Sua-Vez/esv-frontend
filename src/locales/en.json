@@ -227,6 +227,18 @@
     "WEEKLY": "Weekly",
     "OCCASIONALLY": "Occasionally"
   },
+  "controlReasonTypes": {
+    "EXAM_REVISION": "Exam Revision",
+    "TREATEMENT_REVISION": "Treatment Revision",
+    "PROCEDURE_REVISION": "Procedure Revision",
+    "GENERAL_REVISION": "General Revision",
+    "OTHER": "Otro"
+  },
+  "controlStatusTypes": {
+    "PENDING": "Pending",
+    "PROCCESSED": "Proccessed",
+    "CANCELLED": "Cancelled"
+  },
   "configuration": {
     "types": {
       "email": "E-Mail (EMAIL)",
@@ -2801,13 +2813,14 @@
     "showPersonalData": "Personal Data",
     "showConsultationReason": "Consultation Reason",
     "showCurrentIllness": "Current Illness",
-    "showPersonalBackground": "Personal Background",
+    "showPersonalBackground": "Pathological Background",
     "showFamilyBackground": "Family Background",
     "showPsychobiologicalHabits": "Psychobiological Habits",
     "showFunctionalExam": "Functional Exam",
     "showPhysicalExam": "Physical Exam",
     "showDiagnostic": "Diagnostic",
     "showMedicalOrder": "Medical Order",
+    "showControl": "Controls",
     "showItensMedicalHistory": "Admin History Items",
     "menu": "History Details",
     "name": "Name:",
@@ -2827,15 +2840,22 @@
     "consultationReason": "Consultation Reason",
     "history": "History",
     "currentIllness": "Current Illness",
-    "personalBackground": "Personal Background",
+    "personalBackground": "Personal Psychobiological Background",
     "familyBackground": "Family Background",
     "psychobiologicalHabits": "Psychobiological Habits",
     "functionalExam": "Functional Exam",
     "physicalExam": "Physical Exam",
     "diagnostic": "Diagnostic",
     "medicalOrder": "Medical Order",
+    "control": "Controls",
     "resume": "Resume",
     "updated": "Updated for the last time the",
+    "addControl": "Add Control",
+    "controlReason": "Reason:",
+    "controlStatus": "Status:",
+    "controlDate": "Programed Date:",
+    "pendingControls": "Pending Controls:",
+    "add": "Agregar",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2843,6 +2863,11 @@
       }
     },
     "validate": {
+      "control": {
+        "reason": "Should enter the Reason",
+        "status": "Should enter the Status",
+        "scheduledDate": "Should enter the Programed Date"
+      },
       "personalData": {
         "name": "Should enter the Name",
         "lastName": "Should enter the LastName",
