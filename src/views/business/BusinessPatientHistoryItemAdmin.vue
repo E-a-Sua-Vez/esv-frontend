@@ -141,11 +141,12 @@ export default {
         active: true,
         online: true,
         characteristics: {
-          actual: true,
-          frequency: true,
-          ageFrom: true,
-          ageTo: true,
-          comment: true
+          actual: false,
+          frequency: false,
+          ageFrom: false,
+          ageTo: false,
+          comment: false,
+          value: false
         }
       }
     }
@@ -485,6 +486,28 @@ export default {
                             />
                           </div>
                         </div>
+                        <div id="item-comment-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.value") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.value"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="item-comment-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.result") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.result"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
                       </div>
                       <div id="item-id-form" class="row -2 mb-g3">
                         <div class="row item-details-container">
@@ -716,6 +739,28 @@ export default {
                       <div class="col-6">
                         <Toggle
                           v-model="state.newPatientHistoryItem.characteristics.comment"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-actual-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.value") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.value"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-actual-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.result") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.result"
                           :disabled="!state.toggles['patient-history-item.admin.edit']"
                         />
                       </div>

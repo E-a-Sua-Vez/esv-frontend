@@ -668,6 +668,7 @@ export default {
                   :commerce="commerce"
                   :toggles="toggles"
                   :errorsAdd="errorsAdd"
+                  :patientHistoryItems="patientHistoryItems"
                   :receiveData="receivePhysicalExamData"
                 >
                 </PhysicalExamForm>

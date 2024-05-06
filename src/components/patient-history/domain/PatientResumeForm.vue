@@ -9,10 +9,11 @@ import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 import { getDateAndHour, getDate } from '../../../shared/utils/date';
 import html2pdf from "html2pdf.js";
 import Message from '../../common/Message.vue';
+import HistoryDetailsWithItemsCard from '../common/HistoryDetailsWithItemsCard.vue';
 
 export default {
   name: 'PatientResumeForm',
-  components: { Warning, Spinner, VueRecaptcha, Toggle, HistoryDetailsCard, SimpleDownloadButton, Message },
+  components: { Warning, Spinner, VueRecaptcha, Toggle, HistoryDetailsCard, SimpleDownloadButton, Message, HistoryDetailsWithItemsCard },
   props: {
     commerce: { type: Object, default: {} },
     patientHistoryData: { type: Object, default: {} },
@@ -317,12 +318,13 @@ export default {
             </div>
             <div v-if="patientHistoryData.physicalExam && patientHistoryData.physicalExam.length > 0 && patientHistoryData.physicalExam[0]">
               <div v-for="(element, index) in patientHistoryData.physicalExam" :key="`reason-${index}`">
-                <HistoryDetailsCard
+                <HistoryDetailsWithItemsCard
                   :show="toggles['patient.history.view']"
                   :date="element.createdAt"
+                  :details="element.examDetails"
                   :content="element.exam"
                 >
-                </HistoryDetailsCard>
+                </HistoryDetailsWithItemsCard>
               </div>
             </div>
           </div>

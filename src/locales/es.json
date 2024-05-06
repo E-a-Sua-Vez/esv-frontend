@@ -216,7 +216,9 @@
   "items": {
     "types": {
       "STANDARD": "Standard",
-      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos"
+      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos",
+      "TOBACCO_HABIT": "H. Tabaco",
+      "PHYSICAL_EXAM": "Examen Físico"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -2220,6 +2222,9 @@
     "ageFrom": "Desde (Edad):",
     "ageTo": "Hasta (Edad):",
     "comment": "Comentario:",
+    "value": "Valor:",
+    "result": "Resultado:",
+    "write": "Escriba aquí",
     "message": {
       "1": {
         "title": "¡Ups!",

@@ -30,17 +30,17 @@ export default {
       patientHistoryData,
       toggles,
       errorsAdd,
+      patientHistoryItems
     } = toRefs(props);
 
     const { receiveData } = props;
 
     const state = reactive({
-      newPsychobiologicalHabits: {
-
-      },
+      newPsychobiologicalHabits: {},
       oldPsychobiologicalHabits: {},
       patientHistoryItemFrequenciesTypes: [],
       habitsAux: {},
+      habitsList: [],
       captcha: false,
       habitsError: false,
       asc: true
@@ -49,6 +49,10 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
+          state.habitsList = patientHistoryItems.value.filter(habit => ['PSYCHOBIOLOGICAL_HABIT', 'TOBACCO_HABIT'].includes(habit.type));
+          state.habitsList = state.habitsList.sort((a, b) => a.order - b.order);
+        }
         state.patientHistoryItemFrequenciesTypes = getPatientHistoryItemFrequenciesTypes();
         if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldPsychobiologicalHabits = patientHistoryData.value.psychobiologicalHabits;
@@ -238,7 +242,7 @@ export default {
               {{ $t("patientHistoryView.psychobiologicalHabits") }} <i class="bi bi-capsule-pill mx-1"></i>
             </div>
             <div class="col-12">
-              <div v-for="item in patientHistoryItems.sort((a, b) => a.order - b.order)" :key="item.id">
+              <div v-for="item in state.habitsList" :key="item.id">
                 <div v-if="item.active === true && item.online === true" class="row habit-card">
                   <div class="col-4 lefted">
                     <div class="form-check form-switch centered">
@@ -269,7 +273,7 @@ export default {
                                 class="form-control form-control-sm">
                             </div>
                           </div>
-                          <div class="col-6" v-if="state.habitsAux[item.id].actual === false">
+                          <div class="col-6" v-if="item.characteristics.ageFrom && item.characteristics.ageFrom === true && state.habitsAux[item.id].actual === false">
                             <div class="row m-1">
                               <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageTo") }}</label>
                               <input
@@ -283,7 +287,7 @@ export default {
                             </div>
                           </div>
                         </div>
-                        <div class="row centered">
+                        <div class="row centered" v-if="item.characteristics.frequency && item.characteristics.frequency === true">
                           <div class="row mt-2">
                             <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.frequency") }}</label>
                             <select class="btn btn-sm btn-light fw-bold text-dark select" @change="sendFrequency(item, $event)">
@@ -291,7 +295,7 @@ export default {
                             </select>
                           </div>
                         </div>
-                        <div class="row centered">
+                        <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
                           <div class="row mt-2">
                             <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
                               <textarea
@@ -318,12 +322,13 @@ export default {
             <label class="form-check-label metric-card-subtitle mt-2">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
             <textarea
               :disabled="!toggles['patient.history.edit']"
-              class="form-control"
+              class="form-control form-control-sm"
               id="commennt"
-              rows="5"
+              rows="10"
               :max="500"
               @keyup="sendData"
               v-bind:class="{ 'is-invalid': state.habitsError }"
+              :placeholder="$t('businessPatientHistoryItemAdmin.write')"
               v-model="state.newPsychobiologicalHabits.habits">
             </textarea>
           </div>

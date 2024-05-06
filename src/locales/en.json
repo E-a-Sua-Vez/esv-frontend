@@ -215,7 +215,9 @@
   "items": {
     "types": {
       "STANDARD": "Standard",
-      "PSYCHOBIOLOGICAL_HABIT": "Psychobiological H."
+      "PSYCHOBIOLOGICAL_HABIT": "Psychobiological H.",
+      "TOBACCO_HABIT": "H. Tobacco",
+      "PHYSICAL_EXAM": "Physical Exam"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -2225,6 +2227,9 @@
     "ageFrom": "From (Age):",
     "ageTo": "To (Age):",
     "comment": "Comment:",
+    "value": "Value:",
+    "result": "Result:",
+    "write": "Write here",
     "message": {
       "1": {
         "title": "Ups!",

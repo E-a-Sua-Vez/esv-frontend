@@ -116,12 +116,13 @@ export default {
             <div class="col-12">
               <textarea
                 :disabled="!toggles['patient.history.edit']"
-                class="form-control mt-2"
+                class="form-control mt-2 form-control-sm"
                 id="commennt"
-                rows="5"
+                rows="10"
                 :max="500"
                 @keyup="sendData"
                 v-bind:class="{ 'is-invalid': state.backgroundError }"
+                :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                 v-model="state.newPersonalBackground.background">
               </textarea>
             </div>
