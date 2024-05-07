@@ -612,7 +612,7 @@ export default {
                 <div class="metric-card-number">
                   <span v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
                     <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }} <br>
-                    <span class="badge bg-warning detail-data-badge-title alert-pending"> {{ $t("patientHistoryView.pendingControls") }} {{ pendingControlNumber }}</span>
+                    <span class="badge bg-warning detail-data-badge-title alert-pending" v-if="pendingControlNumber > 0"> {{ $t("patientHistoryView.pendingControls") }} {{ pendingControlNumber }}</span>
                   </span>
                 </div>
               </div>
