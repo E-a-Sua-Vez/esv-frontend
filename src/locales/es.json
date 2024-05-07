@@ -2852,7 +2852,9 @@
     "controlStatus": "Estatus:",
     "controlDate": "Fecha Programada:",
     "pendingControls": "Controles Pendientes:",
+    "attendControl": "Atender Control",
     "add": "Agregar",
+    "update": "Actualizar",
     "message": {
       "1": {
         "title": "¡Ups!",

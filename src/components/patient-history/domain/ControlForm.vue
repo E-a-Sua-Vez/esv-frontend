@@ -19,6 +19,7 @@ export default {
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} },
     onSave: { type: Function, default: () => {} },
+    onUpdate: { type: Function, default: () => {} },
   },
   async setup(props) {
 
@@ -32,7 +33,7 @@ export default {
       errorsAdd,
     } = toRefs(props);
 
-    const { receiveData, onSave } = props;
+    const { receiveData, onSave, onUpdate } = props;
 
     const state = reactive({
       newControl: {},
@@ -130,6 +131,22 @@ export default {
       }
     }
 
+    const updateControl = (index, reason, status, controlResult) => {
+      if (state.oldControl && state.oldControl.length > 0) {
+        const element = state.oldControl[index];
+        if (reason) {
+          element.reason = reason;
+        }
+        if (status) {
+          element.status = status;
+        }
+        if (controlResult) {
+          element.controlResult = controlResult;
+        }
+        onUpdate(state.oldControl);
+      }
+    }
+
     const resetAdd = () => {
       state.date = new Date().toISOString().slice(0,10);
       state.status = 'PENDING';
@@ -165,7 +182,8 @@ export default {
       sendData,
       checkAsc,
       addControl,
-      showAdd
+      showAdd,
+      updateControl
     }
   }
 }
@@ -185,9 +203,9 @@ export default {
                 @click="showAdd()"
                 :disabled="!toggles['patient.history.control-edit']">
                 <i class="bi bi-plus-lg"></i> {{ $t("patientHistoryView.addControl") }}
-            </button>
+              </button>
             </div>
-            <div id="add-control" v-if="state.showAdd">
+            <div id="add-control" v-if="state.showAdd" class="metric-card">
               <div class="mt-2">
                 <div class="row">
                   <div class="col-12 col-md my-1 lefted">
@@ -219,7 +237,8 @@ export default {
                       id="commennt"
                       rows="5"
                       :max="500"
-                      :value="state.result">
+                      :value="state.result"
+                      :placeholder="$t('businessPatientHistoryItemAdmin.write')">
                     </textarea>
                   </div>
                 </div>
@@ -267,9 +286,12 @@ export default {
               <HistoryControlDetailsCard
                 :show="toggles['patient.history.view']"
                 :date="element.scheduledDate"
-                :content="element.control"
+                :content="element.controlResult"
                 :status="element.status"
                 :reason="element.reason"
+                :toggles="toggles"
+                :index="index"
+                @onSave="updateControl"
               >
               </HistoryControlDetailsCard>
             </div>

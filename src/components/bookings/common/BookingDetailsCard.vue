@@ -745,7 +745,7 @@ export default {
   border-top: 0;
 }
 .show {
-  padding: 10px;
+  padding: 5px;
   max-height: 400px !important;
   overflow-y: auto;
 }

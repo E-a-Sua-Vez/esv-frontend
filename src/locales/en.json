@@ -2855,7 +2855,9 @@
     "controlStatus": "Status:",
     "controlDate": "Programed Date:",
     "pendingControls": "Pending Controls:",
-    "add": "Agregar",
+    "add": "Add",
+    "attendControl": "Attend Control",
+    "update": "Update",
     "message": {
       "1": {
         "title": "Ups!",

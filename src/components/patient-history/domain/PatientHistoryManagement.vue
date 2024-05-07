@@ -6,7 +6,7 @@ import Popper from "vue3-popper";
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import { globalStore } from '../../../stores';
-import { savePatientHistory } from '../../../application/services/patient-history';
+import { savePatientHistory, updatePatientHistoryControl } from '../../../application/services/patient-history';
 import { getPermissions } from '../../../application/services/permissions';
 import { getDateAndHour } from '../../../shared/utils/date';
 import PatientPersonalDataForm from './PatientPersonalDataForm.vue';
@@ -334,6 +334,25 @@ export default {
             lastAttentionId: this.attention
           }
           this.patientHistory = await savePatientHistory(body);
+          this.refresh();
+        }
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        this.alertError = error.message;
+      }
+    },
+    async onUpdate(control) {
+      try {
+        this.loading = true;
+        this.alertError = '';
+        if (this.validate(this.newPersonalData)) {
+          const body = {
+            control: control,
+            lastAttentionId: this.attention
+          }
+          const id = this.patientHistory.id;
+          this.patientHistory = await updatePatientHistoryControl(id, body);
           this.refresh();
         }
         this.loading = false;
@@ -744,6 +763,7 @@ export default {
                   :errorsAdd="errorsAdd"
                   :receiveData="receiveControlData"
                   :onSave="onSave"
+                  :onUpdate="onUpdate"
                 >
                 </ControlForm>
               </div>
