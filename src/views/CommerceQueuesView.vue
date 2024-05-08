@@ -24,6 +24,7 @@ import firebase from 'firebase/app';
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';
 import ServiceForm from '../components/domain/ServiceForm.vue';
+import { validateIdNumber } from '../shared/utils/idNumber';
 
 export default {
   name: 'CommerceQueuesView',
@@ -474,7 +475,7 @@ export default {
             }
           }
           if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
-            if (!user.idNumber || user.idNumber.length === 0) {
+            if (!user.idNumber || user.idNumber.length === 0 || !validateIdNumber(state.commerce, user.idNumber)) {
               state.errorsAdd.push('commerceQueuesView.validate.idNumber');
             }
           }

@@ -145,6 +145,22 @@ export default {
       receiveData(state.newUser);
     }
 
+    const sendDataOnlyNumber = () => {
+      if (state.newUser.idNumber && state.newUser.idNumber.length > 0) {
+        const idNumber = state.newUser.idNumber.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        state.newUser.idNumber = idNumber;
+      }
+      if (state.newUser.phone && state.newUser.phone.length > 0) {
+        const phone = state.newUser.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        state.newUser.phone = phone;
+      }
+      if (state.newUser.addressCode && state.newUser.addressCode.length > 0) {
+        const addressCode = state.newUser.addressCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        state.newUser.addressCode = addressCode;
+      }
+      receiveData(state.newUser);
+    }
+
     const isDataActive = () => {
       let active = false;
       let features = [];
@@ -340,7 +356,7 @@ export default {
     const onlyNumber = ($event) => {
       let keyCode = ($event.keyCode ? $event.keyCode : $event.which);
       if ((keyCode < 48 || keyCode > 57) && keyCode !== 46) { // 46 is dot
-          $event.preventDefault();
+        $event.preventDefault();
       }
     }
 
@@ -380,7 +396,8 @@ export default {
       searchClient,
       clearClient,
       onlyNumber,
-      getDocumentServiceConditions
+      getDocumentServiceConditions,
+      sendDataOnlyNumber
     }
   }
 }
@@ -419,6 +436,7 @@ export default {
               v-bind:class="{ 'is-invalid': state.searchTextError }"
               :placeholder="$t('dashboard.search3')"
               @keypress="onlyNumber"
+              @keyup="replaceOnlyNumber"
             >
           </div>
           <div class="col-2 col-md-2 centered">
@@ -522,7 +540,7 @@ export default {
                 class="form-control"
                 v-model.trim="state.newUser.idNumber"
                 placeholder="Ex. 112223334"
-                @keyup="sendData"
+                @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
                 >
                 <label for="attention-idnumber-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
@@ -562,7 +580,7 @@ export default {
                 class="form-control"
                 v-model="state.newUser.phone"
                 placeholder="Ex.: 56233445533"
-                @keyup="sendData"
+                @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
                 >
                 <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
@@ -592,7 +610,7 @@ export default {
                 v-model.trim="state.newUser.addressCode"
                 placeholder="00000-00"
                 @blur="getAddress"
-                @keyup="sendData"
+                @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
                 v-bind:class="{ 'is-invalid': state.addressCodeError }"
                 >
