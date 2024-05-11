@@ -40,6 +40,7 @@ export default {
       oldControl: [],
       status: [],
       reasons: [],
+      clientId: undefined,
       captcha: false,
       controlError: false,
       showAdd: false,
@@ -58,6 +59,7 @@ export default {
         state.statuses = getControlStatusTypes();
         if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldControl = patientHistoryData.value.control;
+          state.clientId = patientHistoryData.value.clientId;
         }
         if (cacheData.value) {
           state.newControl = cacheData.value;
@@ -286,6 +288,8 @@ export default {
               <HistoryControlDetailsCard
                 :show="toggles['patient.history.view']"
                 :date="element.scheduledDate"
+                :commerce="commerce"
+                :clientId="state.clientId"
                 :content="element.controlResult"
                 :status="element.status"
                 :reason="element.reason"

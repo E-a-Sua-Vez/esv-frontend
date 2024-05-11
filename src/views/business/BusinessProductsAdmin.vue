@@ -390,6 +390,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.products"
+                  :type="'product'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
@@ -442,7 +443,7 @@ export default {
                             v-model="product.type"
                             id="types"
                             v-bind:class="{ 'is-invalid': state.typeError }">
-                            <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`productsTypes.${typ.name}`) }}</option>
+                            <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`product.types.${typ.name}`) }}</option>
                           </select>
                         </div>
                       </div>
@@ -742,7 +743,7 @@ export default {
                         v-model="state.newProduct.type"
                         id="types"
                         v-bind:class="{ 'is-invalid': state.typeAddError }">
-                        <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`productsTypes.${typ.name}`) }}</option>
+                        <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`product.types.${typ.name}`) }}</option>
                       </select>
                     </div>
                   </div>

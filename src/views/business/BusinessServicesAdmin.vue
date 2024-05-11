@@ -304,6 +304,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.services"
+                  :type="'services'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>

@@ -22,6 +22,7 @@ const BusinessFinancial = () => import('../../views/business/BusinessFinancial.v
 const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
 const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
 const BusinessPatientHistoryItemAdmin = () => import('../../views/business/BusinessPatientHistoryItemAdmin.vue');
+const BusinessFormAdmin = () => import('../../views/business/BusinessFormAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -138,6 +139,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/patient-history-item-admin',
     name: 'business-patient-history-item-admin',
     component: BusinessPatientHistoryItemAdmin
+  },
+  {
+    path: '/interno/negocio/forms-admin',
+    name: 'forms-admin',
+    component: BusinessFormAdmin
   }
 ]
 

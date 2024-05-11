@@ -64,7 +64,7 @@ export default {
             if (dateYYYYMMDD(sortedExams[0].createdAt) === dateYYYYMMDD(new Date())) {
               state.oldPhysicalExam = sortedExams[0];
               state.habitsAux = state.oldPhysicalExam.examDetails;
-              state.newPhysicalExam = patientHistoryData.value.physicalExam;
+              state.newPhysicalExam = patientHistoryData.value.physicalExam[0];
             }
           }
         }
@@ -129,6 +129,9 @@ export default {
           const value = event.target.value;
           if (state.habitsAux[item.id]) {
             state.habitsAux[item.id].value = value;
+            state.habitsAux[item.id].name = item.name;
+          } else {
+            state.habitsAux[item.id] = { value: value, name: item.name };
           }
         } else {
           if (state.habitsAux[item.id]) {
@@ -167,6 +170,7 @@ export default {
             patientHistoryData.value.physicalExam[0]
           )
           state.oldPhysicalExams = patientHistoryData.value.physicalExam;
+          state.oldPhysicalExam = patientHistoryData.value.physicalExam[0];
         }
         loading.value = false;
       }
@@ -199,14 +203,21 @@ export default {
             <div class="col-12">
               <div v-for="item in state.habitsList" :key="item.id">
                 <div v-if="item.active === true && item.online === true" class="row habit-card lefted">
-                  <div class="col-8 col-md-6">
-                    <div class="form-check form-switch lefted habit-title">
-                      <input class="form-check-input m-1" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux && state.habitsAux[item.id] && state.habitsAux[item.id].active" @click="checkItem(item, $event)">
-                      <label class="form-check-label metric-card-subtitle">{{ item.name }}</label>
+                  <div class="col-12">
+                    <div class="col m-1">
+                      <div class="lefted">
+                        <span class="badge bg-primary"> {{ item.tag }} </span>
+                      </div>
+                      <div class="lefted">
+                        <div :class="`${item.characteristics && item.characteristics.check ? 'form-check form-switch' : ''}`">
+                          <input v-if="item.characteristics && item.characteristics.check" class="form-check-input m-1" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux && state.habitsAux[item.id] && state.habitsAux[item.id].check" @click="checkItem(item, $event)">
+                          <label class="form-check-label metric-card-subtitle fw-bold">{{ item.name }}</label>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-6 col-md-6">
-                    <div v-if="state.habitsAux && state.habitsAux[item.id]">
+                  <div class="col-12">
+                    <div class="centered">
                       <div v-if="item.characteristics.value && item.characteristics.value === true">
                         <div class="row m-1">
                           <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.value") }}</label>
@@ -215,7 +226,7 @@ export default {
                             min="0"
                             max="1000"
                             type="number"
-                            :value="state.habitsAux[item.id].value"
+                            :value="state.habitsAux[item.id]?.value"
                             @keyup="sendValue(item, $event)"
                             class="form-control form-control-sm">
                         </div>
@@ -223,15 +234,15 @@ export default {
                       <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
                         <div class="row mt-2">
                           <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
-                            <textarea
-                              :disabled="!toggles['patient.history.edit']"
-                              class="form-control form-control-sm"
-                              id="commennt"
-                              rows="2"
-                              :max="200"
-                              :value="state.habitsAux[item.id].comment"
-                              @keyup="sendComment(item, $event)">
-                            </textarea>
+                          <textarea
+                            :disabled="!toggles['patient.history.edit']"
+                            class="form-control form-control-sm"
+                            id="commennt"
+                            rows="2"
+                            :max="200"
+                            :value="state.habitsAux[item.id]?.comment"
+                            @keyup="sendComment(item, $event)">
+                          </textarea>
                         </div>
                       </div>
                     </div>
@@ -239,10 +250,11 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="col-12">
+            <div class="col-12 mt-2">
+              <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
               <textarea
                 :disabled="!toggles['patient.history.edit']"
-                class="form-control mt-2 form-control-sm"
+                class="form-control form-control-sm"
                 id="commennt"
                 rows="5"
                 :max="500"

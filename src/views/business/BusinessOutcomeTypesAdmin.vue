@@ -289,6 +289,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.outcomeTypes"
+                  :type="'outcomes'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
@@ -453,7 +454,7 @@ export default {
                         v-model="state.newOutcomeType.type"
                         id="features"
                         v-bind:class="{ 'is-invalid': state.typeError }">
-                        <option v-for="opt in state.types" :key="opt.name" :value="opt.id">{{ $t(`outcomeTypes.${opt.name}`) }}</option>
+                        <option v-for="opt in state.types" :key="opt.name" :value="opt.id">{{ $t(`outcomes.types.${opt.name}`) }}</option>
                       </select>
                     </div>
                   </div>

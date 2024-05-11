@@ -24,6 +24,7 @@ const BusinessFinancial = () => import('../../views/business/BusinessFinancial.v
 const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
 const BusinessPatientHistoryItemAdmin = () => import('../../views/business/BusinessPatientHistoryItemAdmin.vue');
 const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
+const BusinessFormAdmin = () => import('../../views/business/BusinessFormAdmin.vue');
 
 const PrivateMasterRoutes = [
   {
@@ -151,6 +152,11 @@ const PrivateMasterRoutes = [
     name: 'bookings-master-admin',
     component: BusinessQueueBookings
   },
+  {
+    path: '/interno/master/forms-master-admin',
+    name: 'forms-master-adminn',
+    component: BusinessFormAdmin
+  }
 ]
 
 export default PrivateMasterRoutes;

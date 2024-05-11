@@ -107,6 +107,20 @@
       "CHOOSE_OPTION": "☝️ Selecione 1"
     }
   },
+  "forms": {
+    "types": {
+      "FIRST_ATTENTION": "Primeira Vez",
+      "PRE_ATTENTION": "Pre Atendimento"
+    },
+    "question_types": {
+      "OPEN_TEXT_FIELD": "✏️ Campo Texto",
+      "OPEN_NUMBER_FIELD": "#️⃣ Campo Número",
+      "YES_OR_NOT": "👍 Sim/Nao",
+      "OPEN_WRITING": "✏️ Aberta",
+      "OPEN_OPTIONS": "👆 Selecione N",
+      "CHOOSE_OPTION": "☝️ Selecione 1"
+    }
+  },
   "origin": {
     "REFERENCE": "Referéncia",
     "GOOGLE": "Google",
@@ -162,13 +176,17 @@
     "null": "N/I",
     "OTHER": "Outro"
   },
-  "productTypes": {
-    "ALL_IN_ONE": "Tudo em Um",
-    "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
-    "QUEUES_BOOKING": "Só Filas e Reservas"
+  "products": {
+    "types": {
+      "ALL_IN_ONE": "Tudo em Um",
+      "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
+      "QUEUES_BOOKING": "Só Filas e Reservas"
+    }
   },
-  "productsTypes": {
-    "SERVICE": "Serviço"
+  "product": {
+    "types": {
+      "SERVICE": "Serviço"
+    }
   },
   "productMeasuresTypes": {
     "MILLILITERS": "Mililitros (ml)",
@@ -184,13 +202,15 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
-  "outcomeTypes": {
-    "OTHER": "Outro",
-    "STANDARD": "Egreso Normal",
-    "SUPPLIER": "Pagamento Fornecedor",
-    "BENEFICIARY": "Pagamento Beneficiário",
-    "COLLABORATOR": "Pagamento Colaborador",
-    "SERVICE": "Pagamento Serviço"
+  "outcomes":  {
+    "types": {
+      "OTHER": "Outro",
+      "STANDARD": "Egreso Normal",
+      "SUPPLIER": "Pagamento Fornecedor",
+      "BENEFICIARY": "Pagamento Beneficiário",
+      "COLLABORATOR": "Pagamento Colaborador",
+      "SERVICE": "Pagamento Serviço"
+    }
   },
   "civilStatuses": {
     "SINGLE": "Solteiro",
@@ -201,7 +221,7 @@
   },
   "sexs": {
     "MALE": "Masculino",
-    "FEMALE": "Fêmea"
+    "FEMALE": "Feminino"
   },
   "companies": {
     "types": {
@@ -212,12 +232,21 @@
       "SERVICE": "Serviço"
     }
   },
+   "collaborators": {
+    "types": {
+      "STANDARD": "Standard",
+      "FULL": "Full",
+      "ASSISTANT": "Asistente"
+    }
+  },
   "items": {
     "types": {
       "STANDARD": "Standard",
-      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos",
-      "TOBACCO_HABIT": "H. Tabaco",
-      "PHYSICAL_EXAM": "Exame Físico"
+      "PERSONAL_HISTORY": "História Pessoal",
+      "PHYSICAL_EXAM": "Exame Físico",
+      "PATIENT_SEX": "Sexo Paciente",
+      "PATIENT_OCCUPATION": "Ocupação Paciente",
+      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -441,6 +470,14 @@
     "attention-whatsapp-cancel": {
       "title": "Whatsapp Atendimento Cancelado",
       "description": "Permite enviar mensagem de atendimento cancelado."
+    },
+    "attention-first-form": {
+      "title": "Form Primeira Vez",
+      "description": "Permite ao cliente preencher um formulario a primeira vez que tem um atendimento."
+    },
+    "attention-pre-form": {
+      "title": "Form Pre Atendimento",
+      "description": "Permite ao cliente preencher um formulario antes do atendimento."
     }
   },
   "document": {
@@ -772,6 +809,8 @@
     "blockInfo": "Horário:",
     "cancelled": "Cancelada",
     "newBooking": "Pode solicitar uma nova:",
+    "preAttention": "Formulário Pre Atendimento",
+    "fillPreAttention": "Para ser atendido, você deverá preencher o seguinte formulário:",
     "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar. Recomendamos que consulte esta página antes e no dia da sua reserva.",
     "message": {
       "1": {
@@ -874,6 +913,10 @@
         "example": "Digite só números, sem caracteres especiais"
       }
     }
+  },
+  "userFormAttention": {
+    "title": "Por favor preencha o seguinte formulário:",
+    "fullfilled": "Você já preencheu este formulário!"
   },
   "collaboratorAttentionValidate": {
     "hello": "Olá!",
@@ -1325,13 +1368,43 @@
       },
       "2": {
         "title": "Obrigado!",
-        "content": "Volte sempre, esperamos você."
+        "content": "Volte sempre, esperamos por você."
       }
     },
     "actions": {
       "1": {
         "action": "Salvar"
       }
+    }
+  },
+  "attentionForm": {
+    "other": "OUTRO",
+    "like": {
+      "subtitle": "Não, Sim"
+    },
+    "writing": {
+      "placeholder": "Fala conosco"
+    },
+    "message": {
+      "1": {
+        "title": "Obrigado!",
+        "content": "Seus dados ajudará a oferecer-lhe um melhor e mais rápido serviço ."
+      },
+      "2": {
+        "title": "Obrigado!",
+        "content": "Volte sempre, esperamos por você."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Salvar"
+      },
+      "2": {
+        "action": "Voltar pra Reserva"
+      }
+    },
+    "validate": {
+      "withoutAnswer": "Deve responder todas as perguntas"
     }
   },
   "dashboard": {
@@ -1433,6 +1506,7 @@
     "spyUpdate": "Próxima actualização em: ",
     "comment": "Comentário:",
     "entities": "Palavras chave:",
+    "typeFilter": "Filtrar por Tipo:",
     "tracing": {
       "title": "Gestão de Clientes",
       "filters": {
@@ -1877,6 +1951,7 @@
     "collaborators-admin": "Colaboradores",
     "permissions-admin": "Permissões",
     "modules-admin": "Módulos",
+    "forms-admin": "Formulários",
     "seeSpy": "Espiadinha",
     "seeMenu": "Menu",
     "business-resume": "Estado do Sistema",
@@ -1909,6 +1984,7 @@
           "collaborators-admin": "Gerenciar Colaboradores",
           "permissions-admin": "Gerenciar Permissões",
           "configuration": "Configurações",
+          "forms-admin": "Administrar Formulários",
           "documents": "Documentos",
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
@@ -1944,6 +2020,7 @@
     "product-master-admin": "Produtos",
     "queues-master-admin": "Filas",
     "configuration": "Configurações",
+    "forms-admin": "Administrar Formulários",
     "documents": "Documentos",
     "reports": "Central de Dados",
     "your-plan": "Seu Plano",
@@ -2824,7 +2901,7 @@
     "showCurrentIllness": "Doença Atual",
     "showPersonalBackground": "Antecedentes Patológicos",
     "showFamilyBackground": "Antecedentes Familiares",
-    "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
+    "showPatientAnamnese": "Anamnese",
     "showFunctionalExam": "Exame Funcional",
     "showPhysicalExam": "Exame Físico",
     "showDiagnostic": "Diagnóstico",
@@ -2851,7 +2928,7 @@
     "currentIllness": "Doença Atual",
     "personalBackground": "Antecedentes Pessoais Patológicos",
     "familyBackground": "Antecedentes Familiares",
-    "psychobiologicalHabits": "Hábitos Psicobiológicos",
+    "patientAnamnese": "Anamnese",
     "functionalExam": "Exame Funcional",
     "physicalExam": "Exame Físico",
     "diagnostic": "Diagnóstico",
@@ -3154,7 +3231,11 @@
           "whatsapp-notify-five": "Editar Notificação Whatsapp Faltam 5",
           "only-survey": "Editar Modo Só Pesquisa",
           "whatsapp-notify-one": "Editar Notificação Whatsapp Falta 1",
-          "get-number-remote": "Editar Obter Senha remota"
+          "get-number-remote": "Editar Obter Senha remota",
+          "features": "Configurações",
+          "whatsapps": "Conexão Whatsapp",
+          "whatsapps-connect": "Conectar Whatsapp",
+          "whatsapps-disconnect": "Desconectar Whatsapp"
         }
       }
     },
@@ -3454,6 +3535,9 @@
     "return": "Voltar",
     "type": "Tipo:",
     "attentionDefault": "Default:",
+    "addQuestionHelp": "Adiciona uma pergunta personalizada.",
+    "deleteQuestionHelp": "Eliminar a pergunta personalizada.",
+    "typeQuestionHelp": "Tipo de pergunta baseado no tipo de resposta.",
     "typeHelp": "Tipo de Pesquisa. Selecione Personalizado para adicionar perguntas personalizadas.",
     "attentionDefaultHelp": "Pesquisa será mostrada depois do atendimento.",
     "queueHelp": "Você pode asociar uma pesquisa a uma fila específica e compartilhar-la com os seus usuários através de um link.",
@@ -3505,6 +3589,75 @@
           "add": "Adicionar Pesquisas",
           "limit": "Número limite de Pesquisas",
           "unavailable": "Deletar Pesquisas"
+        }
+      }
+    },
+    "validate": {
+      "type": "Você deve selecionar o tipo"
+    }
+  },
+  "businessFormsAdmin": {
+    "title": "Formulários",
+    "commerce": "Selecione uma unidade:",
+    "return": "Voltar",
+    "type": "Tipo:",
+    "typeQuestionHelp": "Tipo de pergunta baseado no tipo de resposta.",
+    "addQuestionHelp": "Adiciona uma pergunta personalizada.",
+    "orderQuestionHelp": "La pergunta será listada neste ordem.",
+    "deleteQuestionHelp": "Eliminar a pergunta personalizada.",
+    "attentionDefaultHelp": "Formulário será mostrada pra atendimento.",
+    "typeHelp": "Tipo de Formulário. Selecione Personalizado para adicionar perguntas personalizadas.",
+    "queueHelp": "Você pode asociar um Formulário a uma fila específica e compartilhar-la com os seus usuários através de um link.",
+    "active": "Ativo:",
+    "question": "Pergunta:",
+    "addQuestion": "Adicionar Pergunta",
+    "deleteQuestion": "Eliminar Pregunta",
+    "order": "Ordem:",
+    "options": "Opções:",
+    "update": "Atualizar",
+    "add": "Adicionar",
+    "queue": "Fila/Serviço:",
+    "link": "URL Web:",
+    "services": "Serviços:",
+    "go": "Ir",
+    "other": "Outro",
+    "otherOption": "Opção 'Outro':",
+    "otherOpen": "'Outro' Aberto:",
+    "optionsHelp": "Lista de opções de reposta separados por vírgula, sem espaços.",
+    "analize": "Analisar IA:",
+    "listResult": "Registros:",
+    "completePersonalData": "Dados completos do Cliente:",
+    "occupation": "Em que você trabalha? (Ocupação):",
+    "sex": "Seu Sexo:",
+    "civilStatus": "Seu Estado Civil:",
+    "message": {
+      "1": {
+        "title": "Oh não!",
+        "content": "O comércio não existe o está inativo agora. Revise na URL o entre em contato com um colaborador para obter ajuda."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há Formulários."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Você já atingiu o limite de Formulários. Para adicionar mais Formulários, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Oh não!",
+        "content": "Não há Formulários. Valide a informação na seção de comércios."
+      }
+    },
+    "capacitiesList": {
+      "forms": {
+        "admin": {
+          "view": "Acessar esta seçao",
+          "read": "Ver os Formulários",
+          "edit": "Editar os Formulários",
+          "update": "Atualizar os Formulários",
+          "add": "Adicionar Formulários",
+          "limit": "Número limite de Formulários",
+          "unavailable": "Deletar Formulários"
         }
       }
     },

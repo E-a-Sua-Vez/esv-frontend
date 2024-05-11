@@ -60,6 +60,7 @@ export default {
         'product-admin',
         'outcome-types-admin',
         'company-admin',
+        'forms-admin',
         'patient-history-item-admin',
         'permissions-admin'
       ],

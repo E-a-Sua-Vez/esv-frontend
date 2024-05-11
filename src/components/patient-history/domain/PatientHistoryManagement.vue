@@ -12,9 +12,7 @@ import { getDateAndHour } from '../../../shared/utils/date';
 import PatientPersonalDataForm from './PatientPersonalDataForm.vue';
 import ConsultationReasonForm from './ConsultationReasonForm.vue';
 import CurrentIllnessForm from './CurrentIllnessForm.vue';
-import PersonalBackgroundForm from './PersonalBackgroundForm.vue';
-import FamilyBackgroundForm from './FamilyBackgroundForm.vue';
-import PsychobiologicalHabitsForm from './PsychobiologicalHabitsForm.vue';
+import PatientAnamneseForm from './PatientAnamneseForm.vue';
 import FunctionalExamForm from './FunctionalExamForm.vue';
 import PhysicalExamForm from './PhysicalExamForm.vue';
 import DiagnosticForm from './DiagnosticForm.vue';
@@ -24,14 +22,15 @@ import ControlForm from './ControlForm.vue';
 
 export default {
   name: 'PatientHistoryManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, PatientPersonalDataForm, ConsultationReasonForm, CurrentIllnessForm, PersonalBackgroundForm, FamilyBackgroundForm, PsychobiologicalHabitsForm, FunctionalExamForm, PhysicalExamForm, DiagnosticForm, MedicalOrderForm, PatientResumeForm, ControlForm },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, PatientPersonalDataForm, ConsultationReasonForm, CurrentIllnessForm, PatientAnamneseForm, FunctionalExamForm, PhysicalExamForm, DiagnosticForm, MedicalOrderForm, PatientResumeForm, ControlForm },
   props: {
     showPatientHistoryManagement: { type: Boolean, default: false },
-    client: { type: String, default: undefined },
+    client: { type: Object, default: undefined },
     attention: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     patientHistoryIn: { type: Object, default: {} },
-    patientHistoryItems: { type: Array, default: [] }
+    patientHistoryItems: { type: Array, default: [] },
+    patientForms: { type: Array, default: [] }
   },
   emits: ['getPatientHistory', 'closeModal'],
   data() {
@@ -52,15 +51,14 @@ export default {
       endDate: undefined,
       store,
       userType: '',
+      autoSaving: false,
       pendingControlNumber: 0,
       dataChanged: false,
       saveIntervalId: undefined,
       showPersonalData: true,
       showConsultationReason: false,
       showCurrentIllness: false,
-      showPersonalBackground: false,
-      showFamilyBackground: false,
-      showPsychobiologicalHabits: false,
+      showPatientAnamnese: false,
       showFunctionalExam: false,
       showPhysicalExam: false,
       showDiagnostic: false,
@@ -70,9 +68,7 @@ export default {
       newPersonalData: undefined,
       newConsultationReason: undefined,
       newCurrentIllness: undefined,
-      newPersonalBackground: undefined,
-      newFamilyBackground: undefined,
-      newPsychobiologicalHabits: undefined,
+      newPatientAnamnese: undefined,
       newFunctionalExam: undefined,
       newPhysicalExam: undefined,
       newDiagnostic: undefined,
@@ -117,9 +113,7 @@ export default {
       this.showPersonalData = false;
       this.showConsultationReason = false;
       this.showCurrentIllness = false;
-      this.showPersonalBackground = false;
-      this.showFamilyBackground = false;
-      this.showPsychobiologicalHabits = false;
+      this.showPatientAnamnese = false;
       this.showFunctionalExam = false;
       this.showPhysicalExam = false;
       this.showDiagnostic = false;
@@ -132,9 +126,7 @@ export default {
       this.newPersonalData = undefined;
       this.newConsultationReason = undefined;
       this.newCurrentIllness = undefined;
-      this.newPersonalBackground = undefined;
-      this.newFamilyBackground = undefined;
-      this.newPsychobiologicalHabits = undefined;
+      this.newPatientAnamnese = undefined;
       this.newFunctionalExam = undefined;
       this.newPhysicalExam = undefined;
       this.newDiagnostic = undefined;
@@ -153,17 +145,9 @@ export default {
       this.resetButtons();
       this.showCurrentIllness = true;
     },
-    onPersonalBackground() {
+    onPatientAnamnese() {
       this.resetButtons();
-      this.showPersonalBackground = true;
-    },
-    onFamilyBackground() {
-      this.resetButtons();
-      this.showFamilyBackground = true;
-    },
-    onPsychobiologicalHabits() {
-      this.resetButtons();
-      this.showPsychobiologicalHabits = true;
+      this.showPatientAnamnese = true;
     },
     onFunctionalExam() {
       this.resetButtons();
@@ -203,22 +187,10 @@ export default {
         this.newCurrentIllness = data;
       };
     },
-    receivePersonalBackgroundData (data) {
+    receivePatientAnamneseData (data) {
       if (data) {
         this.dataChanged = true;
-        this.newPersonalBackground = data;
-      };
-    },
-    receiveFamilyBackgroundData (data) {
-      if (data) {
-        this.dataChanged = true;
-        this.newFamilyBackground = data;
-      };
-    },
-    receivePsychobiologicalHabitsData (data) {
-      if (data) {
-        this.dataChanged = true;
-        this.newPsychobiologicalHabits = data;
+        this.newPatientAnamnese = data;
       };
     },
     receiveFunctionalExamData (data) {
@@ -319,13 +291,11 @@ export default {
         if (this.validate(this.newPersonalData)) {
           const body = {
             commerceId: this.commerce.id,
-            clientId: this.client,
+            clientId: this.client.id,
             personalData: this.newPersonalData,
             consultationReason: this.newConsultationReason,
             currentIllness: this.newCurrentIllness,
-            personalBackground: this.newPersonalBackground,
-            familyBackground: this.newFamilyBackground,
-            psychobiologicalHabits: this.newPsychobiologicalHabits,
+            patientAnamnese: this.newPatientAnamnese,
             functionalExam: this.newFunctionalExam,
             physicalExam: this.newPhysicalExam,
             diagnostic: this.newDiagnostic,
@@ -367,7 +337,7 @@ export default {
     },
     refresh() {
       if (this.patientHistory && this.patientHistory.control) {
-        const pendingControl = this.patientHistory.control.filter(ctrl => ctrl.status === 'PENDING');
+        const pendingControl = this.patientHistory.control.filter(ctrol => ctrol.status === 'PENDING');
         if (pendingControl && pendingControl.length > 0) {
           this.pendingControlNumber = pendingControl.length;
         }
@@ -386,9 +356,10 @@ export default {
   },
   computed: {
     changedData() {
-      const { dataChanged } = this;
+      const { dataChanged, autoSaving } = this;
       return {
-        dataChanged
+        dataChanged,
+        autoSaving
       }
     }
   },
@@ -397,12 +368,17 @@ export default {
       immediate: true,
       deep: true,
       async handler(newData, oldData) {
-        if (this.dataChanged === true && (newData.dataChanged !== oldData.dataChanged)) {
+        if (this.dataChanged === true && (newData.dataChanged !== oldData.dataChanged) && this.autoSaving === true) {
           this.saveIntervalId = setInterval(async () => {
             if (this.newPersonalData) {
               await this.onSave();
             }
           }, 60000);
+        }
+        if (this.autoSaving === false) {
+          if (this.saveIntervalId !== undefined) {
+            clearInterval(this.saveIntervalId);
+          }
         }
       }
     },
@@ -450,6 +426,12 @@ export default {
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                :class="showPatientAnamnese ? 'btn-selected' : ''"
+                @click="onPatientAnamnese">
+                {{ $t("patientHistoryView.showPatientAnamnese") }}
+              </button>
+              <button
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showConsultationReason ? 'btn-selected' : ''"
                 @click="onConsultationReason">
                 {{ $t("patientHistoryView.showConsultationReason") }}
@@ -459,24 +441,6 @@ export default {
                 :class="showCurrentIllness ? 'btn-selected' : ''"
                 @click="onCurrentIllness">
                 {{ $t("patientHistoryView.showCurrentIllness") }}
-              </button>
-              <button
-                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                :class="showPersonalBackground ? 'btn-selected' : ''"
-                @click="onPersonalBackground">
-                {{ $t("patientHistoryView.showPersonalBackground") }}
-              </button>
-              <button
-                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                :class="showFamilyBackground ? 'btn-selected' : ''"
-                @click="onFamilyBackground">
-                {{ $t("patientHistoryView.showFamilyBackground") }}
-              </button>
-              <button
-                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                :class="showPsychobiologicalHabits ? 'btn-selected' : ''"
-                @click="onPsychobiologicalHabits">
-                {{ $t("patientHistoryView.showPsychobiologicalHabits") }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
@@ -537,6 +501,12 @@ export default {
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  :class="showPatientAnamnese ? 'btn-selected' : ''"
+                  @click="onPatientAnamnese">
+                  {{ $t("patientHistoryView.showPatientAnamnese") }}
+                </button>
+                <button
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showConsultationReason ? 'btn-selected' : ''"
                   @click="onConsultationReason">
                   {{ $t("patientHistoryView.showConsultationReason") }}
@@ -546,24 +516,6 @@ export default {
                   :class="showCurrentIllness ? 'btn-selected' : ''"
                   @click="onCurrentIllness">
                   {{ $t("patientHistoryView.showCurrentIllness") }}
-                </button>
-                <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  :class="showPersonalBackground ? 'btn-selected' : ''"
-                  @click="onPersonalBackground">
-                  {{ $t("patientHistoryView.showPersonalBackground") }}
-                </button>
-                <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  :class="showFamilyBackground ? 'btn-selected' : ''"
-                  @click="onFamilyBackground">
-                  {{ $t("patientHistoryView.showFamilyBackground") }}
-                </button>
-                <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  :class="showPsychobiologicalHabits ? 'btn-selected' : ''"
-                  @click="onPsychobiologicalHabits">
-                  {{ $t("patientHistoryView.showPsychobiologicalHabits") }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
@@ -645,7 +597,9 @@ export default {
               <div v-if="showPersonalData">
                 <PatientPersonalDataForm
                   :patientHistoryData="patientHistory"
+                  :clientData="client"
                   :cacheData="newPersonalData"
+                  :patientForms="patientForms"
                   :commerce="commerce"
                   :toggles="toggles"
                   :errorsAdd="errorsAdd"
@@ -675,39 +629,18 @@ export default {
                 >
                 </CurrentIllnessForm>
               </div>
-              <div v-if="showPersonalBackground">
-                <PersonalBackgroundForm
+              <div v-if="showPatientAnamnese">
+                <PatientAnamneseForm
                   :patientHistoryData="patientHistory"
-                  :cacheData="newPersonalBackground"
-                  :commerce="commerce"
-                  :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receivePersonalBackgroundData"
-                >
-                </PersonalBackgroundForm>
-              </div>
-              <div v-if="showFamilyBackground">
-                <FamilyBackgroundForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newFamilyBackground"
-                  :commerce="commerce"
-                  :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveFamilyBackgroundData"
-                >
-                </FamilyBackgroundForm>
-              </div>
-              <div v-if="showPsychobiologicalHabits">
-                <PsychobiologicalHabitsForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newPsychobiologicalHabits"
+                  :cacheData="newPatientAnamnese"
+                  :patientForms="patientForms"
                   :commerce="commerce"
                   :toggles="toggles"
                   :errorsAdd="errorsAdd"
                   :patientHistoryItems="patientHistoryItems"
-                  :receiveData="receivePsychobiologicalHabitsData"
+                  :receiveData="receivePatientAnamneseData"
                 >
-                </PsychobiologicalHabitsForm>
+                </PatientAnamneseForm>
               </div>
               <div v-if="showFunctionalExam">
                 <FunctionalExamForm
@@ -768,11 +701,17 @@ export default {
                 </ControlForm>
               </div>
             </div>
-            <div class="righted">
-              <span class="resume-patient-subtitle" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
-                <span class=""> {{ $t("patientHistoryView.updated") }} </span>
-                <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
-              </span>
+            <div class="row">
+              <div class="form-check form-switch righted habit-title">
+                <input class="form-check-input mx-1" type="checkbox" id="item.id" v-model="autoSaving">
+                <label class="form-check-label metric-card-subtitle">{{ $t('patientHistoryView.autoSaving') }}</label>
+              </div>
+              <div>
+                <span class="resume-patient-subtitle righted" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
+                  <span class=""> {{ $t("patientHistoryView.updated") }} </span>
+                  <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -91,10 +91,12 @@
       "SELECTABLE": "Selectable"
     }
   },
-  "productTypes": {
-    "ALL_IN_ONE": "All in One",
-    "ONLY_SURVEYS": "Just Smart Surveys",
-    "QUEUES_BOOKING": "Just Queues and Bookings"
+  "products": {
+    "types": {
+      "ALL_IN_ONE": "All in One",
+      "ONLY_SURVEYS": "Just Smart Surveys",
+      "QUEUES_BOOKING": "Just Queues and Bookings"
+    }
   },
   "surveys": {
     "types": {
@@ -106,6 +108,20 @@
     "question_types": {
       "RATING_TO_5": "⭐️ 0-5",
       "RATING_TO_10": "🔢 1-10",
+      "YES_OR_NOT": "👍 Yes/No",
+      "OPEN_WRITING": "✏️ Open",
+      "OPEN_OPTIONS": "👆 Select N",
+      "CHOOSE_OPTION": "☝️ Select 1"
+    }
+  },
+  "forms": {
+    "types": {
+      "FIRST_ATTENTION": "First Attention",
+      "PRE_ATTENTION": "Pre Attention"
+    },
+    "question_types": {
+      "OPEN_TEXT_FIELD": "✏️ Text Field",
+      "OPEN_NUMBER_FIELD": "#️⃣ Number Field",
       "YES_OR_NOT": "👍 Yes/No",
       "OPEN_WRITING": "✏️ Open",
       "OPEN_OPTIONS": "👆 Select N",
@@ -167,8 +183,10 @@
     "null": "N/I",
     "OTHER": "Other"
   },
-  "productsTypes": {
-    "SERVICE": "Service"
+  "product": {
+    "types": {
+      "SERVICE": "Service"
+    }
   },
   "productMeasuresTypes": {
     "MILLILITERS": "Milliliters (ml)",
@@ -184,13 +202,15 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
-  "outcomeTypes": {
-    "OTHER": "Other",
-    "STANDARD": "Normal Outcome",
-    "SUPPLIER": "Provider Payment",
-    "BENEFICIARY": "Beneficiary Payment",
-    "COLLABORATOR": "Collaborator Payment",
-    "SERVICE": "Service Payment"
+  "outcomes": {
+    "types": {
+      "OTHER": "Other",
+      "STANDARD": "Normal Outcome",
+      "SUPPLIER": "Provider Payment",
+      "BENEFICIARY": "Beneficiary Payment",
+      "COLLABORATOR": "Collaborator Payment",
+      "SERVICE": "Service Payment"
+    }
   },
   "civilStatuses": {
     "SINGLE": "Single",
@@ -215,9 +235,18 @@
   "items": {
     "types": {
       "STANDARD": "Standard",
-      "PSYCHOBIOLOGICAL_HABIT": "Psychobiological H.",
-      "TOBACCO_HABIT": "H. Tobacco",
-      "PHYSICAL_EXAM": "Physical Exam"
+      "PERSONAL_HISTORY": "Personal History",
+      "PHYSICAL_EXAM": "Physical Exam",
+      "PATIENT_SEX": "Sexo Paciente",
+      "PATIENT_OCCUPATION": "Ocupación Paciente",
+      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente"
+    }
+  },
+  "collaborators": {
+    "types": {
+      "STANDARD": "Standard",
+      "FULL": "Full",
+      "ASSISTANT": "Assistant"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -441,6 +470,14 @@
     "attention-whatsapp-cancel": {
       "title": "Whatsapp Attention Cancelled",
       "description": "Let send the attention cancelled whatsapp message."
+    },
+    "attention-first-form": {
+      "title": "Form First Attention",
+      "description": "Let the client to fill a form the first attention."
+    },
+    "attention-pre-form": {
+      "title": "Form Pre Attention",
+      "description": "Let the client to fill a form before an attention."
     }
   },
   "document": {
@@ -771,6 +808,8 @@
     "cancelledTitle": "This booking was",
     "cancelled": "Cancelled",
     "newBooking": "You can request a new one:",
+    "preAttention": "Pre Attention Form",
+    "fillPreAttention": "To be attended, you nedd to fill this form:",
     "advice": "* REMEMBER: The people in front of you and the estimated time may vary since people in front of you can cancel their reservation. We recommend that you consult this page before and on the day of your reservation.",
     "message": {
       "1": {
@@ -873,6 +912,10 @@
         "example": "Type just numbers without especial characters"
       }
     }
+  },
+  "userFormAttention": {
+    "title": "Please, fill this form:",
+    "fullfilled": "You've already filled this form!"
   },
   "collaboratorAttentionValidate": {
     "hello": "Hello!",
@@ -1333,6 +1376,36 @@
       }
     }
   },
+  "attentionForm": {
+    "other": "OTHER",
+    "like": {
+      "subtitle": "No, Yes"
+    },
+    "writing": {
+      "placeholder": "Tell us"
+    },
+    "message": {
+      "1": {
+        "title": "Thanks!",
+        "content": "This information will help us to offer you a better and faster service."
+      },
+      "2": {
+        "title": "Thanks!",
+        "content": "Hope to see you soon."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Save"
+      },
+      "2": {
+        "action": "Back to the Booking"
+      }
+    },
+    "validate": {
+      "withoutAnswer": "Should answer all the questions"
+    }
+  },
   "dashboard": {
     "title": "Performance Hub",
     "clients": "Clients",
@@ -1431,6 +1504,7 @@
     "entities": "Key Words:",
     "second": "Seconds",
     "spyUpdate": "Next update in: ",
+    "typeFilter": "Type Filter:",
     "tracing": {
       "title": "Clients Management",
       "filters": {
@@ -1871,6 +1945,7 @@
     "documents": "Documents",
     "reports": "Data Center",
     "your-plan": "Your Plan",
+    "forms-admin": "Forms",
     "collaborators-admin": "Collaborators",
     "permissions-admin": "Permissions",
     "administrators-admin": "Administrators",
@@ -1907,6 +1982,7 @@
           "collaborators-admin": "Collaborator Settings",
           "permissions-admin": "Permissions Settings",
           "administrators-admin": "Administrator Settings",
+          "forms-admin": "Forms Settings",
           "configuration": "Settings",
           "documents": "Documents",
           "your-plan": "Your Plan",
@@ -1970,6 +2046,7 @@
     "service-master-admin": "Services",
     "product-master-admin": "Products",
     "queues-master-admin": "Queues",
+    "forms-admin": "Forms Settings",
     "configuration": "Settings",
     "documents": "Documents",
     "reports": "Data Center",
@@ -2815,7 +2892,7 @@
     "showCurrentIllness": "Current Illness",
     "showPersonalBackground": "Pathological Background",
     "showFamilyBackground": "Family Background",
-    "showPsychobiologicalHabits": "Psychobiological Habits",
+    "showPatientAnamnese": "Anamnesis",
     "showFunctionalExam": "Functional Exam",
     "showPhysicalExam": "Physical Exam",
     "showDiagnostic": "Diagnostic",
@@ -2842,7 +2919,7 @@
     "currentIllness": "Current Illness",
     "personalBackground": "Personal Psychobiological Background",
     "familyBackground": "Family Background",
-    "psychobiologicalHabits": "Psychobiological Habits",
+    "patientAnamnese": "Anamnesis",
     "functionalExam": "Functional Exam",
     "physicalExam": "Physical Exam",
     "diagnostic": "Diagnostic",
@@ -3150,7 +3227,11 @@
           "whatsapp-notify-five": "Edit Notification Whatsapp 5 left",
           "only-survey": "Edit Just Survey Mode",
           "whatsapp-notify-one": "Edit Notification Whatsapp 1 left",
-          "get-number-remote": "Edit Get remote number"
+          "get-number-remote": "Edit Get remote number",
+          "features": "Configurations",
+          "whatsapps": "Whatsapp Connection",
+          "whatsapps-connect": "Connect Whatsapp",
+          "whatsapps-disconnect": "Disconnect Whatsapp"
         }
       }
     },
@@ -3515,6 +3596,77 @@
       "type": "Should select the type"
     }
   },
+  "businessFormsAdmin": {
+    "title": "Forms",
+    "commerce": "Select a commerce:",
+    "return": "Back",
+    "type": "Type:",
+    "typeHelp": "Type of Form. Select Personalized to add personalized questions.",
+    "queueHelp": "You can attach the Form to one specific queue and share it with your clients through the link.",
+    "addQuestionHelp": "Add one personalized question.",
+    "deleteQuestionHelp": "Delete the personalized question.",
+    "typeQuestionHelp": "Type of question based on the answer.",
+    "orderQuestionHelp": "The question will be listed in this order.",
+    "analizeIAQuestionHelp": "The answer will be analized with IA.",
+    "otherOptionQuestionHelp": "Add 'Other' to the options of this question.",
+    "otherOpenQuestionHelp": "Option 'Other' is open, editable by the user.",
+    "question": "Question:",
+    "comment": "General comment:",
+    "update": "Update",
+    "addQuestion": "Add Question",
+    "deleteQuestion": "Delete Question",
+    "order": "Order:",
+    "add": "Add",
+    "options": "Options:",
+    "queue": "Queue:",
+    "services": "Services:",
+    "link": "URL Web:",
+    "go": "Go",
+    "other": "Other",
+    "otherOption": "'Other' Option:",
+    "otherOpen": "'Other' Open:",
+    "optionsHelp": "List of answer options splitted by comma, without spaces.",
+    "analize": "Analize AI:",
+    "listResult": "Results:",
+    "completePersonalData": "Complete Client Data:",
+    "occupation": "What is your Occupation:",
+    "sex": "Your Sex:",
+    "civilStatus": "Your Civil Status:",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no service Form."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "You have already reached the limit of Form. To add more Form, change your plan or contact us."
+      },
+      "4": {
+        "title": "Oh no!",
+        "content": "Theres no Form. Please check the info at the commerces section."
+      }
+    },
+    "capacitiesList": {
+      "forms": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Form",
+          "edit": "Edit the Form",
+          "update": "Update the Form",
+          "add": "Add Form",
+          "limit": "Limit amount of Form",
+          "unavailable": "Delete Form"
+        }
+      }
+    },
+    "validate": {
+      "type": "Should select the type"
+    }
+  },
   "permissions": {
     "activations": {
       "admin": {
@@ -3555,6 +3707,7 @@
         "administrators-admin": "Enable Manage Administrators - Main Menu Business",
         "configuration": "Enable Manage Configurations - Main Menu Business",
         "documents": "Enable Manage Documents - Main Menu Business",
+        "forms-admin": "Enable Manage Forms - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
         "manage-admin": "Enable Artifacts Admin - Main Menu Business",

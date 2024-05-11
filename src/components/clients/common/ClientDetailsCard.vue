@@ -3,6 +3,7 @@ import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
 import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHistoryDetails } from '../../../application/services/query-stack';
 import { getPatientHistoryItemByCommerce  } from '../../../application/services/patient-history-item';
+import { getFormsByClient  } from '../../../application/services/form';
 import { getDate } from '../../../shared/utils/date';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
@@ -40,6 +41,7 @@ export default {
       attentions: [],
       clientContacts: [],
       patientHistoryItems: [],
+      patientForms: [],
       patientHistory: {},
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
@@ -97,6 +99,10 @@ export default {
         const items = await getPatientHistoryItemByCommerce(this.commerce.id);
         if (items && items.length > 0) {
           this.patientHistoryItems = items;
+        }
+        const forms = await getFormsByClient(this.commerce.id, this.client.id);
+        if (forms && forms.length > 0) {
+          this.patientForms = forms;
         }
         this.loading = false;
       } catch (error) {
@@ -223,6 +229,7 @@ export default {
         {{ formatIdNumber(client.userIdNumber) || 'N/I' }}
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ client.attentionsCounter || 0 }} </span>
         <i v-if="client.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
+        <i v-if="client.firstAttentionForm === true" class="bi bi-clipboard2-pulse-fill mx-1 blue-icon"> </i>
       </div>
       <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyDaysSinceComment(client.daysSinceAttention || 0)} mx-1`"></i> {{ client.daysSinceAttention || 0 }}
@@ -483,10 +490,11 @@ export default {
           <div class="modal-body text-center mb-0" id="patient-history-component">
             <PatientHistoryManagement
               :showPatientHistoryManagement="true"
-              :client="client.id"
+              :client="client"
               :commerce="commerce"
               :patientHistoryIn="patientHistory"
               :patientHistoryItems="patientHistoryItems"
+              :patientForms="patientForms"
               @getPatientHistory="getPatientHistory"
               @closeModal="closeModal"
             >

@@ -118,7 +118,7 @@ export default {
                 :disabled="!toggles['patient.history.edit']"
                 class="form-control mt-2 form-control-sm"
                 id="commennt"
-                rows="15"
+                rows="10"
                 :max="500"
                 @keyup="sendData"
                 v-bind:class="{ 'is-invalid': state.examError }"

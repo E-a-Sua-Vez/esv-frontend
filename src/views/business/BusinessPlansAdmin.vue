@@ -273,7 +273,7 @@ export default {
                           class="btn btn-md btn-light fw-bold text-dark select px-1"
                           v-model="state.newPlan.productType"
                           id="countries">
-                          <option v-for="product in state.productTypes" :key="product" :value="product">{{ $t(`productTypes.${product}`) }}</option>
+                          <option v-for="product in state.productTypes" :key="product" :value="product">{{ $t(`products.types.${product}`) }}</option>
                         </select>
                       </div>
                     </div>

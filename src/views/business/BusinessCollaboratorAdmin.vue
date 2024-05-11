@@ -18,6 +18,7 @@ import Popper from "vue3-popper";
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import { getCollaboratorTypes } from '../../shared/utils/data';
 
 export default {
   name: 'BusinessCollaboratorsAdmin',
@@ -37,11 +38,7 @@ export default {
       services: ref([]),
       modules: ref({}),
       collaborators: ref([]),
-      types: [
-        {  name: 'Standard', type: 'STANDARD' },
-        {  name: 'Assistant', type: 'ASSISTANT' },
-        {  name: 'Full', type: 'FULL' },
-      ],
+      types: [],
       commerce: {},
       commercesSelected: {},
       service: {},
@@ -64,6 +61,7 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.types = getCollaboratorTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
@@ -429,6 +427,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.collaborators"
+                  :type="'collaborators'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>

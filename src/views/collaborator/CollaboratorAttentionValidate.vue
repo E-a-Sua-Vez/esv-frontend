@@ -7,6 +7,8 @@ import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
 import { getProductsConsumptionsDetails, getPatientHistoryDetails } from '../../application/services/query-stack';
 import { getPatientHistoryItemByCommerce  } from '../../application/services/patient-history-item';
+import { getFormsByClient  } from '../../application/services/form';
+import { getClientById  } from '../../application/services/client';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -41,8 +43,10 @@ export default {
       commerce: {},
       user: {},
       toggles: {},
+      client: {},
       togglesStock: {},
       productConsumptions: [],
+      patientForms: [],
       patientHistory: {},
       patientHistoryItems: [],
     });
@@ -127,6 +131,14 @@ export default {
         const items = await getPatientHistoryItemByCommerce(state.commerce.id);
         if (items && items.length > 0) {
           state.patientHistoryItems = items;
+        }
+        const forms = await getFormsByClient(state.commerce.id, state.attention.clientId);
+        if (forms && forms.length > 0) {
+          state.patientForms = forms;
+        }
+        const client = await getClientById(state.attention.clientId);
+        if (client && client.id) {
+          state.client = client;
         }
         loading.value = false;
       } catch (error) {
@@ -334,9 +346,10 @@ export default {
           <div class="modal-body text-center mb-0" id="patient-history-component">
             <PatientHistoryManagement
               :showPatientHistoryManagement="true"
-              :client="state.attention.clientId"
+              :client="state.client"
               :commerce="state.commerce"
               :patientHistoryIn="state.patientHistory"
+              :patientForms="state.patientForms"
               :attention="state.attention.id"
               :patientHistoryItems="state.patientHistoryItems"
               @getPatientHistory="getPatientHistory"

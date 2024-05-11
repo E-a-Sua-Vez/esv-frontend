@@ -2,6 +2,8 @@
 import { ref, watch, reactive, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { getAttentionDetails, cancelAttention } from '../application/services/attention';
+import { getFormsByClient } from '../application/services/form';
+import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
 import { getCommerceById } from '../application/services/commerce';
 import { getQueueById } from '../application/services/queue';
 import { getUserById } from '../application/services/user';
@@ -63,6 +65,11 @@ export default {
       soundPlayed: false,
       goToCancel: false,
       voiceConfig: {},
+      formsPersonalized: [],
+      showFormButton: false,
+      formFirstAttentionCompleted: false,
+      formPreAttentionCompleted: false,
+      form: undefined,
       toggles: {}
     });
 
@@ -70,6 +77,8 @@ export default {
       try {
         loading.value = true;
         await getAttentionDetailsFromService(id);
+        state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
+        await getFormCompleted();
         state.queue = state.attention.queue;
         state.commerce = state.attention.commerce;
         state.toggles = await getPermissions('user');
@@ -314,6 +323,60 @@ export default {
       }
     }
 
+    const getForm = (type, queueId, servicesId) => {
+      if (state.formsPersonalized && state.formsPersonalized.length > 0 && type) {
+        const filteredForms = state.formsPersonalized.filter(form => form.type === type);
+        if (filteredForms && filteredForms.length > 0) {
+          if (queueId) {
+            const result = state.formsPersonalized.filter(form => form.queueId === queueId && form.type === type);
+            if (result.length === 0) {
+              return state.formsPersonalized.filter(form => form.type === type)[0];
+            }
+            return result;
+          } else if (servicesId && servicesId.length > 0) {
+            const result = state.formsPersonalized.filter(form => servicesId.includes(form.servicesId) && form.type === type);
+            if (result.length === 0) {
+              return state.formsPersonalized.filter(form => form.type === type)[0];
+            }
+            return result;
+          } else {
+            return state.formsPersonalized.filter(form => form.type === type)[0];
+          }
+        }
+      }
+      return undefined;
+    }
+
+    const getFormCompleted = async () => {
+      if (state.attention && state.attention.id && state.attention.clientId) {
+        const forms = await getFormsByClient(state.commerce.id, state.attention.clientId);
+        if (forms && forms.length > 0) {
+          if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT')) {
+            const filteredForms = forms.filter(form => form.type === 'FIRST_ATTENTION');
+            if (filteredForms && filteredForms.length > 0) {
+              state.formFirstAttentionCompleted = true;
+            }
+          }
+        }
+        // Solo llena formulario la primera vez
+        if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT')) {
+          if (!state.formFirstAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm('FIRST_ATTENTION', state.attention.queueId, state.attention.servicesId);
+          }
+        } else {
+          state.showFormButton = false;
+        }
+      }
+    }
+
+    const goToForm = async () => {
+      if (state.form && state.form.id && state.attention && state.attention.clientId) {
+        let url = `/interno/form/${state.form.id}/client/${state.attention.clientId}/attention/${state.attention.id}`;
+        router.push({ path: url })
+      }
+    }
+
     watch(
       attentions,
       async () => {
@@ -355,7 +418,9 @@ export default {
       testSound,
       collaboratorName,
       youWereReserveCancelled,
-      speak
+      speak,
+      goToForm,
+      getActiveFeature
     }
   }
 
@@ -543,6 +608,18 @@ export default {
               </div>
             </div>
           </div>
+          <div id="form-process" class="to-goal" v-if="state.showFormButton && state.form && (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') || getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))">
+              <div class="booking-notification-title">
+                <span>{{ $t("userQueueBooking.fillPreAttention") }}</span>
+              </div>
+              <button
+                type="button"
+                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
+                v-if="state.showFormButton"
+                @click="goToForm()">
+                {{ $t("userQueueBooking.preAttention") }} <i class="bi bi-pencil-fill"></i>
+              </button>
+            </div>
           <div id="whatsapp-notification-control" class="d-grid gap-2 mb-2 attention-details-sound" v-if="attentionActive()">
             <div class="attention-notification-title">
               <i class="bi bi-whatsapp"></i> <span class="fw-bold"> {{ $t("clientNotifyData.phoneTitle1") }} </span> <span> {{ $t("clientNotifyData.phoneTitle2") }} </span>
@@ -600,7 +677,7 @@ export default {
               @click="goToCancel()"
               :disabled="attentionCancelled() || !state.toggles['user.attentions.cancel']"
               >
-              {{ $t("userQueueAttention.cancel") }}
+              {{ $t("userQueueAttention.cancel") }} <i class="bi bi-x-circle-fill"></i>
             </button>
             <AreYouSure
               :show="state.goToCancel"
@@ -732,6 +809,11 @@ export default {
   font-weight: 800;
   text-decoration: underline;
   cursor: pointer;
+}
+.booking-notification-title {
+  font-size: .8rem;
+  line-height: 1rem;
+  padding: .2rem;
 }
 @-moz-keyframes parpadeo{
   0% { opacity: 1.0; }

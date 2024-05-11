@@ -60,6 +60,7 @@ export default {
         'administrators-master-admin',
         'collaborators-master-admin',
         'surveys-master-admin',
+        'forms-master-admin',
         'outcome-types-master-admin',
         'company-master-admin',
         'patient-history-item-master-admin',

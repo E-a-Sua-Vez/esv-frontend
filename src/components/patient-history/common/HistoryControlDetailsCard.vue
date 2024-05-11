@@ -1,6 +1,7 @@
 <script>
 import { getDate } from '../../../shared/utils/date';
 import { getControlStatusTypes } from '../../../shared/utils/data';
+import { globalStore } from '../../../stores';
 
 export default {
   name: 'HistoryControlDetailsCard',
@@ -11,15 +12,20 @@ export default {
     status: { type: String, default: undefined },
     reason: { type: String, default: undefined },
     index: { type: Number, default: undefined },
-    toggles: { type: Object, default: {} },
+    commerce: { type: Object, default: {} },
+    clientId: { type: String, default: undefined },
+    toggles: { type: Object, default: {} }
   },
   data() {
+    const store = globalStore();
     return {
       showAdd: false,
       extendedControlEntity: false,
       newResult: '',
       newStatus: 'CONFIRMED',
-      statuses: []
+      statuses: [],
+      store,
+      userType: undefined,
     }
   },
   beforeMount() {
@@ -28,6 +34,9 @@ export default {
   methods: {
     getDate(date) {
       return getDate(date);
+    },
+    async getUserType() {
+      this.userType = await this.store.getCurrentUserType;
     },
     getStatusIcon(status) {
       if (status === 'PENDING') {
@@ -43,9 +52,36 @@ export default {
     update() {
       this.$emit('onSave', this.index, this.reason, this.newStatus, this.newResult);
     },
+    getAttention() {
+      const commerceKeyName = this.commerce.keyName;
+      let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
+      if (this.userType === 'collaborator') {
+        url = `/interno/commerce/${commerceKeyName}/filas`;
+      }
+      let resolvedRoute;
+      let query = {};
+      if (this.clientId) {
+        query['client'] = this.clientId;
+      }
+      if (Object.keys(query).length === 0) {
+        resolvedRoute = this.$router.resolve({ path: url });
+      } else {
+        resolvedRoute = this.$router.resolve({ path: url, query });
+      }
+      window.open(resolvedRoute.href, '_blank');
+    },
     showUpdate(){
       this.extendedControlEntity = !this.extendedControlEntity;
     }
+  },
+  watch: {
+    store: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        await this.getUserType();
+      }
+    },
   }
 }
 </script>
@@ -59,14 +95,23 @@ export default {
       <div class="col">
       <i :class="`bi ${getStatusIcon(status)} mx-1`"></i> {{ $t(`controlReasonTypes.${reason}`) }}
       </div>
-      <div class="col">
-        <span class="confirm-payment details-title"
-          href="#"
-          v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
-          @click.prevent="showUpdate()">
-          <i class="bi bi-pencil-fill"></i> <span class="step-title fw-bold">{{ $t("patientHistoryView.attendControl") }}</span>
-          <i class="dark" :class="`bi ${extendedControlEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-        </span>
+      <div class="row">
+        <div class="col">
+          <a class="confirm-payment details-title"
+            href="#"
+            v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
+            @click.prevent="showUpdate()">
+            <i class="bi bi-pencil-fill"></i> <span class="step-title fw-bold">{{ $t("patientHistoryView.attendControl") }}</span>
+            <i class="dark" :class="`bi ${extendedControlEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </a>
+        </div>
+        <div class="col">
+          <a class="confirm-payment details-title"
+            v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
+            @click.prevent="getAttention()">
+            <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
+          </a>
+        </div>
       </div>
     </div>
     <div class="centered paragraph">

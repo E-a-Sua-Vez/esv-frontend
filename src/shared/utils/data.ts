@@ -67,6 +67,17 @@ export const getQuestionTypes = () => {
   ]
 }
 
+export const getQuestionFormTypes = () => {
+  return [
+    "OPEN_TEXT_FIELD",
+    "OPEN_NUMBER_FIELD",
+    "YES_OR_NOT",
+    "OPEN_WRITING",
+    "OPEN_OPTIONS",
+    "CHOOSE_OPTION"
+  ]
+}
+
 export const getSurveyTypes = () => {
   return [
     "SIMPLE_CSAT",
@@ -76,12 +87,27 @@ export const getSurveyTypes = () => {
   ]
 }
 
+export const getFormTypes = () => {
+  return [
+    "FIRST_ATTENTION",
+    "PRE_ATTENTION"
+  ]
+}
+
 export const getContactTypes = () => {
   return [
     { id: 'CALL', name: 'CALL' },
     { id: 'EMAIL', name: 'EMAIL' },
     { id: 'MESSAGE', name: 'MESSAGE' },
     { id: 'VISIT', name: 'VISIT' }
+  ]
+}
+
+export const getCollaboratorTypes = () => {
+  return [
+    { type: 'STANDARD', name: 'Standard' },
+    { type: 'ASSISTANT', name: 'Assistant' },
+    { type: 'FULL', name: 'Full' }
   ]
 }
 
@@ -204,8 +230,8 @@ export const getCompanyTypes = () => {
 export const getPatientHistoryItemTypes = () => {
   return [
     { id: 'STANDARD', name: 'STANDARD' },
-    { id: 'PSYCHOBIOLOGICAL_HABIT', name: 'PSYCHOBIOLOGICAL_HABIT' },
-    { id: 'PHYSICAL_EXAM', name: 'PHYSICAL_EXAM' }
+    { id: 'PERSONAL_HISTORY', name: 'PERSONAL_HISTORY' },
+    { id: 'PHYSICAL_EXAM', name: 'PHYSICAL_EXAM' },
   ]
 }
 

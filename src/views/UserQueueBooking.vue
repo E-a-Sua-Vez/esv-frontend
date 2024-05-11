@@ -2,9 +2,12 @@
 import { ref, reactive, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { getBookingDetails, cancelBooking } from '../application/services/booking';
+import { getFormsByClient } from '../application/services/form';
+import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
 import { getPermissions } from '../application/services/permissions';
 import { getDate } from '../shared/utils/date';
 import { globalStore } from '../stores';
+import { getActiveFeature } from '../shared/features';
 import Message from '../components/common/Message.vue';
 import AttentionNumber from'../components/common/AttentionNumber.vue';
 import QueueName from '../components/common/QueueName.vue';
@@ -49,6 +52,11 @@ export default {
       queue: {},
       commerce: {},
       user: {},
+      formsPersonalized: [],
+      showFormButton: false,
+      formFirstAttentionCompleted: false,
+      formPreAttentionCompleted: false,
+      form: undefined,
       beforeYou: ref(0),
       estimatedTime: ref("00:01"),
       goToCancel: false,
@@ -59,6 +67,8 @@ export default {
       try {
         loading.value = true;
         await getBookingDetailsFromService(id);
+        state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
+        await getFormCompleted();
         state.toggles = await getPermissions('user');
         loading.value = false;
       } catch (error) {
@@ -103,9 +113,11 @@ export default {
         loading.value = false;
       }
     };
+
     const bookingActive = () => {
       return state.booking.status === 'PENDING' || state.booking.status === 'CONFIRMED' || state.booking.status === 'PROCESSED';
     };
+
     const getCreatedAt = (createdAt, timeZoneIn) => {
       const dateCorrected = new Date(
       new Date(createdAt).toLocaleString('en-US', {
@@ -113,18 +125,23 @@ export default {
       }));
       return dateCorrected.toLocaleString("en-GB");
     }
+
     const backToCommerceQueues = () => {
       router.push({ path: `/interno/comercio/${state.commerce.keyName}` })
     }
+
     const bookingCancelled = () => {
       return state.booking.status === 'RESERVE_CANCELLED';
     }
+
     const goToCancel = () => {
       state.goToCancel = !state.goToCancel;
     }
+
     const cancelCancel = () => {
       state.goToCancel = false;
     }
+
     const cancellingBooking = async () => {
       try {
         loading.value = true;
@@ -141,11 +158,103 @@ export default {
       }
     }
 
+    const getForm = (type, queueId, servicesId) => {
+      if (state.formsPersonalized && state.formsPersonalized.length > 0 && type) {
+        const filteredForms = state.formsPersonalized.filter(form => form.type === type);
+        if (filteredForms && filteredForms.length > 0) {
+          if (queueId) {
+            const result = state.formsPersonalized.filter(form => form.queueId === queueId && form.type === type);
+            if (result.length === 0) {
+              return state.formsPersonalized.filter(form => form.type === type)[0];
+            }
+            return result;
+          } else if (servicesId && servicesId.length > 0) {
+            const result = state.formsPersonalized.filter(form => servicesId.includes(form.servicesId) && form.type === type);
+            if (result.length === 0) {
+              return state.formsPersonalized.filter(form => form.type === type)[0];
+            }
+            return result;
+          } else {
+            return state.formsPersonalized.filter(form => form.type === type)[0];
+          }
+        }
+      }
+      return undefined;
+    }
+
+    const getFormCompleted = async () => {
+      if (state.booking && state.booking.id && state.booking.user && state.booking.user.clientId) {
+        const forms = await getFormsByClient(state.commerce.id, state.booking.user.clientId);
+        const attentionFilteredForms = forms.filter(form => form.bookingId === state.booking.id);
+        if (forms && forms.length > 0) {
+          if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT')) {
+            const filteredForms = forms.filter(form => form.type === 'FIRST_ATTENTION');
+            if (filteredForms && filteredForms.length > 0) {
+              state.formFirstAttentionCompleted = true;
+            }
+          }
+          if (getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')) {
+            const filteredForms = attentionFilteredForms.filter(form => form.type === 'PRE_ATTENTION');
+            if (filteredForms && filteredForms.length > 0) {
+              if (attentionFilteredForms && attentionFilteredForms.length > 0) {
+                state.formPreAttentionCompleted = true;
+              }
+            }
+          }
+        }
+        // Solo llena formulario la primera vez
+        if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+            !getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')) {
+          if (!state.formFirstAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm('FIRST_ATTENTION', state.booking.queueId, state.booking.servicesId);
+          }
+        // Llena formulario siempre
+        } else if (!getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+            getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')) {
+          if (!state.formPreAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm('PRE_ATTENTION', state.booking.queueId, state.booking.servicesId);
+          }
+        // llena un formulario la primera vez y otro distinto para el resto
+        } else if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+            getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')) {
+          const formFirstAttention = getForm('FIRST_ATTENTION', state.booking.queueId, state.booking.servicesId);
+          const formPreAttention = getForm('PRE_ATTENTION', state.booking.queueId, state.booking.servicesId);
+          if (!state.formFirstAttentionCompleted && formFirstAttention) {
+            state.showFormButton = true;
+            state.form = formFirstAttention;
+          } else if (!state.formFirstAttentionCompleted && !state.formPreAttentionCompleted && formFirstAttention) {
+            state.showFormButton = true;
+            state.form = formFirstAttention;
+          } else if (!state.formFirstAttentionCompleted && !state.formPreAttentionCompleted && !formFirstAttention && formPreAttention) {
+            state.showFormButton = true;
+            state.form = formPreAttention;
+          } else if (!state.formPreAttentionCompleted && formPreAttention) {
+            state.showFormButton = true;
+            state.form = formPreAttention;
+          } else {
+            state.showFormButton = false;
+          }
+        } else {
+          state.showFormButton = false;
+        }
+      }
+    }
+
+    const goToForm = async () => {
+      if (state.form && state.form.id && state.booking && state.booking.user && state.booking.user.clientId) {
+        let url = `/interno/form/${state.form.id}/client/${state.booking.user.clientId}/booking/${state.booking.id}`;
+        router.push({ path: url })
+      }
+    }
+
     return {
       id,
       state,
       loading,
       alertError,
+      getActiveFeature,
       getDate,
       bookingCancelled,
       goToCancel,
@@ -155,7 +264,8 @@ export default {
       getCreatedAt,
       bookingActive,
       getEstimatedTime,
-      getBeforeYou
+      getBeforeYou,
+      goToForm
     }
   }
 
@@ -253,6 +363,19 @@ export default {
                     {{ $t("userQueueBooking.advice") }}
                   </div>
                   <hr>
+                  <div id="form-process" class="to-goal" v-if="state.showFormButton && state.form && (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') || getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))">
+                    <div class="booking-notification-title">
+                      <span>{{ $t("userQueueBooking.fillPreAttention") }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
+                      v-if="state.showFormButton"
+                      @click="goToForm()">
+                      {{ $t("userQueueBooking.preAttention") }} <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <hr>
+                  </div>
                   <div v-if="state.commerce.serviceInfo || state.commerce.contactInfo"
                     class="booking-notification-title mb-2">
                     {{ $t("userQueueBooking.commerceDetails") }}
@@ -272,7 +395,7 @@ export default {
                 @click="goToCancel()"
                 :disabled="bookingCancelled() || !state.toggles['user.bookings.cancel']"
                 >
-                {{ $t("userQueueBooking.cancel") }}
+                {{ $t("userQueueBooking.cancel") }} <i class="bi bi-x-circle-fill"></i>
               </button>
               <AreYouSure
                 :show="state.goToCancel"

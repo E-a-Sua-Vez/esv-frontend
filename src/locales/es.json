@@ -91,10 +91,12 @@
       "SELECTABLE": "Seleccionable"
     }
   },
-  "productTypes": {
-    "ALL_IN_ONE": "Todo en Uno",
-    "ONLY_SURVEYS": "Sólo Encuestas Inteligentes",
-    "QUEUES_BOOKING": "Sólo Filas y Reservas"
+  "products": {
+    "types": {
+      "ALL_IN_ONE": "Todo en Uno",
+      "ONLY_SURVEYS": "Sólo Encuestas Inteligentes",
+      "QUEUES_BOOKING": "Sólo Filas y Reservas"
+    }
   },
   "surveys": {
     "types": {
@@ -106,6 +108,20 @@
     "question_types": {
       "RATING_TO_5": "⭐️ 0-5",
       "RATING_TO_10": "🔢 1-10",
+      "YES_OR_NOT": "👍 Si/No",
+      "OPEN_WRITING": "✏️ Abierta",
+      "OPEN_OPTIONS": "👆 Selección N",
+      "CHOOSE_OPTION": "☝️ Selección 1"
+    }
+  },
+  "forms": {
+    "types": {
+      "FIRST_ATTENTION": "Primera Atención",
+      "PRE_ATTENTION": "Pre Atención"
+    },
+    "question_types": {
+      "OPEN_TEXT_FIELD": "✏️ Campo Texto",
+      "OPEN_NUMBER_FIELD": "#️⃣ Campo Número",
       "YES_OR_NOT": "👍 Si/No",
       "OPEN_WRITING": "✏️ Abierta",
       "OPEN_OPTIONS": "👆 Selección N",
@@ -167,8 +183,10 @@
     "null": "N/I",
     "OTHER": "Otro"
   },
-  "productsTypes": {
-    "SERVICE": "Servicio"
+  "product": {
+    "types": {
+      "SERVICE": "Servicio"
+    }
   },
   "productMeasuresTypes": {
     "MILLILITERS": "Mililitros (ml)",
@@ -184,13 +202,15 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
-  "outcomeTypes": {
-    "OTHER": "Otro",
-    "STANDARD": "Egreso Normal",
-    "SUPPLIER": "Pago Proveedor",
-    "BENEFICIARY": "Pago Beneficiario",
-    "COLLABORATOR": "Pago Colaborador",
-    "SERVICE": "Pago Servicio"
+  "outcomes": {
+    "types": {
+      "OTHER": "Otro",
+      "STANDARD": "Egreso Normal",
+      "SUPPLIER": "Pago Proveedor",
+      "BENEFICIARY": "Pago Beneficiario",
+      "COLLABORATOR": "Pago Colaborador",
+      "SERVICE": "Pago Servicio"
+    }
   },
   "civilStatuses": {
     "SINGLE": "Soltero",
@@ -203,7 +223,6 @@
     "MALE": "Masculino",
     "FEMALE": "Femenino"
   },
-
   "companies": {
     "types": {
       "STANDARD": "Standard",
@@ -216,9 +235,15 @@
   "items": {
     "types": {
       "STANDARD": "Standard",
-      "PSYCHOBIOLOGICAL_HABIT": "H. Psicobiológicos",
-      "TOBACCO_HABIT": "H. Tabaco",
+      "PERSONAL_HISTORY": "Historia Personal",
       "PHYSICAL_EXAM": "Examen Físico"
+    }
+  },
+  "collaborators": {
+    "types": {
+      "STANDARD": "Standard",
+      "FULL": "Full",
+      "ASSISTANT": "Asistente"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -436,14 +461,19 @@
       "title": "Whatsapp Reserva Cancelada",
       "description": "Permite enviar mensaje de reserva cancelada."
     },
-    "attention-whatsapp-cancel": {
-      "title": "Whatsapp Atención Cancelada",
-      "description": "Permite enviar mensaje de atención cancelada."
+    "attention-first-form": {
+      "title": "Form Primera Atención",
+      "description": "Permite al cliente llenar un formulario antes de su primera atención en el comercio."
+    },
+    "attention-pre-form": {
+      "title": "Form Pre Atención",
+      "description": "Permite al cliente llenar un formulario antes de su atención en el comercio."
     }
   },
   "document": {
     "types": {
-      "COMMERCE": "Comercio"
+      "COMMERCE": "Comercio",
+      "CLIENT": "Cliente"
     },
     "terms_of_service": {
       "title": "Condiciones de Servicio",
@@ -771,6 +801,8 @@
     "cancelledTitle": "Esta reserva fue",
     "cancelled": "Cancelada",
     "newBooking": "Puedes solicitar una nueva reserva:",
+    "preAttention": "Formulario Pre Atención",
+    "fillPreAttention": "Para ser atendido, deberás llenar el siguiente formulario:",
     "advice": "* RECUERDA: Las personas que tienes por delante y el tiempo estimado pueden variar ya que personas delante de ti pueden cancelar su reserva. Te recomendamos consultar esta página antes y el día de tu reserva.",
     "message": {
       "1": {
@@ -821,6 +853,10 @@
         "action": "Ir a las filas"
       }
     }
+  },
+  "userFormAttention": {
+    "title": "Por favor, llena el siguiente formulario:",
+    "fullfilled": "¡Ya llenaste este formulario!"
   },
   "clientNotifyData": {
     "message": {
@@ -1327,6 +1363,40 @@
       }
     }
   },
+  "attentionForm": {
+    "other": "OTRO",
+    "yesExplain": "Por favor indique detalles",
+    "like": {
+      "subtitle": "No, Si"
+    },
+    "writing": {
+      "placeholder": "Cuéntanos"
+    },
+    "validate": {
+      "withoutAnswer": "Debes responder todas las preguntas"
+    },
+    "message": {
+      "1": {
+        "title": "¡Gracias!",
+        "content": "Estos datos nos ayudarán a ofrecerte un mejor y más rápido servicio."
+      },
+      "2": {
+        "title": "¡Gracias!",
+        "content": "Te esperamos de vuelta muy pronto."
+      }
+    },
+    "actions": {
+      "1": {
+        "action": "Enviar"
+      },
+      "2": {
+        "action": "Volver a la Reserva"
+      },
+      "3": {
+        "action": "Volver a la Atención"
+      }
+    }
+  },
   "dashboard": {
     "title": "Performance Hub",
     "clients": "Clientes",
@@ -1426,6 +1496,7 @@
     "spyUpdate": "Próxima actualización en: ",
     "comment": "Comentario:",
     "entities": "Palabras clave:",
+    "typeFilter": "Filtre por tipo:",
     "tracing": {
       "title": "Gestión de Clientes",
       "filters": {
@@ -1878,6 +1949,7 @@
     "outcome-types-admin": "Tipos de Egreso",
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
+    "forms-admin": "Formularios",
     "manage-admin": "Registro",
     "control-admin": "Gestión",
     "company-admin": "Compañías Proveedoras",
@@ -1909,6 +1981,7 @@
           "configuration": "Configuraciones",
           "documents": "Documentos",
           "surveys-admin": "Administrar Encuestas",
+          "forms-admin": "Administrar Formularios",
           "your-plan": "Tu Plan",
           "manage-admin": "Registrar Artefactos",
           "control-admin": "Gestión Transaccional",
@@ -1947,6 +2020,7 @@
     "reports": "Central de Datos",
     "your-plan": "Tu Plan",
     "surveys-admin": "Administrar Encuestas",
+    "forms-admin": "Administrar Formularios",
     "plans-master-admin": "Administrar Planes",
     "collaborators-master-admin": "Colaboradores",
     "administrators-master-admin": "Administradores",
@@ -2237,6 +2311,10 @@
     "value": "Valor:",
     "result": "Resultado:",
     "write": "Escriba aquí",
+    "selectN": "Seleccione N:",
+    "select1": "Seleccione 1:",
+    "yesNo": "Si/No:",
+    "options": "Opciones:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2812,7 +2890,7 @@
     "showCurrentIllness": "Enfermedad Actual",
     "showPersonalBackground": "Antecedentes Patológicos",
     "showFamilyBackground": "Antecedentes Familiares",
-    "showPsychobiologicalHabits": "Hábitos Psicobiológicos",
+    "showPatientAnamnese": "Anamnesis",
     "showFunctionalExam": "Examen Funcional",
     "showPhysicalExam": "Examen Físico",
     "showDiagnostic": "Diagnóstico",
@@ -2839,7 +2917,7 @@
     "currentIllness": "Enfermedad Actual",
     "personalBackground": "Antecedentes Personales Patológicos",
     "familyBackground": "Antecedentes Familiares",
-    "psychobiologicalHabits": "Hábitos Psicobiológicos",
+    "patientAnamnese": "Anamnesis",
     "functionalExam": "Examen Funcional",
     "physicalExam": "Examen Físico",
     "diagnostic": "Diagnóstico",
@@ -2855,6 +2933,8 @@
     "attendControl": "Atender Control",
     "add": "Agregar",
     "update": "Actualizar",
+    "preAttentionAnswers": "Dat Primera Atención",
+    "autoSaving": "Autoguardado",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3147,7 +3227,11 @@
           "whatsapp-notify-five": "Editar Notificación Whatsapp Faltan 5",
           "only-survey": "Editar Modo Solo Encuesta",
           "whatsapp-notify-one": "Editar Notificación Whatsapp Falta 1",
-          "get-number-remote": "Editar Obtener número remoto"
+          "get-number-remote": "Editar Obtener número remoto",
+          "features": "Configuraciones",
+          "whatsapps": "Conexión Whatsapp",
+          "whatsapps-connect": "Conectar Whatsapp",
+          "whatsapps-disconnect": "Desconectar Whatsapp"
         }
       }
     },
@@ -3513,6 +3597,78 @@
       "type": "Debes ingresar el tipo"
     }
   },
+  "businessFormsAdmin": {
+    "title": "Formularios",
+    "commerce": "Selecciona el comercio:",
+    "return": "Volver",
+    "type": "Tipo:",
+    "typeHelp": "Tipo de formulario. Selecciona personalizado para agregar preguntas personalizadas.",
+    "queueHelp": "Puedes asociar el formulario a una fila específica y compartirla con tus usuarios a través de link.",
+    "servicesHelp": "Puedes asociar el formulario a servicios específicos y compartirla con tus usuarios a través de link.",
+    "addQuestionHelp": "Agrega una pregunta personalizada.",
+    "deleteQuestionHelp": "Elimina la pregunta personalizada.",
+    "typeQuestionHelp": "Tipo de pregunta en base a la respuesta.",
+    "orderQuestionHelp": "La pregunta será listada al usuario en este orden.",
+    "analizeIAQuestionHelp": "La respuesta será analizada con Inteligencia Artificial.",
+    "otherOptionQuestionHelp": "Agrega la opción 'Otro' a las respuestas de esta pregunta.",
+    "otherOpenQuestionHelp": "Opción 'Otro' es abierta, editable por el usuario.",
+    "active": "Activo:",
+    "question": "Pregunta:",
+    "update": "Actualizar",
+    "addQuestion": "Agregar Pregunta",
+    "deleteQuestion": "Eliminar Pregunta",
+    "order": "Orden:",
+    "add": "Agregar",
+    "options": "Opciones:",
+    "queue": "Fila:",
+    "services": "Servicios:",
+    "link": "URL Web:",
+    "go": "Ir",
+    "other": "Otro",
+    "otherOption": "Opción 'Otro':",
+    "otherOpen": "'Otro' Abierto:",
+    "optionsHelp": "Lista las opciones de respuesta separados por coma, sin espacios.",
+    "analize": "Analizar IA:",
+    "listResult": "Registros:",
+    "completePersonalData": "Completar Datos Cliente:",
+    "occupation": "¿A qué te dedicas? (Ocupación):",
+    "sex": "Tu Sexo:",
+    "civilStatus": "Tu Estado Civil:",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay formularios."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "Ya llegaste al límite de formularios. Para agregar más formularios cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay formularios. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "forms": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver las Formularios",
+          "edit": "Editar las Formularios",
+          "update": "Actualizar las Formularios",
+          "add": "Agregar Formularios",
+          "limit": "Cantidad límite de Formularios",
+          "unavailable": "Eliminar Formularios"
+        }
+      }
+    },
+    "validate": {
+      "type": "Debes ingresar el tipo"
+    }
+  },
   "permissions": {
     "sections": {
       "dashboard": "Performance Hub",
@@ -3559,6 +3715,7 @@
         "configuration": "Habilitar Administrar Configuraciones - Menú Principal Negocio",
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
+        "forms-admin": "Habilitar Administrar Formularios - Menú Principal Negocio",
         "manage-admin": "Habilitar Registrar Artefactos - Menú Principal Negocio",
         "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio",
         "outcome-types-admin": "Habilitar Gestión Tipos de Egreso - Menú Principal Negocio"

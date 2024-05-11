@@ -34,6 +34,7 @@ export default {
       activeBusiness: false,
       commerces: ref([]),
       items: ref([]),
+      types: ref([]),
       commerce: {},
       showAdd: false,
       goToUnavailable: false,
@@ -146,7 +147,12 @@ export default {
           ageFrom: false,
           ageTo: false,
           comment: false,
-          value: false
+          value: false,
+          result: false,
+          selectN: false,
+          select1: false,
+          yesNo: false,
+          options: ''
         }
       }
     }
@@ -313,6 +319,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.items"
+                  :type="'items'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
@@ -486,7 +493,7 @@ export default {
                             />
                           </div>
                         </div>
-                        <div id="item-comment-form-update" class="row g-1">
+                        <div id="item-value-form-update" class="row g-1">
                           <div class="col-6 text-label">
                             {{ $t("businessPatientHistoryItemAdmin.value") }}
                           </div>
@@ -497,7 +504,7 @@ export default {
                             />
                           </div>
                         </div>
-                        <div id="item-comment-form-update" class="row g-1">
+                        <div id="item-result-form-update" class="row g-1">
                           <div class="col-6 text-label">
                             {{ $t("businessPatientHistoryItemAdmin.result") }}
                           </div>
@@ -506,6 +513,51 @@ export default {
                               v-model="item.characteristics.result"
                               :disabled="!state.toggles['patient-history-item.admin.edit']"
                             />
+                          </div>
+                        </div>
+                        <div id="item-selectN-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.selectN") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.selectN"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="item-select1-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.select1") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.select1"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="item-yesNo-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.yesNo") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.yesNo"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="item-options-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.options") }}
+                          </div>
+                          <div class="col-6">
+                            <input
+                              type="text"
+                              class="form-control"
+                              v-model="item.characteristics.options"
+                              placeholder="Answer 1,Anwswer 2">
                           </div>
                         </div>
                       </div>
@@ -763,6 +815,51 @@ export default {
                           v-model="state.newPatientHistoryItem.characteristics.result"
                           :disabled="!state.toggles['patient-history-item.admin.edit']"
                         />
+                      </div>
+                    </div>
+                    <div id="item-selectN-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.selectN") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.selectN"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-select1-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.select1") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.select1"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-yesNo-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.yesNo") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.yesNo"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-options-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.options") }}
+                      </div>
+                      <div class="col-6">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="state.newPatientHistoryItem.characteristics.options"
+                          placeholder="Answer 1,Anwswer 2">
                       </div>
                     </div>
                   </div>

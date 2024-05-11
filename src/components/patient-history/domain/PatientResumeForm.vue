@@ -239,56 +239,22 @@ export default {
               </div>
             </div>
           </div>
-          <div id="personalBackground-data">
+          <div id="patientAnamnese-data">
             <div class="row m-1 mb-2">
               <div class="col-12 text-label badge bg-secondary title-section">
-                <span>{{ $t("patientHistoryView.personalBackground") }} <i class="bi bi-person-fill mx-1"></i></span>
+                <span>{{ $t("patientHistoryView.patientAnamnese") }} <i class="bi bi-person-fill mx-1"></i></span>
               </div>
             </div>
-            <div v-if="patientHistoryData.personalBackground && patientHistoryData.personalBackground.length > 0 && patientHistoryData.personalBackground[0]">
-              <div v-for="(element, index) in patientHistoryData.personalBackground" :key="`reason-${index}`">
-                <HistoryDetailsCard
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.background"
-                >
-                </HistoryDetailsCard>
-              </div>
-            </div>
-          </div>
-          <div id="familyBackground-data">
-            <div class="row m-1 mb-2">
-              <div class="col-12 text-label badge bg-secondary title-section">
-                <span>{{ $t("patientHistoryView.familyBackground") }} <i class="bi bi-person-fill mx-1"></i></span>
-              </div>
-            </div>
-            <div v-if="patientHistoryData.familyBackground && patientHistoryData.familyBackground.length > 0 && patientHistoryData.familyBackground[0]">
-              <div v-for="(element, index) in patientHistoryData.familyBackground" :key="`reason-${index}`">
-                <HistoryDetailsCard
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.background"
-                >
-                </HistoryDetailsCard>
-              </div>
-            </div>
-          </div>
-          <div id="psychobiologicalHabits-data">
-            <div class="row m-1 mb-2">
-              <div class="col-12 text-label badge bg-secondary title-section">
-                <span>{{ $t("patientHistoryView.psychobiologicalHabits") }} <i class="bi bi-person-fill mx-1"></i></span>
-              </div>
-            </div>
-            <div v-if="patientHistoryData.psychobiologicalHabits">
-              <div v-if="toggles['patient.history.view'] && patientHistoryData.psychobiologicalHabits.habitsDetails" class="lefted">
-                <span v-for="item in Object.keys(patientHistoryData.psychobiologicalHabits.habitsDetails)" :key="item.id" class="badge detail-data-badge mx-2">
-                  <span class="mx-1"> {{ patientHistoryData.psychobiologicalHabits.habitsDetails[item].name }} </span> ✅
+            <div v-if="patientHistoryData.patientAnamnese">
+              <div v-if="toggles['patient.history.view'] && patientHistoryData.patientAnamnese.habitsDetails" class="lefted">
+                <span v-for="item in Object.keys(patientHistoryData.patientAnamnese.habitsDetails)" :key="item.id" class="badge detail-data-badge mx-2">
+                  <span class="mx-1"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].name }} </span> ✅
                 </span>
               </div>
               <HistoryDetailsCard
                 :show="toggles['patient.history.view']"
-                :date="patientHistoryData.psychobiologicalHabits.modifiedAt"
-                :content="patientHistoryData.psychobiologicalHabits.habits"
+                :date="patientHistoryData.patientAnamnese.modifiedAt"
+                :content="patientHistoryData.patientAnamnese.habits"
               >
               </HistoryDetailsCard>
             </div>

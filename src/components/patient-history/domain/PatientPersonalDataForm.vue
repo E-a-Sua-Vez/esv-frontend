@@ -13,6 +13,8 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
     cacheData: { type: Object, default: undefined },
+    clientData: { type: Object, default: {} },
+    patientForms: { type: Array, default: [] },
     patientHistoryData: { type: Object, default: {} },
     toggles: { type: Object, default: {} },
     errorsAdd: { type: Array, default: [] },
@@ -25,6 +27,8 @@ export default {
     const {
       commerce,
       cacheData,
+      clientData,
+      patientForms,
       patientHistoryData,
       toggles,
       errorsAdd,
@@ -38,6 +42,7 @@ export default {
       phoneCodes: [],
       civilStatuses: [],
       sexs: [],
+      patientFormFirstAttention: {},
       idNumberError: false,
       addressCodeError: false,
       nameError: false,
@@ -70,6 +75,42 @@ export default {
           state.newPersonalData.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
           state.newPersonalData.age = calculateAge(new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10));
           state.newPersonalData.font = true;
+          if (clientData.value && clientData.value.id) {
+            const phoneIn = clientData.value.userPhone || undefined;
+            state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0,2) : '';
+            state.newPersonalData.phone = phoneIn ? phoneIn.slice(2,20) : '';
+            const name = clientData.value.userName || undefined;
+            state.newPersonalData.name = name ? name : '';
+            const lastName = clientData.value.userLastName || undefined;
+            state.newPersonalData.lastName = lastName ? lastName : '';
+            const idNumber = clientData.value.userIdNumber || undefined;
+            state.newPersonalData.idNumber = idNumber ? idNumber : '';
+            const birthday = clientData.value.userBirthday || undefined;
+            state.newPersonalData.birthday = birthday ? birthday : '';
+            const addressCode = clientData.value.userAddressCode || undefined;
+            state.newPersonalData.addressCode = addressCode ? addressCode : '';
+            const addressComplement = clientData.value.userAddressComplement || undefined;
+            state.newPersonalData.addressComplement = addressComplement ? addressComplement : '';
+            const addressText = clientData.value.userAddressText || undefined;
+            state.newPersonalData.addressText = addressText ? addressText : '';
+          }
+          if (patientForms.value && patientForms.value.length > 0) {
+            const patientFormFirstAttentions = patientForms.value.filter(form => form.type === 'FIRST_ATTENTION');
+            state.patientFormFirstAttention = patientFormFirstAttentions && patientFormFirstAttentions.length > 0 ? patientFormFirstAttentions[0] : undefined;
+            if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
+              if (state.patientFormFirstAttention.answers && state.patientFormFirstAttention.answers.length > 0) {
+                const occupationAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_OCCUPATION');
+                const occupation = occupationAnswer[0].answer || undefined;
+                state.newPersonalData.occupation = state.newPersonalData.occupation || occupation ? occupation : '';
+                const sexAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_SEX');
+                const sex = sexAnswer[0].answer[0] || undefined;
+                state.newPersonalData.sex = state.newPersonalData.sex || sex ? sex : '';
+                const civilStatusAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_CIVIL_STATUS');
+                const civilStatus = civilStatusAnswer[0].answer[0] || undefined;
+                state.newPersonalData.civilStatus = state.newPersonalData.civilStatus || civilStatus ? civilStatus : '';
+              }
+            }
+          }
         }
         if (cacheData.value) {
           state.newPersonalData = cacheData.value;
@@ -141,7 +182,7 @@ export default {
 
     const changeBirthday = computed(() => {
       const { newPersonalData } = state;
-      const { birthday } = newPersonalData;
+      const birthday = newPersonalData.birthday;
       return {
         birthday
       }
@@ -169,6 +210,37 @@ export default {
           state.newPersonalData.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
           state.newPersonalData.age = calculateAge(new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10));
           state.newPersonalData.font = true;
+          sendData();
+        }
+        loading.value = false;
+      }
+    )
+
+    watch (
+      patientForms,
+      async () => {
+        loading.value = true;
+        if (patientHistoryData.value && patientHistoryData.value.id) {
+          state.newPersonalData = patientHistoryData.value.personalData;
+        } else {
+          if (patientForms.value && patientForms.value.length > 0) {
+            const patientFormFirstAttentions = patientForms.value.filter(form => form.type === 'FIRST_ATTENTION');
+            state.patientFormFirstAttention = patientFormFirstAttentions && patientFormFirstAttentions.length > 0 ? patientFormFirstAttentions[0] : undefined;
+            if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
+              if (state.patientFormFirstAttention.answers && state.patientFormFirstAttention.answers.length > 0) {
+                const occupationAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_OCCUPATION');
+                const occupation = occupationAnswer[0].answer || undefined;
+                state.newPersonalData.occupation = occupation ? occupation : '';
+                const sexAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_SEX');
+                const sex = sexAnswer[0].answer[0] || undefined;
+                state.newPersonalData.sex = sex ? sex : '';
+                const civilStatusAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_CIVIL_STATUS');
+                const civilStatus = civilStatusAnswer[0].answer[0] || undefined;
+                state.newPersonalData.civilStatus = civilStatus ? civilStatus : '';
+                sendData();
+              }
+            }
+          }
         }
         loading.value = false;
       }

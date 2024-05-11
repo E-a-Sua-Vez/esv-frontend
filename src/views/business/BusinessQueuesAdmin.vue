@@ -545,6 +545,7 @@ export default {
               <div>
                 <SearchAdminItem
                   :businessItems="state.queues"
+                  :type="'queues'"
                   :receiveFilteredItems="receiveFilteredItems"
                 >
                 </SearchAdminItem>
