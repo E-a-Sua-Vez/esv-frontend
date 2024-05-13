@@ -21,7 +21,7 @@ const PrivateUserRoutes = [
   },
   {
     path: '/interno/form/:formId/client/:clientId/booking/:bookingId',
-    name: 'commerce-form-attention',
+    name: 'commerce-form-booking',
     component: UserFormAttention
   },
   {

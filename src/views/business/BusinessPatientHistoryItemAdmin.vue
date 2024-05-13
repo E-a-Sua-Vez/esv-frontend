@@ -152,6 +152,7 @@ export default {
           selectN: false,
           select1: false,
           yesNo: false,
+          document: false,
           options: ''
         }
       }
@@ -548,6 +549,17 @@ export default {
                             />
                           </div>
                         </div>
+                        <div id="item-document-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t("businessPatientHistoryItemAdmin.document") }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="item.characteristics.document"
+                              :disabled="!state.toggles['patient-history-item.admin.edit']"
+                            />
+                          </div>
+                        </div>
                         <div id="item-options-form-update" class="row g-1">
                           <div class="col-6 text-label">
                             {{ $t("businessPatientHistoryItemAdmin.options") }}
@@ -846,6 +858,17 @@ export default {
                       <div class="col-6">
                         <Toggle
                           v-model="state.newPatientHistoryItem.characteristics.yesNo"
+                          :disabled="!state.toggles['patient-history-item.admin.edit']"
+                        />
+                      </div>
+                    </div>
+                    <div id="item-document-form-add" class="row g-1">
+                      <div class="col-6 text-label">
+                        {{ $t("businessPatientHistoryItemAdmin.document") }}
+                      </div>
+                      <div class="col-6">
+                        <Toggle
+                          v-model="state.newPatientHistoryItem.characteristics.document"
                           :disabled="!state.toggles['patient-history-item.admin.edit']"
                         />
                       </div>

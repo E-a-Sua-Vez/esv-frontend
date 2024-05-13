@@ -236,7 +236,8 @@
     "types": {
       "STANDARD": "Standard",
       "PERSONAL_HISTORY": "Historia Personal",
-      "PHYSICAL_EXAM": "Examen Físico"
+      "PHYSICAL_EXAM": "Examen Físico",
+      "PATIENT_DOCUMENTS": "Documentos Paciente"
     }
   },
   "collaborators": {
@@ -244,6 +245,12 @@
       "STANDARD": "Standard",
       "FULL": "Full",
       "ASSISTANT": "Asistente"
+    }
+  },
+  "documents": {
+    "types": {
+      "COMMERCE": "Comercio",
+      "CLIENT": "Cliente"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -2315,6 +2322,7 @@
     "select1": "Seleccione 1:",
     "yesNo": "Si/No:",
     "options": "Opciones:",
+    "document": "Documento:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2897,6 +2905,7 @@
     "showMedicalOrder": "Orden Médica",
     "showControl": "Controles",
     "showItensMedicalHistory": "Admin Items Historia",
+    "showDocuments": "Documentos",
     "menu": "Detalles Historia",
     "name": "Nombre:",
     "lastName": "Apellido:",
@@ -2922,6 +2931,7 @@
     "physicalExam": "Examen Físico",
     "diagnostic": "Diagnóstico",
     "medicalOrder": "Orden Médica",
+    "documents": "Documentos",
     "control": "Controles",
     "resume": "Resumen",
     "updated": "Actualizado por última vez el",
@@ -2935,6 +2945,7 @@
     "update": "Actualizar",
     "preAttentionAnswers": "Dat Primera Atención",
     "autoSaving": "Autoguardado",
+    "clickSave": "Haga click en Salvar",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3248,6 +3259,7 @@
     "add": "Agregar",
     "file": "Archivo:",
     "upload": "Subir",
+    "uploadNewDocument": "Subir Nuevo Documento",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3274,7 +3286,9 @@
     "validate": {
       "feature": "Debes seleccionar un tipo de documento",
       "fileSize": "El tamaño del archivo debe ser mayor que 0MB y menor a 10MB",
-      "file": "Debes subir un archivo"
+      "fileSize2": "El tamaño del archivo debe ser mayor que 0MB y menor a 5MB",
+      "file": "Debes subir un archivo",
+      "fileType": "El formato del archivo no es permitido"
     }
   },
   "businessPermissionsAdmin": {

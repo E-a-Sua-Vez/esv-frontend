@@ -202,7 +202,7 @@ export default {
             </div>
             <div class="col-12">
               <div v-for="item in state.habitsList" :key="item.id">
-                <div v-if="item.active === true && item.online === true" class="row habit-card lefted">
+                <div v-if="item.active === true && item.online === true" class="row item-card lefted">
                   <div class="col-12">
                     <div class="col m-1">
                       <div class="lefted">
@@ -306,13 +306,6 @@ export default {
   </div>
 </template>
 <style scoped>
-.habit-card {
-  background-color: var(--color-background);
-  padding: .2rem;
-  margin: .2rem .1rem;
-  border-radius: .5rem;
-  border: 1px solid var(--gris-default);
-}
 .habit-title {
   text-align: left;
 }

@@ -232,6 +232,7 @@ export const getPatientHistoryItemTypes = () => {
     { id: 'STANDARD', name: 'STANDARD' },
     { id: 'PERSONAL_HISTORY', name: 'PERSONAL_HISTORY' },
     { id: 'PHYSICAL_EXAM', name: 'PHYSICAL_EXAM' },
+    { id: 'PATIENT_DOCUMENTS', name: 'PATIENT_DOCUMENTS' }
   ]
 }
 

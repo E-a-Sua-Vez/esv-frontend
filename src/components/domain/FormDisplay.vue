@@ -86,14 +86,16 @@ export default {
       if (this.answers[index] === undefined) {
         this.answers[index] = [];
       }
-      const option = 'OTHER';
+      let option;
       if (event.target.value) {
-        const option = event.target.value.toUpperCase();
+        const options = event.target.value.toUpperCase().split(',');
+        option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
         if (!this.answers[index].includes(option)) {
-          this.answers[index].push(option);
+          const filtered = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans) && ans.length > 0);
+          this.answers[index] = Array.from(new Set([...filtered, ...option]));
         }
       } else {
-        this.answers[index] = this.answers[index].filter(el => el !== option);;
+        this.answers[index] = this.answers[index].filter(el => el !== option);
       }
     },
     selectOption(event, index, option) {
@@ -247,7 +249,7 @@ export default {
             </div>
             <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PERSONAL_HISTORY'">
               <div>
-                <div v-if="question.patientHistoryItem.active === true && question.patientHistoryItem.online === true" class="row habit-card">
+                <div v-if="question.patientHistoryItem.active === true && question.patientHistoryItem.online === true" class="row item-card">
                   <div :id="`details-${question.patientHistoryItem.id}`" class="mt-2">
                     <!-- SELECT 1 -->
                     <div v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.select1">
@@ -378,7 +380,7 @@ export default {
                       </div>
                     </div>
                     <!-- SELECT COMMENT -->
-                    <div class="row habit-card" v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
+                    <div class="row item-card" v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
                       <div class="col mb-1" v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
                         <textarea
                           class="form-control form-control-sm"

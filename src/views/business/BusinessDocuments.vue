@@ -12,10 +12,11 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import SimpleDocumentCard from '../../components/document/SimpleDocumentCard.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessDocuments',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimpleDocumentCard, ComponentMenu },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimpleDocumentCard, ComponentMenu, SearchAdminItem },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -30,7 +31,6 @@ export default {
       activeBusiness: false,
       commerces: ref([]),
       documents: ref([]),
-      groupedDocuments : {},
       options: {},
       optionSelected: undefined,
       commerce: {},
@@ -40,6 +40,7 @@ export default {
       documentError: false,
       errorsAdd: [],
       toggles: {},
+      filtered: [],
       file: undefined
     });
 
@@ -51,8 +52,9 @@ export default {
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
-          selectCommerce(state.commerce);
+          await selectCommerce(state.commerce);
         }
+        state.filtered = state.documents;
         state.options = await getDocumentOptions();
         state.toggles = await getPermissions('document-commerce', 'admin');
         alertError.value = '';
@@ -76,16 +78,6 @@ export default {
         loading.value = true;
         state.commerce = commerce;
         state.documents = await getDocumentByCommerceId(state.commerce.id);
-        if (state.documents && state.documents.length > 0) {
-          state.groupedDocuments  = state.documents.reduce((acc, conf) => {
-            const type = conf.type;
-            if (!acc[type]) {
-              acc[type] = [];
-            }
-            acc[type].push(conf);
-            return acc;
-          }, {});
-        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -138,16 +130,6 @@ export default {
           await addDocument(state.newDocument, file.value);
           const documents = await getDocumentByCommerceId(state.commerce.id);
           state.documents = documents;
-          if (state.documents && state.documents.length > 0) {
-            state.groupedDocuments = state.documents.reduce((acc, conf) => {
-              const type = conf.type;
-              if (!acc[type]) {
-                acc[type] = [];
-              }
-              acc[type].push(conf);
-              return acc;
-            }, {});
-          }
           state.showAdd = false;
           closeAddModal();
           state.newDocument = {};
@@ -188,6 +170,10 @@ export default {
       modalCloseButton.click();
     }
 
+    const receiveFilteredItems = (items) => {
+      state.filtered = items;
+    }
+
     return {
       state,
       loading,
@@ -198,7 +184,8 @@ export default {
       selectCommerce,
       showAdd,
       add,
-      getFile
+      getFile,
+      receiveFilteredItems
     }
   }
 }
@@ -254,35 +241,22 @@ export default {
                   </button>
                 </div>
               </div>
-              <div class="mt-1">
-                <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.documents.length }} </span>
-              </div>
-              <div class="mb-4" v-if="state.documents.length > 0 && state.toggles['document-commerce.admin.edit']">
-                <div class="my-2">
-                  <a class="nav-link document-title centered"
-                    data-bs-toggle="collapse"
-                    href="#commerce">
-                    {{ $t("document.types.COMMERCE") }}
-                    <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedDocuments['COMMERCE'] ? state.groupedDocuments['COMMERCE'].length : 0 }} </span>
-                    <i class="bi bi-chevron-down mx-2"></i>
-                  </a>
-                  <div id="commerce" class="collapse">
-                    <div v-if="state.groupedDocuments['COMMERCE'] && state.groupedDocuments['COMMERCE'].length > 0">
-                      <div v-for="(document, index) in state.groupedDocuments['COMMERCE']" :key="index">
-                        <SimpleDocumentCard
-                          :show="true"
-                          :canUpdate="state.toggles[`document-commerce.admin.${document.name}`]"
-                          :document="document"
-                          :showTooltip="true"
-                        >
-                        </SimpleDocumentCard>
-                      </div>
-                    </div>
-                    <div v-else>
-                      <Message
-                        :title="$t('businessDocument.message.1.title')"
-                        :content="$t('businessDocument.message.1.content')" />
-                    </div>
+              <SearchAdminItem
+                :businessItems="state.documents"
+                :type="'documents'"
+                :receiveFilteredItems="receiveFilteredItems"
+              >
+              </SearchAdminItem>
+              <div v-for="(document, index) in state.filtered" :key="index" class="result-card">
+                <div class="row">
+                  <div class="col-12">
+                    <SimpleDocumentCard
+                      :show="true"
+                      :canUpdate="state.toggles[`document-commerce.admin.${document.name}`]"
+                      :document="document"
+                      :showTooltip="true"
+                    >
+                    </SimpleDocumentCard>
                   </div>
                 </div>
               </div>

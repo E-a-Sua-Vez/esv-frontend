@@ -239,16 +239,20 @@ export default {
     const sendOtherOption = (item, event) => {
       if (item && item.id) {
         if (state.habitsAux[item.id] === undefined) {
-          state.habitsAux[item.id] = {};
+          state.habitsAux[item.id] = { answer: [] };
+        } else {
+          state.habitsAux[item.id] = state.habitsAux[item.id];
         }
         let option;
         if (event.target.value !== undefined && event.target.value.length > 0) {
-          option = event.target.value.toUpperCase().split(',');
+          const options = event.target.value.toUpperCase().split(',');
+          option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
           if (!state.habitsAux[item.id].answer.includes(option)) {
-            state.habitsAux[item.id].answer = Array.from(new Set([...state.habitsAux[item.id].answer, ...option]));
+            const filtered = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans) && ans.length > 0);
+            state.habitsAux[item.id].answer = Array.from(new Set([...filtered, ...option]));
           }
         } else {
-          state.habitsAux[item.id].answer = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans))
+          state.habitsAux[item.id].answer = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans));
         }
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
@@ -260,9 +264,10 @@ export default {
         if (state.habitsAux[item.id] === undefined) {
           state.habitsAux[item.id] = {};
         }
+        state.habitsAux[item.id].answer = [];
         if (event.target.checked) {
-          state.habitsAux[item.id].answer = [];
-          state.habitsAux[item.id].answer.push(option);
+          const element = option.toUpperCase();
+          state.habitsAux[item.id].answer.push(element);
         }
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
@@ -407,7 +412,7 @@ export default {
               <div v-for="item in state.habitsList" :key="item.id">
                 <div v-if="item.active === true && item.online === true">
                   <!-- SELECT 1 -->
-                  <div class="row habit-card" v-if="item.characteristics && item.characteristics.select1">
+                  <div class="row item-card" v-if="item.characteristics && item.characteristics.select1">
                     <div class="col m-1">
                       <div class="lefted">
                         <span class="badge bg-primary"> {{ item.tag }} </span>
@@ -417,7 +422,6 @@ export default {
                       </div>
                     </div>
                     <div :id="`details-${item.id}`">
-
                       <div class="form-check form-switch check-option lefted" v-for="(option, index) in item.characteristics.options.split(',')" :key="`option-${index}`">
                         <input
                           class="form-check-input"
@@ -452,7 +456,7 @@ export default {
                     </div>
                   </div>
                   <!-- SELECT N -->
-                  <div class="row habit-card" v-else-if="item.characteristics && item.characteristics.selectN">
+                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.selectN">
                     <div class="col-12">
                       <div class="col m-1">
                       <div class="lefted">
@@ -500,7 +504,7 @@ export default {
                     </div>
                   </div>
                   <!-- SELECT YES NO -->
-                  <div class="row habit-card" v-else-if="item.characteristics && item.characteristics.yesNo">
+                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.yesNo">
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -542,7 +546,7 @@ export default {
                     </div>
                   </div>
                   <!-- SELECT CHECK -->
-                  <div class="row habit-card" v-else-if="item.characteristics && item.characteristics.check">
+                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.check">
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -630,7 +634,7 @@ export default {
                     </div>
                   </div>
                   <!-- SELECT COMMENT -->
-                  <div class="row habit-card" v-else-if="item.characteristics && item.characteristics.comment">
+                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.comment">
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -687,13 +691,6 @@ export default {
   </div>
 </template>
 <style scoped>
-.habit-card {
-  background-color: var(--color-background);
-  padding: .1rem;
-  margin: .2rem;
-  border-radius: .5rem;
-  border: 1px solid var(--gris-default);
-}
 .blocks-section {
   overflow-y: scroll;
   max-height: 800px;
