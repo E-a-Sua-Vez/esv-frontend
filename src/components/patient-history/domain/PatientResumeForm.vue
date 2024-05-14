@@ -246,14 +246,67 @@ export default {
               </div>
             </div>
             <div v-if="patientHistoryData.patientAnamnese">
-              <div v-if="toggles['patient.history.view'] && patientHistoryData.patientAnamnese.habitsDetails" class="lefted">
-                <span v-for="item in Object.keys(patientHistoryData.patientAnamnese.habitsDetails)" :key="item.id" class="badge detail-data-badge mx-2">
-                  <span class="mx-1"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].name }} </span> ✅
-                </span>
+              <div v-if="toggles['patient.history.view'] && patientHistoryData.patientAnamnese.habitsDetails" class="">
+                <div v-for="item in Object.keys(patientHistoryData.patientAnamnese.habitsDetails)" :key="item.id" class="mx-2">
+                  <div class="mx-1 fw-bold lefted"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].title }} </div>
+                  <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].characteristics.yesNo">
+                    <div class="lefted mx-3">
+                      <span> {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.answer ? '✅' : '🚫' }}</span>
+                    </div>
+                    <HistoryDetailsCard
+                      :show="toggles['patient.history.view']"
+                      :content="patientHistoryData.patientAnamnese.habitsDetails[item].answer.result.join(', ')"
+                    >
+                    </HistoryDetailsCard>
+                  </div>
+                  <div v-else-if="patientHistoryData.patientAnamnese.habitsDetails[item].characteristics.selectN">
+                    <HistoryDetailsCard
+                      :show="toggles['patient.history.view']"
+                      :content="patientHistoryData.patientAnamnese.habitsDetails[item].answer.join(', ')"
+                    >
+                    </HistoryDetailsCard>
+                  </div>
+                  <div v-else-if="patientHistoryData.patientAnamnese.habitsDetails[item].characteristics.select1">
+                    <HistoryDetailsCard
+                      :show="toggles['patient.history.view']"
+                      :content="patientHistoryData.patientAnamnese.habitsDetails[item].answer.join(', ')"
+                    >
+                    </HistoryDetailsCard>
+                  </div>
+                  <div v-else-if="patientHistoryData.patientAnamnese.habitsDetails[item].characteristics.check">
+                    <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].answer &&
+                      patientHistoryData.patientAnamnese.habitsDetails[item].answer.actual">
+                      <span class="fw-bold"> {{ $t("businessPatientHistoryItemAdmin.actual") }} </span>
+                      <span class="mx-1"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.actual ? '✅' : '🚫' }} </span>
+                    </div>
+                    <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].answer &&
+                      patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageFrom">
+                      <span class="fw-bold"> {{ $t("businessPatientHistoryItemAdmin.ageFrom") }} </span>
+                      <span class="mx-1"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageFrom }} </span>
+                    </div>
+                    <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].answer &&
+                      patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageTo">
+                      <span class="fw-bold"> {{ $t("businessPatientHistoryItemAdmin.ageTo") }} </span>
+                      <span class="mx-1"> {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageTo }} </span>
+                    </div>
+                    <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].answer &&
+                      patientHistoryData.patientAnamnese.habitsDetails[item].answer.frequency">
+                      <span class="fw-bold"> {{ $t("businessPatientHistoryItemAdmin.frequency") }} </span>
+                      <span class="mx-1"> {{ $t(`patientHistoryItemFrequenciesTypes.${patientHistoryData.patientAnamnese.habitsDetails[item].answer.frequency}`) }} </span>
+                    </div>
+                  </div>
+                  <div v-if="patientHistoryData.patientAnamnese.habitsDetails[item].characteristics.comment">
+                    <HistoryDetailsCard
+                      :show="toggles['patient.history.view']"
+                      :content="patientHistoryData.patientAnamnese.habitsDetails[item].comment"
+                    >
+                    </HistoryDetailsCard>
+                  </div>
+                </div>
               </div>
               <HistoryDetailsCard
                 :show="toggles['patient.history.view']"
-                :date="patientHistoryData.patientAnamnese.modifiedAt"
+                :date="patientHistoryData.modifiedAt"
                 :content="patientHistoryData.patientAnamnese.habits"
               >
               </HistoryDetailsCard>
