@@ -79,7 +79,6 @@ export default {
           state.newPatientAnamnese = cacheData.value;
           state.habitsAux = state.newPatientAnamnese.habitsDetails;
         }
-
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -449,7 +448,9 @@ export default {
                             class="form-control form-control-sm"
                             rows="2"
                             :max="200"
-                            :placeholder="$t('businessPatientHistoryItemAdmin.write')">
+                            :placeholder="$t('businessPatientHistoryItemAdmin.write')"
+                            :value="state.habitsAux[item.id]?.comment"
+                            @keyup="sendComment(item, $event)">
                           </textarea>
                         </div>
                       </div>
@@ -473,7 +474,7 @@ export default {
                           class="form-check-input"
                           type="checkbox"
                           :name="`option-${option.title}`"
-                          :checked="state.habitsAux[item.id]?.answer?.includes(option)"
+                          :checked="state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())"
                           @click="sendSelectedOption(item, $event, option)"
                           >
                         <label class="form-check-label mx-2" for="option">{{ option.toUpperCase().trim() }}</label>
@@ -484,7 +485,7 @@ export default {
                           type="text"
                           class="form-control form-control-sm"
                           placeholder="Other"
-                          :value="state.habitsAux[item.id]?.answer.filter(ans => !item.characteristics.options.split(',').includes(ans))"
+                          :value="state.habitsAux[item.id]?.answer.filter(ans => !item.characteristics.options.toUpperCase().split(',').includes(ans.toUpperCase()))"
                           @blur="sendOtherOption(item, $event)">
                       </div>
                       <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
@@ -496,7 +497,7 @@ export default {
                             rows="2"
                             :max="200"
                             :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                            :v-model="state.habitsAux[item.id]?.comment"
+                            :value="state.habitsAux[item.id]?.comment"
                             @keyup="sendComment(item, $event)">
                           </textarea>
                         </div>
@@ -586,7 +587,7 @@ export default {
                               </div>
                             </div>
                           </div>
-                          <div class="col-6" v-if="item.characteristics.ageFrom && item.characteristics.ageFrom === true && state.habitsAux[item.id]?.actual === false">
+                          <div class="col-6" v-if="item.characteristics.ageFrom && item.characteristics.ageFrom === true && !state.habitsAux[item.id]?.actual">
                             <div class="row">
                               <div class="col">
                                 <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageTo") }}</label>

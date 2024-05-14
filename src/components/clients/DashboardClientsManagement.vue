@@ -34,6 +34,8 @@ export default {
       contactable: undefined,
       survey: undefined,
       asc: true,
+      pendingControls: undefined,
+      pendingBookings: undefined,
       showKeyWordsOptions: false,
       showFilterOptions: false,
       searchText: undefined,
@@ -56,7 +58,8 @@ export default {
         }
         this.clients = await getClientsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, undefined, this.serviceId);
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, undefined, this.serviceId, this.pendingControls,
+          this.pendingBookings);
         if (this.clients && this.clients.length > 0) {
           const { counter } = this.clients[0];
           this.counter = counter;
@@ -88,6 +91,8 @@ export default {
       this.serviceId = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
+      this.pendingControls = undefined;
+      this.pendingBookings = undefined;
       await this.refresh();
     },
     async checkContactable(event) {
@@ -118,6 +123,20 @@ export default {
         this.asc = false;
       }
     },
+    async checkPendingControls(event) {
+      if (event.target.checked) {
+        this.pendingControls = true;
+      } else {
+        this.pendingControls = false;
+      }
+    },
+    async checkPendingBookings(event) {
+      if (event.target.checked) {
+        this.pendingBookings = true;
+      } else {
+        this.pendingBookings = false;
+      }
+    },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
     },
@@ -131,7 +150,8 @@ export default {
         }
         const result = await getClientsDetails(this.business.id, this.commerce.id, undefined, undefined, commerceIds,
           undefined, undefined, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
-          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, this.serviceId);
+          this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, this.serviceId, this.pendingControls,
+          this.pendingBookings);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -177,9 +197,11 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit, serviceId } = this;
+      const { page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted,
+        survey, asc, queueId, limit, serviceId, pendingControls, pendingBookings } = this;
       return {
-        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit, serviceId
+        page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted,
+          survey, asc, queueId, limit, serviceId, pendingControls, pendingBookings
       }
     }
   },
@@ -197,6 +219,8 @@ export default {
           oldData.contacted !== newData.contacted ||
           oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
+          oldData.pendingControls !== newData.pendingControls ||
+          oldData.pendingBookings !== newData.pendingBookings ||
           oldData.limit !== newData.limit ||
           oldData.queueId !== newData.queueId ||
           oldData.serviceId !== newData.serviceId)
@@ -374,8 +398,22 @@ export default {
                   </div>
                   <div class="col-12 col-md-6">
                     <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
+                      <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="pendingBookings === false ? 'bg-danger' : ''" type="checkbox" name="pendingBookings" id="pendingBookings" v-model="pendingBookings" @click="checkPendingBookings($event)">
+                      <label class="form-check-label metric-card-subtitle" for="pendingBookings">{{ $t("dashboard.pendingBookings") }}</label>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="form-check form-switch centered">
+                      <input class="form-check-input m-1" :class="pendingControls === false ? 'bg-danger' : ''" type="checkbox" name="pendingControls" id="pendingControls" v-model="pendingControls" @click="checkPendingControls($event)">
+                      <label class="form-check-label metric-card-subtitle" for="pendingControls">{{ $t("dashboard.pendingControls") }}</label>
                     </div>
                   </div>
                 </div>
@@ -445,6 +483,7 @@ export default {
                   :endDate="this.endDate"
                   :queues="this.queues"
                   :commerces="this.commerces"
+                  :services="this.services"
                 >
               </ClientDetailsCard>
               </div>

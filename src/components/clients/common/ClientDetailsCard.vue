@@ -1,7 +1,7 @@
 <script>
 import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
-import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHistoryDetails } from '../../../application/services/query-stack';
+import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHistoryDetails, getBookingsDetails } from '../../../application/services/query-stack';
 import { getPatientHistoryItemByCommerce  } from '../../../application/services/patient-history-item';
 import { getFormsByClient  } from '../../../application/services/form';
 import { getDate } from '../../../shared/utils/date';
@@ -12,10 +12,11 @@ import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
 import { formatIdNumber } from '../../../shared/utils/idNumber';
 import PatientHistoryManagement from '../../patient-history/domain/PatientHistoryManagement.vue';
+import ClientBookingsManagement from '../domain/ClientBookingsManagement.vue';
 
 export default {
   name: 'ClientDetailsCard',
-  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement, PatientHistoryManagement },
+  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement, PatientHistoryManagement, ClientBookingsManagement },
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
@@ -39,6 +40,7 @@ export default {
       userType: undefined,
       user: undefined,
       attentions: [],
+      bookings: [],
       clientContacts: [],
       patientHistoryItems: [],
       patientForms: [],
@@ -64,7 +66,25 @@ export default {
         }
         this.attentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined);
+          this.searchText, this.queueId, this.survey, false, undefined);
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+      }
+    },
+    async getBookings() {
+      try {
+        this.loading = true;
+        this.bookings = [];
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        }
+        this.bookings = await getBookingsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.queueId, false);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -83,7 +103,7 @@ export default {
         }
         this.clientContacts = await getClientContactsDetailsByClientId(
           this.commerce.id, this.startDate, this.endDate, commerceIds, this.client.id,
-          this.page, this.limit, this.daysSinceContacted, this.searchText, this.asc, this.contactResultType);
+          this.page, this.limit, this.daysSinceContacted, this.searchText, false, this.contactResultType);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -316,11 +336,12 @@ export default {
           </div>
           <div class="col-3">
             <button
-              @click="getClientContacts()"
+              @click="getBookings()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
-              :data-bs-target="`#contactModal-${this.client.id}`">
-              {{ $t('dashboard.contact')}} <br> <i class="bi bi-chat-left-dots-fill"></i>
+              :data-bs-target="`#bookingsModal-${this.client.id}`">
+              {{ $t('dashboard.bookings')}} <br>
+              <i v-if="client.pendingBookings > 0" class="bi bi-circle-fill green-icon"> </i> <i class="bi bi-calendar-fill mx-1"></i>
             </button>
           </div>
           <div class="col-4">
@@ -329,12 +350,22 @@ export default {
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               data-bs-toggle="modal"
               :data-bs-target="`#patientHistoryModal-${this.client.id}`">
-              {{ $t('dashboard.patientHistory')}} <br> <i class="bi bi-file-medical-fill"></i>
+              {{ $t('dashboard.patientHistory')}} <br>
+              <i v-if="client.pendingControls > 0" class="bi bi-circle-fill yellow-icon"> </i><i class="bi bi-file-medical-fill mx-1"></i>
             </button>
           </div>
         </div>
         <hr>
         <div class="row centered my-2" v-if="management && !loading">
+          <div class="col-6">
+            <button
+              @click="getClientContacts()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+              data-bs-toggle="modal"
+              :data-bs-target="`#contactModal-${this.client.id}`">
+              {{ $t('dashboard.contact')}} <i class="bi bi-chat-left-dots-fill"></i>
+            </button>
+          </div>
           <div class="col-6">
             <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               @click="goToCreateBooking()">
@@ -443,6 +474,34 @@ export default {
               :services="services"
             >
             </ClientAttentionsManagement>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Bookings -->
+    <div class="modal fade" :id="`bookingsModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-calendar-fill"></i> {{ $t("dashboard.bookingsOf") }} {{ client.userName || client.userIdNumber || client.userEmail }} </h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="text-center mb-0">
+            <ClientBookingsManagement
+              :showClientBookingsManagement="true"
+              :toggles="toggles"
+              :bookingsIn="bookings"
+              :client="client"
+              :commerce="commerce"
+              :commerces="commerces"
+              :queues="queues"
+              :services="services"
+            >
+            </ClientBookingsManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>

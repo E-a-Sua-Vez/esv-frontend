@@ -56,16 +56,20 @@ export default {
         if (question.patientHistoryItem.type === 'PERSONAL_HISTORY') {
           if (question.patientHistoryItem.characteristics.check === true) {
             this.answers.push({ check: false });
-          } else {
-            this.answers.push({ });
+          } else if (question.patientHistoryItem.characteristics.selectN === true) {
+            this.answers.push([]);
+          } else if (question.patientHistoryItem.characteristics.select1 === true) {
+            this.answers.push([]);
+          } else if (question.patientHistoryItem.characteristics.yesNo === true) {
+            this.answers.push({});
+          }else {
+            this.answers.push({});
           }
         } else {
-          this.answers.push({});
+          this.answers.push([]);
         }
       })
-    }} else if (this.formPersonalized.type === 'PRE_ATTENTION') {
-
-    }
+    }}
   },
   methods: {
     checkOption(event, index, option) {
@@ -82,8 +86,8 @@ export default {
         this.answers[index] = this.answers[index].filter(el => el !== option);
       }
     },
-    fillOtherOption(event, index) {
-      if (this.answers[index] === undefined) {
+    fillOtherOption(event, index, question) {
+      if (this.answers[index] === undefined || this.answers[index].length === 0) {
         this.answers[index] = [];
       }
       let option;
@@ -91,14 +95,37 @@ export default {
         const options = event.target.value.toUpperCase().split(',');
         option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
         if (!this.answers[index].includes(option)) {
-          const filtered = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans) && ans.length > 0);
+          const filtered = this.answers[index].filter(ans => question.patientHistoryItem.characteristics.options.toUpperCase().includes(ans) && ans.length > 0);
           this.answers[index] = Array.from(new Set([...filtered, ...option]));
         }
       } else {
         this.answers[index] = this.answers[index].filter(el => el !== option);
       }
     },
+    checkOtherOption(event, index, question) {
+      if (this.answers[index] === undefined || Object.keys(this.answers[index]).length === 0) {
+        this.answers[index] = [];
+      }
+      let option;
+      if (event.target.value) {
+        const options = event.target.value.toUpperCase().split(',');
+        option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
+        this.answers[index] = [];
+        this.answers[index] = [option];
+      } else {
+        this.answers[index] = this.answers[index];
+      }
+    },
     selectOption(event, index, option) {
+      if (this.answers[index] === undefined || this.answers[index].length === 0) {
+        this.answers[index] = [];
+      }
+      if (event.target.checked) {
+        const element = option.toUpperCase();
+        this.answers[index].push(element);
+      }
+    },
+    checkOption(event, index, option) {
       this.answers[index] = [];
       if (event.target.checked) {
         const element = option.toUpperCase();
@@ -110,9 +137,13 @@ export default {
       this.answers[index] = element;
     },
     setResultOption(event, index) {
-      if (event.target.value) {
-        const element = event.target.value.toUpperCase();
-        this.answers[index].result = element;
+      let option;
+      if (event.target.value !== undefined && event.target.value.length > 0) {
+        option = event.target.value.toUpperCase().split(',');
+        const result = this.answers[index].result ? this.answers[index].result : [];
+        this.answers[index].result = Array.from(new Set([...result, ...option]));
+      } else {
+        this.answers[index].result = this.answers[index].result.filter(ans => item.characteristics.options.includes(ans));
       }
     },
     setCommentOption(event, index) {
@@ -242,14 +273,14 @@ export default {
               <div>
                 <input
                   type="text"
-                  class="form-control mt-2"
+                  class="form-control mt-2 form-control-sm"
                   v-model.trim="occupation"
                   @keyup="setOption(index, occupation)">
               </div>
             </div>
             <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PERSONAL_HISTORY'">
               <div>
-                <div v-if="question.patientHistoryItem.active === true && question.patientHistoryItem.online === true" class="row item-card">
+                <div v-if="question.patientHistoryItem.active === true && question.patientHistoryItem.online === true" class="row">
                   <div :id="`details-${question.patientHistoryItem.id}`" class="mt-2">
                     <!-- SELECT 1 -->
                     <div v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.select1">
@@ -259,7 +290,8 @@ export default {
                           type="radio"
                           :name="`option-${question.title}`"
                           :id="`option-${index}`"
-                          @click="selectOption($event, index, option)"
+                          :checked="this.answers[index]?.includes(option.toUpperCase())"
+                          @click="checkOption($event, index, option)"
                           >
                         <label class="form-check-label" :for="`option-${index}`">{{ option.toUpperCase().trim() }}</label>
                       </div>
@@ -271,7 +303,8 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           placeholder="Other"
-                          v-on:blur="fillOtherOption($event, index, option)">
+                          :value="this.answers[index]?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
+                          v-on:blur="checkOtherOption($event, index, question)">
                           <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
                       </div>
                     </div>
@@ -283,7 +316,7 @@ export default {
                           type="checkbox"
                           :name="`option-${option.title}`"
                           :id="`option-${index}`"
-                          @click="checkOption($event, index, option)"
+                          @click="selectOption($event, index, option)"
                           >
                         <label class="form-check-label" for="option">{{ option.toUpperCase().trim() }}</label>
                       </div>
@@ -295,7 +328,8 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           placeholder="Other"
-                          v-on:blur="fillOtherOption($event, index, option)">
+                          :value="this.answers[index]?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
+                          v-on:blur="fillOtherOption($event, index, question)">
                           <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
                       </div>
                     </div>
@@ -313,6 +347,7 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           :placeholder="$t('attentionForm.yesExplain')"
+                          :value="this.answers[index].result?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
                           v-on:blur="setResultOption($event, index)">
                       </div>
                     </div>
@@ -380,7 +415,7 @@ export default {
                       </div>
                     </div>
                     <!-- SELECT COMMENT -->
-                    <div class="row item-card" v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
+                    <div class="row" v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
                       <div class="col mb-1" v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
                         <textarea
                           class="form-control form-control-sm"

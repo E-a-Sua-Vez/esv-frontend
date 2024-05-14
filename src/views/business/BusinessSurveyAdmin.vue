@@ -469,7 +469,7 @@ export default {
                             :class="'dark p-1'"
                             arrow
                             disableClickAway
-                            :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
+                            :content="$t('businessSurveysAdmin.queueHelp')">
                             <i class='bi bi-info-circle-fill h7'></i>
                           </Popper>
                         </div>

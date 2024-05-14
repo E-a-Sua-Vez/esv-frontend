@@ -239,6 +239,15 @@
       "ASSISTANT": "Asistente"
     }
   },
+  "documents": {
+    "types": {
+      "COMMERCE": "Comércio",
+      "CLIENT": "Clientw"
+    },
+    "options": {
+      "patient_documents": "Documentos Paciente"
+    }
+  },
   "items": {
     "types": {
       "STANDARD": "Standard",
@@ -246,7 +255,8 @@
       "PHYSICAL_EXAM": "Exame Físico",
       "PATIENT_SEX": "Sexo Paciente",
       "PATIENT_OCCUPATION": "Ocupação Paciente",
-      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente"
+      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente",
+      "PATIENT_DOCUMENTS": "Documentos Paciente"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -978,7 +988,7 @@
           "transfer": "Transfer Atendimento",
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuario",
-          "products": "Stock"
+          "products": "Estoque"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1035,7 +1045,9 @@
           "skip": "Pular atendimento",
           "payment-confirm": "Confirmar Pagamento",
           "transfer": "Transfer Atendimento",
-          "cancel": "Cancelar Atendimento"
+          "cancel": "Cancelar Atendimento",
+          "patient-history": "Prontuario",
+          "products": "Estoque"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1244,7 +1256,9 @@
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
           "transfer": "Transfer Atendimento",
-          "cancel": "Cancelar Atendimento"
+          "cancel": "Cancelar Atendimento",
+          "patient-history": "Prontuario",
+          "products": "Produtos"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1379,6 +1393,7 @@
   },
   "attentionForm": {
     "other": "OUTRO",
+    "yesExplain": "Por favor indique detalhes",
     "like": {
       "subtitle": "Não, Sim"
     },
@@ -1450,7 +1465,7 @@
     "contactable": "Contactável",
     "survey": "Pesquisa",
     "keyWord": "Palavras Chave",
-    "search": "🔎 Nome, Telefone ou Email",
+    "search": "🔎 Nome, CPF ou Email",
     "search2": "🔎 CPF, Telefone ou Email",
     "search3": "🔎 CPF or Passaporte",
     "detractor": "Detrator",
@@ -1494,6 +1509,9 @@
     "paymentStatus": "Status de Pagamento",
     "patientHistory": "Prontuario",
     "patientHistoryOf": "Prontuario de",
+    "pendingControls": "Retornos",
+    "pendingBookings": "Reservas",
+    "bookingsOf": "Reservas de",
     "stock": "Estoque",
     "dates": {
       "from": "Do",
@@ -1719,6 +1737,10 @@
       "client-contacts-management": {
         "title": "Relatório de Contatos (Detalhes)",
         "description": "Baixar arquivo relatório com os resultados dos contatos no intervalo de datas selecionado"
+      },
+      "bookings-management": {
+        "title": "Relatório de Reservas (Detalles)",
+        "description": "Baixar arquivo relatório com os resultados das reservas no intervalo de datas selecionado"
       }
     },
     "capacitiesList": {
@@ -1840,6 +1862,9 @@
         "collection-details": {
           "view": "Ver Detalhes de Cobrança"
         },
+        "bookings-management": {
+          "view": "Ver Reservas (Detalhes)"
+        },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
           "indicators": "Relatório de Indicadores",
@@ -1848,7 +1873,8 @@
           "surveys-consolidated": "Relatório de Pesquisas (Consolidado)",
           "attentions-management": "Relatório de Atendimentos (Detalhes)",
           "clients-management": "Relatório de Clientes (Detalhes)",
-          "client-contacts-management": "Relatório de Contatos (Detalhes)"
+          "client-contacts-management": "Relatório de Contatos (Detalhes)",
+          "bookings-management": "Relatório de Reservas (Detalhes)"
         }
       }
     },
@@ -2321,6 +2347,11 @@
     "value": "Valor:",
     "result": "Resultado:",
     "write": "Escreve aquí",
+    "selectN": "Selecione N:",
+    "select1": "Selecione 1:",
+    "yesNo": "Sim/Não:",
+    "options": "Opções:",
+    "document": "Documento:",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -2907,6 +2938,7 @@
     "showDiagnostic": "Diagnóstico",
     "showMedicalOrder": "Ordem Médica",
     "showControl": "Retornos",
+    "showDocuments": "Documentos",
     "showItensMedicalHistory": "Admin Itens Prontuario",
     "menu": "Detalhes Prontuario",
     "name": "Nome:",
@@ -2933,6 +2965,7 @@
     "physicalExam": "Exame Físico",
     "diagnostic": "Diagnóstico",
     "medicalOrder": "Ordem Médica",
+    "documents": "Documentos",
     "control": "Retornos",
     "resume": "Resumo",
     "updated": "Atualizado pela última vez no día",
@@ -2944,6 +2977,8 @@
     "add": "Adicionar",
     "attendControl": "Atender Control",
     "update": "Atualizar",
+    "autoSaving": "Salvamento Automático",
+    "clickSave": "Clique em Salvar",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3251,7 +3286,8 @@
     "feature": "Documento:",
     "add": "Adicionar",
     "file": "Arquivo:",
-    "upload": "Upload",
+    "upload": "Carregar",
+    "uploadNewDocument": "Carregar Documento Novo",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -3324,7 +3360,7 @@
         "collaborators": {
           "view": "Acessar esta seçao",
           "update": "Atualizas os Permissões",
-          "add": "Agregar Permisos"
+          "add": "Adicionar Permisos"
         }
       }
     },
@@ -3605,7 +3641,6 @@
     "addQuestionHelp": "Adiciona uma pergunta personalizada.",
     "orderQuestionHelp": "La pergunta será listada neste ordem.",
     "deleteQuestionHelp": "Eliminar a pergunta personalizada.",
-    "attentionDefaultHelp": "Formulário será mostrada pra atendimento.",
     "typeHelp": "Tipo de Formulário. Selecione Personalizado para adicionar perguntas personalizadas.",
     "queueHelp": "Você pode asociar um Formulário a uma fila específica e compartilhar-la com os seus usuários através de um link.",
     "active": "Ativo:",
@@ -3846,12 +3881,37 @@
       "attention-client-contact": {
         "view": "Ver Contato de Clientes - Seção Performance Hub"
       },
+      "attention-days-since-clients":{
+        "view": "Ver Dias Atendimento Clientes - Section Performance Hub"
+      },
+      "client-contacts-management": {
+        "view": "Ver Contato Clientes - Seção Gestão Clientes"
+      },
+      "tracing": {
+        "view": "Ver Seção - Seção Gestão Clientes"
+      },
+      "attentions-management": {
+        "view": "Ver Seção Atendimentos - Seção Gestão Clientes"
+      },
+      "bookings-management": {
+        "view": "Ver Seção Reservas - Seção Gestão Clientes"
+      },
+      "clients-management": {
+        "view": "Ver Seção Contacto Clientes - Seção Gestão Clientes"
+      },
+      "collection-details":{
+        "view": "Ver Recebidos Detalhes - Seção Financeira"
+      },
       "reports": {
-        "surveys": "Download Relatório Pesquisas (Sumário) Seção Performance Hub",
-        "indicators": "Download Relatório Indicadores Seção Performance Hub",
-        "graphs": "Download Relatório de Tendências Seção Performance Hub",
-        "surveys-management": "Download Relatório Pesquisas (Detalhes) Seção Performance Hub",
-        "surveys-consolidated": "Download Relatório Pesquisas (Consolidado) Seção Performance Hub"
+        "surveys": "Baixar Relatório Pesquisas (Sumário) Seção Performance Hub",
+        "indicators": "Baixar Relatório Indicadores Seção Performance Hub",
+        "graphs": "Baixar Relatório de Tendências Seção Performance Hub",
+        "surveys-management": "Baixar Relatório Pesquisas (Detalhes) Seção Performance Hub",
+        "surveys-consolidated": "Baixar Relatório Pesquisas (Consolidado) Seção Performance Hub",
+        "attentions-management": "Baixar Relatório de Atendimentos",
+        "client-contacts-management": "Baixar Relatório de Contactos",
+        "clients-management": "Baixar Relatório de Clientes (Detalhes)",
+        "bookings-management": "Baixar Relatório de Reservas"
       }
     },
     "executive": {
@@ -3898,13 +3958,35 @@
     },
     "collaborator": {
       "module": {
-        "update": "Atualizar módulo - Seção Atendimentos del Colaborador"
+        "update": "Atualizar módulo - Seção Atendimentos do Colaborador"
       },
       "attention": {
-        "attend": "Atender - Seção Atendimentos del Colaborador",
-        "finish": "Marcar atencão como atendida - Seção Atendimentos del Colaborador",
-        "skip": "Pular Atencão - Seção Atendimentos del Colaborador",
-        "payment-confirm": "Confirmar Pagamento - Seção Atendimentos del Colaborador"
+        "attend": "Atender - Seção Atendimentos do Colaborador",
+        "finish": "Marcar atencão como atendida - Seção Atendimentos do Colaborador",
+        "skip": "Pular Atencão - Seção Atendimentos do Colaborador",
+        "payment-confirm": "Confirmar Pagamento - Seção Atendimentos do Colaborador",
+        "cancel": "Cancelar Atendimento - Seção Atendimentos do Colaborador",
+        "patient-history": "Prontuario - Seção Atendimentos do Colaborador",
+        "products": "Produtos - Seção Atendimentos do Colaborador",
+        "transfer": "Transfer Atendimento - Seção Atendimentos do Colaborador"
+      },
+      "bookings": {
+        "admin": "Gerenciar Reservas",
+        "cancel":"Cancelar Reserva",
+        "confirm": "Confirmar Reservas",
+        "edit": "Editar Reserva",
+        "manage": "Gerenciar Reservas",
+        "transfer": "Transferir Reserva"
+      },
+      "waitlists": {
+        "book": "Reserva Lista de Espera"
+      },
+      "main-menu": {
+        "booking-manage": "Habilitar Gestão Reservas - Menú Principal Colaborador",
+        "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
+        "queue-manage": "Habilitar Atender Filas do Día - Menú Principal Colaborador",
+        "tracing": "Habilitar Gestão de Clientes - Menú Principal Colaborador",
+        "product-stock": "Habilitar Gestão de Estoque - Menú Principal Colaborador"
       }
     },
     "roles": {
@@ -3964,6 +4046,48 @@
         "update": "Atualizar dados - Seção Gerenciar Produtos",
         "add": "Adicionar dados - Seção Gerenciar Produtos",
         "limit": "Límite de dados - Seção Gerenciar Produtos"
+      }
+    },
+    "products-stock": {
+      "attentions": {
+        "view": "Ver Seção - Estoque de Atendimentos",
+        "add-consumption": "Adicionar Consumo - Estoque de Atendimentos",
+        "add-replacement": "Adicionar Recarregamento - Estoque de Atendimentos"
+      },
+      "products": {
+        "view": "Ver Seção - Gestão de Estoque",
+        "add-consumption": "Adicionar Consumo - Gestão de Estoque",
+        "add-replacement": "Adicionar Recarregamento - Gestão de Estoque",
+        "view-attention": "Ver Consumo de Atendimentos - Gestão de Estoque",
+        "view-consumption": "Ver Consumo - Gestão de Estoque",
+        "view-replacement":"Ver Recarregamento - Gestão de Estoque"
+      },
+      "reports": {
+        "details": "Reporte Controle de Estoque - Gestão de Estoque",
+        "replacement-details":"Reporte de Recarregamento de Producto - Gestão de Estoque",
+        "consumption-details": "Reporte de Consumo de Producto - Gestão de Estoque"
+      }
+    },
+    "document-client": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Documentos Clientes",
+        "read": "Ver dados - Seção Gerenciar Documentos Clientes",
+        "edit": "Editar dados - Seção Gerenciar Documentos Clientes",
+        "update": "Atualizar dados - Seção Gerenciar Documentos Clientes",
+        "add": "Adicionar dados - Seção Gerenciar Documentos Clientes",
+        "limit": "Límite de dados - Seção Gerenciar Documentos Clientes"
+      }
+    },
+    "patient": {
+      "history": {
+        "view": "Acessar Seção - Gerenciar Prontuario",
+        "read": "Ver dados - Seção Gerenciar Prontuario",
+        "edit": "Editar dados - Seção Gerenciar Prontuario",
+        "update": "Atualizar dados - Seção Gerenciar Prontuario",
+        "add": "Adicionar dados - Seção Gerenciar Prontuario",
+        "control-edit": "Editar Retorno Paciente - Sección Administrar Prontuario",
+        "control-update": "Actualizar Retorno Paciente - Sección Administrar Prontuario",
+        "download": "Baixar Prontuario - Sección Administrar Prontuario"
       }
     }
   }

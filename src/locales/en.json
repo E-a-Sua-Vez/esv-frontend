@@ -237,9 +237,10 @@
       "STANDARD": "Standard",
       "PERSONAL_HISTORY": "Personal History",
       "PHYSICAL_EXAM": "Physical Exam",
-      "PATIENT_SEX": "Sexo Paciente",
-      "PATIENT_OCCUPATION": "Ocupación Paciente",
-      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente"
+      "PATIENT_SEX": "Patient Sex",
+      "PATIENT_OCCUPATION": "Patient Occupation",
+      "PATIENT_CIVIL_STATUS": "Patient Civil Status",
+      "PATIENT_DOCUMENTS": "Patient Documents"
     }
   },
   "collaborators": {
@@ -247,6 +248,15 @@
       "STANDARD": "Standard",
       "FULL": "Full",
       "ASSISTANT": "Assistant"
+    }
+  },
+  "documents": {
+    "types": {
+      "COMMERCE": "Commerce",
+      "CLIENT": "Client"
+    },
+    "options": {
+      "patient_documents": "Patient Documents"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -1029,7 +1039,9 @@
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
           "transfer": "Transfer Attention",
-          "cancel": "Cancel Attention"
+          "cancel": "Cancel Attention",
+          "patient-history": "Medical History",
+          "products": "Products"
         },
         "module": {
           "update": "Update attention Module"
@@ -1243,7 +1255,9 @@
           "skip": "Skip Attention",
           "payment-confirm": "Confirm Payment",
           "transfer": "Transfer Attention",
-          "cancel": "Cancel Attention"
+          "cancel": "Cancel Attention",
+          "patient-history": "Medical History",
+          "products": "Products"
         },
         "module": {
           "update": "Update attention Module"
@@ -1378,6 +1392,7 @@
   },
   "attentionForm": {
     "other": "OTHER",
+    "yesExplain": "Please give more details",
     "like": {
       "subtitle": "No, Yes"
     },
@@ -1448,7 +1463,7 @@
     "asc": "To minor",
     "desc": "To mayor",
     "keyWord": "Key Words",
-    "search": "🔎 Name, Phone or Email",
+    "search": "🔎 Name, Id or Email",
     "search2": "🔎 Id, Phone or Email",
     "search3": "🔎 Id or Passport",
     "detractor": "Detractor",
@@ -1493,6 +1508,9 @@
     "paymentStatus": "Payment Status",
     "patientHistory": "History",
     "patientHistoryOf": "Medical History of",
+    "pendingControls": "Controls",
+    "pendingBookings": "Bookings",
+    "bookingsOf": "Bookings of",
     "dates": {
       "from": "From",
       "to": "to"
@@ -1717,6 +1735,10 @@
       "client-contacts-management": {
         "title": "Client Contacts Report (Details)",
         "description": "Download report file with the results of the clients carried out in the selected date range"
+      },
+      "bookings-management": {
+        "title": "Bookings Report (Details)",
+        "description": "Download report file with the results of the bookings carried out in the selected date range"
       }
     },
     "capacitiesList": {
@@ -1788,7 +1810,7 @@
           "view": "Flujo de Reservas"
         },
         "attention-comments-avg": {
-          "view": "Atenciones comentadas (Promedio)"
+          "view": "Attentions comentadas (Promedio)"
         },
         "graphs-attentions": {
           "view": "Attention Graphs"
@@ -1838,6 +1860,9 @@
         "collection-details": {
           "view": "See Collection Details"
         },
+        "bookings-management": {
+          "view": "See Bookings Details"
+        },
         "reports": {
           "surveys": "Surveys Report (Summary)",
           "indicators": "Indicators Report",
@@ -1846,7 +1871,8 @@
           "surveys-consolidated": "Surveys Report (Consolidated)",
           "attentions-management": "Attentions Report (Details)",
           "clients-management": "Clients Report (Details)",
-          "client-contacts-management": "Contacts Report (Details)"
+          "client-contacts-management": "Contacts Report (Details)",
+          "bookings-management": "Bookings Report (Details)"
         }
       }
     },
@@ -2319,6 +2345,11 @@
     "value": "Value:",
     "result": "Result:",
     "write": "Write here",
+    "selectN": "Select N:",
+    "select1": "Select 1:",
+    "yesNo": "Yes/No:",
+    "options": "Options:",
+    "document": "Document:",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2429,7 +2460,7 @@
       "optimumLevel": "You should enter the optimum level",
       "replacementLevel": "You should enter the replacement level",
       "maximumLevel": "You should enter the maximum level",
-      "levels": "Verify if the levels and amounts are valid"
+      "levels": "Seeify if the levels and amounts are valid"
     }
   },
   "businessFinancial" : {
@@ -2522,19 +2553,19 @@
     "return": "Back",
     "products": "Products",
     "attentions": "Attentions",
-    "consuptionsOf": "Consumes of",
+    "consuptionsOf": "Consumptions of",
     "replacementsOf": "Replacements of",
     "replacementLevel": "Replacement level:",
     "optimumLevel": "Optimum level:",
     "actualLevel": "Actual level:",
-    "consuptions": "Consumes",
+    "consuptions": "Consumptions",
     "replacements": "Replacements",
     "expired": "Expired",
     "price": "Total Cost:",
     "replacement": "Replacements Req.",
     "search": "🔎 Name or Code",
     "addReplacement": "New Replacement",
-    "addConsuption": "Add Consume",
+    "addConsuption": "Add Consumption",
     "commerces": "Commerce:",
     "amount": "Quantity:",
     "code": "Code/Batch:",
@@ -2545,7 +2576,7 @@
     "daysToExpired": "Days to Expired:",
     "daysNextReplacement": "Days Next Replacement:",
     "replacementSel": "Replacement:",
-    "consumptionDate": "Consume Date:",
+    "consumptionDate": "Consumption Date:",
     "attentionProducts": "Attention Stock",
     "stock": "Stock",
     "product": "Product:",
@@ -2574,8 +2605,8 @@
         "description": "Download the Replacement Product Report"
       },
       "consumption-details": {
-        "title": "Product Consume Report",
-        "description": "Download the Consume Product Report"
+        "title": "Product Consumption Report",
+        "description": "Download the Consumption Product Report"
       }
     },
     "capacitiesList": {
@@ -2603,7 +2634,7 @@
     "validate": {
       "product": "You should select the Product",
       "consumptionAmount": "You should add the consumption amount",
-      "consumptionLevel": "Consume amount added is bigger than the quantity available",
+      "consumptionLevel": "Consumption amount added is bigger than the quantity available",
       "replacementAmount": "You should add the replacement amount",
       "replacementDate": "You should add the replacement date",
       "productReplacement": "You should select replacement"
@@ -2898,6 +2929,7 @@
     "showDiagnostic": "Diagnostic",
     "showMedicalOrder": "Medical Order",
     "showControl": "Controls",
+    "showDocuments": "Documents",
     "showItensMedicalHistory": "Admin History Items",
     "menu": "History Details",
     "name": "Name:",
@@ -2924,6 +2956,7 @@
     "physicalExam": "Physical Exam",
     "diagnostic": "Diagnostic",
     "medicalOrder": "Medical Order",
+    "documents": "Documents",
     "control": "Controls",
     "resume": "Resume",
     "updated": "Updated for the last time the",
@@ -2935,6 +2968,8 @@
     "add": "Add",
     "attendControl": "Attend Control",
     "update": "Update",
+    "autoSaving": "Autosaving",
+    "clickSave": "Click on Save Button",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3248,6 +3283,7 @@
     "add": "Add",
     "file": "File:",
     "upload": "Upload",
+    "uploadNewDocument": "Upload New Document",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3449,7 +3485,7 @@
   "planSelection": {
     "title": "Just one step away...",
     "subtitle": {
-      "1": "Verify your purchase and press send.",
+      "1": "Seeify your purchase and press send.",
       "2": "Later you will have 24hrs. to realize the payment."
     },
     "canPayWays": "You can pay trough the following ways:",
@@ -3610,6 +3646,7 @@
     "analizeIAQuestionHelp": "The answer will be analized with IA.",
     "otherOptionQuestionHelp": "Add 'Other' to the options of this question.",
     "otherOpenQuestionHelp": "Option 'Other' is open, editable by the user.",
+    "active": "Active:",
     "question": "Question:",
     "comment": "General comment:",
     "update": "Update",
@@ -3860,12 +3897,37 @@
       "attention-client-contact": {
         "view": "See Client Contacts - Section Performance Hub"
       },
+      "attention-days-since-clients":{
+        "view": "See Days Since Attention Clients - Section Performance Hub"
+      },
+      "attentions-management": {
+        "view": "See Attentions - Clients Management Section"
+      },
+      "bookings-management": {
+        "view": "See Bookings - Clients Management Section"
+      },
+      "client-contacts-management": {
+        "view": "See Client Contacts - Clients Management Section"
+      },
+      "clients-management": {
+        "view": "See Clients Management - Clients Management Section"
+      },
+      "collection-details":{
+        "view": "See Collection Details - Financial Section"
+      },
+      "tracing": {
+        "view": "See Section - Clients Management Section"
+      },
       "reports": {
-        "surveys": "Download Report Surveys (Summary) Section Performance Hub",
-        "indicators": "Download Report Indicators Section Performance Hub",
-        "graphs": "Download Report de Trends Section Performance Hub",
-        "surveys-management": "Download Report Surveys (Details) Section Performance Hub",
-        "surveys-consolidated": "Download Report Surveys (Consolidated) Section Performance Hub"
+        "surveys": "Download Report Surveys (Summary) - Section Performance Hub",
+        "indicators": "Download Report Indicators - Section Performance Hub",
+        "graphs": "Download Report de Trends - Section Performance Hub",
+        "surveys-management": "Download Report Surveys (Details) - Section Performance Hub",
+        "surveys-consolidated": "Download Report Surveys (Consolidated) - Section Performance Hub",
+        "attentions-management": "Download Report Attentions",
+        "bookings-management": "Download Report Bookings",
+        "client-contacts-management": "Download Report Client Contacts",
+        "clients-management": "Download Report Clients (Details)"
       }
     },
     "executive": {
@@ -3911,13 +3973,35 @@
     },
     "collaborator": {
       "module": {
-        "update": "Update module - Section Attentions of the Collaborator"
+        "update": "Update module - Section Collaborator Attentions"
       },
       "attention": {
-        "attend": "Atender - Section Attentions of the Collaborator",
-        "finish": "Marcar atención como atendida - Section Attentions of the Collaborator",
-        "skip": "Saltar atención - Section Attentions of the Collaborator",
-        "payment-confirm": "Confirm Payment - Section Attentions of the Collaborator"
+        "attend": "Atender - Section Collaborator Attentions",
+        "finish": "Marcar atención como atendida - Section Collaborator Attentions",
+        "skip": "Saltar atención - Section Collaborator Attentions",
+        "payment-confirm": "Confirm Payment - Section Collaborator Attentions",
+        "cancel": "Cancel Attention - Section Collaborator Attentions",
+        "patient-history": "Medical History - Section Collaborator Attentions",
+        "products": "Products - Section Collaborator Attentions",
+        "transfer": "Transfer Attention - Section Collaborator Attentions"
+      },
+      "bookings": {
+        "cancel": "Cancela Bookings",
+        "manage": "Manage Bookings",
+        "confirm": "Confirm Booking",
+        "transfer": "Transfer Bookings",
+        "edit": "Edit Bookings",
+        "admin": "Admin Bookings"
+      },
+      "waitlists": {
+        "book": "Waitlist Reserve"
+      },
+      "main-menu": {
+        "booking-manage": "Enable Bookings Manage - Main Menu Collaborator",
+        "dashboard": "Enable Performance Hub - Main Menu Collaborator",
+        "queue-manage":"Enable Attend Queues of the Day - Main Menu Collaborator",
+        "tracing": "Enable Manage Clients - Main Menu Collaborator",
+        "product-stock":"Enable Stock Manage - Main Menu Collaborator"
       }
     },
     "roles": {
@@ -3977,6 +4061,48 @@
         "update": "Update data - Section Manage Products",
         "add": "Add data - Section Manage Products",
         "limit": "Limit of data - Section Manage Products"
+      }
+    },
+    "products-stock": {
+      "attentions": {
+        "view": "See Section - Stock Attentions",
+        "add-consumption": "Add Consumption - Stock Attentions",
+        "add-replacement": "Add Reposition - Stock Attentions"
+      },
+      "products": {
+        "view": "See Section - Stock Management",
+        "add-consumption": "Add Consumption - Stock Management",
+        "add-replacement": "Add Reposition - Stock Management",
+        "view-attention": "See Consumption Attentions - Stock Management",
+        "view-consumption": "See Consumption - Stock Management",
+        "view-replacement":"See Reposition - Stock Management"
+      },
+      "reports": {
+        "details": "Inform Stock Control - Stock Management",
+        "replacement-details":"Inform Product Reposition - Stock Management",
+        "consumption-details": "Inform Product Consumption - Stock Management"
+      }
+    },
+    "document-client": {
+      "admin": {
+        "view": "Get to this Section - Manage Client Documents",
+        "read": "Read data - Section Manage Client Documents",
+        "edit": "Edit data - Section Manage Client Documents",
+        "update": "Update data - Section Manage Client Documents",
+        "add": "Add data - Section Manage Client Documents",
+        "limit": "Limit of data - Section Manage Client Documents"
+      }
+    },
+    "patient": {
+      "history": {
+        "view": "Get to this Section - Manage Medical History",
+        "read": "Read data - Section Manage Medical History",
+        "edit": "Edit data - Section Manage Medical History",
+        "update": "Update data - Section Manage Medical History",
+        "add": "Add data - Section Manage Medical History",
+        "control-edit": "Edit Control Patient - Section Manage Medical History",
+        "control-update": "Update Control Patien - Section Manage Medical History",
+        "download": "Download History - Section Manage Medical History"
       }
     }
   }

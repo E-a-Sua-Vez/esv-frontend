@@ -2,46 +2,41 @@
 import Spinner from '../../common/Spinner.vue';
 import Popper from "vue3-popper";
 import Message from '../../common/Message.vue';
-import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import AttentionDetailsCard from '../../clients/common/AttentionDetailsCard.vue';
-import { getAttentionsDetails } from '../../../application/services/query-stack';
-import jsonToCsv from '../../../shared/utils/jsonToCsv';
+import { getDocumentsDetails } from '../../../application/services/query-stack';
+import SimpleDocumentCard from '../common/SimpleDocumentCard.vue';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getDocumentTypes } from '../../../shared/utils/data';
 
 export default {
-  name: 'ClientAttentionsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard },
+  name: 'DocumentsManagement',
+  components: { Message, Spinner, Popper, SimpleDocumentCard },
   props: {
-    showClientAttentionsManagement: { type: Boolean, default: false },
+    showClientManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    client: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
-    queues: { type: Array, default: undefined },
-    services: { type: Array, default: undefined },
-    attentionsIn: { type: Array, default: undefined },
+    business: { type: Object, default: undefined },
   },
   data() {
     return {
       loading: false,
       counter: 0,
-      attentions: [],
-      newAttentions: [],
-      clientIn: [],
       totalPages: 0,
-      daysSinceType: undefined,
-      survey: undefined,
-      asc: false,
+      asc: true,
       showFilterOptions: false,
       searchText: undefined,
-      queueId: undefined,
-      serviceId: undefined,
+      type: undefined,
+      documents: [],
+      types: [],
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
       endDate: undefined
     }
+  },
+  beforeMount() {
+    this.types = getDocumentTypes();
   },
   methods: {
     async refresh() {
@@ -51,13 +46,18 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        this.documents = await getDocumentsDetails(this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.asc, this.type);
+        if (this.documents && this.documents.length > 0) {
+          const { counter } = this.documents[0];
+          this.counter = counter;
+          const total = counter / this.limit;
+          const totalB = Math.trunc(total);
+          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+        } else {
+          this.counter = 0;
+          this.totalPages = 0;
         }
-        this.newAttentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
-        this.updatePaginationData();
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -67,23 +67,12 @@ export default {
       this.page = pageIn;
     },
     async clear() {
-      this.daysSinceType = undefined;
-      this.survey = undefined;
       this.asc = true;
       this.searchText = undefined;
-      this.queueId = undefined;
-      this.serviceId = undefined;
-      this.limit = 10;
+      this.type = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();
-    },
-    async checkSurvey(event) {
-      if (event.target.checked) {
-        this.survey = true;
-      } else {
-        this.survey = false;
-      }
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -92,51 +81,8 @@ export default {
         this.asc = false;
       }
     },
-    updatePaginationData() {
-      if (this.attentions && this.attentions.length > 0) {
-        const { counter } = this.attentions[0];
-        this.counter = counter;
-        const total = counter / this.limit;
-        const totalB = Math.trunc(total);
-        this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
-      } else {
-        this.counter = 0;
-        this.totalPages = 0;
-      }
-    },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
-    },
-    async exportToCSV() {
-      try {
-        this.loading = true;
-        let csvAsBlob = [];
-        let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
-        const result = await getAttentionsDetails(
-          this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
-        if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
-        }
-        const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
-        const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `attentions-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
-        a.href = blobURL;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        this.loading = false;
-      } catch (error) {
-        this.loading = false;
-      }
     },
     async getToday() {
       const date = new Date().toISOString().slice(0,10);
@@ -167,9 +113,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, survey, asc, queueId, limit, serviceId } = this;
+      const { page, asc, type, limit } = this;
       return {
-        page, daysSinceType, survey, asc, queueId, limit, serviceId
+        page, asc, type, limit
       }
     }
   },
@@ -180,35 +126,13 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.client !== newData.client ||
-          oldData.daysSinceType !== newData.daysSinceType ||
-          oldData.survey !== newData.survey ||
-          oldData.asc !== newData.asc ||
+          (oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId ||
-          oldData.serviceId !== newData.serviceId)
+          oldData.type !== newData.type)
         ) {
           this.page = 1;
         }
-        await this.refresh();
-      }
-    },
-    attentionsIn: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.attentions = this.attentionsIn;
-        this.updatePaginationData();
-      }
-    },
-    newAttentions: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        if (this.newAttentions) {
-          this.attentions = this.newAttentions;
-          this.updatePaginationData();
-        }
+        this.refresh();
       }
     }
   }
@@ -216,21 +140,12 @@ export default {
 </script>
 
 <template>
-  <div id="attentions-management" class="row" v-if="showClientAttentionsManagement === true && toggles['dashboard.attentions-management.view']">
+  <div id="documents-management" class="row" v-if="showClientManagement === true && toggles['document-commerce.admin.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
-              :showTooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
-            ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
@@ -274,42 +189,34 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
-                    <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.service") }} </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
-                    <option v-for="service in services" :key="service.name" :value="service.id" id="select-queue">{{ service.name }}</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
-                  <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="MEDIUM" name="daysSince-type" id="medium-since" autocomplete="off">
-                  <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
-                  <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disableClickAway
-                    :content="$t(`dashboard.tracing.filters.attention`)">
-                    <i class='bi bi-info-circle-fill h7 m-2'></i>
-                  </Popper>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
-                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
+                <div class="m-1">
+                  <div class="row">
+                    <div class="col-10">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="searchText"
+                        :placeholder="$t('dashboard.search')">
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
                     </div>
                   </div>
-                  <div class="col-12 col-md-6">
+                </div>
+                <div class="col-12 col-md my-1 filter-card" v-if="types && types.length > 1">
+                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.type") }} </label>
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="type">
+                    <option v-for="typ in types" :key="typ.name" :value="typ.id" id="select-queue">{{ $t(`documents.types.${typ.name}`) }}</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <div class="col-12">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
@@ -371,14 +278,62 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="attentions && attentions.length > 0">
-              <div class="row" v-for="(attention, index) in attentions" :key="`attentions-${index}`">
-                <AttentionDetailsCard
+            <div v-if="documents && documents.length > 0">
+              <div class="row" v-for="(document, index) in documents" :key="`documents-${index}`">
+                <SimpleDocumentCard
                   :show="true"
-                  :attention="attention"
                   :commerce="commerce"
+                  :canUpdate="toggles[`document-commerce.admin.${document.name}`]"
+                  :document="document"
+                  :showTooltip="true"
                 >
-              </AttentionDetailsCard>
+                </SimpleDocumentCard>
+              </div>
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1 || totalPages === 0">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1 || totalPages === 0">
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select class="btn btn-md btn-light fw-bold text-dark select mx-1" v-model="page" :disabled="totalPages === 0">
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">{{ pag }}</option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages || totalPages === 0">
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages || totalPages === 0">
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
               </div>
             </div>
             <div v-else>
@@ -392,7 +347,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showClientAttentionsManagement === true && !toggles['dashboard.attentions-management.view']">
+  <div v-if="showClientManagement === true && !toggles['document-commerce.admin.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
@@ -456,6 +411,6 @@ export default {
 }
 .select {
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-clear);
+  border: 1px solid var(--gris-clear);
 }
 </style>

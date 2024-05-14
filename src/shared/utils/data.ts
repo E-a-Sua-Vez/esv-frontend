@@ -261,3 +261,10 @@ export const getControlReasonsTypes = () => {
     { id: 'OTHER', name: 'OTHER' }
   ]
 }
+
+export const getDocumentTypes = () => {
+  return [
+    { id: 'COMMERCE', name: 'COMMERCE' },
+    { id: 'CLIENT', name: 'CLIENT' }
+  ]
+}

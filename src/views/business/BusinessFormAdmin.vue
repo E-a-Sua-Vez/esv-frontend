@@ -460,7 +460,7 @@ export default {
                             :class="'dark p-1'"
                             arrow
                             disableClickAway
-                            :content="$t('businessFormsAdmin.attentionDefaultHelp')">
+                            :content="$t('businessFormsAdmin.queueHelp')">
                             <i class='bi bi-info-circle-fill h7'></i>
                           </Popper>
                         </div>

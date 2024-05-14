@@ -237,6 +237,9 @@
       "STANDARD": "Standard",
       "PERSONAL_HISTORY": "Historia Personal",
       "PHYSICAL_EXAM": "Examen Físico",
+      "PATIENT_SEX": "Sexo Paciente",
+      "PATIENT_OCCUPATION": "Ocupación Paciente",
+      "PATIENT_CIVIL_STATUS": "Estado Civil Paciente",
       "PATIENT_DOCUMENTS": "Documentos Paciente"
     }
   },
@@ -251,6 +254,9 @@
     "types": {
       "COMMERCE": "Comercio",
       "CLIENT": "Cliente"
+    },
+    "options": {
+      "patient_documents": "Doc. Paciente"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -1021,7 +1027,9 @@
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
           "transfer": "Transferir Atención",
-          "cancel": "Cancelar Atención"
+          "cancel": "Cancelar Atención",
+          "patient-history": "Historial Médico",
+          "products": "Registrar Stock"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1236,7 +1244,9 @@
           "skip": "Saltar atención",
           "payment-confirm": "Confirmar Pago",
           "transfer": "Transferir Atención",
-          "cancel": "Cancelar Atención"
+          "cancel": "Cancelar Atención",
+          "patient-history": "Historial Médico",
+          "products": "Registrar Stock"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1447,7 +1457,7 @@
     "asc": "A menor",
     "desc": "A mayor",
     "keyWord": "Palabras Clave",
-    "search": "🔎 Nombre, Teléfono o Email",
+    "search": "🔎 Nombre, Cédula o Email",
     "search2": "🔎 Id, Cédula, Teléfono o Email",
     "search3": "🔎 Id o Cédula",
     "detractor": "Detractor",
@@ -1492,6 +1502,9 @@
     "outcomes": "Egresos",
     "patientHistory": "Historia",
     "patientHistoryOf": "Historial Médico de",
+    "pendingControls": "Controles",
+    "pendingBookings": "Reservas",
+    "bookingsOf": "Reservas de",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1720,6 +1733,10 @@
       "client-contacts-management": {
         "title": "Reporte de Contactos (Detalles)",
         "description": "Descarga archivo report con el resultado de los contactos realizadas en el rango de fechas seleccionado"
+      },
+      "bookings-management": {
+        "title": "Reporte de Reservas (Detalles)",
+        "description": "Descarga archivo report con el resultado de las reservas realizadas en el rango de fechas seleccionado"
       }
     },
     "capacitiesList": {
@@ -1841,6 +1858,9 @@
         "collection-details": {
           "view": "Ver Detalles de Recaudación"
         },
+        "bookings-management": {
+          "view": "Ver Reservas (Detalles)"
+        },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",
           "indicators": "Reporte de Indicadores",
@@ -1849,7 +1869,8 @@
           "surveys-consolidated": "Reporte de Encuestas (Consolidado)",
           "attentions-management": "Reporte de Atenciones (Detalles)",
           "clients-management": "Reporte de Clientes (Detalles)",
-          "client-contacts-management": "Reporte de Contactos (Detalles)"
+          "client-contacts-management": "Reporte de Contactos (Detalles)",
+          "bookings-management": "Reporte de Reservas (Detalles)"
         }
       }
     },
@@ -2943,7 +2964,6 @@
     "attendControl": "Atender Control",
     "add": "Agregar",
     "update": "Actualizar",
-    "preAttentionAnswers": "Dat Primera Atención",
     "autoSaving": "Autoguardado",
     "clickSave": "Haga click en Salvar",
     "message": {
@@ -3867,7 +3887,7 @@
         "view": "Ver Evolución de CSAT - Sección Performance Hub"
       },
       "client-contacts-management": {
-        "view": "Ver Sección - Administrar Clientes"
+        "view": "Ver Sección - Sección Administrar Clientes"
       },
       "attention-origin-avg": {
         "view": "Ver Origen del Cliente - Sección Performance Hub"
@@ -3879,7 +3899,16 @@
         "view": "Ver Días Atención de Clientes - Sección Performance Hub"
       },
       "attentions-management": {
-        "view": "Ver Días Atención de Clientes - Sección Performance Hub"
+        "view": "Ver Sección Atenciones - Sección Administrar Clientes"
+      },
+      "bookings-management": {
+        "view": "Ver Sección Reservas - Sección Administrar Clientes"
+      },
+      "clients-management": {
+        "view": "Ver Sección Contacto Clientes - Sección Administrar Clientes"
+      },
+      "collection-details":{
+        "view": "Ver Ingresos Detalles - Sección Financiera"
       },
       "reports": {
         "surveys": "Descargar Reporte de Encuestas (Resumen) - Sección Performance Hub",
@@ -3887,9 +3916,10 @@
         "graphs": "Descargar Reporte de Tendencias - Sección Performance Hub",
         "surveys-management": "Descargar Reporte de Encuestas (Detalles) - Sección Performance Hub",
         "surveys-consolidated": "Descargar Reporte de Encuestas (Consolidado) - Sección Performance Hub",
-        "attentions-management": "Descargar Reporte de Atenciones - Sección Performance Hub",
-        "client-contacts-management": "Descargar Reporte de Contactos - Sección Performance Hub",
-        "clients-management": "Reporte de Clientes (Detalles) - Sección Performance Hub"
+        "attentions-management": "Descargar Reporte de Atenciones",
+        "client-contacts-management": "Descargar Reporte de Contactos",
+        "clients-management": "Reporte de Clientes (Detalles)",
+        "bookings-management": "Reporte de Reservas (Detalles)"
       },
       "tracing": {
         "view": "Ver Sección - Gestión de Clientes"
@@ -4062,7 +4092,20 @@
         "read": "Leer datos - Sección Administrar Historia Médica",
         "edit": "Editar datos - Sección Administrar Historia Médica",
         "update": "Actualizar datos - Sección Administrar Historia Médica",
-        "add": "Agregar datos - Sección Administrar Historia Médica"
+        "add": "Agregar datos - Sección Administrar Historia Médica",
+        "control-edit": "Editar Control Paciente - Sección Administrar Historia Médica",
+        "control-update": "Actualizar Control Paciente - Sección Administrar Historia Médica",
+        "download": "Descargar Historia - Sección Administrar Historia Médica"
+      }
+    },
+    "document-client": {
+      "admin": {
+        "view": "Ver Sección - Sección Documentos Clientes",
+        "read": "Leer datos - Sección Documentos Clientes",
+        "edit": "Editar datos - Sección Documentos Clientes",
+        "update": "Actualizar datos - Sección Documentos Clientes",
+        "add": "Agregar datos - Sección Documentos Clientes",
+        "limit": "Límite de datos - Sección Documentos Clientes"
       }
     }
   }

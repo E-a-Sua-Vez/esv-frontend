@@ -378,6 +378,31 @@ export const getAttentionsDetails = async (
   return (await requestQuery.get('attention/details', options)).data;
 };
 
+export const getBookingsDetails = async (
+  commerceId,
+  from,
+  to,
+  commerceIds = undefined,
+  page = 1,
+  limit = 10,
+  searchText = undefined,
+  queueId = undefined,
+  asc = true,
+  serviceId = undefined
+) => {
+  const options = {};
+  options.params = {
+    from, to, commerceId, commerceIds, page, limit,
+    searchText, queueId, asc, serviceId
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('booking/details', options)).data;
+};
+
 export const getPatientHistoryDetails = async (
   clientId
 ) => {
@@ -411,14 +436,15 @@ export const getClientsDetails = async (
   asc = true,
   contactResultType = undefined,
   idNumber = undefined,
-  serviceId = undefined
+  serviceId = undefined,
+  pendingControls = undefined,
+  pendingBookings = undefined
 ) => {
   const options = {};
   options.params = {
-
     from, to, commerceId, commerceIds, page, limit, daysSinceType, daysSinceContacted,
     contactable, contacted, searchText, queueId, survey, asc,
-    contactResultType, businessId, idNumber, serviceId
+    contactResultType, businessId, idNumber, serviceId, pendingControls, pendingBookings
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);
@@ -599,4 +625,27 @@ export const getOutcomesDetails = async (
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('outcome/details', options)).data;
+};
+
+export const getDocumentsDetails = async (
+  from,
+  to,
+  commerceIds = undefined,
+  page = undefined,
+  limit = undefined,
+  searchText = undefined,
+  asc = true,
+  type = undefined
+) => {
+  const options = {};
+  options.params = {
+
+    from, to, commerceIds, page, limit, asc, searchText, type
+  };
+  options.paramsSerializer = params => {
+    return qs.stringify(params);
+  };
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('documents/details', options)).data;
 };

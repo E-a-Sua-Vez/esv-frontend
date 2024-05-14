@@ -3,30 +3,31 @@ import Spinner from '../../common/Spinner.vue';
 import Popper from "vue3-popper";
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import AttentionDetailsCard from '../../clients/common/AttentionDetailsCard.vue';
-import { getAttentionsDetails } from '../../../application/services/query-stack';
+import AttentionDetailsCard from '../common/AttentionDetailsCard.vue';
+import { getBookingsDetails } from '../../../application/services/query-stack';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { DateModel } from '../../../shared/utils/date.model';
+import BookingDetailsCard from '../../clients/common/BookingDetailsCard.vue';
 
 export default {
-  name: 'ClientAttentionsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard },
+  name: 'ClientBookingsManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard, BookingDetailsCard },
   props: {
-    showClientAttentionsManagement: { type: Boolean, default: false },
+    showClientBookingsManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     client: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
-    attentionsIn: { type: Array, default: undefined },
+    bookingsIn: { type: Array, default: undefined },
   },
   data() {
     return {
       loading: false,
       counter: 0,
-      attentions: [],
-      newAttentions: [],
+      bookings: [],
+      newBookings: [],
       clientIn: [],
       totalPages: 0,
       daysSinceType: undefined,
@@ -54,9 +55,8 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        this.newAttentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
+        this.newBookings = await getBookingsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.queueId, this.asc, this.serviceId);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -78,13 +78,6 @@ export default {
       this.endDate = undefined;
       await this.refresh();
     },
-    async checkSurvey(event) {
-      if (event.target.checked) {
-        this.survey = true;
-      } else {
-        this.survey = false;
-      }
-    },
     async checkAsc(event) {
       if (event.target.checked) {
         this.asc = true;
@@ -93,8 +86,8 @@ export default {
       }
     },
     updatePaginationData() {
-      if (this.attentions && this.attentions.length > 0) {
-        const { counter } = this.attentions[0];
+      if (this.bookings && this.bookings.length > 0) {
+        const { counter } = this.bookings[0];
         this.counter = counter;
         const total = counter / this.limit;
         const totalB = Math.trunc(total);
@@ -118,17 +111,16 @@ export default {
         if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
-        const result = await getAttentionsDetails(
+        const result = await getBookingsDetails(
           this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
+          undefined, undefined, this.searchText, this.queueId, this.asc, this.serviceId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `attentions-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `bookings-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -181,8 +173,6 @@ export default {
         if (
           (oldData && newData) &&
           (oldData.client !== newData.client ||
-          oldData.daysSinceType !== newData.daysSinceType ||
-          oldData.survey !== newData.survey ||
           oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
           oldData.queueId !== newData.queueId ||
@@ -193,20 +183,20 @@ export default {
         await this.refresh();
       }
     },
-    attentionsIn: {
+    bookingsIn: {
       immediate: true,
       deep: true,
       async handler() {
-        this.attentions = this.attentionsIn;
+        this.bookings = this.bookingsIn;
         this.updatePaginationData();
       }
     },
-    newAttentions: {
+    newBookings: {
       immediate: true,
       deep: true,
       async handler() {
-        if (this.newAttentions) {
-          this.attentions = this.newAttentions;
+        if (this.newBookings) {
+          this.bookings = this.newBookings;
           this.updatePaginationData();
         }
       }
@@ -216,20 +206,20 @@ export default {
 </script>
 
 <template>
-  <div id="attentions-management" class="row" v-if="showClientAttentionsManagement === true && toggles['dashboard.attentions-management.view']">
+  <div id="bookings-management" class="row" v-if="showClientBookingsManagement === true && toggles['dashboard.bookings-management.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
             <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
+              :download="toggles['dashboard.reports.bookings-management']"
+              :title="$t('dashboard.reports.bookings-management.title')"
               :showTooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
+              :description="$t('dashboard.reports.bookings-management.description')"
               :icon="'bi-file-earmark-spreadsheet'"
               @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
+              :canDownload="toggles['dashboard.reports.bookings-management'] === true"
             ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -303,13 +293,7 @@ export default {
                   </Popper>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
-                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
+                  <div class="col-12">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
@@ -371,14 +355,14 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="attentions && attentions.length > 0">
-              <div class="row" v-for="(attention, index) in attentions" :key="`attentions-${index}`">
-                <AttentionDetailsCard
+            <div v-if="bookings && bookings.length > 0">
+              <div class="row" v-for="(booking, index) in bookings" :key="`bookings-${index}`">
+                <BookingDetailsCard
                   :show="true"
-                  :attention="attention"
+                  :booking="booking"
                   :commerce="commerce"
                 >
-              </AttentionDetailsCard>
+              </BookingDetailsCard>
               </div>
             </div>
             <div v-else>
@@ -392,7 +376,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showClientAttentionsManagement === true && !toggles['dashboard.attentions-management.view']">
+  <div v-if="showClientBookingsManagement === true && !toggles['dashboard.bookings-management.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

@@ -40,7 +40,7 @@ export default {
       totalPages: 0,
       daysSinceContacted: undefined,
       contactResultType: undefined,
-      asc: true,
+      asc: false,
       checked: false,
       showFilterOptions: false,
       showAddOption: false,

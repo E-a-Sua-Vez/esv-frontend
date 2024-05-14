@@ -1,47 +1,48 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getDocumentByCommerceId, getDocumentOptions, addDocument } from '../../application/services/document';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import Warning from '../../components/common/Warning.vue';
-import SimpleDocumentCard from '../../components/document/SimpleDocumentCard.vue';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
-import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import DocumentsManagement from '../../components/document/domain/DocumentsManagement.vue';
 
 export default {
   name: 'BusinessDocuments',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimpleDocumentCard, ComponentMenu, SearchAdminItem },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    Spinner,
+    Alert,
+    ToggleCapabilities,
+    ComponentMenu,
+    DocumentsManagement
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
     let loading = ref(false);
     let alertError = ref('');
-    let file = ref(undefined);
 
     const state = reactive({
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      documents: ref([]),
-      options: {},
-      optionSelected: undefined,
+      commerces: ref({}),
+      selectedCommerces: ref({}),
+      queues: ref({}),
+      services: ref({}),
+      queue: {},
+      dateType: 'month',
       commerce: {},
-      showAdd: false,
-      newDocument: {},
-      extendedEntity: undefined,
-      documentError: false,
-      errorsAdd: [],
-      toggles: {},
-      filtered: [],
-      file: undefined
+      toggles: {}
     });
 
     onBeforeMount(async () => {
@@ -51,141 +52,66 @@ export default {
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
         state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          await selectCommerce(state.commerce);
-        }
-        state.filtered = state.documents;
-        state.options = await getDocumentOptions();
+        state.selectedCommerces = [state.commerce];
         state.toggles = await getPermissions('document-commerce', 'admin');
-        alertError.value = '';
+        await refresh();
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
         loading.value = false;
       }
     })
 
     const isActiveBusiness = () => {
-      return state.business && state.business.active === true
+      return state.business && state.business.active === true;
     };
-
-    const goBack = () => {
-      router.back();
-    }
 
     const selectCommerce = async (commerce) => {
       try {
         loading.value = true;
-        state.commerce = commerce;
-        state.documents = await getDocumentByCommerceId(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
-    const showAdd = () => {
-      state.showAdd = true;
-      state.newDocument = {
-        commerceId: state.commerce.id,
-      }
-    }
-
-    const validateAdd = () => {
-      state.errorsAdd = [];
-      if (state.optionSelected) {
-        state.newDocument.type = state.optionSelected.type;
-        state.newDocument.name = state.optionSelected.name;
-        state.newDocument.commerceId = state.commerce.id;
-        state.optionSelected = undefined;
-      } else {
-        state.errorsAdd.push('businessDocument.validate.feature');
-      }
-      if (!state.newDocument.file) {
-        state.errorsAdd.push('businessDocument.validate.file');
-      }
-      if(state.errorsAdd.length === 0) {
-        return true;
-      }
-      return false;
-    }
-
-    const validateDocument = (file) => {
-      state.errorsAdd = [];
-      if (file.size === 0 || file.size > 10000000) {
-        state.errorsAdd.push('businessDocument.validate.fileSize');
-      }
-      if(state.errorsAdd.length === 0) {
-        return true;
-      }
-      return false;
-    }
-
-    const add = async () => {
-      try {
-        loading.value = true;
-        if (validateAdd()) {
-          await addDocument(state.newDocument, file.value);
-          const documents = await getDocumentByCommerceId(state.commerce.id);
-          state.documents = documents;
-          state.showAdd = false;
-          closeAddModal();
-          state.newDocument = {};
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    }
-
-    const showPopUpFile = async () => {
-      document.getElementById('document-fileUpload').click();
-    }
-
-    const getFile = async ($event) => {
-      try {
-        loading.value = true;
-        const target = $event.target;
-        if (target && target.files && target.files.length > 0) {
-          const fileUploaded = target.files[0];
-          if (validateDocument(fileUploaded)) {
-            file.value = fileUploaded;
-            state.newDocument.file = file.value;
-            state.newDocument.format = file.value.type;
+        state.selectedCommerces = undefined;
+        if (commerce.id === 'ALL') {
+          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
+            state.selectedCommerces = state.currentUser.commercesId;
+          } else {
+            state.selectedCommerces = state.commerces;
           }
+        } else {
+          state.commerce = commerce;
+          state.selectedCommerces = state.commerces;
         }
+        await refresh();
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
         loading.value = false;
       }
     }
 
-    const closeAddModal = () => {
-      const modalCloseButton = document.getElementById('close-modal');
-      modalCloseButton.click();
+    const getLocalHour = (hour) => {
+      const date = new Date();
+      const hourDate = new Date(date.setHours(hour));
+      if (state.commerce.country) {
+        if (state.commerce.country === 've') {
+          return hourDate.getHours() - 4;
+        } else if (['br', 'cl'].includes(state.commerce.country)) {
+          return hourDate.getHours() - 3;
+        } else {
+          return hourDate.getHours();
+        }
+      }
     }
 
-    const receiveFilteredItems = (items) => {
-      state.filtered = items;
+    const goBack = () => {
+      router.back();
     }
 
     return {
       state,
       loading,
       alertError,
-      showPopUpFile,
       goBack,
       isActiveBusiness,
       selectCommerce,
-      showAdd,
-      add,
-      getFile,
-      receiveFilteredItems
+      getLocalHour
     }
   }
 }
@@ -206,146 +132,41 @@ export default {
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
       <div id="businessDocument">
-        <div v-if="isActiveBusiness && state.toggles['document-commerce.admin.view']">
-          <div id="businessDocument-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t("businessDocument.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="documents">
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessDocument.message.3.title')"
-                  :content="$t('businessDocument.message.3.content')" />
+        <div v-if="isActiveBusiness()">
+          <div v-if="state.commerces.length === 0" class="control-box">
+            <Message
+              :title="$t('dashboard.message.3.title')"
+              :content="$t('dashboard.message.3.content')" />
+          </div>
+          <div v-else class="control-box">
+            <div id="dashboard-controls">
+              <div class="row">
+                <div class="col" v-if="state.commerces">
+                  <span>{{ $t("dashboard.commerce") }} </span>
+                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                    <option key="ALL" :value="{id:'ALL'}">{{ $t("dashboard.all") }}</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
-          <div v-if="!loading" id="businessDocument-result" class="mt-4">
+          <div v-if="!loading" id="dashboard-result" class="mt-2">
             <div>
-              <div v-if="state.documents.length === 0">
-                <Message
-                  :title="$t('businessDocument.message.2.title')"
-                  :content="$t('businessDocument.message.2.content')" />
-              </div>
-              <div v-if="state.commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd()"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-document`"
-                    :disabled="!state.toggles['document-commerce.admin.add']">
-                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
-                  </button>
-                </div>
-              </div>
-              <SearchAdminItem
-                :businessItems="state.documents"
-                :type="'documents'"
-                :receiveFilteredItems="receiveFilteredItems"
+              <DocumentsManagement
+                :showClientManagement="true"
+                :toggles="state.toggles"
+                :commerce="state.commerce"
+                :commerces="state.selectedCommerces"
               >
-              </SearchAdminItem>
-              <div v-for="(document, index) in state.filtered" :key="index" class="result-card">
-                <div class="row">
-                  <div class="col-12">
-                    <SimpleDocumentCard
-                      :show="true"
-                      :canUpdate="state.toggles[`document-commerce.admin.${document.name}`]"
-                      :document="document"
-                      :showTooltip="true"
-                    >
-                    </SimpleDocumentCard>
-                  </div>
-                </div>
-              </div>
+              </DocumentsManagement>
             </div>
           </div>
         </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['document-commerce.admin.view']) && !loading">
+        <div v-if="!isActiveBusiness() && !loading">
           <Message
-            :title="$t('businessDocument.message.1.title')"
-            :content="$t('businessDocument.message.1.content')" />
-        </div>
-      </div>
-    </div>
-    <!-- Modal Add -->
-    <div class="modal fade" :id="`add-document`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
-            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-document" class="document-card mb-4" v-if="state.showAdd && state.toggles['document-commerce.admin.add']">
-              <div class="row g-1">
-                <div id="document-feature-form-add" class="row g-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessDocument.feature") }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                      v-model="state.optionSelected"
-                      id="features"
-                      v-bind:class="{ 'is-invalid': state.moduleError }">
-                      <option v-for="opt in state.options" :key="opt.name" :value="opt">{{ $t(`document.${opt.name}.title`) }}</option>
-                    </select>
-                  </div>
-                </div>
-                <div id="document-file-form-add" class="row g-1">
-                  <div class="col-4 text-label">
-                    {{ $t("businessDocument.file") }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      id="document-fileUpload"
-                      ref="file"
-                      data-cy="document-fileUpload"
-                      type="file"
-                      hidden
-                      @change="getFile($event)">
-                    <button
-                      id="document-upload-button"
-                      :disabled="!state.toggles['document-commerce.admin.edit']"
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-1 px-4"
-                      @click="showPopUpFile()">
-                      {{ $t("businessDocument.upload") }} <i class="bi bi-cloud-upload-fill"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1" v-if="state.newDocument.file">
-                  <div class="col-5"></div>
-                  <div class="col-6 examples">
-                    <span class=""> {{ state.newDocument.file.name }} ({{ (state.newDocument.file.size / 1000000).toFixed(2) }} MB) </span>
-                  </div>
-                </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="add(state.newDocument)">
-                    {{ $t("businessDocument.add") }} <i class="bi bi-save"></i>
-                  </button>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
-          </div>
+            :title="$t('dashboard.message.1.title')"
+            :content="$t('dashboard.message.1.content')" />
         </div>
       </div>
     </div>
@@ -354,58 +175,45 @@ export default {
 </template>
 
 <style scoped>
+.metric-title {
+  text-align: left;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.metric-subtitle {
+  text-align: left;
+  font-size: .9rem;
+  font-weight: 500;
+}
 .select {
   border-radius: .5rem;
   border: 1.5px solid var(--gris-clear);
-  text-overflow: ellipsis;
 }
-.module-card {
+.metric-card {
   background-color: var(--color-background);
   padding: .5rem;
-  margin-bottom: 1rem;
+  margin: .5rem;
   border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
+  border: 1.5px solid var(--gris-default);
 }
-.module-details-container {
+.metric-card-title {
   font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
-  margin-bottom: 0;
+  line-height: .8rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
 }
-.is-disabled {
-  opacity: 0.5;
+.green-icon {
+  color: var(--verde-tu);
 }
-.show {
-  padding: 10px;
-  max-height: 1500px !important;
-  overflow-y: auto;
+.red-icon {
+  color: var(--rojo-warning);
 }
-.document-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  align-items: left;
+.yellow-icon {
+  color: var(--amarillo-star);
 }
-.document-title {
-  line-height: 1.2rem;
-  font-size: .9rem;
-  font-weight: 700;
-  text-align: left;
-  background-color: var(--azul-turno);
-  margin: .1rem;
-  border-radius: 1rem;
-  line-height: 1rem;
-  border: 1.5px solid var(--azul-turno);
-  color: var(--color-background);
-  padding: .2rem;
-}
-.examples {
-  font-size: .8rem;
-  line-height: 1rem;
-  color: .5px solid var(--gris-default);
+.metric-card-subtitle {
+  font-size: .6rem;
+  font-weight: 500;
 }
 </style>

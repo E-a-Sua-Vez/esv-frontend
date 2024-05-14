@@ -65,7 +65,7 @@ export default {
           state.documentList = state.documentList.sort((a, b) => b.order - a.order);
         }
         if (patientHistoryData.value && patientHistoryData.value.id) {
-          state.oldDocuments = patientHistoryData.value.patientDocument;
+          state.oldDocuments = patientHistoryData.value.patientDocument.filter(doc => doc.available);
         }
         if (cacheData.value) {
           state.newDocuments = cacheData.value;
@@ -104,7 +104,7 @@ export default {
         } else {
           elementsSorted = elements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
-        state.oldDocuments = elementsSorted;
+        state.oldDocuments = elementsSorted.filter(doc => doc.available);
       }
     }
 
@@ -152,8 +152,10 @@ export default {
       if (state.optionSelected) {
         const documentMetadata = {
           clientName: clientData.value.userName,
+          clientLastName: clientData.value.userLastName,
           clientIdNumber: clientData.value.userIdNumber,
-          clientEmail: clientData.value.userEmail
+          clientEmail: clientData.value.userEmail,
+          optionSelected: state.optionSelected
         };
         const time = new Date().getTime();
         state.newDocument.type = 'CLIENT';
@@ -253,7 +255,7 @@ export default {
             patientHistoryData.value.patientDocument.length > 0 &&
             patientHistoryData.value.patientDocument[0]
           )
-          state.oldDocuments = patientHistoryData.value.patientDocument;
+          state.oldDocuments = patientHistoryData.value.patientDocument.filter(doc => doc.available);
         }
         loading.value = false;
       }
@@ -348,38 +350,40 @@ export default {
                   </Warning>
                 </div>
               </div>
-              <div class="col-12 text-label fw-bold mt-4" v-if="state.oldDocuments && state.oldDocuments.length > 0">
-                {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
-                <div class="form-check form-switch centered">
-                  <input class="form-check-input m-1" :class="state.asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="state.asc" @click="checkAsc($event)">
-                  <label class="form-check-label metric-card-subtitle" for="asc">{{ state.asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+              <div v-if="state.oldDocuments && state.oldDocuments.length > 0">
+                <div class="col-12 text-label fw-bold mt-4">
+                  {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
+                  <div class="form-check form-switch centered">
+                    <input class="form-check-input m-1" :class="state.asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="state.asc" @click="checkAsc($event)">
+                    <label class="form-check-label metric-card-subtitle" for="asc">{{ state.asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+                  </div>
                 </div>
-              </div>
-              <div v-for="(item) in state.oldDocuments.filter(doc => doc.available)" :key="item.id">
-                <div v-if="item.active === true" class="document-card">
-                  <div class="row" v-if="item.details && item.details.characteristics && item.details.characteristics.document && item.details.characteristics.document === true">
-                    <div class="col-8">
-                      <div class="lefted">
-                        <span class="badge bg-primary"> {{ item.details.tag }} </span>
-                        <span class="badge bg-secondary mx-1">  {{ item.details.name }} </span>
-                      </div>
-                      <div class="lefted">
-                        <div>
-                          <i :class="`bi ${documentIcon(item.format)} mx-1`"></i> <label class="form-check-label metric-card-subtitle mt-1">{{ getDateAndHour(item.createdAt) }}</label>
+                <div v-for="item in state.oldDocuments.filter(doc => doc.available)" :key="item.id">
+                  <div v-if="item.active === true" class="document-card">
+                    <div class="row" v-if="item.details && item.details.characteristics && item.details.characteristics.document && item.details.characteristics.document === true">
+                      <div class="col-8">
+                        <div class="lefted">
+                          <span class="badge bg-primary"> {{ item.details.tag }} </span>
+                          <span class="badge bg-secondary mx-1">  {{ item.details.name }} </span>
+                        </div>
+                        <div class="lefted">
+                          <div>
+                            <i :class="`bi ${documentIcon(item.format)} mx-1`"></i> <label class="form-check-label metric-card-subtitle mt-1">{{ getDateAndHour(item.createdAt) }}</label>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="col-4 righted">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                        @click="executeDownload(item)">
-                        <i class="bi bi-download"></i>
-                      </button>
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2"
-                        @click="executeDelete(item)">
-                        <i class="bi bi-trash-fill"></i>
-                      </button>
+                      <div class="col-4 righted">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                          @click="executeDownload(item)">
+                          <i class="bi bi-download"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2"
+                          @click="executeDelete(item)">
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
