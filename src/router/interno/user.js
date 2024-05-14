@@ -29,6 +29,11 @@ const PrivateUserRoutes = [
     name: 'commerce-form-attention',
     component: UserFormAttention
   },
+  {
+    path: '/interno/acceptterms/booking/:id/:code',
+    name: 'commerce-booking-terms-confirm',
+    component: UserQueueBooking
+  },
 ]
 
 export default PrivateUserRoutes;

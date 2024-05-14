@@ -389,13 +389,14 @@ export default {
 <template>
   <div v-if="show && booking">
     <div class="row metric-card fw-bold">
-      <div class="col centered" v-if="booking.user && booking.user.name">
-        <i class="bi bi-person-circle icon"></i> {{ booking.user.name.split(' ')[0] || 'N/I' }}
+      <div class="col lefted" v-if="booking.user && booking.user.name">
+        {{ booking.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
         <i v-if="booking.transfered === true" class="bi bi-arrow-left-right icon blue-icon"> </i>
         <i v-if="booking.edited === true" class="bi bi-pencil-fill icon"> </i>
+        <i v-if="booking.termsConditionsAcceptedCode" class="bi bi-person-fill-check mx-1"></i>
       </div>
       <div class="col centered hour-title" v-if="booking.block && booking.block.hourFrom">
         <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>

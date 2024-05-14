@@ -528,7 +528,8 @@
     "totalAmount": "Total Amount:",
     "package": "Package:",
     "service": "Service:",
-    "outcomeTitle": "Reason:"
+    "outcomeTitle": "Reason:",
+    "termsAccepted": "Terms Accepted:"
   },
   "searchAdminItem": {
     "message": {

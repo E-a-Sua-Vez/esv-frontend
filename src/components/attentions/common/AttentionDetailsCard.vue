@@ -330,12 +330,13 @@ export default {
       <div class="col-2 centered">
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ attention.number }}</span>
       </div>
-      <div class="col centered" v-if="attention.user && attention.user.name">
-        <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name.split(' ')[0] || 'N/I' }}
+      <div class="col lefted" v-if="attention.user && attention.user.name">
+        {{ attention.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="attention.paymentConfirmationData !== undefined && attention.paymentConfirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
         <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
+        <i v-if="attention.termsConditionsAcceptedCode" class="bi bi-person-fill-check mx-1"></i>
       </div>
       <div class="col centered hour-title" v-if="attention.block && attention.block.hourFrom">
         <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>

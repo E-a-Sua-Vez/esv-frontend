@@ -61,3 +61,8 @@ export const getPendingBookingsByClient = async (commerceId, clientId, idNumber)
 export const editBooking = async (id, body) => {
   return (await requestBackend.patch(`/${entity}/edit/${id}`, body, await getHeaders())).data;
 }
+
+export const acceptBookingTermsAndConditions = async (id, code) => {
+  return (await requestBackend.patch(`/${entity}/accept-terms/${id}/${code}`, {}, await getHeaders())).data;
+}
+

@@ -522,7 +522,8 @@
     "totalAmount": "Total Procedimiento:",
     "package": "Paquete:",
     "service": "Servicio:",
-    "outcomeTitle": "Concepto:"
+    "outcomeTitle": "Concepto:",
+    "termsAccepted": "Terms. Aceptados:"
   },
   "searchAdminItem": {
     "message": {

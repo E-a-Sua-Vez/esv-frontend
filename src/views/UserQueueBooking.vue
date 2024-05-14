@@ -1,7 +1,7 @@
 <script>
 import { ref, reactive, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
-import { getBookingDetails, cancelBooking } from '../application/services/booking';
+import { getBookingDetails, cancelBooking, acceptBookingTermsAndConditions } from '../application/services/booking';
 import { getFormsByClient } from '../application/services/form';
 import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
 import { getPermissions } from '../application/services/permissions';
@@ -40,7 +40,7 @@ export default {
   async setup() {
     const route = useRoute();
     const router = useRouter();
-    const { id } = route.params;
+    const { id, code } = route.params;
 
     const store = globalStore();
 
@@ -66,6 +66,9 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        if (code) {
+          await acceptBookingTermsAndConditions(id, code);
+        }
         await getBookingDetailsFromService(id);
         state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
         await getFormCompleted();

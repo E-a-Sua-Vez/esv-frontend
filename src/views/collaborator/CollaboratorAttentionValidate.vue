@@ -5,7 +5,7 @@ import { finishAttention, skip, getAttentionDetails } from '../../application/se
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
-import { getProductsConsumptionsDetails, getPatientHistoryDetails } from '../../application/services/query-stack';
+import { getProductsConsumptionsDetails, getPatientHistoryDetails, getPendingAttentionsDetails } from '../../application/services/query-stack';
 import { getPatientHistoryItemByCommerce  } from '../../application/services/patient-history-item';
 import { getFormsByClient  } from '../../application/services/form';
 import { getClientById  } from '../../application/services/client';
@@ -21,10 +21,12 @@ import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
 import PatientHistoryManagement from '../../components/patient-history/domain/PatientHistoryManagement.vue';
+import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
+import AttentionDetailsNumber from '../../components/common/AttentionDetailsNumber.vue';
 
 export default {
   name: 'CollaboratorAttentionValidate',
-  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu, ProductAttentionManagement, PatientHistoryManagement},
+  components: { Message, PoweredBy, QR, CommerceLogo, QueueName, AttentionNumber, Spinner, Alert, ToggleCapabilities, ComponentMenu, ProductAttentionManagement, PatientHistoryManagement, AttentionDetailsCard, AttentionDetailsNumber,},
   async setup() {
     const route = useRoute();
     const router = useRouter();
@@ -39,8 +41,10 @@ export default {
     const state = reactive({
       currentUser: {},
       attention: {},
+      attentionDetails: {},
       queue: {},
       commerce: {},
+      commerceIds: {},
       user: {},
       toggles: {},
       client: {},
@@ -59,6 +63,12 @@ export default {
         if (state.attention.id) {
           state.queue = state.attention.queue;
           state.commerce = state.attention.commerce;
+          state.commerceIds = [state.commerce.id];
+          const attentionDetails = await getPendingAttentionsDetails(undefined, undefined, undefined, state.commerceIds, undefined, undefined, undefined,
+          undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, id);
+          if (attentionDetails && attentionDetails.length > 0) {
+            state.attentionDetails = attentionDetails[0];
+          }
           if (state.attention.userId) {
             state.user = state.attention.user
           }
@@ -184,11 +194,13 @@ export default {
             <span>{{ $t("collaboratorAttentionValidate.yourNumber") }}</span>
           </div>
         </div>
-        <AttentionNumber
+        <AttentionDetailsNumber
           :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+          :attention="state.attentionDetails"
           :number="state.attention.number"
           :data="state.user"
-        ></AttentionNumber>
+          :showData="true"
+        ></AttentionDetailsNumber>
         <div v-if="state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'" class="d-grid gap-2 my-2 mx-2">
           <div class="mb-2">
             <label for="comment" class="form-label mt-2 comment-title">{{ $t("collaboratorAttentionValidate.comment.label") }}</label>

@@ -528,7 +528,8 @@
     "totalAmount": "Valor Total:",
     "package": "Pacote:",
     "service": "Serviço:",
-    "outcomeTitle": "Conceito:"
+    "outcomeTitle": "Conceito:",
+    "termsAccepted": "Terms. Aceitados:"
   },
   "searchAdminItem": {
     "message": {
@@ -954,7 +955,7 @@
     },
     "comment": {
       "label": "Algum comentário no atendimento? (Opcional):",
-      "placeholder": "O usuário foi gentil. Deixou gorjeta."
+      "placeholder": "O usuário foi gentil."
     },
     "message": {
       "1": {

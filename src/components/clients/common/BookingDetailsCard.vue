@@ -69,8 +69,9 @@ export default {
         <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
         <span v-if="booking.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span> </span>
       </div>
-      <div class="col-6 card-client-title lefted fw-bold" v-if="booking && booking.userName">
+      <div class="col-6 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
         {{ booking.userName?.trim().toUpperCase() || '' }} {{ booking.userLastName?.trim().toUpperCase() || '' }}
+        <span v-if="booking.termsConditionsAcceptedCode"> <i class="bi bi-person-fill-check mx-1"></i> </span>
         <i v-if="booking.paid !== undefined && booking.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
       <div class="col-2 centered fw-bold">
@@ -196,6 +197,10 @@ export default {
               <span v-if="booking.servicesDetails" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
                 <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }} </span>
+              </span>
+              <span v-if="booking.termsConditionsToAcceptedAt" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.termsAccepted') }} </span>
+                <span> {{ getDate(booking.termsConditionsToAcceptedAt) }} </span>
               </span>
               <br><br>
               <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.bookingId }}</span>
