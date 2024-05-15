@@ -674,7 +674,7 @@ export default {
   padding: .5rem;
   margin: .5rem;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .metric-card-title {
   font-size: .8rem;
@@ -699,7 +699,7 @@ export default {
   margin-top: .5rem;
   margin-bottom: .5rem;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .metric-conclusion {
   padding: .5rem;

@@ -148,7 +148,7 @@ export default {
 .color-secondary {
   color: var(--gris-default);
   background-color: var(--color-background);
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .color-nodevice {
   color: var(--orange-no-device);
@@ -163,7 +163,7 @@ export default {
 .color-secondary-reverse {
   color: var(--color-text);
   background-color: var(--gris-default);
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .color-nodevice-reverse {
   background-color: var(--orange-no-device);

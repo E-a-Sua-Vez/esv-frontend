@@ -57,7 +57,7 @@ export default {
   padding: .3rem .5rem;
   margin: .5rem;
   border-radius: .5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }
 .metric-card-title {
   margin: .1rem;

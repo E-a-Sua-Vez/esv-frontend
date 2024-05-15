@@ -69,7 +69,7 @@ export default {
   margin: .1rem;
   border-radius: 1rem;
   line-height: 1.5rem;
-  border: 1.5px solid var(--gris-default);
+  border: 1px solid var(--gris-default);
 }s
 .activation-attention {
   border: 1.5px solid var(--amarillo-star);
