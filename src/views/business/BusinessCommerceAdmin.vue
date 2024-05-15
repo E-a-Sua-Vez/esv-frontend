@@ -360,14 +360,20 @@ export default {
           date = dateYYYYMMDD(state.selectedDate);
         }
         if (date && state.selectedHourFrom && state.selectedHourTo) {
-          if (Object.keys(selectedDates).length >= 0) {
+          if (state.selectedHourTo < state.selectedHourFrom) {
+            state.errorsDateAdd.push('businessCommercesAdmin.validate.hours')
+          } else if (Object.keys(selectedDates).length >= 0) {
+            const [hourFrom, minuteFrom] = state.selectedHourFrom.split(':');
+            const [hourTo, minuteTo] = state.selectedHourTo.split(':');
+            const hourNumberFrom = +hourFrom + (+minuteFrom / 60);
+            const hourNumberTo = +hourTo + (+minuteTo / 60);
             selectedDates[date] = {
-              attentionHourFrom: state.selectedHourFrom,
-              attentionHourTo: state.selectedHourTo
+              attentionHourFrom: hourNumberFrom,
+              attentionHourTo: hourNumberTo
             }
           }
         } else {
-          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate')
+          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate');
         }
       }
       state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
@@ -385,10 +391,16 @@ export default {
           date = dateYYYYMMDD(state.selectedDate);
         }
         if (date && state.selectedHourFrom && state.selectedHourTo) {
-          if (Object.keys(selectedDates).length >= 0) {
+          if (state.selectedHourTo < state.selectedHourFrom) {
+            state.errorsDateAdd.push('businessCommercesAdmin.validate.hours')
+          } else if (Object.keys(selectedDates).length >= 0) {
+            const [hourFrom, minuteFrom] = state.selectedHourFrom.split(':');
+            const [hourTo, minuteTo] = state.selectedHourTo.split(':');
+            const hourNumberFrom = +hourFrom + (+minuteFrom / 60);
+            const hourNumberTo = +hourTo + (+minuteTo / 60);
             selectedDates[date] = {
-              attentionHourFrom: state.selectedHourFrom,
-              attentionHourTo: state.selectedHourTo
+              attentionHourFrom: hourNumberFrom,
+              attentionHourTo: hourNumberTo
             }
           }
         } else {
@@ -1085,28 +1097,20 @@ export default {
                               <div class="row">
                                 <div class="col-5">
                                   <input
-                                    min="0"
-                                    max="24"
-                                    minlength="1"
-                                    maxlength="2"
-                                    type="number"
+                                    type="time"
                                     class="form-control form-control-sm"
                                     v-model="state.selectedHourFrom"
-                                    placeholder="Ex. 8">
+                                  />
                                 </div>
                                 <div class="col-2">
                                   -
                                 </div>
                                 <div class="col-5">
                                   <input
-                                    min="0"
-                                    max="24"
-                                    minlength="1"
-                                    maxlength="2"
-                                    type="number"
+                                    type="time"
                                     class="form-control form-control-sm"
                                     v-model="state.selectedHourTo"
-                                    placeholder="Ex. 16">
+                                  />
                                 </div>
                               </div>
                               <div class="row my-2">
@@ -1128,7 +1132,7 @@ export default {
                             </div>
                             <div v-if="commerce.serviceInfo.specificCalendarDays">
                               <hr>
-                              <div class="row centered my-1" v-for="date in Object.keys(commerce.serviceInfo.specificCalendarDays)" :key="date">
+                              <div class="row centered my-1" v-for="date in Object.keys(commerce.serviceInfo.specificCalendarDays).sort()" :key="date">
                                 <div class="col-4">
                                   <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
                                 </div>
@@ -1760,28 +1764,20 @@ export default {
                           <div class="row">
                             <div class="col-5">
                               <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
+                                type="time"
                                 class="form-control form-control-sm"
                                 v-model="state.selectedHourFrom"
-                                placeholder="Ex. 8">
+                              />
                             </div>
                             <div class="col-2">
                               -
                             </div>
                             <div class="col-5">
                               <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
+                                type="time"
                                 class="form-control form-control-sm"
                                 v-model="state.selectedHourTo"
-                                placeholder="Ex. 16">
+                              />
                             </div>
                           </div>
                           <div class="row my-2">

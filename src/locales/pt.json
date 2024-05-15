@@ -2945,7 +2945,8 @@
       "tag": "Você deve digitar o nome fantasia",
       "url": "Você deve digitar o web site",
       "address": "Você deve digitar o endereço",
-      "selectedDate": "Deve selecionar uma data e adicionar horário"
+      "selectedDate": "Deve selecionar uma data e adicionar horário",
+      "hours": "Hora 'De' deve ser minor que a hora 'Até'"
     }
   },
   "patientHistoryView": {

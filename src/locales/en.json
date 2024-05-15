@@ -2936,7 +2936,8 @@
       "tag": "You should enter the fantasy name",
       "url": "You should enter the web site",
       "address": "You should enter the address",
-      "selectedDate": "Should select a date and add hours"
+      "selectedDate": "Should select a date and add hours",
+      "hours": "Hour 'From' should be minor than hour 'To'"
     }
   },
   "patientHistoryView": {

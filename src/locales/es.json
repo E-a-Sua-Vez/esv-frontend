@@ -2932,7 +2932,8 @@
       "email": "Debes ingresar el email",
       "url": "Debes ingresar el sitio web",
       "address": "Debes ingresar la dirección",
-      "selectedDate": "Debe seleccionar una fecha y agregar horario"
+      "selectedDate": "Debe seleccionar una fecha y agregar horario",
+      "hours": "Hora 'Desde' debe ser menor a hora 'Hasta'"
     }
   },
   "patientHistoryView": {
