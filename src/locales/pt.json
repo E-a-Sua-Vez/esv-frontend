@@ -209,7 +209,8 @@
       "SUPPLIER": "Pagamento Fornecedor",
       "BENEFICIARY": "Pagamento Beneficiário",
       "COLLABORATOR": "Pagamento Colaborador",
-      "SERVICE": "Pagamento Serviço"
+      "SERVICE": "Pagamento Serviço",
+      "HEALTH_AGREEMENT": "Convenio Saúde"
     }
   },
   "civilStatuses": {
@@ -229,7 +230,8 @@
       "SUPPLIER": "Fornecedor",
       "BENEFICIARY": "Beneficiário",
       "COLLABORATOR": "Colaborador",
-      "SERVICE": "Serviço"
+      "SERVICE": "Serviço",
+      "HEALTH_AGREEMENT": "Convenio Saúde"
     }
   },
    "collaborators": {
@@ -492,6 +494,10 @@
     "email-bookings-terms-conditions": {
       "title": "Email Acepta Terminos",
       "description": "Permite ao cliente aceitar as condições de seriviço."
+    },
+    "attention-user-health-agreement": {
+      "title": "Form Convenio Saúde",
+      "description": "Solicita o Convenio de Saúde ao usuário para obter a senha."
     }
   },
   "document": {
@@ -641,6 +647,7 @@
     "oldClient": "Já sou Cliente",
     "selectTheService": "Selecione o Serviço",
     "procedures": "Sessões:",
+    "healthAgreementText": "Convenio de Saúde",
     "waitlist": {
       "title": "Junte-se à lista de espera!",
       "content": "Neste momento não temos disponibilidade. Você quer ser contatado caso o horário fique disponível?",
@@ -677,7 +684,8 @@
       "origin": "Deve digitar seu origem",
       "code1": "Deve digitar seu código 1",
       "code2": "Deve digitar seu código 2",
-      "code3": "Deve digitar seu código 3"
+      "code3": "Deve digitar seu código 3",
+      "healthAgreementText": "Deve selecionar seu convenio de saúde"
     }
   },
   "attentionNumber": {
@@ -2899,6 +2907,9 @@
     "blockTime": "Bloque (Min):",
     "personalized": "Personalizado:",
     "holidays": "Férias:",
+    "specificCalendar": "Calendário Específico:",
+    "selectSpecificDate": "Selecione data no calendário e indique as horas disponíveis:",
+    "addDate": "Adicionar Data",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -2933,7 +2944,8 @@
       "keyName": "Você deve digitar o nome web",
       "tag": "Você deve digitar o nome fantasia",
       "url": "Você deve digitar o web site",
-      "address": "Você deve digitar o endereço"
+      "address": "Você deve digitar o endereço",
+      "selectedDate": "Deve selecionar uma data e adicionar horário"
     }
   },
   "patientHistoryView": {

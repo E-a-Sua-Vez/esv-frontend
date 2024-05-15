@@ -223,7 +223,8 @@ export const getCompanyTypes = () => {
     { id: 'SUPPLIER', name: 'SUPPLIER' },
     { id: 'BENEFICIARY', name: 'BENEFICIARY' },
     { id: 'COLLABORATOR', name: 'COLLABORATOR' },
-    { id: 'SERVICE', name: 'SERVICE' }
+    { id: 'SERVICE', name: 'SERVICE' },
+    { id: 'HEALTH_AGREEMENT', name: 'HEALTH_AGREEMENT' }
   ]
 }
 

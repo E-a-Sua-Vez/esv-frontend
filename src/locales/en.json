@@ -209,7 +209,8 @@
       "SUPPLIER": "Provider Payment",
       "BENEFICIARY": "Beneficiary Payment",
       "COLLABORATOR": "Collaborator Payment",
-      "SERVICE": "Service Payment"
+      "SERVICE": "Service Payment",
+      "HEALTH_AGREEMENT": "Health Agreement"
     }
   },
   "civilStatuses": {
@@ -229,7 +230,8 @@
       "SUPPLIER": "Provider",
       "BENEFICIARY": "Beneficiary",
       "COLLABORATOR": "Collaborator",
-      "SERVICE": "Service"
+      "SERVICE": "Service",
+      "HEALTH_AGREEMENT": "Health Agreement"
     }
   },
   "items": {
@@ -492,6 +494,10 @@
     "email-bookings-terms-conditions": {
       "title": "Email Terms Accept",
       "description": "Let the client to accept the terms and conditions of service."
+    },
+    "attention-user-health-agreement": {
+      "title": "Form Health Agreement",
+      "description": "Request the Health Agreement to the user to obtain a attention number."
     }
   },
   "document": {
@@ -641,6 +647,7 @@
     "oldClient": "I'm Client",
     "selectTheService": "Select the Service",
     "procedures": "Procedures:",
+    "healthAgreementText": "Health Agreement",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",
@@ -676,7 +683,8 @@
       "origin": "Should set your origin",
       "code1": "Should set your code 1",
       "code2": "Should set your code 2",
-      "code3": "Should set your code 3"
+      "code3": "Should set your code 3",
+      "healthAgreementText": "Should select your health agreement"
     }
   },
   "attentionNumber": {
@@ -2891,6 +2899,9 @@
     "blockTime": "Block (Min):",
     "personalized": "Personalized:",
     "holidays": "Holidays:",
+    "specificCalendar": "Specific Calendar:",
+    "selectSpecificDate": "Select date on calendar e add the available hours:",
+    "addDate": "Add Date",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2924,7 +2935,8 @@
       "keyName": "You should enter the web name",
       "tag": "You should enter the fantasy name",
       "url": "You should enter the web site",
-      "address": "You should enter the address"
+      "address": "You should enter the address",
+      "selectedDate": "Should select a date and add hours"
     }
   },
   "patientHistoryView": {

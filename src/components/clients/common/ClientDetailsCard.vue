@@ -423,6 +423,10 @@ export default {
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.birthday') }} </span>
                 <i class="bi bi-cake-fill"></i> {{ getDate(client.userBirthday) }}
               </span>
+              <span v-if="client.healthAgreementName" class="badge mx-1 detail-data-badge">
+                <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.healthAgreementText') }} </span>
+                {{ client.healthAgreementName }}
+              </span>
               <span v-if="client.userOrigin" class="badge mx-1 detail-data-badge">
                 <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.origin') }} </span>
                 {{ $t(`origin.${client.userOrigin}`) }}</span>

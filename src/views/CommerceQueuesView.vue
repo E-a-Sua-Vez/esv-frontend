@@ -47,6 +47,7 @@ export default {
       code1,
       code2,
       code3,
+      healthAgreementId,
       addressCode,
       origin
     } = route.params;
@@ -142,7 +143,7 @@ export default {
         loading.value = true;
         if (keyName) {
           state.commerce = await getCommerceByKeyName(keyName);
-          state.locale = state.commerce.localeInfo.language;
+          state.locale = state.commerce.localeInfo.language || 'es';
           store.setCurrentCommerce(state.commerce);
           if (client && client !== undefined) {
             const clientById = await getClientById(client);
@@ -269,6 +270,9 @@ export default {
         }
         if (data.code3) {
           state.newUser.code3 = data.code3;
+        }
+        if (data.healthAgreementId) {
+          state.newUser.healthAgreementId = data.healthAgreementId;
         }
         if (data.phoneCode && data.phone) {
           state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
@@ -447,7 +451,8 @@ export default {
         getActiveFeature(state.commerce, 'attention-user-origin', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-code1', 'USER') ||
         getActiveFeature(state.commerce, 'attention-user-code2', 'USER') ||
-        getActiveFeature(state.commerce, 'attention-user-code3', 'USER')
+        getActiveFeature(state.commerce, 'attention-user-code3', 'USER') ||
+        getActiveFeature(state.commerce, 'attention-user-health-agreement', 'USER')
       ) {
         return true;
       }
@@ -533,6 +538,11 @@ export default {
               state.errorsAdd.push('commerceQueuesView.validate.code3');
             }
           }
+          if (getActiveFeature(state.commerce, 'attention-user-health-agreement', 'USER')) {
+            if (!user.healthAgreementId || user.healthAgreementId.length === 0) {
+              state.errorsAdd.push('commerceQueuesView.validate.healthAgreementId');
+            }
+          }
         } else {
           if (getActiveFeature(state.commerce, 'attention-user-email', 'USER')) {
             if (!validateEmail(user.email)) {
@@ -585,6 +595,10 @@ export default {
       if (user.code3) {
         personalInfo.code3 = user.code3;
         delete user.code3;
+      }
+      if (user.healthAgreementId) {
+        personalInfo.healthAgreementId = user.healthAgreementId;
+        delete user.healthAgreementId;
       }
       user.personalInfo = personalInfo;
       return user;
@@ -1427,6 +1441,7 @@ export default {
       code1,
       code2,
       code3,
+      healthAgreementId,
       addressCode,
       origin,
       client,
@@ -1486,6 +1501,7 @@ export default {
             :code1="state.newUser.code1 || code1"
             :code2="state.newUser.code2 || code2"
             :code3="state.newUser.code3 || code3"
+            :healthAgreementId="state.newUser.healthAgreementId || healthAgreementId"
             :client="client"
             :errorsAdd="state.errorsAdd"
             :receiveData="receiveData"

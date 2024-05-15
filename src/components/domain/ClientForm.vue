@@ -4,6 +4,7 @@ import { getActiveFeature } from '../../shared/features';
 import { getPhoneCodes, getUserOrigin } from '../../shared/utils/data';
 import { getAddressBR } from '../../application/services/address';
 import { searchClientByIdNumber } from '../../application/services/client';
+import { getActiveCompaniesByCommerceIdAnyType } from '../../application/services/company';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../../components/common/Warning.vue';
 import Spinner from '../common/Spinner.vue';
@@ -27,6 +28,7 @@ export default {
     code1: { type: String, default: '' },
     code2: { type: String, default: '' },
     code3: { type: String, default: '' },
+    healthAgreementId: { type: String, default: '' },
     client: { type: String, default: undefined },
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} }
@@ -52,6 +54,7 @@ export default {
       code1,
       code2,
       code3,
+      healthAgreementId,
       client,
       errorsAdd
     } = toRefs(props);
@@ -66,6 +69,7 @@ export default {
       phoneCode: '',
       phoneCodes: [],
       originCodes: [],
+      healthAgreementCompanies: [],
       addressCodeError: false,
       showNewClient: true,
       showOldClient: false,
@@ -87,6 +91,9 @@ export default {
           if (state.documentServiceConditions && state.documentServiceConditions.active === true) {
             state.fileServiceConditions = await getDocument(`${commerce.value.id}.pdf`, 'terms_of_service');
           }
+        }
+        if (getActiveFeature(commerce.value, 'attention-user-health-agreement', 'USER')) {
+          state.healthAgreementCompanies = await getActiveCompaniesByCommerceIdAnyType(commerce.value.id, 'HEALTH_AGREEMENT');
         }
         if (commerce.value && commerce.value.localeInfo.country) {
           state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
@@ -130,10 +137,13 @@ export default {
           state.newUser.code1 = code1.value != 'undefined' ? code1.value : '';
         }
         if (code2.value) {
-          state.newUser.code1 = code2.value != 'undefined' ? code2.value : '';
+          state.newUser.code2 = code2.value != 'undefined' ? code2.value : '';
         }
         if (code3.value) {
-          state.newUser.code1 = code3.value != 'undefined' ? code3.value : '';
+          state.newUser.code3 = code3.value != 'undefined' ? code3.value : '';
+        }
+        if (healthAgreementId.value) {
+          state.newUser.healthAgreementId = healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
         }
         loading.value = false;
       } catch (error) {
@@ -237,7 +247,8 @@ export default {
         getActiveFeature(commerce.value, 'attention-user-origin', 'USER') ||
         getActiveFeature(commerce.value, 'attention-user-code1', 'USER') ||
         getActiveFeature(commerce.value, 'attention-user-code2', 'USER') ||
-        getActiveFeature(commerce.value, 'attention-user-code3', 'USER')
+        getActiveFeature(commerce.value, 'attention-user-code3', 'USER') ||
+        getActiveFeature(commerce.value, 'attention-user-health-agreement', 'USER')
       ) {
         return true;
       }
@@ -704,6 +715,22 @@ export default {
                 <option v-for="code in state.originCodes" :key="code.id" :value="code.code">{{ $t(`origin.${code.id}`) }}</option>
               </select>
               <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.originText") }}</label>
+            </div>
+          </div>
+          <div id="attention-health-agreement-form-add" class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-health-agreement', 'USER') &&
+              state.healthAgreementCompanies && state.healthAgreementCompanies.length > 0"
+          >
+            <div class="col form-floating">
+              <select
+                class="form-control form-select btn btn-light select"
+                v-model="state.newUser.healthAgreementId"
+                id="attention-healthAgreementId-input-add"
+                @change="sendData"
+                >
+                <option v-for="company in state.healthAgreementCompanies" :key="company.id" :value="company.id">{{ company.tag }}</option>
+              </select>
+              <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.healthAgreementText") }}</label>
             </div>
           </div>
           <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions">

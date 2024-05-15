@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getActiveCommercesByBusinessId, updateCommerce, addCommerce } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
+import { getDate, dateYYYYMMDD } from '../../shared/utils/date';
 import Popper from "vue3-popper";
 import CommerceName from '../../components/common/CommerceName.vue';
 import Toggle from '@vueform/toggle';
@@ -26,6 +27,26 @@ export default {
 
     let loading = ref(false);
     let alertError = ref('');
+    let dateMask = ref({
+      modelValue: 'YYYY-MM-DD',
+    });
+    let disabledDates = ref([
+      {
+        repeat: {
+          weekdays: [],
+        }
+      }
+    ]);
+    let calendarAttributes = ref([
+      {
+        key: 'Available',
+        highlight: {
+          color: 'green',
+          fillMode: 'light',
+        },
+        dates: []
+      }
+    ])
 
     const state = reactive({
       currentUser: {},
@@ -39,7 +60,13 @@ export default {
       newCommerce: {},
       extendedEntity: undefined,
       errorsAdd: [],
+      errorsDateAdd: [],
       errorsUpdate: [],
+      locale: 'es',
+      selectedDate: (new Date()).setDate(new Date().getDate()),
+      selectedHourFrom: undefined,
+      selectedHourTo: undefined,
+      selectedDates: {},
       nameError: false,
       keyNameError: false,
       tagAddError: false,
@@ -71,6 +98,7 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await getActiveCommercesByBusinessId(state.business.id);
+        state.locale = state.commerce.localeInfo?.language || 'es';
         state.filtered = state.commerces;
         state.toggles = await getPermissions('commerces', 'admin');
         alertError.value = '';
@@ -176,6 +204,8 @@ export default {
           personalizedHours: {},
           holiday: false,
           holidays: {},
+          specificCalendar: false,
+          specificCalendarDays: {},
           ...state.business.serviceInfo }
       }
     }
@@ -184,6 +214,9 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newCommerce)) {
+          if (state.selectedDates && state.commerces.serviceInfo) {
+            state.commerces.serviceInfo.selectedDates = state.selectedDates;
+          }
           await addCommerce(state.newCommerce);
           const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
@@ -204,6 +237,9 @@ export default {
       try {
         loading.value = true;
         if (validateUpdate(commerce)) {
+          if (state.selectedDates && state.commerces.serviceInfo) {
+            state.commerces.serviceInfo.selectedDates = state.selectedDates;
+          }
           await updateCommerce(commerce.id, commerce);
           const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
@@ -304,6 +340,95 @@ export default {
       }
     }
 
+    const initializedSpecificCalendar = (serviceInfo) => {
+      if (serviceInfo.specificCalendarDays === true) {
+        if (!serviceInfo.specificCalendarDays) {
+          serviceInfo.specificCalendarDays = {};
+        }
+      }
+    }
+
+    const addSpecificDate = (index) => {
+      state.errorsDateAdd = [];
+      let selectedDates = state.filtered[index].serviceInfo.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates) {
+        let date = dateYYYYMMDD(new Date());
+        if (state.selectedDate) {
+          date = dateYYYYMMDD(state.selectedDate);
+        }
+        if (date && state.selectedHourFrom && state.selectedHourTo) {
+          if (Object.keys(selectedDates).length >= 0) {
+            selectedDates[date] = {
+              attentionHourFrom: state.selectedHourFrom,
+              attentionHourTo: state.selectedHourTo
+            }
+          }
+        } else {
+          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate')
+        }
+      }
+      state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const updateAddSpecificDate = () => {
+      state.errorsDateAdd = [];
+      let selectedDates = state.newCommerce.serviceInfo.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates) {
+        let date = dateYYYYMMDD(new Date());
+        if (state.selectedDate) {
+          date = dateYYYYMMDD(state.selectedDate);
+        }
+        if (date && state.selectedHourFrom && state.selectedHourTo) {
+          if (Object.keys(selectedDates).length >= 0) {
+            selectedDates[date] = {
+              attentionHourFrom: state.selectedHourFrom,
+              attentionHourTo: state.selectedHourTo
+            }
+          }
+        } else {
+          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate')
+        }
+      }
+      state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const deleteSpecificDate = (index, date) => {
+      let selectedDates = state.filtered[index].serviceInfo.specificCalendarDays;
+      if (selectedDates) {
+        if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
+          delete selectedDates[date];
+        }
+      }
+      state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const updateDeleteSpecificDate = (date) => {
+      let selectedDates = state.newCommerce.serviceInfo.specificCalendarDays;
+      if (selectedDates) {
+        if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
+          delete selectedDates[date];
+        }
+      }
+      state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const timeConvert = (num) => {
+      if (num) {
+        const [hours, min = 0] = num.toString().split('.');
+        let minutes = (num - hours) * 60;
+        if (minutes === 0) {
+          minutes = '00';
+        }
+        return `${hours}:${minutes}`;
+      }
+    };
+
     const receiveFilteredItems = (items) => {
       state.filtered = items;
     }
@@ -317,6 +442,10 @@ export default {
       state,
       loading,
       alertError,
+      dateMask,
+      disabledDates,
+      calendarAttributes,
+      getDate,
       showUpdateForm,
       update,
       showAdd,
@@ -331,7 +460,13 @@ export default {
       unavailable,
       goToUnavailable,
       unavailableCancel,
-      receiveFilteredItems
+      receiveFilteredItems,
+      initializedSpecificCalendar,
+      addSpecificDate,
+      updateAddSpecificDate,
+      deleteSpecificDate,
+      updateDeleteSpecificDate,
+      timeConvert
     }
   }
 }
@@ -418,7 +553,6 @@ export default {
                         </div>
                         <div class="col-8">
                           <input
-                            :disabled="true"
                             min="1"
                             max="50"
                             type="text"
@@ -433,7 +567,6 @@ export default {
                         </div>
                         <div class="col-8">
                           <input
-                            :disabled="true"
                             min="1"
                             max="50"
                             type="text"
@@ -448,7 +581,6 @@ export default {
                         </div>
                         <div class="col-8">
                           <input
-                            :disabled="true"
                             min="10"
                             type="email"
                             class="form-control"
@@ -875,18 +1007,19 @@ export default {
                           </div>
                         </div>
                         <div id="update-commerce-personalized-active-form" class="row g-1">
-                              <div class="col-4 text-label">
-                                {{ $t("businessCommercesAdmin.personalized") }}
-                              </div>
-                              <div class="col-8">
-                                <Toggle
-                                  v-model="commerce.serviceInfo.personalized"
-                                  :disabled="!state.toggles['commerces.admin.edit']"
-                                  @click="initializedParsonalizedHours(commerce.serviceInfo)"
-                                />
-                              </div>
+                          <div class="col-4 text-label">
+                            {{ $t("businessCommercesAdmin.personalized") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="commerce.serviceInfo.personalized"
+                              :disabled="!state.toggles['commerces.admin.edit']"
+                              @click="initializedParsonalizedHours(commerce.serviceInfo)"
+                            />
+                          </div>
                         </div>
                         <div id="commerce-personalized-form-update" v-if="commerce.serviceInfo.personalized" class="row g-1">
+                          <hr>
                           <div class="row g-1" v-for="day in commerce.serviceInfo.attentionDays" :key="day">
                             <div class="col-4 text-label">
                               {{ $t(`days.${day}`) }}
@@ -898,7 +1031,7 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control"
+                                class="form-control form-control-sm"
                                 v-model="commerce.serviceInfo.personalizedHours[day].attentionHourFrom"
                                 placeholder="Ex. 8">
                             </div>
@@ -912,9 +1045,104 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control"
+                                class="form-control form-control-sm"
                                 v-model="commerce.serviceInfo.personalizedHours[day].attentionHourTo"
                                 placeholder="Ex. 16">
+                            </div>
+                          </div>
+                        </div>
+                        <div id="commerce-specificCalendar-active-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessCommercesAdmin.specificCalendar") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="commerce.serviceInfo.specificCalendar"
+                              :disabled="!state.toggles['commerces.admin.edit']"
+                              @click="initializedSpecificCalendar(commerce.serviceInfo)"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-specificCalendarDays-form-update" v-if="commerce.serviceInfo.specificCalendar" class="g-1">
+                          <hr>
+                          <div class="row">
+                            <div class="my-2 selected-days-title">
+                              <span class="selected-days-title"> {{ $t("businessCommercesAdmin.selectSpecificDate") }} </span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                              <VDatePicker
+                                :locale="state.locale"
+                                v-model.string="state.selectedDate"
+                                :mask="dateMask"
+                                :disabled-dates="disabledDates"
+                                :attributes='calendarAttributes'
+                              />
+                            </div>
+                            <div class="col-12 col-md-6 mt-2">
+                              <div class="col-12">
+                                <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                              </div>
+                              <div class="row">
+                                <div class="col-5">
+                                  <input
+                                    min="0"
+                                    max="24"
+                                    minlength="1"
+                                    maxlength="2"
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    v-model="state.selectedHourFrom"
+                                    placeholder="Ex. 8">
+                                </div>
+                                <div class="col-2">
+                                  -
+                                </div>
+                                <div class="col-5">
+                                  <input
+                                    min="0"
+                                    max="24"
+                                    minlength="1"
+                                    maxlength="2"
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    v-model="state.selectedHourTo"
+                                    placeholder="Ex. 16">
+                                </div>
+                              </div>
+                              <div class="row my-2">
+                                <button
+                                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                                  @click="addSpecificDate(index)">
+                                  {{ $t("businessCommercesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
+                                </button>
+                                <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
+                                  <Warning>
+                                    <template v-slot:message>
+                                      <li v-for="(error, index) in state.errorsDateAdd" :key="index">
+                                        {{ $t(error) }}
+                                      </li>
+                                    </template>
+                                  </Warning>
+                                </div>
+                              </div>
+                            </div>
+                            <div v-if="commerce.serviceInfo.specificCalendarDays">
+                              <hr>
+                              <div class="row centered my-1" v-for="date in Object.keys(commerce.serviceInfo.specificCalendarDays)" :key="date">
+                                <div class="col-4">
+                                  <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+                                </div>
+                                <div class="col-5 selected-days-title">
+                                  {{ timeConvert(commerce.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(commerce.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
+                                </div>
+                                <div class="col-3">
+                                  <button
+                                    class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+                                    @click="deleteSpecificDate(index, date)">
+                                    <i class="bi bi-trash-fill"></i>
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1413,43 +1641,43 @@ export default {
                           <input class="form-check-input" type="checkbox" id="monday"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 1)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 1)">
-                          <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
+                          <label class="form-check-label text-label" for="monday">{{ $t("days.1") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="tuesday"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 2)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 2)">
-                          <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
+                          <label class="form-check-label text-label" for="tuesday">{{ $t("days.2") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="wednesday"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 3)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 3)">
-                          <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
+                          <label class="form-check-label text-label" for="wednesday">{{ $t("days.3") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="thursday"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 4)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 4)">
-                          <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
+                          <label class="form-check-label text-label" for="thursday">{{ $t("days.4") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="friday"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 5)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 5)">
-                          <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
+                          <label class="form-check-label text-label" for="friday">{{ $t("days.5") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="sabado"
                             :checked="dayChecked(state.newCommerce.serviceInfo, 6)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 6)">
-                          <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
+                          <label class="form-check-label text-label" for="sabado">{{ $t("days.6") }}</label>
                         </div>
                         <div class="form-check form-switch">
                           <input class="form-check-input" type="checkbox" id="domingo"
                             :checked="dayChecked(state.newCommerce.serviceInfo)"
                             @click="checkDay($event, state.newCommerce.serviceInfo, 7)">
-                          <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                          <label class="form-check-label text-label" for="domingo">{{ $t("days.7") }}</label>
                         </div>
                       </div>
                     </div>
@@ -1466,6 +1694,7 @@ export default {
                       </div>
                     </div>
                     <div id="commerce-personalized-form-add" v-if="state.newCommerce.serviceInfo.personalized" class="row g-1">
+                      <hr>
                       <div class="row g-1" v-for="day in state.newCommerce.serviceInfo.attentionDays" :key="day">
                         <div class="col-4 text-label">
                           {{ $t(`days.${day}`) }}
@@ -1477,7 +1706,7 @@ export default {
                             minlength="1"
                             maxlength="2"
                             type="number"
-                            class="form-control"
+                            class="form-control form-control-sm"
                             v-model="state.newCommerce.serviceInfo.personalizedHours[day].attentionHourFrom"
                             placeholder="Ex. 8">
                         </div>
@@ -1491,9 +1720,104 @@ export default {
                             minlength="1"
                             maxlength="2"
                             type="number"
-                            class="form-control"
+                            class="form-control form-control-sm"
                             v-model="state.newCommerce.serviceInfo.personalizedHours[day].attentionHourTo"
                             placeholder="Ex. 16">
+                        </div>
+                      </div>
+                    </div>
+                    <div id="commerce-specificCalendar-active-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCommercesAdmin.specificCalendar") }}
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newCommerce.serviceInfo.specificCalendar"
+                          :disabled="!state.toggles['commerces.admin.edit']"
+                          @click="initializedSpecificCalendar(state.newCommerce.serviceInfo)"
+                        />
+                      </div>
+                    </div>
+                    <div id="commerce-specificCalendarDays-form-add" v-if="state.newCommerce.serviceInfo.specificCalendar" class="row">
+                      <hr>
+                      <div class="row">
+                        <div class="my-2 selected-days-title">
+                          <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectSpecificDate") }} </span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <VDatePicker
+                            :locale="state.locale"
+                            v-model.string="state.selectedDate"
+                            :mask="dateMask"
+                            :disabled-dates="disabledDates"
+                            :attributes='calendarAttributes'
+                          />
+                        </div>
+                        <div class="col-12 col-md-6 mt-2">
+                          <div class="col-12">
+                            <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                          </div>
+                          <div class="row">
+                            <div class="col-5">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control form-control-sm"
+                                v-model="state.selectedHourFrom"
+                                placeholder="Ex. 8">
+                            </div>
+                            <div class="col-2">
+                              -
+                            </div>
+                            <div class="col-5">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control form-control-sm"
+                                v-model="state.selectedHourTo"
+                                placeholder="Ex. 16">
+                            </div>
+                          </div>
+                          <div class="row my-2">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                              @click="updateAddSpecificDate()">
+                              {{ $t("businessCommercesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
+                            </button>
+                            <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
+                              <Warning>
+                                <template v-slot:message>
+                                  <li v-for="(error, index) in state.errorsDateAdd" :key="index">
+                                    {{ $t(error) }}
+                                  </li>
+                                </template>
+                              </Warning>
+                            </div>
+                          </div>
+                        </div>
+                        <div v-if="state.newCommerce.serviceInfo.specificCalendarDays">
+                          <hr>
+                          <div class="row centered my-1" v-for="date in Object.keys(state.newCommerce.serviceInfo.specificCalendarDays)" :key="date">
+                            <div class="col-4 text-label">
+                              <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+                            </div>
+                            <div class="col-5 selected-days-title text-label">
+                              {{ timeConvert(state.newCommerce.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(state.newCommerce.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
+                            </div>
+                            <div class="col-3">
+                              <button
+                                class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+                                @click="updateDeleteSpecificDate(date)">
+                                <i class="bi bi-trash-fill"></i>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1556,5 +1880,8 @@ export default {
 .errors {
   font-size: small;
   color: var(--rojo-warning);
+}
+.selected-days-title {
+  line-height: 1rem;
 }
 </style>

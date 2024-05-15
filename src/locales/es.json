@@ -209,7 +209,8 @@
       "SUPPLIER": "Pago Proveedor",
       "BENEFICIARY": "Pago Beneficiario",
       "COLLABORATOR": "Pago Colaborador",
-      "SERVICE": "Pago Servicio"
+      "SERVICE": "Pago Servicio",
+      "HEALTH_AGREEMENT": "Convenio Salud"
     }
   },
   "civilStatuses": {
@@ -229,7 +230,8 @@
       "SUPPLIER": "Proveedor",
       "BENEFICIARY": "Beneficiario",
       "COLLABORATOR": "Colaborador",
-      "SERVICE": "Servicio"
+      "SERVICE": "Servicio",
+      "HEALTH_AGREEMENT": "Convenio Salud"
     }
   },
   "items": {
@@ -485,6 +487,10 @@
     "email-bookings-terms-conditions": {
       "title": "Email Acepta Terminos",
       "description": "Permite al cliente aceptar las condiciones y terminos de serivicio."
+    },
+    "attention-user-health-agreement": {
+      "title": "Form Convenio Salud",
+      "description": "Solicita el Convenio de Salud para obtener número de atención."
     }
   },
   "document": {
@@ -637,6 +643,7 @@
     "oldClient": "Ya Soy Cliente",
     "selectTheService": "Selecciona el servicio",
     "procedures": "Sesiones:",
+    "healthAgreementText": "Convenio de Salud",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",
@@ -673,7 +680,8 @@
       "origin": "Debes ingresar tu origen",
       "code1": "Debes ingresar tu código 1",
       "code2": "Debes ingresar tu código 2",
-      "code3": "Debes ingresar tu código 3"
+      "code3": "Debes ingresar tu código 3",
+      "healthAgreementText": "Debes seleccionar tu convenio de salud"
     }
   },
   "attentionNumber": {
@@ -2886,6 +2894,9 @@
     "listResult": "Registros:",
     "personalized": "Personalizado:",
     "holidays": "Feriados:",
+    "specificCalendar": "Calendario Específico:",
+    "selectSpecificDate": "Seleccione fecha en el calendario e indique las horas disponibles:",
+    "addDate": "Agregar Fecha",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2920,7 +2931,8 @@
       "phone": "Debes ingresar el teléfono",
       "email": "Debes ingresar el email",
       "url": "Debes ingresar el sitio web",
-      "address": "Debes ingresar la dirección"
+      "address": "Debes ingresar la dirección",
+      "selectedDate": "Debe seleccionar una fecha y agregar horario"
     }
   },
   "patientHistoryView": {
