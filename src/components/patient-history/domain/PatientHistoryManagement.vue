@@ -52,7 +52,7 @@ export default {
       endDate: undefined,
       store,
       userType: '',
-      autoSaving: false,
+      autoSaving: true,
       pendingControlNumber: 0,
       dataChanged: false,
       saveIntervalId: undefined,

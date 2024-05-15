@@ -24,7 +24,8 @@ export default {
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
-    productAttentionsIn: { type: Array, default: [] }
+    productAttentionsIn: { type: Array, default: [] },
+    showSearchFilters: { type: Boolean, default: true }
   },
   emits: ['getProductConsuptions'],
   data() {
@@ -298,6 +299,9 @@ export default {
       async handler() {
         if (this.selectedProduct && this.selectedProduct.id) {
           this.productReplacements = await getActiveReplacementsByProductId(this.selectedProduct.id);
+          if (!this.productReplacements || this.productReplacements.length === 0) {
+            this.errorsAdd.push('businessProductStockAdmin.validate.replacement');
+          }
         }
       }
     }
@@ -391,6 +395,7 @@ export default {
             </div>
             <div>
               <SimpleDownloadCard
+                v-if="showSearchFilters"
                 :download="toggles['products-stock.reports.consumption-details']"
                 :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
                 :showTooltip="true"
@@ -411,7 +416,7 @@ export default {
                   </button>
                 </div>
                 <div v-if="showFilterOptions">
-                  <div class="row my-1">
+                  <div class="row my-1" v-if="showSearchFilters">
                     <div class="col-3">
                       <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
                     </div>

@@ -336,6 +336,7 @@ export default {
               :attention="{ attentionId: state.attention.id, ...state.attention }"
               :commerce="state.commerce"
               :productAttentionsIn="state.productConsumptions"
+              :showSearchFilters="false"
               @getProductConsuptions="getAttentionProducts"
             >
             </ProductAttentionManagement>

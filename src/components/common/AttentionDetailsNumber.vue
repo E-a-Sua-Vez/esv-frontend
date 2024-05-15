@@ -74,7 +74,7 @@ export default {
         {{ number }}
       </div>
     </div>
-    <div :class="`details-arrow ${colorDetailToShow()}`" v-if="showData && hasData()">
+    <div :class="`details-arrow ${colorDetailToShow()}`" v-if="showData && hasData() && attention.attentionId">
       <span
         data-bs-toggle="collapse"
         :href="`#user-data-${number}`"
@@ -225,7 +225,7 @@ export default {
 .attention-number {
   margin-left: .3rem;
   margin-right: .3rem;
-  padding: .5rem;
+  padding: .4rem .5rem;
   border-radius: 1rem;
   font-weight: 900;
   font-size: 2.8rem;

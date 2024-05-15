@@ -350,6 +350,11 @@ export default {
                   </Warning>
                 </div>
               </div>
+              <div v-else>
+                <Message
+                  :title="$t('patientHistoryView.message.2.title')"
+                  :content="$t('patientHistoryView.message.2.content')" />
+              </div>
               <div v-if="state.oldDocuments && state.oldDocuments.length > 0">
                 <div class="col-12 text-label fw-bold mt-4">
                   {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>

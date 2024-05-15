@@ -2645,7 +2645,9 @@
       "consumptionLevel": "Consumption amount added is bigger than the quantity available",
       "replacementAmount": "You should add the replacement amount",
       "replacementDate": "You should add the replacement date",
-      "productReplacement": "You should select replacement"
+      "productReplacement": "You should select replacement",
+      "consumptionDate": "You should add the consume date",
+      "replacement": "This product has not availability, get in touch with administrator"
     }
   },
   "businessModulesAdmin": {
@@ -2982,6 +2984,10 @@
       "1": {
         "title": "Ups!",
         "content": "There's not elements to show"
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "There's not types of documents to upload. Get in touch with the administrator."
       }
     },
     "validate": {

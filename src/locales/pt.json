@@ -2649,8 +2649,10 @@
       "consumptionAmount": "Deve digitar a quantidade válida",
       "consumptionLevel": "O consumo digitado e maior quue a quantidade disponível",
       "replacementAmount": "Deve digitar a quantidade válida",
-      "replacementDate": "Deve digitar a data",
-      "productReplacement": "Deve selecionar um recarregamento"
+      "replacementDate": "Deve digitar a data de recarregamento",
+      "productReplacement": "Deve selecionar um recarregamento",
+      "consumptionDate": "Deve digitar a data de consumo",
+      "replacement": "O produto não tem disponibilidade, contacte ao administrador"
     }
   },
   "businessModulesAdmin": {
@@ -2991,6 +2993,10 @@
       "1": {
         "title": "Ups!",
         "content": "Não há elementos para mostrar."
+      },
+      "2": {
+        "title": "Ups!",
+        "content": "Não existem tipos de documentos disponíveis para carregar. Contacte o administrador."
       }
     },
     "validate": {

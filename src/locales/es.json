@@ -2553,8 +2553,10 @@
       "consumptionAmount": "Debe ingresar una cantidad válida",
       "consumptionLevel": "El consumo ingresado es mayor a la cantidad disponible",
       "replacementAmount": "Debe ingresar una cantidad válida",
-      "replacementDate": "Debe ingresar la fecha",
-      "productReplacement": "Debe seleccionar una reposición"
+      "replacementDate": "Debe ingresar la fecha de reposición",
+      "productReplacement": "Debe seleccionar una reposición",
+      "consumptionDate": "Debe ingresar la fecha de consumo",
+      "replacement": "Este producto no tiene disponibilidad, consulte al administrador"
     }
   },
   "businessFinancial" : {
@@ -2978,6 +2980,10 @@
       "1": {
         "title": "¡Ups!",
         "content": "No hay elementos para mostrar"
+      },
+      "2": {
+        "title": "¡Ups!",
+        "content": "No hay tipos de documentos disponibles para cargar. Comunícate con el administrador."
       }
     },
     "validate": {

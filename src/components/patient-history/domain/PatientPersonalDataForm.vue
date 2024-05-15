@@ -43,6 +43,7 @@ export default {
       civilStatuses: [],
       sexs: [],
       patientFormFirstAttention: {},
+      commerce: {},
       idNumberError: false,
       addressCodeError: false,
       nameError: false,
@@ -69,30 +70,31 @@ export default {
         if (patientHistoryData.value && patientHistoryData.value.id) {
           state.newPersonalData = patientHistoryData.value.personalData;
         } else {
-          if (commerce.value && commerce.value.localeInfo.country) {
+          if (commerce.value && commerce.value.id && commerce.value.localeInfo.country) {
             state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
           }
           state.newPersonalData.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
           state.newPersonalData.age = calculateAge(new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10));
           state.newPersonalData.font = true;
           if (clientData.value && clientData.value.id) {
-            const phoneIn = clientData.value.userPhone || undefined;
+            const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
             state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0,2) : '';
             state.newPersonalData.phone = phoneIn ? phoneIn.slice(2,20) : '';
-            const name = clientData.value.userName || undefined;
+            const name = clientData.value.userName || clientData.value.name || undefined;
             state.newPersonalData.name = name ? name : '';
-            const lastName = clientData.value.userLastName || undefined;
+            const lastName = clientData.value.userLastName || clientData.value.lastName || undefined;
             state.newPersonalData.lastName = lastName ? lastName : '';
-            const idNumber = clientData.value.userIdNumber || undefined;
+            const idNumber = clientData.value.userIdNumber || clientData.value.idNumber || undefined;
             state.newPersonalData.idNumber = idNumber ? idNumber : '';
-            const birthday = clientData.value.userBirthday || undefined;
+            const birthday = clientData.value.userBirthday || (clientData.value.personalInfo && clientData.value.personalInfo.birthday) || undefined;
             state.newPersonalData.birthday = birthday ? birthday : '';
-            const addressCode = clientData.value.userAddressCode || undefined;
+            const addressCode = clientData.value.userAddressCode || (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) || undefined;
             state.newPersonalData.addressCode = addressCode ? addressCode : '';
-            const addressComplement = clientData.value.userAddressComplement || undefined;
+            const addressComplement = clientData.value.userAddressComplement || (clientData.value.personalInfo && clientData.value.personalInfo.addressComplement) || undefined;
             state.newPersonalData.addressComplement = addressComplement ? addressComplement : '';
-            const addressText = clientData.value.userAddressText || undefined;
+            const addressText = clientData.value.userAddressText || (clientData.value.personalInfo && clientData.value.personalInfo.addressText) || undefined;
             state.newPersonalData.addressText = addressText ? addressText : '';
+            sendData();
           }
           if (patientForms.value && patientForms.value.length > 0) {
             const patientFormFirstAttentions = patientForms.value.filter(form => form.type === 'FIRST_ATTENTION');
@@ -108,6 +110,7 @@ export default {
                 const civilStatusAnswer = state.patientFormFirstAttention.answers.filter(answer => answer.type === 'PATIENT_CIVIL_STATUS');
                 const civilStatus = civilStatusAnswer[0].answer[0] || undefined;
                 state.newPersonalData.civilStatus = state.newPersonalData.civilStatus || civilStatus ? civilStatus : '';
+                sendData();
               }
             }
           }
@@ -187,6 +190,34 @@ export default {
         birthday
       }
     })
+
+    watch (
+      clientData,
+      async () => {
+        loading.value = true;
+        if (clientData.value && clientData.value.id) {
+          const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
+          state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0,2) : '';
+          state.newPersonalData.phone = phoneIn ? phoneIn.slice(2,20) : '';
+          const name = clientData.value.userName || clientData.value.name || undefined;
+          state.newPersonalData.name = name ? name : '';
+          const lastName = clientData.value.userLastName || clientData.value.lastName || undefined;
+          state.newPersonalData.lastName = lastName ? lastName : '';
+          const idNumber = clientData.value.userIdNumber || clientData.value.idNumber || undefined;
+          state.newPersonalData.idNumber = idNumber ? idNumber : '';
+          const birthday = clientData.value.userBirthday || (clientData.value.personalInfo && clientData.value.personalInfo.birthday) || undefined;
+          state.newPersonalData.birthday = birthday ? birthday : '';
+          const addressCode = clientData.value.userAddressCode || (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) || undefined;
+          state.newPersonalData.addressCode = addressCode ? addressCode : '';
+          const addressComplement = clientData.value.userAddressComplement || (clientData.value.personalInfo && clientData.value.personalInfo.addressComplement) || undefined;
+          state.newPersonalData.addressComplement = addressComplement ? addressComplement : '';
+          const addressText = clientData.value.userAddressText || (clientData.value.personalInfo && clientData.value.personalInfo.addressText) || undefined;
+          state.newPersonalData.addressText = addressText ? addressText : '';
+          sendData();
+        }
+        loading.value = false;
+      }
+    )
 
     watch (
       changeBirthday,
