@@ -161,6 +161,13 @@ export default {
       receiveData(state.newUser);
     }
 
+    const replaceOnlyNumber = () => {
+      if (state.idNumber && state.idNumber.length > 0) {
+        const idNumber = state.idNumber.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        state.idNumber = idNumber;
+      }
+    }
+
     const isDataActive = () => {
       let active = false;
       let features = [];
@@ -397,7 +404,8 @@ export default {
       clearClient,
       onlyNumber,
       getDocumentServiceConditions,
-      sendDataOnlyNumber
+      sendDataOnlyNumber,
+      replaceOnlyNumber
     }
   }
 }
@@ -430,13 +438,13 @@ export default {
         <div class="row g-1 mt-2" v-if="state.showOldClient">
           <div class="col-10 col-md-10">
             <input
-              type="number"
+              maxlength="20"
+              type="text"
               class="form-control"
               v-model.trim="state.idNumber"
-              v-bind:class="{ 'is-invalid': state.searchTextError }"
               :placeholder="$t('dashboard.search3')"
-              @keypress="onlyNumber"
               @keyup="replaceOnlyNumber"
+              @keypress="onlyNumber"
             >
           </div>
           <div class="col-2 col-md-2 centered">
