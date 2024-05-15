@@ -488,6 +488,10 @@
     "attention-pre-form": {
       "title": "Form Pre Attention",
       "description": "Let the client to fill a form before an attention."
+    },
+    "email-bookings-terms-conditions": {
+      "title": "Email Terms Accept",
+      "description": "Let the client to accept the terms and conditions of service."
     }
   },
   "document": {
@@ -1576,6 +1580,9 @@
         "34": "Incomes",
         "35": "Confirmed",
         "36": "Outcomes",
+        "37": "A. Cancelled",
+        "38": "B. Cancelled",
+        "39": "Terms & Cond.",
         "graph": {
           "1": "Attentions Evolution",
           "2": "Attentions by Queue",

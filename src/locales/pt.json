@@ -488,6 +488,10 @@
     "attention-pre-form": {
       "title": "Form Pre Atendimento",
       "description": "Permite ao cliente preencher um formulario antes do atendimento."
+    },
+    "email-bookings-terms-conditions": {
+      "title": "Email Acepta Terminos",
+      "description": "Permite ao cliente aceitar as condições de seriviço."
     }
   },
   "document": {
@@ -1578,6 +1582,9 @@
         "34": "Recebimentos",
         "35": "Confirmadas",
         "36": "Despesas",
+        "37": "A. Cancelado",
+        "38": "R. Cancelada",
+        "39": "Terms y Cond.",
         "graph": {
           "1": "Evolução das Atendimentos",
           "2": "Atendimentos por Linha",

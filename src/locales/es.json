@@ -481,6 +481,10 @@
     "attention-pre-form": {
       "title": "Form Pre Atención",
       "description": "Permite al cliente llenar un formulario antes de su atención en el comercio."
+    },
+    "email-bookings-terms-conditions": {
+      "title": "Email Acepta Terminos",
+      "description": "Permite al cliente aceptar las condiciones y terminos de serivicio."
     }
   },
   "document": {
@@ -1570,6 +1574,9 @@
         "34": "Ingresos",
         "35": "Confirmadas",
         "36": "Egresos",
+        "37": "A. Cancelado",
+        "38": "R. Cancelada",
+        "39": "Terms y Cond.",
         "graph": {
           "1": "Evolución de Atenciones",
           "2": "Atenciones por Fila",
