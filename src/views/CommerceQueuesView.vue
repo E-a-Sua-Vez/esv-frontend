@@ -83,6 +83,14 @@ export default {
         },
         dates: []
       },
+      {
+        key: 'Unavailable',
+        highlight: {
+          color: 'red',
+          fillMode: 'light',
+        },
+        dates: []
+      }
     ])
     let calendarAttributes = ref([
       {
@@ -159,15 +167,6 @@ export default {
         loading.value = true;
         if (keyName) {
           state.commerce = await getCommerceByKeyName(keyName);
-          if (state.commerce &&
-            state.commerce.id &&
-            state.commerce.serviceInfo &&
-            state.commerce.serviceInfo.specificCalendar &&
-            state.commerce.serviceInfo.specificCalendarDays) {
-              state.specificCalendar = true;
-              state.specificCalendarDays = state.commerce.serviceInfo.specificCalendarDays;
-              state.specificCalendarDates = Object.keys(state.commerce.serviceInfo.specificCalendarDays) || [];
-            }
           state.locale = state.commerce.localeInfo.language || 'es';
           store.setCurrentCommerce(state.commerce);
           if (client && client !== undefined) {
@@ -378,7 +377,7 @@ export default {
     }
 
     const getBookings = () => {
-      const { unsubscribe } = updatedBookings(formattedDate(state.date));
+      const { unsubscribe } = updatedBookings(formattedDate(state.date || state.specificCalendarDate));
       unsubscribeBookings = unsubscribe;
     }
 
@@ -395,6 +394,7 @@ export default {
             .map(doc => {
               const booking = { id: doc.id, ...doc.data() };
               return booking;
+
             })
         })
       }
@@ -693,7 +693,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
-          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), block: state.block, clientId: state.newUser.clientId };
+          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date || state.specificCalendarDate), block: state.block, clientId: state.newUser.clientId };
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
             const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
@@ -731,7 +731,7 @@ export default {
           if (isDataActive(state.commerce)) {
             newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
           }
-          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date), clientId: state.newUser.clientId  }
+          const body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date || state.specificCalendarDate), clientId: state.newUser.clientId  }
           const waitlist = await createWaitlist(body);
           if (waitlist && waitlist.id) {
             state.waitlistCreated = true;
@@ -844,6 +844,7 @@ export default {
     const setDate = (date) => {
       if (state.queue.id) {
         state.date = date;
+        state.specificCalendarDate = date;
         state.block = {};
       }
     }
@@ -856,6 +857,7 @@ export default {
       state.attentionBlock = {},
       state.block = {};
       state.date = 'TODAY';
+      state.specificCalendarDate = 'TODAY';
       state.showToday = true;
       state.showReserve = false;
     }
@@ -1119,7 +1121,11 @@ export default {
     const getAvailableDatesByCalendarMonth = async (pages) => {
       if (pages && pages.length > 0) {
         const page = pages[0].id;
-        await getAvailableDatesByMonth(`${page}-01`);
+        if (state.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(`${page}-01`);
+        } else {
+          await getAvailableDatesByMonth(`${page}-01`);
+        }
       }
     }
 
@@ -1274,32 +1280,70 @@ export default {
       loadingHours.value = false;
     }
 
-    const getInitAvailableSpecificDatesByMonth = () => {
-      if (state.specificCalendar === true &&
-        state.specificCalendarDates &&
-        state.specificCalendarDates.length > 0) {
-          specificCalendarAttributes.value[0].dates = [];
-        const dates = state.specificCalendarDates.map(dat => {
-          const [year, month, day] = dat.split('-');
-          const date = new Date(year, +month - 1, day);
-          return new DateModel(date).toString();
-        });
-        specificCalendarAttributes.value[0].dates.push(...dates);
+    const getAvailableSpecificDatesByMonth = async (date) => {
+      loadingHours.value = true;
+      let availableDates = [];
+      const [year, month] = date.split('-');
+      const thisMonth = +month - 1;
+      const nextMonth = +month;
+      const dateFrom = new Date(+year, thisMonth, 1);
+      const dateTo = new Date(+year, nextMonth, 0);
+      const monthBookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo) || [];
+      const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+        const date = booking.date;
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        acc[date].push(booking);
+        return acc;
+      }, {});
+      availableDates = await state.specificCalendarDates.map(dat => {
+        const [year, month, day] = dat.split('-');
+        const date = new Date(year, +month - 1, day);
+        return new DateModel(date).toString();
+      });
+      const forDeletion = [];
+      if (availableDates && availableDates.length > 0) {
+        let limit = 1;
+        if (state.queue.serviceInfo !== undefined && state.queue.serviceInfo.blockLimit !== undefined && state.queue.serviceInfo.blockLimit > 0) {
+          limit = state.queue.serviceInfo.blockLimit;
+        }
+        availableDates.forEach(date => {
+          const bookings = bookingsGroupedByDate[date] || [];
+          const blocks = state.blocksBySpecificCalendarDate[date] || [];
+          const blocksNumbers = blocks.map(block => block.number);
+          const bookingsReserved = bookings.map(booking => booking.block.blockNumbers || booking.block.number);
+          const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+          const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+          uniqueBlocksReserved.forEach(block => {
+            const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+            if (times >= limit && blocksNumbers.every(block => totalBlocksReserved.includes(block)) && !forDeletion.includes(date)) {
+              if (uniqueBlocksReserved.length === blocks.length) {
+                forDeletion.push(date);
+              }
+            }
+          })
+          if (!forDeletion.includes(date) &&
+            date === formattedDate(state.specificCalendarDate) &&
+            (state.availableBookingBlocks.length === 0 || state.availableBookingSuperBlocks.length === 0)) {
+              forDeletion.push(date);
+          }
+        })
       }
-    }
-
-    const getAvailableSpecificDatesByMonth = () => {
-      if (state.specificCalendar === true &&
-        state.specificCalendarDates &&
-        state.specificCalendarDates.length > 0) {
-          specificCalendarAttributes.value[0].dates = [];
-        const dates = state.specificCalendarDates.map(dat => {
-          const [year, month, day] = dat.split('-');
-          const date = new Date(year, +month - 1, day);
-          return new DateModel(date).toString();
-        });
-        specificCalendarAttributes.value[0].dates.push(...dates);
-      }
+      const availability = await availableDates.filter(item => !forDeletion.includes(item));
+      const avaliableToCalendar = await availability.map(date => {
+        const [year,month,day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+      specificCalendarAttributes.value[0].dates = [];
+      specificCalendarAttributes.value[0].dates.push(...avaliableToCalendar);
+      const forDeletionToCalendar = forDeletion.map(date => {
+        const [year,month,day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+      specificCalendarAttributes.value[1].dates = [];
+      specificCalendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+      loadingHours.value = false;
     }
 
     const changeDate = computed(() => {
@@ -1369,21 +1413,45 @@ export default {
       changeQueue,
       async () => {
         if (state.queue && state.queue.id) {
-          state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+          if (state.queue.serviceInfo && state.queue.serviceInfo.specificCalendar) {
+            state.specificCalendar = true;
+          } else if (state.commerce.serviceInfo && state.commerce.serviceInfo.specificCalendar) {
+            state.specificCalendar = true;
+          } else {
+            state.specificCalendar = false;
+          }
+          if (state.specificCalendar === true) {
+            if (state.queue.serviceInfo && state.queue.serviceInfo.specificCalendarDays) {
+              state.specificCalendarDates = Object.keys(state.queue.serviceInfo.specificCalendarDays) || [];
+              state.specificCalendarDays = state.commerce.serviceInfo.specificCalendarDays;
+              state.specificCalendarDates = Object.keys(state.queue.serviceInfo.specificCalendarDays) || [];
+            } else if (state.commerce.serviceInfo && state.commerce.serviceInfo.specificCalendarDays) {
+              state.specificCalendarDates = Object.keys(state.commerce.serviceInfo.specificCalendarDays) || [];
+              state.specificCalendarDays = state.commerce.serviceInfo.specificCalendarDays;
+              state.specificCalendarDates = Object.keys(state.commerce.serviceInfo.specificCalendarDays) || [];
+            }
+            state.blocksBySpecificCalendarDate = await getQueueBlockDetailsBySpecificDayByCommerceId(state.commerce.id, state.queue.id);
+            state.blocks = getBlocksBySpecificDay();
+          } else {
+            state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+            state.blocks = getBlocksByDay();
+          }
         }
-        state.blocks = getBlocksByDay();
         state.block = {};
         let currentDate;
-        if (state.date === undefined || state.date === 'TODAY') {
+        if ((state.date === undefined || state.date === 'TODAY') || (state.specificCalendarDate === undefined || state.specificCalendarDate === 'TODAY')) {
           currentDate = new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         } else {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
-        getInitAvailableSpecificDatesByMonth();
         getAvailableBookingBlocks(state.bookings);
         bookingsAvailables();
         getAvailableBookingSuperBlocks();
-        await getAvailableDatesByMonth(currentDate);
+        if (state.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(currentDate);
+        } else {
+          await getAvailableDatesByMonth(currentDate);
+        }
       }
     )
 
@@ -1436,7 +1504,7 @@ export default {
       changeBooking,
       async (newData, oldData) => {
         if (newData.allBookings !== oldData.allBookings &&
-          state.date && state.date !== 'TODAY') {
+          ((state.date && state.date !== 'TODAY') || (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY'))) {
           const newIds = newData.allBookings.map(booking => booking.id);
           const oldIds = oldData.allBookings.map(booking => booking.id);
           if (!newIds.every(id => oldIds.includes(id))) {
@@ -1460,15 +1528,21 @@ export default {
             state.groupedBookingsByQueue[state.queue.id] = [];
             state.bookings = [];
           }
+          getAvailableBookingBlocks(state.bookings);
+          getAvailableBookingSuperBlocks();
+          bookingsAvailables();
           let currentDate;
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
           if (newData.allBookings.length > 0) {
-            await getAvailableDatesByMonth(currentDate);
+            if (state.specificCalendar === true) {
+              if (!state.specificCalendarDate || state.specificCalendarDates.includes(formattedDate(state.specificCalendarDate))) {
+                await getAvailableSpecificDatesByMonth(currentDate);
+              }
+            } else {
+              await getAvailableDatesByMonth(currentDate);
+            }
           }
         }
-        getAvailableBookingBlocks(state.bookings);
-        getAvailableBookingSuperBlocks();
-        bookingsAvailables();
       }
     )
 
@@ -1498,15 +1572,12 @@ export default {
         getAvailableAttentionSuperBlocks();
         bookingsAvailables();
         attentionsAvailables();
-        getAvailableSpecificDatesByMonth();
       }
     )
 
     watch (
       changeSpecificCalendarDate,
       async (newData, oldData) => {
-        loadingHours.value = true;
-        state.blocksBySpecificCalendarDate = await getQueueBlockDetailsBySpecificDayByCommerceId(state.commerce.id, state.queue.id);
         if (state.specificCalendarDate && state.specificCalendarDate === 'TODAY') {
           if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
             state.blocks = getBlocksBySpecificDay();
@@ -1531,8 +1602,6 @@ export default {
         getAvailableAttentionSuperBlocks();
         bookingsAvailables();
         attentionsAvailables();
-        getAvailableSpecificDatesByMonth();
-        loadingHours.value = false;
       }
     )
 
@@ -1798,6 +1867,7 @@ export default {
                           :max-date="state.maxDate"
                           :disabled-dates="disabledDates"
                           :attributes='specificCalendarAttributes'
+                          @did-move="getAvailableDatesByCalendarMonth"
                         />
                         <div v-if="state.specificCalendarDate">
                           <div class="badge rounded-pill bg-secondary py-2 px-5 m-2"><span> {{ formattedDate(state.specificCalendarDate) }} </span></div>
@@ -1827,7 +1897,9 @@ export default {
                             <div v-if="state.availableBookingSuperBlocks &&
                               state.availableBookingSuperBlocks.length === 0 &&
                               state.specificCalendarDate" class="mb-2">
-                              <div id="waitlist" class="d-grid gap-2 mb-2 waitlist-box mt-3" v-if="getActiveFeature(state.commerce, 'booking-waitlist-active', 'PRODUCT')">
+                              <div id="waitlist" class="d-grid gap-2 mb-2 waitlist-box mt-3"
+                                v-if="getActiveFeature(state.commerce, 'booking-waitlist-active', 'PRODUCT') &&
+                                  state.specificCalendarDates.includes(formattedDate(state.specificCalendarDate))">
                                 <div class="choose-attention">
                                   <i class="bi bi-bell-fill"></i> <span class="fw-bold"> {{ $t("commerceQueuesView.waitlist.title") }} </span> <span> {{ $t("commerceQueuesView.waitlist.content") }} </span>
                                 </div>
@@ -1871,7 +1943,7 @@ export default {
                                 state.specificCalendarDate" class="mb-1">
                                 <div id="waitlist" class="d-grid gap-2 mb-1 waitlist-box mt-3"
                                   v-if="getActiveFeature(state.commerce, 'booking-waitlist-active', 'PRODUCT') &&
-                                  state.specificCalendarDates.includes(state.specificCalendarDate)">
+                                  state.specificCalendarDates.includes(formattedDate(state.specificCalendarDate))">
                                   <div class="choose-attention">
                                     <i class="bi bi-bell-fill"></i> <span class="fw-bold"> {{ $t("commerceQueuesView.waitlist.title") }} </span> <span> {{ $t("commerceQueuesView.waitlist.content") }} </span>
                                   </div>
@@ -1933,16 +2005,25 @@ export default {
                             </button>
                           </div>
                         </div>
+                        <div v-else-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')">
+                          <button
+                            type="button"
+                            class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                            @click="getBooking()"
+                            :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate"
+                            >
+                            {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
+                          </button>
+                        </div>
                       </div>
-                      <div v-else-if="getActiveFeature(state.commerce, 'booking-active', 'PRODUCT')">
-                        <button
-                          type="button"
-                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                          @click="getBooking()"
-                          :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate"
-                          >
-                          {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
-                        </button>
+                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsAdd" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
                       </div>
                     </div>
                   </div>

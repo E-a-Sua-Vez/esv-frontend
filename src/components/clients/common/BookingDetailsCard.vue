@@ -3,6 +3,7 @@ import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
+import { formatIdNumber } from '../../../shared/utils/idNumber';
 
 export default {
   name: 'BookingDetailsCard',
@@ -10,7 +11,8 @@ export default {
   props: {
     show: { type: Boolean, default: true },
     booking: { type: Object, default: undefined },
-    detailsOpened: { type: Boolean, default: false }
+    detailsOpened: { type: Boolean, default: false },
+    commerce: { type: Object, default: undefined },
   },
   data() {
     return {
@@ -41,6 +43,9 @@ export default {
       } else {
         return 'bi-calendar-fill red-icon';
       }
+    },
+    formatIdNumber(commerce, idNumber) {
+      return formatIdNumber(commerce, idNumber);
     }
   },
   watch: {
@@ -72,7 +77,7 @@ export default {
       <div class="col-6 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
         {{ booking.userName?.trim().toUpperCase() || '' }} {{ booking.userLastName?.trim().toUpperCase() || '' }}
         <span v-if="booking.termsConditionsAcceptedCode"> <i class="bi bi-person-fill-check mx-1"></i> </span>
-        <i v-if="booking.paid !== undefined && booking.paid === true" class="bi bi-coin mx-1 blue-icon"> </i>
+        <i v-if="booking.paid" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
       <div class="col-2 centered fw-bold">
         <i :class="`bi ${clasifyStatus(booking.status)} mx-1`"></i>
@@ -142,13 +147,13 @@ export default {
               </a>
             </div>
             <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.userIdNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ formatIdNumber(commerce, booking.userIdNumber) || 'N/I' }}
             </div>
           </div>
         </div>
         <div class="row m-1 centered">
           <div class="col">
-            <div class="" v-if="booking.paid !== undefined && booking.paid === true">
+            <div class="" v-if="booking.paid">
               <div class="mb-2">
                 <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
               </div>
@@ -158,7 +163,12 @@ export default {
                   {{ $t(`paymentTypes.${booking.paymentType}`) }}</span>
                 <span v-if="booking.paymentMethod" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentMethod') }} </span>
-                  {{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}</span>
+                  {{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}
+                </span>
+                <span v-if="booking.paymentMethod && booking.paymentMethod === 'HEALTH_AGREEMENT' && booking.healthAgreementId && booking.healthAgreementName" class="badge mx-1 detail-data-badge">
+                  <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.healthAgreementText') }} </span>
+                  {{ booking.healthAgreementName }}
+                </span>
                 <span v-if="booking.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
                   <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
                   <i class="bi bi-coin mx-1"> </i> {{ booking.paymentAmount }}</span>
@@ -173,16 +183,6 @@ export default {
                 </span>
               </div>
               <hr>
-            </div>
-            <div v-if="booking.rating || booking.nps">
-              <div class="mb-2">
-                <i class="bi bi-star-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.surveyData") }}</span>
-              </div>
-              <span class="badge mx-1 detail-data-badge">
-                CSAT <i class="bi bi-star-fill yellow-icon"></i>  {{ booking.rating || 'N/I' }} </span>
-              <span class="badge mx-1 detail-data-badge">
-                NPS <i class="bi bi-emoji-smile-fill blue-icon"></i>  {{ booking.nps || 'N/I' }}
-              </span>
             </div>
             <div class="mt-2">
               <div class="mb-2">

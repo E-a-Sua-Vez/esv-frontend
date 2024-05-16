@@ -8,6 +8,7 @@ import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
 import { getPendingCommerceBookingsByDate, transferBooking, editBooking } from '../../../application/services/booking';
 import { getQueueById } from '../../../application/services/queue';
 import { getDate } from '../../../shared/utils/date';
+import { formatIdNumber } from '../../../shared/utils/idNumber';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
@@ -365,6 +366,9 @@ export default {
           this.blockToEdit = data.block
         }
       }
+    },
+    formatIdNumber(commerce, idNumber) {
+      return formatIdNumber(commerce, idNumber);
     }
   },
   watch: {
@@ -469,7 +473,7 @@ export default {
               </a>
             </div>
             <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.user.idNumber || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i> {{ formatIdNumber(commerce, booking.user.idNumber) || 'N/I' }}
             </div>
           </div>
         </div>

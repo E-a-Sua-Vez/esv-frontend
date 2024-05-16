@@ -423,12 +423,13 @@ export const getBookingsDetails = async (
   searchText = undefined,
   queueId = undefined,
   asc = true,
-  serviceId = undefined
+  serviceId = undefined,
+  status = undefined
 ) => {
   const options = {};
   options.params = {
     from, to, commerceId, commerceIds, page, limit,
-    searchText, queueId, asc, serviceId
+    searchText, queueId, asc, serviceId, status
   };
   options.paramsSerializer = params => {
     return qs.stringify(params);

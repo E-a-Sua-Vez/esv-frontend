@@ -341,7 +341,7 @@ export default {
     }
 
     const initializedSpecificCalendar = (serviceInfo) => {
-      if (serviceInfo.specificCalendarDays === true) {
+      if (serviceInfo.specificCalendar === true) {
         if (!serviceInfo.specificCalendarDays) {
           serviceInfo.specificCalendarDays = {};
         }
@@ -1091,8 +1091,14 @@ export default {
                               />
                             </div>
                             <div class="col-12 col-md-6 mt-2">
+                              <div class="my-1 selected-days-title">
+                                <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectedDate") }} </span>
+                              </div>
                               <div class="col-12">
-                                <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                                <span class="badge bg-primary my-1 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                              </div>
+                              <div class="my-1 selected-days-title">
+                                <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.hours") }} </span>
                               </div>
                               <div class="row">
                                 <div class="col-5">
@@ -1758,8 +1764,14 @@ export default {
                           />
                         </div>
                         <div class="col-12 col-md-6 mt-2">
+                          <div class="my-1 selected-days-title">
+                            <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectedDate") }} </span>
+                          </div>
                           <div class="col-12">
-                            <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                            <span class="badge bg-primary my-1 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                          </div>
+                          <div class="my-1 selected-days-title">
+                            <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.hours") }} </span>
                           </div>
                           <div class="row">
                             <div class="col-5">

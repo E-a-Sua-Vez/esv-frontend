@@ -310,7 +310,7 @@ export default {
             type="text"
             class="form-control form-control-sm"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.nameError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.name') }"
             v-model.trim="state.newPersonalData.name">
         </div>
       </div>
@@ -326,7 +326,7 @@ export default {
             type="text"
             class="form-control form-control-sm"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.lastNameError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.lastName') }"
             v-model.trim="state.newPersonalData.lastName">
         </div>
       </div>
@@ -343,7 +343,7 @@ export default {
             @keypress="onlyNumber"
             @keyup="sendData"
             class="form-control form-control-sm"
-            v-bind:class="{ 'is-invalid': state.idNumberError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.idNumber') }"
             v-model.trim="state.newPersonalData.idNumber">
         </div>
       </div>
@@ -358,7 +358,7 @@ export default {
             class="form-control form-control-sm"
             @blur="calculateAge"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.birthdayError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.birthday') }"
             v-model.trim="state.newPersonalData.birthday">
         </div>
       </div>
@@ -375,7 +375,7 @@ export default {
             @keypress="onlyNumber"
             @keyup="sendData"
             class="form-control form-control-sm"
-            v-bind:class="{ 'is-invalid': state.ageError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.age') }"
             v-model.trim="state.newPersonalData.age">
         </div>
       </div>
@@ -391,7 +391,7 @@ export default {
             type="text"
             class="form-control form-control-sm"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.occupationError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.occupation') }"
             v-model.trim="state.newPersonalData.occupation">
         </div>
       </div>
@@ -437,7 +437,7 @@ export default {
             @blur="getAddress"
             @keypress="onlyNumber"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.addressCodeError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.addressCode') }"
             v-model.trim="state.newPersonalData.addressCode">
         </div>
       </div>
@@ -453,7 +453,7 @@ export default {
             type="text"
             class="form-control form-control-sm"
             @keyup="sendData"
-            v-bind:class="{ 'is-invalid': state.addressTextError }"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.addressText') }"
             v-model.trim="state.newPersonalData.addressText">
         </div>
       </div>
@@ -469,6 +469,7 @@ export default {
             type="text"
             class="form-control form-control-sm"
             @keyup="sendData"
+            v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.addressComplement') }"
             v-model.trim="state.newPersonalData.addressComplement">
         </div>
       </div>
@@ -496,7 +497,7 @@ export default {
                 class="form-control form-control-sm"
                 @keypress="onlyNumber"
                 @keyup="sendData"
-                v-bind:class="{ 'is-invalid': state.phoneError }"
+                v-bind:class="{ 'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.phone') }"
                 v-model.trim="state.newPersonalData.phone">
             </div>
           </div>

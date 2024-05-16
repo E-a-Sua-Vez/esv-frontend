@@ -167,6 +167,7 @@
     "MONEY": "Dinheiro",
     "BOLETO": "Boleto",
     "PIX": "Pix",
+    "HEALTH_AGREEMENT": "Convenio Saúde",
     "OTHER": "Outro"
   },
   "paymentFiscalNotes": {
@@ -244,7 +245,7 @@
   "documents": {
     "types": {
       "COMMERCE": "Comércio",
-      "CLIENT": "Clientw"
+      "CLIENT": "Cliente"
     },
     "options": {
       "patient_documents": "Documentos Paciente"
@@ -685,7 +686,7 @@
       "code1": "Deve digitar seu código 1",
       "code2": "Deve digitar seu código 2",
       "code3": "Deve digitar seu código 3",
-      "healthAgreementText": "Deve selecionar seu convenio de saúde"
+      "healthAgreementId": "Deve selecionar seu convenio de saúde"
     }
   },
   "attentionNumber": {
@@ -1179,6 +1180,10 @@
       "9": {
         "title": "Pacote já foi pagado",
         "content": "Este pacote não presenta pagamentos pendentes."
+      },
+      "10": {
+        "title": "Ups!",
+        "content": "Día desabilitado ou sem horas configuradas."
       }
     },
     "capacitiesList": {
@@ -1194,7 +1199,9 @@
           "skip": "Pular Atendimento",
           "payment-confirm": "Confirmar Pagamento",
           "transfer": "Transfer Atendimento",
-          "cancel": "Cancelar Atendimento"
+          "cancel": "Cancelar Atendimento",
+          "patient-history": "Prontuario",
+          "products": "Estoque"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -2003,7 +2010,7 @@
     "go-minisite": "Minisite",
     "outcome-types-admin": "Tipos de Despesa",
     "booking-manage": "Reservas Visão 360°",
-    "company-admin": "Empresas Fornecedoras",
+    "company-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
     "message": {
       "1": {
@@ -2038,7 +2045,7 @@
           "patients": "Gestão de Pacientes",
           "outcome-types-admin": "Gestão de Tipos de Despesa",
           "booking-manage": "Reservas Visão 360°",
-          "company-admin": "Empresas Fornecedoras",
+          "company-admin": "Empresas",
           "patient-history-item-admin": "Itens Prontuario"
         }
       }
@@ -2078,7 +2085,7 @@
     "control-master-admin": "Gestão",
     "go-minisite": "Minisite",
     "outcome-types-master-admin": "Tipos de Despesa",
-    "company-master-admin": "Empresas Fornecedoras",
+    "company-master-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
     "bookings-master-admin": "Reservas Visão 360°"
   },
@@ -2163,6 +2170,9 @@
     "walkinHelp": "Filas admitem atendimentos hoje sem horários.",
     "sameCommeceHelp": "Essa fila atende no mesmo horário do comércio.",
     "personalizedHelp": "Personalize horários de atendimento diferentes para cada dia.",
+    "specificCalendar": "Calendário Específico:",
+    "selectSpecificDate": "Selecione data no calendário e indique as horas disponíveis:",
+    "addDate": "Adicionar Data",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -2280,7 +2290,7 @@
     }
   },
   "businessCompaniesAdmin": {
-    "title": "Empresas Fornecedoras",
+    "title": "Empresas",
     "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "tag": "Tag:",
@@ -2910,6 +2920,8 @@
     "specificCalendar": "Calendário Específico:",
     "selectSpecificDate": "Selecione data no calendário e indique as horas disponíveis:",
     "addDate": "Adicionar Data",
+    "selectedDate": "Data Selecionada:",
+    "hours": "Horário de Atendimento:",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -2955,7 +2967,7 @@
     "showCurrentIllness": "Doença Atual",
     "showPersonalBackground": "Antecedentes Patológicos",
     "showFamilyBackground": "Antecedentes Familiares",
-    "showPatientAnamnese": "Anamnese",
+    "showPatientAnamnese": "História Pessoal",
     "showFunctionalExam": "Exame Funcional",
     "showPhysicalExam": "Exame Físico",
     "showDiagnostic": "Diagnóstico",
@@ -2983,7 +2995,7 @@
     "currentIllness": "Doença Atual",
     "personalBackground": "Antecedentes Pessoais Patológicos",
     "familyBackground": "Antecedentes Familiares",
-    "patientAnamnese": "Anamnese",
+    "patientAnamnese": "História Pessoal",
     "functionalExam": "Exame Funcional",
     "physicalExam": "Exame Físico",
     "diagnostic": "Diagnóstico",

@@ -5,8 +5,9 @@ import { getPendingBookingsBetweenDates, getPendingCommerceBookingsBetweenDates,
 import { dateYYYYMMDD, getDate } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
-import { getQueueBlockDetailsByDayByCommerceId } from '../../../application/services/block';
+import { getQueueBlockDetailsByDayByCommerceId, getQueueBlockDetailsBySpecificDayByCommerceId } from '../../../application/services/block';
 import { getClientsDetails } from '../../../application/services/query-stack';
+import { DateModel } from '../../../shared/utils/date.model';
 import Popper from "vue3-popper";
 import DashboardAttentionsManagement from '../../attentions/DashboardAttentionsManagement.vue';
 import Message from '../../common/Message.vue';
@@ -76,7 +77,12 @@ export default {
       extendedBookingsEntity: false,
       clientBookings: [],
       showBookings360: true,
-      showClients360: false
+      showClients360: false,
+      specificCalendar: false,
+      specificCalendarDays: {},
+      specificCalendarDates: [],
+      specificCalendarDate: undefined,
+      blocksBySpecificCalendarDate: {}
     });
 
     const {
@@ -298,7 +304,13 @@ export default {
       if (pages && pages.length > 0) {
         const pagesIn = pages[0].id.split('-');
         const page = `${pagesIn[0]}-${pagesIn[1]}`;
-        await getAvailableDatesByMonth(state.selectedQueue, `${page}-01`);
+        if (state.selectedQueue && state.selectedQueue.serviceInfo &&
+          state.selectedQueue.serviceInfo.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(state.selectedQueue, `${page}-01`);
+        } else {
+          await getAvailableDatesByMonth(state.selectedQueue, `${page}-01`);
+        }
+
       }
     }
 
@@ -346,7 +358,11 @@ export default {
             if (state.blocksCommerceByDay) {
               state.blocksByDay = state.blocksCommerceByDay[queue.id];
               const monthBookings = groupedBookings[queue.id] || [];
-              getAvailableDatesByQueueMonth(monthBookings, queue, date);
+              if (queue.serviceInfo && queue.serviceInfo.specificCalendar === true) {
+                getAvailableSepecificDatesByQueueMonth(monthBookings, queue, date);
+              } else {
+                getAvailableDatesByQueueMonth(monthBookings, queue, date);
+              }
             }
           }
         }
@@ -392,6 +408,82 @@ export default {
               forDeletion.push(date);
             } else if (bookings.length >= 1) {
               forReserves.push(date);
+            }
+          })
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const avaliableToCalendar = availableDates.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][0].dates = [];
+        calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
+        const forDeletionToCalendar = forDeletion.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][1].dates = [];
+        calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
+        const avaliableToReserve = forReserves.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][2].dates = [];
+        calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
+      }
+    }
+
+    const getAvailableSepecificDatesByQueueMonth = async (monthBookings, queue, date) => {
+      let availableDates = [];
+      if (monthBookings && monthBookings.length >= 0 && date) {
+        const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+          const date = booking.date;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(booking);
+          return acc;
+        }, {});
+        let specificCalendarDays;
+        if (queue.serviceInfo && queue.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(queue.serviceInfo.specificCalendarDays);
+        } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
+        }
+        availableDates = specificCalendarDays.map(dat => {
+          const [year, month, day] = dat.split('-');
+          const date = new Date(year, +month - 1, day);
+          return new DateModel(date).toString();
+        });
+        const forDeletion = [];
+        const forReserves = [];
+        if (availableDates && availableDates.length > 0) {
+          let limit = 1;
+          if (queue.serviceInfo !== undefined && queue.serviceInfo.blockLimit !== undefined && queue.serviceInfo.blockLimit > 0) {
+            limit = queue.serviceInfo.blockLimit;
+          }
+          const blocksBySpecificCalendarDate = await getQueueBlockDetailsBySpecificDayByCommerceId(commerce.value.id, queue.id);
+          availableDates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date] || [];
+            const blocks = blocksBySpecificCalendarDate[date] || [];
+            const blocksNumbers = blocks.map(block => block.number);
+            const bookingsReserved = bookings.map(booking => booking.block.blockNumbers || booking.block.number);
+            const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+            const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+            uniqueBlocksReserved.forEach(block => {
+              const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+              if (times >= limit && blocksNumbers.every(block => totalBlocksReserved.includes(block)) && !forDeletion.includes(date)) {
+                if (uniqueBlocksReserved.length === blocks.length) {
+                  forDeletion.push(date);
+                } else if (bookings.length > 1) {
+                  forReserves.push(date);
+                }
+              }
+            })
+            if (!forDeletion.includes(date) &&
+              date === formattedDate(state.specificCalendarDate) &&
+              (state.availableBookingBlocks.length === 0 || state.availableBookingSuperBlocks.length === 0)) {
+                forDeletion.push(date);
             }
           })
           availableDates = availableDates.filter(item => !forDeletion.includes(item));
@@ -481,6 +573,88 @@ export default {
       }
     }
 
+    const getAvailableSpecificDatesByMonth = async (queue, date) => {
+      if (queue && date) {
+        let availableDates = [];
+        const [year, month] = dateYYYYMMDD(date).split('-');
+        const thisMonth = +month - 1;
+        const nextMonth = +month;
+        const dateFrom = new Date(+year, thisMonth, 1);
+        const dateTo = new Date(+year, nextMonth, 0);
+        const monthBookings = await getPendingBookingsBetweenDates(queue.id, dateFrom, dateTo);
+        const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+          const date = booking.date;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(booking);
+          return acc;
+        }, {});
+        let specificCalendarDays;
+        if (queue.serviceInfo && queue.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(queue.serviceInfo.specificCalendarDays);
+        } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
+        }
+        availableDates = specificCalendarDays.map(dat => {
+          const [year, month, day] = dat.split('-');
+          const date = new Date(year, +month - 1, day);
+          return new DateModel(date).toString();
+        });
+        const forDeletion = [];
+        const forReserves = [];
+        if (availableDates && availableDates.length > 0) {
+          let limit = 1;
+          if (queue.serviceInfo !== undefined && queue.serviceInfo.blockLimit !== undefined && queue.serviceInfo.blockLimit > 0) {
+            limit = queue.serviceInfo.blockLimit;
+          }
+          const blocksBySpecificCalendarDate = state.blocksBySpecificCalendarDate;//await getQueueBlockDetailsBySpecificDayByCommerceId(commerce.value.id, queue.id);
+          availableDates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date] || [];
+            const blocks = blocksBySpecificCalendarDate[date] || [];
+            const blocksNumbers = blocks.map(block => block.number);
+            const bookingsReserved = bookings.map(booking => booking.block.blockNumbers || booking.block.number);
+            const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+            const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+            uniqueBlocksReserved.forEach(block => {
+              const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+              if (times >= limit && blocksNumbers.every(block => totalBlocksReserved.includes(block)) && !forDeletion.includes(date)) {
+                if (uniqueBlocksReserved.length === blocks.length) {
+                  forDeletion.push(date);
+                } else if (bookings.length > 1) {
+                  forReserves.push(date);
+                }
+              }
+            })
+            if (!forDeletion.includes(date) &&
+              date === formattedDate(state.specificCalendarDate) &&
+              (state.availableBookingBlocks.length === 0 || state.availableBookingSuperBlocks.length === 0)) {
+                forDeletion.push(date);
+            }
+          })
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const avaliableToCalendar = availableDates.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][0].dates = [];
+        calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
+        const forDeletionToCalendar = forDeletion.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][1].dates = [];
+        calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
+        const avaliableToReserve = forReserves.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[queue.id][2].dates = [];
+        calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
+      }
+    }
+
     const selectDay = async (queue) => {
       if (queue && queue.id) {
         state.selectedQueue = queue;
@@ -493,7 +667,6 @@ export default {
       } else {
         showAttentions();
       }
-
     }
 
     const getBlocks = () => {
@@ -610,6 +783,7 @@ export default {
         loadingAttentions.value = false
       }
     }
+
     const gotToAttendQueue = async () => {
       try {
         loadingAttentions.value = true;
@@ -659,7 +833,7 @@ export default {
 
     watch(
       changeDate,
-      async () => {
+      async (newData, oldData) => {
         loadingBookings.value = true;
         if (unsubscribeBookings) {
           unsubscribeBookings();
@@ -669,11 +843,45 @@ export default {
           unsubscribeWaitlists();
         }
         getWaitlists();
-        await Promise.all([
-          updatedAttentions(),
-          getAvailableDatesByMonth(state.selectedQueue, state.selectedDate)
-        ]);
-        getBlocks();
+        if (state.selectedQueue && state.selectedQueue.id) {
+          if (state.selectedQueue.serviceInfo && state.selectedQueue.serviceInfo.specificCalendar) {
+            state.specificCalendar = true;
+          } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar) {
+            state.specificCalendar = true;
+          } else {
+            state.specificCalendar = false;
+          }
+          if (state.specificCalendar === true) {
+            state.blocks = [];
+            if (state.selectedQueue.serviceInfo && state.selectedQueue.serviceInfo.specificCalendarDays) {
+              state.specificCalendarDates = Object.keys(state.selectedQueue.serviceInfo.specificCalendarDays) || [];
+              state.specificCalendarDays = commerce.value.serviceInfo.specificCalendarDays;
+              state.specificCalendarDates = Object.keys(state.selectedQueue.serviceInfo.specificCalendarDays) || [];
+            } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendarDays) {
+              state.specificCalendarDates = Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
+              state.specificCalendarDays = commerce.value.serviceInfo.specificCalendarDays;
+              state.specificCalendarDates = Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
+            }
+            if (newData.selectedQueue.id !== oldData.selectedQueue.id) {
+              state.blocksBySpecificCalendarDate = await getQueueBlockDetailsBySpecificDayByCommerceId(commerce.value.id, state.selectedQueue.id);
+            }
+            state.blocks = state.blocksBySpecificCalendarDate[dateYYYYMMDD(state.selectedDate)];
+          }
+        }
+        if (state.specificCalendar === true) {
+          if (state.specificCalendarDates.includes(dateYYYYMMDD(state.selectedDate))) {
+            await Promise.all([
+              updatedAttentions(),
+              getAvailableSpecificDatesByMonth(state.selectedQueue, state.selectedDate)
+            ]);
+          }
+        } else {
+          await Promise.all([
+            updatedAttentions(),
+            getAvailableDatesByMonth(state.selectedQueue, state.selectedDate)
+          ]);
+          getBlocks();
+        }
         loadingBookings.value = false;
       }
     )
@@ -682,9 +890,15 @@ export default {
       changeData,
       async (newData, oldData) => {
         if (newData.bookings !== oldData.bookings) {
-          const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
-          await updateAvailableDays(currentDate);
-          getBlocks();
+          const newIds = newData.bookings.map(booking => booking.id);
+          const oldIds = oldData.bookings.map(booking => booking.id);
+          if (!newIds.every(id => oldIds.includes(id))) {
+            const currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
+            await updateAvailableDays(currentDate);
+            if (state.specificCalendar === false) {
+              getBlocks();
+            }
+          }
         }
       }
     )
@@ -759,7 +973,7 @@ export default {
           <div class="row">
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1 subtitle-info"
                 :class="state.showQueues ? 'btn-selected' : ''"
                 @click="showQueue()">
                 {{ $t("collaboratorBookingsView.queues") }} <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -767,7 +981,7 @@ export default {
             </div>
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1 subtitle-info"
                 :class="state.showCollaboratorQueues ? 'btn-selected' : ''"
                 @click="showCollaboratorQueue()">
                 {{ $t("collaboratorBookingsView.collaboratorQueues") }} <i :class="state.showCollaboratorQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -775,7 +989,7 @@ export default {
             </div>
             <div class="col-12 col-md-4">
               <button
-                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                class="btn-size btn btn-md btn-block col-9 fw-bold btn-dark rounded-pill mt-1 mb-1 subtitle-info"
                 :class="state.showAllQueues ? 'btn-selected' : ''"
                 @click="showAllQueue()">
                 {{ $t("collaboratorBookingsView.allQueues") }} <i :class="state.showAllQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -899,14 +1113,14 @@ export default {
               <div id="subMenu" class="">
                 <h6 class="mb-0">
                   <button
-                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 subtitle-info"
                     :class="state.showAttentions ? 'btn-selected' : ''"
                     @click="showAttentions()"
                     >
                     {{ $t('collaboratorBookingsView.attentions') }} <br> <i class="bi bi-qr-code"></i>
                   </button>
                   <button
-                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1"
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1 subtitle-info"
                     :class="state.showBooking ? 'btn-selected' : ''"
                     @click="showBookings()"
                     :disabled="!state.selectedQueue || !state.selectedDate"
@@ -914,7 +1128,7 @@ export default {
                     {{ $t('collaboratorBookingsView.bookings') }} <br> <i class="bi bi-calendar-check-fill"></i>
                   </button>
                   <button
-                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1"
+                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 subtitle-info"
                     :class="state.showWaitlist ? 'btn-selected' : ''"
                     @click="showWaitlists()"
                     :disabled="!state.selectedQueue.id || !state.selectedDate"
@@ -1016,6 +1230,11 @@ export default {
                           :class="'bg-success'"> {{ block.hourFrom }}</span>
                       </div>
                     </div>
+                  </div>
+                  <div v-if="state.selectedDate && (!state.blocks || state.blocks.length === 0)">
+                    <Message
+                      :title="$t('collaboratorBookingsView.message.10.title')"
+                      :content="$t('collaboratorBookingsView.message.10.content')" />
                   </div>
                   <div v-if="!state.selectedQueue || !state.selectedDate">
                     <Message

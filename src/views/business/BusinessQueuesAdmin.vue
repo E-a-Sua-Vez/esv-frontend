@@ -6,6 +6,7 @@ import { getQueueByCommerce, updateQueue, addQueue, getQueuesByCommerceId } from
 import { getActiveServicesByCommerceId, getServiceByCommerce } from '../../application/services/service';
 import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
+import { getDate, dateYYYYMMDD } from '../../shared/utils/date';
 import Popper from "vue3-popper";
 import QueueSimpleName from '../../components/common/QueueSimpleName.vue';
 import Toggle from '@vueform/toggle';
@@ -29,6 +30,26 @@ export default {
 
     let loading = ref(false);
     let alertError = ref('');
+    let dateMask = ref({
+      modelValue: 'YYYY-MM-DD',
+    });
+    let disabledDates = ref([
+      {
+        repeat: {
+          weekdays: [],
+        }
+      }
+    ]);
+    let calendarAttributes = ref([
+      {
+        key: 'Available',
+        highlight: {
+          color: 'green',
+          fillMode: 'light',
+        },
+        dates: []
+      }
+    ])
 
     const state = reactive({
       currentUser: {},
@@ -45,8 +66,13 @@ export default {
       newQueue: {},
       selectedCollaborator: {},
       selectedService: {},
+      selectedDate: (new Date()).setDate(new Date().getDate()),
+      selectedHourFrom: undefined,
+      selectedHourTo: undefined,
+      selectedDates: {},
       extendedEntity: undefined,
       errorsAdd: [],
+      errorsDateAdd: [],
       errorsUpdate: [],
       nameAddError: false,
       nameUpdateError: false,
@@ -202,6 +228,8 @@ export default {
           holiday: false,
           holidays: {},
           walkin: false,
+          specificCalendar: false,
+          specificCalendarDays: {},
           ...state.business.serviceInfo
         }
       }
@@ -349,6 +377,20 @@ export default {
       }
     }
 
+    const initializedSpecificCalendar = (serviceInfo) => {
+      if (serviceInfo.specificCalendar === true) {
+
+        if (!serviceInfo.specificCalendarDays) {
+          if (state.commerce && state.commerce.serviceInfo && state.commerce.serviceInfo.specificCalendar === true) {
+            serviceInfo.specificCalendarDays = state.commerce.serviceInfo.specificCalendarDays;
+          } else {
+            serviceInfo.specificCalendarDays = serviceInfo.specificCalendarDays || {};
+          }
+        }
+      }
+
+    }
+
     const initializedSameCommerceHours = (serviceInfo) => {
       if (serviceInfo.sameCommeceHours === true) {
         if (state.commerce.serviceInfo) {
@@ -450,6 +492,99 @@ export default {
       }
     }
 
+    const addSpecificDate = (index) => {
+      state.errorsDateAdd = [];
+      let selectedDates = state.filtered[index].serviceInfo.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates) {
+        let date = dateYYYYMMDD(new Date());
+        if (state.selectedDate) {
+          date = dateYYYYMMDD(state.selectedDate);
+        }
+        if (date && state.selectedHourFrom && state.selectedHourTo) {
+          if (state.selectedHourTo < state.selectedHourFrom) {
+            state.errorsDateAdd.push('businessCommercesAdmin.validate.hours')
+          } else if (Object.keys(selectedDates).length >= 0) {
+            const [hourFrom, minuteFrom] = state.selectedHourFrom.split(':');
+            const [hourTo, minuteTo] = state.selectedHourTo.split(':');
+            const hourNumberFrom = +hourFrom + (+minuteFrom / 60);
+            const hourNumberTo = +hourTo + (+minuteTo / 60);
+            selectedDates[date] = {
+              attentionHourFrom: hourNumberFrom,
+              attentionHourTo: hourNumberTo
+            }
+          }
+        } else {
+          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate');
+        }
+      }
+      state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const updateAddSpecificDate = () => {
+      state.errorsDateAdd = [];
+      let selectedDates = state.newCommerce.serviceInfo.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates) {
+        let date = dateYYYYMMDD(new Date());
+        if (state.selectedDate) {
+          date = dateYYYYMMDD(state.selectedDate);
+        }
+        if (date && state.selectedHourFrom && state.selectedHourTo) {
+          if (state.selectedHourTo < state.selectedHourFrom) {
+            state.errorsDateAdd.push('businessCommercesAdmin.validate.hours')
+          } else if (Object.keys(selectedDates).length >= 0) {
+            const [hourFrom, minuteFrom] = state.selectedHourFrom.split(':');
+            const [hourTo, minuteTo] = state.selectedHourTo.split(':');
+            const hourNumberFrom = +hourFrom + (+minuteFrom / 60);
+            const hourNumberTo = +hourTo + (+minuteTo / 60);
+            selectedDates[date] = {
+              attentionHourFrom: hourNumberFrom,
+              attentionHourTo: hourNumberTo
+            }
+          }
+        } else {
+          state.errorsDateAdd.push('businessCommercesAdmin.validate.selectedDate')
+        }
+      }
+      state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const deleteSpecificDate = (index, date) => {
+      let selectedDates = state.filtered[index].serviceInfo.specificCalendarDays;
+      if (selectedDates) {
+        if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
+          delete selectedDates[date];
+        }
+      }
+      state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const updateDeleteSpecificDate = (date) => {
+      let selectedDates = state.newCommerce.serviceInfo.specificCalendarDays;
+      if (selectedDates) {
+        if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
+          delete selectedDates[date];
+        }
+      }
+      state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+    }
+
+    const timeConvert = (num) => {
+      if (num) {
+        const [hours, min = 0] = num.toString().split('.');
+        let minutes = (num - hours) * 60;
+        if (minutes === 0) {
+          minutes = '00';
+        }
+        return `${hours}:${minutes}`;
+      }
+    };
+
     const receiveFilteredItems = (items) => {
       state.filtered = items;
     }
@@ -463,6 +598,10 @@ export default {
       state,
       loading,
       alertError,
+      dateMask,
+      disabledDates,
+      calendarAttributes,
+      getDate,
       showUpdateForm,
       update,
       showAdd,
@@ -486,7 +625,13 @@ export default {
       showService,
       deleteService,
       selectServiceIndex,
-      receiveFilteredItems
+      receiveFilteredItems,
+      initializedSpecificCalendar,
+      addSpecificDate,
+      updateAddSpecificDate,
+      deleteSpecificDate,
+      updateDeleteSpecificDate,
+      timeConvert
     }
   }
 }
@@ -900,7 +1045,7 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control"
+                                class="form-control form-control-sm"
                                 v-model="queue.serviceInfo.personalizedHours[day].attentionHourFrom"
                                 placeholder="Ex. 8">
                             </div>
@@ -914,9 +1059,96 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control"
+                                class="form-control form-control-sm"
                                 v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
                                 placeholder="Ex. 16">
+                            </div>
+                          </div>
+                        </div>
+                        <div id="queue-specificCalendar-active-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessQueuesAdmin.specificCalendar") }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="queue.serviceInfo.specificCalendar"
+                              :disabled="!state.toggles['queues.admin.edit']"
+                              @click="initializedSpecificCalendar(queue.serviceInfo)"
+                            />
+                          </div>
+                        </div>
+                        <div id="queue-specificCalendarDays-form-update" v-if="queue.serviceInfo.specificCalendar" class="g-1">
+                          <hr>
+                          <div class="row">
+                            <div class="my-2 selected-days-title">
+                              <span class="selected-days-title"> {{ $t("businessQueuesAdmin.selectSpecificDate") }} </span>
+                            </div>
+                            <div class="col-12 col-md-6">
+                              <VDatePicker
+                                :locale="state.locale"
+                                v-model.string="state.selectedDate"
+                                :mask="dateMask"
+                                :disabled-dates="disabledDates"
+                                :attributes='calendarAttributes'
+                              />
+                            </div>
+                            <div class="col-12 col-md-6 mt-2">
+                              <div class="col-12">
+                                <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                              </div>
+                              <div class="row">
+                                <div class="col-5">
+                                  <input
+                                    type="time"
+                                    class="form-control form-control-sm"
+                                    v-model="state.selectedHourFrom"
+                                  />
+                                </div>
+                                <div class="col-2">
+                                  -
+                                </div>
+                                <div class="col-5">
+                                  <input
+                                    type="time"
+                                    class="form-control form-control-sm"
+                                    v-model="state.selectedHourTo"
+                                  />
+                                </div>
+                              </div>
+                              <div class="row my-2">
+                                <button
+                                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                                  @click="addSpecificDate(index)">
+                                  {{ $t("businessQueuesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
+                                </button>
+                                <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
+                                  <Warning>
+                                    <template v-slot:message>
+                                      <li v-for="(error, index) in state.errorsDateAdd" :key="index">
+                                        {{ $t(error) }}
+                                      </li>
+                                    </template>
+                                  </Warning>
+                                </div>
+                              </div>
+                            </div>
+                            <div v-if="queue.serviceInfo.specificCalendarDays">
+                              <hr>
+                              <div class="row centered my-1" v-for="date in Object.keys(queue.serviceInfo.specificCalendarDays).sort()" :key="date">
+                                <div class="col-4">
+                                  <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+                                </div>
+                                <div class="col-5 selected-days-title">
+                                  {{ timeConvert(queue.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(queue.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
+                                </div>
+                                <div class="col-3">
+                                  <button
+                                    class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+                                    @click="deleteSpecificDate(index, date)">
+                                    <i class="bi bi-trash-fill"></i>
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1404,7 +1636,7 @@ export default {
                             minlength="1"
                             maxlength="2"
                             type="number"
-                            class="form-control"
+                            class="form-control form-control-sm"
                             v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourFrom"
                             placeholder="Ex. 8">
                         </div>
@@ -1418,9 +1650,96 @@ export default {
                             minlength="1"
                             maxlength="2"
                             type="number"
-                            class="form-control"
+                            class="form-control form-control-sm"
                             v-model="state.newQueue.serviceInfo.personalizedHours[day].attentionHourTo"
                             placeholder="Ex. 16">
+                        </div>
+                      </div>
+                    </div>
+                    <div id="queue-specificCalendar-active-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessQueuesAdmin.specificCalendar") }}
+                      </div>
+                      <div class="col-8">
+                        <Toggle
+                          v-model="state.newQueue.serviceInfo.specificCalendar"
+                          :disabled="!state.toggles['queues.admin.edit']"
+                          @click="initializedSpecificCalendar(state.newQueue.serviceInfo)"
+                        />
+                      </div>
+                    </div>
+                    <div id="queue-specificCalendarDays-form-add" v-if="state.newQueue.serviceInfo.specificCalendar" class="row">
+                      <hr>
+                      <div class="row">
+                        <div class="my-2 selected-days-title">
+                          <span class="selected-days-title text-label"> {{ $t("businessQueuesAdmin.selectSpecificDate") }} </span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <VDatePicker
+                            :locale="state.locale"
+                            v-model.string="state.selectedDate"
+                            :mask="dateMask"
+                            :disabled-dates="disabledDates"
+                            :attributes='calendarAttributes'
+                          />
+                        </div>
+                        <div class="col-12 col-md-6 mt-2">
+                          <div class="col-12">
+                            <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
+                          </div>
+                          <div class="row">
+                            <div class="col-5">
+                              <input
+                                type="time"
+                                class="form-control form-control-sm"
+                                v-model="state.selectedHourFrom"
+                              />
+                            </div>
+                            <div class="col-2">
+                              -
+                            </div>
+                            <div class="col-5">
+                              <input
+                                type="time"
+                                class="form-control form-control-sm"
+                                v-model="state.selectedHourTo"
+                              />
+                            </div>
+                          </div>
+                          <div class="row my-2">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                              @click="updateAddSpecificDate()">
+                              {{ $t("businessQueuesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
+                            </button>
+                            <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
+                              <Warning>
+                                <template v-slot:message>
+                                  <li v-for="(error, index) in state.errorsDateAdd" :key="index">
+                                    {{ $t(error) }}
+                                  </li>
+                                </template>
+                              </Warning>
+                            </div>
+                          </div>
+                        </div>
+                        <div v-if="state.newQueue.serviceInfo.specificCalendarDays">
+                          <hr>
+                          <div class="row centered my-1" v-for="date in Object.keys(state.newQueue.serviceInfo.specificCalendarDays)" :key="date">
+                            <div class="col-4 text-label">
+                              <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+                            </div>
+                            <div class="col-5 selected-days-title text-label">
+                              {{ timeConvert(state.newQueue.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(state.newQueue.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
+                            </div>
+                            <div class="col-3">
+                              <button
+                                class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+                                @click="updateDeleteSpecificDate(date)">
+                                <i class="bi bi-trash-fill"></i>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

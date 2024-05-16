@@ -30,7 +30,7 @@ export default {
       newBookings: [],
       clientIn: [],
       totalPages: 0,
-      daysSinceType: undefined,
+      status: undefined,
       survey: undefined,
       asc: false,
       showFilterOptions: false,
@@ -56,7 +56,7 @@ export default {
           this.searchText = this.client.userIdNumber || this.client.userEmail;
         }
         this.newBookings = await getBookingsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.searchText, this.queueId, this.asc, this.serviceId);
+          this.page, this.limit, this.searchText, this.queueId, this.asc, this.serviceId, this.status);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -67,7 +67,7 @@ export default {
       this.page = pageIn;
     },
     async clear() {
-      this.daysSinceType = undefined;
+      this.status = undefined;
       this.survey = undefined;
       this.asc = true;
       this.searchText = undefined;
@@ -113,7 +113,7 @@ export default {
         }
         const result = await getBookingsDetails(
           this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.searchText, this.queueId, this.asc, this.serviceId);
+          undefined, undefined, this.searchText, this.queueId, this.asc, this.serviceId, this.status);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -159,9 +159,9 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, survey, asc, queueId, limit, serviceId } = this;
+      const { page, status, survey, asc, queueId, limit, serviceId } = this;
       return {
-        page, daysSinceType, survey, asc, queueId, limit, serviceId
+        page, status, survey, asc, queueId, limit, serviceId
       }
     }
   },
@@ -277,12 +277,14 @@ export default {
                   </select>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
-                  <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="MEDIUM" name="daysSince-type" id="medium-since" autocomplete="off">
-                  <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
-                  <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="CONFIRMED" name="status-type" id="confirmed-since" autocomplete="off">
+                  <label class="btn" for="confirmed-since"> <i :class="`bi bi-check-circle-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="PENDING" name="status-type" id="pending-since" autocomplete="off">
+                  <label class="btn" for="pending-since"> <i :class="`bi bi-clock-fill yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="PROCESSED" name="processed-type" id="processed-since" autocomplete="off">
+                  <label class="btn" for="processed-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="USER_CANCELLED" name="userCancelled-type" id="userCancelled-since" autocomplete="off">
+                  <label class="btn" for="userCancelled-since"> <i :class="`bi bi-calendar-fill red-icon`"></i> </label>
                   <Popper
                     v-if="true"
                     :class="'dark'"
