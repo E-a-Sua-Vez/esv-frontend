@@ -68,6 +68,7 @@ export default {
       this.asc = false;
       this.searchText = undefined;
       this.limit = 10;
+      this.page = 1;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();

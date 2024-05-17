@@ -46,15 +46,6 @@ export default {
       endDate: undefined
     }
   },
-  async beforeMount() {
-    try {
-      this.loading = true;
-      await this.refresh();
-      this.loading = false;
-    } catch (error) {
-      this.loading = false;
-    }
-  },
   methods: {
     async refresh() {
       try {
@@ -81,8 +72,9 @@ export default {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      this.refresh();
     },
     async clear() {
       this.daysSinceType = undefined;
@@ -190,6 +182,12 @@ export default {
       return {
         page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted, survey, asc, queueId, limit, serviceId
       }
+    },
+    visible() {
+      const { showAttentionManagement } = this;
+      return {
+        showAttentionManagement
+      }
     }
   },
   watch: {
@@ -211,8 +209,18 @@ export default {
           oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
+          this.refresh();
         }
-        this.refresh();
+      }
+    },
+    visible: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.showAttentionManagement === true) {
+          this.page = 1;
+          this.refresh();
+        }
       }
     }
   }

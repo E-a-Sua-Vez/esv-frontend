@@ -1,35 +1,34 @@
 <script>
-import Spinner from '../../common/Spinner.vue';
+import Spinner from '../common/Spinner.vue';
 import Popper from "vue3-popper";
-import Message from '../../common/Message.vue';
-import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import AttentionDetailsCard from '../../clients/common/AttentionDetailsCard.vue';
-import { getAttentionsDetails } from '../../../application/services/query-stack';
-import jsonToCsv from '../../../shared/utils/jsonToCsv';
-import { DateModel } from '../../../shared/utils/date.model';
+import Message from '../common/Message.vue';
+import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
+import { getBookingsDetails } from '../../application/services/query-stack';
+import jsonToCsv from '../../shared/utils/jsonToCsv';
+import { DateModel } from '../../shared/utils/date.model';
+import BookingDetailsCard from '../clients/common/BookingDetailsCard.vue';
+import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 
 export default {
-  name: 'ClientAttentionsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard },
+  name: 'DashboardBookingsManagement',
+  components: { Message, SimpleDownloadCard, Spinner, Popper, BookingDetailsCard, SimpleDownloadButton },
   props: {
-    showClientAttentionsManagement: { type: Boolean, default: false },
+    showBookingsManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
-    client: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
-    attentionsIn: { type: Array, default: undefined },
+    bookingsIn: { type: Array, default: undefined },
   },
   data() {
     return {
       loading: false,
       counter: 0,
-      attentions: [],
-      newAttentions: [],
-      clientIn: [],
+      bookings: [],
+      newBookings: [],
       totalPages: 0,
-      daysSinceType: undefined,
+      status: undefined,
       survey: undefined,
       asc: false,
       showFilterOptions: false,
@@ -39,8 +38,8 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
-      startDate: undefined,
-      endDate: undefined
+      startDate: new DateModel().setDateOfMonth(1).toString(),
+      endDate: new DateModel(this.startDate).endOfMonth().toString()
     }
   },
   methods: {
@@ -51,23 +50,20 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
-        this.newAttentions = await getAttentionsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
-          this.page, this.limit, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
+        this.newBookings = await getBookingsDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
+          this.page, this.limit, this.searchText, this.queueId, this.asc, this.serviceId, this.status);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     async clear() {
-      this.daysSinceType = undefined;
+      this.status = undefined;
       this.survey = undefined;
       this.asc = true;
       this.searchText = undefined;
@@ -75,16 +71,9 @@ export default {
       this.serviceId = undefined;
       this.page = 1;
       this.limit = 10;
-      this.startDate = undefined;
-      this.endDate = undefined;
+      this.startDate = new DateModel().setDateOfMonth(1).toString();
+      this.endDate = new DateModel(this.startDate).endOfMonth().toString();
       await this.refresh();
-    },
-    async checkSurvey(event) {
-      if (event.target.checked) {
-        this.survey = true;
-      } else {
-        this.survey = false;
-      }
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -94,8 +83,8 @@ export default {
       }
     },
     updatePaginationData() {
-      if (this.attentions && this.attentions.length > 0) {
-        const { counter } = this.attentions[0];
+      if (this.bookings && this.bookings.length > 0) {
+        const { counter } = this.bookings[0];
         this.counter = counter;
         const total = counter / this.limit;
         const totalB = Math.trunc(total);
@@ -116,20 +105,16 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
-        const result = await getAttentionsDetails(
+        const result = await getBookingsDetails(
           this.commerce.id, this.startDate, this.endDate, commerceIds,
-          undefined, undefined, this.daysSinceType, undefined, undefined, undefined,
-          this.searchText, this.queueId, this.survey, this.asc, undefined, this.serviceId);
+          undefined, undefined, this.searchText, this.queueId, this.asc, this.serviceId, this.status);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `attentions-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
+        a.download = `bookings-details-${this.commerce.tag}-${this.startDate}-${this.endDate}.csv`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -148,9 +133,8 @@ export default {
     },
     async getCurrentMonth() {
       const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
-      this.startDate = `${year}-${month}-01`;
-      this.endDate = `${year}-${month}-${day}`;
+      this.startDate = new DateModel(date).setDateOfMonth(1).toString();
+      this.endDate = new DateModel(this.startDate).endOfMonth().toString();
       await this.refresh();
     },
     async getLastMonth() {
@@ -168,9 +152,15 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, daysSinceType, survey, asc, queueId, limit, serviceId } = this;
+      const { page, status, survey, asc, queueId, limit, serviceId } = this;
       return {
-        page, daysSinceType, survey, asc, queueId, limit, serviceId
+        page, status, survey, asc, queueId, limit, serviceId
+      }
+    },
+    visible() {
+      const { showBookingsManagement } = this;
+      return {
+        showBookingsManagement
       }
     }
   },
@@ -181,12 +171,10 @@ export default {
       async handler(oldData, newData) {
         if (
           (oldData && newData) &&
-          (oldData.client !== newData.client ||
-          oldData.daysSinceType !== newData.daysSinceType ||
-          oldData.survey !== newData.survey ||
-          oldData.asc !== newData.asc ||
+          (oldData.asc !== newData.asc ||
           oldData.limit !== newData.limit ||
           oldData.queueId !== newData.queueId ||
+          oldData.status !== newData.status ||
           oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
@@ -194,21 +182,31 @@ export default {
         }
       }
     },
-    attentionsIn: {
+    bookingsIn: {
       immediate: true,
       deep: true,
       async handler() {
-        this.attentions = this.attentionsIn;
+        this.bookings = this.bookingsIn;
         this.updatePaginationData();
       }
     },
-    newAttentions: {
+    newBookings: {
       immediate: true,
       deep: true,
       async handler() {
-        if (this.newAttentions) {
-          this.attentions = this.newAttentions;
+        if (this.newBookings) {
+          this.bookings = this.newBookings;
           this.updatePaginationData();
+        }
+      }
+    },
+    visible: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.showBookingsManagement === true) {
+          this.page = 1;
+          this.refresh();
         }
       }
     }
@@ -217,21 +215,24 @@ export default {
 </script>
 
 <template>
-  <div id="attentions-management" class="row" v-if="showClientAttentionsManagement === true && toggles['dashboard.attentions-management.view']">
+  <div id="bookings-management" class="row" v-if="showBookingsManagement === true && toggles['dashboard.bookings-management.view']">
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
-              :showTooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :canDownload="toggles['dashboard.reports.attentions-management'] === true"
-            ></SimpleDownloadCard>
+            <div id="admin-sub-menu" class="row mt-3 mx-0">
+              <div class="col lefted">
+                <SimpleDownloadButton
+                  :download="toggles['dashboard.reports.bookings-management']"
+                  :showTooltip="true"
+                  :description="$t('dashboard.reports.bookings-management.description')"
+                  :icon="'bi-file-earmark-spreadsheet'"
+                  @download="exportToCSV"
+                  :canDownload="toggles['dashboard.reports.bookings-management'] === true"
+                ></SimpleDownloadButton>
+              </div>
+            </div>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
@@ -288,12 +289,14 @@ export default {
                   </select>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="EARLY" name="daysSince-type" id="early-since" autocomplete="off">
-                  <label class="btn" for="early-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="MEDIUM" name="daysSince-type" id="medium-since" autocomplete="off">
-                  <label class="btn" for="medium-since"> <i :class="`bi bi-qr-code yellow-icon`"></i> </label>
-                  <input type="radio" class="btn btn-check btn-sm" v-model="daysSinceType" value="LATE" name="daysSince-type" id="late-since" autocomplete="off">
-                  <label class="btn" for="late-since"> <i :class="`bi bi-qr-code red-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="CONFIRMED" name="status-type" id="confirmed-since" autocomplete="off">
+                  <label class="btn" for="confirmed-since"> <i :class="`bi bi-check-circle-fill green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="PENDING" name="status-type" id="pending-since" autocomplete="off">
+                  <label class="btn" for="pending-since"> <i :class="`bi bi-clock-fill yellow-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="PROCESSED" name="processed-type" id="processed-since" autocomplete="off">
+                  <label class="btn" for="processed-since"> <i :class="`bi bi-qr-code green-icon`"></i> </label>
+                  <input type="radio" class="btn btn-check btn-sm" v-model="status" value="RESERVE_CANCELLED" name="userCancelled-type" id="userCancelled-since" autocomplete="off">
+                  <label class="btn" for="userCancelled-since"> <i :class="`bi bi-calendar-fill red-icon`"></i> </label>
                   <Popper
                     v-if="true"
                     :class="'dark'"
@@ -304,13 +307,7 @@ export default {
                   </Popper>
                 </div>
                 <div class="row">
-                  <div class="col-12 col-md-6">
-                    <div class="form-check form-switch centered">
-                      <input class="form-check-input m-1" :class="survey === false ? 'bg-danger' : ''" type="checkbox" name="survey" id="survey" v-model="survey" @click="checkSurvey($event)">
-                      <label class="form-check-label metric-card-subtitle" for="survey">{{ $t("dashboard.survey") }}</label>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
+                  <div class="col-12">
                     <div class="form-check form-switch centered">
                       <input class="form-check-input m-1" :class="asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="asc" @click="checkAsc($event)">
                       <label class="form-check-label metric-card-subtitle" for="asc">{{ asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
@@ -372,14 +369,14 @@ export default {
                   </ul>
                 </nav>
             </div>
-            <div v-if="attentions && attentions.length > 0">
-              <div class="row" v-for="(attention, index) in attentions" :key="`attentions-${index}`">
-                <AttentionDetailsCard
+            <div v-if="bookings && bookings.length > 0">
+              <div class="row" v-for="(booking, index) in bookings" :key="`bookings-${index}`">
+                <BookingDetailsCard
                   :show="true"
-                  :attention="attention"
+                  :booking="booking"
                   :commerce="commerce"
                 >
-              </AttentionDetailsCard>
+              </BookingDetailsCard>
               </div>
             </div>
             <div v-else>
@@ -393,7 +390,7 @@ export default {
       </div>
     </div>
   </div>
-  <div v-if="showClientAttentionsManagement === true && !toggles['dashboard.attentions-management.view']">
+  <div v-if="showBookingsManagement === true && !toggles['dashboard.bookings-management.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

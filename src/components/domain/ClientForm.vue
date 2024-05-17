@@ -14,6 +14,7 @@ export default {
   name: 'ClientForm',
   components: { Warning, Spinner, VueRecaptcha },
   props: {
+    show: { type: Boolean, default: false },
     commerce: { type: Object, default: {} },
     name: { type: String, default: '' },
     lastName: { type: String, default: '' },
@@ -31,7 +32,8 @@ export default {
     healthAgreementId: { type: String, default: '' },
     client: { type: String, default: undefined },
     errorsAdd: { type: Array, default: [] },
-    receiveData: { type: Function, default: () => {} }
+    receiveData: { type: Function, default: () => {} },
+    clientFront: { type: Boolean, default: true },
   },
   async setup(props) {
 
@@ -40,6 +42,7 @@ export default {
     const siteKey = import.meta.env.VITE_RECAPTCHA_CHECK;
 
     const {
+      show,
       commerce,
       name,
       lastName,
@@ -56,7 +59,8 @@ export default {
       code3,
       healthAgreementId,
       client,
-      errorsAdd
+      errorsAdd,
+      clientFront
     } = toRefs(props);
 
     const { receiveData } = props;
@@ -86,64 +90,68 @@ export default {
         loading.value = true;
         state.phoneCodes = getPhoneCodes();
         state.originCodes = getUserOrigin();
-        if (getActiveFeature(commerce.value, 'user-service-conditions', 'PRODUCT')) {
-          state.documentServiceConditions = await getDocumentByOption(commerce.value.id, 'terms_of_service');
-          if (state.documentServiceConditions && state.documentServiceConditions.active === true) {
-            state.fileServiceConditions = await getDocument(`${commerce.value.id}.pdf`, 'terms_of_service');
+        if (show.value === true) {
+          if (clientFront.value === true) {
+            if (getActiveFeature(commerce.value, 'user-service-conditions', 'PRODUCT')) {
+              state.documentServiceConditions = await getDocumentByOption(commerce.value.id, 'terms_of_service');
+              if (state.documentServiceConditions && state.documentServiceConditions.active === true) {
+                state.fileServiceConditions = await getDocument(`${commerce.value.id}.pdf`, 'terms_of_service');
+              }
+            }
           }
-        }
-        if (getActiveFeature(commerce.value, 'attention-user-health-agreement', 'USER')) {
-          state.healthAgreementCompanies = await getActiveCompaniesByCommerceIdAnyType(commerce.value.id, 'HEALTH_AGREEMENT');
-        }
-        if (commerce.value && commerce.value.localeInfo.country) {
-          state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
-        }
-        if (name.value) {
-          state.newUser.name = name.value !== 'undefined' ? name.value : '';
-        }
-        if (lastName.value) {
-          state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
-        }
-        if (idNumber.value) {
-          const idNumberIn = idNumber.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.newUser.idNumber = idNumberIn !== 'undefined' ? idNumberIn : '';
-        }
-        if (email.value) {
-          state.newUser.email = email.value !== 'undefined' ? email.value : ''
-        }
-        if (phone.value) {
-          const phoneIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.newUser.phoneCode = phoneIn !== 'undefined' ? phoneIn.slice(0,2) : '';
-          state.newUser.phone = phoneIn !== 'undefined' ? phoneIn.slice(2,20) : '';
-        }
-        if (birthday.value) {
-          state.newUser.birthday = birthday.value != 'undefined' ? birthday.value : '';
-        } else {
-          state.newUser.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
-        }
-        if (addressText.value) {
-          state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
-        }
-        if (addressComplement.value) {
-          state.newUser.addressComplement = addressComplement.value != 'undefined' ? addressComplement.value : '';
-        }
-        if (addressCode.value) {
-          state.newUser.addressCode = addressCode.value != 'undefined' ? addressCode.value : '';
-        }
-        if (origin.value) {
-          state.newUser.origin = origin.value != 'undefined' ? origin.value : '';
-        }
-        if (code1.value) {
-          state.newUser.code1 = code1.value != 'undefined' ? code1.value : '';
-        }
-        if (code2.value) {
-          state.newUser.code2 = code2.value != 'undefined' ? code2.value : '';
-        }
-        if (code3.value) {
-          state.newUser.code3 = code3.value != 'undefined' ? code3.value : '';
-        }
-        if (healthAgreementId.value) {
-          state.newUser.healthAgreementId = healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
+          if (getActiveFeature(commerce.value, 'attention-user-health-agreement', 'USER')) {
+            state.healthAgreementCompanies = await getActiveCompaniesByCommerceIdAnyType(commerce.value.id, 'HEALTH_AGREEMENT');
+          }
+          if (commerce.value && commerce.value.localeInfo.country) {
+            state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
+          }
+          if (name.value) {
+            state.newUser.name = name.value !== 'undefined' ? name.value : '';
+          }
+          if (lastName.value) {
+            state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
+          }
+          if (idNumber.value) {
+            const idNumberIn = idNumber.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+            state.newUser.idNumber = idNumberIn !== 'undefined' ? idNumberIn : '';
+          }
+          if (email.value) {
+            state.newUser.email = email.value !== 'undefined' ? email.value : ''
+          }
+          if (phone.value) {
+            const phoneIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+            state.newUser.phoneCode = phoneIn !== 'undefined' ? phoneIn.slice(0,2) : '';
+            state.newUser.phone = phoneIn !== 'undefined' ? phoneIn.slice(2,20) : '';
+          }
+          if (birthday.value) {
+            state.newUser.birthday = birthday.value != 'undefined' ? birthday.value : '';
+          } else {
+            state.newUser.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
+          }
+          if (addressText.value) {
+            state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
+          }
+          if (addressComplement.value) {
+            state.newUser.addressComplement = addressComplement.value != 'undefined' ? addressComplement.value : '';
+          }
+          if (addressCode.value) {
+            state.newUser.addressCode = addressCode.value != 'undefined' ? addressCode.value : '';
+          }
+          if (origin.value) {
+            state.newUser.origin = origin.value != 'undefined' ? origin.value : '';
+          }
+          if (code1.value) {
+            state.newUser.code1 = code1.value != 'undefined' ? code1.value : '';
+          }
+          if (code2.value) {
+            state.newUser.code2 = code2.value != 'undefined' ? code2.value : '';
+          }
+          if (code3.value) {
+            state.newUser.code3 = code3.value != 'undefined' ? code3.value : '';
+          }
+          if (healthAgreementId.value) {
+            state.newUser.healthAgreementId = healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
+          }
         }
         loading.value = false;
       } catch (error) {
@@ -194,8 +202,7 @@ export default {
     };
 
     const isActiveCommerce = () => {
-      return commerce.value.active === true &&
-        commerce.value.queues.length > 0
+      return commerce.value.active === true;
     };
 
     const findPhoneCode = (codeIn) => {
@@ -394,6 +401,8 @@ export default {
 
     return {
       state,
+      show,
+      clientFront,
       loading,
       loadingSearch,
       commerce,
@@ -422,9 +431,9 @@ export default {
 }
 </script>
 <template>
-  <div>
+  <div v-if="show">
     <div id="data" v-if="isDataActive()">
-      <div v-if="isActiveCommerce()" class="choose-attention py-2 pt-3">
+      <div v-if="isActiveCommerce() && clientFront === true" class="choose-attention py-2 pt-3">
         <span class="fw-bold">{{ $t("commerceQueuesView.data") }}</span>
       </div>
       <div class="col col-md-10 offset-md-1 data-card">
@@ -733,7 +742,7 @@ export default {
               <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.healthAgreementText") }}</label>
             </div>
           </div>
-          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions">
+          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions && clientFront === true">
             <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
               <input type="checkbox" class="col-2 form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
               <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
@@ -744,7 +753,7 @@ export default {
             </div>
           </div>
           <div v-else>
-            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
+            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions() && clientFront === true">
               <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
               <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
                 <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>

@@ -94,7 +94,6 @@ export default {
     </div>
   </div>
   <div v-if="showSurvey === true && !toggles['dashboard.surveys.view']">
-   {{showSurveyResults }} {{ toggles['dashboard.surveys.view']}}
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"

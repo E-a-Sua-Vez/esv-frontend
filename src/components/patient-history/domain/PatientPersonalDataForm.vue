@@ -195,25 +195,29 @@ export default {
       clientData,
       async () => {
         loading.value = true;
-        if (clientData.value && clientData.value.id) {
-          const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
-          state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0,2) : '';
-          state.newPersonalData.phone = phoneIn ? phoneIn.slice(2,20) : '';
-          const name = clientData.value.userName || clientData.value.name || undefined;
-          state.newPersonalData.name = name ? name : '';
-          const lastName = clientData.value.userLastName || clientData.value.lastName || undefined;
-          state.newPersonalData.lastName = lastName ? lastName : '';
-          const idNumber = clientData.value.userIdNumber || clientData.value.idNumber || undefined;
-          state.newPersonalData.idNumber = idNumber ? idNumber : '';
-          const birthday = clientData.value.userBirthday || (clientData.value.personalInfo && clientData.value.personalInfo.birthday) || undefined;
-          state.newPersonalData.birthday = birthday ? birthday : '';
-          const addressCode = clientData.value.userAddressCode || (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) || undefined;
-          state.newPersonalData.addressCode = addressCode ? addressCode : '';
-          const addressComplement = clientData.value.userAddressComplement || (clientData.value.personalInfo && clientData.value.personalInfo.addressComplement) || undefined;
-          state.newPersonalData.addressComplement = addressComplement ? addressComplement : '';
-          const addressText = clientData.value.userAddressText || (clientData.value.personalInfo && clientData.value.personalInfo.addressText) || undefined;
-          state.newPersonalData.addressText = addressText ? addressText : '';
-          sendData();
+        if (patientHistoryData.value && patientHistoryData.value.id) {
+          state.newPersonalData = patientHistoryData.value.personalData;
+        } else {
+          if (clientData.value && clientData.value.id) {
+            const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
+            state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0,2) : '';
+            state.newPersonalData.phone = phoneIn ? phoneIn.slice(2,20) : '';
+            const name = clientData.value.userName || clientData.value.name || undefined;
+            state.newPersonalData.name = name ? name : '';
+            const lastName = clientData.value.userLastName || clientData.value.lastName || undefined;
+            state.newPersonalData.lastName = lastName ? lastName : '';
+            const idNumber = clientData.value.userIdNumber || clientData.value.idNumber || undefined;
+            state.newPersonalData.idNumber = idNumber ? idNumber : '';
+            const birthday = clientData.value.userBirthday || (clientData.value.personalInfo && clientData.value.personalInfo.birthday) || undefined;
+            state.newPersonalData.birthday = birthday ? birthday : '';
+            const addressCode = clientData.value.userAddressCode || (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) || undefined;
+            state.newPersonalData.addressCode = addressCode ? addressCode : '';
+            const addressComplement = clientData.value.userAddressComplement || (clientData.value.personalInfo && clientData.value.personalInfo.addressComplement) || undefined;
+            state.newPersonalData.addressComplement = addressComplement ? addressComplement : '';
+            const addressText = clientData.value.userAddressText || (clientData.value.personalInfo && clientData.value.personalInfo.addressText) || undefined;
+            state.newPersonalData.addressText = addressText ? addressText : '';
+            sendData();
+          }
         }
         loading.value = false;
       }

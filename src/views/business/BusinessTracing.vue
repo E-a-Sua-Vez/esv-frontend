@@ -2,7 +2,6 @@
 import { ref, reactive, onBeforeMount, } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getSurveyMetrics } from '../../application/services/query-stack';
 import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import { getServiceByCommerce } from '../../application/services/service';
@@ -16,6 +15,7 @@ import DashboardSurveysManagement from '../../components/dashboard/DashboardSurv
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
 import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DashboardAttentionsAndBookingsManagement from '../../components/attentions/DashboardAttentionsAndBookingsManagement.vue';
 
 export default {
   name: 'BusinessTracing',
@@ -29,7 +29,8 @@ export default {
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
     DashboardClientsManagement,
-    ComponentMenu
+    ComponentMenu,
+    DashboardAttentionsAndBookingsManagement
   },
   async setup() {
     const router = useRouter();
@@ -98,7 +99,6 @@ export default {
         state.queues = commerce.queues;
         state.services = await getServiceByCommerce(commerce.id);
         state.toggles = await getPermissions('dashboard');
-        await refresh();
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -125,29 +125,8 @@ export default {
           state.queues = queuesByCommerce.queues;
           state.selectedCommerces = state.commerces;
         }
-        await refresh();
         loading.value = false;
       } catch (error) {
-        loading.value = false;
-      }
-    }
-
-    const getCalculatedMetrics = async () => {
-      if (state.queues && state.queues.length > 0) {
-        const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-        const { calculatedMetrics } = await getSurveyMetrics(state.commerce.id, queues, undefined, undefined);
-        return calculatedMetrics;
-      }
-    }
-
-    const refresh = async () => {
-      try {
-        loading.value = true;
-        state.calculatedMetrics = await getCalculatedMetrics();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
         loading.value = false;
       }
     }
@@ -194,7 +173,6 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      refresh,
       selectCommerce,
       showClients,
       showSurveys,
@@ -280,7 +258,7 @@ export default {
                 :services="state.services"
               >
               </DashboardClientsManagement>
-              <DashboardAttentionsManagement
+              <DashboardAttentionsAndBookingsManagement
                 :showAttentionManagement="state.showAttentions"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
@@ -288,7 +266,7 @@ export default {
                 :commerces="state.selectedCommerces"
                 :services="state.services"
               >
-              </DashboardAttentionsManagement>
+              </DashboardAttentionsAndBookingsManagement>
               <DashboardSurveysManagement
                 :showSurveyManagement="state.showSurveyManagement"
                 :calculatedMetrics="state.calculatedMetrics"
@@ -296,6 +274,7 @@ export default {
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
+                :services="state.services"
               >
               </DashboardSurveysManagement>
             </div>

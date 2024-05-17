@@ -1677,6 +1677,7 @@ export default {
         <div v-if="isAvailableCommerce(state.commerce)">
           <!-- FORM -->
           <ClientForm
+            :show="true"
             :commerce="state.commerce"
             :name="state.newUser.name || name"
             :lastName="state.newUser.lastName || lastName"

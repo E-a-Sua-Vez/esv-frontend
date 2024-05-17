@@ -72,6 +72,7 @@ export default {
       this.contactResultType = undefined;
       this.asc = true;
       this.searchText = undefined;
+      this.page = 1;
       this.limit = 10;
       this.startDate = undefined;
       this.endDate = undefined;

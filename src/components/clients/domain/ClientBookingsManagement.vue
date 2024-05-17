@@ -73,6 +73,7 @@ export default {
       this.searchText = undefined;
       this.queueId = undefined;
       this.serviceId = undefined;
+      this.page = 1;
       this.limit = 10;
       this.startDate = undefined;
       this.endDate = undefined;
@@ -139,9 +140,8 @@ export default {
     },
     async getCurrentMonth() {
       const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
-      this.startDate = `${year}-${month}-01`;
-      this.endDate = `${year}-${month}-${day}`;
+      this.startDate = new DateModel(date).setDateOfMonth(1).toString();
+      this.endDate = new DateModel(this.startDate).endOfMonth().toString();
       await this.refresh();
     },
     async getLastMonth() {
@@ -179,8 +179,8 @@ export default {
           oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
+          await this.refresh();
         }
-        await this.refresh();
       }
     },
     bookingsIn: {

@@ -5,18 +5,20 @@ import { getAttentionsDetails, getClientContactsDetailsByClientId, getPatientHis
 import { getPatientHistoryItemByCommerce  } from '../../../application/services/patient-history-item';
 import { getFormsByClient  } from '../../../application/services/form';
 import { getDate } from '../../../shared/utils/date';
+import { formatIdNumber } from '../../../shared/utils/idNumber';
+import { getPermissions } from '../../../application/services/permissions';
 import Popper from "vue3-popper";
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
 import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue';
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
-import { formatIdNumber } from '../../../shared/utils/idNumber';
 import PatientHistoryManagement from '../../patient-history/domain/PatientHistoryManagement.vue';
 import ClientBookingsManagement from '../domain/ClientBookingsManagement.vue';
+import ClientDataManagement from '../domain/ClientDataManagement.vue';
 
 export default {
   name: 'ClientDetailsCard',
-  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement, PatientHistoryManagement, ClientBookingsManagement },
+  components: { Popper, Spinner, ClientAttentionsManagement, ClientContactsManagement, PatientHistoryManagement, ClientBookingsManagement, ClientDataManagement },
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
@@ -45,6 +47,8 @@ export default {
       patientHistoryItems: [],
       patientForms: [],
       patientHistory: {},
+      togglesClient: {},
+      showClientData: false,
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
         { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
@@ -89,6 +93,9 @@ export default {
       } catch (error) {
         this.loading = false;
       }
+    },
+    getClientData() {
+      this.showClientData = true;
     },
     async getClientContacts() {
       try {
@@ -206,6 +213,7 @@ export default {
     },
     async getUserType() {
       this.userType = await this.store.getCurrentUserType;
+      this.togglesClient = await getPermissions('client', 'admin');
     },
     async getUser() {
       this.user = await this.store.getCurrentUser;
@@ -216,6 +224,17 @@ export default {
     closeModal() {
       const modalCloseButton = document.getElementById(`close-modal-patient-history-${this.client.id}`);
       modalCloseButton.click();
+    },
+    closeDataModal() {
+      const modalCloseButton = document.getElementById(`close-modal-client-edit-${this.client.id}`);
+      modalCloseButton.click();
+      this.showClientData = false;
+    }
+  },
+  computed: {
+    visible() {
+      const { showClientData } = this;
+      return showClientData;
     }
   },
   watch: {
@@ -357,7 +376,16 @@ export default {
         </div>
         <hr>
         <div class="row centered my-2" v-if="management && !loading">
-          <div class="col-6">
+          <div class="col-4">
+            <button
+              @click="getClientData()"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+              data-bs-toggle="modal"
+              :data-bs-target="`#editModal-${this.client.id}`">
+              {{ $t('dashboard.edit')}} <i class="bi bi-pencil-fill"></i>
+            </button>
+          </div>
+          <div class="col-4">
             <button
               @click="getClientContacts()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
@@ -366,7 +394,7 @@ export default {
               {{ $t('dashboard.contact')}} <i class="bi bi-chat-left-dots-fill"></i>
             </button>
           </div>
-          <div class="col-6">
+          <div class="col-4">
             <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
               @click="goToCreateBooking()">
               {{ $t('dashboard.schedule')}} <i class="bi bi-calendar-check-fill mx-1"></i>
@@ -509,6 +537,32 @@ export default {
           </div>
           <div class="mx-2 mb-4 text-center">
             <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+     <!-- Modal Edit -->
+     <div class="modal fade" :id="`editModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class=" modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-fill"></i> {{ $t("dashboard.dataOf") }} {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }} </h5>
+            <button :id="`close-modal-client-edit-${this.client.id}`" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <Spinner :show="loading"></Spinner>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <ClientDataManagement
+              :showClientDataManagement="visible"
+              :toggles="togglesClient"
+              :client="client"
+              :commerce="commerce"
+              :commerces="commerces"
+              :closeModal="closeDataModal"
+            >
+            </ClientDataManagement>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
           </div>
         </div>
       </div>

@@ -1525,6 +1525,8 @@
     "pendingControls": "Controles",
     "pendingBookings": "Reservas",
     "bookingsOf": "Reservas de",
+    "edit": "Editar",
+    "dataOf": "Datos de",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -2909,6 +2911,7 @@
     "addDate": "Agregar Fecha",
     "selectedDate": "Fecha Seleccionada:",
     "hours": "Horario de Atención:",
+    "confirmNotificationDaysBefore": "Días Previos Notificación Confirmación:",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3762,6 +3765,9 @@
       "notify": {
         "whatsapp": "Campo de número Whatsapp para notificaciones",
         "email": "Campo de email para notificaciones"
+      },
+      "admin": {
+        "edit": "Editar datos - Sección Administrar Clientes"
       }
     },
     "businesses": {
@@ -3948,6 +3954,9 @@
       },
       "collection-details":{
         "view": "Ver Ingresos Detalles - Sección Financiera"
+      },
+      "client-data-management": {
+        "view": "Ver Sección Cliente - Sección Administrar Clientes"
       },
       "reports": {
         "surveys": "Descargar Reporte de Encuestas (Resumen) - Sección Performance Hub",

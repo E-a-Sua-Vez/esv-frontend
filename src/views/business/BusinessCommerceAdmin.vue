@@ -199,6 +199,7 @@ export default {
         localeInfo: state.business.localeInfo || {},
         contactInfo: state.business.contactInfo || {},
         serviceInfo: {
+          confirmNotificationDaysBefore: 1,
           break: false,
           personalized: false,
           personalizedHours: {},
@@ -896,6 +897,20 @@ export default {
                               class="form-control"
                               v-model="commerce.serviceInfo.serviceUrl"
                               placeholder="Ex. https://menu.commerce.com">
+                          </div>
+                        </div>
+                        <div id="commerce-confirmNotificationDaysBefore-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessCommercesAdmin.confirmNotificationDaysBefore") }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="8"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.serviceInfo.confirmNotificationDaysBefore"
+                              placeholder="5">
                           </div>
                         </div>
                         <div id="commerce-attentionHour-form-update" class="row g-1">
@@ -1689,6 +1704,20 @@ export default {
                             @click="checkDay($event, state.newCommerce.serviceInfo, 7)">
                           <label class="form-check-label text-label" for="domingo">{{ $t("days.7") }}</label>
                         </div>
+                      </div>
+                    </div>
+                    <div id="commerce-confirmNotificationDaysBefore-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCommercesAdmin.confirmNotificationDaysBefore") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="1"
+                          max="8"
+                          type="text"
+                          class="form-control"
+                          v-model="state.newCommerce.serviceInfo.confirmNotificationDaysBefore"
+                          placeholder="5">
                       </div>
                     </div>
                     <div id="add-commerce-personalized-active-form" class="row g-1">

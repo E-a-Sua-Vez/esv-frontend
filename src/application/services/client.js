@@ -13,3 +13,7 @@ export const contactClient = async (id, body) => {
 export const searchClientByIdNumber = async (commerceId, idNumber) => {
   return (await requestBackend.get(`/${entity}/search/commerceId/${commerceId}/idNumber/${idNumber}`, await getHeaders())).data;
 }
+
+export const updateClient = async (id, body) => {
+  return (await requestBackend.patch(`/${entity}/${id}`, body, await getHeaders())).data;
+}

@@ -7,6 +7,7 @@ import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getGroupedQueueByCommerceId } from '../../application/services/queue';
+import { getServiceByCommerce } from '../../application/services/service';
 import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
 import PoweredBy from '../../components/common/PoweredBy.vue';
@@ -17,6 +18,7 @@ import DashboardSurveysManagement from '../../components/dashboard/DashboardSurv
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
 import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DashboardAttentionsAndBookingsManagement from '../../components/attentions/DashboardAttentionsAndBookingsManagement.vue';
 
 export default {
   name: 'CollaboratorTracing',
@@ -29,7 +31,8 @@ export default {
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
     DashboardClientsManagement,
-    ComponentMenu
+    ComponentMenu,
+    DashboardAttentionsAndBookingsManagement
   },
   async setup() {
     const router = useRouter();
@@ -69,6 +72,7 @@ export default {
       commerces: ref({}),
       selectedCommerces: ref({}),
       queues: ref({}),
+      services: ref({}),
       queue: {},
       collaborator: {},
       dateType: 'month',
@@ -106,6 +110,7 @@ export default {
             if (state.commerce) {
               const commerce = await getCommerceById(state.commerce.id);
               state.queues = commerce.queues;
+              state.services = await getServiceByCommerce(commerce.id);
             }
           } else if (state.collaborator.commerceId) {
             const commerce = await getCommerceById(state.collaborator.commerceId);
@@ -113,6 +118,7 @@ export default {
             state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
             state.selectedCommerces = [state.commerce];
             state.queues = commerce.queues;
+            state.services = await getServiceByCommerce(commerce.id);
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
               if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
@@ -130,7 +136,6 @@ export default {
           state.selectedCommerces = state.commerces;
         }
         state.toggles = await getPermissions('dashboard');
-        await refresh();
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -166,29 +171,8 @@ export default {
             }
           }
         }
-        await refresh();
         loading.value = false;
       } catch (error) {
-        loading.value = false;
-      }
-    }
-
-    const getCalculatedMetrics = async () => {
-      if (state.queues && state.queues.length > 0) {
-        const queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
-        const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, undefined, undefined);
-        return calculatedMetrics;
-      }
-    }
-
-    const refresh = async () => {
-      try {
-        loading.value = true;
-        state.calculatedMetrics = await getCalculatedMetrics();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
         loading.value = false;
       }
     }
@@ -235,7 +219,6 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      refresh,
       selectCommerce,
       showAttentions,
       showSurveys,
@@ -316,18 +299,20 @@ export default {
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
-                :commerces="state.selectedCommerces || state.commerces"
+                :commerces="state.selectedCommerces"
                 :business="state.business"
+                :services="state.services"
               >
               </DashboardClientsManagement>
-              <DashboardAttentionsManagement
+              <DashboardAttentionsAndBookingsManagement
                 :showAttentionManagement="state.showAttentions"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
+                :services="state.services"
               >
-              </DashboardAttentionsManagement>
+              </DashboardAttentionsAndBookingsManagement>
               <DashboardSurveysManagement
                 :showSurveyManagement="state.showSurveyManagement"
                 :calculatedMetrics="state.calculatedMetrics"
@@ -335,6 +320,7 @@ export default {
                 :commerce="state.commerce"
                 :queues="state.queues"
                 :commerces="state.selectedCommerces"
+                :services="state.services"
               >
               </DashboardSurveysManagement>
             </div>

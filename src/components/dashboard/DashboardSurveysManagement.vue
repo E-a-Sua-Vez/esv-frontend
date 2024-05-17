@@ -9,7 +9,7 @@ import AttentionNPSDetails from './domain/AttentionNPSDetails.vue';
 import SurveyDetailsCard from './common/SurveyDetailsCard.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Popper from "vue3-popper";
-import { getSurveysDetails } from '../../application/services/query-stack';
+import { getSurveysDetails, getSurveyMetrics } from '../../application/services/query-stack';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 import { DateModel } from '../../shared/utils/date.model';
 
@@ -22,7 +22,8 @@ export default {
     toggles: { type: Object, default: undefined },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: [] },
-    queues: { type: Object, default: undefined }
+    queues: { type: Object, default: undefined },
+    services: { type: Array, default: undefined }
   },
   data() {
     return {
@@ -38,21 +39,15 @@ export default {
       showFilterOptions: false,
       keyWord: undefined,
       searchText: undefined,
+      keyWordsResult: undefined,
+      keyWords: undefined,
       queueId: undefined,
+      serviceId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
       endDate: undefined
-    }
-  },
-  async beforeMount() {
-    try {
-      this.loading = true;
-      await this.refresh();
-      this.loading = false;
-    } catch (error) {
-      this.loading = false;
     }
   },
   methods: {
@@ -65,7 +60,7 @@ export default {
         }
         this.surveys = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.ratingType, this.npsType, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId);
+          this.keyWord, this.searchText, this.queueId, this.serviceId);
         if (this.surveys && this.surveys.length > 0) {
           const { counter } = this.surveys[0];
           this.counter = counter;
@@ -76,13 +71,56 @@ export default {
           this.counter = 0;
           this.totalPages = 0;
         }
+        this.calculateKeyWords();
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
+    calculateKeyWords() {
+      if (this.surveys.length > 0) {
+        const keyWords = {};
+        this.surveys.forEach(result => {
+          const { messageScore } = result;
+          if (result.messageEntities) {
+            const array = Object.values(result.messageEntities);
+            array.map(entity => {
+              const entityName = entity.name.toUpperCase();
+              const entityScore = entity.score || +messageScore || 0;
+              if (!keyWords[entityName]) {
+                keyWords[entityName] = {
+                  count: 1,
+                  score: entityScore,
+                  scoreAvg: entityScore
+                }
+              } else {
+                const count = parseInt(keyWords[entityName].count) + 1;
+                const score = keyWords[entityName].score + entityScore;
+                keyWords[entityName] = {
+                  count: count,
+                  score: score,
+                  scoreAvg: parseFloat(((score / count) || 0).toFixed(2))
+                };
+              }
+            })
+          }
+        })
+        const newKeyWords = {};
+        const keysSorted = Object.keys(keyWords).sort((a, b) => { return keyWords[b].count - keyWords[a].count }).slice(0, 10);
+        keysSorted.map(element => {
+          newKeyWords[element] = {
+            count: keyWords[element].count,
+            score: keyWords[element].score,
+            scoreAvg: keyWords[element].scoreAvg
+          }
+        })
+        this.keyWordsResult = newKeyWords;
+        this.keyWords = Object.keys(this.keyWordsResult).sort((a,b) => b - a).slice(0, 10);
+      }
+    },
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     async clear() {
       this.ratingType = undefined;
@@ -92,6 +130,7 @@ export default {
       this.keyWord = undefined;
       this.searchText = undefined;
       this.queueId = undefined;
+      this.serviceId = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();
@@ -110,21 +149,9 @@ export default {
         this.contacted = false;
       }
     },
-    getKeyWords() {
-      if (this.calculatedMetrics &&
-        this.calculatedMetrics['survey.created'] &&
-        this.calculatedMetrics['survey.created'].keyWords
-      ) {
-        return Object.keys(this.calculatedMetrics['survey.created'].keyWords).sort((a,b) => b - a).slice(0, 10);
-      }
-    },
     getKeyWordAvg(word) {
-      if (this.calculatedMetrics &&
-        this.calculatedMetrics['survey.created'] &&
-        this.calculatedMetrics['survey.created'].keyWords &&
-        this.calculatedMetrics['survey.created'].keyWords[word]
-      ) {
-        return this.calculatedMetrics['survey.created'].keyWords[word]['scoreAvg'] || 0
+      if (this.keyWords && this.keyWords[word]) {
+        return this.keyWords[word]['scoreAvg'] || 0
       }
       return 0;
     },
@@ -158,7 +185,7 @@ export default {
         }
         const result = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           undefined, undefined, this.ratingType, this.npsType, this.contactable, this.contacted,
-          this.keyWord, this.searchText, this.queueId);
+          this.keyWord, this.searchText, this.queueId, this.serviceId);
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -204,9 +231,15 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit} = this;
+      const { page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit, serviceId} = this;
       return {
-        page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit
+        page, ratingType, npsType, contactable, contacted, keyWord, queueId, limit, serviceId
+      }
+    },
+    visible() {
+      const { showSurveyManagement } = this;
+      return {
+        showSurveyManagement
       }
     }
   },
@@ -222,11 +255,22 @@ export default {
           oldData.contactable !== newData.contactable ||
           oldData.keyWord !== newData.keyWord ||
           oldData.limit !== newData.limit ||
-          oldData.queueId !== newData.queueId)
+          oldData.queueId !== newData.queueId ||
+          oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
+          this.refresh();
         }
-        this.refresh();
+      }
+    },
+    visible: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.showSurveyManagement === true) {
+          this.page = 1;
+          this.refresh();
+        }
       }
     }
   }
@@ -320,6 +364,12 @@ export default {
                     <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">{{ queue.name }}</option>
                   </select>
                 </div>
+                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
+                  <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.service") }} </label>
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
+                    <option v-for="service in services" :key="service.name" :value="service.id" id="select-queue">{{ service.name }}</option>
+                  </select>
+                </div>
                 <div class="col-12 col-md my-1 filter-card">
                   <input type="radio" class="btn btn-check btn-sm" v-model="ratingType" value="DETRACTOR" name="rating-type" id="detractor-rating" autocomplete="off">
                   <label class="btn" for="detractor-rating"> <i :class="`bi bi-star-fill red-icon`"></i> </label>
@@ -366,18 +416,18 @@ export default {
                     </div>
                   </div>
                 </div>
-                <div class="filter-card col-md">
+                <div class="filter-card col-md" v-if="this.keyWords && this.keyWords.length > 0">
                   <span class="form-check-label metric-keyword-subtitle" @click="showKeyWords()"> {{ $t("dashboard.keyWord") }} <i :class="`bi ${showKeyWordsOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i> </span>
                   <div v-if="showKeyWordsOptions === true" class="row">
-                    <div class="col" v-for="(word, ind) in getKeyWords()" :key="`word-${ind}`">
+                    <div class="col" v-for="(word, ind) in this.keyWords" :key="`word-${ind}`">
                       <div class="m-0">
                         <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold" :class="word === keyWord ? 'metric-keyword-tag-selected': ''" @click="setKeyWord(word)">
                           {{ word }}
                           <span class="badge rounded-pill bg-danger metric-keyword-tag mx-1 ">
-                            {{ calculatedMetrics['survey.created'].keyWords[word].count }}
+                            {{ keyWordsResult[word].count }}
                           </span>
                           <span class="metric-keyword-tag" v-if="getKeyWordAvg(word) !== 0">
-                            <i :class="`metric-keyword-tag bi ${clasifyScoredComment(calculatedMetrics['survey.created'].keyWords[word] ? getKeyWordAvg(word) : undefined)}  mb-0`"> </i> {{ getKeyWordAvg(word) }}
+                            <i :class="`metric-keyword-tag bi ${clasifyScoredComment(this.keyWordsResult[word] ? getKeyWordAvg(word) : undefined)}  mb-0`"> </i> {{ getKeyWordAvg(word) }}
                           </span>
                         </span>
                       </div>

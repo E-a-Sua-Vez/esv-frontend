@@ -1531,6 +1531,8 @@
     "pendingControls": "Controls",
     "pendingBookings": "Bookings",
     "bookingsOf": "Bookings of",
+    "edit": "Edit",
+    "dataOf": "Data of",
     "dates": {
       "from": "From",
       "to": "to"
@@ -2914,6 +2916,7 @@
     "addDate": "Add Date",
     "selectedDate": "Selected Date:",
     "hours": "Attention Hours:",
+    "confirmNotificationDaysBefore": "Confirmation Notification Days Before:",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3757,6 +3760,9 @@
       "notify": {
         "whatsapp": "Field of Number Whatsapp para notifications",
         "email": "Field of email para notifications"
+      },
+      "admin": {
+        "edit": "Edit data - Section Client Admin"
       }
     },
     "businesses": {
@@ -3956,6 +3962,9 @@
       },
       "tracing": {
         "view": "See Section - Clients Management Section"
+      },
+      "client-data-management": {
+        "view": "See Client Section - Clients Management Section"
       },
       "reports": {
         "surveys": "Download Report Surveys (Summary) - Section Performance Hub",

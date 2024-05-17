@@ -75,8 +75,9 @@ export default {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     async clear() {
       this.daysSinceType = undefined;
@@ -203,6 +204,12 @@ export default {
         page, daysSinceType, daysSinceContacted, contactResultType, contactable, contacted,
           survey, asc, queueId, limit, serviceId, pendingControls, pendingBookings
       }
+    },
+    visible() {
+      const { showClientManagement } = this;
+      return {
+        showClientManagement
+      }
     }
   },
   watch: {
@@ -226,8 +233,18 @@ export default {
           oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
+          this.refresh();
         }
-        this.refresh();
+      }
+    },
+    visible: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        if (this.showClientManagement === true) {
+          this.page = 1;
+          this.refresh();
+        }
       }
     }
   }
