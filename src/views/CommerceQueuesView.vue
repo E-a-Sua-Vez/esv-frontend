@@ -1325,7 +1325,7 @@ export default {
           })
           if (!forDeletion.includes(date) &&
             date === formattedDate(state.specificCalendarDate) &&
-            (state.availableBookingBlocks.length === 0 || state.availableBookingSuperBlocks.length === 0)) {
+            (state.availableBookingBlocks.length === 0 && state.availableBookingSuperBlocks.length === 0)) {
               forDeletion.push(date);
           }
         })
