@@ -69,20 +69,21 @@ export default {
 
 <template>
   <div v-if="show">
-    <div class="row metric-card">
+    <div class="row metric-card centered">
       <div v-if="booking.servicesDetails" class="idNumber-title lefted">
         <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
         <span v-if="booking.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span> </span>
       </div>
-      <div class="col-6 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
+      <div class="col-4 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
         {{ booking.userName?.trim().toUpperCase() || '' }} {{ booking.userLastName?.trim().toUpperCase() || '' }}
         <span v-if="booking.termsConditionsAcceptedCode"> <i class="bi bi-person-fill-check mx-1"></i> </span>
         <i v-if="booking.paid" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
-      <div class="col-2 centered fw-bold">
-        <i :class="`bi ${clasifyStatus(booking.status)} mx-1`"></i>
+      <div class="col-5">
+        <i :class="`bi ${clasifyStatus(booking.status)} mx-1 h6`"></i>
+        <span class="date-title"> {{ booking.hourFrom }} - {{ booking.hourTo }} </span>
       </div>
-      <div class="col-4 centered date-title">
+      <div class="col-3 centered date-title">
         {{ getDate(booking.date) }}
       </div>
     </div>

@@ -276,6 +276,26 @@ export default {
                     </div>
                   </div>
                 </div>
+                <div class="m-1">
+                  <div class="row">
+                    <div class="col-10">
+                      <input
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="form-control"
+                        v-model="searchText"
+                        :placeholder="$t('dashboard.search')">
+                    </div>
+                    <div class="col-2">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                        @click="refresh()">
+                        <span><i class="bi bi-search"></i></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
                   <label class="metric-card-subtitle mx-2" for="select-queue"> {{ $t("dashboard.queue") }} </label>
                   <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
