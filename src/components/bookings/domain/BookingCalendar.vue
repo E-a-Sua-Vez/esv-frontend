@@ -310,7 +310,6 @@ export default {
         } else {
           await getAvailableDatesByMonth(state.selectedQueue, `${page}-01`);
         }
-
       }
     }
 
@@ -372,6 +371,9 @@ export default {
 
     const getAvailableDatesByQueueMonth = async (monthBookings, queue, date) => {
       let availableDates = [];
+      calendarAttributes.value[queue.id][0].dates = [];
+      calendarAttributes.value[queue.id][1].dates = [];
+      calendarAttributes.value[queue.id][2].dates = [];
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
       const nextMonth = +month;
@@ -416,25 +418,25 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][0].dates = [];
         calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][1].dates = [];
         calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
         const avaliableToReserve = forReserves.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][2].dates = [];
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }
 
     const getAvailableSepecificDatesByQueueMonth = async (monthBookings, queue, date) => {
       let availableDates = [];
+      calendarAttributes.value[queue.id][0].dates = [];
+      calendarAttributes.value[queue.id][1].dates = [];
+      calendarAttributes.value[queue.id][2].dates = [];
       if (monthBookings && monthBookings.length >= 0 && date) {
         const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
           const date = booking.date;
@@ -472,10 +474,10 @@ export default {
             const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
             uniqueBlocksReserved.forEach(block => {
               const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-              if (times >= limit && blocksNumbers.every(block => totalBlocksReserved.includes(block)) && !forDeletion.includes(date)) {
-                if (uniqueBlocksReserved.length === blocks.length) {
+              if (times >= limit && !forDeletion.includes(date)) {
+                if (uniqueBlocksReserved.length === blocks.length && blocksNumbers.every(block => totalBlocksReserved.includes(block))) {
                   forDeletion.push(date);
-                } else if (bookings.length > 1) {
+                } else if (bookings.length >= 1) {
                   forReserves.push(date);
                 }
               }
@@ -492,19 +494,16 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][0].dates = [];
         calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][1].dates = [];
         calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
         const avaliableToReserve = forReserves.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][2].dates = [];
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }
@@ -512,6 +511,9 @@ export default {
     const getAvailableDatesByMonth = async (queue, date) => {
       if (queue && date) {
         let availableDates = [];
+        calendarAttributes.value[queue.id][0].dates = [];
+        calendarAttributes.value[queue.id][1].dates = [];
+        calendarAttributes.value[queue.id][2].dates = [];
         const [year, month] = dateYYYYMMDD(date).split('-');
         const thisMonth = +month - 1;
         const nextMonth = +month;
@@ -556,19 +558,19 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][0].dates = [];
+
         calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][1].dates = [];
+
         calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
         const avaliableToReserve = forReserves.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][2].dates = [];
+
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }
@@ -576,6 +578,9 @@ export default {
     const getAvailableSpecificDatesByMonth = async (queue, date) => {
       if (queue && date) {
         let availableDates = [];
+        calendarAttributes.value[queue.id][0].dates = [];
+        calendarAttributes.value[queue.id][1].dates = [];
+        calendarAttributes.value[queue.id][2].dates = [];
         const [year, month] = dateYYYYMMDD(date).split('-');
         const thisMonth = +month - 1;
         const nextMonth = +month;
@@ -608,7 +613,7 @@ export default {
           if (queue.serviceInfo !== undefined && queue.serviceInfo.blockLimit !== undefined && queue.serviceInfo.blockLimit > 0) {
             limit = queue.serviceInfo.blockLimit;
           }
-          const blocksBySpecificCalendarDate = state.blocksBySpecificCalendarDate;//await getQueueBlockDetailsBySpecificDayByCommerceId(commerce.value.id, queue.id);
+          const blocksBySpecificCalendarDate = state.blocksBySpecificCalendarDate;
           availableDates.forEach(date => {
             const bookings = bookingsGroupedByDate[date] || [];
             const blocks = blocksBySpecificCalendarDate[date] || [];
@@ -618,10 +623,10 @@ export default {
             const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
             uniqueBlocksReserved.forEach(block => {
               const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-              if (times >= limit && blocksNumbers.every(block => totalBlocksReserved.includes(block)) && !forDeletion.includes(date)) {
-                if (uniqueBlocksReserved.length === blocks.length) {
+              if (times >= limit && !forDeletion.includes(date)) {
+                if (uniqueBlocksReserved.length === blocks.length && blocksNumbers.every(block => totalBlocksReserved.includes(block))) {
                   forDeletion.push(date);
-                } else if (bookings.length > 1) {
+                } else if (bookings.length >= 1) {
                   forReserves.push(date);
                 }
               }
@@ -638,19 +643,16 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][0].dates = [];
         calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][1].dates = [];
         calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
         const avaliableToReserve = forReserves.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-        calendarAttributes.value[queue.id][2].dates = [];
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }
