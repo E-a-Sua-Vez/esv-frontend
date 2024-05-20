@@ -494,9 +494,17 @@
       "title": "Whatsapp Contacto Comercio",
       "description": "Permite al usuario poder contactar al Comercio vía Whatsapp antes de solicitar atención"
     },
+    "user-service-conditions": {
+      "title": "Acepta Condiciones de Servicio",
+      "description": "Permite al usuario aceptar las condiciones de Servicio"
+    },
     "booking-whatsapp-cancel": {
       "title": "Whatsapp Reserva Cancelada",
       "description": "Permite enviar mensaje de reserva cancelada."
+    },
+    "attention-whatsapp-cancel": {
+      "title": "Whatsapp Atención Cancelada",
+      "description": "Permite enviar mensaje de atención cancelada."
     },
     "attention-first-form": {
       "title": "Form Primera Atención",
@@ -513,6 +521,10 @@
     "attention-user-health-agreement": {
       "title": "Form Convenio Salud",
       "description": "Solicita el Convenio de Salud para obtener número de atención."
+    },
+    "email-post-attention": {
+      "title": "Email Post Atención",
+      "description": "Permite al cliente recibir un email con un documento post atención."
     }
   },
   "document": {
@@ -520,9 +532,17 @@
       "COMMERCE": "Comercio",
       "CLIENT": "Cliente"
     },
+    "commerceTypes": {
+      "terms_of_service": "Condiciones de Servicio",
+      "post_attention": "Post Atención"
+    },
     "terms_of_service": {
       "title": "Condiciones de Servicio",
       "description": "Condiciones de Servicio del Comercio."
+    },
+    "post_attention": {
+      "title": "Post Atención",
+      "description": "Archivo Post Atención del Cliente."
     }
   },
   "paymentMethods": {

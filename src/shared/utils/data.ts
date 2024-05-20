@@ -270,3 +270,10 @@ export const getDocumentTypes = () => {
     { id: 'CLIENT', name: 'CLIENT' }
   ]
 }
+
+export const getDocumentCommerceTypes = () => {
+  return [
+    { id: 'terms_of_service', name: 'terms_of_service' },
+    { id: 'post_attention', name: 'post_attention' }
+  ]
+}

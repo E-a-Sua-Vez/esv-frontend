@@ -151,7 +151,7 @@ export default {
     </div>
     <!-- Modal User -->
     <div class="modal fade" id="userModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+      <div class=" modal-dialog modal-md">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold"><i class="bi bi-person-circle"></i> {{ $t("myUser.title") }} </h5>

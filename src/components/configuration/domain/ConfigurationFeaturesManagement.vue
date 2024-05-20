@@ -150,7 +150,7 @@ export default {
     }
 
     const closeAddModal = () => {
-      const modalCloseButton = document.getElementById('close-modal');
+      const modalCloseButton = document.getElementById('close-modal-config');
       modalCloseButton.click();
     }
 
@@ -332,7 +332,7 @@ export default {
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
-            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button id="close-modal-config" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>

@@ -22,6 +22,7 @@ export const addDocument = async (document, file) => {
   formData.append('commerceId', document.commerceId);
   formData.append('name', document.name);
   formData.append('format', document.format);
+  formData.append('reportType', document.reportType);
   return (await requestBackend.post(`/${entity}`, formData, options)).data;
 }
 

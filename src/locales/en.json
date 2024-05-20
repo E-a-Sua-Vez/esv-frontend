@@ -520,15 +520,28 @@
     "attention-user-health-agreement": {
       "title": "Form Health Agreement",
       "description": "Request the Health Agreement to the user to obtain a attention number."
+    },
+    "email-post-attention": {
+      "title": "Email Post Attention",
+      "description": "Let the client to receive an email with a document post attention."
     }
   },
   "document": {
     "types": {
-      "COMMERCE": "Commerce"
+      "COMMERCE": "Commerce",
+      "CLIENT": "Client"
+    },
+    "commerceTypes": {
+      "terms_of_service": "Service Conditios",
+      "post_attention": "Post Attention"
     },
     "terms_of_service": {
       "title": "Service Conditions",
       "description": "Commerce Service Conditions"
+    },
+    "post_attention": {
+      "title": "Post Attention",
+      "description": "File Post Atención."
     }
   },
   "paymentMethods": {

@@ -520,15 +520,28 @@
     "attention-user-health-agreement": {
       "title": "Form Convenio Saúde",
       "description": "Solicita o Convenio de Saúde ao usuário para obter a senha."
+    },
+    "email-post-attention": {
+      "title": "Email Pos Atendimento",
+      "description": "Permite ao cliente recever um arquivo no email pos atendimento."
     }
   },
   "document": {
     "types": {
-      "COMMERCE": "Comércio"
+      "COMMERCE": "Comércio",
+      "CLIENT": "Cliente"
+    },
+    "commerceTypes": {
+      "terms_of_service": "Condições de Serviço",
+      "post_attention": "Pos Atendimento"
     },
     "terms_of_service": {
       "title": "Condições de Serviço",
       "description": "Condições de Serviço do Comércio."
+    },
+    "post_attention": {
+      "title": "Pos Atendimento",
+      "description": "Arquivo Pos Atendimento."
     }
   },
   "paymentMethods": {

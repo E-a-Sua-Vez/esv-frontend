@@ -138,9 +138,9 @@ export default {
       <div id="conf-id-form" class="row">
         <div class="row document-details-container">
           <div class="col">
-            <span v-if="document.createdAt" class="badge rounded-pill bg-dark metric-keyword-tag mx-1 fw-bold"> {{ getDate(document.createdAt) }}</span>
-            <span v-if="document.modifiedBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ document.modifiedBy }}</span><br>
+            <span v-if="document.modifiedBy" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ document.modifiedBy }}</span>
             <span class="metric-keyword-tag mx-1 id"> <span class="fw-bold"> Id: </span>{{ document.id }} </span>
+            <span v-if="document.createdAt" class="mx-1 metric-keyword-tag id"> <span class="fw-bold"> Date: </span> {{ getDate(document.createdAt) }}</span>
           </div>
         </div>
       </div>
