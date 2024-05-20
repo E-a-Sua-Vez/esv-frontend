@@ -14,7 +14,7 @@ import Warning from '../../components/common/Warning.vue';
 import SimplePlanCard from '../../components/plan/SimplePlanCard.vue';
 import Plan from '../../components/plan/Plan.vue';
 import PlanSelection from '../../components/domain/PlanSelection.vue';
-import NotificationConditions from '../../components/domain/NotificationConditions.vue';
+import NotificationConditions from '../../components/conditions/NotificationConditions.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 

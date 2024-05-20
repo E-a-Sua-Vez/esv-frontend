@@ -98,7 +98,7 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await getActiveCommercesByBusinessId(state.business.id);
-        state.locale = state.commerce.localeInfo?.language || 'es';
+        state.locale = state.business.localeInfo.language || 'es';
         state.filtered = state.commerces;
         state.toggles = await getPermissions('commerces', 'admin');
         alertError.value = '';

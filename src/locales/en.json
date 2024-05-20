@@ -42,6 +42,27 @@
     "true": "Yes",
     "false": "No"
   },
+  "myUser": {
+    "title": "My User",
+    "actions": "Actions",
+    "messages": "Messages",
+    "password": "Password Change",
+    "logout": "Logout",
+    "credential": "Credential:",
+    "user": "User:",
+    "lastSignIn": "Last Connection:",
+    "message": {
+      "1": {
+        "title": "Empty Mailbox",
+        "content": "At the moment, you don't have pending messages."
+      },
+      "2": {
+        "icon": "bi-key-fill",
+        "title": "Welcome to It's your Turn!",
+        "content": "You haven't changed your password for the first time yet. For your security, we invite you to change it now. To do this, click on 'Actions' > 'Password Change' and follow the instructions."
+      }
+    }
+  },
   "countries": {
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",

@@ -1,7 +1,7 @@
 <script>
 import Message from '../../components/common/Message.vue';
 import Warning from '../../components/common/Warning.vue';
-import NotificationConditions from '../../components/domain/NotificationConditions.vue';
+import NotificationConditions from '../conditions/NotificationConditions.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import { notify } from '../../application/services/attention';

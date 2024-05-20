@@ -38,6 +38,27 @@
   "serviceStatus": "Estado del Servicio",
   "searcher": "🔎 Buscador",
   "add": "Agregar",
+  "myUser": {
+    "title": "Mi Usuario",
+    "actions": "Acciones",
+    "messages": "Mensajes",
+    "password": "Cambio de Clave",
+    "logout": "Cerrar Sesión",
+    "credential": "Credencial:",
+    "user": "Usuario:",
+    "lastSignIn": "Última Conexión:",
+    "message": {
+      "1": {
+        "title": "Buzón Vacío",
+        "content": "En este momento no tienes mensajes pendientes."
+      },
+      "2": {
+        "icon": "bi-key-fill",
+        "title": "¡Bienvenido a Es tu Turno!",
+        "content": "Aún no haz cambiado tu contraseña por primera vez. Por tu seguridad, te invitamos a cambiarla ahora. Para ello, haz click en 'Acciones' > 'Cambio de Clave' y sigue las instrucciones."
+      }
+    }
+  },
   "countries": {
     "br": "🇧🇷 Brasil",
     "cl": "🇨🇱 Chile",

@@ -70,7 +70,6 @@ export default {
             <div class="col p-1">
               <button type="button" class="btn btn-sm btn-close" aria-label="Close" @click="close()"></button>
             </div>
-
           </div>
           <div class="plan-card-subtitle">
             <span v-if="isDesactivate()">{{ $t("planStatus.subtitle.desactivate") }} <span class="fw-bold"> {{ dateYYYYMMDD(planActivation.endDate) }} </span>.</span>

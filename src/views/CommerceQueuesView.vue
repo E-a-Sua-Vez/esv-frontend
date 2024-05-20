@@ -19,7 +19,7 @@ import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
-import NotificationConditions from '../components/domain/NotificationConditions.vue';
+import NotificationConditions from '../components/conditions/NotificationConditions.vue';
 import firebase from 'firebase/app';
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';

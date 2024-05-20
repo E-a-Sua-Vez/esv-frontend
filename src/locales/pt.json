@@ -38,6 +38,27 @@
   "of": "de",
   "serviceStatus": "Status do serviço",
   "add": "Adicionar",
+  "myUser": {
+    "title": "Meu Usuário",
+    "actions": "Ações",
+    "messages": "Mensagens",
+    "password": "Alterar Senha",
+    "logout": "Sair",
+    "credential": "Credencial:",
+    "user": "Usuário:",
+    "lastSignIn": "Última Coneção:",
+    "message": {
+      "1": {
+        "title": "Caixa Vazia",
+        "content": "No momento você não tem mensagens pendentes."
+      },
+      "2": {
+        "icon": "bi-key-fill",
+        "title": "Bem-vindo a É a Sua Vez!",
+        "content": "Você ainda não alterou sua senha pela primeira vez. Para sua segurança, convidamos você a alterá-la agora. Para isso, clique em 'Ações' > 'Alterar Senha' e siga as instruções."
+      }
+    }
+  },
   "countries": {
     "br": "🇧🇷 Brazil",
     "cl": "🇨🇱 Chile",

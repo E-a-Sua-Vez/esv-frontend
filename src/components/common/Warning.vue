@@ -4,6 +4,7 @@ export default {
   props: {
     icon: { type: String, default: 'bi bi-exclamation-circle' },
     type: { type: String, default: 'normal' },
+    closable: { type: Boolean, default: false },
   },
   data() {
     return {}
@@ -12,14 +13,16 @@ export default {
 </script>
 
 <template>
-  <div :class="`message {{ type }}`">
+  <div :class="`message {{ type }}`" role="alert" class="alert-error alert alert-danger alert-dismissible">
     <div class="row g-2">
       <div class="col-2 h4">
         <i :class="`bi ${icon}`"></i>
       </div>
-      <div class="col-10">
+      <button v-if="closable" id="close-alert" type="button" class="btn btn-sm btn-close" data-bs-dismiss="alert" aria-label="Close"> </button>
+      <div class="col-9">
         <slot name="message"> Warning </slot>
       </div>
+
     </div>
   </div>
 </template>
