@@ -2091,7 +2091,9 @@
     "company-master-admin": "Compañías",
     "patient-history-item-master-admin": "Items Historia Médica",
     "bookings-master-admin": "Reservas Visión 360°",
-    "go-minisite": "Minisite"
+    "go-minisite": "Minisite",
+    "forms-master-admin": "Formularios",
+    "permissions-master-admin": "Permisos"
   },
   "collaboratorMenu": {
     "welcome": "¡Bienvenido!",

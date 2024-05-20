@@ -65,6 +65,7 @@ export default {
         'company-master-admin',
         'patient-history-item-master-admin',
         'product-master-admin',
+        'permissions-master-admin'
       ]
     });
 

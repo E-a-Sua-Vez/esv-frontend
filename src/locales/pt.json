@@ -2093,7 +2093,9 @@
     "outcome-types-master-admin": "Tipos de Despesa",
     "company-master-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
-    "bookings-master-admin": "Reservas Visão 360°"
+    "bookings-master-admin": "Reservas Visão 360°",
+    "forms-master-admin": "Formulários",
+    "permissions-master-admin": "Permissões"
   },
   "collaboratorMenu": {
     "welcome": "Bem-vindo!",
