@@ -1533,6 +1533,7 @@
     "bookingsOf": "Bookings of",
     "edit": "Edit",
     "dataOf": "Data of",
+    "addClient": "Add Client",
     "dates": {
       "from": "From",
       "to": "to"
@@ -3765,7 +3766,8 @@
         "email": "Field of email para notifications"
       },
       "admin": {
-        "edit": "Edit data - Section Client Admin"
+        "edit": "Edit data - Section Client Admin",
+        "add": "Add data - Section Client Admin"
       }
     },
     "businesses": {

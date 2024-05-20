@@ -3771,7 +3771,8 @@
         "email": "Campo de email para notificaciones"
       },
       "admin": {
-        "edit": "Editar datos - Sección Administrar Clientes"
+        "edit": "Editar datos - Sección Administrar Clientes",
+        "add": "Agregar datos - Sección Administrar Clientes"
       }
     },
     "businesses": {

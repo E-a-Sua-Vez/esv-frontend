@@ -1535,6 +1535,7 @@
     "stock": "Estoque",
     "edit": "Editar",
     "dataOf": "Dados de",
+    "addClient": "Adicionar Cliente",
     "dates": {
       "from": "Do",
       "to": "a"
@@ -3761,7 +3762,8 @@
         "email": "Campo de email para notificaciones"
       },
       "admin": {
-        "edit": "Editar dados - Seção Administrar Clientes"
+        "edit": "Editar dados - Seção Administrar Clientes",
+        "add": "Adicionar dados - Seção Administrar Clientes"
       }
     },
     "businesses": {
