@@ -1888,6 +1888,9 @@
         "bookings-management": {
           "view": "See Bookings Details"
         },
+        "client-data-management": {
+          "view": "Edit Clients"
+        },
         "reports": {
           "surveys": "Surveys Report (Summary)",
           "indicators": "Indicators Report",

@@ -1527,6 +1527,7 @@
     "bookingsOf": "Reservas de",
     "edit": "Editar",
     "dataOf": "Datos de",
+    "addClient": "Agregar Cliente",
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1885,6 +1886,9 @@
         },
         "bookings-management": {
           "view": "Ver Reservas (Detalles)"
+        },
+        "client-data-management": {
+          "view": "Editar Clientes"
         },
         "reports": {
           "surveys": "Reporte de Encuestas (Resumen)",

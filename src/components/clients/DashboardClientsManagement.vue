@@ -8,10 +8,13 @@ import { getClientsDetails } from '../../application/services/query-stack';
 import ClientDetailsCard from '../clients/common/ClientDetailsCard.vue';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 import { DateModel } from '../../shared/utils/date.model';
+import { getPermissions } from '../../application/services/permissions';
+import ClientDataManagement from './domain/ClientDataManagement.vue';
+import ClientAddManagement from './domain/ClientAddManagement.vue';
 
 export default {
   name: 'DashboardClientsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard, SimpleDownloadButton },
+  components: { Message, SimpleDownloadCard, Spinner, Popper, ClientDetailsCard, SimpleDownloadButton, ClientDataManagement, ClientAddManagement },
   props: {
     showClientManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -45,17 +48,19 @@ export default {
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
-      endDate: undefined
+      endDate: undefined,
+      togglesClient: {}
     }
   },
   methods: {
-    async refresh() {
+    async refresh(page) {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
+        this.page = page ? page : this.page;
         this.clients = await getClientsDetails(this.business.id, this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.daysSinceType, this.daysSinceContacted, this.contactable, this.contacted,
           this.searchText, this.queueId, this.survey, this.asc, this.contactResultType, undefined, this.serviceId, this.pendingControls,
@@ -84,6 +89,7 @@ export default {
       this.daysSinceContacted = undefined;
       this.contactResultType = undefined;
       this.survey = undefined;
+      this.page = 1;
       this.asc = true;
       this.contactable = undefined;
       this.contacted = undefined;
@@ -174,26 +180,33 @@ export default {
       const [ year, month, day ] = date.split('-');
       this.startDate = `${year}-${month}-${day}`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh();
+      await this.refresh(1);
     },
     async getCurrentMonth() {
       const date = new Date().toISOString().slice(0,10);
       const [ year, month, day ] = date.split('-');
       this.startDate = `${year}-${month}-01`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh();
+      await this.refresh(1);
     },
     async getLastMonth() {
       const date = new Date().toISOString().slice(0,10);
       this.startDate = new DateModel(date).substractMonths(1).toString();
       this.endDate = new DateModel(this.startDate).endOfMonth().toString();
-      await this.refresh();
+      await this.refresh(1);
     },
     async getLastThreeMonths() {
       const date = new Date().toISOString().slice(0,10);
       this.startDate = new DateModel(date).substractMonths(3).toString();
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
-      await this.refresh();
+      await this.refresh(1);
+    },
+    closeAddModal() {
+      const modalCloseButton = document.getElementById(`close-modal-client-add`);
+      modalCloseButton.click();
+      setTimeout(async () => {
+        this.refresh(1);
+      }, 3000)
     }
   },
   computed: {
@@ -242,6 +255,7 @@ export default {
       deep: true,
       async handler() {
         if (this.showClientManagement === true) {
+          this.togglesClient = await getPermissions('client', 'admin');
           this.page = 1;
           this.refresh();
         }
@@ -260,6 +274,13 @@ export default {
           <div>
             <div id="admin-sub-menu" class="row mt-3 mx-0">
               <div class="col lefted">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#addModal`"
+                  :disabled="!togglesClient['client.admin.add']">
+                  <i class="bi bi-plus-lg"></i> {{ $t("add") }}
+                </button>
                 <SimpleDownloadButton
                   :download="toggles['dashboard.reports.clients-management']"
                   :showTooltip="true"
@@ -306,7 +327,7 @@ export default {
                     <div class="col-2">
                       <button
                         class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()">
+                        @click="refresh(1)">
                         <span><i class="bi bi-search"></i></span>
                       </button>
                     </div>
@@ -326,7 +347,7 @@ export default {
                     <div class="col-2">
                       <button
                         class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()">
+                        @click="refresh(1)">
                         <span><i class="bi bi-search"></i></span>
                       </button>
                     </div>
@@ -567,6 +588,32 @@ export default {
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
       :content="$t('dashboard.message.1.content')" />
+  </div>
+  <!-- Modal Add -->
+  <div class="modal fade" :id="`addModal`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class=" modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header border-0 centered active-name">
+          <h5 class="modal-title fw-bold"><i class="bi bi-pencil-fill"></i> {{ $t("dashboard.addClient") }}  </h5>
+          <button :id="`close-modal-client-add`" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <Spinner :show="loading"></Spinner>
+        <div class="modal-body text-center mb-0" id="attentions-component">
+          <ClientAddManagement
+            :showClientAddManagement="true"
+            :toggles="togglesClient"
+            :client="undefined"
+            :commerce="commerce"
+            :commerces="commerces"
+            :closeModal="closeAddModal"
+          >
+          </ClientAddManagement>
+        </div>
+        <div class="mx-2 mb-4 text-center">
+          <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

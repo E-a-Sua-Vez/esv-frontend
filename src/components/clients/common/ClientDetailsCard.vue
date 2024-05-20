@@ -541,8 +541,8 @@ export default {
         </div>
       </div>
     </div>
-     <!-- Modal Edit -->
-     <div class="modal fade" :id="`editModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <!-- Modal Edit -->
+    <div class="modal fade" :id="`editModal-${this.client.id}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class=" modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">

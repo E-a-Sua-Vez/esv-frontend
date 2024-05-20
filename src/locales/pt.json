@@ -1890,6 +1890,9 @@
         "bookings-management": {
           "view": "Ver Reservas (Detalhes)"
         },
+        "client-data-management": {
+          "view": "Editar Clientes"
+        },
         "reports": {
           "surveys": "Relatório de Pesquisas (Sumário)",
           "indicators": "Relatório de Indicadores",

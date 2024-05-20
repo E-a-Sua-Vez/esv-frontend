@@ -437,7 +437,7 @@ export default {
         <span class="fw-bold">{{ $t("commerceQueuesView.data") }}</span>
       </div>
       <div class="col col-md-10 offset-md-1 data-card">
-        <div class="row g-1" v-if="getActiveFeature(commerce, 'attention-user-search', 'USER') && !client">
+        <div class="row g-1" v-if="getActiveFeature(commerce, 'attention-user-search', 'USER') && !client && clientFront === true">
           <div class="col-6">
             <button
               class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"

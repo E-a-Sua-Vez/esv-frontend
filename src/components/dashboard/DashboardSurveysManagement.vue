@@ -51,13 +51,14 @@ export default {
     }
   },
   methods: {
-    async refresh() {
+    async refresh(page) {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
+        this.page = page ? page : this.page;
         this.surveys = await getSurveysDetails(this.commerce.id, this.startDate, this.endDate, commerceIds,
           this.page, this.limit, this.ratingType, this.npsType, this.contactable, this.contacted,
           this.keyWord, this.searchText, this.queueId, this.serviceId);
@@ -133,6 +134,7 @@ export default {
       this.serviceId = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
+      this.page = 1;
       await this.refresh();
     },
     async checkContactable(event) {
@@ -207,26 +209,26 @@ export default {
       const [ year, month, day ] = date.split('-');
       this.startDate = `${year}-${month}-${day}`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh();
+      await this.refresh(1);
     },
     async getCurrentMonth() {
       const date = new Date().toISOString().slice(0,10);
       const [ year, month, day ] = date.split('-');
       this.startDate = `${year}-${month}-01`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh();
+      await this.refresh(1);
     },
     async getLastMonth() {
       const date = new Date().toISOString().slice(0,10);
       this.startDate = new DateModel(date).substractMonths(1).toString();
       this.endDate = new DateModel(this.startDate).endOfMonth().toString();
-      await this.refresh();
+      await this.refresh(1);
     },
     async getLastThreeMonths() {
       const date = new Date().toISOString().slice(0,10);
       this.startDate = new DateModel(date).substractMonths(3).toString();
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
-      await this.refresh();
+      await this.refresh(1);
     }
   },
   computed: {
@@ -332,7 +334,7 @@ export default {
                     <div class="col-2">
                       <button
                         class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()">
+                        @click="refresh(1)">
                         <span><i class="bi bi-search"></i></span>
                       </button>
                     </div>
@@ -352,7 +354,7 @@ export default {
                     <div class="col-2">
                       <button
                         class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()">
+                        @click="refresh(1)">
                         <span><i class="bi bi-search"></i></span>
                       </button>
                     </div>

@@ -2,11 +2,12 @@
 import { ref, reactive, onBeforeMount, computed, watch, onUnmounted, toRefs } from 'vue';
 import { getActiveFeature } from '../../../shared/features';
 import { bookingCollection } from '../../../application/firebase';
+import { DateModel } from '../../../shared/utils/date.model';
 import Message from '../../common/Message.vue';
 import Alert from '../../common/Alert.vue';
 import Spinner from '../../common/Spinner.vue';
 import { getPendingBookingsBetweenDates } from '../../../application/services/booking';
-import { getQueueBlockDetailsByDay } from '../../../application/services/block';
+import { getQueueBlockDetailsByDay, getQueueBlockDetailsBySpecificDayByCommerceId } from '../../../application/services/block';
 import { getServicesById } from '../../../application/services/service';
 
 export default {
@@ -113,7 +114,8 @@ export default {
       canBook: false,
       totalServicesResquested: 0,
       totalDurationRequested: 0,
-      amountofBlocksNeeded: 0
+      amountofBlocksNeeded: 0,
+      blocksBySpecificCalendarDate: {}
     });
 
     onBeforeMount(async () => {
@@ -226,6 +228,9 @@ export default {
     const getAvailableDatesByMonth = async (date) => {
       loadingHours.value = true;
       let availableDates = [];
+      calendarAttributes.value[0].dates = [];
+      calendarAttributes.value[1].dates = [];
+      calendarAttributes.value[2].dates = [];
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
       const nextMonth = +month;
@@ -270,21 +275,102 @@ export default {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
-      calendarAttributes.value[0].dates = [];
       calendarAttributes.value[0].dates.push(...avaliableToCalendar);
       const forDeletionToCalendar = forDeletion.map(date => {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
-      calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
       loadingHours.value = false;
       const avaliableToReserve = forReserves.map(date => {
         const [year,month,day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
-      calendarAttributes.value[2].dates = [];
       calendarAttributes.value[2].dates.push(...avaliableToReserve);
+    }
+
+    const getAvailableSpecificDatesByMonth = async (date) => {
+      loadingHours.value = true;
+      if (queue.value.id && date) {
+        let availableDates = [];
+        calendarAttributes.value[0].dates = [];
+        calendarAttributes.value[1].dates = [];
+        calendarAttributes.value[2].dates = [];
+        const [year, month] = date.split('-');
+        const thisMonth = +month - 1;
+        const nextMonth = +month;
+        const dateFrom = new Date(+year, thisMonth, 1);
+        const dateTo = new Date(+year, nextMonth, 0);
+        const monthBookings = await getPendingBookingsBetweenDates(queue.value.id, dateFrom, dateTo);
+        const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+          const date = booking.date;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(booking);
+          return acc;
+        }, {});
+        let specificCalendarDays;
+        if (queue.value.serviceInfo && queue.value.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(queue.value.serviceInfo.specificCalendarDays);
+        } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendarDays) {
+          specificCalendarDays = Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
+        }
+        availableDates = specificCalendarDays.map(dat => {
+          const [year, month, day] = dat.split('-');
+          const date = new Date(year, +month - 1, day);
+          return new DateModel(date).toString();
+        });
+        const forDeletion = [];
+        const forReserves = [];
+        if (availableDates && availableDates.length > 0) {
+          let limit = 1;
+          if (queue.value.serviceInfo !== undefined && queue.value.serviceInfo.blockLimit !== undefined && queue.value.serviceInfo.blockLimit > 0) {
+            limit = queue.value.serviceInfo.blockLimit;
+          }
+          state.blocksBySpecificCalendarDate = await getQueueBlockDetailsBySpecificDayByCommerceId(commerce.value.id, queue.value.id);
+          availableDates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date] || [];
+            const blocks = state.blocksBySpecificCalendarDate[date] || [];
+            const blocksNumbers = blocks.map(block => block.number);
+            const bookingsReserved = bookings.map(booking => booking.block.blockNumbers || booking.block.number);
+            const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+            const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+            uniqueBlocksReserved.forEach(block => {
+              const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+              if (times >= limit && !forDeletion.includes(date)) {
+                if (uniqueBlocksReserved.length === blocks.length && blocksNumbers.every(block => totalBlocksReserved.includes(block))) {
+                  forDeletion.push(date);
+                } else if (bookings.length >= 1) {
+                  forReserves.push(date);
+                }
+              }
+            })
+            if (!forDeletion.includes(date) &&
+              date === formattedDate(state.specificCalendarDate) &&
+              (state.availableBookingBlocks.length === 0 && state.availableBookingSuperBlocks.length === 0)) {
+                forDeletion.push(date);
+            }
+          })
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+        const avaliableToCalendar = availableDates.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[0].dates.push(...avaliableToCalendar);
+        const forDeletionToCalendar = forDeletion.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+        const avaliableToReserve = forReserves.map(date => {
+          const [year,month,day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+        calendarAttributes.value[2].dates.push(...avaliableToReserve);
+      }
+      loadingHours.value = false;
     }
 
     const getAvailableBookingBlocks = (bookings) => {
@@ -442,7 +528,22 @@ export default {
     const getAvailableDatesByCalendarMonth = async (pages) => {
       if (pages && pages.length > 0) {
         const page = pages[0].id;
-        await getAvailableDatesByMonth(`${page}-01`);
+        if (queue.value && queue.value.serviceInfo &&
+            queue.value.serviceInfo.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(`${page}-01`);
+        } else {
+          await getAvailableDatesByMonth(`${page}-01`);
+        }
+      }
+    }
+
+    const getBlocksBySpecificDay = () => {
+      if (!state.date || state.date === 'TODAY') {
+        const date = formattedDate(new Date());
+        return state.blocksBySpecificCalendarDate[date];
+      } else {
+        const date = formattedDate(state.date);
+        return state.blocksBySpecificCalendarDate[date];
       }
     }
 
@@ -487,7 +588,11 @@ export default {
         } else {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
-        await getAvailableDatesByMonth(currentDate);
+        if (queue.value.id && queue.value.serviceInfo && queue.value.serviceInfo.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(currentDate);
+        } else {
+          await getAvailableDatesByMonth(currentDate);
+        }
       }
     )
 
@@ -525,7 +630,11 @@ export default {
           let currentDate;
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
           if (newData.allBookings.length > 0) {
-            await getAvailableDatesByMonth(currentDate);
+            if (queue.value.id && queue.value.serviceInfo && queue.value.serviceInfo.specificCalendar === true) {
+              await getAvailableSpecificDatesByMonth(currentDate);
+            } else {
+              await getAvailableDatesByMonth(currentDate);
+            }
           }
           getAvailableBookingBlocks(state.bookings);
           getAvailableBookingSuperBlocks();
@@ -538,8 +647,13 @@ export default {
       changeDate,
       async (newData, oldData) => {
         if (newData.date && newData.date !== oldData.date) {
-          state.blocks = getBlocksByDay();
-          state.block = {};
+          if (queue.value.id && queue.value.serviceInfo && queue.value.serviceInfo.specificCalendar === true) {
+            state.blocks = getBlocksBySpecificDay();
+            state.block = {};
+          } else {
+            state.blocks = getBlocksByDay();
+            state.block = {};
+          }
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
