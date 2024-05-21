@@ -1,9 +1,11 @@
 <script>
-import { ref, reactive, onBeforeMount, watch } from 'vue';
+import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
 import { getDateAndHour } from '../../shared/utils/date';
+import { messageCollection } from '../../application/firebase';
+import { useI18n } from 'vue-i18n';
 import LocaleSelector from './LocaleSelector.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import MyUser from '../domain/MyUser.vue';
@@ -13,8 +15,18 @@ export default {
   name: 'Header',
   async setup() {
     const router = useRouter();
+    const { t } = useI18n();
     let store = globalStore();
+
     let loading = ref(false);
+    let messages = ref([]);
+    let unsubscribeMessages = () => {};
+
+    onUnmounted(() => {
+      if (unsubscribeMessages) {
+        unsubscribeMessages();
+      }
+    })
 
     const state = reactive({
       userName: '',
@@ -32,6 +44,7 @@ export default {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
       state.currentUserType = await store.getCurrentUserType;
+      getMessages();
     }
 
     onBeforeMount(async () => {
@@ -39,13 +52,52 @@ export default {
       await getUser(store);
     })
 
-    watch(
-      () => store,
-      async (newStore, oldStore) => {
-        await getUser(newStore);
-        buildMessageFirstPasswordChange();
-      }, { immediate: true, deep: true }
-    )
+    const getMessages = () => {
+      loading.value = true;
+      if (state.currentUserType === 'business' && state.currentUser && state.currentUser.id) {
+        const { unsubscribe } = updatedAvailableMessages(undefined, state.currentUser.id);
+        unsubscribeMessages = unsubscribe;
+
+      } else if (state.currentUserType === 'collaborator' && state.currentUser && state.currentUser.id) {
+        const { unsubscribe } = updatedAvailableMessages(state.currentUser.id, undefined);
+        unsubscribeMessages = unsubscribe;
+      }
+      loading.value = false;
+    }
+
+    const updatedAvailableMessages = (collaboratorId, administratorId) => {
+      if (collaboratorId) {
+        const messages = ref([]);
+        const messageQuery = messageCollection
+          .where('collaboratorId', "==", collaboratorId)
+          .where('active', "==", true)
+          .where('read', "==", false)
+          .orderBy('createdAt', 'asc');
+        const unsubscribe = messageQuery.onSnapshot(snapshot => {
+          messages.value = snapshot.docs
+            .map(doc => {
+              return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+            })
+        })
+        state.messages = messages;
+        return { unsubscribe };
+      } else if (administratorId) {
+        const messages = ref([]);
+        const messageQuery = messageCollection
+          .where('administratorId', "==", administratorId)
+          .where('active', "==", true)
+          .where('read', "==", false)
+          .orderBy('createdAt', 'asc');
+        const unsubscribe = messageQuery.onSnapshot(snapshot => {
+          messages.value = snapshot.docs
+            .map(doc => {
+              return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+            })
+        })
+        state.messages = messages;
+        return { unsubscribe };
+      }
+    }
 
     const loginInvited = async () => {
       const environment = import.meta.env.VITE_NODE_ENV || 'local';
@@ -75,6 +127,9 @@ export default {
         } else if (currentUserType === 'master') {
           path = '/publico/master/login';
         }
+        if (unsubscribeMessages) {
+          unsubscribeMessages();
+        }
         loading.value = false;
         router.push({ path, replace: true }).then(() => { router.go() });
       } catch (error) {
@@ -86,11 +141,13 @@ export default {
       if (state.currentUser && !state.currentUser.firstPasswordChanged) {
         const message = {
           id: "first-password-change",
-          title: "myUser.message.2.title",
-          content: "myUser.message.2.content",
+          title: t("myUser.message.2.title"),
+          content: t("myUser.message.2.content"),
+          icon: t("myUser.message.2.icon"),
           active: state.currentUser.firstPasswordChanged,
-          date: new Date(),
-          available: state.currentUser.firstPasswordChanged
+          createdAt: new Date(),
+          read: !state.currentUser.firstPasswordChanged,
+          type: "SYSTEM"
         }
         const messageCodes = state.messages.map(message => message.id);
         if (state.messages && !messageCodes.includes(message.id)) {
@@ -99,10 +156,33 @@ export default {
       }
     }
 
+    const changeData = computed(() => {
+      const { messages } = state;
+      return {
+        messages
+      }
+    })
+
+    watch(
+      () => store,
+      async (newStore, oldStore) => {
+        await getUser(newStore);
+        buildMessageFirstPasswordChange();
+      }, { immediate: true, deep: true }
+    )
+
+    watch(
+      changeData,
+      async () => {
+        buildMessageFirstPasswordChange();
+      }
+    )
+
     return {
       state,
       store,
       loading,
+      messages,
       getDateAndHour,
       logout,
       loginInvited,
@@ -124,7 +204,7 @@ export default {
                 :data-bs-target="`#userModal`"
               >
                 <span class="fw-bold"><i class="bi bi-person-circle"></i> {{ state.userName }}</span>
-                <span v-if="state.messages.length > 0" class="message-indicator  parpadea badge bg-danger rounded-pill px-2 py-1 mx-1">{{ state.messages.length || 0 }} </span>
+                <span v-if="state.messages.length > 0" class="message-indicator  parpadea badge bg-danger rounded-pill px-2 py-1 mx-1"> <i class="bi bi-envelope-fill"></i> {{ state.messages.length || 0 }} </span>
               </a>
             </div>
             <div class="">
@@ -158,7 +238,7 @@ export default {
             <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body text-center pb-3">
-            <MyUser> </MyUser>
+            <MyUser :messages="state.messages"> </MyUser>
           </div>
         </div>
       </div>

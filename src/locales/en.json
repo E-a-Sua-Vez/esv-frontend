@@ -51,6 +51,7 @@
     "credential": "Credential:",
     "user": "User:",
     "lastSignIn": "Last Connection:",
+    "markAsRead": "Mark all as read",
     "message": {
       "1": {
         "title": "Empty Mailbox",
@@ -307,7 +308,8 @@
       "email": "E-Mail (EMAIL)",
       "product": "Product (PRODUCT)",
       "user": "User (USER)",
-      "whatsapp": "Whatsapp (WHATSAPP)"
+      "whatsapp": "Whatsapp (WHATSAPP)",
+      "message": "Message (MESSAGE)"
     },
     "whatsapp-notify-now": {
       "title": "Notification Whatsapp É a sua vez",
@@ -524,6 +526,10 @@
     "email-post-attention": {
       "title": "Email Post Attention",
       "description": "Let the client to receive an email with a document post attention."
+    },
+    "stock-product-recharge": {
+      "title": "Replace Stock",
+      "description": "Message Admin to Replace o Product on Low Level."
     }
   },
   "document": {

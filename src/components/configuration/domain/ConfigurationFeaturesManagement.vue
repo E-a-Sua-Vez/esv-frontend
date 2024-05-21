@@ -307,6 +307,33 @@ export default {
                         </div>
                       </div>
                     </div>
+                    <div class="my-2">
+                      <a class="nav-link configuration-title centered"
+                        data-bs-toggle="collapse"
+                        href="#message">
+                        {{ $t("configuration.types.message") }}
+                        <span class="badge bg-secondary px-2 py-1 mx-1">{{ state.groupedConfigurations['MESSAGE'] ? state.groupedConfigurations['MESSAGE'].length : 0 }} </span>
+                        <i class="bi bi-chevron-down mx-2"></i>
+                      </a>
+                      <div id="message" class="collapse">
+                        <div v-if="state.groupedConfigurations['MESSAGE'] && state.groupedConfigurations['MESSAGE'].length > 0">
+                          <div v-for="(configuration, index) in state.groupedConfigurations['MESSAGE']" :key="index">
+                            <SimpleConfigurationCard
+                              :show="true"
+                              :canUpdate="state.toggles[`configuration.admin.${configuration.name}`]"
+                              :configuration="configuration"
+                              :showTooltip="true"
+                            >
+                            </SimpleConfigurationCard>
+                          </div>
+                        </div>
+                        <div v-else>
+                          <Message
+                            :title="$t('businessConfiguration.message.1.title')"
+                            :content="$t('businessConfiguration.message.1.content')" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

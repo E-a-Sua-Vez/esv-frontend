@@ -1,11 +1,12 @@
 <script>
-import { ref, reactive, onBeforeMount, watch } from 'vue';
+import { ref, reactive, onBeforeMount, watch, toRefs } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
 import { getDateAndHour } from '../../shared/utils/date';
 import { sendResetPasswordEmail } from '../../application/firebase';
 import { changePassword } from '../../application/services/auth';
+import { markAllAsRead } from '../../application/services/message';
 import Message from '../common/Message.vue';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
@@ -15,7 +16,10 @@ import UserMessage from '../common/UserMessage.vue';
 export default {
   components: { Message, Spinner, Alert, Warning, UserMessage },
   name: 'MyUser',
-  async setup() {
+  props: {
+    messages: { type: Array, default: [] }
+  },
+  async setup(props) {
     const router = useRouter();
     let store = globalStore();
     let loading = ref(false);
@@ -28,10 +32,13 @@ export default {
       currentBusiness: {},
       showActions: false,
       showMessages: true,
-      messages: [],
       errors: [],
       passwordChanged: false
     });
+
+    const {
+      messages
+    } = toRefs(props);
 
     const getUser = async (store) => {
       state.userName = undefined;
@@ -53,27 +60,8 @@ export default {
       () => store,
       async (newStore, oldStore) => {
         await getUser(newStore);
-        buildMessageFirstPasswordChange();
       }, { immediate: true, deep: true }
     )
-
-    const buildMessageFirstPasswordChange = () => {
-      if (state.currentUser && !state.currentUser.firstPasswordChanged) {
-        const message = {
-          id: "first-password-change",
-          title: "myUser.message.2.title",
-          content: "myUser.message.2.content",
-          icon: "myUser.message.2.icon",
-          active: state.currentUser.firstPasswordChanged,
-          date: new Date(),
-          available: state.currentUser.firstPasswordChanged
-        }
-        const messageCodes = state.messages.map(message => message.id);
-        if (state.messages && !messageCodes.includes(message.id)) {
-          state.messages.push(message);
-        }
-      }
-    }
 
     const loginInvited = async () => {
       const environment = import.meta.env.VITE_NODE_ENV || 'local';
@@ -135,6 +123,27 @@ export default {
       }
     }
 
+    const markMessagesAsRead = async () => {
+      try {
+        alertError.value = '';
+        if (state.currentUserType &&  state.currentUser && state.currentUser.id) {
+          if (state.currentUserType === 'business') {
+            const body = {
+              administratorId: state.currentUser.id
+            };
+            await markAllAsRead(body);
+          } else if (state.currentUserType === 'collaborator') {
+            const body = {
+              collaboratorId: state.currentUser.id
+            };
+            await markAllAsRead(body);
+          }
+        }
+      } catch (error) {
+        alertError.value = error.message;
+      }
+    }
+
     const showActions = () => {
       state.showActions = true;
       state.showMessages = false;
@@ -150,13 +159,15 @@ export default {
       store,
       loading,
       alertError,
+      messages,
       getDateAndHour,
       logout,
       loginInvited,
       getUser,
       showActions,
       showMessages,
-      sendEmail
+      sendEmail,
+      markMessagesAsRead
     }
   }
 
@@ -217,8 +228,14 @@ export default {
           class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
           :class="state.showMessages ? 'btn-selected' : ''"
           @click="showMessages()">
-          {{ $t("myUser.messages") }} <i class="bi bi-inbox-fill"></i>
-          <span class="badge bg-danger rounded-pill px-2 py-1 mx-1">{{ state.messages.length || 0 }} </span>
+          <div class="row centered">
+            <div class="col-7">
+              {{ $t("myUser.messages") }}
+            </div>
+            <div class="col-4 centered">
+              <span class="badge bg-danger rounded-pill px-2 py-1 mx-1"> <i class="bi bi-envelope-fill"></i> {{ messages.length || 0 }} </span>
+            </div>
+          </div>
         </button>
       </div>
     </div>
@@ -251,21 +268,33 @@ export default {
       </button>
     </div>
     <div class="row col mx-1 mt-3 mb-1" v-if="state.showMessages">
-      <div v-if="state.messages && state.messages.length === 0">
+      <div v-if="messages && messages.length === 0">
         <Message
           :icon="'bi-inbox-fill'"
           :title="$t('myUser.message.1.title')"
           :content="$t('myUser.message.1.content')" />
       </div>
       <div v-else class="message-box">
-        <div v-for="message in state.messages" :key="message.id">
-          <UserMessage
-            :closable="true"
-            :icon="$t(message.icon)"
-            :title="$t(message.title)"
-            :content="$t(message.content)"
-            :date="message.date"
+        <div class="righted">
+          <button
+            class="btn btn-sm btn-size fw-bold btn-success rounded-pill mb-2"
+            @click="markMessagesAsRead()"
+            :disabled="!(messages && messages.length > 1)">
+            {{ $t("myUser.markAsRead") }} <i class="bi bi-check-all"></i>
+          </button>
+        </div>
+        <div v-for="message in messages" :key="message.id">
+          <Transition mode="out-in">
+            <UserMessage
+              :closable="true"
+              :id="message.id"
+              :icon="message.icon"
+              :title="message.title"
+              :content="message.content"
+              :date="message.createdAt"
+              :type="message.type"
             />
+          </Transition>
         </div>
       </div>
     </div>
@@ -283,10 +312,10 @@ export default {
 }
 .message-box {
   overflow-y: scroll;
-  max-height:400px;
-  font-size: small;
+  max-height: 600px;
+  font-size: .7rem;
   margin-bottom: 2rem;
-  padding: 1rem;
+  padding: .5rem;
   border-radius: .5rem;
   border: .5px solid var(--gris-default);
   text-align: justify;

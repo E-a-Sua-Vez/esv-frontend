@@ -359,6 +359,8 @@ export default {
               const monthBookings = groupedBookings[queue.id] || [];
               if (queue.serviceInfo && queue.serviceInfo.specificCalendar === true) {
                 getAvailableSepecificDatesByQueueMonth(monthBookings, queue, date);
+              } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar === true) {
+                getAvailableSepecificDatesByQueueMonth(monthBookings, queue, date);
               } else {
                 getAvailableDatesByQueueMonth(monthBookings, queue, date);
               }
@@ -558,19 +560,16 @@ export default {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-
         calendarAttributes.value[queue.id][0].dates.push(...avaliableToCalendar);
         const forDeletionToCalendar = forDeletion.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-
         calendarAttributes.value[queue.id][1].dates.push(...forDeletionToCalendar);
         const avaliableToReserve = forReserves.map(date => {
           const [year,month,day] = date.split('-');
           return new Date(+year, +month - 1, +day);
         });
-
         calendarAttributes.value[queue.id][2].dates.push(...avaliableToReserve);
       }
     }

@@ -47,6 +47,7 @@
     "credential": "Credencial:",
     "user": "Usuário:",
     "lastSignIn": "Última Coneção:",
+    "markAsRead": "Marcar tudo como lido",
     "message": {
       "1": {
         "title": "Caixa Vazia",
@@ -307,7 +308,8 @@
       "email": "E-Mail (EMAIL)",
       "product": "Produto (PRODUCT)",
       "user": "Usuário (USER)",
-      "whatsapp": "Whatsapp (WHATSAPP)"
+      "whatsapp": "Whatsapp (WHATSAPP)",
+      "message": "Message (MESSAGE)"
     },
     "whatsapp-notify-now": {
       "title": "Whatsapp ÈASuaVez",
@@ -524,6 +526,10 @@
     "email-post-attention": {
       "title": "Email Pos Atendimento",
       "description": "Permite ao cliente recever um arquivo no email pos atendimento."
+    },
+    "stock-product-recharge": {
+      "title": "Recarrega Stock",
+      "description": "Mensagem Admin pra Recarregar Produto no Nível Baixo."
     }
   },
   "document": {

@@ -47,6 +47,7 @@
     "credential": "Credencial:",
     "user": "Usuario:",
     "lastSignIn": "Última Conexión:",
+    "markAsRead": "Marcar todos como leídos",
     "message": {
       "1": {
         "title": "Buzón Vacío",
@@ -307,7 +308,8 @@
       "email": "E-Mail (EMAIL)",
       "product": "Producto (PRODUCT)",
       "user": "Usuario (USER)",
-      "whatsapp": "Whatsapp (WHATSAPP)"
+      "whatsapp": "Whatsapp (WHATSAPP)",
+      "message": "Mensaje (MESSAGE)"
     },
     "whatsapp-notify-now": {
       "title": "Whatsapp Es tu Turno",
@@ -525,6 +527,10 @@
     "email-post-attention": {
       "title": "Email Post Atención",
       "description": "Permite al cliente recibir un email con un documento post atención."
+    },
+    "stock-product-recharge": {
+      "title": "Recarga Stock",
+      "description": "Mensaje Admin para Recarga de Producto en Nivel Bajo."
     }
   },
   "document": {

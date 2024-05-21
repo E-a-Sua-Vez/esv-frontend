@@ -25,6 +25,7 @@ export const attentionCollection = firestore.collection('attention');
 export const queueCollection = firestore.collection('queue');
 export const bookingCollection = firestore.collection('booking');
 export const waitlistCollection = firestore.collection('waitlist');
+export const messageCollection = firestore.collection('message');
 
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);
@@ -134,6 +135,40 @@ export function updatedQueuesByCommerce(commerceId) {
   })
   onUnmounted(unsubscribe)
   return queues;
+}
+
+export function updatedAvailableMessages(collaboratorId, administratorId) {
+  if (collaboratorId) {
+    const messages = ref([]);
+    const messageQuery = messageCollection
+      .where('collaboratorId', "==", collaboratorId)
+      .where('active', "==", true)
+      .where('read', "==", false)
+      .orderBy('createdAt', 'asc');
+    const unsubscribe = messageQuery.onSnapshot(snapshot => {
+      messages.value = snapshot.docs
+        .map(doc => {
+          return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+        })
+    })
+    onUnmounted(unsubscribe)
+    return messages;
+  } else if (administratorId) {
+    const messages = ref([]);
+    const messageQuery = messageCollection
+      .where('administratorId', "==", administratorId)
+      .where('active', "==", true)
+      .where('read', "==", false)
+      .orderBy('createdAt', 'asc');
+    const unsubscribe = messageQuery.onSnapshot(snapshot => {
+      messages.value = snapshot.docs
+        .map(doc => {
+          return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
+        })
+    })
+    onUnmounted(unsubscribe)
+    return messages;
+  }
 }
 
 export async function login(email, password) {
