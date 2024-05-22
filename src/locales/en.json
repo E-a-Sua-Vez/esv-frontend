@@ -1175,7 +1175,7 @@
     "attendQueue": "Attend Queue",
     "packages": "Active Packages:",
     "pendingPayment": "Pending Payments:",
-    "skipPayment": "Process payment now:",
+    "processPaymentNow": "Process payment now:",
     "confirmInstallments": "Confirm Installment:",
     "confirmPayment": "Confirm Payment",
     "fiscalNote": "F. Note",

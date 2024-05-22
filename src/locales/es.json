@@ -1171,7 +1171,7 @@
     "attendQueue": "Atender Fila",
     "packages": "Paquetes Activos:",
     "pendingPayment": "Pagos Pendientes:",
-    "skipPayment": "Procesar pago ahora:",
+    "processPaymentNow": "Procesar pago ahora:",
     "confirmInstallments": "Confirmar Cuotas:",
     "confirmPayment": "Confirmar Pago",
     "fiscalNote": "N. Fiscal",

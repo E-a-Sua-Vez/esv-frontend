@@ -33,7 +33,7 @@ export default {
         <button
           class="col btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-1 px-2 mx-1"
           @click="actionYes()"
-          :disabled="!yesDisabled || yesClicked">
+          :disabled="!yesDisabled">
           {{ $t("yes") }} <i class="bi bi-check2-circle"></i>
         </button>
         <button

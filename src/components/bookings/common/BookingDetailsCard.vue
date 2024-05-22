@@ -78,6 +78,9 @@ export default {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
       this.extendedEditEntity = false;
       this.extendedTransferEntity = false
+      this.newConfirmationData = {
+        processPaymentNow: false
+      }
     },
     async showEditDetails() {
       this.extendedEditEntity = !this.extendedEditEntity;
@@ -116,7 +119,7 @@ export default {
     },
     validateConfirm(data) {
       this.errorsAdd = [];
-      if (data.packagePaid === false && getActiveFeature(this.commerce, 'booking-confirm-payment', 'PRODUCT')) {
+      if (data.processPaymentNow === true && getActiveFeature(this.commerce, 'booking-confirm-payment', 'PRODUCT')) {
         if(!data.paymentType || data.paymentType.length === 0) {
           this.paymentTypeError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentType');
@@ -346,14 +349,17 @@ export default {
         if (data.pendingPaymentId) {
           this.newConfirmationData.pendingPaymentId = data.pendingPaymentId;
         }
-        if (data.skipPayment) {
-          this.newConfirmationData.skipPayment = !data.skipPayment;
+        if (data.processPaymentNow !== undefined) {
+          this.newConfirmationData.processPaymentNow = data.processPaymentNow;
         }
-        if (data.packagePaid) {
+        if (data.packagePaid !== undefined) {
           this.newConfirmationData.packagePaid = data.packagePaid;
         }
-        if (data.packagePaid) {
+        if (data.packagePaid !== undefined) {
           this.newConfirmationData.confirmInstallments = data.confirmInstallments;
+        }
+        if (data.processPaymentNow === false) {
+          this.errorsAdd = [];
         }
       };
     },
@@ -392,8 +398,8 @@ export default {
 
 <template>
   <div v-if="show && booking">
-    <div class="row metric-card fw-bold">
-      <div class="col lefted" v-if="booking.user && booking.user.name">
+    <div class="row metric-card">
+      <div class="col lefted fw-bold" v-if="booking.user && booking.user.name">
         {{ booking.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill icon green-icon"> </i>
@@ -750,7 +756,7 @@ export default {
   border-top: 0;
 }
 .show {
-  padding: 5px;
+  padding: 1px;
   max-height: 400px !important;
   overflow-y: auto;
 }
@@ -810,7 +816,7 @@ export default {
 }
 .hour-title {
   font-size: .8rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: .9rem;
   letter-spacing: .01px;
 }

@@ -35,7 +35,7 @@ export default {
       newConfirmationData: {
         procedureNumber: 1,
         proceduresTotalNumber: 1,
-        skipPayment: false,
+        processPaymentNow: !confirmPayment.value || false,
         packagePaid: false
       },
       paymentTypes: [],
@@ -125,7 +125,7 @@ export default {
         state.newConfirmationData.proceduresTotalNumber = 1;
       }
       state.selectedPayment = undefined;
-      state.newConfirmationData.skipPayment = false;
+      state.newConfirmationData.processPaymentNow = false;
     }
 
     const selectPayment = (payment) => {
@@ -142,8 +142,9 @@ export default {
       }
     }
 
-    const skipPayment = async (event) => {
-      if (event.target.checked) {
+    const processPaymentNow = async (event) => {
+      state.newConfirmationData.processPaymentNow = event.target.checked;
+      if (state.newConfirmationData.processPaymentNow) {
         state.newConfirmationData.paymentType = undefined;
         state.newConfirmationData.paymentMethod = undefined;
         state.newConfirmationData.paymentAmount = undefined;
@@ -152,7 +153,6 @@ export default {
         state.newConfirmationData.paymentFiscalNote = undefined;
         state.newConfirmationData.installments = undefined;
         state.newConfirmationData.pendingPaymentId = undefined;
-        state.newConfirmationData.skipPayment = event.target.checked;
         state.selectedPayment = undefined;
       }
       sendData();
@@ -181,7 +181,7 @@ export default {
       confirmPayment,
       selectPackage,
       selectPayment,
-      skipPayment,
+      processPaymentNow,
       confirmInstallments,
       paidPackage
     }
@@ -242,20 +242,20 @@ export default {
           <div v-if="confirmPayment === true">
             <div id="payment-skip-payment-form-add" class="row m-1 my-1" v-if="!paidPackage()">
               <div class="col-8 text-label">
-                {{ $t("collaboratorBookingsView.skipPayment") }}
+                {{ $t("collaboratorBookingsView.processPaymentNow") }}
               </div>
               <div class="col-4 form-check form-switch">
                 <input
                   class="form-check-input py-2 px-3 col-12"
                   type="checkbox"
                   id="skip-payment"
-                  v-model="state.newConfirmationData.skipPayment"
-                  @click="skipPayment($event)"
+                  v-model="state.newConfirmationData.processPaymentNow"
+                  @click="processPaymentNow($event)"
                   @keyup="sendData">
               </div>
             </div>
             <div v-if="state.selectedPackage && state.pendingIncomes && state.pendingIncomes.length > 0">
-              <div v-if="state.newConfirmationData.skipPayment === true">
+              <div v-if="state.newConfirmationData.processPaymentNow === true">
                 <div id="payment-type-form-add" class="row g-1 my-1">
                   <div class="col-4 text-label">
                     {{ $t("collaboratorBookingsView.pendingPayment") }}
@@ -278,7 +278,7 @@ export default {
                 :title="$t('collaboratorBookingsView.message.9.title')"
                 :content="$t('collaboratorBookingsView.message.9.content')" />
             </div>
-            <div v-if="state.newConfirmationData.skipPayment === true && !paidPackage()">
+            <div v-if="state.newConfirmationData.processPaymentNow === true && !paidPackage()">
               <div id="payment-type-form-add" class="row m-1 my-1">
                 <div class="col-4 text-label">
                   {{ $t("collaboratorBookingsView.paymentType") }}

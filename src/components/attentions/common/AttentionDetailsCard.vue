@@ -58,9 +58,14 @@ export default {
     },
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
+      this.extendedTransferEntity = false;
+      this.newConfirmationData = {
+        processPaymentNow: true
+      }
     },
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
+      this.extendedPaymentEntity = false;
       if (this.extendedTransferEntity === true) {
         await this.toTransfer();
       }
@@ -87,7 +92,7 @@ export default {
     },
     validateConfirm(data) {
       this.errorsAdd = [];
-      if (data.packagePaid === false && getActiveFeature(this.commerce, 'attention-confirm-payment', 'PRODUCT')) {
+      if (data.processPaymentNow === true && getActiveFeature(this.commerce, 'attention-confirm-payment', 'PRODUCT')) {
         if(!data.paymentType || data.paymentType.length === 0) {
           this.paymentTypeError = true;
           this.errorsAdd.push('collaboratorBookingsView.validate.paymentType');
@@ -271,14 +276,17 @@ export default {
         if (data.pendingPaymentId) {
           this.newPaymentConfirmationData.pendingPaymentId = data.pendingPaymentId;
         }
-        if (data.skipPayment) {
-          this.newPaymentConfirmationData.skipPayment = !data.skipPayment;
+        if (data.processPaymentNow !== undefined) {
+          this.newPaymentConfirmationData.processPaymentNow = data.processPaymentNow;
         }
-        if (data.packagePaid) {
+        if (data.packagePaid !== undefined) {
           this.newPaymentConfirmationData.packagePaid = data.packagePaid;
         }
-        if (data.packagePaid) {
+        if (data.packagePaid !== undefined) {
           this.newPaymentConfirmationData.confirmInstallments = data.confirmInstallments;
+        }
+        if (data.processPaymentNow === false) {
+          this.errorsAdd = [];
         }
       };
     },
@@ -326,11 +334,11 @@ export default {
 
 <template>
   <div v-if="show && attention">
-    <div class="row metric-card fw-bold">
-      <div class="col-2 centered">
+    <div class="row metric-card">
+      <div class="col-2 lefted">
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"> {{ attention.number }}</span>
       </div>
-      <div class="col lefted" v-if="attention.user && attention.user.name">
+      <div class="col lefted fw-bold" v-if="attention.user && attention.user.name">
         {{ attention.user.name.split(' ')[0] || 'N/I' }}
         <i v-if="attention.status === 'PENDING' && (!attention.paid || attention.paid === false)" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="attention.status === 'PENDING' && (attention.paid || attention.paid === true)" class="bi bi-check-circle-fill icon green-icon"> </i>
@@ -603,7 +611,7 @@ export default {
   border-top: 0;
 }
 .show {
-  padding: 10px;
+  padding: 1px;
   max-height: 600px !important;
   overflow-y: auto;
 }
@@ -656,7 +664,7 @@ export default {
 }
 .hour-title {
   font-size: .8rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: .9rem;
   letter-spacing: .01px;
 }
