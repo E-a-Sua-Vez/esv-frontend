@@ -63,8 +63,9 @@ export default {
         this.loading = false;
       }
     },
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     async clear() {
       this.status = undefined;

@@ -68,8 +68,9 @@ export default {
   },
   async beforeMount() {},
   methods: {
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);

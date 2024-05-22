@@ -279,7 +279,7 @@ export default {
           <button
             class="btn btn-sm btn-size fw-bold btn-success rounded-pill mb-2"
             @click="markMessagesAsRead()"
-            :disabled="!(messages && messages.length > 1)">
+            :disabled="!(messages && messages.length > 1 && messages.filter(msg => msg.type === 'SYSTEM').length !== messages.length)">
             {{ $t("myUser.markAsRead") }} <i class="bi bi-check-all"></i>
           </button>
         </div>

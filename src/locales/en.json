@@ -61,6 +61,11 @@
         "icon": "bi-key-fill",
         "title": "Welcome to It's your Turn!",
         "content": "You haven't changed your password for the first time yet. For your security, we invite you to change it now. To do this, click on 'Actions' > 'Password Change' and follow the instructions."
+      },
+      "3": {
+        "icon": "bi-whatsapp",
+        "title": "Whatsapp Number Disconnected",
+        "content": "The Whatsapp connection to send notifications is inactive. To reconnect it, go to the Main Menu > 'Configurations' > 'Whatsapp Connection' or contact the administrator."
       }
     }
   },

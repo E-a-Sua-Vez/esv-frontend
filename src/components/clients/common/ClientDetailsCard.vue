@@ -41,6 +41,8 @@ export default {
       store,
       userType: undefined,
       user: undefined,
+      page: 1,
+      limit: 10,
       attentions: [],
       bookings: [],
       clientContacts: [],

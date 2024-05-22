@@ -62,10 +62,10 @@ export default {
       endDate: undefined
     }
   },
-  async beforeMount() {},
   methods: {
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
@@ -90,7 +90,8 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.newProductConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId, this.page, this.limit, this.asc, this.startDate, this.endDate, undefined);
+        this.newProductConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId, this.page,
+        this.limit, this.asc, this.startDate, this.endDate, undefined);
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {

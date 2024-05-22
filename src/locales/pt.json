@@ -57,6 +57,11 @@
         "icon": "bi-key-fill",
         "title": "Bem-vindo a É a Sua Vez!",
         "content": "Você ainda não alterou sua senha pela primeira vez. Para sua segurança, convidamos você a alterá-la agora. Para isso, clique em 'Ações' > 'Alterar Senha' e siga as instruções."
+      },
+      "3": {
+        "icon": "bi-whatsapp",
+        "title": "Número Whatsapp Desconectado",
+        "content": "A conexão a Whatsapp para o envio de notificações está inativa. Para reconectar, acesse ao Menu Principal > 'Configurações' > 'Conexão Whatsapp' ou entre em contacto com o administrador."
       }
     }
   },

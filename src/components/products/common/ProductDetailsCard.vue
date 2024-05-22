@@ -30,6 +30,8 @@ export default {
       store,
       userType: undefined,
       user: undefined,
+      limit: 10,
+      page: 1,
       productReplacements: [],
       productConsumptions: []
     }
@@ -121,7 +123,8 @@ export default {
     async getProductReplacements() {
       try {
         this.loading = true;
-        this.productReplacements = await getProductsReplacementDetails(this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
+        this.productReplacements = await getProductsReplacementDetails(this.product.productId, this.page,
+          this.limit, this.asc, undefined, undefined);
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -131,7 +134,8 @@ export default {
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
-        this.productConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId, this.page, this.limit, this.asc, undefined, undefined);
+        this.productConsumptions = await getProductsConsumptionsDetails(commerceIds, this.product.productId,
+          this.page, this.limit, this.asc, undefined, undefined);
         this.loading = false;
       } catch (error) {
         this.loading = false;

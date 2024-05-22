@@ -57,6 +57,11 @@
         "icon": "bi-key-fill",
         "title": "¡Bienvenido a Es tu Turno!",
         "content": "Aún no haz cambiado tu contraseña por primera vez. Por tu seguridad, te invitamos a cambiarla ahora. Para ello, haz click en 'Acciones' > 'Cambio de Clave' y sigue las instrucciones."
+      },
+      "3": {
+        "icon": "bi-whatsapp",
+        "title": "Número Whatsapp Desconectado",
+        "content": "La conexión a Whatsapp para envío de notificaciones está inactiva. Para reconectarla, ve al Menú Principal > 'Configuraciones' > 'Conexión Whatsapp' o comunícate con el administrador."
       }
     }
   },

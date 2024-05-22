@@ -44,6 +44,7 @@ export default {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
       state.currentUserType = await store.getCurrentUserType;
+      state.currentBusiness = await store.getCurrentBusiness;
       getMessages();
     }
 
@@ -156,6 +157,26 @@ export default {
       }
     }
 
+    const buildMessageWhatsappStatus = async () => {
+      if (state.currentBusiness && state.currentBusiness.whatsappConnection
+        && state.currentBusiness.whatsappConnection.idConnection && state.currentBusiness.whatsappConnection.connected === false) {
+        const message = {
+          id: "whatsapp-disconnected",
+          title: t("myUser.message.3.title"),
+          content: t("myUser.message.3.content"),
+          icon: t("myUser.message.3.icon"),
+          active: state.currentBusiness.whatsappConnection.connected,
+          createdAt: new Date(),
+          read: !state.currentBusiness.whatsappConnection.connected,
+          type: "SYSTEM"
+        }
+        const messageCodes = state.messages.map(message => message.id);
+        if (state.messages && !messageCodes.includes(message.id)) {
+          state.messages.push(message);
+        }
+      }
+    }
+
     const changeData = computed(() => {
       const { messages } = state;
       return {
@@ -167,7 +188,6 @@ export default {
       () => store,
       async (newStore, oldStore) => {
         await getUser(newStore);
-        buildMessageFirstPasswordChange();
       }, { immediate: true, deep: true }
     )
 
@@ -175,6 +195,7 @@ export default {
       changeData,
       async () => {
         buildMessageFirstPasswordChange();
+        buildMessageWhatsappStatus();
       }
     )
 

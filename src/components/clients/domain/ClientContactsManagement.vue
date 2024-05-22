@@ -64,8 +64,9 @@ export default {
     this.contactResultTypes = getContactResultTypes();
   },
   methods: {
-    setPage(pageIn) {
+    async setPage(pageIn) {
       this.page = pageIn;
+      await this.refresh();
     },
     async clear() {
       this.daysSinceContacted = undefined;
