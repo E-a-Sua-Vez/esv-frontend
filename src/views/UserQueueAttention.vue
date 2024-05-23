@@ -464,7 +464,10 @@ export default {
           <AttentionSurvey
             :surveyPersonalized="state.survey"
             :attentionId="state.attention.id"
-            :attentionType="state.attention.type">
+            :attentionType="state.attention.type"
+            :attention="state.attention"
+            :commerce="state.commerce"
+            >
           </AttentionSurvey>
         </div>
         <div id="survey-fullfilled" v-else-if="youFullfilledSurvey()">

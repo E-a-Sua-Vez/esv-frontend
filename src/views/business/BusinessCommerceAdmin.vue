@@ -200,6 +200,7 @@ export default {
         contactInfo: state.business.contactInfo || {},
         serviceInfo: {
           confirmNotificationDaysBefore: 1,
+          surveyPostAttentionDaysAfter: 0,
           break: false,
           personalized: false,
           personalizedHours: {},
@@ -899,7 +900,7 @@ export default {
                               placeholder="Ex. https://menu.commerce.com">
                           </div>
                         </div>
-                        <div id="commerce-confirmNotificationDaysBefore-form-add" class="row g-1">
+                        <div id="commerce-confirmNotificationDaysBefore-form-update" class="row g-1">
                           <div class="col-4 text-label">
                             {{ $t("businessCommercesAdmin.confirmNotificationDaysBefore") }}
                           </div>
@@ -910,6 +911,20 @@ export default {
                               type="text"
                               class="form-control"
                               v-model="commerce.serviceInfo.confirmNotificationDaysBefore"
+                              placeholder="5">
+                          </div>
+                        </div>
+                        <div id="commerce-surveyPostAttentionDaysAfter-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t("businessCommercesAdmin.surveyPostAttentionDaysAfter") }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="8"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.serviceInfo.surveyPostAttentionDaysAfter"
                               placeholder="5">
                           </div>
                         </div>
@@ -1717,6 +1732,20 @@ export default {
                           type="text"
                           class="form-control"
                           v-model="state.newCommerce.serviceInfo.confirmNotificationDaysBefore"
+                          placeholder="5">
+                      </div>
+                    </div>
+                    <div id="commerce-surveyPostAttentionDaysAfter-form-add" class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t("businessCommercesAdmin.surveyPostAttentionDaysAfter") }}
+                      </div>
+                      <div class="col-8">
+                        <input
+                          min="1"
+                          max="8"
+                          type="text"
+                          class="form-control"
+                          v-model="state.newCommerce.serviceInfo.surveyPostAttentionDaysAfter"
                           placeholder="5">
                       </div>
                     </div>

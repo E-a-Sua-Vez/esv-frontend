@@ -2970,6 +2970,7 @@
     "selectedDate": "Fecha Seleccionada:",
     "hours": "Horario de Atención:",
     "confirmNotificationDaysBefore": "Días Previos Notificación Confirmación:",
+    "surveyPostAttentionDaysAfter": "Días Posteriores Encuesta Satisfacción:",
     "message": {
       "1": {
         "title": "¡Ups!",

@@ -2968,6 +2968,7 @@
     "selectedDate": "Selected Date:",
     "hours": "Attention Hours:",
     "confirmNotificationDaysBefore": "Confirmation Notification Days Before:",
+    "surveyPostAttentionDaysAfter": "Surveys Days Before:",
     "message": {
       "1": {
         "title": "Ups!",

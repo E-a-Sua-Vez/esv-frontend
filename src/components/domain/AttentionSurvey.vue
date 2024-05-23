@@ -7,6 +7,7 @@ import NPSSurvey from '../survey/NPSSurvey.vue';
 import AgreeSurvey from '../survey/AgreeSurvey.vue';
 import LikeSurvey from '../survey/LikeSurvey.vue';
 import StarSurvey from '../survey/StarSurvey.vue';
+import { DateModel } from '../../shared/utils/date.model';
 
 export default {
   name: 'AttentionSurvey',
@@ -22,7 +23,9 @@ export default {
   props: {
     surveyPersonalized: { type: Object, default: {} },
     attentionId: { type: String, default: '' },
-    attentionType: { type: String, default: 'STANDARD'}
+    attentionType: { type: String, default: 'STANDARD'},
+    attention: { type: Object, default: {} },
+    commerce: { type: Object, default: {} },
   },
   data() {
     return {
@@ -71,6 +74,24 @@ export default {
         this.answers[index].push(option);
       }
     },
+    getCreatedAt(createdAt, timeZoneIn) {
+      const dateCorrected = new Date(
+        new Date(createdAt).toLocaleString('en-US', {
+          timeZone: timeZoneIn,
+        }),
+      );
+      return dateCorrected.toLocaleString("en-GB");
+    },
+    showSurvey () {
+      if (this.commerce && this.commerce.serviceInfo
+        && this.attention.status === 'TERMINATED'
+        && (this.attention.surveyPostAttentionDateScheduled === undefined ||
+        new DateModel().toString() >= this.attention.surveyPostAttentionDateScheduled)
+        && this.surveyPersonalized.id) {
+          return true;
+      }
+      return false;
+    },
     async saveRating() {
       try {
         this.loading = true;
@@ -114,7 +135,7 @@ export default {
 </script>
 
 <template>
-  <div v-if="surveyPersonalized.id" class="mt-4">
+  <div v-if="showSurvey()" class="mt-4">
     <div v-if="!surveyCompleted && attentionType !=='NODEVICE'">
       <div v-if="surveyPersonalized.hasCSAT">
         <div class="your-rating">
@@ -261,6 +282,11 @@ export default {
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
+      <div class="row attention-details-container">
+        <div class="attention-details-date attention-details-data">
+          <span><strong>Id:</strong> {{ this.attention.id }}</span>
+        </div>
+      </div>
     </div>
     <div v-else>
       <Message
@@ -292,5 +318,14 @@ export default {
 .title {
   font-size: 12px;
   font-weight: 500;
+}
+.attention-details-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: .4rem;
+  margin-right: .4rem;
+  margin-top: 1rem;
+  margin-bottom: 0rem;
 }
 </style>

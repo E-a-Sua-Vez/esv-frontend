@@ -2976,6 +2976,7 @@
     "selectedDate": "Data Selecionada:",
     "hours": "Horário de Atendimento:",
     "confirmNotificationDaysBefore": "Días Notificação Confirmação:",
+    "surveyPostAttentionDaysAfter": "Días Depois Pesquisa Satisfação:",
     "message": {
       "1": {
         "title": "Oh não!",
