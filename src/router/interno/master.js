@@ -11,7 +11,7 @@ const BusinessExecutiveReport = () => import('../../views/business/BusinessExecu
 const BusinessAdmin = () => import('../../views/business/BusinessAdmin.vue');
 const BusinessConfiguration = () => import('../../views/business/BusinessConfiguration.vue');
 const BusinessPlan = () => import('../../views/business/BusinessPlan.vue');
-const MasterPermissionsAdmin = () => import('../../views/business/MasterPermissionsAdmin.vue');
+const MasterPermissionsAdmin = () => import('../../views/master/MasterPermissionsAdmin.vue');
 const BusinessPlansAdmin = () => import('../../views/business/BusinessPlansAdmin.vue');
 const BusinessPlanActivationAdmin = () => import('../../views/business/BusinessPlanActivationAdmin.vue');
 const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAdmin.vue');

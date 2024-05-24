@@ -3795,6 +3795,14 @@
     }
   },
   "permissions": {
+    "sections": {
+      "client": "Gestão Cliente",
+      "document-client": "Documentos Cliente",
+      "dashboard": "Performance Hub",
+      "collaborator": "Ações Colaborador",
+      "patient": "Paciente",
+      "products-stock": "Stock"
+    },
     "activations": {
       "admin": {
         "view": "Acessar Seção - Seção Activaçao de Planos",

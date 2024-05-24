@@ -47,7 +47,7 @@ export default {
         :placeholder="$t('enterSearcher')">
     </div>
     <div>
-      <div v-if="this.searchString.length >= 3" class="card mt-1">
+      <div v-if="this.searchString.length >= 3" class="card mt-1 menu">
         <div v-if="searchItem && searchItem.length > 0">
           <div v-for="item in searchItem" :key="item.id" class="row d-flex m-1 searcher item" @click="selectItem(item)">
             <div class="col-3">
@@ -92,5 +92,11 @@ export default {
 .item {
   text-align: left;
   cursor: pointer;
+}
+.menu {
+  height:auto;
+  display:flex;
+  z-index: 100;
+  position:absolute;
 }
 </style>

@@ -3799,6 +3799,14 @@
     }
   },
   "permissions": {
+    "sections": {
+      "client": "Client Management",
+      "document-client": "Client Documents",
+      "dashboard": "Performance Hub",
+      "collaborator": "Actions Collaborator",
+      "patient": "Patient",
+      "products-stock": "Stock"
+    },
     "activations": {
       "admin": {
         "view": "Get to Section - Section Plan Activation",

@@ -14,10 +14,11 @@ import Alert from '../common/Alert.vue';
 import Warning from '../common/Warning.vue';
 import SimplePermissionCard from './SimplePermissionCard.vue';
 import SearchBar from '../common/SearchBar.vue';
+import SearchPermissionItem from '../common/SearchPermissionItem.vue';
 
 export default {
   name: 'CollaboratorPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, SearchBar },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard, SearchBar, SearchPermissionItem },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -45,7 +46,8 @@ export default {
       toggles: {},
       searchString: '',
       email: '',
-      user: undefined
+      user: undefined,
+      filtered: []
     });
 
     onBeforeMount(async () => {
@@ -239,6 +241,10 @@ export default {
       }
     })
 
+    const receiveFilteredItems = (items) => {
+      state.filtered = items;
+    }
+
     const getDate = (date) => {
       if (date) {
         const dateCorrected = new Date(date);
@@ -260,7 +266,8 @@ export default {
       clear,
       search,
       getDate,
-      selectCommerce
+      selectCommerce,
+      receiveFilteredItems
     }
   }
 }
@@ -339,21 +346,14 @@ export default {
                 </button>
               </div>
             </div>
-            <div class="row g-1 mt-4">
-              <input
-                min="1"
-                max="50"
-                type="text"
-                class="form-control"
-                v-model="state.searchString"
-                :placeholder="$t('enterSearcher')">
-                {{ filter }}
-            </div>
-            <div class="mt-1">
-              <span class="badge bg-secondary px-2 py-2 m-1">{{ $t("businessAdmin.listResult") }} {{ state.permissions.length }} </span>
-            </div>
             <div class="mb-4" v-if="state.permissions.length > 0">
-              <div v-for="(permission, index) in state.permissions" :key="index">
+              <SearchPermissionItem
+                :businessItems="state.permissions"
+                :type="'permissions'"
+                :receiveFilteredItems="receiveFilteredItems"
+              >
+              </SearchPermissionItem>
+              <div v-for="(permission, index) in state.filtered" :key="index">
                 <SimplePermissionCard
                   :show="true"
                   :canUpdate="state.toggles['permissions.collaborators.update']"

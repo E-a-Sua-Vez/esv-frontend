@@ -3806,10 +3806,12 @@
   },
   "permissions": {
     "sections": {
+      "client": "Gestión Cliente",
+      "document-client": "Documentos Cliente",
       "dashboard": "Performance Hub",
       "collaborator": "Acciones Colaborador",
       "patient": "Paciente",
-      "product-stock": "Stock"
+      "products-stock": "Stock"
     },
     "activations": {
       "admin": {
