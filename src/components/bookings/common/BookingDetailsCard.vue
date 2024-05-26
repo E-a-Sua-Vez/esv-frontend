@@ -398,9 +398,15 @@ export default {
 
 <template>
   <div v-if="show && booking">
-    <div class="row metric-card">
+    <div class="row metric-card booking-link"
+      href="#"
+      @click.prevent="showDetails()">
+      <div v-if="booking.servicesDetails" class="idNumber-title lefted">
+        <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge service-badge bg-primary"> {{ serv.name }} </span>
+        <span v-if="booking.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span> </span>
+      </div>
       <div class="col lefted fw-bold" v-if="booking.user && booking.user.name">
-        {{ booking.user.name.split(' ')[0] || 'N/I' }}
+        {{ booking.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
         <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
         <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill icon green-icon"> </i>
         <i v-if="booking.confirmationData && booking.confirmationData.paid === true" class="bi bi-coin icon blue-icon"> </i>
@@ -411,24 +417,24 @@ export default {
       <div class="col centered hour-title" v-if="booking.block && booking.block.hourFrom">
         <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
       </div>
-      <div class="col centered date-title">
-        {{ getDate(booking.date) }}
+      <div class="col-1 centered date-title">
+        <div class="centered">
+          <span
+            href="#"
+            @click.prevent="showDetails()">
+            <span class="details-title"></span>
+            <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </span>
+        </div>
       </div>
     </div>
     <div class="details-arrow">
-      <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
-          <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-        </span>
-      </div>
+      <div class="centered mb-2"></div>
       <div
         :class="{ show: extendedEntity }"
         class="detailed-data transition-slow">
         <div class="row m-0 centered">
-          <div class="d-block col-12 col-md-4">
+          <div class="d-block col-12 col-md-4 mt-4">
             <div class="col-12 fw-bold">
               <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name || 'N/I' }} {{ booking.user.lastName || '' }}
               <div class="row">
@@ -486,7 +492,7 @@ export default {
         <hr>
         <!-- CONFIRMATION DETAILS -->
         <div class="row mx-1 centered" v-if="booking.confirmed === true && booking.confirmationData">
-          <div class="">
+          <div class="mb-2">
             <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.confirmData") }}</span>
           </div>
           <div v-if="booking.confirmationData">
@@ -498,8 +504,9 @@ export default {
             <span v-if="booking.confirmationData.paymentCommission" class="badge rounded-pill bg-warning metric-keyword-tag mx-1 fw-bold"> <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentCommission }}</span>
             <span v-if="booking.confirmationData.paymentDate" class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"> {{ getDate(booking.confirmationData.paymentDate) }}</span>
           </div>
-          <hr>
+
         </div>
+        <hr>
         <div class="row mx-1 centered">
           <!-- PAYMENT -->
           <div class="col-4" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
@@ -554,7 +561,7 @@ export default {
                   :receiveData="receiveData"
                 >
                 </PaymentForm>
-                <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+                <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
                   @click="goConfirm2()"
                   :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']">
                   <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.confirm") }}
@@ -605,12 +612,12 @@ export default {
                   <i class="bi bi-arrow-left-right h5"></i>
                 </div>
                 <div class="text-label mb-1">
-                  <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="queueToTransfer">
+                  <select class="btn btn-sm btn-light fw-bold text-dark select" aria-label="form-select-sm" v-model="queueToTransfer">
                     <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id" id="select-block">{{ queue.name }}</option>
                   </select>
                 </div>
               </div>
-              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
                 @click="goTransfer()"
                 :disabled="!queueToTransfer || !toggles['collaborator.bookings.transfer']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.transfer") }}
@@ -668,7 +675,7 @@ export default {
                 >
                 </BookingDatePicker>
               </div>
-              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
                 @click="goEdit()"
                 :disabled="!toggles['collaborator.bookings.edit']">
                 <i class="bi bi-person-check-fill"> </i> {{ $t("collaboratorBookingsView.edit") }}
@@ -687,7 +694,7 @@ export default {
         </div>
         <div class="row centered mt-2" v-if="!loading">
           <div class="col-6">
-            <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
+            <button class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
               @click="goCancel()"
               :disabled="booking.status === 'USER_CANCELED' || booking.cancelled || !toggles['collaborator.bookings.cancel']"
               >
@@ -695,7 +702,7 @@ export default {
             </button>
           </div>
           <div class="col-6" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') && !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')">
-            <button class="btn btn-md btn-size fw-bold btn-primary rounded-pill px-3"
+            <button class="btn btn-md btn-size fw-bold btn-primary rounded-pill px-3 card-action"
               @click="goConfirm1()"
               :disabled="booking.status === 'CONFIRMED' || booking.confirmed || !toggles['collaborator.bookings.confirm']"
               >
@@ -719,10 +726,7 @@ export default {
           >
           </AreYouSure>
         </div>
-        <div class="m-0 mt-2" v-if="booking.servicesDetails">
-          <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge rounded-pill bg-primary col fw-bold"> {{ serv.name }}</span>
-        </div>
-        <div class="row m-0 mt-1 centered">
+        <div class="row m-0 my-2 centered">
           <div class="col">
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.id }}</span>
             <span class="metric-card-details"><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span>
@@ -736,7 +740,6 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
@@ -744,16 +747,15 @@ export default {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
-  line-height: 1.6rem;
+  line-height: 1.2rem;
 }
 .details-arrow {
-  margin: .5rem;
   margin-top: 0;
   border-bottom-left-radius: .5rem;
   border-bottom-right-radius: .5rem;
-  line-height: 1.1rem;
   border: .5px solid var(--gris-default);
   border-top: 0;
+  line-height: .8rem;
 }
 .show {
   padding: 1px;
@@ -823,5 +825,8 @@ export default {
 .icon {
   margin-left: .1rem;
   margin-right: .15rem;
+}
+.booking-link {
+  cursor: pointer;
 }
 </style>

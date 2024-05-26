@@ -95,12 +95,11 @@ export default {
     })
 
     const isActiveCommerce = () => {
-      return commerce.value.active === true &&
-        commerce.value.queues.length > 0
+      return commerce.value.active === true;
     };
 
     const isActiveQueues = () => {
-      return commerce.value !== undefined && commerce.value.queues !== undefined && commerce.value.queues.length > 0;
+      return commerce.value !== undefined && queues.value !== undefined && queues.value.length > 0;
     };
 
     const getQueue = async (queueIn) => {

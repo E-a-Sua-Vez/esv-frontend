@@ -147,7 +147,6 @@ export default {
       <div class="row">
         <span class="fw-bold m-1"> {{ $t("commerceQRSetup.commerceSelected") }} {{ state.commerce.tag }} </span>
       </div>
-
       <div v-if="isActiveCommerce(state.commerce)">
         <div v-if="isAvailableCommerce(state.commerce)">
           <div v-if="captchaEnabled === true">

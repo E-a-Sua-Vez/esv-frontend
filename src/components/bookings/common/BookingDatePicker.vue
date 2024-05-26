@@ -742,7 +742,7 @@ export default {
                 <div class="choose-attention py-1 pt-1">
                   <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                 </div>
-                <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
+                <select class="btn btn-sm btn-light fw-bold text-dark select" aria-label="form-select-sm" v-model="state.block">
                   <option v-for="block in state.availableBookingBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
                 </select>
               </div>

@@ -44,6 +44,10 @@ export const getCollaboratorsByCommerceId = async commerceId => {
   return (await requestBackend.get(`/${entity}/commerceId/${commerceId}`, await getHeaders())).data;
 }
 
+export const getDetailsCollaboratorsByCommerceId = async commerceId => {
+  return (await requestBackend.get(`/${entity}/details/commerceId/${commerceId}`, await getHeaders())).data;
+}
+
 export const updateModule = async (id, body) => {
   return (await requestBackend.patch(`/${entity}/${id}`, body, await getHeaders())).data;
 }

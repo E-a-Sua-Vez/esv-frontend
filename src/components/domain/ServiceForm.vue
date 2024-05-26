@@ -53,8 +53,7 @@ export default {
     })
 
     const isActiveCommerce = () => {
-      return commerce.value.active === true &&
-        commerce.value.queues.length > 0
+      return commerce.value.active === true;
     };
 
     const isActiveQueues = () => {

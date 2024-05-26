@@ -12,7 +12,7 @@ import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
 import { getActiveFeature } from '../shared/features';
 import { bookingCollection, attentionCollection } from '../application/firebase';
-import { getCollaboratorsByCommerceId, getCollaboratorDetailsById } from '../application/services/collaborator';
+import { getDetailsCollaboratorsByCommerceId, getCollaboratorDetailsById } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
 import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
@@ -180,7 +180,7 @@ export default {
             }
           }
           const [collaborators, groupedQueues] = await Promise.all([
-            getCollaboratorsByCommerceId(state.commerce.id),
+            getDetailsCollaboratorsByCommerceId(state.commerce.id),
             getGroupedQueueByCommerceId(state.commerce.id)
           ]);
           if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {
@@ -211,7 +211,7 @@ export default {
               await getAttention(undefined);
             }
           } else {
-            const queues = state.commerce.queues;
+            const queues = Object.values(groupedQueues).flat();
             state.queues = queues;
             if (queues.length === 1) {
               state.queue = queues[0];
@@ -408,12 +408,7 @@ export default {
     }
 
     const isActiveCommerce = (commerce) => {
-      return commerce.active === true &&
-        commerce.queues.length > 0
-    };
-
-    const isActiveQueues = (commerce) => {
-      return commerce !== undefined && commerce.queues.length > 0;
+      return commerce.active === true;
     };
 
     const getFeature = (commerce, name) => {
@@ -497,11 +492,6 @@ export default {
 
     const validate = (user) => {
       state.errorsAdd = [];
-      /*if (getActiveFeature(state.commerce, 'attention-user-search', 'USER')) {
-        if (!user.clientId || user.clientId.length === 0) {
-          state.errorsAdd.push('commerceQueuesView.validate.name');
-        }
-      }*/
       if (!user.clientId || user.clientId.length === 0) {
         if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
           if (getActiveFeature(state.commerce, 'attention-user-name', 'USER')) {
@@ -1640,7 +1630,6 @@ export default {
       getActiveFeature,
       isActiveCommerce,
       isAvailableCommerce,
-      isActiveQueues,
       goBack,
       getQueue,
       getAttention,
@@ -1722,7 +1711,7 @@ export default {
             <div v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()" class="choose-attention py-1">
               <span class="fw-bold"> {{ $t("commerceQueuesView.when") }} </span>
             </div>
-            <div class="row g-1" v-if="isActiveQueues(state.commerce)">
+            <div class="row g-1">
               <div class="col col-md-10 offset-md-1 data-card">
                 <div class="row">
                    <!-- ATTENTION TODAY HOUR -->
@@ -1890,7 +1879,7 @@ export default {
                               <div class="choose-attention py-1 pt-2">
                                 <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                               </div>
-                              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
+                              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label="form-select-sm" v-model="state.block">
                                 <option v-for="block in state.availableBookingSuperBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
                               </select>
                             </div>
@@ -2065,7 +2054,7 @@ export default {
                               <div class="choose-attention py-1 pt-2">
                                 <i class="bi bi-hourglass-split"></i> <span> {{ $t("commerceQueuesView.selectBlock") }} </span>
                               </div>
-                              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="state.block">
+                              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label="form-select-sm" v-model="state.block">
                                 <option v-for="block in state.availableBookingSuperBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
                               </select>
                             </div>
