@@ -104,6 +104,22 @@ export default {
       }
     }
 
+    const convertDuration = (duration) => {
+      if (duration) {
+        if (duration > 0 && duration < 60) {
+          return `${duration}m`;
+        } else {
+          const hours = Math.trunc(duration/60);
+          const minutes = duration % 60;
+          if (minutes === 0) {
+            return `${hours}h`;
+          } else {
+            return `${hours}h ${minutes}m`;
+          }
+        }
+      }
+    }
+
     const changeSearchServiceText = computed(() => {
       const { searchServiceText } = state;
       return {
@@ -185,7 +201,8 @@ export default {
       isActiveCommerce,
       isActiveQueues,
       checkService,
-      serviceChecked
+      serviceChecked,
+      convertDuration
     }
   }
 }
@@ -269,7 +286,7 @@ export default {
           </div>
           <div class="col">
             <div class="badge rounded-pill bg-secondary py-2">
-              <span> <i class="bi bi-stopwatch-fill"></i>  {{ $t("commerceQueuesView.totalDuration") }} {{ state.duration }} </span>
+              <span> <i class="bi bi-stopwatch-fill"></i>  {{ $t("commerceQueuesView.totalDuration") }} {{ convertDuration(state.duration) }} </span>
             </div>
           </div>
         </div>
