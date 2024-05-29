@@ -175,12 +175,6 @@ export default {
       } else {
         state.tagUpdateError = false;
       }
-      if(!commerce.phone || commerce.phone.length < 10) {
-        state.phoneUpdateError = true;
-        state.errorsUpdate.push('businessCommercesAdmin.validate.phone');
-      } else {
-        state.phoneUpdateError = false;
-      }
       if(state.errorsUpdate.length === 0) {
         return true;
       }
