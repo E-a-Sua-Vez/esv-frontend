@@ -307,6 +307,8 @@ export default {
         if (state.selectedQueue && state.selectedQueue.serviceInfo &&
           state.selectedQueue.serviceInfo.specificCalendar === true) {
           await getAvailableSpecificDatesByMonth(state.selectedQueue, `${page}-01`);
+        } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar === true) {
+          await getAvailableSpecificDatesByMonth(state.selectedQueue, `${page}-01`);
         } else {
           await getAvailableDatesByMonth(state.selectedQueue, `${page}-01`);
         }
