@@ -710,6 +710,59 @@ export default {
       }
     };
 
+    const addBookingNumberUsed = async (sessionId, queueId, date) => {
+      let ids = [];
+      let blockLimit = 0;
+      console.log("🚀 ~ addBookingNumberUsed ~ blockLimit:", blockLimit);
+      if (state.queue.serviceInfo) {
+        blockLimit = state.queue.serviceInfo.blockLimit;
+      };
+      // caso bloque varios horarios
+      if (state.block && state.block.blockNumbers) {
+        console.log("🚀 ~ addBookingNumberUsed ~ state.block:", state.block);
+        for(let i = 0; i < state.block.blockNumbers.length; i++) {
+          const number = state.block.blockNumbers[i];
+          console.log("🚀 ~ addBookingNumberUsed ~ number:", number);
+          const created = await bookingBlockNumberUsedCollection.add({
+            sessionId: sessionId,
+            blockNumber: number,
+            queueId: queueId,
+            date: date,
+            dateRequested: new Date(),
+            time: new Date().getTime()
+          });
+          ids.push(created.id);
+        }
+        // caso bloque 1 horario
+      } else if (state.block && state.block.number) {
+        console.log("🚀 ~ addBookingNumberUsed ~ state.block:", state.block);
+        const number = state.block.number;
+        const created = await bookingBlockNumberUsedCollection.add({
+          sessionId: sessionId,
+          blockNumber: number,
+          queueId: queueId,
+          date: date,
+          dateRequested: new Date(),
+          time: new Date().getTime()
+        });
+        ids.push(created.id);
+      }
+      setTimeout(async() => {
+        // caso bloque 1 horario
+        if (state.block && state.block.number) {
+          const numbersUsed = await bookingBlockNumberUsedCollection
+          .where('queueId', "==", queueId)
+          .where('date', '==', date);
+          if (numbersUsed.length > blockLimit) {
+            return false;
+          } else {
+            return true;
+          }
+        }
+
+      }, 500)
+    }
+
     const getWaitList = async () => {
       try {
         loading.value = true;
