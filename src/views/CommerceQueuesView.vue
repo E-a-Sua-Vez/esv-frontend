@@ -155,6 +155,7 @@ export default {
       totalServicesResquested: 0,
       totalDurationRequested: 0,
       amountofBlocksNeeded: 0,
+      sessionId: undefined,
       specificCalendar: false,
       specificCalendarDays: {},
       specificCalendarDates: [],
@@ -165,6 +166,7 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        state.sessionId = uuidv4().toString();
         if (keyName) {
           state.commerce = await getCommerceByKeyName(keyName);
           state.locale = state.commerce.localeInfo.language || 'es';
