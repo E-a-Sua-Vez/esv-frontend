@@ -11,7 +11,7 @@ import { createWaitlist } from '../application/services/waitlist';
 import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
 import { getActiveFeature } from '../shared/features';
-import { bookingCollection, attentionCollection } from '../application/firebase';
+import { bookingCollection, attentionCollection, bookingBlockNumberUsedCollection } from '../application/firebase';
 import { getDetailsCollaboratorsByCommerceId, getCollaboratorDetailsById } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
 import PoweredBy from '../components/common/PoweredBy.vue';
@@ -240,6 +240,7 @@ export default {
         }
         loading.value = false;
       } catch (error) {
+        console.log("🚀 ~ onBeforeMount ~ error:", error);
         loading.value = false;
       }
     })
@@ -691,6 +692,7 @@ export default {
             const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
             body = { ...body, servicesId, servicesDetails };
           }
+          await addBookingNumberUsed(state.sessionId, state.queue.id, formattedDate(state.date));
           const booking = await createBooking(body);
           const user = await store.getCurrentUserType;
           if (user && user === 'collaborator') {
@@ -761,7 +763,6 @@ export default {
             return true;
           }
         }
-
       }, 500)
     }
 
