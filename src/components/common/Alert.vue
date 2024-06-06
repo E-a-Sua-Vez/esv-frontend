@@ -36,7 +36,7 @@ export default {
       } else if (this.stack === 404) {
         this.messageTitle = this.$t('alert.message.10');
         this.messageDetail = this.$t('alert.message.9');
-      } else if (this.stack === 990) {
+      } else if (this.stack === 990 || this.stack === 409) {
         this.messageTitle = this.$t('alert.message.11');
         this.messageDetail = this.$t('alert.message.12');
       } else {
@@ -47,7 +47,16 @@ export default {
   },
   updated() {
     this.alertMessage()
-  }
+  },
+  watch: {
+    stack: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.alertMessage();
+      }
+    }
+  },
 }
 </script>
 

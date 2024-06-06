@@ -24,6 +24,7 @@ import firebase from 'firebase/app';
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';
 import ServiceForm from '../components/domain/ServiceForm.vue';
+import { v4 as uuidv4 } from 'uuid';
 import { validateIdNumber } from '../shared/utils/idNumber';
 import { DateModel } from '../shared/utils/date.model';
 
@@ -62,6 +63,7 @@ export default {
     let loading = ref(false);
     let loadingCalendar = ref(false);
     let loadingHours = ref(false);
+    let loadingService = ref(false);
     let alertError = ref('');
     let calendar = ref(null);
     let dateMask = ref({
@@ -240,7 +242,6 @@ export default {
         }
         loading.value = false;
       } catch (error) {
-        console.log("🚀 ~ onBeforeMount ~ error:", error);
         loading.value = false;
       }
     })
@@ -317,6 +318,7 @@ export default {
     }
 
     const receiveQueue = (queue) => {
+      alertError.value = '';
       state.errorsAdd = [];
       getQueue(queue);
       state.totalDurationRequested = 0;
@@ -325,6 +327,7 @@ export default {
     }
 
     const receiveServices = async (services) => {
+      alertError.value = '';
       state.errorsAdd = [];
       state.services = services;
       setCanBook();
@@ -335,19 +338,20 @@ export default {
       state.totalDurationRequested = state.selectedServices.reduce((acc, service) => acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime), 0);
       state.amountofBlocksNeeded = Math.ceil(state.totalDurationRequested/state.queue.blockTime);
       if (state.specificCalendar === true) {
+        state.specificCalendarDate = undefined;
         if (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY') {
           getAvailableBookingSuperBlocks();
         } else {
           getAvailableAttentionSuperBlocks();
         }
       } else {
+        state.date = undefined;
         if (state.date && state.date !== 'TODAY') {
           getAvailableBookingSuperBlocks();
         } else {
           getAvailableAttentionSuperBlocks();
         }
       }
-
       setCanBook();
     }
 
@@ -379,13 +383,12 @@ export default {
       }
     }
 
-    const getBookings = () => {
-      const { unsubscribe } = updatedBookings(formattedDate(state.date || state.specificCalendarDate));
+    const getBookings = async () => {
+      const { unsubscribe } = await updatedBookings(formattedDate(state.date || state.specificCalendarDate));
       unsubscribeBookings = unsubscribe;
     }
 
     const updatedBookings = (date) => {
-      let values = ref([]);
       let unsubscribe;
       if (date !== undefined) {
         const bookingsQuery = bookingCollection
@@ -393,15 +396,12 @@ export default {
           .where('status', "in", ['PENDING', 'CONFIRMED'])
           .where('date', '==', date);
         unsubscribe = bookingsQuery.onSnapshot(snapshot => {
-          values.value = snapshot.docs
-            .map(doc => {
-              const booking = { id: doc.id, ...doc.data() };
-              return booking;
-
-            })
+          state.allBookings = snapshot.docs.map(doc => {
+            const booking = { id: doc.id, ...doc.data() };
+            return booking;
+          })
         })
       }
-      state.allBookings = values;
       return { unsubscribe };
     }
 
@@ -494,6 +494,7 @@ export default {
     }
 
     const validate = (user) => {
+      alertError.value = '';
       state.errorsAdd = [];
       if (!user.clientId || user.clientId.length === 0) {
         if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
@@ -634,7 +635,7 @@ export default {
 
     const getAttention = async (block) => {
       try {
-        loading.value = true;
+        loadingService.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
@@ -649,8 +650,19 @@ export default {
           }
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
-            body = { ...body, servicesId, servicesDetails };
+            const servicesDetails = state.selectedServices.map(serv => {
+              return {
+                id: serv.id,
+                name: serv.name,
+                tag: serv.tag,
+                procedures: serv.serviceInfo.procedures || 1
+              }
+            });
+            body = {
+              ...body,
+              servicesId,
+              servicesDetails
+            };
           }
           state.date = undefined;
           state.specificCalendarDate = undefined;
@@ -668,107 +680,127 @@ export default {
             })
           }
         }
-        loading.value = false;
+        loadingService.value = false;
       } catch (error) {
-        loading.value = false;
-        alertError.value = error.message;
+        loadingService.value = false;
+        alertError.value = error.response.status || 500;
       }
     };
 
     const getBooking = async () => {
+      const timeout = (Math.random() * 1000) + 1000;
       try {
-        loading.value = true;
+        loadingService.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
           const bodyUser = buildUserBody(state.newUser);
           let newUser = undefined;
           if (isDataActive(state.commerce)) {
-            newUser = { ...bodyUser, commerceId: state.commerce.id, notificationOn: state.accept, notificationEmailOn: state.accept, acceptTermsAndConditions: state.accept };
+            newUser = {
+              ...bodyUser,
+              commerceId: state.commerce.id,
+              notificationOn: state.accept,
+              notificationEmailOn: state.accept,
+              acceptTermsAndConditions: state.accept
+            };
           }
-          let body = { queueId: state.queue.id, channel: state.currentChannel, user: newUser, date: formattedDate(state.date || state.specificCalendarDate), block: state.block, clientId: state.newUser.clientId };
+          let body = {
+            queueId: state.queue.id,
+            channel: state.currentChannel,
+            user: newUser,
+            date: formattedDate(state.date || state.specificCalendarDate),
+            block: state.block,
+            clientId: state.newUser.clientId,
+            sessionId: state.sessionId
+          };
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => { return { id: serv.id, name: serv.name, tag: serv.tag, procedures: serv.serviceInfo.procedures || 1 } });
+            const servicesDetails = state.selectedServices.map(serv => {
+              return {
+                id: serv.id,
+                name: serv.name,
+                tag: serv.tag,
+                procedures: serv.serviceInfo.procedures || 1
+              }
+            });
             body = { ...body, servicesId, servicesDetails };
           }
-          await addBookingNumberUsed(state.sessionId, state.queue.id, formattedDate(state.date));
-          const booking = await createBooking(body);
-          const user = await store.getCurrentUserType;
-          if (user && user === 'collaborator') {
-            router.push({
-              name: 'collaborator-queue-booking',
-              params: { id: booking.id }
-            })
-          } else {
-            router.push({
-              name: 'commerce-queue-booking',
-              params: { id: booking.id }
-            })
-          }
+          await addBookingNumberUsed(state.sessionId, state.queue.id, formattedDate(state.date || state.specificCalendarDate));
+          setTimeout(async () => {
+            try {
+              const booking = await createBooking(body);
+              const user = await store.getCurrentUserType;
+              if (user && user === 'collaborator') {
+                router.push({
+                  name: 'collaborator-queue-booking',
+                  params: { id: booking.id }
+                })
+              } else {
+                router.push({
+                  name: 'commerce-queue-booking',
+                  params: { id: booking.id }
+                })
+              }
+              loadingService.value = false;
+            } catch (error) {
+              loadingService.value = false;
+              alertError.value = error.response.status || 500;
+            }
+          }, timeout);
+        } else {
+          loadingService.value = false;
         }
-        loading.value = false;
       } catch (error) {
-        loading.value = false;
-        alertError.value = error.message;
+        loadingService.value = false;
+        alertError.value = error.response.status || 500;
       }
     };
 
     const addBookingNumberUsed = async (sessionId, queueId, date) => {
-      let ids = [];
-      let blockLimit = 0;
-      console.log("🚀 ~ addBookingNumberUsed ~ blockLimit:", blockLimit);
-      if (state.queue.serviceInfo) {
-        blockLimit = state.queue.serviceInfo.blockLimit;
-      };
-      // caso bloque varios horarios
-      if (state.block && state.block.blockNumbers) {
-        console.log("🚀 ~ addBookingNumberUsed ~ state.block:", state.block);
-        for(let i = 0; i < state.block.blockNumbers.length; i++) {
-          const number = state.block.blockNumbers[i];
-          console.log("🚀 ~ addBookingNumberUsed ~ number:", number);
-          const created = await bookingBlockNumberUsedCollection.add({
+      try {
+        // caso bloque varios horarios
+        if (state.block && state.block.blockNumbers) {
+          for(let i = 0; i < state.block.blocks.length; i++) {
+            const block = state.block.blocks[i];
+            const number = block.number;
+            const hourFrom = block.hourFrom;
+            const hourTo = block.hourTo;
+            const body = {
+              sessionId: sessionId,
+              blockNumber: number,
+              hourFrom: hourFrom,
+              hourTo: hourTo,
+              queueId: queueId,
+              date: date,
+              dateRequested: new Date(),
+              time: new Date().getTime()
+            };
+            await bookingBlockNumberUsedCollection.add(body);
+          }
+          // caso bloque 1 horario
+        } else if (state.block && state.block.number) {
+          const number = state.block.number;
+          const hourFrom = state.block.hourFrom;
+          const hourTo = state.block.hourTo;
+          const body = {
             sessionId: sessionId,
             blockNumber: number,
+            hourFrom: hourFrom,
+            hourTo: hourTo,
             queueId: queueId,
             date: date,
             dateRequested: new Date(),
             time: new Date().getTime()
-          });
-          ids.push(created.id);
+          };
+          await bookingBlockNumberUsedCollection.add(body);
         }
-        // caso bloque 1 horario
-      } else if (state.block && state.block.number) {
-        console.log("🚀 ~ addBookingNumberUsed ~ state.block:", state.block);
-        const number = state.block.number;
-        const created = await bookingBlockNumberUsedCollection.add({
-          sessionId: sessionId,
-          blockNumber: number,
-          queueId: queueId,
-          date: date,
-          dateRequested: new Date(),
-          time: new Date().getTime()
-        });
-        ids.push(created.id);
-      }
-      setTimeout(async() => {
-        // caso bloque 1 horario
-        if (state.block && state.block.number) {
-          const numbersUsed = await bookingBlockNumberUsedCollection
-          .where('queueId', "==", queueId)
-          .where('date', '==', date);
-          if (numbersUsed.length > blockLimit) {
-            return false;
-          } else {
-            return true;
-          }
-        }
-      }, 500)
+      } catch (error) { }
     }
 
     const getWaitList = async () => {
       try {
-        loading.value = true;
+        loadingService.value = true;
         alertError.value = '';
         if (validate(state.newUser)) {
           state.currentChannel = await store.getCurrentAttentionChannel;
@@ -783,10 +815,10 @@ export default {
             state.waitlistCreated = true;
           }
         }
-        loading.value = false;
+        loadingService.value = false;
       } catch (error) {
-        loading.value = false;
-        alertError.value = error.message;
+        loadingService.value = false;
+        alertError.value = error.response.status || 500;
       }
     };
 
@@ -864,6 +896,7 @@ export default {
       const blockAvailable = state.availableBookingBlocks.filter(block => block.number === state.block.number)
       if (!blockAvailable || blockAvailable.length === 0) {
         state.bookingAvailable = false;
+        alertError.value = '';
       } else {
         state.bookingAvailable = true;
       }
@@ -931,6 +964,7 @@ export default {
     };
 
     const getAvailableBookingBlocks = (bookings) => {
+      state.availableBookingBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
       if (state.queue.type !== 'SELECT_SERVICE') {
@@ -1231,6 +1265,7 @@ export default {
     }
 
     const getAvailableBookingSuperBlocks = () => {
+      state.availableBookingSuperBlocks = [];
       if (state.selectedServices && state.selectedServices.length > 0) {
         const superBlocks = [];
         if (state.amountofBlocksNeeded > 1) {
@@ -1343,10 +1378,12 @@ export default {
         acc[date].push(booking);
         return acc;
       }, {});
-      availableDates = await state.specificCalendarDates.map(dat => {
+      await state.specificCalendarDates.map(dat => {
         const [year, month, day] = dat.split('-');
         const date = new Date(year, +month - 1, day);
-        return new DateModel(date).toString();
+        if (date >= dateFrom && date <= dateTo) {
+          availableDates.push(new DateModel(date).toString());
+        }
       });
       const forDeletion = [];
       if (availableDates && availableDates.length > 0) {
@@ -1369,10 +1406,12 @@ export default {
               }
             }
           })
-          if (!forDeletion.includes(date) &&
-            date === formattedDate(state.specificCalendarDate) &&
-            (state.availableBookingBlocks.length === 0 && state.availableBookingSuperBlocks.length === 0)) {
+          if (!forDeletion.includes(date) && date === formattedDate(state.specificCalendarDate)) {
+            if (state.amountofBlocksNeeded > 1 && state.availableBookingSuperBlocks.length === 0) {
               forDeletion.push(date);
+            } else if (state.amountofBlocksNeeded === 1 && state.availableBookingBlocks.length === 0) {
+              forDeletion.push(date);
+            }
           }
         })
       }
@@ -1491,8 +1530,8 @@ export default {
           currentDate = new Date(new Date(state.date || new Date()).setDate(new Date().getDate() + 1)).toISOString().slice(0, 10);
         }
         getAvailableBookingBlocks(state.bookings);
-        bookingsAvailables();
         getAvailableBookingSuperBlocks();
+        bookingsAvailables();
         if (state.specificCalendar === true) {
           await getAvailableSpecificDatesByMonth(currentDate);
         } else {
@@ -1504,6 +1543,7 @@ export default {
     watch (
       changeAttention,
       async (newData, oldData) => {
+        alertError.value = '';
         if (newData.allAttentions !== oldData.allAttentions) {
           const newIds = newData.allAttentions.map(att => att.id);
           const oldIds = oldData.allAttentions.map(att => att.id);
@@ -1540,8 +1580,9 @@ export default {
       changeBlock,
       async () => {
         if (state.attentionBlock) {
-          bookingsAvailables();
+          getAvailableBookingBlocks(state.bookings);
           getAvailableBookingSuperBlocks();
+          bookingsAvailables();
         }
       }
     )
@@ -1549,6 +1590,7 @@ export default {
     watch (
       changeBooking,
       async (newData, oldData) => {
+        loadingHours.value = true;
         if (newData.allBookings !== oldData.allBookings &&
           ((state.date && state.date !== 'TODAY') || (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY'))) {
           const newIds = newData.allBookings.map(booking => booking.id);
@@ -1589,6 +1631,7 @@ export default {
             }
           }
         }
+        loadingHours.value = false;
       }
     )
 
@@ -1612,8 +1655,9 @@ export default {
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
-          getBookings();
+          await getBookings();
         };
+        getAvailableBookingBlocks(state.bookings);
         getAvailableBookingSuperBlocks();
         getAvailableAttentionSuperBlocks();
         bookingsAvailables();
@@ -1641,7 +1685,7 @@ export default {
           if (unsubscribeBookings) {
             unsubscribeBookings();
           }
-          getBookings();
+          await getBookings();
         };
         getAvailableBookingBlocks(state.bookings);
         getAvailableBookingSuperBlocks();
@@ -1658,6 +1702,7 @@ export default {
       keyName,
       loading,
       loadingHours,
+      loadingService,
       alertError,
       dateMask,
       disabledDates,
@@ -1716,8 +1761,6 @@ export default {
           <span>{{ $t("commerceQueuesView.welcome") }}</span>
         </div>
       </div>
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
       <div v-if="isActiveCommerce(state.commerce) && !loading">
         <div v-if="isAvailableCommerce(state.commerce)">
           <!-- FORM -->
@@ -1881,7 +1924,7 @@ export default {
                           <div class="badge rounded-pill bg-secondary py-2 px-4 m-1"><span> {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }} </span></div>
                         </div>
                         <div v-if="state.attentionBlock.number && state.attentionAvailable === false">
-                          <Alert :show="!!state.attentionAvailable" :stack="990"></Alert>
+                        <Alert :show="!!state.attentionAvailable" :stack="990"></Alert>
                         </div>
                         <button
                           type="button"
@@ -2045,7 +2088,7 @@ export default {
                               type="button"
                               class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                               @click="getBooking()"
-                              :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate"
+                              :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate || loadingService"
                               >
                               {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                             </button>
@@ -2056,7 +2099,7 @@ export default {
                             type="button"
                             class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                             @click="getBooking()"
-                            :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate"
+                            :disabled="!state.accept || !state.queue.id || !state.specificCalendarDate || loadingService"
                             >
                             {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                           </button>
@@ -2213,7 +2256,7 @@ export default {
                               type="button"
                               class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                               @click="getBooking()"
-                              :disabled="!state.accept || !state.queue.id || !state.date"
+                              :disabled="!state.accept || !state.queue.id || !state.date || loadingService"
                               >
                               {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                             </button>
@@ -2224,7 +2267,7 @@ export default {
                             type="button"
                             class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                             @click="getBooking()"
-                            :disabled="!state.accept || !state.queue.id || !state.date"
+                            :disabled="!state.accept || !state.queue.id || !state.date || loadingService"
                             >
                             {{ $t("commerceQueuesView.confirm") }} <i class="bi bi-check-lg"></i>
                           </button>
@@ -2261,6 +2304,9 @@ export default {
           :icon="'bi bi-emoji-smile'">
         </Message>
       </div>
+      <Spinner :show="loading"></Spinner>
+      <Spinner :show="loadingService"></Spinner>
+      <Alert :show="loading" :stack="alertError"></Alert>
     </div>
     <PoweredBy :name="state.commerce.name" />
     <!-- Modal Conditions -->
