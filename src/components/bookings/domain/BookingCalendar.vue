@@ -82,7 +82,8 @@ export default {
       specificCalendarDays: {},
       specificCalendarDates: [],
       specificCalendarDate: undefined,
-      blocksBySpecificCalendarDate: {}
+      blocksBySpecificCalendarDate: {},
+      bookingsActiveBlocks: []
     });
 
     const {
@@ -137,6 +138,22 @@ export default {
           return result;
         }
       }
+    }
+
+    const getBookingsActiveBlocks = () => {
+      let result = [];
+      if (state.bookings && state.bookings.length > 0) {
+        state.bookings.forEach(booking => {
+          if (booking.block && booking.block.blocks && booking.block.blocks.length > 0) {
+            const hourMap = booking.block.blocks.map(block => block.hourFrom);
+            result = [...result, ...hourMap];
+          } else {
+            result.push(booking.block.hourFrom);
+          }
+        })
+      }
+      state.bookingsActiveBlocks = result;
+      return result;
     }
 
     const getBookingBlockNumber = (block) => {
@@ -902,6 +919,7 @@ export default {
               getBlocks();
             }
           }
+          getBookingsActiveBlocks();
         }
       }
     )
@@ -959,7 +977,8 @@ export default {
       showMyBookings,
       showBookings360,
       showClients360,
-      gotToAttendQueue
+      gotToAttendQueue,
+      getBookingsActiveBlocks
     }
   }
 }
@@ -1205,7 +1224,7 @@ export default {
                       <div class="metric-card">
                         <span
                           class="lefted badge rounded-pill bg-primary m-0 hour-title"
-                          :class="getBookingBlockNumber(block).length > 0 ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}
+                          :class="state.bookingsActiveBlocks.includes(block.hourFrom) ? 'bg-primary' : 'bg-success'"> {{ block.hourFrom }}
                         </span>
                         <div v-for="booking in getBookingBlockNumber(block)" :key="booking.id">
                           <BookingDetailsCard
@@ -1403,14 +1422,16 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .4rem .5rem;
+  padding: .2rem .3rem;
   margin: .5rem;
   margin-bottom: 0;
   border-radius: .5rem;
-  border: 1px solid var(--gris-default);
+  border: 1.5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
+  border-right: 0;
+  border-top: 0;
   line-height: 1.6rem;
 }
 .show {
@@ -1424,7 +1445,7 @@ export default {
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
+  margin: .1rem;
   font-size: .8rem;
   font-weight: 500;
 }
