@@ -50,6 +50,7 @@ export default {
       selectedHourFrom: undefined,
       selectedHourTo: undefined,
       selectedMonth: new DateModel().toString().slice(0,7),
+      minDate: new Date(),
       selectedDates: {},
       errorsDateAdd: [],
       filteredDates: [],
@@ -263,6 +264,7 @@ export default {
           <VDatePicker
             :locale="state.locale"
             v-model.string="state.selectedDate"
+            :min-date="state.minDate"
             :mask="dateMask"
             :disabled-dates="disabledDates"
             :attributes='calendarAttributes'
