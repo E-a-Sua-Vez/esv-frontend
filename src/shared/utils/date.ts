@@ -6,16 +6,18 @@ export const dateYYYYMMDD = (date: Date) => {
 }
 
 export const getDate = (dateIn, timeZoneIn) => {
-  if (dateIn) {
+  if (dateIn || dateIn !== 'Invalid Date') {
     let date = dateIn;
     try  {
       date = new Date(dateIn.toDate().toString()).toISOString();
     } catch (error) {
-      date = new Date(dateIn).toISOString();
+      date = new Date(dateIn) && new Date(dateIn).toString() !== 'Invalid Date' ? new Date(dateIn).toISOString() : undefined;
     }
-    const [year, month, day] = date.slice(0,10).split('-');
-    const returnDate = `${day}/${month}/${year}`;
-    return returnDate;
+    if (date) {
+      const [year, month, day] = date.slice(0,10).split('-');
+      const returnDate = `${day}/${month}/${year}`;
+      return returnDate;
+    }
   }
 }
 export const getDateAndHour = (dateIn, timeZoneIn) => {

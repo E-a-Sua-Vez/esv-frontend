@@ -20,10 +20,11 @@ import AreYouSure from '../../components/common/AreYouSure.vue';
 import { getQueueTypes } from '../../shared/utils/data';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu, SearchAdminItem },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, QueueSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu, SearchAdminItem, SpecificCalendarForm },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -1079,78 +1080,12 @@ export default {
                         </div>
                         <div id="queue-specificCalendarDays-form-update" v-if="queue.serviceInfo.specificCalendar" class="g-1">
                           <hr>
-                          <div class="row">
-                            <div class="my-2 selected-days-title">
-                              <span class="selected-days-title"> {{ $t("businessQueuesAdmin.selectSpecificDate") }} </span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                              <VDatePicker
-                                :locale="state.locale"
-                                v-model.string="state.selectedDate"
-                                :mask="dateMask"
-                                :disabled-dates="disabledDates"
-                                :attributes='calendarAttributes'
-                              />
-                            </div>
-                            <div class="col-12 col-md-6 mt-2">
-                              <div class="col-12">
-                                <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
-                              </div>
-                              <div class="row">
-                                <div class="col-5">
-                                  <input
-                                    type="time"
-                                    class="form-control form-control-sm"
-                                    v-model="state.selectedHourFrom"
-                                  />
-                                </div>
-                                <div class="col-2">
-                                  -
-                                </div>
-                                <div class="col-5">
-                                  <input
-                                    type="time"
-                                    class="form-control form-control-sm"
-                                    v-model="state.selectedHourTo"
-                                  />
-                                </div>
-                              </div>
-                              <div class="row my-2">
-                                <button
-                                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                                  @click="addSpecificDate(index)">
-                                  {{ $t("businessQueuesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
-                                </button>
-                                <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
-                                  <Warning>
-                                    <template v-slot:message>
-                                      <li v-for="(error, index) in state.errorsDateAdd" :key="index">
-                                        {{ $t(error) }}
-                                      </li>
-                                    </template>
-                                  </Warning>
-                                </div>
-                              </div>
-                            </div>
-                            <div v-if="queue.serviceInfo.specificCalendarDays">
-                              <hr>
-                              <div class="row centered my-1" v-for="date in Object.keys(queue.serviceInfo.specificCalendarDays).sort()" :key="date">
-                                <div class="col-4">
-                                  <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
-                                </div>
-                                <div class="col-5 selected-days-title">
-                                  {{ timeConvert(queue.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(queue.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
-                                </div>
-                                <div class="col-3">
-                                  <button
-                                    class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
-                                    @click="deleteSpecificDate(index, date)">
-                                    <i class="bi bi-trash-fill"></i>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <SpecificCalendarForm
+                            :show="queue.serviceInfo.specificCalendar"
+                            :locale="state.locale"
+                            :structure="queue"
+                          >
+                          </SpecificCalendarForm>
                         </div>
                       </div>
                       <div id="queue-id-form" class="row -2 mb-g3">
@@ -1670,78 +1605,12 @@ export default {
                     </div>
                     <div id="queue-specificCalendarDays-form-add" v-if="state.newQueue.serviceInfo.specificCalendar" class="row">
                       <hr>
-                      <div class="row">
-                        <div class="my-2 selected-days-title">
-                          <span class="selected-days-title text-label"> {{ $t("businessQueuesAdmin.selectSpecificDate") }} </span>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <VDatePicker
-                            :locale="state.locale"
-                            v-model.string="state.selectedDate"
-                            :mask="dateMask"
-                            :disabled-dates="disabledDates"
-                            :attributes='calendarAttributes'
-                          />
-                        </div>
-                        <div class="col-12 col-md-6 mt-2">
-                          <div class="col-12">
-                            <span class="badge bg-primary my-2 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
-                          </div>
-                          <div class="row">
-                            <div class="col-5">
-                              <input
-                                type="time"
-                                class="form-control form-control-sm"
-                                v-model="state.selectedHourFrom"
-                              />
-                            </div>
-                            <div class="col-2">
-                              -
-                            </div>
-                            <div class="col-5">
-                              <input
-                                type="time"
-                                class="form-control form-control-sm"
-                                v-model="state.selectedHourTo"
-                              />
-                            </div>
-                          </div>
-                          <div class="row my-2">
-                            <button
-                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                              @click="updateAddSpecificDate()">
-                              {{ $t("businessQueuesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
-                            </button>
-                            <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
-                              <Warning>
-                                <template v-slot:message>
-                                  <li v-for="(error, index) in state.errorsDateAdd" :key="index">
-                                    {{ $t(error) }}
-                                  </li>
-                                </template>
-                              </Warning>
-                            </div>
-                          </div>
-                        </div>
-                        <div v-if="state.newQueue.serviceInfo.specificCalendarDays">
-                          <hr>
-                          <div class="row centered my-1" v-for="date in Object.keys(state.newQueue.serviceInfo.specificCalendarDays)" :key="date">
-                            <div class="col-4 text-label">
-                              <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
-                            </div>
-                            <div class="col-5 selected-days-title text-label">
-                              {{ timeConvert(state.newQueue.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(state.newQueue.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
-                            </div>
-                            <div class="col-3">
-                              <button
-                                class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
-                                @click="updateDeleteSpecificDate(date)">
-                                <i class="bi bi-trash-fill"></i>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <SpecificCalendarForm
+                        :show="state.newQueue.serviceInfo.specificCalendar"
+                        :locale="state.locale"
+                        :structure="state.newQueue"
+                      >
+                      </SpecificCalendarForm>
                     </div>
                   </div>
                   <div class="col">

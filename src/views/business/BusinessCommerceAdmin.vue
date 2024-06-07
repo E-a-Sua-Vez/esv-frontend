@@ -17,10 +17,11 @@ import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
 
 export default {
   name: 'BusinessCommerceAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, Warning, Popper, AreYouSure, ComponentMenu, SearchAdminItem },
+  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, Warning, Popper, AreYouSure, ComponentMenu, SearchAdminItem, SpecificCalendarForm },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -340,6 +341,10 @@ export default {
       if (serviceInfo.specificCalendar === true) {
         if (!serviceInfo.specificCalendarDays) {
           serviceInfo.specificCalendarDays = {};
+        } else {
+          const days = Object.keys(serviceInfo.specificCalendarDays);
+          calendarAttributes.value[0].dates = [];
+          calendarAttributes.value[0].dates.push(...days);
         }
       }
     }
@@ -373,6 +378,9 @@ export default {
         }
       }
       state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+      const days = Object.keys(selectedDates);
+      calendarAttributes.value[0].dates = [];
+      calendarAttributes.value[0].dates.push(...days);
     }
 
     const updateAddSpecificDate = () => {
@@ -404,6 +412,9 @@ export default {
         }
       }
       state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+      const days = Object.keys(selectedDates);
+      calendarAttributes.value[0].dates = [];
+      calendarAttributes.value[0].dates.push(...days);
     }
 
     const deleteSpecificDate = (index, date) => {
@@ -414,6 +425,9 @@ export default {
         }
       }
       state.filtered[index].serviceInfo.specificCalendarDays = selectedDates;
+      const days = Object.keys(selectedDates);
+      calendarAttributes.value[0].dates = [];
+      calendarAttributes.value[0].dates.push(...days);
     }
 
     const updateDeleteSpecificDate = (date) => {
@@ -424,6 +438,9 @@ export default {
         }
       }
       state.newCommerce.serviceInfo.specificCalendarDays = selectedDates;
+      const days = Object.keys(selectedDates);
+      calendarAttributes.value[0].dates = [];
+      calendarAttributes.value[0].dates.push(...days);
     }
 
     const timeConvert = (num) => {
@@ -1101,84 +1118,12 @@ export default {
                         </div>
                         <div id="commerce-specificCalendarDays-form-update" v-if="commerce.serviceInfo.specificCalendar" class="g-1">
                           <hr>
-                          <div class="row">
-                            <div class="my-2 selected-days-title">
-                              <span class="selected-days-title"> {{ $t("businessCommercesAdmin.selectSpecificDate") }} </span>
-                            </div>
-                            <div class="col-12 col-md-6">
-                              <VDatePicker
-                                :locale="state.locale"
-                                v-model.string="state.selectedDate"
-                                :mask="dateMask"
-                                :disabled-dates="disabledDates"
-                                :attributes='calendarAttributes'
-                              />
-                            </div>
-                            <div class="col-12 col-md-6 mt-2">
-                              <div class="my-1 selected-days-title">
-                                <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectedDate") }} </span>
-                              </div>
-                              <div class="col-12">
-                                <span class="badge bg-primary my-1 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
-                              </div>
-                              <div class="my-1 selected-days-title">
-                                <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.hours") }} </span>
-                              </div>
-                              <div class="row">
-                                <div class="col-5">
-                                  <input
-                                    type="time"
-                                    class="form-control form-control-sm"
-                                    v-model="state.selectedHourFrom"
-                                  />
-                                </div>
-                                <div class="col-2">
-                                  -
-                                </div>
-                                <div class="col-5">
-                                  <input
-                                    type="time"
-                                    class="form-control form-control-sm"
-                                    v-model="state.selectedHourTo"
-                                  />
-                                </div>
-                              </div>
-                              <div class="row my-2">
-                                <button
-                                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                                  @click="addSpecificDate(index)">
-                                  {{ $t("businessCommercesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
-                                </button>
-                                <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
-                                  <Warning>
-                                    <template v-slot:message>
-                                      <li v-for="(error, index) in state.errorsDateAdd" :key="index">
-                                        {{ $t(error) }}
-                                      </li>
-                                    </template>
-                                  </Warning>
-                                </div>
-                              </div>
-                            </div>
-                            <div v-if="commerce.serviceInfo.specificCalendarDays">
-                              <hr>
-                              <div class="row centered my-1" v-for="date in Object.keys(commerce.serviceInfo.specificCalendarDays).sort()" :key="date">
-                                <div class="col-4">
-                                  <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
-                                </div>
-                                <div class="col-5 selected-days-title">
-                                  {{ timeConvert(commerce.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(commerce.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
-                                </div>
-                                <div class="col-3">
-                                  <button
-                                    class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
-                                    @click="deleteSpecificDate(index, date)">
-                                    <i class="bi bi-trash-fill"></i>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <SpecificCalendarForm
+                            :show="commerce.serviceInfo.specificCalendar"
+                            :locale="state.locale"
+                            :structure="commerce"
+                          >
+                          </SpecificCalendarForm>
                         </div>
                       </div>
                       <div id="commerce-id-form" class="row -2 mb-g3">
@@ -1802,84 +1747,12 @@ export default {
                     </div>
                     <div id="commerce-specificCalendarDays-form-add" v-if="state.newCommerce.serviceInfo.specificCalendar" class="row">
                       <hr>
-                      <div class="row">
-                        <div class="my-2 selected-days-title">
-                          <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectSpecificDate") }} </span>
-                        </div>
-                        <div class="col-12 col-md-6">
-                          <VDatePicker
-                            :locale="state.locale"
-                            v-model.string="state.selectedDate"
-                            :mask="dateMask"
-                            :disabled-dates="disabledDates"
-                            :attributes='calendarAttributes'
-                          />
-                        </div>
-                        <div class="col-12 col-md-6 mt-2">
-                          <div class="my-1 selected-days-title">
-                            <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.selectedDate") }} </span>
-                          </div>
-                          <div class="col-12">
-                            <span class="badge bg-primary my-1 p-2">{{ getDate(new Date(state.selectedDate)) }} </span>
-                          </div>
-                          <div class="my-1 selected-days-title">
-                            <span class="selected-days-title text-label"> {{ $t("businessCommercesAdmin.hours") }} </span>
-                          </div>
-                          <div class="row">
-                            <div class="col-5">
-                              <input
-                                type="time"
-                                class="form-control form-control-sm"
-                                v-model="state.selectedHourFrom"
-                              />
-                            </div>
-                            <div class="col-2">
-                              -
-                            </div>
-                            <div class="col-5">
-                              <input
-                                type="time"
-                                class="form-control form-control-sm"
-                                v-model="state.selectedHourTo"
-                              />
-                            </div>
-                          </div>
-                          <div class="row my-2">
-                            <button
-                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                              @click="updateAddSpecificDate()">
-                              {{ $t("businessCommercesAdmin.addDate") }} <i class="bi bi-calendar-date-fill"></i>
-                            </button>
-                            <div class="row g-1 errors" id="feedback" v-if="(state.errorsDateAdd.length > 0)">
-                              <Warning>
-                                <template v-slot:message>
-                                  <li v-for="(error, index) in state.errorsDateAdd" :key="index">
-                                    {{ $t(error) }}
-                                  </li>
-                                </template>
-                              </Warning>
-                            </div>
-                          </div>
-                        </div>
-                        <div v-if="state.newCommerce.serviceInfo.specificCalendarDays">
-                          <hr>
-                          <div class="row centered my-1" v-for="date in Object.keys(state.newCommerce.serviceInfo.specificCalendarDays)" :key="date">
-                            <div class="col-4 text-label">
-                              <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
-                            </div>
-                            <div class="col-5 selected-days-title text-label">
-                              {{ timeConvert(state.newCommerce.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(state.newCommerce.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
-                            </div>
-                            <div class="col-3">
-                              <button
-                                class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3"
-                                @click="updateDeleteSpecificDate(date)">
-                                <i class="bi bi-trash-fill"></i>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <SpecificCalendarForm
+                        :show="state.newCommerce.serviceInfo.specificCalendar"
+                        :locale="state.locale"
+                        :structure="state.newCommerce"
+                      >
+                      </SpecificCalendarForm>
                     </div>
                   </div>
                   <div class="col">
