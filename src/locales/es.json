@@ -2983,6 +2983,10 @@
       "3": {
         "title": "¡Ups!",
         "content": "Ya llegaste al límite de sucursales. Para agregar más sucursales cambia de plan o comunícate con nosotros."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay fechas configuradas."
       }
     },
     "capacitiesList": {

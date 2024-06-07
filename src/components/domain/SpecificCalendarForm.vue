@@ -212,6 +212,8 @@ export default {
           refresh(days);
           calendarAttributes.value[0].dates = [];
           calendarAttributes.value[0].dates.push(...days);
+        } else {
+          state.filteredDates = [];
         }
       }
     }
@@ -345,21 +347,28 @@ export default {
               </ul>
             </nav>
           </div>
-          <div class="row centered my-1 mx-1" v-for="date in state.filteredDates" :key="date">
-            <div class="col-4">
-              <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+          <div v-if="state.filteredDates && state.filteredDates.length > 0">
+            <div class="row centered my-1 mx-1" v-for="date in state.filteredDates" :key="date">
+              <div class="col-4">
+                <span class="badge bg-secondary p-2"> {{ getDate(new Date(date)) }} </span>
+              </div>
+              <div class="col-5 selected-days-title">
+                {{ timeConvert(structure.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(structure.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
+              </div>
+              <div class="col-3">
+                <button
+                  class="btn btn-sm btn-size btn-danger rounded-pill px-3"
+                  @click="deleteSpecificDate(index, date)"
+                  >
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </div>
             </div>
-            <div class="col-5 selected-days-title">
-              {{ timeConvert(structure.serviceInfo.specificCalendarDays[date].attentionHourFrom) }} - {{ timeConvert(structure.serviceInfo.specificCalendarDays[date].attentionHourTo) }}
-            </div>
-            <div class="col-3">
-              <button
-                class="btn btn-sm btn-size btn-danger rounded-pill px-3"
-                @click="deleteSpecificDate(index, date)"
-                >
-                <i class="bi bi-trash-fill"></i>
-              </button>
-            </div>
+          </div>
+          <div v-else>
+            <Message
+              :title="$t('businessCommercesAdmin.message.4.title')"
+              :content="$t('businessCommercesAdmin.message.4.content')" />
           </div>
         </div>
       </div>

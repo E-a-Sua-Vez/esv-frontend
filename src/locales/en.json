@@ -2981,6 +2981,10 @@
       "3": {
         "title": "Oh no!",
         "content": "You have already reached the limit of commerces. To add more commerces, change your plan or contact us."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "There's not configured dates."
       }
     },
     "capacitiesList": {

@@ -2989,6 +2989,10 @@
       "3": {
         "title": "Oh não!",
         "content": "Você já atingiu o limite de comércios. Para adicionar mais comércios, mude de plano ou entre em contato conosco."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "No há datas configuradas."
       }
     },
     "capacitiesList": {
