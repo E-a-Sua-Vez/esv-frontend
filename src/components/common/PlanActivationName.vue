@@ -58,6 +58,20 @@ export default {
 </template>
 
 <style scoped>
+.active {
+  background-color: var(--color-background);
+  border-radius: 1rem;
+  line-height: 1rem;
+  border: 1px solid var(--azul-turno);
+  padding-top: .2rem;
+  padding-bottom: .2rem;
+}
+.desactived-name {
+  background-color: var(--gris-clear);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: .9rem;
+}
 .active-name {
   background-color: var(--color-background);
   color: var(--color-text);
@@ -66,15 +80,16 @@ export default {
 }
 .desactived {
   background-color: var(--gris-clear);
-  margin: .1rem;
   border-radius: 1rem;
-  line-height: 1.5rem;
-  border: 1px solid var(--gris-default);
+  line-height: 1rem;
+  border: 1px solid var(--azul-turno);
+  padding-top: .2rem;
+  padding-bottom: .2rem;
 }s
 .activation-attention {
-  border: 1.5px solid var(--amarillo-star);
+  border: 1px solid var(--amarillo-star);
 }
 .activation-desactivate {
-  border: 1.5px solid var(--rojo-warning);
+  border: 1px solid var(--rojo-warning);
 }
 </style>

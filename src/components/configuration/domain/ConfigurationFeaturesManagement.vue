@@ -12,6 +12,7 @@ import Alert from '../../../components/common/Alert.vue';
 import Warning from '../../../components/common/Warning.vue';
 import SimpleConfigurationCard from '../../../components/configuration/common/SimpleConfigurationCard.vue';
 import ComponentMenu from '../../../components/common/ComponentMenu.vue';
+import { getConfigurationTypes } from '../../../shared/utils/data';
 
 export default {
   name: 'ConfigurationFeaturesManagement',
@@ -36,7 +37,10 @@ export default {
       commerces: ref([]),
       configurations: ref([]),
       groupedConfigurations : {},
+      types: [],
+      typeSelected: undefined,
       options: {},
+      allOptions: [],
       optionSelected: undefined,
       commerce: {},
       showAdd: false,
@@ -57,7 +61,8 @@ export default {
         if (state.commerce) {
           selectCommerce(state.commerce);
         }
-        state.options = await getFeatureToggleOptions();
+        state.types = getConfigurationTypes();
+        state.allOptions = await getFeatureToggleOptions();
         state.toggles = await getPermissions('configuration', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -154,10 +159,17 @@ export default {
       modalCloseButton.click();
     }
 
+    const selectType = () => {
+      if (state.typeSelected) {
+        state.options = state.allOptions.filter((element) => element.type === state.typeSelected);
+      }
+    }
+
     return {
       state,
       loading,
       alertError,
+      selectType,
       goBack,
       isActiveBusiness,
       selectCommerce,
@@ -366,6 +378,20 @@ export default {
             <Alert :show="loading" :stack="alertError"></Alert>
             <div id="add-configuration" class="configuration-card mb-4" v-if="state.showAdd && state.toggles['configuration.admin.add']">
               <div class="row g-1">
+                <div id="configuration-feature-form-add" class="row g-1">
+                  <div class="col text-label">
+                    {{ $t("businessConfiguration.types") }}
+                  </div>
+                  <div class="col">
+                    <select
+                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
+                      v-model="state.typeSelected"
+                      @change="selectType()"
+                      id="types">
+                      <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`configuration.types.${typ.name}`) }}</option>
+                    </select>
+                  </div>
+                </div>
                 <div id="configuration-feature-form-add" class="row g-1">
                   <div class="col text-label">
                     {{ $t("businessConfiguration.feature") }}

@@ -277,3 +277,13 @@ export const getDocumentCommerceTypes = () => {
     { id: 'post_attention', name: 'post_attention' }
   ]
 }
+
+export const getConfigurationTypes = () => {
+  return [
+    { id: 'EMAIL', name: 'email' },
+    { id: 'PRODUCT', name: 'product' },
+    { id: 'USER', name: 'user' },
+    { id: 'WHATSAPP', name: 'whatsapp' },
+    { id: 'MESSAGE', name: 'message' }
+  ]
+}
