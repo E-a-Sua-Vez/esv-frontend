@@ -293,17 +293,11 @@
 }
 .flip-enter-active,
 .flip-leave-active {
-  transition: all 1s ease-in-out;
+  transition: all 0.7s ease;
 }
 .flip-enter-from, .flip-leave-to {
   transform: rotateY(180deg);
   opacity: 0;
-}
-.flip-enter-active {
-  animation: bounce-in 0.2s;
-}
-.flip-leave-active {
-  animation: bounce-in 0.2s reverse;
 }
 .fade-enter-active,
 .fade-leave-active {
@@ -530,4 +524,15 @@
   100% {
     transform: scale(1);
   }
+}
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }

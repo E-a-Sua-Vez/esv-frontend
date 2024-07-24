@@ -434,7 +434,8 @@ export default {
   <div v-if="show">
     <div id="data" v-if="isDataActive()">
       <div v-if="isActiveCommerce() && clientFront === true" class="choose-attention py-2 pt-3">
-        <span class="fw-bold">{{ $t("commerceQueuesView.data") }}</span>
+        <i class="bi bi-1-circle-fill h5"></i>
+        <span class="fw-bold h6 m-1">{{ $t("commerceQueuesView.data") }}</span>
       </div>
       <div class="col col-md-10 offset-md-1 data-card">
         <div class="row g-1" v-if="getActiveFeature(commerce, 'attention-user-search', 'USER') && !client && clientFront === true">

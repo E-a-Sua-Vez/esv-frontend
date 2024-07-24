@@ -11,6 +11,7 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
     queue: { type: Object, default: {} },
+    selectedServices: { type: Object, default: {} },
     receiveSelectedServices: { type: Function, default: () => {} }
   },
   async setup(props) {
@@ -20,6 +21,7 @@ export default {
     const {
       commerce,
       queue,
+      selectedServices
     } = toRefs(props);
 
     const { receiveSelectedServices } = props;
@@ -40,6 +42,9 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        if (selectedServices.value && selectedServices.value.length > 0) {
+          state.selectedServices.push(selectedServices.value);
+        }
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
             state.services = queue.value.services;
@@ -73,8 +78,12 @@ export default {
     }
 
     const serviceChecked = (service) => {
-      if (state.selectedServices) {
-        return state.selectedServices.includes(service);
+      const selServices = selectedServices.value || state.selectedServices;
+      state.selectedServices = selServices;
+      if (state.selectedServices && state.selectedServices.length > 0) {
+        state.duration = state.selectedServices.reduce((acc, service) => acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime), 0);
+        const ids = state.selectedServices.map(serv => serv.id);
+        return ids.includes(service.id);
       }
       return false;
     }

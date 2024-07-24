@@ -251,8 +251,9 @@ export default {
 <template>
   <div>
     <div id="queues" v-if="isActiveCommerce() && !loading" class="mb-2">
-      <div v-if="isActiveCommerce()" class="choose-attention py-2">
-        <span v-if="queues && queues.length > 0" class="fw-bold">{{ $t("commerceQueuesView.choose") }}</span>
+      <div v-if="isActiveCommerce()" class="choose-attention py-2 pt-3">
+        <i class="bi bi-2-circle-fill h5 m-1"></i>
+        <span v-if="queues && queues.length > 0" class="fw-bold h6">{{ $t("commerceQueuesView.choose") }}</span>
       </div>
       <div class="row g-1" v-if="isActiveQueues()">
         <div class="col col-md-10 offset-md-1 data-card">
