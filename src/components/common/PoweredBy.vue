@@ -28,7 +28,7 @@ export default {
 <style scoped>
 .logo-powered {
   display: flex;
-  width: 150px;
+  width: 120px;
   background-repeat: no-repeat;
   background-size: 100%;
 }

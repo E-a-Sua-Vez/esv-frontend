@@ -26,8 +26,8 @@ export default {
 <style scoped>
 .logo {
   display: flex;
-  max-width: 300px;
-  max-height: 280px;
+  max-width: 250px;
+  max-height: 230px;
   background-repeat: no-repeat;
   background-size: 100%;
   margin-bottom: .3rem;

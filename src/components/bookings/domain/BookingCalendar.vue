@@ -782,6 +782,7 @@ export default {
 
     const selectQueue = (queue) => {
       state.selectedQueue = queue;
+      showAttentions();
     }
 
     const formattedDate = (date) => {
@@ -1134,13 +1135,6 @@ export default {
               </div>
               <div id="subMenu" class="">
                 <h6 class="mb-0">
-                  <button
-                    class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 subtitle-info"
-                    :class="state.showAttentions ? 'btn-selected' : ''"
-                    @click="showAttentions()"
-                    >
-                    {{ $t('collaboratorBookingsView.attentions') }} <br> <i class="bi bi-qr-code"></i>
-                  </button>
                   <button
                     class="btn btn-sm btn-block btn-size fw-bold btn-dark rounded-pill my-1 mx-1 subtitle-info"
                     :class="state.showBooking ? 'btn-selected' : ''"

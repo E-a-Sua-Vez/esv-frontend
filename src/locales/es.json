@@ -1,7 +1,7 @@
 {
-  "logo": "/images/logo_horizontal_transparente.png",
-  "logoAlt": "Es tu turno",
-  "homeTitle": "Es tu Turno {'|'} Servicio de filas 100% digital",
+  "logo": "/images/spot+_white.png",
+  "logoAlt": "Spot+",
+  "homeTitle": "Spot+ {'|'} Atención 100% digital",
   "email": "hola{'@'}estuturno.app",
   "blog": "https://blog.estuturno.app",
   "publicSite": "Sitio Público",
@@ -9,7 +9,7 @@
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "backToInit": "Ir al inicio",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/estuturno_logo_powered.png",
+  "logoPoweredBy": "/images/spot+_white.png",
   "enableAll": "¡Habilita más capacidades!",
   "curious": "¿Curioso?",
   "wantToKnowMore": "¡Quiero saber más!",
@@ -23,7 +23,7 @@
   "capacities": "¿Qué puedo hacer?",
   "upgrade": "Haz un Upgrade de tu plan para obtener más beneficios.",
   "logoValues": "/images/es_tu_turno_values.png",
-  "logoValuesAlt": "Es tu turno",
+  "logoValuesAlt": "Spot+",
   "noResults": "😓 Sin Resultados",
   "sureAction": "¿Estás seguro que deseas realizar esta acción?",
   "lostConnection": "Perdiste la conexión a internet. Revisa tu conexión y refresca la página.",
@@ -56,7 +56,7 @@
       },
       "2": {
         "icon": "bi-key-fill",
-        "title": "¡Bienvenido a Es tu Turno!",
+        "title": "¡Bienvenido a Spot+!",
         "content": "Aún no haz cambiado tu contraseña por primera vez. Por tu seguridad, te invitamos a cambiarla ahora. Para ello, haz click en 'Acciones' > 'Cambio de Clave' y sigue las instrucciones."
       },
       "3": {
