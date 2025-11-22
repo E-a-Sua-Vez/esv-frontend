@@ -711,18 +711,12 @@ export default {
 
     return {
       state,
-      show,
-      commerce,
-      queue,
-      booking,
       dateMask,
       calendarAttributes,
       disabledDates,
       loading,
       loadingHours,
       loadingCalendar,
-      amountofBlocksNeeded,
-      view,
       formattedDate,
       getActiveFeature,
       getAvailableDatesByCalendarMonth,

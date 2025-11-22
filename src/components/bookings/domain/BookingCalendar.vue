@@ -1039,10 +1039,6 @@ export default {
 
     return {
       state,
-      queues,
-      commerce,
-      show,
-      toggles,
       dateMask,
       loading,
       loadingSearch,
