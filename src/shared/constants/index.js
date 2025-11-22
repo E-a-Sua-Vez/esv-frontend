@@ -58,3 +58,4 @@ export const ENVIRONMENTS = {
   PRODUCTION: 'prod',
   TEST: 'test',
 };
+// test comment
