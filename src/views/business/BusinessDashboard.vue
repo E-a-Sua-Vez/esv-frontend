@@ -36,14 +36,14 @@ export default {
     DashboardGraphs,
     DashboardSurveysResult,
     DashboardSurveys,
-    ComponentMenu
+    ComponentMenu,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const attentionCreated = {
       attentionNumber: 0,
@@ -58,25 +58,25 @@ export default {
       pastMonthAttentionNumber: {},
       currentMonthAttentionNumber: {},
       pastPeriodEvolution: {},
-      paymentData: {}
-    }
+      paymentData: {},
+    };
 
     const surveyCreated = {
       avgRating: 0,
-      sentimentScore: {}
-    }
+      sentimentScore: {},
+    };
 
     const notificationCreated = {
       notificationNumber: 0,
       channelFlow: {},
-      typesFlow: {}
-    }
+      typesFlow: {},
+    };
 
     const state = reactive({
       currentUser: {},
       business: {},
-      startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10),
-      endDate: new Date().toISOString().slice(0,10),
+      startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0, 10),
+      endDate: new Date().toISOString().slice(0, 10),
       activeBusiness: false,
       commerces: ref([]),
       queues: ref([]),
@@ -93,11 +93,11 @@ export default {
         'booking.created': {
           bookingFlow: {
             datasets: [],
-            labels: []
-          }
+            labels: [],
+          },
         },
-        'collaborators': {},
-        'clients': {}
+        collaborators: {},
+        clients: {},
       },
       graphs: {
         'attention-number-evolution': false,
@@ -114,7 +114,7 @@ export default {
         'booking-hour-distribution': false,
       },
       calculatedSurveyMetrics: {},
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -123,7 +123,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const commerce = await getQueueByCommerce(state.commerce.id);
         state.queues = commerce.queues;
         state.toggles = await getPermissions('dashboard');
@@ -132,13 +133,11 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -149,7 +148,7 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
     const resetGraphsVisibility = () => {
       state.graphs = {
@@ -166,18 +165,24 @@ export default {
         'booking-day-distribution': false,
         'booking-hour-distribution': false,
       };
-    }
+    };
 
     const checkGraphsVisibility = () => {
-      if (state.calculatedMetrics['attention.created'].evolution
-          && state.calculatedMetrics['attention.created'].evolution.datasets
-          && state.calculatedMetrics['attention.created'].evolution.datasets.length > 0) {
+      if (
+        state.calculatedMetrics['attention.created'].evolution &&
+        state.calculatedMetrics['attention.created'].evolution.datasets &&
+        state.calculatedMetrics['attention.created'].evolution.datasets.length > 0
+      ) {
         if (state.toggles['dashboard.attention-number-evolution.view']) {
           state.graphs['attention-number-evolution'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
-        !state.calculatedMetrics['attention.created'].durationFlow.datasets.every(item => item === 0)) {
+      if (
+        state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
+        !state.calculatedMetrics['attention.created'].durationFlow.datasets.every(
+          item => item === 0
+        )
+      ) {
         if (state.toggles['dashboard.attention-duration-evolution.view']) {
           state.graphs['attention-duration-evolution'] = true;
         }
@@ -192,61 +197,76 @@ export default {
           state.graphs['attention-number-queue'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].attentionFlow.datasets.length > 0 &&
-          state.calculatedMetrics['attention.created'].attentionFlow.datasets[0] !== 0){
+      if (
+        state.calculatedMetrics['attention.created'].attentionFlow.datasets.length > 0 &&
+        state.calculatedMetrics['attention.created'].attentionFlow.datasets[0] !== 0
+      ) {
         if (state.toggles['dashboard.attention-flow.view']) {
           state.graphs['attention-flow'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].attentionFlow.datasets.length > 0 &&
-          !state.calculatedMetrics['attention.created'].attentionFlow.datasets.every(item => item === 0)){
+      if (
+        state.calculatedMetrics['attention.created'].attentionFlow.datasets.length > 0 &&
+        !state.calculatedMetrics['attention.created'].attentionFlow.datasets.every(
+          item => item === 0
+        )
+      ) {
         if (state.toggles['dashboard.survey-flow.view']) {
           state.graphs['survey-flow'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].hourDistribution.datasets.length > 0){
+      if (state.calculatedMetrics['attention.created'].hourDistribution.datasets.length > 0) {
         if (state.toggles['dashboard.attention-hour-distribution.view']) {
           state.graphs['attention-hour-distribution'] = true;
         }
       }
-      if (state.calculatedMetrics['booking.created'].bookingFlow.datasets.length > 0 &&
-          state.calculatedMetrics['booking.created'].bookingFlow.datasets[0] !== 0){
+      if (
+        state.calculatedMetrics['booking.created'].bookingFlow.datasets.length > 0 &&
+        state.calculatedMetrics['booking.created'].bookingFlow.datasets[0] !== 0
+      ) {
         if (state.toggles['dashboard.booking-flow.view']) {
           state.graphs['booking-flow'] = true;
         }
       }
-      if (state.calculatedMetrics['booking.created'].evolution
-          && state.calculatedMetrics['booking.created'].evolution.datasets
-          && state.calculatedMetrics['booking.created'].evolution.datasets.length > 0) {
+      if (
+        state.calculatedMetrics['booking.created'].evolution &&
+        state.calculatedMetrics['booking.created'].evolution.datasets &&
+        state.calculatedMetrics['booking.created'].evolution.datasets.length > 0
+      ) {
         if (state.toggles['dashboard.booking-number-evolution.view']) {
           state.graphs['booking-number-evolution'] = true;
         }
       }
-      if (state.calculatedMetrics['booking.created'].hourDistribution.datasets.length > 0){
+      if (state.calculatedMetrics['booking.created'].hourDistribution.datasets.length > 0) {
         if (state.toggles['dashboard.booking-hour-distribution.view']) {
           state.graphs['booking-hour-distribution'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].dayDistribution.datasets.length > 0){
+      if (state.calculatedMetrics['attention.created'].dayDistribution.datasets.length > 0) {
         if (state.toggles['dashboard.attention-day-distribution.view']) {
           state.graphs['attention-day-distribution'] = true;
         }
       }
-      if (state.calculatedMetrics['booking.created'].dayDistribution.datasets.length > 0){
+      if (state.calculatedMetrics['booking.created'].dayDistribution.datasets.length > 0) {
         if (state.toggles['dashboard.booking-day-distribution.view']) {
           state.graphs['booking-day-distribution'] = true;
         }
       }
-    }
+    };
 
     const getCalculatedMetrics = async () => {
       let queues = [];
       if (state.queues && state.queues.length > 0) {
-        queues = state.queues.map(queue => { return { id: queue.id, name: queue.name }})
+        queues = state.queues.map(queue => ({ id: queue.id, name: queue.name }));
       }
-      const { calculatedMetrics } = await getMetrics(state.commerce.id, queues, state.startDate, state.endDate);
+      const { calculatedMetrics } = await getMetrics(
+        state.commerce.id,
+        queues,
+        state.startDate,
+        state.endDate
+      );
       return calculatedMetrics;
-    }
+    };
 
     const refresh = async () => {
       try {
@@ -257,42 +277,42 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
+        alertError.value = error ? (error.response ? error.respose.status : 500) : 500;
         loading.value = false;
       }
-    }
+    };
 
     const getToday = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
+      const date = new Date().toISOString().slice(0, 10);
+      const [year, month, day] = date.split('-');
       state.startDate = `${year}-${month}-${day}`;
       state.endDate = `${year}-${month}-${day}`;
       await refresh();
-    }
+    };
 
     const getCurrentMonth = async () => {
-      const date = new Date().toISOString().slice(0,10);
-      const [ year, month, day ] = date.split('-');
+      const date = new Date().toISOString().slice(0, 10);
+      const [year, month, day] = date.split('-');
       state.startDate = `${year}-${month}-01`;
       state.endDate = `${year}-${month}-${day}`;
       await refresh();
-    }
+    };
 
     const getLastMonth = async () => {
-      const date = new Date().toISOString().slice(0,10);
+      const date = new Date().toISOString().slice(0, 10);
       state.startDate = new DateModel(date).substractMonths(1).toString();
       state.endDate = new DateModel(state.startDate).endOfMonth().toString();
       await refresh();
-    }
+    };
 
     const getLastThreeMonths = async () => {
-      const date = new Date().toISOString().slice(0,10);
+      const date = new Date().toISOString().slice(0, 10);
       state.startDate = new DateModel(date).substractMonths(3).toString();
       state.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await refresh();
-    }
+    };
 
-    const getLocalHour = (hour) => {
+    const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
       if (state.commerce.country) {
@@ -306,93 +326,99 @@ export default {
           return hourDate.getHours();
         }
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showIndicators = () => {
       state.showIndicators = true;
       state.showGraphs = false;
       state.showSurveyResults = false;
-    }
+    };
 
     const showGraphs = () => {
       state.showIndicators = false;
       state.showGraphs = true;
       state.showSurveyResults = false;
-    }
+    };
 
     const showSurvey = () => {
       state.showIndicators = false;
       state.showGraphs = false;
       state.showSurveyResults = true;
-    }
+    };
 
-    const surveyLabel = (label) => {
+    const surveyLabel = label => {
       const labels = {
-        'TERMINATED': 'INITIATED',
-        'RATED': 'TERMINATED'
+        TERMINATED: 'INITIATED',
+        RATED: 'TERMINATED',
       };
       return labels[label] || undefined;
-    }
+    };
 
     const attentionNumberEvolution = computed(() => {
       const data = state.calculatedMetrics['attention.created'].evolution;
       if (data && data.labels) {
         return {
-        labels: data.labels || [],
-        datasets: [
-          {
-            label: 'AVG Pasado',
-            boxWidth: 10,
-            borderColor: '#a52a2a',
-            backgroundColor: '#a52a2a',
-            borderDash: [2, 2],
-            data: data.labels ?
-              data.labels.map(
-                label => state.calculatedMetrics["attention.created"].pastPeriodAttentionNumber.dailyAvg || 0
-              ): [],
+          labels: data.labels || [],
+          datasets: [
+            {
+              label: 'AVG Pasado',
+              boxWidth: 10,
+              borderColor: '#a52a2a',
+              backgroundColor: '#a52a2a',
+              borderDash: [2, 2],
+              data: data.labels
+                ? data.labels.map(
+                    label =>
+                      state.calculatedMetrics['attention.created'].pastPeriodAttentionNumber
+                        .dailyAvg || 0
+                  )
+                : [],
+              fill: false,
+              tension: 0.1,
+              radius: 0,
+              type: 'line',
+            },
+            {
+              label: 'AVG Presente',
+              boxWidth: 10,
+              borderColor: '#2f407a',
+              backgroundColor: '#2f407a',
+              borderDash: [2, 2],
+              data: data.labels
+                ? data.labels.map(
+                    label => state.calculatedMetrics['attention.created'].dailyAvg || 0
+                  )
+                : [],
+              fill: false,
+              tension: 0.1,
+              radius: 0,
+              type: 'line',
+            },
+            {
+              label: 'Período Actual',
+              boxWidth: 10,
+              borderColor: '#004aad',
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
+              data: data.datasets || [],
+              fill: false,
+              tension: 0.2,
+              type: 'bar',
+            },
+          ],
+          options: {
             fill: false,
-            tension: .1,
             radius: 0,
-            type: 'line'
           },
-          {
-            label: 'AVG Presente',
-            boxWidth: 10,
-            borderColor: '#2f407a',
-            backgroundColor: '#2f407a',
-            borderDash: [2, 2],
-            data: data.labels ?
-              data.labels.map(
-                label => state.calculatedMetrics["attention.created"].dailyAvg || 0
-              ): [],
-            fill: false,
-            tension: .1,
-            radius: 0,
-            type: 'line'
-          },
-          {
-            label: 'Período Actual',
-            boxWidth: 10,
-            borderColor: '#004aad',
-            backgroundColor: "rgba(127, 134, 255, 0.7)",
-            data: data.datasets || [],
-            fill: false,
-            tension: .2,
-            type: 'bar'
-          },
-        ],
-        options: {
-          fill: false,
-          radius: 0,
-        }
-        }
+        };
       }
     });
-    const { barChartProps: attentionNumberEvolutionProps } = useBarChart({ chartData: attentionNumberEvolution });
+    const { barChartProps: attentionNumberEvolutionProps } = useBarChart({
+      chartData: attentionNumberEvolution,
+    });
 
     const attentionDurationEvolution = computed(() => {
       const data = state.calculatedMetrics['attention.created'].durationFlow;
@@ -410,24 +436,26 @@ export default {
                 label => state.calculatedMetrics['attention.created'].avgDuration
               ),
               fill: false,
-              tension: .1,
+              tension: 0.1,
               radius: 0,
-              type: 'line'
+              type: 'line',
             },
             {
               label: 'Duración Atenciones',
               boxWidth: 10,
-              backgroundColor: "rgba(127, 134, 255, 0.6)",
+              backgroundColor: 'rgba(127, 134, 255, 0.6)',
               data: data.datasets || [],
               fill: true,
               radius: 5,
-              tension: .2,
-            }
+              tension: 0.2,
+            },
           ],
-        }
+        };
       }
     });
-    const { barChartProps: attentionDurationEvolutionProps } = useBarChart({ chartData: attentionDurationEvolution });
+    const { barChartProps: attentionDurationEvolutionProps } = useBarChart({
+      chartData: attentionDurationEvolution,
+    });
 
     const attentionHourDistribution = computed(() => {
       const data = state.calculatedMetrics['attention.created'].hourDistribution;
@@ -439,21 +467,23 @@ export default {
               label: 'Atenciones',
               boxWidth: 10,
               borderColor: '#004aad',
-              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
               data: data.datasets || [],
               fill: false,
-              tension: .2,
-              type: 'bar'
+              tension: 0.2,
+              type: 'bar',
             },
           ],
           options: {
             fill: false,
             radius: 0,
-          }
-        }
+          },
+        };
       }
     });
-    const { barChartProps: attentionHourDistributionProps } = useBarChart({ chartData: attentionHourDistribution });
+    const { barChartProps: attentionHourDistributionProps } = useBarChart({
+      chartData: attentionHourDistribution,
+    });
 
     const attentionDayDistribution = computed(() => {
       const data = state.calculatedMetrics['attention.created'].dayDistribution;
@@ -465,21 +495,23 @@ export default {
               label: 'Atenciones',
               boxWidth: 10,
               borderColor: '#004aad',
-              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
               data: data.datasets || [],
               fill: false,
-              tension: .2,
-              type: 'bar'
+              tension: 0.2,
+              type: 'bar',
             },
           ],
           options: {
             fill: false,
             radius: 0,
-          }
-        }
+          },
+        };
       }
     });
-    const { barChartProps: attentionDayDistributionProps } = useBarChart({ chartData: attentionDayDistribution });
+    const { barChartProps: attentionDayDistributionProps } = useBarChart({
+      chartData: attentionDayDistribution,
+    });
 
     const attentionQueues = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionQueues;
@@ -491,9 +523,8 @@ export default {
               data: data.datasets || [],
               backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6'],
             },
-
           ],
-        }
+        };
       }
     });
     const { barChartProps: attentionQueuesProps } = useBarChart({ chartData: attentionQueues });
@@ -508,10 +539,10 @@ export default {
               label: 'Atenciones',
               indexAxis: 'y',
               data: data.datasets || [],
-              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']
+              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6'],
             },
           ],
-        }
+        };
       }
     });
     const { barChartProps: attentionFlowProps } = useBarChart({ chartData: attentionFlow });
@@ -522,16 +553,16 @@ export default {
         const labels = data.labels.slice(2, 4).map(label => surveyLabel(label));
         const datasets = data.datasets.slice(2, 4);
         return {
-          labels: labels,
+          labels,
           datasets: [
             {
               label: 'Encuestas',
               indexAxis: 'y',
               data: datasets || [],
-              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']
+              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6'],
             },
           ],
-        }
+        };
       }
     });
     const { barChartProps: surveyFlowProps } = useBarChart({ chartData: surveyFlow });
@@ -552,27 +583,31 @@ export default {
                 label => state.calculatedMetrics['attention.created'].avgRateDuration
               ),
               fill: false,
-              tension: .1,
+              tension: 0.1,
               radius: 0,
-              type: 'line'
+              type: 'line',
             },
             {
               label: 'Duración Encuestas',
               boxWidth: 10,
-              backgroundColor: "rgba(127, 134, 255, 0.6)",
+              backgroundColor: 'rgba(127, 134, 255, 0.6)',
               data: data.datasets || [],
               fill: true,
               radius: 5,
-              tension: .2,
-            }
+              tension: 0.2,
+            },
           ],
-        }
+        };
       }
     });
-    const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({ chartData: attentionRateDurationEvolution });
+    const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({
+      chartData: attentionRateDurationEvolution,
+    });
 
     const bookingFlow = computed(() => {
-      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].bookingFlow : {};
+      const data = state.calculatedMetrics['booking.created']
+        ? state.calculatedMetrics['booking.created'].bookingFlow
+        : {};
       if (data && data.labels) {
         return {
           labels: data.labels,
@@ -581,57 +616,62 @@ export default {
               label: 'Reservas',
               indexAxis: 'y',
               data: data.datasets || [],
-              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6']
+              backgroundColor: ['#446ffc', '#2f407a', '#7c91d9', '#0e2678', '#b1bde6'],
             },
           ],
-        }
+        };
       }
     });
     const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
 
     const bookingNumberEvolution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].evolution : {};
+      const data = state.calculatedMetrics['booking.created']
+        ? state.calculatedMetrics['booking.created'].evolution
+        : {};
       if (data && data.labels) {
         return {
-        labels: data.labels || [],
-        datasets: [
-          {
-            label: 'AVG Presente',
-            boxWidth: 10,
-            borderColor: '#2f407a',
-            backgroundColor: '#2f407a',
-            borderDash: [2, 2],
-            data: data.labels ?
-              data.labels.map(
-                label => state.calculatedMetrics["booking.created"].dailyAvg || 0
-              ): [],
+          labels: data.labels || [],
+          datasets: [
+            {
+              label: 'AVG Presente',
+              boxWidth: 10,
+              borderColor: '#2f407a',
+              backgroundColor: '#2f407a',
+              borderDash: [2, 2],
+              data: data.labels
+                ? data.labels.map(label => state.calculatedMetrics['booking.created'].dailyAvg || 0)
+                : [],
+              fill: false,
+              tension: 0.1,
+              radius: 0,
+              type: 'line',
+            },
+            {
+              label: 'Período Actual',
+              boxWidth: 10,
+              borderColor: '#004aad',
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
+              data: data.datasets || [],
+              fill: false,
+              tension: 0.2,
+              type: 'bar',
+            },
+          ],
+          options: {
             fill: false,
-            tension: .1,
             radius: 0,
-            type: 'line'
           },
-          {
-            label: 'Período Actual',
-            boxWidth: 10,
-            borderColor: '#004aad',
-            backgroundColor: "rgba(127, 134, 255, 0.7)",
-            data: data.datasets || [],
-            fill: false,
-            tension: .2,
-            type: 'bar'
-          },
-        ],
-        options: {
-          fill: false,
-          radius: 0,
-        }
-        }
+        };
       }
     });
-    const { barChartProps: bookingNumberEvolutionProps } = useBarChart({ chartData: bookingNumberEvolution });
+    const { barChartProps: bookingNumberEvolutionProps } = useBarChart({
+      chartData: bookingNumberEvolution,
+    });
 
     const bookingHourDistribution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].hourDistribution : {};
+      const data = state.calculatedMetrics['booking.created']
+        ? state.calculatedMetrics['booking.created'].hourDistribution
+        : {};
       if (data && data.labels) {
         return {
           labels: data.labels.map(hour => getLocalHour(hour)),
@@ -640,24 +680,28 @@ export default {
               label: 'Reservas',
               boxWidth: 10,
               borderColor: '#004aad',
-              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
               data: data.datasets || [],
               fill: false,
-              tension: .2,
-              type: 'bar'
+              tension: 0.2,
+              type: 'bar',
             },
           ],
           options: {
             fill: false,
             radius: 0,
-          }
-        }
+          },
+        };
       }
     });
-    const { barChartProps: bookingHourDistributionProps } = useBarChart({ chartData: bookingHourDistribution });
+    const { barChartProps: bookingHourDistributionProps } = useBarChart({
+      chartData: bookingHourDistribution,
+    });
 
     const bookingDayDistribution = computed(() => {
-      const data = state.calculatedMetrics['booking.created'] ? state.calculatedMetrics['booking.created'].dayDistribution : {};
+      const data = state.calculatedMetrics['booking.created']
+        ? state.calculatedMetrics['booking.created'].dayDistribution
+        : {};
       if (data && data.labels) {
         return {
           labels: data.labels,
@@ -666,21 +710,23 @@ export default {
               label: 'Reservas',
               boxWidth: 10,
               borderColor: '#004aad',
-              backgroundColor: "rgba(127, 134, 255, 0.7)",
+              backgroundColor: 'rgba(127, 134, 255, 0.7)',
               data: data.datasets || [],
               fill: false,
-              tension: .2,
-              type: 'bar'
+              tension: 0.2,
+              type: 'bar',
             },
           ],
           options: {
             fill: false,
             radius: 0,
-          }
-        }
+          },
+        };
       }
     });
-    const { barChartProps: bookingDayDistributionProps } = useBarChart({ chartData: bookingDayDistribution });
+    const { barChartProps: bookingDayDistributionProps } = useBarChart({
+      chartData: bookingDayDistribution,
+    });
 
     return {
       state,
@@ -709,10 +755,10 @@ export default {
       getLastMonth,
       getLastThreeMonths,
       getLocalHour,
-      getToday
-    }
-  }
-}
+      getToday,
+    };
+  },
+};
 </script>
 
 <template>
@@ -722,8 +768,9 @@ export default {
       <ComponentMenu
         :title="$t(`dashboard.title`)"
         :toggles="state.toggles"
-        componentName="dashboard"
-        @goBack="goBack">
+        component-name="dashboard"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -734,62 +781,113 @@ export default {
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('dashboard.message.3.title')"
-              :content="$t('dashboard.message.3.content')" />
+              :content="$t('dashboard.message.3.content')"
+            />
           </div>
           <div v-else class="control-box">
             <div id="dashboard-controls">
               <div class="row">
                 <div class="col" v-if="state.commerces">
-                  <span>{{ $t("dashboard.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                  <span>{{ $t('dashboard.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    id="modules"
+                    @change="selectCommerce(state.commerce)"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
                   </select>
                 </div>
               </div>
               <div class="row my-2">
                 <div class="col-3">
-                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getToday()" :disabled="loading">{{ $t("dashboard.today") }}</button>
+                  <button
+                    class="btn btn-dark rounded-pill px-2 metric-filters"
+                    @click="getToday()"
+                    :disabled="loading"
+                  >
+                    {{ $t('dashboard.today') }}
+                  </button>
                 </div>
                 <div class="col-3">
-                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getCurrentMonth()" :disabled="loading">{{ $t("dashboard.thisMonth") }}</button>
+                  <button
+                    class="btn btn-dark rounded-pill px-2 metric-filters"
+                    @click="getCurrentMonth()"
+                    :disabled="loading"
+                  >
+                    {{ $t('dashboard.thisMonth') }}
+                  </button>
                 </div>
                 <div class="col-3">
-                  <button class="btn  btn-dark rounded-pill px-2 metric-filters" @click="getLastMonth()" :disabled="loading">{{ $t("dashboard.lastMonth") }}</button>
+                  <button
+                    class="btn btn-dark rounded-pill px-2 metric-filters"
+                    @click="getLastMonth()"
+                    :disabled="loading"
+                  >
+                    {{ $t('dashboard.lastMonth') }}
+                  </button>
                 </div>
                 <div class="col-3">
-                  <button class="btn btn-dark rounded-pill px-2 metric-filters" @click="getLastThreeMonths()" :disabled="loading">{{ $t("dashboard.lastThreeMonths") }}</button>
+                  <button
+                    class="btn btn-dark rounded-pill px-2 metric-filters"
+                    @click="getLastThreeMonths()"
+                    :disabled="loading"
+                  >
+                    {{ $t('dashboard.lastThreeMonths') }}
+                  </button>
                 </div>
               </div>
               <div class="row">
                 <div class="col-6">
-                  <input id="startDate" class="form-control metric-controls" type="date" v-model="state.startDate"/>
+                  <input
+                    id="startDate"
+                    class="form-control metric-controls"
+                    type="date"
+                    v-model="state.startDate"
+                  />
                 </div>
                 <div class="col-6">
-                  <input id="endDate" class="form-control metric-controls" type="date" v-model="state.endDate"/>
+                  <input
+                    id="endDate"
+                    class="form-control metric-controls"
+                    type="date"
+                    v-model="state.endDate"
+                  />
                 </div>
               </div>
               <div class="col">
-                <button class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2  px-4" @click="refresh()" :disabled="loading">
-                  <i class="bi bi-search"></i> {{ $t("dashboard.refresh") }}
+                <button
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  @click="refresh()"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
                 </button>
               </div>
             </div>
           </div>
           <div v-if="!loading" id="dashboard-result" class="mt-2">
             <div id="title" class="metric-title">
-              <span v-if="state.showIndicators">{{ $t("dashboard.indicators") }}</span>
-              <span v-else-if="state.showGraphs">{{ $t("dashboard.graph") }}</span>
-              <span v-else-if="state.showSurveyResults">{{ $t("dashboard.surveys") }}</span>
+              <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+              <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+              <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
             </div>
-            <div id="sub-title" class="metric-subtitle">({{ $t("dashboard.dates.from") }} {{ state.startDate }} {{ $t("dashboard.dates.to") }} {{ state.endDate }})</div>
+            <div id="sub-title" class="metric-subtitle">
+              ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+              {{ $t('dashboard.dates.to') }} {{ state.endDate }})
+            </div>
             <div class="row col mx-1 mt-3 mb-1">
               <div class="col-4 centered">
                 <button
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showIndicators ? 'btn-selected' : ''"
                   @click="showIndicators()"
-                  :disabled="!state.toggles['dashboard.indicators.view']">
-                  {{ $t("dashboard.indicators") }} <br> <i class="bi bi-stoplights-fill"></i>
+                  :disabled="!state.toggles['dashboard.indicators.view']"
+                >
+                  {{ $t('dashboard.indicators') }} <br />
+                  <i class="bi bi-stoplights-fill"></i>
                 </button>
               </div>
               <div class="col-4 centered">
@@ -797,8 +895,10 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showGraphs ? 'btn-selected' : ''"
                   @click="showGraphs()"
-                  :disabled="!state.toggles['dashboard.graphs.view']">
-                  {{ $t("dashboard.graph") }} <br> <i class="bi bi-bar-chart-line-fill"></i>
+                  :disabled="!state.toggles['dashboard.graphs.view']"
+                >
+                  {{ $t('dashboard.graph') }} <br />
+                  <i class="bi bi-bar-chart-line-fill"></i>
                 </button>
               </div>
               <div class="col-4 centered">
@@ -806,24 +906,26 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showSurveyResults ? 'btn-selected' : ''"
                   @click="showSurvey()"
-                  :disabled="!state.toggles['dashboard.surveys.view']">
-                  {{ $t("dashboard.surveys") }} <br> <i class="bi bi-patch-question-fill"></i>
+                  :disabled="!state.toggles['dashboard.surveys.view']"
+                >
+                  {{ $t('dashboard.surveys') }} <br />
+                  <i class="bi bi-patch-question-fill"></i>
                 </button>
               </div>
             </div>
             <div>
               <DashboardIndicators
-                :showIndicators="state.showIndicators"
-                :calculatedMetrics="state.calculatedMetrics"
+                :show-indicators="state.showIndicators"
+                :calculated-metrics="state.calculatedMetrics"
                 :toggles="state.toggles"
-                :startDate="state.startDate"
-                :endDate="state.endDate"
+                :start-date="state.startDate"
+                :end-date="state.endDate"
                 :commerce="state.commerce"
               >
               </DashboardIndicators>
               <DashboardGraphs
-                :showGraphs="state.showGraphs"
-                :calculatedMetrics="{
+                :show-graphs="state.showGraphs"
+                :calculated-metrics="{
                   attentionNumberEvolutionProps,
                   attentionDurationEvolutionProps,
                   attentionHourDistributionProps,
@@ -836,21 +938,21 @@ export default {
                   attentionDayDistributionProps,
                   bookingDayDistributionProps,
                   bookingHourDistributionProps,
-                  ...state.calculatedMetrics
+                  ...state.calculatedMetrics,
                 }"
                 :toggles="state.toggles"
                 :graphs="state.graphs"
-                :startDate="state.startDate"
-                :endDate="state.endDate"
+                :start-date="state.startDate"
+                :end-date="state.endDate"
                 :commerce="state.commerce"
               >
               </DashboardGraphs>
               <DashboardSurveys
-                :showSurvey="state.showSurveyResults"
-                :calculatedMetrics="state.calculatedMetrics"
+                :show-survey="state.showSurveyResults"
+                :calculated-metrics="state.calculatedMetrics"
                 :toggles="state.toggles"
-                :startDate="state.startDate"
-                :endDate="state.endDate"
+                :start-date="state.startDate"
+                :end-date="state.endDate"
                 :commerce="state.commerce"
                 :queues="state.queues"
               >
@@ -861,7 +963,8 @@ export default {
         <div v-if="!isActiveBusiness() && !loading">
           <Message
             :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')" />
+            :content="$t('dashboard.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -877,23 +980,23 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -908,8 +1011,7 @@ export default {
   color: var(--amarillo-star);
 }
 .metric-card-subtitle {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
-
 </style>

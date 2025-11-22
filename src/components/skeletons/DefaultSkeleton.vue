@@ -1,13 +1,12 @@
 <template>
   <div>
-    <div  class="content">
+    <div class="content">
       <div id="skel-logo" class="content-image img-fluid mx-auto"></div>
       <div id="skel-page-header" class="content-info">
         <span></span>
         <h3></h3>
       </div>
-      <div id="skel-queues" class="content-queues">
-      </div>
+      <div id="skel-queues" class="content-queues"></div>
     </div>
   </div>
 </template>
@@ -18,7 +17,7 @@
 .content-image {
   display: flex;
   height: 150px;
-  margin: .5rem;
+  margin: 0.5rem;
   background-size: 100%;
   border-radius: 10px;
   animation: pulse-bg 1s infinite;
@@ -27,7 +26,7 @@
   width: 100%;
   height: 16px;
   display: block;
-  margin: .5rem 0 .5rem 0;
+  margin: 0.5rem 0 0.5rem 0;
   border-radius: 10px;
   animation: pulse-bg 1s infinite;
 }

@@ -10,37 +10,37 @@ export default [
         name: 'Atención Regular',
         position: 1,
         active: true,
-        limit: 200
+        limit: 200,
       },
       {
         id: 2,
         name: 'Atención 3era Edad',
         position: 3,
         active: true,
-        limit: 200
+        limit: 200,
       },
       {
         id: 3,
         name: 'Atención Embarazadas',
         position: 2,
         active: true,
-        limit: 200
+        limit: 200,
       },
       {
         id: 4,
         name: 'Atención Premium',
         position: 4,
         active: false,
-        limit: 200
-      }
-    ]
+        limit: 200,
+      },
+    ],
   },
   {
     id: 'oVxVYWaHVbJVCJzp',
     name: 'Insert Coin Restaurant',
     active: true,
     logo: '/images/fake_commerce_restaurant_logo.png',
-    queues: [ ]
+    queues: [],
   },
   {
     id: 'S9QRm3pRbvVpspwy',
@@ -53,9 +53,9 @@ export default [
         name: 'Ventanilla Única',
         position: 1,
         active: true,
-        limit: 200
-      }
-    ]
+        limit: 200,
+      },
+    ],
   },
   {
     id: 'cZzaBfMrPkL7GDJy',
@@ -68,15 +68,15 @@ export default [
         name: 'Ventanilla Única',
         position: 1,
         active: true,
-        limit: 200
-      }
-    ]
+        limit: 200,
+      },
+    ],
   },
   {
     id: 'WcKFxH2BxeV16ZHCCV6N',
     name: "Nina's Beauty",
     active: true,
     logo: '/images/ninas_beauty_logo.png',
-    queues: [ ]
+    queues: [],
   },
-]
+];

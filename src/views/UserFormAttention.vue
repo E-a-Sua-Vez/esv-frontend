@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue'
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getPermissions } from '../application/services/permissions';
 import { getFormPersonalizedById } from '../application/services/form-personalized';
@@ -7,9 +7,9 @@ import { getFormsByClientAndType } from '../application/services/form';
 import { getBookingDetails } from '../application/services/booking';
 import { getAttentionDetails } from '../application/services/attention';
 import Message from '../components/common/Message.vue';
-import AttentionSurvey from'../components/domain/AttentionSurvey.vue';
+import AttentionSurvey from '../components/domain/AttentionSurvey.vue';
 import QueueName from '../components/common/QueueName.vue';
-import AttentionNumber from'../components/common/AttentionNumber.vue';
+import AttentionNumber from '../components/common/AttentionNumber.vue';
 import PoweredBy from '../components/common/PoweredBy.vue';
 import QR from '../components/common/QR.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
@@ -35,20 +35,15 @@ export default {
     Message,
     Spinner,
     Alert,
-    FormDisplay
+    FormDisplay,
   },
   async setup() {
     const route = useRoute();
     const router = useRouter();
-    const {
-      clientId,
-      formId,
-      attentionId,
-      bookingId
-    } = route.params;
+    const { clientId, formId, attentionId, bookingId } = route.params;
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       formFullfilled: false,
@@ -57,7 +52,7 @@ export default {
       attention: ref({}),
       queue: ref({}),
       form: ref({}),
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -87,9 +82,9 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const getBookingDetailsFromService = async (id) => {
+    const getBookingDetailsFromService = async id => {
       loading.value = true;
       try {
         state.booking = await getBookingDetails(id);
@@ -100,7 +95,7 @@ export default {
       }
     };
 
-    const getAttentionDetailsFromService = async (id) => {
+    const getAttentionDetailsFromService = async id => {
       loading.value = true;
       try {
         state.attention = await getAttentionDetails(id);
@@ -113,15 +108,18 @@ export default {
 
     const backToBooking = () => {
       if (bookingId) {
-        router.push({  name: 'commerce-queue-booking', params: { id: bookingId } })
+        router.push({ name: 'commerce-queue-booking', params: { id: bookingId } });
       }
-    }
+    };
 
     const backToAttention = () => {
       if (attentionId && state.queue) {
-        router.push({  name: 'commerce-queue-attention', params: { id: attentionId, queueId: state.queue.id  } })
+        router.push({
+          name: 'commerce-queue-attention',
+          params: { id: attentionId, queueId: state.queue.id },
+        });
       }
-    }
+    };
 
     return {
       state,
@@ -132,11 +130,10 @@ export default {
       loading,
       alertError,
       backToBooking,
-      backToAttention
-    }
-  }
-
-}
+      backToAttention,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -149,51 +146,53 @@ export default {
         <div id="page-header" class="text-center mt-4">
           <div>
             <div class="welcome">
-              <span>{{ $t("userQueueBooking.hello") }}</span>
+              <span>{{ $t('userQueueBooking.hello') }}</span>
             </div>
           </div>
           <div>
             <div class="fw-bold" v-if="!state.formFullfilled">
-              <span>{{ $t("userFormAttention.title") }}</span>
+              <span>{{ $t('userFormAttention.title') }}</span>
             </div>
             <div class="fw-bold" v-else>
-              <span>{{ $t("userFormAttention.fullfilled") }}</span>
+              <span>{{ $t('userFormAttention.fullfilled') }}</span>
             </div>
           </div>
         </div>
         <div id="survey" v-if="!state.formFullfilled">
           <FormDisplay
-            :formPersonalized="state.form"
-            :clientId="clientId"
-            :attentionId="attentionId"
-            :bookingId="bookingId"
-            :commerceId="state.commerce.id"
-            :queueId="state.queue.id"
-            >
+            :form-personalized="state.form"
+            :client-id="clientId"
+            :attention-id="attentionId"
+            :booking-id="bookingId"
+            :commerce-id="state.commerce.id"
+            :queue-id="state.queue.id"
+          >
           </FormDisplay>
         </div>
         <div v-else>
           <Message
             :title="$t('attentionForm.message.1.title')"
             :content="$t('attentionForm.message.1.content')"
-            :icon="'bi bi-emoji-sunglasses'">
+            :icon="'bi bi-emoji-sunglasses'"
+          >
           </Message>
           <a
             v-if="bookingId"
             class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-            @click="backToBooking()">
-            {{ $t("attentionForm.actions.2.action") }} <i class="bi bi-arrow-left"></i>
+            @click="backToBooking()"
+          >
+            {{ $t('attentionForm.actions.2.action') }} <i class="bi bi-arrow-left"></i>
           </a>
           <a
             v-else-if="attentionId"
             class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-            @click="backToAttention()">
-            {{ $t("attentionForm.actions.3.action") }} <i class="bi bi-arrow-left"></i>
+            @click="backToAttention()"
+          >
+            {{ $t('attentionForm.actions.3.action') }} <i class="bi bi-arrow-left"></i>
           </a>
         </div>
       </div>
-      <div>
-    </div>
+      <div></div>
     </div>
     <PoweredBy :name="state.commerce.name" />
   </div>
@@ -202,51 +201,51 @@ export default {
 <style scoped>
 .attention-details-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin-left: .1rem;
-  margin-right: .1rem;
-  margin-bottom: .2rem;
+  padding: 0.5rem;
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
+  margin-bottom: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
 .attention-shortly-details-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin-left: .4rem;
-  margin-right: .4rem;
-  margin-bottom: .2rem;
+  padding: 0.5rem;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  margin-bottom: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
 .attention-details-date {
   background-color: var(--color-background);
-  padding: .2rem;
-  margin: .2rem;
+  padding: 0.2rem;
+  margin: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 .attention-details-sound {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .3rem;
+  padding: 0.5rem;
+  margin: 0.3rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
-  margin-bottom: .5rem;
+  border: 0.5px solid var(--gris-default);
+  margin-bottom: 0.5rem;
 }
 .attention-details-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: .4rem;
-  margin-right: .4rem;
-  margin-top: .5rem;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  margin-top: 0.5rem;
   margin-bottom: 0rem;
 }
 .attention-details-title {
-  font-size: .7rem;
-  line-height: .8rem !important;
+  font-size: 0.7rem;
+  line-height: 0.8rem !important;
 }
 .attention-details-content {
   font-size: 1.1rem;
@@ -257,19 +256,19 @@ export default {
   line-height: 1rem;
   padding-top: 1rem;
   font-weight: 700;
-  margin-block-start: .2rem;
+  margin-block-start: 0.2rem;
 }
 .attention-details-data {
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .attention-sound {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1.1rem;
 }
 .attention-notification-title {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1rem;
-  padding: .2rem;
+  padding: 0.2rem;
 }
 .parpadea {
   animation-name: parpadeo;
@@ -277,7 +276,7 @@ export default {
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 
-  -webkit-animation-name:parpadeo;
+  -webkit-animation-name: parpadeo;
   -webkit-animation-duration: 1s;
   -webkit-animation-timing-function: linear;
   -webkit-animation-iteration-count: infinite;
@@ -288,27 +287,45 @@ export default {
   font-weight: 400;
 }
 .test-sound {
-  font-size: .6rem;
-  line-height: .8rem;
+  font-size: 0.6rem;
+  line-height: 0.8rem;
   font-weight: 800;
   text-decoration: underline;
   cursor: pointer;
 }
-@-moz-keyframes parpadeo{
-  0% { opacity: 1.0; }
-  50% { opacity: 0.0; }
-  100% { opacity: 1.0; }
+@-moz-keyframes parpadeo {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-webkit-keyframes parpadeo {
-  0% { opacity: 1.0; }
-  50% { opacity: 0.0; }
-   100% { opacity: 1.0; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes parpadeo {
-  0% { opacity: 1.0; }
-   50% { opacity: 0.0; }
-  100% { opacity: 1.0; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

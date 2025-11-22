@@ -3,7 +3,11 @@ import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import { getValidatedPlanActivation, planValidate, planDesactivate } from '../../application/services/plan-activation';
+import {
+  getValidatedPlanActivation,
+  planValidate,
+  planDesactivate,
+} from '../../application/services/plan-activation';
 import { useI18n } from 'vue-i18n';
 import PlanName from '../../components/common/PlanName.vue';
 import Message from '../../components/common/Message.vue';
@@ -18,14 +22,25 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessPlanActivationAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, PlanName, Warning, PlanActivationName, AreYouSure, ComponentMenu },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    Spinner,
+    Alert,
+    PlanName,
+    Warning,
+    PlanActivationName,
+    AreYouSure,
+    ComponentMenu,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
     const { t } = useI18n();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -36,12 +51,12 @@ export default {
       extendedEntity: undefined,
       extendedOldEntity: undefined,
       newPaymentData: {
-        paymentDate: new Date().toISOString().slice(0,10)
+        paymentDate: new Date().toISOString().slice(0, 10),
       },
       paymentMethods: [
-        { id: 'FREE_PERIOD', name: t('paymentMethods.freePeriod')},
-        { id: 'WIRE_TRANSFER', name: t('paymentMethods.wireTransfer')},
-        { id: 'CASH_DEPOSIT', name: t('paymentMethods.cashDeposit')}
+        { id: 'FREE_PERIOD', name: t('paymentMethods.freePeriod') },
+        { id: 'WIRE_TRANSFER', name: t('paymentMethods.wireTransfer') },
+        { id: 'CASH_DEPOSIT', name: t('paymentMethods.cashDeposit') },
       ],
       bankAccounts: [
         {
@@ -51,7 +66,7 @@ export default {
           bank: 'N/A',
           accountType: 'N/A',
           accountNumber: 'N/A',
-          currency: 'N/A'
+          currency: 'N/A',
         },
         {
           id: '1',
@@ -60,8 +75,8 @@ export default {
           bank: 'Bank',
           accountType: 'CHECK',
           accountNumber: '123123123',
-          currency: 'us'
-        }
+          currency: 'us',
+        },
       ],
       paymentDateError: false,
       paymentAmountAddError: false,
@@ -70,7 +85,7 @@ export default {
       paymentBankError: false,
       goToDesactivate: false,
       searchString: '',
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -87,59 +102,59 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const showForm = (index) => {
+    const showForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
-    }
+    };
 
-    const showOldForm = (index) => {
+    const showOldForm = index => {
       state.extendedOldEntity = state.extendedOldEntity !== index ? index : undefined;
-    }
+    };
 
-    const validateActivationPayment = (payment) => {
+    const validateActivationPayment = payment => {
       state.errorsValidate = [];
-      if(!payment.paymentNumber || payment.paymentNumber.length === 0) {
+      if (!payment.paymentNumber || payment.paymentNumber.length === 0) {
         state.paymentNumberAddError = true;
         state.errorsValidate.push('businessPlanActivationAdmin.validate.paymentNumber');
       } else {
         state.paymentNumberAddError = false;
       }
-      if(payment.paymentAmount === undefined || payment.paymentAmount < 0) {
+      if (payment.paymentAmount === undefined || payment.paymentAmount < 0) {
         state.paymentAmountAddError = true;
         state.errorsValidate.push('businessPlanActivationAdmin.validate.paymentAmount');
       } else {
         state.paymentAmountAddError = false;
       }
-      if(!payment.method ||  payment.method.length === 0) {
+      if (!payment.method || payment.method.length === 0) {
         state.paymentMethodError = true;
         state.errorsValidate.push('businessPlanActivationAdmin.validate.method');
       } else {
         state.paymentMethodError = false;
       }
-      if(!payment.bank ||  payment.bank.length === 0) {
+      if (!payment.bank || payment.bank.length === 0) {
         state.paymentBankError = true;
         state.errorsValidate.push('businessPlanActivationAdmin.validate.bank');
       } else {
         state.paymentBankError = false;
       }
-      if(!payment.paymentDate ||  payment.paymentDate.length === 0) {
+      if (!payment.paymentDate || payment.paymentDate.length === 0) {
         state.paymentDateError = true;
         state.errorsValidate.push('businessPlanActivationAdmin.validate.paymentDate');
       } else {
         state.paymentDateError = false;
       }
-      if(state.errorsValidate.length === 0) {
+      if (state.errorsValidate.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const validate = async (activation) => {
+    const validate = async activation => {
       try {
         loading.value = true;
         if (validateActivationPayment(state.newPaymentData)) {
@@ -151,12 +166,12 @@ export default {
             method: state.newPaymentData.method,
             paymentNumber: state.newPaymentData.paymentNumber,
             paymentDate: state.newPaymentData.paymentDate,
-            bankData: state.newPaymentData.bank
+            bankData: state.newPaymentData.bank,
           };
           await planValidate(activation.id, body);
           state.activations = await getValidatedPlanActivation(false);
           state.oldActivations = await getValidatedPlanActivation(true);
-          state.newPaymentData = {}
+          state.newPaymentData = {};
         }
         alertError.value = '';
         loading.value = false;
@@ -164,17 +179,17 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const goToDesactivate = () => {
       state.goToDesactivate = !state.goToDesactivate;
-    }
+    };
 
     const cancelDesactivate = () => {
       state.goToDesactivate = false;
-    }
+    };
 
-    const desactivate = async (activation) => {
+    const desactivate = async activation => {
       try {
         loading.value = true;
         if (activation.active === true) {
@@ -190,16 +205,17 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const filter = computed(() => {
       if (state.searchString.length >= 3) {
         state.oldActivations = state.oldActivations.filter(i =>
-          i.business.name.toLowerCase().startsWith(state.searchString.toLowerCase()));
+          i.business.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+        );
       } else {
         state.oldActivations = state.oldActivationsList;
       }
-    })
+    });
 
     return {
       state,
@@ -212,10 +228,10 @@ export default {
       validate,
       goToDesactivate,
       cancelDesactivate,
-      desactivate
-    }
-  }
-}
+      desactivate,
+    };
+  },
+};
 </script>
 
 <template>
@@ -225,8 +241,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessPlanActivationAdmin.title`)"
         :toggles="state.toggles"
-        componentName="businessPlanActivationAdmin"
-        @goBack="goBack">
+        component-name="businessPlanActivationAdmin"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -239,35 +256,44 @@ export default {
               <div v-if="state.activations.length === 0">
                 <Message
                   :title="$t('businessPlanActivationAdmin.message.2.title')"
-                  :content="$t('businessPlanActivationAdmin.message.2.content')" />
+                  :content="$t('businessPlanActivationAdmin.message.2.content')"
+                />
               </div>
               <div class="row mb-2">
                 <div class="col text-label">
-                  <span>{{ $t("businessPlanActivationAdmin.listResult") }}</span>
+                  <span>{{ $t('businessPlanActivationAdmin.listResult') }}</span>
                   <span class="fw-bold m-2">{{ state.activations.length }}</span>
                 </div>
               </div>
-              <div v-for="(activation, index) in state.activations" :key="index" class="activation-card">
+              <div
+                v-for="(activation, index) in state.activations"
+                :key="index"
+                class="activation-card"
+              >
                 <div class="row">
                   <div class="col-10">
-                    <PlanActivationName :activation="activation" ></PlanActivationName>
+                    <PlanActivationName :activation="activation"></PlanActivationName>
                   </div>
                   <div class="col-2">
-                    <a
-                      href="#"
-                      @click.prevent="showForm(index)">
-                      <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                    <a href="#" @click.prevent="showForm(index)">
+                      <i
+                        :id="index"
+                        :class="`bi ${
+                          state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
                     </a>
                   </div>
                 </div>
-                <div v-if="state.toggles['activations.admin.read']"
+                <div
+                  v-if="state.toggles['activations.admin.read']"
                   :class="{ show: state.extendedEntity === index }"
                   class="detailed-data transition-slow"
-                  >
+                >
                   <div class="row g-1">
                     <div id="activation-payment-id-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessPlanActivationAdmin.number") }}
+                        {{ $t('businessPlanActivationAdmin.number') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -278,12 +304,13 @@ export default {
                           :disabled="!state.toggles['activations.admin.add']"
                           v-model="state.newPaymentData.paymentNumber"
                           v-bind:class="{ 'is-invalid': state.paymentNumberAddError }"
-                          placeholder="Ex: 0055433221">
+                          placeholder="Ex: 0055433221"
+                        />
                       </div>
                     </div>
                     <div id="activation-payment-amount-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessPlanActivationAdmin.amount") }}
+                        {{ $t('businessPlanActivationAdmin.amount') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -293,12 +320,13 @@ export default {
                           :disabled="!state.toggles['activations.admin.add']"
                           v-model="state.newPaymentData.paymentAmount"
                           v-bind:class="{ 'is-invalid': state.paymentAmountAddError }"
-                          placeholder="Ex: 69">
+                          placeholder="Ex: 69"
+                        />
                       </div>
                     </div>
                     <div id="activation-payment-method-form-update" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessPlanActivationAdmin.paymentMethod") }}
+                        {{ $t('businessPlanActivationAdmin.paymentMethod') }}
                       </div>
                       <div class="col-8">
                         <select
@@ -306,14 +334,20 @@ export default {
                           v-model="state.newPaymentData.method"
                           id="modules-edit"
                           :disabled="!state.toggles['activations.admin.add']"
+                        >
+                          <option
+                            v-for="met in state.paymentMethods"
+                            :key="met.name"
+                            :value="met.id"
                           >
-                          <option v-for="met in state.paymentMethods" :key="met.name" :value="met.id">{{ met.name }}</option>
+                            {{ met.name }}
+                          </option>
                         </select>
                       </div>
                     </div>
                     <div id="activation-payment-method-form-update" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessPlanActivationAdmin.bank") }}
+                        {{ $t('businessPlanActivationAdmin.bank') }}
                       </div>
                       <div class="col-8">
                         <select
@@ -321,14 +355,16 @@ export default {
                           v-model="state.newPaymentData.bank"
                           id="modules-edit"
                           :disabled="!state.toggles['activations.admin.add']"
-                          >
-                          <option v-for="bank in state.bankAccounts" :key="bank.name" :value="bank">{{ bank.name }}</option>
+                        >
+                          <option v-for="bank in state.bankAccounts" :key="bank.name" :value="bank">
+                            {{ bank.name }}
+                          </option>
                         </select>
                       </div>
                     </div>
                     <div id="activation-payment-method-form-update" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessPlanActivationAdmin.paymentDate") }}
+                        {{ $t('businessPlanActivationAdmin.paymentDate') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -337,7 +373,8 @@ export default {
                           type="date"
                           :disabled="!state.toggles['activations.admin.add']"
                           v-bind:class="{ 'is-invalid': state.paymentDateError }"
-                          v-model="state.newPaymentData.paymentDate"/>
+                          v-model="state.newPaymentData.paymentDate"
+                        />
                       </div>
                     </div>
                     <div id="activation-id-form" class="row -2 mb-g3">
@@ -351,12 +388,17 @@ export default {
                       <button
                         class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                         @click="validate(activation)"
-                        :disabled="!state.toggles['activations.admin.validate']">
+                        :disabled="!state.toggles['activations.admin.validate']"
+                      >
                         <i class="bi bi-plugin"></i>
-                        {{ $t("businessPlanActivationAdmin.validated") }}
+                        {{ $t('businessPlanActivationAdmin.validated') }}
                       </button>
                     </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsValidate.length > 0)">
+                    <div
+                      class="row g-1 errors"
+                      id="feedback"
+                      v-if="state.errorsValidate.length > 0"
+                    >
                       <Warning>
                         <template v-slot:message>
                           <li v-for="(error, index) in state.errorsValidate" :key="index">
@@ -370,7 +412,8 @@ export default {
                 <div v-if="!state.toggles['activations.admin.read'] && !loading">
                   <Message
                     :title="$t('businessPlanActivationAdmin.message.1.title')"
-                    :content="$t('businessPlanActivationAdmin.message.1.content')" />
+                    :content="$t('businessPlanActivationAdmin.message.1.content')"
+                  />
                 </div>
               </div>
               <div id="activation-history">
@@ -382,31 +425,42 @@ export default {
                     type="text"
                     class="form-control"
                     v-model="state.searchString"
-                    :placeholder="$t('enterSearcher')">
-                    {{ filter }}
+                    :placeholder="$t('enterSearcher')"
+                  />
+                  {{ filter }}
                 </div>
                 <div v-if="state.oldActivations.length > 0">
-                  <div v-for="(activation, index) in state.oldActivations.slice(0, 10)" :key="index" class="activation-card">
+                  <div
+                    v-for="(activation, index) in state.oldActivations.slice(0, 10)"
+                    :key="index"
+                    class="activation-card"
+                  >
                     <div class="row">
                       <div class="col-10">
-                        <PlanActivationName :activation="activation" ></PlanActivationName>
+                        <PlanActivationName :activation="activation"></PlanActivationName>
                       </div>
                       <div class="col-2">
-                        <a
-                          href="#"
-                          @click.prevent="showOldForm(index)">
-                          <i :id="index" :class="`bi ${state.extendedOldEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                        <a href="#" @click.prevent="showOldForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedOldEntity === index
+                                ? 'bi-chevron-up'
+                                : 'bi-chevron-down'
+                            }`"
+                          ></i>
                         </a>
                       </div>
                     </div>
-                    <div v-if="state.toggles['activations.admin.read']"
+                    <div
+                      v-if="state.toggles['activations.admin.read']"
                       :class="{ show: state.extendedOldEntity === index }"
                       class="detailed-data transition-slow"
-                      >
+                    >
                       <div class="row g-1">
                         <div id="activation-payment-id-form-add" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessPlanActivationAdmin.number") }}
+                            {{ $t('businessPlanActivationAdmin.number') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -416,12 +470,13 @@ export default {
                               class="form-control"
                               :disabled="true"
                               v-model="activation.payment.paymentNumber"
-                              placeholder="Ex: 0055433221">
+                              placeholder="Ex: 0055433221"
+                            />
                           </div>
                         </div>
                         <div id="activation-payment-amount-form-add" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessPlanActivationAdmin.amount") }}
+                            {{ $t('businessPlanActivationAdmin.amount') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -430,12 +485,13 @@ export default {
                               class="form-control"
                               :disabled="true"
                               v-model="activation.payment.amount"
-                              placeholder="Ex: 69">
+                              placeholder="Ex: 69"
+                            />
                           </div>
                         </div>
                         <div id="activation-payment-method-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessPlanActivationAdmin.paymentMethod") }}
+                            {{ $t('businessPlanActivationAdmin.paymentMethod') }}
                           </div>
                           <div class="col-8">
                             <select
@@ -443,14 +499,20 @@ export default {
                               v-model="activation.payment.method"
                               id="modules-edit"
                               :disabled="true"
+                            >
+                              <option
+                                v-for="met in state.paymentMethods"
+                                :key="met.name"
+                                :value="met.id"
                               >
-                              <option v-for="met in state.paymentMethods" :key="met.name" :value="met.id">{{ met.name }}</option>
+                                {{ met.name }}
+                              </option>
                             </select>
                           </div>
                         </div>
                         <div id="activation-payment-method-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessPlanActivationAdmin.bank") }}
+                            {{ $t('businessPlanActivationAdmin.bank') }}
                           </div>
                           <div class="col-8">
                             <select
@@ -458,14 +520,20 @@ export default {
                               :v-model="activation.payment.bank"
                               id="modules-edit"
                               :disabled="true"
+                            >
+                              <option
+                                v-for="bank in state.bankAccounts"
+                                :key="bank.name"
+                                :value="bank"
                               >
-                              <option v-for="bank in state.bankAccounts" :key="bank.name" :value="bank">{{ bank.name }}</option>
+                                {{ bank.name }}
+                              </option>
                             </select>
                           </div>
                         </div>
                         <div id="activation-payment-method-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessPlanActivationAdmin.paymentDate") }}
+                            {{ $t('businessPlanActivationAdmin.paymentDate') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -473,7 +541,8 @@ export default {
                               class="form-control metric-controls"
                               type="date"
                               :disabled="true"
-                              v-model="activation.payment.paymentDate"/>
+                              v-model="activation.payment.paymentDate"
+                            />
                           </div>
                         </div>
                         <div id="activation-id-form" class="row -2 mb-g3">
@@ -487,15 +556,18 @@ export default {
                           <button
                             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                             @click="goToDesactivate()"
-                            :disabled="!state.toggles['activations.admin.desactivate'] || !activation.active">
+                            :disabled="
+                              !state.toggles['activations.admin.desactivate'] || !activation.active
+                            "
+                          >
                             <i class="bi bi-scissors"></i>
-                            {{ $t("businessPlanActivationAdmin.desactivate") }}
+                            {{ $t('businessPlanActivationAdmin.desactivate') }}
                           </button>
                         </div>
                         <AreYouSure
                           :show="state.goToDesactivate"
-                          :yesDisabled="state.toggles['activations.admin.desactivate']"
-                          :noDisabled="state.toggles['activations.admin.desactivate']"
+                          :yes-disabled="state.toggles['activations.admin.desactivate']"
+                          :no-disabled="state.toggles['activations.admin.desactivate']"
                           @actionYes="desactivate(activation)"
                           @actionNo="cancelDesactivate()"
                         >
@@ -505,15 +577,16 @@ export default {
                     <div v-if="!state.toggles['activations.admin.read'] && !loading">
                       <Message
                         :title="$t('businessPlanActivationAdmin.message.1.title')"
-                        :content="$t('businessPlanActivationAdmin.message.1.content')" />
+                        :content="$t('businessPlanActivationAdmin.message.1.content')"
+                      />
                     </div>
                   </div>
-
                 </div>
                 <div v-else>
                   <Message
                     :title="$t('businessPlanActivationAdmin.message.3.title')"
-                    :content="$t('businessPlanActivationAdmin.message.3.content')" />
+                    :content="$t('businessPlanActivationAdmin.message.3.content')"
+                  />
                 </div>
               </div>
             </div>
@@ -522,7 +595,8 @@ export default {
         <div v-if="!state.toggles['activations.admin.view'] && !loading">
           <Message
             :title="$t('businessPlanActivationAdmin.message.1.title')"
-            :content="$t('businessPlanActivationAdmin.message.1.content')" />
+            :content="$t('businessPlanActivationAdmin.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -532,22 +606,22 @@ export default {
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .activation-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .activation-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {

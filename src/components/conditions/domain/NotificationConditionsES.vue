@@ -2,17 +2,17 @@
 export default {
   name: 'NotificationConditionsES',
   props: {
-    localeIn: { type: String, default: undefined }
+    localeIn: { type: String, default: undefined },
   },
   data() {
     return {
-      locale
-    }
+      locale,
+    };
   },
   beforeMount() {
     this.locale = this.localeIn || 'es';
-  }
-}
+  },
+};
 </script>
 
 <template>
@@ -37,7 +37,6 @@ export default {
     <li>Sitio web: el sitio de Es tu Turno, al que se puede acceder a través de esta URL: estuturno.app </li>
     <li>Usted: una persona o entidad que está registrada con Es tu Turno para utilizar los Servicios.</li>
     </ul>
-    </p>
     <h5>¿Qué información recopilamos?</h5>
     <p>Recopilamos información suya cuando visita nuestra plataforma, se registra en nuestro sitio, realiza un pedido, se suscribe a nuestro boletín, responde a una encuesta o completa un formulario.</p>
     <ul><li>Nombre / nombre de usuario</li><li>Números de teléfono</li><li>Correos electrónicos</li><li>Direcciones de correo</li><li>Direcciones de facturación</li><li>Edad</li><li>Contraseña</li>

@@ -15,13 +15,22 @@ import SimplePermissionCard from './SimplePermissionCard.vue';
 
 export default {
   name: 'PlanPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ToggleCapabilities, Warning, SimplePermissionCard },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    Spinner,
+    Alert,
+    ToggleCapabilities,
+    Warning,
+    SimplePermissionCard,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -31,7 +40,7 @@ export default {
       plans: {},
       planSelectedIndex: 0,
       planSelected: {
-        permissions: []
+        permissions: [],
       },
       permissions: [],
       showAdd: false,
@@ -39,7 +48,7 @@ export default {
       permissionError: false,
       errorsAdd: [],
       toggles: {},
-      searchString: ''
+      searchString: '',
     });
 
     onBeforeMount(async () => {
@@ -56,77 +65,89 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const selectPlan = async (planIndex) => {
+    const selectPlan = async planIndex => {
       try {
         loading.value = true;
         state.planSelectedIndex = planIndex;
         state.planSelected = state.plans[planIndex];
         const permissions = [];
-        if (state.planSelected && state.planSelected.permissions && !Array.isArray(state.planSelected.permissions)) {
+        if (
+          state.planSelected &&
+          state.planSelected.permissions &&
+          !Array.isArray(state.planSelected.permissions)
+        ) {
           Object.keys(state.planSelected.permissions).map(permission => {
             permissions.push({
               name: permission,
-              value: state.planSelected.permissions[permission]
-            })
+              value: state.planSelected.permissions[permission],
+            });
           });
           state.planSelected.permissions = permissions;
           state.permissions = permissions;
         }
-        state.permissions = state.permissions.sort((a, b) => { if (a.name < b.name) { return -1; } if (a.name > b.name) { return 1; } return 0; });
+        state.permissions = state.permissions.sort((a, b) => {
+          if (a.name < b.name) {
+            return -1;
+          }
+          if (a.name > b.name) {
+            return 1;
+          }
+          return 0;
+        });
         alertError.value = '';
         loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const showAdd = () => {
       state.showAdd = !state.showAdd;
       state.newPermission = {
-        type: 'boolean'
-      }
-    }
+        type: 'boolean',
+      };
+    };
 
-    const validateAdd = (permission) => {
+    const validateAdd = permission => {
       state.errorsAdd = [];
-      if(!permission.name || permission.name.length === 0) {
+      if (!permission.name || permission.name.length === 0) {
         state.nameError = true;
         state.errorsAdd.push('businessPermissionsAdmin.validate.name');
       } else {
         state.nameError = false;
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
     const add = async () => {
       try {
         loading.value = true;
         if (validateAdd(state.newPermission)) {
           state.newPermission.value = false;
-          if(state.newPermission.type) {
+          if (state.newPermission.type) {
             if (state.newPermission.type === 'number') {
               state.newPermission.value = 0;
             }
           }
           const permission = {
             name: state.newPermission.name,
-            value: state.newPermission.value
-          }
+            value: state.newPermission.value,
+          };
           await updatePlanPermission(state.planSelected.id, permission);
           state.plans = await getPlans();
           selectPlan(state.planSelectedIndex);
           state.showAdd = false;
-          state.newPermission = {}
+          state.newPermission = {};
         }
         alertError.value = '';
         loading.value = false;
@@ -134,31 +155,32 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const update = async (permission) => {
+    const update = async permission => {
       try {
         await updatePlanPermission(state.planSelected.id, permission);
         state.plans = await getPlans();
         selectPlan(state.planSelectedIndex);
-        state.newPermission = {}
+        state.newPermission = {};
         alertError.value = '';
       } catch (error) {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const filter = computed(() => {
       if (state.searchString.length >= 3) {
         if (state.planSelected && state.planSelected.permissions.length > 0) {
           state.permissions = state.planSelected.permissions.filter(i =>
-            i.name.toLowerCase().startsWith(state.searchString.toLowerCase()));
+            i.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+          );
         }
       } else {
         state.permissions = state.planSelected.permissions;
       }
-    })
+    });
 
     return {
       state,
@@ -169,10 +191,10 @@ export default {
       update,
       goBack,
       selectPlan,
-      showAdd
-    }
-  }
-}
+      showAdd,
+    };
+  },
+};
 </script>
 
 <template>
@@ -186,9 +208,16 @@ export default {
         <div id="businessPermissionsAdmin-controls" class="control-box">
           <div class="row">
             <div class="col" v-if="state.plans">
-              <span>{{ $t("businessPermissionsAdmin.plan") }} </span>
-              <select class="btn btn-md fw-bold text-dark m-1 select px-1" v-model="state.planSelected" @change="selectPlan($event.target.selectedIndex)" id="plans">
-                <option v-for="plan in state.plans" :key="plan.id" :value="plan">{{ plan.name }}</option>
+              <span>{{ $t('businessPermissionsAdmin.plan') }} </span>
+              <select
+                class="btn btn-md fw-bold text-dark m-1 select px-1"
+                v-model="state.planSelected"
+                @change="selectPlan($event.target.selectedIndex)"
+                id="plans"
+              >
+                <option v-for="plan in state.plans" :key="plan.id" :value="plan">
+                  {{ plan.name }}
+                </option>
               </select>
             </div>
           </div>
@@ -199,8 +228,9 @@ export default {
               type="text"
               class="form-control"
               v-model="state.searchString"
-              :placeholder="$t('enterSearcher')">
-              {{ filter }}
+              :placeholder="$t('enterSearcher')"
+            />
+            {{ filter }}
           </div>
         </div>
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">
@@ -208,27 +238,33 @@ export default {
             <div v-if="state.plans.length === 0">
               <Message
                 :title="$t('businessPermissionsAdmin.message.2.title')"
-                :content="$t('businessPermissionsAdmin.message.2.content')" />
+                :content="$t('businessPermissionsAdmin.message.2.content')"
+              />
             </div>
             <div class="row mb-2">
               <div class="col-8 text-label">
-                <span>{{ $t("businessPermissionsAdmin.listResult") }}</span>
+                <span>{{ $t('businessPermissionsAdmin.listResult') }}</span>
                 <span class="fw-bold m-2">{{ state.permissions.length }}</span>
               </div>
               <div class="col-4">
                 <button
                   class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
                   @click="showAdd()"
-                  :disabled="!state.toggles['plans.admin.add']">
+                  :disabled="!state.toggles['plans.admin.add']"
+                >
                   <i class="bi bi-plus-lg"></i>
                 </button>
               </div>
             </div>
-            <div id="add-plans" class="plans-card mb-4" v-if="state.showAdd && state.toggles['plans.admin.add']">
+            <div
+              id="add-plans"
+              class="plans-card mb-4"
+              v-if="state.showAdd && state.toggles['plans.admin.add']"
+            >
               <div class="row g-1">
                 <div id="plans-permission-form-add" class="row g-1">
                   <div class="col-4 text-label">
-                    {{ $t("businessPermissionsAdmin.permission") }}
+                    {{ $t('businessPermissionsAdmin.permission') }}
                   </div>
                   <div class="col-8">
                     <input
@@ -237,28 +273,47 @@ export default {
                       class="form-control"
                       v-model="state.newPermission.name"
                       v-bind:class="{ 'is-invalid': state.permissionError }"
-                      placeholder="Ex. dashboard.panel.view">
+                      placeholder="Ex. dashboard.panel.view"
+                    />
                   </div>
                 </div>
                 <div id="plans-permission-type-add" class="row g-1">
                   <div class="col-4 text-label">
-                    {{ $t("businessPermissionsAdmin.type") }}
+                    {{ $t('businessPermissionsAdmin.type') }}
                   </div>
                   <div class="col-8">
-                    <input type="radio" class="btn-check mx-2" v-model="state.newPermission.type" value="boolean" name="permission-type" id="success-outlined" autocomplete="off" checked>
+                    <input
+                      type="radio"
+                      class="btn-check mx-2"
+                      v-model="state.newPermission.type"
+                      value="boolean"
+                      name="permission-type"
+                      id="success-outlined"
+                      autocomplete="off"
+                      checked
+                    />
                     <label class="btn btn-outline-success" for="success-outlined">Boolean</label>
-                    <input type="radio" class="btn-check m-2" v-model="state.newPermission.type" value="number" name="permission-type" id="danger-outlined" autocomplete="off">
+                    <input
+                      type="radio"
+                      class="btn-check m-2"
+                      v-model="state.newPermission.type"
+                      value="number"
+                      name="permission-type"
+                      id="danger-outlined"
+                      autocomplete="off"
+                    />
                     <label class="btn btn-outline-danger m-2" for="danger-outlined">Number</label>
                   </div>
                 </div>
                 <div class="col">
                   <button
                     class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="add(state.newPermission)">
-                    {{ $t("businessPermissionsAdmin.add") }} <i class="bi bi-save"></i>
+                    @click="add(state.newPermission)"
+                  >
+                    {{ $t('businessPermissionsAdmin.add') }} <i class="bi bi-save"></i>
                   </button>
                 </div>
-                <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                   <Warning>
                     <template v-slot:message>
                       <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -269,13 +324,16 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="plans-card mb-4" v-if="state.permissions.length > 0 && state.toggles['plans.admin.read']">
+            <div
+              class="plans-card mb-4"
+              v-if="state.permissions.length > 0 && state.toggles['plans.admin.read']"
+            >
               <div v-for="(permission, index) in state.permissions" :key="index">
                 <SimplePermissionCard
                   :show="true"
-                  :canUpdate="state.toggles['plans.admin.update']"
+                  :can-update="state.toggles['plans.admin.update']"
                   :permission="permission"
-                  :showTooltip="true"
+                  :show-tooltip="true"
                   @update="update"
                 >
                 </SimplePermissionCard>
@@ -284,7 +342,8 @@ export default {
             <div v-if="!state.toggles['plans.admin.read'] && !loading">
               <Message
                 :title="$t('businessPermissionsAdmin.message.1.title')"
-                :content="$t('businessPermissionsAdmin.message.1.content')" />
+                :content="$t('businessPermissionsAdmin.message.1.content')"
+              />
             </div>
           </div>
         </div>
@@ -292,7 +351,8 @@ export default {
       <div v-if="!state.toggles['plans.admin.view'] && !loading">
         <Message
           :title="$t('businessPermissionsAdmin.message.1.title')"
-          :content="$t('businessPermissionsAdmin.message.1.content')" />
+          :content="$t('businessPermissionsAdmin.message.1.content')"
+        />
       </div>
     </div>
   </div>
@@ -300,22 +360,22 @@ export default {
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .module-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .module-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {
@@ -328,10 +388,10 @@ export default {
 }
 .plans-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 </style>

@@ -11,7 +11,15 @@ import HistoryDetailsWithItemsCard from '../common/HistoryDetailsWithItemsCard.v
 
 export default {
   name: 'PhysicalExamForm',
-  components: { Warning, Spinner, VueRecaptcha, Toggle, Message, HistoryDetailsCard, HistoryDetailsWithItemsCard },
+  components: {
+    Warning,
+    Spinner,
+    VueRecaptcha,
+    Toggle,
+    Message,
+    HistoryDetailsCard,
+    HistoryDetailsWithItemsCard,
+  },
   props: {
     commerce: { type: Object, default: {} },
     cacheData: { type: Object, default: undefined },
@@ -19,20 +27,13 @@ export default {
     toggles: { type: Object, default: {} },
     errorsAdd: { type: Array, default: [] },
     patientHistoryItems: { type: Array, default: [] },
-    receiveData: { type: Function, default: () => {} }
+    receiveData: { type: Function, default: () => {} },
   },
   async setup(props) {
+    const loading = ref(false);
 
-    let loading = ref(false);
-
-    const {
-      commerce,
-      cacheData,
-      patientHistoryData,
-      toggles,
-      errorsAdd,
-      patientHistoryItems,
-    } = toRefs(props);
+    const { commerce, cacheData, patientHistoryData, toggles, errorsAdd, patientHistoryItems } =
+      toRefs(props);
 
     const { receiveData } = props;
 
@@ -44,22 +45,24 @@ export default {
       habitsAux: {},
       captcha: false,
       examError: false,
-      asc: true
-    })
+      asc: true,
+    });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
-          state.habitsList = patientHistoryItems.value.filter(habit => ['PHYSICAL_EXAM'].includes(habit.type));
+          state.habitsList = patientHistoryItems.value.filter(habit =>
+            ['PHYSICAL_EXAM'].includes(habit.type)
+          );
           state.habitsList = state.habitsList.sort((a, b) => b.order - a.order);
         }
         if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldPhysicalExams = patientHistoryData.value.physicalExam;
           const elements = patientHistoryData.value.physicalExam;
-          const sortedExams = elements.sort((a, b) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          });
+          const sortedExams = elements.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
           if (sortedExams && sortedExams.length > 0) {
             if (dateYYYYMMDD(sortedExams[0].createdAt) === dateYYYYMMDD(new Date())) {
               state.oldPhysicalExam = sortedExams[0];
@@ -76,14 +79,13 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
     const sendData = () => {
       receiveData(state.newPhysicalExam);
-    }
+    };
 
-
-    const checkAsc = (event) => {
+    const checkAsc = event => {
       if (event.target.checked) {
         state.asc = true;
       } else {
@@ -93,13 +95,17 @@ export default {
         let elementsSorted = [];
         const elements = state.oldPhysicalExams;
         if (state.asc) {
-          elementsSorted = elements.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
         } else {
-          elementsSorted = elements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         }
         state.oldPhysicalExams = elementsSorted;
       }
-    }
+    };
 
     const checkItem = (item, event) => {
       if (item && item.id) {
@@ -108,8 +114,8 @@ export default {
             state.habitsAux[item.id] = {
               id: item.id,
               name: item.name,
-              active: true
-            }
+              active: true,
+            };
           } else {
             state.habitsAux[item.id].active = true;
           }
@@ -121,7 +127,7 @@ export default {
         state.newPhysicalExam.examDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendValue = (item, event) => {
       if (item && item.id) {
@@ -131,7 +137,7 @@ export default {
             state.habitsAux[item.id].value = value;
             state.habitsAux[item.id].name = item.name;
           } else {
-            state.habitsAux[item.id] = { value: value, name: item.name };
+            state.habitsAux[item.id] = { value, name: item.name };
           }
         } else {
           if (state.habitsAux[item.id]) {
@@ -141,7 +147,7 @@ export default {
         state.newPhysicalExam.examDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendComment = (item, event) => {
       if (item && item.id) {
@@ -158,23 +164,21 @@ export default {
         state.newPhysicalExam.examDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
-    watch (
-      patientHistoryData,
-      async () => {
-        loading.value = true;
-        if (patientHistoryData.value && patientHistoryData.value.id) {
-          if (patientHistoryData.value.physicalExam &&
-            patientHistoryData.value.physicalExam.length > 0 &&
-            patientHistoryData.value.physicalExam[0]
-          )
+    watch(patientHistoryData, async () => {
+      loading.value = true;
+      if (patientHistoryData.value && patientHistoryData.value.id) {
+        if (
+          patientHistoryData.value.physicalExam &&
+          patientHistoryData.value.physicalExam.length > 0 &&
+          patientHistoryData.value.physicalExam[0]
+        )
           state.oldPhysicalExams = patientHistoryData.value.physicalExam;
-          state.oldPhysicalExam = patientHistoryData.value.physicalExam[0];
-        }
-        loading.value = false;
+        state.oldPhysicalExam = patientHistoryData.value.physicalExam[0];
       }
-    )
+      loading.value = false;
+    });
 
     return {
       state,
@@ -186,10 +190,10 @@ export default {
       sendData,
       checkAsc,
       checkItem,
-      sendComment
-    }
-  }
-}
+      sendComment,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -198,20 +202,43 @@ export default {
         <div class="col-12 col-md-6 mt-2">
           <div id="patient-name-form-add" class="row m-1">
             <div class="col-12 text-label">
-              {{ $t("patientHistoryView.physicalExam") }} <i class="bi bi-person-fill mx-1"></i>
+              {{ $t('patientHistoryView.physicalExam') }} <i class="bi bi-person-fill mx-1"></i>
             </div>
             <div class="col-12">
               <div v-for="item in state.habitsList" :key="item.id">
-                <div v-if="item.active === true && item.online === true" class="row item-card lefted">
+                <div
+                  v-if="item.active === true && item.online === true"
+                  class="row item-card lefted"
+                >
                   <div class="col-12">
                     <div class="col m-1">
                       <div class="lefted">
                         <span class="badge bg-primary"> {{ item.tag }} </span>
                       </div>
                       <div class="lefted">
-                        <div :class="`${item.characteristics && item.characteristics.check ? 'form-check form-switch' : ''}`">
-                          <input v-if="item.characteristics && item.characteristics.check" class="form-check-input m-1" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux && state.habitsAux[item.id] && state.habitsAux[item.id].check" @click="checkItem(item, $event)">
-                          <label class="form-check-label metric-card-subtitle fw-bold">{{ item.name }}</label>
+                        <div
+                          :class="`${
+                            item.characteristics && item.characteristics.check
+                              ? 'form-check form-switch'
+                              : ''
+                          }`"
+                        >
+                          <input
+                            v-if="item.characteristics && item.characteristics.check"
+                            class="form-check-input m-1"
+                            type="checkbox"
+                            :name="item.name"
+                            id="item.id"
+                            :checked="
+                              state.habitsAux &&
+                              state.habitsAux[item.id] &&
+                              state.habitsAux[item.id].check
+                            "
+                            @click="checkItem(item, $event)"
+                          />
+                          <label class="form-check-label metric-card-subtitle fw-bold">{{
+                            item.name
+                          }}</label>
                         </div>
                       </div>
                     </div>
@@ -220,7 +247,9 @@ export default {
                     <div class="centered">
                       <div v-if="item.characteristics.value && item.characteristics.value === true">
                         <div class="row m-1">
-                          <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.value") }}</label>
+                          <label class="form-check-label metric-card-subtitle">{{
+                            $t('businessPatientHistoryItemAdmin.value')
+                          }}</label>
                           <input
                             :disabled="!toggles['patient.history.edit']"
                             min="0"
@@ -228,12 +257,18 @@ export default {
                             type="number"
                             :value="state.habitsAux[item.id]?.value"
                             @keyup="sendValue(item, $event)"
-                            class="form-control form-control-sm">
+                            class="form-control form-control-sm"
+                          />
                         </div>
                       </div>
-                      <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
+                      <div
+                        class="row centered"
+                        v-if="item.characteristics.comment && item.characteristics.comment === true"
+                      >
                         <div class="row mt-2">
-                          <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+                          <label class="form-check-label metric-card-subtitle">{{
+                            $t('businessPatientHistoryItemAdmin.comment')
+                          }}</label>
                           <textarea
                             :disabled="!toggles['patient.history.edit']"
                             class="form-control form-control-sm"
@@ -241,7 +276,8 @@ export default {
                             rows="2"
                             :max="200"
                             :value="state.habitsAux[item.id]?.comment"
-                            @keyup="sendComment(item, $event)">
+                            @keyup="sendComment(item, $event)"
+                          >
                           </textarea>
                         </div>
                       </div>
@@ -251,7 +287,9 @@ export default {
               </div>
             </div>
             <div class="col-12 mt-2">
-              <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+              <label class="form-check-label metric-card-subtitle">{{
+                $t('businessPatientHistoryItemAdmin.comment')
+              }}</label>
               <textarea
                 :disabled="!toggles['patient.history.edit']"
                 class="form-control form-control-sm"
@@ -262,7 +300,7 @@ export default {
                 v-bind:class="{ 'is-invalid': state.examError }"
                 v-model="state.newPhysicalExam.exam"
                 :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                >
+              >
               </textarea>
             </div>
           </div>
@@ -278,13 +316,29 @@ export default {
         </div>
         <div class="col-12 col-md-6 mt-2 blocks-section">
           <div class="col-12 text-label fw-bold">
-            {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
+            {{ $t('patientHistoryView.history') }} <i class="bi bi-clock-fill mx-1"></i>
             <div class="form-check form-switch centered">
-              <input class="form-check-input m-1" :class="state.asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="state.asc" @click="checkAsc($event)">
-              <label class="form-check-label metric-card-subtitle" for="asc">{{ state.asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+              <input
+                class="form-check-input m-1"
+                :class="state.asc === false ? 'bg-danger' : ''"
+                type="checkbox"
+                name="asc"
+                id="asc"
+                v-model="state.asc"
+                @click="checkAsc($event)"
+              />
+              <label class="form-check-label metric-card-subtitle" for="asc">{{
+                state.asc ? $t('dashboard.asc') : $t('dashboard.desc')
+              }}</label>
             </div>
           </div>
-          <div v-if="state.oldPhysicalExams && state.oldPhysicalExams.length > 0 && state.oldPhysicalExams[0]">
+          <div
+            v-if="
+              state.oldPhysicalExams &&
+              state.oldPhysicalExams.length > 0 &&
+              state.oldPhysicalExams[0]
+            "
+          >
             <div v-for="(element, index) in state.oldPhysicalExams" :key="`exam-${index}`">
               <HistoryDetailsWithItemsCard
                 :show="toggles['patient.history.view']"
@@ -298,7 +352,8 @@ export default {
           <div v-else>
             <Message
               :title="$t('patientHistoryView.message.1.title')"
-              :content="$t('patientHistoryView.message.1.content')" />
+              :content="$t('patientHistoryView.message.1.content')"
+            />
           </div>
         </div>
       </div>
@@ -314,9 +369,9 @@ export default {
   max-height: 800px;
   font-size: small;
   margin-bottom: 2rem;
-  padding: .5rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   background-color: var(--color-background);
 }
 </style>

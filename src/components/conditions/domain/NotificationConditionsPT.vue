@@ -2,17 +2,17 @@
 export default {
   name: 'NotificationConditionsPT',
   props: {
-    localeIn: { type: String, default: undefined }
+    localeIn: { type: String, default: undefined },
   },
   data() {
     return {
-      locale
-    }
+      locale,
+    };
   },
   beforeMount() {
     this.locale = this.localeIn || 'pt';
-  }
-}
+  },
+};
 </script>
 
 <template>
@@ -37,7 +37,6 @@ export default {
     <li>Site: o site É a Sua Vez, que pode ser acessado através desta URL: easuavez.com </li>
     <li>Você: uma pessoa ou entidade registrada no É a Sua Vez para usar os Serviços.</li>
     </ul>
-    </p>
     <h5>Quais informações coletamos?</h5>
     <p>Coletamos informações suas quando você visita nossa plataforma, se registra em nosso site, faz um pedido, assina nossa newsletter, responde a uma pesquisa ou preenche um formulário.</p>
     <ul><li>Nome/nome de usuário</li><li>Números de telefone</li><li>E-mails</li><li>Endereços de e-mail</li><li>Endereços de cobrança </li><li >Idade</li><li>Senha</li>

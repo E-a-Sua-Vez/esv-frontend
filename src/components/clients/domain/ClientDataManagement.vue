@@ -19,19 +19,13 @@ export default {
     client: { type: Object, default: {} },
     commerce: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
-    closeModal: { type: Function, default: () => {} }
+    closeModal: { type: Function, default: () => {} },
   },
   async setup(props) {
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
-    const {
-      showClientDataManagement,
-      toggles,
-      client,
-      commerce,
-      commerces
-    } = toRefs(props);
+    const { showClientDataManagement, toggles, client, commerce, commerces } = toRefs(props);
 
     const { closeModal } = props;
 
@@ -41,14 +35,14 @@ export default {
       phone: '',
       phoneCode: '',
       accept: false,
-      clientData: undefined
+      clientData: undefined,
     });
 
     onBeforeMount(() => {
       state.clientData = client.value;
     });
 
-    const receiveData = (data) => {
+    const receiveData = data => {
       if (data) {
         if (!state.newUser.clientId) {
           state.newUser.clientId = client.value.id;
@@ -97,12 +91,16 @@ export default {
           state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         } else if (data.phone) {
-          state.phoneCode = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').slice(0,2);
-          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').slice(2,data.phone.length);
+          state.phoneCode = data.phone
+            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+            .slice(0, 2);
+          state.phone = data.phone
+            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+            .slice(2, data.phone.length);
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         }
-      };
-    }
+      }
+    };
 
     const showConditions = () => {
       if (
@@ -122,13 +120,15 @@ export default {
         return true;
       }
       return false;
-    }
+    };
 
-    const isDataActive = (commerce) => {
+    const isDataActive = commerce => {
       let active = false;
       let features = [];
       if (commerce !== undefined && commerce.features.length > 0) {
-        features = commerce.features.filter(feature => feature.type === 'USER' && feature.active === true);
+        features = commerce.features.filter(
+          feature => feature.type === 'USER' && feature.active === true
+        );
         if (features.length > 0) {
           active = true;
         }
@@ -139,7 +139,7 @@ export default {
       return active;
     };
 
-    const validate = (user) => {
+    const validate = user => {
       state.errorsAdd = [];
       if (!user.clientId || user.clientId.length === 0) {
         if (!getActiveFeature(state.commerce, 'attention-user-not-required', 'USER')) {
@@ -154,7 +154,11 @@ export default {
             }
           }
           if (getActiveFeature(state.commerce, 'attention-user-idNumber', 'USER')) {
-            if (!user.idNumber || user.idNumber.length === 0 || !validateIdNumber(state.commerce, user.idNumber)) {
+            if (
+              !user.idNumber ||
+              user.idNumber.length === 0 ||
+              !validateIdNumber(state.commerce, user.idNumber)
+            ) {
               state.errorsAdd.push('commerceQueuesView.validate.idNumber');
             }
           }
@@ -167,7 +171,7 @@ export default {
               }
               user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
             }
-            if(!state.phone || state.phone.length === 0) {
+            if (!state.phone || state.phone.length === 0) {
               state.errorsAdd.push('commerceQueuesView.validate.phone');
             }
           }
@@ -225,13 +229,13 @@ export default {
           }
         }
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const buildUserBody = (user) => {
+    const buildUserBody = user => {
       const personalInfo = {};
       if (user.birthday) {
         personalInfo.birthday = user.birthday;
@@ -271,7 +275,7 @@ export default {
       }
       user.personalInfo = personalInfo;
       return user;
-    }
+    };
 
     const update = async () => {
       try {
@@ -281,7 +285,11 @@ export default {
           const bodyUser = buildUserBody(state.newUser);
           let body = undefined;
           if (isDataActive(commerce.value)) {
-            body = { ...bodyUser, commerceId: commerce.value.id, businessId: commerce.value.businessId };
+            body = {
+              ...bodyUser,
+              commerceId: commerce.value.id,
+              businessId: commerce.value.businessId,
+            };
           }
           await updateClient(client.value.id, body);
           closeModal();
@@ -296,39 +304,36 @@ export default {
     const changeData = computed(() => {
       const { clientData } = state;
       return {
-        clientData
-      }
-    })
+        clientData,
+      };
+    });
 
     const visible = computed(() => {
       const { showClientDataManagement } = props;
       return showClientDataManagement;
-    })
+    });
 
-    watch(
-      changeData,
-      async () => {
-        if (state.clientData) {
-          const clientData = state.clientData;
-          receiveData({
-            name: clientData.userName,
-            lastName: clientData.userLastName,
-            idNumber: clientData.userIdNumber,
-            email: clientData.userEmail,
-            birthday: clientData.userBirthday,
-            addressCode: clientData.userAddressCode,
-            addressText: clientData.userAddressText,
-            addressComplement: clientData.userAddressComplement,
-            origin: clientData.userOrigin,
-            code1: clientData.userCode1,
-            code2: clientData.userCode2,
-            code3: clientData.userCode3,
-            healthAgreementId: clientData.healthAgreementId,
-            phone: clientData.userPhone,
-          })
-        }
+    watch(changeData, async () => {
+      if (state.clientData) {
+        const clientData = state.clientData;
+        receiveData({
+          name: clientData.userName,
+          lastName: clientData.userLastName,
+          idNumber: clientData.userIdNumber,
+          email: clientData.userEmail,
+          birthday: clientData.userBirthday,
+          addressCode: clientData.userAddressCode,
+          addressText: clientData.userAddressText,
+          addressComplement: clientData.userAddressComplement,
+          origin: clientData.userOrigin,
+          code1: clientData.userCode1,
+          code2: clientData.userCode2,
+          code3: clientData.userCode3,
+          healthAgreementId: clientData.healthAgreementId,
+          phone: clientData.userPhone,
+        });
       }
-    )
+    });
 
     return {
       state,
@@ -342,13 +347,17 @@ export default {
       visible,
       update,
       showConditions,
-      receiveData
-    }
-  }
-}
+      receiveData,
+    };
+  },
+};
 </script>
 <template>
-  <div id="clientData-management" class="row" v-if="showClientDataManagement === true && toggles['client.admin.edit']">
+  <div
+    id="clientData-management"
+    class="row"
+    v-if="showClientDataManagement === true && toggles['client.admin.edit']"
+  >
     <div class="content text-center">
       <Spinner :show="loading"></Spinner>
       <Alert :show="loading" :stack="alertError"></Alert>
@@ -359,33 +368,34 @@ export default {
             :show="visible"
             :commerce="commerce"
             :name="state.newUser.name"
-            :lastName="state.newUser.lastName"
-            :idNumber="state.newUser.idNumber"
+            :last-name="state.newUser.lastName"
+            :id-number="state.newUser.idNumber"
             :email="state.newUser.email"
             :phone="state.newUser.phone"
             :birthday="state.newUser.birthday"
-            :addressText="state.newUser.addressText"
-            :addressCode="state.newUser.addressCode"
-            :addressComplement="state.newUser.addressComplement"
+            :address-text="state.newUser.addressText"
+            :address-code="state.newUser.addressCode"
+            :address-complement="state.newUser.addressComplement"
             :origin="state.newUser.origin"
             :code1="state.newUser.code1"
             :code2="state.newUser.code2"
             :code3="state.newUser.code3"
-            :healthAgreementId="state.newUser.healthAgreementId"
+            :health-agreement-id="state.newUser.healthAgreementId"
             :client="client.id"
-            :errorsAdd="state.errorsAdd"
-            :receiveData="receiveData"
-            :clientFront="false"
+            :errors-add="state.errorsAdd"
+            :receive-data="receiveData"
+            :client-front="false"
           >
           </ClientForm>
           <div class="row mx-4">
             <button
               class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-              @click="update()">
-              {{ $t("businessCommercesAdmin.update") }} <i class="bi bi-save"></i>
+              @click="update()"
+            >
+              {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
             </button>
           </div>
-          <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+          <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
             <Warning>
               <template v-slot:message>
                 <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -402,46 +412,47 @@ export default {
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')" />
+      :content="$t('dashboard.message.1.content')"
+    />
   </div>
 </template>
 <style scoped>
 .choose-attention {
   padding-bottom: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1rem;
 }
 .data-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .booking-data-card {
-  --margin-top: .2rem;
-  margin-bottom: .5rem;
+  --margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
   background-color: var(--color-background);
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   font-weight: 400;
 }
 .waitlist-box {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .3rem;
+  padding: 0.5rem;
+  margin: 0.3rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
-  margin-bottom: .5rem;
+  border: 0.5px solid var(--gris-default);
+  margin-bottom: 0.5rem;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-clear);
 }
 .subtitle-info {
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 </style>

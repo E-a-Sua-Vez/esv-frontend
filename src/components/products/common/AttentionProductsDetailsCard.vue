@@ -1,7 +1,7 @@
 <script>
 import { getContactResultTypes } from '../../../shared/utils/data';
 import { getDate } from '../../../shared/utils/date';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
 import ProductAttentionManagement from '../domain/ProductAttentionManagement.vue';
@@ -24,8 +24,8 @@ export default {
       contactResultTypes: [],
       productConsumptions: [],
       page: 1,
-      limit: 10
-    }
+      limit: 10,
+    };
   },
   beforeMount() {
     this.contactResultTypes = getContactResultTypes();
@@ -55,12 +55,21 @@ export default {
     async getAttentionProducts() {
       try {
         this.loading = true;
-        this.productConsumptions = await getProductsConsumptionsDetails(undefined, undefined, this.page, this.limit, this.asc, undefined, undefined, this.attention.attentionId);
+        this.productConsumptions = await getProductsConsumptionsDetails(
+          undefined,
+          undefined,
+          this.page,
+          this.limit,
+          this.asc,
+          undefined,
+          undefined,
+          this.attention.attentionId
+        );
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
-    }
+    },
   },
   watch: {
     detailsOpened: {
@@ -68,32 +77,45 @@ export default {
       deep: true,
       async handler() {
         this.extendedEntity = this.detailsOpened;
-      }
+      },
     },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="row metric-card">
       <div v-if="attention.servicesDetails" class="idNumber-title lefted">
-        <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
-        <span v-if="attention.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span> </span>
+        <span
+          v-for="serv in attention.servicesDetails"
+          :key="serv.id"
+          class="badge service-badge bg-primary p-1"
+        >
+          {{ serv.name }}
+        </span>
+        <span v-if="attention.packageId" class="badge bg-secondary service-badge">
+          <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span>
+        </span>
       </div>
-      <div class="col-6 lefted fw-bold card-client-title mt-1" v-if="attention && attention.userName">
-        {{ attention.userName?.trim().toUpperCase() || '' }} {{ attention.userLastName?.trim().toUpperCase() || '' }}
+      <div
+        class="col-6 lefted fw-bold card-client-title mt-1"
+        v-if="attention && attention.userName"
+      >
+        {{ attention.userName?.trim().toUpperCase() || '' }}
+        {{ attention.userLastName?.trim().toUpperCase() || '' }}
         <i v-if="attention.productCounter > 0" class="bi bi-eyedropper mx-1"> </i>
       </div>
       <div class="col-2 centered fw-bold card-client-title">
-        <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i> {{ attention.daysSinceAttention || 0 }}
+        <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i>
+        {{ attention.daysSinceAttention || 0 }}
       </div>
       <div class="col-4 centered date-title">
         {{ getDate(attention.createdDate) }}
@@ -101,21 +123,18 @@ export default {
     </div>
     <div class="details-arrow">
       <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
+        <span href="#" @click.prevent="showDetails()">
+          <span class="details-title">{{ $t('dashboard.details') }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
-      <div
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow">
+      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }} {{ attention.userLastName || '' }} <a class="btn copy-icon"
-                @click="copyAttention()">
+              <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }}
+              {{ attention.userLastName || '' }}
+              <a class="btn copy-icon" @click="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
             </div>
@@ -125,16 +144,18 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+attention.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + attention.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+attention.userEmail"
-                target="_blank">
+                :href="'mailto:' + attention.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
               </a>
             </div>
@@ -146,16 +167,18 @@ export default {
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+attention.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + attention.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+attention.userEmail"
-                target="_blank">
+                :href="'mailto:' + attention.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
               </a>
             </div>
@@ -170,63 +193,111 @@ export default {
               @click="getAttentionProducts()"
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action px-4"
               data-bs-toggle="modal"
-              :data-bs-target="`#attentionsProductsModal-${attention.attentionId}`">
-              {{ $t('businessProductStockAdmin.stock')}} <br> <i class="bi bi-eyedropper"></i>
+              :data-bs-target="`#attentionsProductsModal-${attention.attentionId}`"
+            >
+              {{ $t('businessProductStockAdmin.stock') }} <br />
+              <i class="bi bi-eyedropper"></i>
             </button>
           </div>
         </div>
-        <hr>
+        <hr />
         <div class="mt-2">
           <div class="mb-2">
-            <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
+            <i class="bi bi-qr-code mx-1"> </i>
+            <span class="mb-1">{{ $t('dashboard.attData') }}</span>
           </div>
           <span v-if="attention.queueName" class="badge mx-1 detail-data-badge">
             <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
-            {{ attention.queueName }}</span>
+            {{ attention.queueName }}</span
+          >
           <span v-if="attention.collaboratorName" class="badge mx-1 detail-data-badge">
             <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
-            <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span>
-          <span v-if="attention.commerceName && attention.commerceTag" class="badge mx-1 detail-data-badge">
-            <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-            {{ attention.commerceName }} - {{ attention.commerceTag }}</span>
-          <span v-if="attention.packageId && attention.packageName" class="badge mx-1 detail-data-badge">
+            <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span
+          >
+          <span
+            v-if="attention.commerceName && attention.commerceTag"
+            class="badge mx-1 detail-data-badge"
+          >
+            <span class="fw-bold detail-data-badge-title">
+              {{ $t('dashboard.commerceData') }}
+            </span>
+            {{ attention.commerceName }} - {{ attention.commerceTag }}</span
+          >
+          <span
+            v-if="attention.packageId && attention.packageName"
+            class="badge mx-1 detail-data-badge"
+          >
             <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
-              {{ attention.packageName }}
-              <span class="badge mx-1 bg-secondary">{{ attention.packageProcedureNumber }} / {{ attention.packageProceduresTotalNumber }}</span>
-              <i class="bi bi-check-circle-fill green-icon" v-if="attention.packagePaid"> </i>
+            {{ attention.packageName }}
+            <span class="badge mx-1 bg-secondary"
+              >{{ attention.packageProcedureNumber }} /
+              {{ attention.packageProceduresTotalNumber }}</span
+            >
+            <i class="bi bi-check-circle-fill green-icon" v-if="attention.packagePaid"> </i>
           </span>
           <span v-if="attention.servicesDetails" class="badge mx-1 detail-data-badge">
             <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
-            <span v-for="serv in attention.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }}</span>
+            <span
+              v-for="serv in attention.servicesDetails"
+              :key="serv.id"
+              class="badge bg-primary mx-1"
+            >
+              {{ serv.name }}</span
+            >
           </span>
-          <br><br>
-          <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.attentionId }}</span>
-          <span class="metric-card-details"><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span>
+          <br /><br />
+          <span class="metric-card-details mx-1"
+            ><strong>Id:</strong> {{ attention.attentionId }}</span
+          >
+          <span class="metric-card-details"
+            ><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span
+          >
         </div>
       </div>
     </div>
     <!-- Modal Products -->
-    <div class="modal fade" :id="`attentionsProductsModal-${attention.attentionId}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+    <div
+      class="modal fade"
+      :id="`attentionsProductsModal-${attention.attentionId}`"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-10"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-eyedropper"></i> {{ $t("businessProductStockAdmin.attentionProducts") }} </h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-eyedropper"></i>
+              {{ $t('businessProductStockAdmin.attentionProducts') }}
+            </h5>
+            <button
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0">
             <ProductAttentionManagement
-              :showProductAttentionManagement="true"
+              :show-product-attention-management="true"
               :toggles="toggles"
               :attention="attention"
               :commerce="commerce"
-              :productAttentionsIn="productConsumptions"
+              :product-attentions-in="productConsumptions"
               @getProductConsuptions="getAttentionProducts"
             >
             </ProductAttentionManagement>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>
@@ -237,10 +308,10 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
-  margin: .5rem;
+  padding: 0.1rem;
+  margin: 0.5rem;
   margin-bottom: 0;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -254,24 +325,24 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
+  line-height: 0.7rem;
 }
 .checked-icon {
   color: var(--azul-turno);
 }
 .metric-card-details {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 400;
 }
 </style>

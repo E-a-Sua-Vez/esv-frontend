@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'AttentionRatingDetails',
   props: {
@@ -12,8 +11,7 @@ export default {
     limit: { type: Number, default: 5 },
   },
   data() {
-    return {
-    }
+    return {};
   },
   methods: {
     clasifyRatedComment(messageScore) {
@@ -27,19 +25,19 @@ export default {
         return 'bi-emoji-smile-fill green-icon';
       }
     },
-    wrapComment(comment){
+    wrapComment(comment) {
       if (!comment) {
         return 'No Data';
       } else if (comment.length > 30) {
-        return comment.slice(0,30) + '...';
+        return comment.slice(0, 30) + '...';
       }
       return comment;
     },
     scorePercentage(total, score) {
-      return parseFloat((score * 100 / total).toFixed(2), 2) || 0;
-    }
+      return parseFloat(((score * 100) / total).toFixed(2), 2) || 0;
+    },
   },
-}
+};
 </script>
 
 <template>
@@ -64,36 +62,73 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div v-if="messages.length > 0 && false">
-      <div class="row mx-2" v-for="(message) in messages.slice(0, limit)" :key="message.id">
+      <div class="row mx-2" v-for="message in messages.slice(0, limit)" :key="message.id">
         <div class="metric-card-title">
-          <i :class="`h6 col-2 bi ${clasifyRatedComment(message.rating)}`">
-          </i>
+          <i :class="`h6 col-2 bi ${clasifyRatedComment(message.rating)}`"> </i>
           <span class="col-8"> {{ wrapComment(message.message) }} </span>
-          <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle"> {{ message.rating || 'N/I' }} </span>
+          <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle">
+            {{ message.rating || 'N/I' }}
+          </span>
         </div>
-        <hr>
+        <hr />
       </div>
     </div>
     <div class="my-2 mx-2">
-      <div class="progress" style="height: 30px;">
-        <div class="progress-bar yellow-0-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating0)}%`" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress" style="height: 30px">
+        <div
+          class="progress-bar yellow-0-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating0)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating0 || 'N/I' }}
         </div>
-        <div class="progress-bar yellow-1-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating1)}%`" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="progress-bar yellow-1-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating1)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating1 || 'N/I' }}
         </div>
-        <div class="progress-bar yellow-2-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating2)}%`" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="progress-bar yellow-2-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating2)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating2 || 'N/I' }}
         </div>
-        <div class="progress-bar yellow-3-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating3)}%`" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="progress-bar yellow-3-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating3)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating3 || 'N/I' }}
         </div>
-        <div class="progress-bar yellow-4-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating4)}%`" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="progress-bar yellow-4-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating4)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating4 || 'N/I' }}
         </div>
-        <div class="progress-bar yellow-5-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, score.totalRating5)}%`" aria-valuemin="0" aria-valuemax="100">
+        <div
+          class="progress-bar yellow-5-area"
+          role="progressbar"
+          :style="`height: 30px; width: ${scorePercentage(count, score.totalRating5)}%`"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
           {{ score.totalRating5 || 'N/I' }}
         </div>
       </div>
@@ -101,17 +136,21 @@ export default {
     <div class="row mx-2">
       <div class="row metric-card-title" v-for="index in 6" :key="index">
         <div class="col-5 centered">
-          <i :class="`bi bi-star-fill yellow-icon`"> </i> <span class="mx-1"> {{ 6 - index}}</span>
+          <i :class="`bi bi-star-fill yellow-icon`"> </i> <span class="mx-1"> {{ 6 - index }}</span>
         </div>
         <div class="col centered">
-          <span class="badge rounded-pill bg-primary metric-card-subtitle m-1"> {{ `${scorePercentage(count, score[`totalRating${6 - index}`])}%` }} </span>
+          <span class="badge rounded-pill bg-primary metric-card-subtitle m-1">
+            {{ `${scorePercentage(count, score[`totalRating${6 - index}`])}%` }}
+          </span>
         </div>
         <div class="col centered">
-          <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ score[`totalRating${6 - index}`] || 'N/I' }} </span>
+          <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1">
+            {{ score[`totalRating${6 - index}`] || 'N/I' }}
+          </span>
         </div>
-        <hr>
+        <hr />
       </div>
-      <hr>
+      <hr />
     </div>
   </div>
 </template>
@@ -119,14 +158,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
-  line-height: .8rem;
+  font-size: 0.9rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

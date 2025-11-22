@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getBusinesses, updateBusiness, addBusiness } from '../../application/services/business';
 import { getPermissions } from '../../application/services/permissions';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import CommerceName from '../../components/common/CommerceName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -18,13 +18,25 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, CommerceName, Toggle, Warning, Popper, SearchBar, ComponentMenu },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    Spinner,
+    Alert,
+    CommerceName,
+    Toggle,
+    Warning,
+    Popper,
+    SearchBar,
+    ComponentMenu,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -58,9 +70,9 @@ export default {
         'pharmacy',
         'services',
         'restaurant',
-        'supermarket'
+        'supermarket',
       ],
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -77,77 +89,77 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const validateAdd = (business) => {
+    const validateAdd = business => {
       state.errorsAdd = [];
-      if(!business.name || business.name.length === 0) {
+      if (!business.name || business.name.length === 0) {
         state.nameError = true;
         state.errorsAdd.push('businessAdmin.validate.name');
       } else {
         state.nameError = false;
       }
-      if(!business.keyName || business.keyName.length === 0) {
+      if (!business.keyName || business.keyName.length === 0) {
         state.keyNameError = true;
         state.errorsAdd.push('businessAdmin.validate.keyName');
       } else {
         state.keyNameError = false;
       }
-      if(!business.email || business.email.length < 10) {
+      if (!business.email || business.email.length < 10) {
         state.emailError = true;
         state.errorsAdd.push('businessAdmin.validate.email');
       } else {
         state.emailError = false;
       }
-      if(!business.category || business.category.length === 0) {
+      if (!business.category || business.category.length === 0) {
         state.categoryAddError = true;
         state.errorsAdd.push('businessAdmin.validate.category');
       } else {
         state.categoryAddError = false;
       }
-      if(!business.contactInfo.phone || business.contactInfo.phone.length < 10) {
+      if (!business.contactInfo.phone || business.contactInfo.phone.length < 10) {
         state.phoneAddError = true;
         state.errorsAdd.push('businessAdmin.validate.phone');
       } else {
         state.phoneAddError = false;
       }
-      if(!business.localeInfo.country || business.localeInfo.country.length === 0) {
+      if (!business.localeInfo.country || business.localeInfo.country.length === 0) {
         state.countryAddError = true;
         state.errorsAdd.push('businessAdmin.validate.country');
       } else {
         state.countryAddError = false;
       }
-      if(!business.localeInfo.address || business.localeInfo.address.length < 10) {
+      if (!business.localeInfo.address || business.localeInfo.address.length < 10) {
         state.addressAddError = true;
         state.errorsAdd.push('businessAdmin.validate.address');
       } else {
         state.addressAddError = false;
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const validateUpdate = (business) => {
+    const validateUpdate = business => {
       state.errorsUpdate = [];
-      if(!business.phone || business.phone.length < 10) {
+      if (!business.phone || business.phone.length < 10) {
         state.phoneUpdateError = true;
         state.errorsUpdate.push('businessAdmin.validate.phone');
       } else {
         state.phoneUpdateError = false;
       }
-      if(state.errorsUpdate.length === 0) {
+      if (state.errorsUpdate.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const update = async (business) => {
+    const update = async business => {
       try {
         loading.value = true;
         if (validateUpdate(business)) {
@@ -161,7 +173,7 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const showAdd = () => {
       state.showAdd = !state.showAdd;
@@ -173,10 +185,10 @@ export default {
           personalized: false,
           personalizedHours: {},
           holiday: false,
-          holidays: {}
-       }
-      }
-    }
+          holidays: {},
+        },
+      };
+    };
 
     const add = async () => {
       try {
@@ -186,7 +198,7 @@ export default {
           state.business = business;
           state.businesses = await getBusinesses();
           state.showAdd = false;
-          state.newBusiness = {}
+          state.newBusiness = {};
         }
         state.extendedEntity = undefined;
         alertError.value = '';
@@ -195,30 +207,30 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const showUpdateForm = (index) => {
+    const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
-    }
+    };
 
-    const selectBusiness = (business) => {
+    const selectBusiness = business => {
       state.business = business;
       state.currentUser.businessId = business.id;
       store.setCurrentBusiness(state.business);
-    }
+    };
 
     const closeBusiness = () => {
       state.business = {};
       state.currentUser.businessId = undefined;
       store.setCurrentBusiness({});
-    }
+    };
 
     const dayChecked = (serviceInfo, day) => {
       if (serviceInfo && serviceInfo.attentionDays) {
         return serviceInfo.attentionDays.includes(day);
       }
       return false;
-    }
+    };
 
     const checkDay = (event, serviceInfo, day) => {
       if (serviceInfo) {
@@ -236,13 +248,13 @@ export default {
         if (serviceInfo.personalized === true) {
           serviceInfo.personalizedHours[day] = {
             attentionHourFrom: serviceInfo.attentionHourFrom,
-            attentionHourTo: serviceInfo.attentionHourTo
+            attentionHourTo: serviceInfo.attentionHourTo,
           };
         }
       }
-    }
+    };
 
-    const initializedParsonalizedHours = (serviceInfo) => {
+    const initializedParsonalizedHours = serviceInfo => {
       if (serviceInfo.personalized === true) {
         if (!serviceInfo.personalizedHours) {
           serviceInfo.personalizedHours = {};
@@ -251,12 +263,12 @@ export default {
           serviceInfo.attentionDays.forEach(day => {
             serviceInfo.personalizedHours[day] = {
               attentionHourFrom: serviceInfo.attentionHourFrom,
-              attentionHourTo: serviceInfo.attentionHourTo
+              attentionHourTo: serviceInfo.attentionHourTo,
             };
-          })
+          });
         }
       }
-    }
+    };
 
     return {
       state,
@@ -271,10 +283,10 @@ export default {
       checkDay,
       selectBusiness,
       closeBusiness,
-      initializedParsonalizedHours
-    }
-  }
-}
+      initializedParsonalizedHours,
+    };
+  },
+};
 </script>
 
 <template>
@@ -284,8 +296,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessAdmin.title`)"
         :toggles="state.toggles"
-        componentName="businessAdmin"
-        @goBack="goBack">
+        component-name="businessAdmin"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -298,28 +311,34 @@ export default {
               <div v-if="state.businesses.length === 0">
                 <Message
                   :title="$t('businessAdmin.message.2.title')"
-                  :content="$t('businessAdmin.message.2.content')" />
+                  :content="$t('businessAdmin.message.2.content')"
+                />
               </div>
               <div class="row mb-2">
                 <div class="col-8 text-label">
-                  <span>{{ $t("businessAdmin.listResult") }}</span>
+                  <span>{{ $t('businessAdmin.listResult') }}</span>
                   <span class="fw-bold m-2">{{ state.businesses.length }}</span>
                 </div>
                 <div class="col-4">
                   <button
                     class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAdd(business)"
-                    :disabled="!state.toggles['businesses.admin.add']">
+                    :disabled="!state.toggles['businesses.admin.add']"
+                  >
                     <i class="bi bi-plus-lg"></i>
                   </button>
                 </div>
               </div>
-              <div id="add-business" class="business-card mb-4" v-if="state.showAdd && state.toggles['businesses.admin.add']">
+              <div
+                id="add-business"
+                class="business-card mb-4"
+                v-if="state.showAdd && state.toggles['businesses.admin.add']"
+              >
                 <div v-if="state.businesses.length < state.toggles['businesses.admin.limit']">
                   <div class="row g-1">
                     <div id="business-name-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessAdmin.name") }}
+                        {{ $t('businessAdmin.name') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -329,18 +348,20 @@ export default {
                           class="form-control"
                           v-model="state.newBusiness.name"
                           v-bind:class="{ 'is-invalid': state.nameError }"
-                          placeholder="brilliant-shop-1">
+                          placeholder="brilliant-shop-1"
+                        />
                       </div>
                     </div>
                     <div id="business-keyName-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessAdmin.keyName") }}
+                        {{ $t('businessAdmin.keyName') }}
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disableClickAway
-                          :content="$t('businessAdmin.keyNameHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
+                          disable-click-away
+                          :content="$t('businessAdmin.keyNameHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
                       </div>
                       <div class="col-8">
@@ -351,12 +372,13 @@ export default {
                           class="form-control"
                           v-model="state.newBusiness.keyName"
                           v-bind:class="{ 'is-invalid': state.keyNameError }"
-                          placeholder="brilliant-shop-1">
+                          placeholder="brilliant-shop-1"
+                        />
                       </div>
                     </div>
                     <div id="business-email-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessAdmin.email") }}
+                        {{ $t('businessAdmin.email') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -365,12 +387,13 @@ export default {
                           class="form-control"
                           v-model="state.newBusiness.email"
                           v-bind:class="{ 'is-invalid': state.emailError }"
-                          placeholder="name@email.com">
+                          placeholder="name@email.com"
+                        />
                       </div>
                     </div>
                     <div id="business-logo-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessAdmin.logo") }}
+                        {{ $t('businessAdmin.logo') }}
                       </div>
                       <div class="col-8">
                         <input
@@ -378,36 +401,37 @@ export default {
                           type="text"
                           class="form-control"
                           v-model="state.newBusiness.logo"
-                          placeholder="url/image.png">
+                          placeholder="url/image.png"
+                        />
                       </div>
                     </div>
                     <div id="business-category-form-add" class="row g-1">
                       <div class="col-4 text-label">
-                        {{ $t("businessAdmin.category") }}
+                        {{ $t('businessAdmin.category') }}
                       </div>
                       <div class="col-8">
                         <select
                           class="btn btn-md btn-light fw-bold text-dark select"
                           v-model="state.newBusiness.category"
                           id="caterogies"
-                          v-bind:class="{ 'is-invalid': state.categoryAddError }">
-                          <option v-for="cat in state.categories" :key="cat" :value="cat">{{ $t(`categories.${cat}`) }}</option>
+                          v-bind:class="{ 'is-invalid': state.categoryAddError }"
+                        >
+                          <option v-for="cat in state.categories" :key="cat" :value="cat">
+                            {{ $t(`categories.${cat}`) }}
+                          </option>
                         </select>
                       </div>
                     </div>
                     <!-- Datos de localizacion -->
                     <div class="row g-1">
-                      <a
-                        class="nav-link fw-bold"
-                        data-bs-toggle="collapse"
-                        href="#add-location">
-                        {{ $t("businessAdmin.location") }} <i class="bi bi-chevron-down"></i>
+                      <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-location">
+                        {{ $t('businessAdmin.location') }} <i class="bi bi-chevron-down"></i>
                       </a>
                     </div>
                     <div id="add-location" class="collapse row m-0">
                       <div id="business-country-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.country") }}
+                          {{ $t('businessAdmin.country') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -417,12 +441,13 @@ export default {
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.country"
                             v-bind:class="{ 'is-invalid': state.countryAddError }"
-                            placeholder="Ex. ve, br, cl">
+                            placeholder="Ex. ve, br, cl"
+                          />
                         </div>
                       </div>
                       <div id="business-language-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.language") }}
+                          {{ $t('businessAdmin.language') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -431,12 +456,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.language"
-                            placeholder="Ex.: es / en / pt">
+                            placeholder="Ex.: es / en / pt"
+                          />
                         </div>
                       </div>
                       <div id="business-timezone-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.timezone") }}
+                          {{ $t('businessAdmin.timezone') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -445,12 +471,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.timezone"
-                            placeholder="Ex.: America/Caracas">
+                            placeholder="Ex.: America/Caracas"
+                          />
                         </div>
                       </div>
                       <div id="business-address-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.address") }}
+                          {{ $t('businessAdmin.address') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -460,12 +487,13 @@ export default {
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.address"
                             v-bind:class="{ 'is-invalid': state.addressAddError }"
-                            placeholder="Street 1, Building 56, City, State">
+                            placeholder="Street 1, Building 56, City, State"
+                          />
                         </div>
                       </div>
                       <div id="business-addressLat-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.addressLat") }}
+                          {{ $t('businessAdmin.addressLat') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -474,12 +502,13 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.addressLat"
-                            placeholder="Ex.: 10.65656">
+                            placeholder="Ex.: 10.65656"
+                          />
                         </div>
                       </div>
                       <div id="business-addressLng-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.addressLng") }}
+                          {{ $t('businessAdmin.addressLng') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -488,23 +517,21 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.localeInfo.addressLng"
-                            placeholder="Ex.: -10.65656">
+                            placeholder="Ex.: -10.65656"
+                          />
                         </div>
                       </div>
                     </div>
                     <!-- Datos de Contacto -->
                     <div class="row g-1">
-                      <a
-                        class="nav-link fw-bold"
-                        data-bs-toggle="collapse"
-                        href="#add-contact">
-                        {{ $t("businessAdmin.contact") }} <i class="bi bi-chevron-down"></i>
+                      <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-contact">
+                        {{ $t('businessAdmin.contact') }} <i class="bi bi-chevron-down"></i>
                       </a>
                     </div>
                     <div id="add-contact" class="collapse row m-0">
                       <div id="business-contact-email-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.email") }}
+                          {{ $t('businessAdmin.email') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -513,12 +540,13 @@ export default {
                             type="email"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.email"
-                            placeholder="Ex.: contact@business.com">
+                            placeholder="Ex.: contact@business.com"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-url-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.url") }}
+                          {{ $t('businessAdmin.url') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -527,12 +555,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.url"
-                            placeholder="Ex.: https://www.business.com/">
+                            placeholder="Ex.: https://www.business.com/"
+                          />
                         </div>
                       </div>
                       <div id="business-phone-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.phone") }}
+                          {{ $t('businessAdmin.phone') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -541,12 +570,13 @@ export default {
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.phone"
                             v-bind:class="{ 'is-invalid': state.phoneAddError }"
-                            placeholder="Cod. Pais + Numero">
+                            placeholder="Cod. Pais + Numero"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-phone2-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.phone2") }}
+                          {{ $t('businessAdmin.phone2') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -555,12 +585,13 @@ export default {
                             type="tel"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.phone2"
-                            placeholder="Ex.: 56233445533">
+                            placeholder="Ex.: 56233445533"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-whatsapp-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.whatsapp") }}
+                          {{ $t('businessAdmin.whatsapp') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -569,12 +600,13 @@ export default {
                             type="tel"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.whatsapp"
-                            placeholder="Ex.: 56233445533">
+                            placeholder="Ex.: 56233445533"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-twitter-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.twitter") }}
+                          {{ $t('businessAdmin.twitter') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -583,12 +615,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.twitter"
-                            placeholder="Ex.: tw_business">
+                            placeholder="Ex.: tw_business"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-instagram-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.instagram") }}
+                          {{ $t('businessAdmin.instagram') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -597,12 +630,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.instagram"
-                            placeholder="Ex.: ig_business">
+                            placeholder="Ex.: ig_business"
+                          />
                         </div>
                       </div>
                       <div id="business-contact-facebook-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.facebook") }}
+                          {{ $t('businessAdmin.facebook') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -611,23 +645,21 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.contactInfo.facebook"
-                            placeholder="Ex.: fb_business">
+                            placeholder="Ex.: fb_business"
+                          />
                         </div>
                       </div>
                     </div>
                     <!-- Datos de Servicio -->
                     <div class="row g-1">
-                      <a
-                        class="nav-link fw-bold"
-                        data-bs-toggle="collapse"
-                        href="#add-service">
-                        {{ $t("businessAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                      <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-service">
+                        {{ $t('businessAdmin.service') }} <i class="bi bi-chevron-down"></i>
                       </a>
                     </div>
                     <div id="add-service" class="collapse row m-0">
                       <div id="business-serviceUrl-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.serviceUrl") }}
+                          {{ $t('businessAdmin.serviceUrl') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -636,12 +668,13 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="state.newBusiness.serviceInfo.serviceUrl"
-                            placeholder="Ex. https://menu.business.com">
+                            placeholder="Ex. https://menu.business.com"
+                          />
                         </div>
                       </div>
                       <div id="business-attentionHour-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.attentionHour") }}
+                          {{ $t('businessAdmin.attentionHour') }}
                         </div>
                         <div class="col-3">
                           <input
@@ -652,11 +685,10 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.serviceInfo.attentionHourFrom"
-                            placeholder="Ex. 8">
+                            placeholder="Ex. 8"
+                          />
                         </div>
-                        <div class="col-2">
-                          -
-                        </div>
+                        <div class="col-2">-</div>
                         <div class="col-3">
                           <input
                             min="0"
@@ -666,12 +698,13 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.serviceInfo.attentionHourTo"
-                            placeholder="Ex. 16">
+                            placeholder="Ex. 16"
+                          />
                         </div>
                       </div>
                       <div id="add-business-break-active-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessCommercesAdmin.break") }}
+                          {{ $t('businessCommercesAdmin.break') }}
                         </div>
                         <div class="col-8">
                           <Toggle
@@ -680,9 +713,13 @@ export default {
                           />
                         </div>
                       </div>
-                      <div id="business-attentionBreak-form-add" v-if="state.newBusiness.serviceInfo.break" class="row g-1">
+                      <div
+                        id="business-attentionBreak-form-add"
+                        v-if="state.newBusiness.serviceInfo.break"
+                        class="row g-1"
+                      >
                         <div class="col-4 text-label">
-                          {{ $t("businessCommercesAdmin.breakHour") }}
+                          {{ $t('businessCommercesAdmin.breakHour') }}
                         </div>
                         <div class="col-3">
                           <input
@@ -693,11 +730,10 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.serviceInfo.breakHourFrom"
-                            placeholder="Ex. 8">
+                            placeholder="Ex. 8"
+                          />
                         </div>
-                        <div class="col-2">
-                          -
-                        </div>
+                        <div class="col-2">-</div>
                         <div class="col-3">
                           <input
                             min="0"
@@ -707,61 +743,94 @@ export default {
                             type="number"
                             class="form-control"
                             v-model="state.newBusiness.serviceInfo.breakHourTo"
-                            placeholder="Ex. 16">
+                            placeholder="Ex. 16"
+                          />
                         </div>
                       </div>
                       <div id="business-attentionDays-form-add" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessAdmin.attentionDays") }}
+                          {{ $t('businessAdmin.attentionDays') }}
                         </div>
                         <div class="col-8">
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="monday"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="monday"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 1)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 1)">
-                            <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 1)"
+                            />
+                            <label class="form-check-label" for="monday">{{ $t('days.1') }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="tuesday"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="tuesday"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 2)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 2)">
-                            <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 2)"
+                            />
+                            <label class="form-check-label" for="tuesday">{{ $t('days.2') }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="wednesday"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="wednesday"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 3)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 3)">
-                            <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 3)"
+                            />
+                            <label class="form-check-label" for="wednesday">{{
+                              $t('days.3')
+                            }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="thursday"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="thursday"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 4)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 4)">
-                            <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 4)"
+                            />
+                            <label class="form-check-label" for="thursday">{{
+                              $t('days.4')
+                            }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="friday"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="friday"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 5)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 5)">
-                            <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 5)"
+                            />
+                            <label class="form-check-label" for="friday">{{ $t('days.5') }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="sabado"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="sabado"
                               :checked="dayChecked(state.newBusiness.serviceInfo, 6)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 6)">
-                            <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 6)"
+                            />
+                            <label class="form-check-label" for="sabado">{{ $t('days.6') }}</label>
                           </div>
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="domingo"
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              id="domingo"
                               :checked="dayChecked(state.newBusiness.serviceInfo)"
-                              @click="checkDay($event, state.newBusiness.serviceInfo, 7)">
-                            <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                              @click="checkDay($event, state.newBusiness.serviceInfo, 7)"
+                            />
+                            <label class="form-check-label" for="domingo">{{ $t('days.7') }}</label>
                           </div>
                         </div>
                       </div>
                       <div id="add-business-personalized-active-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessCommercesAdmin.personalized") }}
+                          {{ $t('businessCommercesAdmin.personalized') }}
                         </div>
                         <div class="col-8">
                           <Toggle
@@ -771,8 +840,16 @@ export default {
                           />
                         </div>
                       </div>
-                      <div id="business-personalized-form-add" v-if="state.newBusiness.serviceInfo.personalized" class="row g-1">
-                        <div class="row g-1" v-for="day in state.newBusiness.serviceInfo.attentionDays" :key="day">
+                      <div
+                        id="business-personalized-form-add"
+                        v-if="state.newBusiness.serviceInfo.personalized"
+                        class="row g-1"
+                      >
+                        <div
+                          class="row g-1"
+                          v-for="day in state.newBusiness.serviceInfo.attentionDays"
+                          :key="day"
+                        >
                           <div class="col-4 text-label">
                             {{ $t(`days.${day}`) }}
                           </div>
@@ -784,12 +861,14 @@ export default {
                               maxlength="2"
                               type="number"
                               class="form-control"
-                              v-model="state.newBusiness.serviceInfo.personalizedHours[day].attentionHourFrom"
-                              placeholder="Ex. 8">
+                              v-model="
+                                state.newBusiness.serviceInfo.personalizedHours[day]
+                                  .attentionHourFrom
+                              "
+                              placeholder="Ex. 8"
+                            />
                           </div>
-                          <div class="col-2">
-                            -
-                          </div>
+                          <div class="col-2">-</div>
                           <div class="col-3">
                             <input
                               min="0"
@@ -798,8 +877,11 @@ export default {
                               maxlength="2"
                               type="number"
                               class="form-control"
-                              v-model="state.newBusiness.serviceInfo.personalizedHours[day].attentionHourTo"
-                              placeholder="Ex. 16">
+                              v-model="
+                                state.newBusiness.serviceInfo.personalizedHours[day].attentionHourTo
+                              "
+                              placeholder="Ex. 16"
+                            />
                           </div>
                         </div>
                       </div>
@@ -807,11 +889,12 @@ export default {
                     <div class="col">
                       <button
                         class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="add(state.newBusiness)">
-                        {{ $t("businessAdmin.add") }} <i class="bi bi-save"></i>
+                        @click="add(state.newBusiness)"
+                      >
+                        {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
                       </button>
                     </div>
-                    <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                    <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                       <Warning>
                         <template v-slot:message>
                           <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -825,37 +908,47 @@ export default {
                 <div v-else>
                   <Message
                     :title="$t('businessAdmin.message.3.title')"
-                    :content="$t('businessAdmin.message.3.content')" />
+                    :content="$t('businessAdmin.message.3.content')"
+                  />
                 </div>
               </div>
               <div id="searcher" class="mx-3">
                 <SearchBar
                   :list="state.businesses"
                   :label="$t('masterMenu.business')"
-                  @selectItem="selectBusiness">
+                  @selectItem="selectBusiness"
+                >
                 </SearchBar>
               </div>
               <div class="business-admin">
                 <div v-if="state.business.id" class="card mt-1 mb-3">
                   <div class="row d-flex m-1 business-title">
                     <div class="col-4">
-                      <img :src="state.business.logo" class="img-thumbnail rounded-start item-image">
+                      <img
+                        :src="state.business.logo"
+                        class="img-thumbnail rounded-start item-image"
+                      />
                     </div>
                     <div class="col-7">
                       <span class="item-title fw-bold"> {{ state.business.name }} </span>
                     </div>
-                    <button type="button" class="btn-close" aria-label="Close" @click="closeBusiness()"></button>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      aria-label="Close"
+                      @click="closeBusiness()"
+                    ></button>
                   </div>
                   <div id="business-update" class="my-2">
                     <div
                       v-if="state.toggles['businesses.admin.read']"
                       :class="{ show: state.extendedEntity === undefined }"
                       class="detailed-data transition-slow"
-                      >
+                    >
                       <div class="row g-1">
                         <div id="business-name-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessAdmin.name") }}
+                            {{ $t('businessAdmin.name') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -865,12 +958,13 @@ export default {
                               type="text"
                               class="form-control"
                               v-model="state.business.name"
-                              placeholder="brilliant-shop-1">
+                              placeholder="brilliant-shop-1"
+                            />
                           </div>
                         </div>
                         <div id="business-keyName-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessAdmin.keyName") }}
+                            {{ $t('businessAdmin.keyName') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -880,12 +974,13 @@ export default {
                               type="text"
                               class="form-control"
                               v-model="state.business.keyName"
-                              placeholder="brilliant-shop-1">
+                              placeholder="brilliant-shop-1"
+                            />
                           </div>
                         </div>
                         <div id="business-email-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessAdmin.email") }}
+                            {{ $t('businessAdmin.email') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -894,12 +989,13 @@ export default {
                               type="email"
                               class="form-control"
                               v-model="state.business.email"
-                              placeholder="business@email.com">
+                              placeholder="business@email.com"
+                            />
                           </div>
                         </div>
                         <div id="business-logo-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessAdmin.logo") }}
+                            {{ $t('businessAdmin.logo') }}
                           </div>
                           <div class="col-8">
                             <input
@@ -907,25 +1003,29 @@ export default {
                               type="text"
                               class="form-control"
                               v-model="state.business.logo"
-                              placeholder="url/logo.png">
+                              placeholder="url/logo.png"
+                            />
                           </div>
                         </div>
                         <div id="business-category-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessAdmin.category") }}
+                            {{ $t('businessAdmin.category') }}
                           </div>
                           <div class="col-8">
                             <select
                               class="btn btn-md btn-light fw-bold text-dark select"
                               v-model="state.business.category"
-                              id="caterogies">
-                              <option v-for="cat in state.categories" :key="cat" :value="cat">{{ $t(`categories.${cat}`) }}</option>
+                              id="caterogies"
+                            >
+                              <option v-for="cat in state.categories" :key="cat" :value="cat">
+                                {{ $t(`categories.${cat}`) }}
+                              </option>
                             </select>
                           </div>
                         </div>
                         <div id="business-active-form" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t("businessCommercesAdmin.active") }}
+                            {{ $t('businessCommercesAdmin.active') }}
                           </div>
                           <div class="col-8">
                             <Toggle
@@ -941,14 +1041,16 @@ export default {
                             data-bs-toggle="collapse"
                             aria-expanded="true"
                             aria-controls="update-location"
-                            href="#update-location">
-                            {{ $t("businessCommercesAdmin.location") }} <i class="bi bi-chevron-down"></i>
+                            href="#update-location"
+                          >
+                            {{ $t('businessCommercesAdmin.location') }}
+                            <i class="bi bi-chevron-down"></i>
                           </a>
                         </div>
                         <div id="update-location" class="collapse row m-0">
                           <div id="business-country-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.country") }}
+                              {{ $t('businessCommercesAdmin.country') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -958,12 +1060,13 @@ export default {
                                 class="form-control"
                                 v-model="state.business.localeInfo.country"
                                 v-bind:class="{ 'is-invalid': state.countryUpdateError }"
-                                placeholder="Ex. ve, br, cl">
+                                placeholder="Ex. ve, br, cl"
+                              />
                             </div>
                           </div>
                           <div id="business-language-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.language") }}
+                              {{ $t('businessCommercesAdmin.language') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -972,12 +1075,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.localeInfo.language"
-                                placeholder="Ex.: es / en / pt">
+                                placeholder="Ex.: es / en / pt"
+                              />
                             </div>
                           </div>
                           <div id="business-timezone-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.timezone") }}
+                              {{ $t('businessCommercesAdmin.timezone') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -986,12 +1090,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.localeInfo.timezone"
-                                placeholder="Ex.: America/Caracas">
+                                placeholder="Ex.: America/Caracas"
+                              />
                             </div>
                           </div>
                           <div id="business-address-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.address") }}
+                              {{ $t('businessCommercesAdmin.address') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1001,12 +1106,13 @@ export default {
                                 class="form-control"
                                 v-model="state.business.localeInfo.address"
                                 v-bind:class="{ 'is-invalid': state.addressAddError }"
-                                placeholder="Street 1, Building 56, City, State">
+                                placeholder="Street 1, Building 56, City, State"
+                              />
                             </div>
                           </div>
                           <div id="business-addressLat-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.addressLat") }}
+                              {{ $t('businessCommercesAdmin.addressLat') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1015,12 +1121,13 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.localeInfo.addressLat"
-                                placeholder="Ex.: 10.65656">
+                                placeholder="Ex.: 10.65656"
+                              />
                             </div>
                           </div>
                           <div id="business-addressLng-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.addressLng") }}
+                              {{ $t('businessCommercesAdmin.addressLng') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1029,7 +1136,8 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.localeInfo.addressLng"
-                                placeholder="Ex.: -10.65656">
+                                placeholder="Ex.: -10.65656"
+                              />
                             </div>
                           </div>
                         </div>
@@ -1038,14 +1146,16 @@ export default {
                           <a
                             class="nav-link fw-bold"
                             data-bs-toggle="collapse"
-                            href="#update-contact">
-                            {{ $t("businessCommercesAdmin.contact") }} <i class="bi bi-chevron-down"></i>
+                            href="#update-contact"
+                          >
+                            {{ $t('businessCommercesAdmin.contact') }}
+                            <i class="bi bi-chevron-down"></i>
                           </a>
                         </div>
                         <div id="update-contact" class="collapse row m-0">
                           <div id="business-contact-email-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.email") }}
+                              {{ $t('businessCommercesAdmin.email') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1054,12 +1164,13 @@ export default {
                                 type="email"
                                 class="form-control"
                                 v-model="state.business.contactInfo.email"
-                                placeholder="Ex.: contact@business.com">
+                                placeholder="Ex.: contact@business.com"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-url-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.url") }}
+                              {{ $t('businessCommercesAdmin.url') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1068,12 +1179,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.contactInfo.url"
-                                placeholder="Ex.: https://www.business.com/">
+                                placeholder="Ex.: https://www.business.com/"
+                              />
                             </div>
                           </div>
                           <div id="business-phone-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.phone") }}
+                              {{ $t('businessCommercesAdmin.phone') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1082,12 +1194,13 @@ export default {
                                 class="form-control"
                                 v-model="state.business.contactInfo.phone"
                                 v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
-                                placeholder="Cod. Pais + Numero">
+                                placeholder="Cod. Pais + Numero"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-phone2-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.phone2") }}
+                              {{ $t('businessCommercesAdmin.phone2') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1096,12 +1209,13 @@ export default {
                                 type="tel"
                                 class="form-control"
                                 v-model="state.business.contactInfo.phone2"
-                                placeholder="Ex.: 56233445533">
+                                placeholder="Ex.: 56233445533"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-whatsapp-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.whatsapp") }}
+                              {{ $t('businessCommercesAdmin.whatsapp') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1110,12 +1224,13 @@ export default {
                                 type="tel"
                                 class="form-control"
                                 v-model="state.business.contactInfo.whatsapp"
-                                placeholder="Ex.: 56233445533">
+                                placeholder="Ex.: 56233445533"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-twitter-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.twitter") }}
+                              {{ $t('businessCommercesAdmin.twitter') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1124,12 +1239,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.contactInfo.twitter"
-                                placeholder="Ex.: tw_commerce">
+                                placeholder="Ex.: tw_commerce"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-instagram-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.instagram") }}
+                              {{ $t('businessCommercesAdmin.instagram') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1138,12 +1254,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.contactInfo.instagram"
-                                placeholder="Ex.: ig_commerce">
+                                placeholder="Ex.: ig_commerce"
+                              />
                             </div>
                           </div>
                           <div id="business-contact-facebook-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.facebook") }}
+                              {{ $t('businessCommercesAdmin.facebook') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1152,7 +1269,8 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.contactInfo.facebook"
-                                placeholder="Ex.: fb_commerce">
+                                placeholder="Ex.: fb_commerce"
+                              />
                             </div>
                           </div>
                         </div>
@@ -1161,14 +1279,16 @@ export default {
                           <a
                             class="nav-link fw-bold"
                             data-bs-toggle="collapse"
-                            href="#update-service">
-                            {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                            href="#update-service"
+                          >
+                            {{ $t('businessCommercesAdmin.service') }}
+                            <i class="bi bi-chevron-down"></i>
                           </a>
                         </div>
                         <div id="update-service" class="collapse row m-0">
                           <div id="business-serviceUrl-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.serviceUrl") }}
+                              {{ $t('businessCommercesAdmin.serviceUrl') }}
                             </div>
                             <div class="col-8">
                               <input
@@ -1177,12 +1297,13 @@ export default {
                                 type="text"
                                 class="form-control"
                                 v-model="state.business.serviceInfo.serviceUrl"
-                                placeholder="Ex. https://menu.business.com">
+                                placeholder="Ex. https://menu.business.com"
+                              />
                             </div>
                           </div>
                           <div id="business-attentionHour-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.attentionHour") }}
+                              {{ $t('businessCommercesAdmin.attentionHour') }}
                             </div>
                             <div class="col-3">
                               <input
@@ -1193,11 +1314,10 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.serviceInfo.attentionHourFrom"
-                                placeholder="Ex. 8">
+                                placeholder="Ex. 8"
+                              />
                             </div>
-                            <div class="col-2">
-                              -
-                            </div>
+                            <div class="col-2">-</div>
                             <div class="col-3">
                               <input
                                 min="0"
@@ -1207,12 +1327,13 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.serviceInfo.attentionHourTo"
-                                placeholder="Ex. 16">
+                                placeholder="Ex. 16"
+                              />
                             </div>
                           </div>
                           <div id="add-business-break-active-form" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.break") }}
+                              {{ $t('businessCommercesAdmin.break') }}
                             </div>
                             <div class="col-8">
                               <Toggle
@@ -1221,9 +1342,13 @@ export default {
                               />
                             </div>
                           </div>
-                          <div id="business-attentionBreak-form-update" v-if="state.business.serviceInfo.break" class="row g-1">
+                          <div
+                            id="business-attentionBreak-form-update"
+                            v-if="state.business.serviceInfo.break"
+                            class="row g-1"
+                          >
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.breakHour") }}
+                              {{ $t('businessCommercesAdmin.breakHour') }}
                             </div>
                             <div class="col-3">
                               <input
@@ -1234,11 +1359,10 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.serviceInfo.breakHourFrom"
-                                placeholder="Ex. 8">
+                                placeholder="Ex. 8"
+                              />
                             </div>
-                            <div class="col-2">
-                              -
-                            </div>
+                            <div class="col-2">-</div>
                             <div class="col-3">
                               <input
                                 min="0"
@@ -1248,61 +1372,104 @@ export default {
                                 type="number"
                                 class="form-control"
                                 v-model="state.business.serviceInfo.breakHourTo"
-                                placeholder="Ex. 16">
+                                placeholder="Ex. 16"
+                              />
                             </div>
                           </div>
                           <div id="business-attentionDays-form-update" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.attentionDays") }}
+                              {{ $t('businessCommercesAdmin.attentionDays') }}
                             </div>
                             <div class="col-8">
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="monday"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="monday"
                                   :checked="dayChecked(state.business.serviceInfo, 1)"
-                                  @click="checkDay($event, state.business.serviceInfo, 1)">
-                                <label class="form-check-label" for="monday">{{ $t("days.1") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 1)"
+                                />
+                                <label class="form-check-label" for="monday">{{
+                                  $t('days.1')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="tuesday"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="tuesday"
                                   :checked="dayChecked(state.business.serviceInfo, 2)"
-                                  @click="checkDay($event, state.business.serviceInfo, 2)">
-                                <label class="form-check-label" for="tuesday">{{ $t("days.2") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 2)"
+                                />
+                                <label class="form-check-label" for="tuesday">{{
+                                  $t('days.2')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="wednesday"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="wednesday"
                                   :checked="dayChecked(state.business.serviceInfo, 3)"
-                                  @click="checkDay($event, state.business.serviceInfo, 3)">
-                                <label class="form-check-label" for="wednesday">{{ $t("days.3") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 3)"
+                                />
+                                <label class="form-check-label" for="wednesday">{{
+                                  $t('days.3')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="thursday"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="thursday"
                                   :checked="dayChecked(state.business.serviceInfo, 4)"
-                                  @click="checkDay($event, state.business.serviceInfo, 4)">
-                                <label class="form-check-label" for="thursday">{{ $t("days.4") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 4)"
+                                />
+                                <label class="form-check-label" for="thursday">{{
+                                  $t('days.4')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="friday"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="friday"
                                   :checked="dayChecked(state.business.serviceInfo, 5)"
-                                  @click="checkDay($event, state.business.serviceInfo, 5)">
-                                <label class="form-check-label" for="friday">{{ $t("days.5") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 5)"
+                                />
+                                <label class="form-check-label" for="friday">{{
+                                  $t('days.5')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="sabado"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="sabado"
                                   :checked="dayChecked(state.business.serviceInfo, 6)"
-                                  @click="checkDay($event, state.business.serviceInfo, 6)">
-                                <label class="form-check-label" for="sabado">{{ $t("days.6") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 6)"
+                                />
+                                <label class="form-check-label" for="sabado">{{
+                                  $t('days.6')
+                                }}</label>
                               </div>
                               <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="domingo"
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="domingo"
                                   :checked="dayChecked(state.business.serviceInfo, 7)"
-                                  @click="checkDay($event, state.business.serviceInfo, 7)">
-                                <label class="form-check-label" for="domingo">{{ $t("days.7") }}</label>
+                                  @click="checkDay($event, state.business.serviceInfo, 7)"
+                                />
+                                <label class="form-check-label" for="domingo">{{
+                                  $t('days.7')
+                                }}</label>
                               </div>
                             </div>
                           </div>
                           <div id="update-business-personalized-active-form" class="row g-1">
                             <div class="col-4 text-label">
-                              {{ $t("businessCommercesAdmin.personalized") }}
+                              {{ $t('businessCommercesAdmin.personalized') }}
                             </div>
                             <div class="col-8">
                               <Toggle
@@ -1312,8 +1479,16 @@ export default {
                               />
                             </div>
                           </div>
-                          <div id="business-personalized-form-update" v-if="state.business.serviceInfo.personalized" class="row g-1">
-                            <div class="row g-1" v-for="day in state.business.serviceInfo.attentionDays" :key="day">
+                          <div
+                            id="business-personalized-form-update"
+                            v-if="state.business.serviceInfo.personalized"
+                            class="row g-1"
+                          >
+                            <div
+                              class="row g-1"
+                              v-for="day in state.business.serviceInfo.attentionDays"
+                              :key="day"
+                            >
                               <div class="col-4 text-label">
                                 {{ $t(`days.${day}`) }}
                               </div>
@@ -1325,12 +1500,14 @@ export default {
                                   maxlength="2"
                                   type="number"
                                   class="form-control"
-                                  v-model="state.business.serviceInfo.personalizedHours[day].attentionHourFrom"
-                                  placeholder="Ex. 8">
+                                  v-model="
+                                    state.business.serviceInfo.personalizedHours[day]
+                                      .attentionHourFrom
+                                  "
+                                  placeholder="Ex. 8"
+                                />
                               </div>
-                              <div class="col-2">
-                                -
-                              </div>
+                              <div class="col-2">-</div>
                               <div class="col-3">
                                 <input
                                   min="0"
@@ -1339,8 +1516,12 @@ export default {
                                   maxlength="2"
                                   type="number"
                                   class="form-control"
-                                  v-model="state.business.serviceInfo.personalizedHours[day].attentionHourTo"
-                                  placeholder="Ex. 16">
+                                  v-model="
+                                    state.business.serviceInfo.personalizedHours[day]
+                                      .attentionHourTo
+                                  "
+                                  placeholder="Ex. 16"
+                                />
                               </div>
                             </div>
                           </div>
@@ -1356,11 +1537,16 @@ export default {
                           <button
                             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                             @click="update(state.business)"
-                            :disabled="!state.toggles['businesses.admin.update']">
-                            {{ $t("businessCommercesAdmin.update") }} <i class="bi bi-save"></i>
+                            :disabled="!state.toggles['businesses.admin.update']"
+                          >
+                            {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
                           </button>
                         </div>
-                        <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
                           <Warning>
                             <template v-slot:message>
                               <li v-for="(error, index) in state.errorsUpdate" :key="index">
@@ -1380,7 +1566,8 @@ export default {
         <div v-else>
           <Message
             :title="$t('businessAdmin.message.1.title')"
-            :content="$t('businessAdmin.message.1.content')" />
+            :content="$t('businessAdmin.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -1390,22 +1577,22 @@ export default {
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .business-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .business-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {
@@ -1430,9 +1617,9 @@ export default {
   justify-content: center;
   align-items: center;
   max-height: 3rem;
-  margin: .3rem;
+  margin: 0.3rem;
   font-size: 1rem;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 .item-image {
   max-width: 100px;

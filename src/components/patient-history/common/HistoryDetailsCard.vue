@@ -6,17 +6,17 @@ export default {
   props: {
     show: { type: Boolean, default: false },
     content: { type: String, default: '' },
-    date: { type: String, default: '' }
+    date: { type: String, default: '' },
   },
   data() {
-    return {}
+    return {};
   },
   methods: {
     getDate(date) {
       return getDate(date);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -35,13 +35,13 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .paragraph {
-  font-size: .8rem;
-  line-height: .9rem;
+  font-size: 0.8rem;
+  line-height: 0.9rem;
 }
 </style>

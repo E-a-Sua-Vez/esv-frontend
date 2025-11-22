@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'SurveyDetails',
   props: {
@@ -8,8 +7,8 @@ export default {
   },
   data() {
     return {
-      survey: {}
-    }
+      survey: {},
+    };
   },
   methods: {
     clasifyRatedComment(messageScore) {
@@ -35,7 +34,7 @@ export default {
       }
     },
     scorePercentage(total, score) {
-      return parseFloat((score * 100 / total).toFixed(2), 2) || 0;
+      return parseFloat(((score * 100) / total).toFixed(2), 2) || 0;
     },
   },
   watch: {
@@ -44,27 +43,37 @@ export default {
       deep: true,
       async handler() {
         this.survey = this.surveyIn;
-      }
-    }
-  }
-}
+      },
+    },
+  },
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="answers">
       <div class="row metric-card" v-if="survey.rating">
-        <span class="fw-bold metric-card-detail-title mt-1"> CSAT: {{ $t('attentionSurvey.rateYourAttention')}} </span>
+        <span class="fw-bold metric-card-detail-title mt-1">
+          CSAT: {{ $t('attentionSurvey.rateYourAttention') }}
+        </span>
         <div>
-          <h5><span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.rating }} ⭐️ </span></h5>
+          <h5>
+            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+              {{ survey.rating }} ⭐️
+            </span>
+          </h5>
         </div>
       </div>
       <div class="row metric-card" v-if="survey.nps">
-        <span class="fw-bold metric-card-detail-title mt-1"> NPS: {{ $t('attentionSurvey.nps.title')}} </span>
+        <span class="fw-bold metric-card-detail-title mt-1">
+          NPS: {{ $t('attentionSurvey.nps.title') }}
+        </span>
         <div>
-          <button v-if="survey.nps <= 5" :class="`button detractor m-2`" >{{ survey.nps }}</button>
-          <button v-if="survey.nps >= 6 && survey.nps <= 8" :class="`button passive m-2`" >{{ survey.nps }}</button>
-          <button v-if="survey.nps >= 9" :class="`button promoter m-2`" >{{ survey.nps }}</button>
+          <button v-if="survey.nps <= 5" :class="`button detractor m-2`">{{ survey.nps }}</button>
+          <button v-if="survey.nps >= 6 && survey.nps <= 8" :class="`button passive m-2`">
+            {{ survey.nps }}
+          </button>
+          <button v-if="survey.nps >= 9" :class="`button promoter m-2`">{{ survey.nps }}</button>
         </div>
       </div>
       <div v-if="survey.answers && survey.answers.length > 0">
@@ -73,42 +82,71 @@ export default {
             <span class="fw-bold metric-card-detail-title mt-1"> {{ answer.title }} </span>
             <span class="mt-1"> {{ $t(`surveys.question_types.${answer.type}`) }} </span>
             <div v-if="answer.type === 'YES_OR_NOT'">
-              <button v-if="answer.answer === 'NO'" :class="`button no-selected m-2`" ><i class="bi bi-hand-thumbs-down-fill"></i></button>
-              <button v-if="answer.answer === 'YES'" :class="`button yes-selected m-2`"><i class="bi bi-hand-thumbs-up-fill"></i></button>
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ $t(answer.answer) }} </span>
+              <button v-if="answer.answer === 'NO'" :class="`button no-selected m-2`">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+              <button v-if="answer.answer === 'YES'" :class="`button yes-selected m-2`">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button>
+              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                {{ $t(answer.answer) }}
+              </span>
             </div>
             <div v-if="answer.type === 'CHOOSE_OPTION'">
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer[0] }} </span>
+              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                {{ answer.answer[0] }}
+              </span>
             </div>
             <div v-if="answer.type === 'RATING_TO_10'">
-              <button v-if="answer.answer <= 5" :class="`button detractor m-2`" >{{ answer.answer }}</button>
-              <button v-if="answer.answer >= 6 && answer.answer <= 8" :class="`button passive m-2`" >{{ answer.answer }}</button>
-              <button v-if="answer.answer >= 9" :class="`button promoter m-2`" >{{ answer.answer }}</button>
+              <button v-if="answer.answer <= 5" :class="`button detractor m-2`">
+                {{ answer.answer }}
+              </button>
+              <button v-if="answer.answer >= 6 && answer.answer <= 8" :class="`button passive m-2`">
+                {{ answer.answer }}
+              </button>
+              <button v-if="answer.answer >= 9" :class="`button promoter m-2`">
+                {{ answer.answer }}
+              </button>
             </div>
             <div v-if="answer.type === 'OPEN_OPTIONS'">
               <div v-for="ans of answer.answer" :key="ans">
-                <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ ans }} </span>
+                <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                  {{ ans }}
+                </span>
               </div>
             </div>
             <div v-if="answer.type === 'RATING_TO_5'">
-              <h5><span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer }} ⭐️ </span></h5>
+              <h5>
+                <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                  {{ answer.answer }} ⭐️
+                </span>
+              </h5>
             </div>
             <div v-if="answer.type === 'OPEN_WRITING'">
               <div v-if="answer.answer.messageScore && answer.answer.messageScore.score">
-                <i :class="`bi ${clasifyScoredComment(answer.answer.messageScore.score)} mx-1`"> </i> {{ answer.answer.messageScore.score || 0 }}
+                <i :class="`bi ${clasifyScoredComment(answer.answer.messageScore.score)} mx-1`">
+                </i>
+                {{ answer.answer.messageScore.score || 0 }}
               </div>
-              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ answer.answer.message || '' }} </span>
+              <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+                {{ answer.answer.message || '' }}
+              </span>
             </div>
           </div>
         </div>
       </div>
       <div class="row metric-card" v-if="survey.message">
-        <span class="fw-bold metric-card-detail-title mt-1"> {{ $t('attentionSurvey.survey.label')}} </span>
+        <span class="fw-bold metric-card-detail-title mt-1">
+          {{ $t('attentionSurvey.survey.label') }}
+        </span>
         <div>
           <div v-if="survey.messageScore">
-            <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey.messageScore || 0 }}
+            <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i>
+            {{ survey.messageScore || 0 }}
           </div>
-          <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">  {{ survey.message || '' }} </span>
+          <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold">
+            {{ survey.message || '' }}
+          </span>
         </div>
       </div>
     </div>
@@ -118,14 +156,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
-  line-height: .8rem;
+  font-size: 0.9rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -143,7 +181,7 @@ export default {
   text-align: center;
   font-weight: 700;
   border-radius: 100%;
-  margin: .2rem;
+  margin: 0.2rem;
   outline: none;
   margin-left: -1px;
   width: 40px;
@@ -152,46 +190,46 @@ export default {
   transform: scale(1);
 }
 .no-selected {
-  background: #F44336;
+  background: #f44336;
   color: white;
-  border-color: lighten(#F44336, 5%);
-  transform: scale(1.20);
+  border-color: lighten(#f44336, 5%);
+  transform: scale(1.2);
 }
 .yes-selected {
   background: #3b5998;
   color: white;
   border-color: lighten(#3b5998, 5%);
-  transform: scale(1.20);
+  transform: scale(1.2);
 }
 .detractor {
-  background: #F44336;
+  background: #f44336;
   color: white;
-  border-color: lighten(#F44336, 5%);
+  border-color: lighten(#f44336, 5%);
   transform: scale(1);
 }
 .passive {
-  background: #F57C00;
+  background: #f57c00;
   color: white;
-  border-color: lighten(#F57C00, 5%);
+  border-color: lighten(#f57c00, 5%);
   transform: scale(1);
 }
 .promoter {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
-  border-color: lighten(#4CAF50, 5%);
+  border-color: lighten(#4caf50, 5%);
   transform: scale(1);
 }
 .answers {
   overflow-y: scroll;
-  height:600px;
+  height: 600px;
   font-size: small;
   margin-bottom: 2rem;
   padding: 1rem;
   text-justify: inter-word;
 }
 .metric-card-detail-title {
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 </style>

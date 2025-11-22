@@ -2,10 +2,10 @@
 export default {
   name: 'PlanActivationName',
   props: {
-    activation: { type: Object, default: {} }
+    activation: { type: Object, default: {} },
   },
   data() {
-    return {}
+    return {};
   },
   methods: {
     isActive() {
@@ -17,7 +17,9 @@ export default {
     },
     isAttention() {
       if (this.activation.endDate) {
-        const dateToAttention = new Date(new Date(this.activation.endDate).setDate(new Date().getDate() - 5));
+        const dateToAttention = new Date(
+          new Date(this.activation.endDate).setDate(new Date().getDate() - 5)
+        );
         if (new Date() > dateToAttention) {
           return 'activation-attention';
         }
@@ -34,24 +36,40 @@ export default {
         return '';
       }
       return '';
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <div :class="`${isActive() + ' ' + isAttention() + ' ' + isDesactivate()}`">
     <span :class="activation.active === true ? 'active-name' : 'desactived-name'">
       <i class="bi bi-star"></i> {{ activation.business.name }}
-      <div id="plan-active" class=" mx-2 my-1">
-        <span class="badge state rounded-pill bg-info m-1"> {{ activation.planPayedCopy.name }} </span>
-        <span v-if="activation.active" class="badge state rounded-pill bg-success mx-1"> {{ $t("businessPlan.planActive") }}</span>
-        <span v-else class="badge state rounded-pill bg-danger mx-1"> {{ $t("businessPlan.planInactive") }} </span>
-        <span v-if="activation.validated" class="badge state rounded-pill bg-primary mx-1"> {{ $t("businessPlan.planValidated") }}</span>
-        <span v-else class="badge state rounded-pill bg-warning mx-1"> {{ $t("businessPlan.planPending") }} </span><br>
-        <span class="badge state rounded-pill bg-dark mx-1"> {{ activation.createdAt.slice(0,10) }} </span>
-        <span v-if="activation.startDate" class="badge state rounded-pill bg-primary mx-1"> {{ activation.startDate.slice(0,10) }} </span>
-        <span v-if="activation.endDate" class="badge state rounded-pill bg-danger mx-1"> {{ activation.endDate.slice(0,10) }} </span>
+      <div id="plan-active" class="mx-2 my-1">
+        <span class="badge state rounded-pill bg-info m-1">
+          {{ activation.planPayedCopy.name }}
+        </span>
+        <span v-if="activation.active" class="badge state rounded-pill bg-success mx-1">
+          {{ $t('businessPlan.planActive') }}</span
+        >
+        <span v-else class="badge state rounded-pill bg-danger mx-1">
+          {{ $t('businessPlan.planInactive') }}
+        </span>
+        <span v-if="activation.validated" class="badge state rounded-pill bg-primary mx-1">
+          {{ $t('businessPlan.planValidated') }}</span
+        >
+        <span v-else class="badge state rounded-pill bg-warning mx-1">
+          {{ $t('businessPlan.planPending') }} </span
+        ><br />
+        <span class="badge state rounded-pill bg-dark mx-1">
+          {{ activation.createdAt.slice(0, 10) }}
+        </span>
+        <span v-if="activation.startDate" class="badge state rounded-pill bg-primary mx-1">
+          {{ activation.startDate.slice(0, 10) }}
+        </span>
+        <span v-if="activation.endDate" class="badge state rounded-pill bg-danger mx-1">
+          {{ activation.endDate.slice(0, 10) }}
+        </span>
       </div>
     </span>
   </div>
@@ -63,30 +81,30 @@ export default {
   border-radius: 1rem;
   line-height: 1rem;
   border: 1px solid var(--azul-turno);
-  padding-top: .2rem;
-  padding-bottom: .2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
 }
 .desactived-name {
   background-color: var(--gris-clear);
   color: var(--color-text);
   font-weight: 700;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .active-name {
   background-color: var(--color-background);
   color: var(--color-text);
   font-weight: 700;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .desactived {
   background-color: var(--gris-clear);
   border-radius: 1rem;
   line-height: 1rem;
   border: 1px solid var(--azul-turno);
-  padding-top: .2rem;
-  padding-bottom: .2rem;
-}s
-.activation-attention {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+s .activation-attention {
   border: 1px solid var(--amarillo-star);
 }
 .activation-desactivate {

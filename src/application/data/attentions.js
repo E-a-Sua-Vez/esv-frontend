@@ -12,13 +12,13 @@ export default [
       active: true,
       logo: '/images/fake_commerce_notary_logo.png',
     },
-    queue:  {
+    queue: {
       id: 1,
       name: 'Atención Regular',
       position: 1,
       active: true,
-      limit: 200
-    }
+      limit: 200,
+    },
   },
   {
     id: 'tql42tQGDR4jv1ZMC',
@@ -33,12 +33,12 @@ export default [
       active: true,
       logo: '/images/ninas_beauty_logo.png',
     },
-    queue:  {
+    queue: {
       id: 1,
       name: 'Atención Regular',
       position: 1,
       active: true,
-      limit: 200
-    }
-  }
-]
+      limit: 200,
+    },
+  },
+];

@@ -1,17 +1,15 @@
 <script>
-
 export default {
   name: 'AttentionQuestionRatingTo10',
   props: {
     show: { type: Boolean, default: true },
-    question: { type: Object, default: {} }
+    question: { type: Object, default: {} },
   },
   data() {
-    return {
-    }
+    return {};
   },
   methods: {
-    clasifyNpsComment(score){
+    clasifyNpsComment(score) {
       if (!score) {
         return 'bi-emoji-expressionless-fill blue-icon';
       } else if (score <= 5) {
@@ -26,10 +24,10 @@ export default {
       return parseFloat((avg * 100).toFixed(2), 2) || 0;
     },
     getOptions(obj) {
-      return Object.keys(obj).sort((a,b) => b - a);
+      return Object.keys(obj).sort((a, b) => b - a);
     },
   },
-}
+};
 </script>
 
 <template>
@@ -46,15 +44,25 @@ export default {
         </div>
       </div>
       <div class="col-12 col-md-7">
-        <div class="row centered" v-for="(option, ind) in getOptions(question['distribution'])" :key="`option.${ind}`">
+        <div
+          class="row centered"
+          v-for="(option, ind) in getOptions(question['distribution'])"
+          :key="`option.${ind}`"
+        >
           <div class="col-4 centered">
-            <span class="h6 fw-bold"> <i :class="`h6 bi ${clasifyNpsComment(option)}  mb-0`"> </i> {{ option }} </span>
+            <span class="h6 fw-bold">
+              <i :class="`h6 bi ${clasifyNpsComment(option)}  mb-0`"> </i> {{ option }}
+            </span>
           </div>
           <div class="col-2 centered">
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ question['distribution'][option].counter }} </span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle">
+              {{ question['distribution'][option].counter }}
+            </span>
           </div>
           <div class="col-4 centered">
-            <span class="badge rounded-pill bg-primary metric-card-subtitle"> {{ getPercentage(question['distribution'][option].avg) }} % </span>
+            <span class="badge rounded-pill bg-primary metric-card-subtitle">
+              {{ getPercentage(question['distribution'][option].avg) }} %
+            </span>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getCommerceById } from '../../application/services/commerce';
@@ -25,14 +25,14 @@ export default {
     ToggleCapabilities,
     ComponentMenu,
     ProductsStockManagement,
-    ProductAttentionManagement
+    ProductAttentionManagement,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -46,7 +46,7 @@ export default {
       commerce: {},
       showProducts: true,
       showAttentions: false,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -55,7 +55,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.selectedCommerces = [state.commerce];
         const commerce = await getCommerceById(state.commerce.id);
         state.queues = commerce.queues;
@@ -64,13 +65,11 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.selectedCommerces = undefined;
@@ -90,21 +89,21 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showProducts = () => {
       state.showProducts = true;
       state.showAttentions = false;
-    }
+    };
 
     const showAttentions = () => {
       state.showProducts = false;
       state.showAttentions = true;
-    }
+    };
 
     return {
       state,
@@ -114,10 +113,10 @@ export default {
       isActiveBusiness,
       selectCommerce,
       showProducts,
-      showAttentions
-    }
-  }
-}
+      showAttentions,
+    };
+  },
+};
 </script>
 
 <template>
@@ -127,8 +126,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessProductStockAdmin.title`)"
         :toggles="state.toggles"
-        componentName="businessProductStockAdmin"
-        @goBack="goBack">
+        component-name="businessProductStockAdmin"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -139,15 +139,23 @@ export default {
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('businessProductStockAdmin.message.3.title')"
-              :content="$t('businessProductStockAdmin.message.3.content')" />
+              :content="$t('businessProductStockAdmin.message.3.content')"
+            />
           </div>
           <div v-else class="control-box">
             <div id="product-stock-controls">
               <div class="row">
                 <div class="col" v-if="state.commerces">
-                  <span>{{ $t("businessProductStockAdmin.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                  <span>{{ $t('businessProductStockAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    id="modules"
+                    @change="selectCommerce(state.commerce)"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -160,8 +168,10 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showProducts ? 'btn-selected' : ''"
                   @click="showProducts()"
-                  :disabled="!state.toggles['products-stock.products.view']">
-                  {{ $t("businessProductStockAdmin.products") }} <br> <i class="bi bi-eyedropper"></i>
+                  :disabled="!state.toggles['products-stock.products.view']"
+                >
+                  {{ $t('businessProductStockAdmin.products') }} <br />
+                  <i class="bi bi-eyedropper"></i>
                 </button>
               </div>
               <div class="col-6 centered">
@@ -169,14 +179,16 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showAttentions ? 'btn-selected' : ''"
                   @click="showAttentions()"
-                  :disabled="!state.toggles['products-stock.attentions.view']">
-                  {{ $t("businessProductStockAdmin.attentions") }} <br> <i class="bi bi-qr-code"></i>
+                  :disabled="!state.toggles['products-stock.attentions.view']"
+                >
+                  {{ $t('businessProductStockAdmin.attentions') }} <br />
+                  <i class="bi bi-qr-code"></i>
                 </button>
               </div>
             </div>
             <div>
               <ProductsStockManagement
-                :showProductStockManagement="state.showProducts"
+                :show-product-stock-management="state.showProducts"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -185,7 +197,7 @@ export default {
               >
               </ProductsStockManagement>
               <ProductAttentionManagement
-                :showProductStockManagement="state.showAttentions"
+                :show-product-stock-management="state.showAttentions"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -198,7 +210,8 @@ export default {
         <div v-if="!isActiveBusiness() && !loading">
           <Message
             :title="$t('businessProductStockAdmin.message.1.title')"
-            :content="$t('businessProductStockAdmin.message.1.content')" />
+            :content="$t('businessProductStockAdmin.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -214,23 +227,23 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -245,8 +258,7 @@ export default {
   color: var(--amarillo-star);
 }
 .metric-card-subtitle {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
-
 </style>

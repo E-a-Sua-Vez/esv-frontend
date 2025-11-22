@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import { createEvent } from '../../../application/services/event';
 
 export default {
@@ -17,8 +17,8 @@ export default {
   },
   data() {
     return {
-      reportedError: false
-    }
+      reportedError: false,
+    };
   },
   methods: {
     reportError() {
@@ -33,17 +33,17 @@ export default {
           return this.data;
         } else {
           if (Number.isInteger(this.data)) {
-            return Number(this.data.toFixed(2)).toLocaleString("de-DE");
+            return Number(this.data.toFixed(2)).toLocaleString('de-DE');
           } else {
-            return Number(this.data.toFixed(2)).toLocaleString("de-DE");
+            return Number(this.data.toFixed(2)).toLocaleString('de-DE');
           }
         }
       } else {
         return 'No Data';
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -54,16 +54,17 @@ export default {
       </div>
       <div class="centered">
         <i :class="`bi ${icon} ${iconStyleClass}`"></i>
-        <span class="fw-bold px-2"> {{ getData() }}
-          <span v-if="subdata !== undefined" class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ subdata }} </span>
+        <span class="fw-bold px-2">
+          {{ getData() }}
+          <span
+            v-if="subdata !== undefined"
+            class="badge rounded-pill bg-secondary metric-card-subtitle"
+          >
+            {{ subdata }}
+          </span>
         </span>
-        <Popper
-          v-if="showTooltip"
-          :class="'dark'"
-          arrow
-          disableClickAway
-          :content="description">
-          <i class='bi bi-info-circle-fill h7'></i>
+        <Popper v-if="showTooltip" :class="'dark'" arrow disable-click-away :content="description">
+          <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </div>
     </div>
@@ -73,14 +74,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 </style>

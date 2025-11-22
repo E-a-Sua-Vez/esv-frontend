@@ -1,5 +1,4 @@
 <script>
-
 import { globalStore } from './stores/index';
 import Footer from './components/common/Footer.vue';
 import Header from './components/common/Header.vue';
@@ -12,14 +11,14 @@ export default {
   data() {
     const store = globalStore();
     return {
-      store
-    }
+      store,
+    };
   },
   async onBeforeMount() {
-    await this.store.resetSession;
+    await this.store.resetSession();
   },
-  methods: { }
-}
+  methods: {},
+};
 </script>
 
 <template>
@@ -37,7 +36,12 @@ export default {
               <template #default>
                 <div>
                   <Offline :show="true"></Offline>
-                  <component :is="Component" :key="$route.path" class="container col-md-7"></component>
+                  <component
+                    :is="Component"
+                    :key="$route.path"
+                    class="container col-md-7"
+                  ></component>
+                  <Footer></Footer>
                 </div>
               </template>
               <template #fallback>
@@ -51,7 +55,6 @@ export default {
         <DefaultSkeleton></DefaultSkeleton>
       </template>
     </RouterView>
-    <Footer></Footer>
   </div>
 </template>
 

@@ -16,39 +16,36 @@ export default {
 
     onBeforeMount(async () => {
       await store.resetSession;
-    })
+    });
 
     const goSite = () => {
       router.push('/');
-    }
+    };
 
-    const bussinesUrl = `/interno/master/menu`;
+    const bussinesUrl = '/interno/master/menu';
 
     return {
       bussinesUrl,
-      goSite
-    }
-  }
-}
+      goSite,
+    };
+  },
+};
 </script>
 
 <template>
   <div>
-    <div  class="content text-center">
+    <div class="content text-center">
       <CommerceLogo @click="goSite()"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
-          <span>{{ $t("masterLogin.welcome") }}</span>
+          <span>{{ $t('masterLogin.welcome') }}</span>
         </div>
         <div class="login-message">
-          <span>{{ $t("masterLogin.login") }}</span>
+          <span>{{ $t('masterLogin.login') }}</span>
         </div>
       </div>
       <div>
-        <Login
-          :userType="'master'"
-          :urlOkRedirect="bussinesUrl"
-        ></Login>
+        <Login :user-type="'master'" :url-ok-redirect="bussinesUrl"></Login>
       </div>
     </div>
     <PoweredBy />

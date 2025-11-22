@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'AttentionNotificationDetails',
   props: {
@@ -8,13 +7,13 @@ export default {
     booking: { type: [String, Number], default: 0 },
     waitlist: { type: [String, Number], default: 0 },
     channels: { type: Object, default: {} },
-    types: { type: Object, default: {} }
+    types: { type: Object, default: {} },
   },
   data() {
-    return { }
+    return {};
   },
-  methods: { },
-}
+  methods: {},
+};
 </script>
 
 <template>
@@ -39,7 +38,7 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div class="row mt-2">
       <div class="col-4">
         <div class="metric-card-title">
@@ -69,7 +68,7 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div class="row mt-2">
       <div class="col-4">
         <div class="metric-card-title">
@@ -99,7 +98,7 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div class="row mt-1">
       <div class="col-4">
         <div class="metric-card-title">
@@ -129,7 +128,7 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div class="row mt-1">
       <div class="col-4">
         <div class="metric-card-title">
@@ -165,14 +164,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

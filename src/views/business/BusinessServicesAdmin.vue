@@ -2,9 +2,13 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getServiceByCommerce, updateService, addService } from '../../application/services/service';
+import {
+  getServiceByCommerce,
+  updateService,
+  addService,
+} from '../../application/services/service';
 import { getPermissions } from '../../application/services/permissions';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import ServiceSimpleName from '../../components/common/ServiceSimpleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
@@ -20,13 +24,26 @@ import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessServicesAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ServiceSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu, SearchAdminItem },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    Spinner,
+    Alert,
+    ServiceSimpleName,
+    Toggle,
+    Warning,
+    AreYouSure,
+    Popper,
+    ComponentMenu,
+    SearchAdminItem,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -49,7 +66,7 @@ export default {
       estimatedTimeUpdateError: false,
       types: [],
       toggles: {},
-      filtered: []
+      filtered: [],
     });
 
     onBeforeMount(async () => {
@@ -59,7 +76,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
           state.services = await getServiceByCommerce(state.commerce.id);
         }
@@ -71,76 +89,77 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const validateAdd = (service) => {
+    const validateAdd = service => {
       state.errorsAdd = [];
-      if(!service.name || service.name.length === 0) {
+      if (!service.name || service.name.length === 0) {
         state.nameError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.name');
       } else {
         state.nameError = false;
       }
-      if(!service.tag || service.tag.length === 0) {
+      if (!service.tag || service.tag.length === 0) {
         state.tagError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.tag');
       } else {
         state.tagError = false;
       }
-      if(!service.order || service.order.length === 0) {
+      if (!service.order || service.order.length === 0) {
         state.orderAddError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.order');
       } else {
         state.orderAddError = false;
       }
-      if(!service.serviceInfo.estimatedTime || service.serviceInfo.estimatedTime.length === 0) {
+      if (!service.serviceInfo.estimatedTime || service.serviceInfo.estimatedTime.length === 0) {
         state.timeAddError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.estimatedTime');
       } else {
         state.timeAddError = false;
       }
-      if(!service.serviceInfo.shortDescription || service.serviceInfo.shortDescription.length === 0) {
+      if (
+        !service.serviceInfo.shortDescription ||
+        service.serviceInfo.shortDescription.length === 0
+      ) {
         state.timeAddError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.shortDescription');
       } else {
         state.timeAddError = false;
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const validateUpdate = (service) => {
+    const validateUpdate = service => {
       state.errorsUpdate = [];
-      if(!service.order || service.order.length === 0) {
+      if (!service.order || service.order.length === 0) {
         state.orderUpdateError = true;
         state.errorsUpdate.push('businessServicesAdmin.validate.order');
       } else {
         state.orderUpdateError = false;
       }
-      if(state.errorsUpdate.length === 0) {
+      if (state.errorsUpdate.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
     const showAdd = () => {
       state.showAdd = true;
       state.newService = {
         order: state.services.length + 1,
         online: true,
-        serviceInfo: {}
-      }
-    }
+        serviceInfo: {},
+      };
+    };
 
     const add = async () => {
       try {
@@ -151,7 +170,7 @@ export default {
           state.services = await getServiceByCommerce(state.commerce.id);
           state.showAdd = false;
           closeAddModal();
-          state.newService = {}
+          state.newService = {};
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -160,9 +179,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const update = async (service) => {
+    const update = async service => {
       try {
         loading.value = true;
         if (validateUpdate(service)) {
@@ -176,9 +195,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const unavailable = async (service) => {
+    const unavailable = async service => {
       try {
         loading.value = true;
         if (service && service.id) {
@@ -195,17 +214,17 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const goToUnavailable = () => {
       state.goToUnavailable = !state.goToUnavailable;
-    }
+    };
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    }
+    };
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -216,20 +235,20 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const showUpdateForm = (index) => {
+    const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
-    }
+    };
 
-    const receiveFilteredItems = (items) => {
+    const receiveFilteredItems = items => {
       state.filtered = items;
-    }
+    };
 
     const closeAddModal = () => {
       const modalCloseButton = document.getElementById('close-modal');
       modalCloseButton.click();
-    }
+    };
 
     return {
       state,
@@ -245,10 +264,10 @@ export default {
       unavailable,
       goToUnavailable,
       unavailableCancel,
-      receiveFilteredItems
-    }
-  }
-}
+      receiveFilteredItems,
+    };
+  },
+};
 </script>
 
 <template>
@@ -258,8 +277,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessServicesAdmin.title`)"
         :toggles="state.toggles"
-        componentName="businessServicesAdmin"
-        @goBack="goBack">
+        component-name="businessServicesAdmin"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -270,15 +290,23 @@ export default {
           <div id="businessServicesAdmin-controls" class="control-box">
             <div class="row">
               <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t("businessServicesAdmin.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                <span>{{ $t('businessServicesAdmin.commerce') }} </span>
+                <select
+                  class="btn btn-md fw-bold text-dark m-1 select"
+                  v-model="state.commerce"
+                  @change="selectCommerce(state.commerce)"
+                  id="modules"
+                >
+                  <option v-for="com in state.commerces" :key="com.id" :value="com">
+                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                  </option>
                 </select>
               </div>
               <div v-else>
                 <Message
                   :title="$t('businessServicesAdmin.message.4.title')"
-                  :content="$t('businessServicesAdmin.message.4.content')" />
+                  :content="$t('businessServicesAdmin.message.4.content')"
+                />
               </div>
             </div>
           </div>
@@ -287,7 +315,8 @@ export default {
               <div v-if="state.services.length === 0">
                 <Message
                   :title="$t('businessServicesAdmin.message.2.title')"
-                  :content="$t('businessServicesAdmin.message.2.content')" />
+                  :content="$t('businessServicesAdmin.message.2.content')"
+                />
               </div>
               <div v-if="state.commerce" class="row mb-2">
                 <div class="col lefted">
@@ -296,16 +325,17 @@ export default {
                     @click="showAdd(service)"
                     data-bs-toggle="modal"
                     :data-bs-target="`#add-service`"
-                    :disabled="!state.toggles['services.admin.add']">
-                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
+                    :disabled="!state.toggles['services.admin.add']"
+                  >
+                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
                   </button>
                 </div>
               </div>
               <div>
                 <SearchAdminItem
-                  :businessItems="state.services"
+                  :business-items="state.services"
                   :type="'services'"
-                  :receiveFilteredItems="receiveFilteredItems"
+                  :receive-filtered-items="receiveFilteredItems"
                 >
                 </SearchAdminItem>
                 <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
@@ -314,21 +344,25 @@ export default {
                       <ServiceSimpleName :service="service"></ServiceSimpleName>
                     </div>
                     <div class="col-2">
-                      <a
-                        href="#"
-                        @click.prevent="showUpdateForm(index)">
-                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                      <a href="#" @click.prevent="showUpdateForm(index)">
+                        <i
+                          :id="index"
+                          :class="`bi ${
+                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
                       </a>
                     </div>
                   </div>
-                  <div v-if="state.toggles['services.admin.read']"
+                  <div
+                    v-if="state.toggles['services.admin.read']"
                     :class="{ show: state.extendedEntity === index }"
                     class="detailed-data transition-slow"
-                    >
+                  >
                     <div class="row g-1">
                       <div id="queue-type-form-update" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessQueuesAdmin.type") }}
+                          {{ $t('businessQueuesAdmin.type') }}
                         </div>
                         <div class="col-8">
                           <input
@@ -336,18 +370,20 @@ export default {
                             type="text"
                             class="form-control"
                             v-model="service.type"
-                            placeholder="Type">
+                            placeholder="Type"
+                          />
                         </div>
                       </div>
                       <div id="service-order-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessServicesAdmin.order") }}
+                          {{ $t('businessServicesAdmin.order') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessServicesAdmin.orderHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessServicesAdmin.orderHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-8">
@@ -359,18 +395,20 @@ export default {
                             class="form-control"
                             v-model="service.order"
                             v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                            placeholder="1">
+                            placeholder="1"
+                          />
                         </div>
                       </div>
                       <div id="service-online-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessServicesAdmin.online") }}
+                          {{ $t('businessServicesAdmin.online') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessServicesAdmin.onlineHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessServicesAdmin.onlineHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-8">
@@ -382,7 +420,7 @@ export default {
                       </div>
                       <div id="service-active-form" class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessServicesAdmin.active") }}
+                          {{ $t('businessServicesAdmin.active') }}
                         </div>
                         <div class="col-8">
                           <Toggle
@@ -396,14 +434,16 @@ export default {
                         <a
                           class="nav-link subdata-title centered active"
                           data-bs-toggle="collapse"
-                          href="#update-service">
-                          {{ $t("businessServicesAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                          href="#update-service"
+                        >
+                          {{ $t('businessServicesAdmin.service') }}
+                          <i class="bi bi-chevron-down"></i>
                         </a>
                       </div>
                       <div id="update-service" class="collapse row m-0">
                         <div id="service-short-description-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.shortDescription") }}
+                            {{ $t('businessServicesAdmin.shortDescription') }}
                           </div>
                           <div class="col-6">
                             <input
@@ -413,12 +453,13 @@ export default {
                               class="form-control"
                               v-model="service.serviceInfo.shortDescription"
                               v-bind:class="{ 'is-invalid': state.shortDescriptionUpdateError }"
-                              placeholder="Service A is great">
+                              placeholder="Service A is great"
+                            />
                           </div>
                         </div>
                         <div id="service-description-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.longDescription") }}
+                            {{ $t('businessServicesAdmin.longDescription') }}
                           </div>
                           <div class="col-6">
                             <textarea
@@ -427,18 +468,21 @@ export default {
                               type="text"
                               class="form-control"
                               v-model="service.serviceInfo.longDescription"
-                              placeholder="Benefit A-Benefit B..."> </textarea>
+                              placeholder="Benefit A-Benefit B..."
+                            >
+                            </textarea>
                           </div>
                         </div>
                         <div id="service-time-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.estimatedTime") }}
+                            {{ $t('businessServicesAdmin.estimatedTime') }}
                             <Popper
                               :class="'dark p-1'"
                               arrow
-                              disableClickAway
-                              :content="$t('businessServicesAdmin.estimatedTimeHelp')">
-                              <i class='bi bi-info-circle-fill h7'></i>
+                              disable-click-away
+                              :content="$t('businessServicesAdmin.estimatedTimeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
                             </Popper>
                           </div>
                           <div class="col-6">
@@ -448,18 +492,20 @@ export default {
                               class="form-control"
                               v-model="service.serviceInfo.estimatedTime"
                               v-bind:class="{ 'is-invalid': state.estimatedTimeUpdateError }"
-                              placeholder="1">
+                              placeholder="1"
+                            />
                           </div>
                         </div>
                         <div id="service-block-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.blockTime") }}
+                            {{ $t('businessServicesAdmin.blockTime') }}
                             <Popper
                               :class="'dark p-1'"
                               arrow
-                              disableClickAway
-                              :content="$t('businessServicesAdmin.blockTimeHelp')">
-                              <i class='bi bi-info-circle-fill h7'></i>
+                              disable-click-away
+                              :content="$t('businessServicesAdmin.blockTimeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
                             </Popper>
                           </div>
                           <div class="col-6">
@@ -468,18 +514,20 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.blockTime"
-                              placeholder="1">
+                              placeholder="1"
+                            />
                           </div>
                         </div>
                         <div id="service-block-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.procedures") }}
+                            {{ $t('businessServicesAdmin.procedures') }}
                             <Popper
                               :class="'dark p-1'"
                               arrow
-                              disableClickAway
-                              :content="$t('businessServicesAdmin.proceduresHelp')">
-                              <i class='bi bi-info-circle-fill h7'></i>
+                              disable-click-away
+                              :content="$t('businessServicesAdmin.proceduresHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
                             </Popper>
                           </div>
                           <div class="col-6">
@@ -488,12 +536,13 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.procedures"
-                              placeholder="1">
+                              placeholder="1"
+                            />
                           </div>
                         </div>
                         <div id="service-price-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.price") }}
+                            {{ $t('businessServicesAdmin.price') }}
                           </div>
                           <div class="col-6">
                             <input
@@ -501,12 +550,13 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.price"
-                              placeholder="1000">
+                              placeholder="1000"
+                            />
                           </div>
                         </div>
                         <div id="service-onlinePrice-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.onlinePrice") }}
+                            {{ $t('businessServicesAdmin.onlinePrice') }}
                           </div>
                           <div class="col-6">
                             <input
@@ -514,12 +564,13 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.onlinePrice"
-                              placeholder="1000">
+                              placeholder="1000"
+                            />
                           </div>
                         </div>
                         <div id="service-saving-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.saving") }}
+                            {{ $t('businessServicesAdmin.saving') }}
                           </div>
                           <div class="col-6">
                             <input
@@ -527,12 +578,13 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.saving"
-                              placeholder="25">
+                              placeholder="25"
+                            />
                           </div>
                         </div>
                         <div id="service-onlineSaving-form-update" class="row g-1">
                           <div class="col-6 text-label">
-                            {{ $t("businessServicesAdmin.onlineSaving") }}
+                            {{ $t('businessServicesAdmin.onlineSaving') }}
                           </div>
                           <div class="col-6">
                             <input
@@ -540,7 +592,8 @@ export default {
                               type="number"
                               class="form-control"
                               v-model="service.serviceInfo.onlineSaving"
-                              placeholder="30">
+                              placeholder="30"
+                            />
                           </div>
                         </div>
                       </div>
@@ -555,25 +608,32 @@ export default {
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click="update(service)"
-                          :disabled="!state.toggles['services.admin.update']">
-                          {{ $t("businessServicesAdmin.update") }} <i class="bi bi-save"></i>
+                          :disabled="!state.toggles['services.admin.update']"
+                        >
+                          {{ $t('businessServicesAdmin.update') }} <i class="bi bi-save"></i>
                         </button>
                         <button
                           class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
                           @click="goToUnavailable()"
-                          v-if="state.toggles['services.admin.unavailable']">
-                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
+                          v-if="state.toggles['services.admin.unavailable']"
+                        >
+                          {{ $t('businessQueuesAdmin.unavailable') }}
+                          <i class="bi bi-trash-fill"></i>
                         </button>
                         <AreYouSure
                           :show="state.goToUnavailable"
-                          :yesDisabled="state.toggles['services.admin.unavailable']"
-                          :noDisabled="state.toggles['services.admin.unavailable']"
+                          :yes-disabled="state.toggles['services.admin.unavailable']"
+                          :no-disabled="state.toggles['services.admin.unavailable']"
                           @actionYes="unavailable(service)"
                           @actionNo="unavailableCancel()"
                         >
                         </AreYouSure>
                       </div>
-                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
+                      <div
+                        class="row g-1 errors"
+                        id="feedback"
+                        v-if="state.errorsUpdate.length > 0"
+                      >
                         <Warning>
                           <template v-slot:message>
                             <li v-for="(error, index) in state.errorsUpdate" :key="index">
@@ -584,10 +644,15 @@ export default {
                       </div>
                     </div>
                   </div>
-                  <div v-if="(!isActiveBusiness() || !state.toggles['services.admin.read']) && !loading">
+                  <div
+                    v-if="
+                      (!isActiveBusiness() || !state.toggles['services.admin.read']) && !loading
+                    "
+                  >
                     <Message
                       :title="$t('businessServicesAdmin.message.1.title')"
-                      :content="$t('businessServicesAdmin.message.1.content')" />
+                      :content="$t('businessServicesAdmin.message.1.content')"
+                    />
                   </div>
                 </div>
               </div>
@@ -597,27 +662,45 @@ export default {
         <div v-if="(!isActiveBusiness() || !state.toggles['services.admin.view']) && !loading">
           <Message
             :title="$t('businessServicesAdmin.message.1.title')"
-            :content="$t('businessServicesAdmin.message.1.content')" />
+            :content="$t('businessServicesAdmin.message.1.content')"
+          />
         </div>
       </div>
     </div>
     <!-- Modal Add -->
-    <div class="modal fade" :id="`add-service`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+    <div
+      class="modal fade"
+      :id="`add-service`"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
-            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <button
+              id="close-modal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-service" class="result-card mb-4" v-if="state.showAdd && state.toggles['services.admin.add']">
+            <div
+              id="add-service"
+              class="result-card mb-4"
+              v-if="state.showAdd && state.toggles['services.admin.add']"
+            >
               <div v-if="state.services.length < state.toggles['services.admin.limit']">
                 <div class="row g-1">
                   <div id="service-name-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessServicesAdmin.name") }}
+                      {{ $t('businessServicesAdmin.name') }}
                     </div>
                     <div class="col-6">
                       <input
@@ -627,18 +710,20 @@ export default {
                         class="form-control"
                         v-model="state.newService.name"
                         v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="Service A">
+                        placeholder="Service A"
+                      />
                     </div>
                   </div>
                   <div id="service-tag-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessServicesAdmin.tag") }}
+                      {{ $t('businessServicesAdmin.tag') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessServicesAdmin.tagHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessServicesAdmin.tagHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -649,18 +734,20 @@ export default {
                         class="form-control"
                         v-model="state.newService.tag"
                         v-bind:class="{ 'is-invalid': state.tagError }"
-                        placeholder="Serv-A">
+                        placeholder="Serv-A"
+                      />
                     </div>
                   </div>
                   <div id="service-type-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessServicesAdmin.type") }}
+                      {{ $t('businessServicesAdmin.type') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessServicesAdmin.typeHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessServicesAdmin.typeHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -668,21 +755,25 @@ export default {
                         class="btn btn-md btn-light fw-bold text-dark select"
                         v-model="state.newService.type"
                         id="types"
-                        v-bind:class="{ 'is-invalid': state.typeError }">
-                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">{{ $t(`services.types.${typ.id}`) }}</option>
+                        v-bind:class="{ 'is-invalid': state.typeError }"
+                      >
+                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
+                          {{ $t(`services.types.${typ.id}`) }}
+                        </option>
                       </select>
                     </div>
                   </div>
                   <div id="service-order-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessServicesAdmin.order") }}
+                      {{ $t('businessServicesAdmin.order') }}
                       <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessServicesAdmin.orderHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
+                        :class="'dark p-1'"
+                        arrow
+                        disable-click-away
+                        :content="$t('businessServicesAdmin.orderHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
+                      </Popper>
                     </div>
                     <div class="col-6">
                       <input
@@ -692,40 +783,43 @@ export default {
                         class="form-control"
                         v-model="state.newService.order"
                         v-bind:class="{ 'is-invalid': state.orderAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="add-service-online-form" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.online") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessServicesAdmin.onlineHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-6">
-                        <Toggle
-                          v-model="state.newService.online"
-                          :disabled="!state.toggles['services.admin.edit']"
-                        />
-                      </div>
+                    <div class="col-6 text-label">
+                      {{ $t('businessServicesAdmin.online') }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disable-click-away
+                        :content="$t('businessServicesAdmin.onlineHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
+                      </Popper>
                     </div>
+                    <div class="col-6">
+                      <Toggle
+                        v-model="state.newService.online"
+                        :disabled="!state.toggles['services.admin.edit']"
+                      />
+                    </div>
+                  </div>
                   <!-- Datos de Servicio -->
                   <div class="row g-1">
                     <a
                       class="nav-link subdata-title centered active"
                       data-bs-toggle="collapse"
-                      href="#add-service-info">
-                      {{ $t("businessCommercesAdmin.service") }} <i class="bi bi-chevron-down"></i>
+                      href="#add-service-info"
+                    >
+                      {{ $t('businessCommercesAdmin.service') }} <i class="bi bi-chevron-down"></i>
                     </a>
                   </div>
                   <div id="add-service-info" class="collapse row m-0">
                     <div id="service-short-description-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.shortDescription") }}
+                        {{ $t('businessServicesAdmin.shortDescription') }}
                       </div>
                       <div class="col-6">
                         <input
@@ -735,12 +829,13 @@ export default {
                           class="form-control"
                           v-model="state.newService.serviceInfo.shortDescription"
                           v-bind:class="{ 'is-invalid': state.shortDescriptionAddError }"
-                          placeholder="Service A is great">
+                          placeholder="Service A is great"
+                        />
                       </div>
                     </div>
                     <div id="service-description-form-update" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.longDescription") }}
+                        {{ $t('businessServicesAdmin.longDescription') }}
                       </div>
                       <div class="col-6">
                         <textarea
@@ -749,18 +844,21 @@ export default {
                           type="text"
                           class="form-control"
                           v-model="state.newService.serviceInfo.longDescription"
-                          placeholder="Benefit A-Benefit B..."> </textarea>
+                          placeholder="Benefit A-Benefit B..."
+                        >
+                        </textarea>
                       </div>
                     </div>
                     <div id="service-time-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.estimatedTime") }}
+                        {{ $t('businessServicesAdmin.estimatedTime') }}
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disableClickAway
-                          :content="$t('businessServicesAdmin.estimatedTimeHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
+                          disable-click-away
+                          :content="$t('businessServicesAdmin.estimatedTimeHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
                       </div>
                       <div class="col-6">
@@ -770,18 +868,20 @@ export default {
                           class="form-control"
                           v-model="state.newService.serviceInfo.estimatedTime"
                           v-bind:class="{ 'is-invalid': state.estimatedTimeAddError }"
-                          placeholder="1">
+                          placeholder="1"
+                        />
                       </div>
                     </div>
                     <div id="service-block-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.blockTime") }}
+                        {{ $t('businessServicesAdmin.blockTime') }}
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disableClickAway
-                          :content="$t('businessServicesAdmin.blockTimeHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
+                          disable-click-away
+                          :content="$t('businessServicesAdmin.blockTimeHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
                       </div>
                       <div class="col-6">
@@ -790,18 +890,20 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.blockTime"
-                          placeholder="1">
+                          placeholder="1"
+                        />
                       </div>
                     </div>
                     <div id="service-block-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.procedures") }}
+                        {{ $t('businessServicesAdmin.procedures') }}
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disableClickAway
-                          :content="$t('businessServicesAdmin.proceduresHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
+                          disable-click-away
+                          :content="$t('businessServicesAdmin.proceduresHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
                       </div>
                       <div class="col-6">
@@ -810,12 +912,13 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.procedures"
-                          placeholder="1">
+                          placeholder="1"
+                        />
                       </div>
                     </div>
                     <div id="service-price-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.price") }}
+                        {{ $t('businessServicesAdmin.price') }}
                       </div>
                       <div class="col-6">
                         <input
@@ -823,12 +926,13 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.price"
-                          placeholder="1000">
+                          placeholder="1000"
+                        />
                       </div>
                     </div>
                     <div id="service-onlinePrice-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.onlinePrice") }}
+                        {{ $t('businessServicesAdmin.onlinePrice') }}
                       </div>
                       <div class="col-6">
                         <input
@@ -836,12 +940,13 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.onlinePrice"
-                          placeholder="1000">
+                          placeholder="1000"
+                        />
                       </div>
                     </div>
                     <div id="service-saving-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.saving") }}
+                        {{ $t('businessServicesAdmin.saving') }}
                       </div>
                       <div class="col-6">
                         <input
@@ -849,12 +954,13 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.saving"
-                          placeholder="25">
+                          placeholder="25"
+                        />
                       </div>
                     </div>
                     <div id="service-onlineSaving-form-add" class="row g-1">
                       <div class="col-6 text-label">
-                        {{ $t("businessServicesAdmin.onlineSaving") }}
+                        {{ $t('businessServicesAdmin.onlineSaving') }}
                       </div>
                       <div class="col-6">
                         <input
@@ -862,18 +968,20 @@ export default {
                           type="number"
                           class="form-control"
                           v-model="state.newService.serviceInfo.onlineSaving"
-                          placeholder="30">
+                          placeholder="30"
+                        />
                       </div>
                     </div>
                   </div>
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newService)">
-                      {{ $t("businessServicesAdmin.add") }} <i class="bi bi-save"></i>
+                      @click="add(state.newService)"
+                    >
+                      {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>
                     </button>
                   </div>
-                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                     <Warning>
                       <template v-slot:message>
                         <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -887,12 +995,18 @@ export default {
               <div v-else>
                 <Message
                   :title="$t('businessServicesAdmin.message.3.title')"
-                  :content="$t('businessServicesAdmin.message.3.content')" />
+                  :content="$t('businessServicesAdmin.message.3.content')"
+                />
               </div>
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>
@@ -903,14 +1017,14 @@ export default {
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .service-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {

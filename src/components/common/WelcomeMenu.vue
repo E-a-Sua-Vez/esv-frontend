@@ -10,10 +10,10 @@ export default {
     componentName: { type: String, default: undefined },
   },
   data() {
-    return {}
+    return {};
   },
-  methods: {}
-}
+  methods: {},
+};
 </script>
 
 <template>
@@ -23,15 +23,17 @@ export default {
         <div class="centered">
           <div class="welcome">
             <div id="welcome">
-              <span v-if="!name" class="welcome-title">{{ $t("collaboratorMenu.welcome") }}</span>
-              <span v-else class="welcome-title">{{ $t("collaboratorMenu.welcome-user") }}, {{ name }}!</span>
+              <span v-if="!name" class="welcome-title">{{ $t('collaboratorMenu.welcome') }}</span>
+              <span v-else class="welcome-title"
+                >{{ $t('collaboratorMenu.welcome-user') }}, {{ name }}!</span
+              >
             </div>
           </div>
         </div>
         <div class="toggle-title" v-if="toggles && componentName">
           <ToggleCapabilities
             :toggles="toggles"
-            :componentName="componentName"
+            :component-name="componentName"
           ></ToggleCapabilities>
         </div>
       </div>
@@ -42,20 +44,20 @@ export default {
 <style scoped>
 .title-content {
   border-radius: 10rem;
-  border: .5px solid var(--gris-clear);
-  background-color:var(--gris-clear);
+  border: 0.5px solid var(--gris-clear);
+  background-color: var(--gris-clear);
 }
 .welcome-title {
   font-size: 1.2rem;
   font-weight: 700;
 }
 .welcome {
-  padding: .5rem;
+  padding: 0.5rem;
   line-height: 1rem;
 }
 .toggle-title {
   line-height: 1rem;
-  padding-bottom: .5rem;
+  padding-bottom: 0.5rem;
   padding-top: 0rem !important;
 }
 </style>

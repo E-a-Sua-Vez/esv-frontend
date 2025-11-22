@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'ProductSimpleName',
   props: {
@@ -9,14 +8,14 @@ export default {
   data() {
     return {
       extendedEntity: false,
-    }
+    };
   },
   methods: {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -28,9 +27,7 @@ export default {
         :class="product.active === true ? 'active-name' : 'desactived-name'"
       >
         <div class="row centered">
-          <div class="col-8">
-            <i class="bi bi-eyedropper"></i> {{ product.name }}
-          </div>
+          <div class="col-8"><i class="bi bi-eyedropper"></i> {{ product.name }}</div>
           <div class="col-2">
             <span>
               <i class="dark fw-bold" :class="'bi bi-arrow-right-circle-fill'"></i>
@@ -48,14 +45,14 @@ export default {
 <style scoped>
 .active {
   background-color: var(--azul-turno);
-  margin: .1rem;
+  margin: 0.1rem;
   border-radius: 1rem;
   line-height: 1rem;
   border: 1.5px solid var(--azul-turno);
 }
 .desactived {
   background-color: var(--gris-tooltip);
-  margin: .1rem;
+  margin: 0.1rem;
   border-radius: 1rem;
   line-height: 1rem;
   border: 1.5px solid var(--gris-tooltip);
@@ -64,14 +61,13 @@ export default {
   background-color: var(--gris-tooltip);
   color: var(--color-background);
   font-weight: 700;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .show {
-  padding: .5rem;
+  padding: 0.5rem;
   overflow-y: auto;
 }
 .product-details {
   cursor: pointer;
 }
-
 </style>

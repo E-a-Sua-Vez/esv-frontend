@@ -26,7 +26,7 @@ export default {
       accept: false,
       captcha: false,
       passwordError: false,
-			emailError: false,
+      emailError: false,
       errors: [],
       modalVisible: false,
       loading: false,
@@ -35,12 +35,12 @@ export default {
       siteKey,
       keyName,
       store,
-      visible: false
-    }
+      visible: false,
+    };
   },
   methods: {
     async login() {
-      if(this.validate()) {
+      if (this.validate()) {
         try {
           this.loading = true;
           this.alertError = '';
@@ -53,9 +53,8 @@ export default {
             let path = this.urlOkRedirect;
             if (this.userType === 'collaborator') {
               path = path.replace(':id', this.user.commerceId);
-
             }
-            this.$router.push({ path })
+            this.$router.push({ path });
           }
           this.loading = false;
         } catch (error) {
@@ -66,29 +65,29 @@ export default {
     },
     validate() {
       this.errors = [];
-      if(this.password.length === 0) {
+      if (this.password.length === 0) {
         this.passwordError = true;
         this.errors.push('loginData.validate.password.1');
       }
-      if(this.email.length > 0) {
-        if(this.email.length < 10) {
+      if (this.email.length > 0) {
+        if (this.email.length < 10) {
           this.emailError = true;
           this.errors.push('loginData.validate.email.1');
         }
       }
-      if(this.password.length === 0 && this.email.length === 0) {
+      if (this.password.length === 0 && this.email.length === 0) {
         this.errors.push('loginData.validate.common.1');
       }
-      if(!this.captcha) {
+      if (!this.captcha) {
         this.errors.push('loginData.validate.common.2');
       }
-      if(this.errors.length === 0) {
+      if (this.errors.length === 0) {
         return true;
       }
       return false;
-	  },
+    },
     validateCaptchaOk(response) {
-      if(response) {
+      if (response) {
         this.captcha = true;
       }
     },
@@ -114,22 +113,22 @@ export default {
         const modalCloseButton = document.getElementById('close-modal');
         modalCloseButton.click();
       }
-    }
+    },
   },
   watch: {
-    modalVisible: function(newVal) {
+    modalVisible(newVal) {
       this.modalVisible = newVal;
-    }
+    },
   },
   async beforeMount() {
     const currentUser = await this.store.getCurrentUser;
     const currentUserType = await this.store.getCurrentUserType;
-    if(currentUser && currentUserType) {
+    if (currentUser && currentUserType) {
       await signOut(currentUser.email, currentUserType);
       await this.store.resetSession();
     }
-  }
-}
+  },
+};
 </script>
 <template>
   <div>
@@ -142,13 +141,14 @@ export default {
             </div>
             <div class="col-10">
               <input
-              type="email"
-              class="form-control"
-              id="email"
-              v-model="email"
-              autocomplete="username"
-              v-bind:class="{ 'is-invalid': emailError }"
-              placeholder="tunombre@tumail.com">
+                type="email"
+                class="form-control"
+                id="email"
+                v-model="email"
+                autocomplete="username"
+                v-bind:class="{ 'is-invalid': emailError }"
+                placeholder="tunombre@tumail.com"
+              />
             </div>
           </div>
           <div id="password-form" class="row g-2 mb-3">
@@ -157,13 +157,14 @@ export default {
             </div>
             <div class="col-10">
               <input
-              type="password"
-              class="form-control"
-              id="password"
-              v-model="password"
-              autocomplete="current-password"
-              v-bind:class="{ 'is-invalid': passwordError }"
-              :placeholder="$t('loginData.password.placeholder')">
+                type="password"
+                class="form-control"
+                id="password"
+                v-model="password"
+                autocomplete="current-password"
+                v-bind:class="{ 'is-invalid': passwordError }"
+                :placeholder="$t('loginData.password.placeholder')"
+              />
             </div>
           </div>
           <div class="recaptcha-area">
@@ -177,15 +178,16 @@ export default {
           <div class="btn-area d-grid gap-2">
             <button
               class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-              type="submit">
-              {{ $t("loginData.actions.1.action") }}
+              type="submit"
+            >
+              {{ $t('loginData.actions.1.action') }}
               <i class="bi bi-check-lg"></i>
             </button>
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
           </div>
         </div>
-        <div class="errors" id="feedback" v-if="(errors.length > 0)">
+        <div class="errors" id="feedback" v-if="errors.length > 0">
           <Warning>
             <template v-slot:message>
               <li v-for="(error, index) in errors" :key="index">
@@ -195,32 +197,46 @@ export default {
           </Warning>
         </div>
         <div class="actions mt-4" v-if="userType !== 'master'">
-          <span>{{ $t("loginData.actions.2.title.1") }}</span>
+          <span>{{ $t('loginData.actions.2.title.1') }}</span>
           <div class="d-grid gap-2">
             <a
               class="mb-3 link"
               data-bs-toggle="modal"
               data-bs-target="#modalPassword"
-              @click="$event => closeMenu()">
-              {{ $t("loginData.actions.2.action") }}
+              @click="$event => closeMenu()"
+            >
+              {{ $t('loginData.actions.2.action') }}
             </a>
           </div>
         </div>
         <!-- Modal Password -->
-        <div class="modal fade" id="modalPassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-          <div class=" modal-dialog modal-xl">
+        <div
+          class="modal fade"
+          id="modalPassword"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="staticBackdropLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-xl">
             <div class="modal-content">
-              <div class="modal-header border-0"><button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                <div class="modal-body text-center pb-5">
-                  <Suspense>
-                    <template #default>
-                      <AccessAdmin
-                        :userType="userType"
-                        @closeModal="closeMenu()">
-                      </AccessAdmin>
-                    </template>
-                  </Suspense>
-                </div>
+              <div class="modal-header border-0">
+                <button
+                  id="close-modal"
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body text-center pb-5">
+                <Suspense>
+                  <template #default>
+                    <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
+                  </template>
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
@@ -230,12 +246,12 @@ export default {
 </template>
 <style scoped>
 .client-data-card {
-  margin-top: .2rem;
+  margin-top: 0.2rem;
   margin-bottom: 1rem;
   padding: 1rem;
   background-color: var(--color-background);
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   font-weight: 400;
   line-height: 2.5rem;
 }

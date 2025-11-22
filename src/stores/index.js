@@ -1,141 +1,109 @@
-import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { getActiveCommercesByBusinessId } from '../application/services/commerce';
 import { getBusinessById } from '../application/services/business';
+import { getStorageItem, setStorageItem, removeStorageItem } from '@/shared/utils/storage';
+import { STORAGE_KEYS } from '@/shared/constants';
 
 export const globalStore = defineStore('globalStore', {
   state: () => ({
-    currentUser: ref(undefined),
-    currentPermissions: ref(undefined),
-    currentQueue: ref(undefined),
-    currentCommerce: ref(undefined),
-    currentBusiness: ref(undefined),
-    currentUserType: ref(undefined),
-    currentAttentionChannel: ref(undefined),
-    currentActiveAttentions: ref(undefined)
+    currentUser: null,
+    currentPermissions: null,
+    currentQueue: null,
+    currentCommerce: null,
+    currentBusiness: null,
+    currentUserType: null,
+    currentAttentionChannel: null,
+    currentActiveAttentions: null,
   }),
   getters: {
-    getCurrentUser: (state) => {
-      const localValue = localStorage.getItem('currentUser');
-      let value = state.currentUser || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
+    getCurrentUser: state => state.currentUser || getStorageItem(STORAGE_KEYS.CURRENT_USER),
+    getCurrentPermissions: state =>
+      state.currentPermissions || getStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS),
+    getCurrentQueue: state => state.currentQueue || getStorageItem(STORAGE_KEYS.CURRENT_QUEUE),
+    getCurrentUserType: state => {
+      const stored = state.currentUserType || localStorage.getItem(STORAGE_KEYS.CURRENT_USER_TYPE);
+      return stored && stored !== 'undefined' ? stored : null;
     },
-    getCurrentPermissions: (state) => {
-      const localValue = localStorage.getItem('currentPermissions');
-      let value = state.currentPermissions || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
+    getCurrentCommerce: state =>
+      state.currentCommerce || getStorageItem(STORAGE_KEYS.CURRENT_COMMERCE),
+    getCurrentBusiness: state =>
+      state.currentBusiness || getStorageItem(STORAGE_KEYS.CURRENT_BUSINESS),
+    getCurrentAttentionChannel: state => {
+      const stored =
+        state.currentAttentionChannel ||
+        localStorage.getItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL);
+      return stored && stored !== 'undefined' ? stored : 'QR';
     },
-    getCurrentQueue: async (state) => {
-      const localValue = localStorage.getItem('currentQueue');
-      let value = state.currentQueue || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
-    },
-    getCurrentUserType: async (state) => {
-      const localValue = localStorage.getItem('currentUserType');
-      const value = state.currentUserType || localValue || undefined;
-      return value === 'undefined' ? undefined : value;
-    },
-    getCurrentCommerce: async (state) => {
-      let localValue = localStorage.getItem('currentCommerce');
-      let value = state.currentCommerce || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
-    },
-    getCurrentBusiness: async (state) => {
-      let localValue = localStorage.getItem('currentBusiness');
-      let value = state.currentBusiness || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
-    },
-    getCurrentAttentionChannel: async (state) => {
-      const localValue = localStorage.getItem('currentAttentionChannel');
-      let value = state.currentAttentionChannel || localValue || 'QR';
-      return value === 'undefined' ? undefined : value;
-    },
-    getCurrentActiveAttentions: async (state) => {
-      let localValue = localStorage.getItem('currentActiveAttentions');
-      let value = state.currentActiveAttentions || localValue || undefined;
-      value = value === 'undefined' ? undefined : value;
-      value = value ? JSON.parse(value) : value;
-      return value;
-    },
+    getCurrentActiveAttentions: state =>
+      state.currentActiveAttentions || getStorageItem(STORAGE_KEYS.CURRENT_ACTIVE_ATTENTIONS),
   },
   actions: {
     async setCurrentUser(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentUser', val);
-      this.$state.currentUser = val;
+      this.currentUser = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_USER, value);
     },
     async setCurrentPermissions(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentPermissions', val);
-      this.currentPermissions = val;
+      this.currentPermissions = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS, value);
     },
     async setCurrentQueue(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentQueue', val);
-      this.currentQueue = val;
+      this.currentQueue = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_QUEUE, value);
     },
     async setCurrentUserType(value) {
-      await localStorage.setItem('currentUserType', value);
       this.currentUserType = value;
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_TYPE, value);
     },
     async setCurrentCommerce(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentCommerce', val);
-      this.currentCommerce = val;
+      this.currentCommerce = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_COMMERCE, value);
     },
     async setCurrentBusiness(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentBusiness', val);
-      this.currentBusiness = val;
+      this.currentBusiness = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_BUSINESS, value);
     },
     async setCurrentAttentionChannel(value) {
-      await localStorage.setItem('currentAttentionChannel', value);
       this.currentAttentionChannel = value;
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL, value);
     },
     async setCurrentActiveAttentions(value) {
-      const val = value ? JSON.stringify(value) : value;
-      await localStorage.setItem('currentActiveAttentions', val);
-      this.currentActiveAttentions = val;
+      this.currentActiveAttentions = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_ACTIVE_ATTENTIONS, value);
     },
     async resetSession() {
-      await localStorage.setItem('currentUser', undefined);
-      await localStorage.setItem('currentQueue', undefined);
-      await localStorage.setItem('currentPermissions', undefined);
-      await localStorage.setItem('currentActiveAttentions', undefined);
-      await this.setCurrentUser(undefined);
-      await this.setCurrentQueue(undefined);
-      await this.setCurrentPermissions(undefined);
-      await this.setCurrentActiveAttentions(undefined);
-      this.currentUser = undefined;
-      this.currentQueue = undefined;
-      this.currentPermissions = undefined;
-      this.currentActiveAttentions = undefined;
+      // Clear state
+      this.currentUser = null;
+      this.currentQueue = null;
+      this.currentPermissions = null;
+      this.currentActiveAttentions = null;
+
+      // Clear storage
+      removeStorageItem(STORAGE_KEYS.CURRENT_USER);
+      removeStorageItem(STORAGE_KEYS.CURRENT_QUEUE);
+      removeStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS);
+      removeStorageItem(STORAGE_KEYS.CURRENT_ACTIVE_ATTENTIONS);
     },
     async getActualBusiness() {
-      let business = await this.getCurrentBusiness || undefined;
-      const currentUser = await this.getCurrentUser;
-      const currentCommerce = await this.getCurrentCommerce;
-      if (!business && ((currentUser && currentUser.businessId) || (currentCommerce && currentCommerce.businessId))) {
+      let business = this.getCurrentBusiness || undefined;
+      const currentUser = this.getCurrentUser;
+      const currentCommerce = this.getCurrentCommerce;
+      if (
+        !business &&
+        ((currentUser && currentUser.businessId) || (currentCommerce && currentCommerce.businessId))
+      ) {
         business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }
       return business;
     },
     async renewActualBusiness() {
-      let business = await this.getCurrentBusiness || undefined;
-      const currentUser = await this.getCurrentUser;
-      const currentCommerce = await this.getCurrentCommerce;
-      if (((currentUser && currentUser.businessId) || (currentCommerce && currentCommerce.businessId))) {
+      let business = this.getCurrentBusiness || undefined;
+      const currentUser = this.getCurrentUser;
+      const currentCommerce = this.getCurrentCommerce;
+      if (
+        (currentUser && currentUser.businessId) ||
+        (currentCommerce && currentCommerce.businessId)
+      ) {
         business = await getBusinessById(currentUser.businessId || currentCommerce.businessId);
         this.setCurrentBusiness(business);
       }
@@ -143,10 +111,10 @@ export const globalStore = defineStore('globalStore', {
     },
     async getAvailableCommerces(commercesIn) {
       let commerces = undefined;
-      const currentUser = await this.getCurrentUser;
+      const currentUser = this.getCurrentUser;
       commerces = commercesIn;
       if (!commerces) {
-        const business = await this.getCurrentBusiness;
+        const business = this.getCurrentBusiness;
         const businessId = currentUser.businessId || business.id;
         commerces = await getActiveCommercesByBusinessId(businessId);
       }
@@ -160,7 +128,6 @@ export const globalStore = defineStore('globalStore', {
         }
       }
       return commerces;
-    }
+    },
   },
 });
-

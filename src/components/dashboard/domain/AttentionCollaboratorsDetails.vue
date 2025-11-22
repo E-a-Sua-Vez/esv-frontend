@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'AttentionCollaboratorsDetails',
   props: {
@@ -8,24 +7,28 @@ export default {
     limit: { type: Number, default: 5 },
   },
   data() {
-    return {
-    }
+    return {};
   },
-  methods: {
-  },
-}
+  methods: {},
+};
 </script>
 
 <template>
   <div v-if="show">
     <div v-if="collaborators.length > 0">
-      <div class="row mx-2" v-for="(collaborator, index) in collaborators.slice(0, limit)" :key="collaborator.id">
+      <div
+        class="row mx-2"
+        v-for="(collaborator, index) in collaborators.slice(0, limit)"
+        :key="collaborator.id"
+      >
         <div class="metric-card-title">
-          <i :class="`h6 col-2 bi bi-${index+1}-circle-fill`"></i>
+          <i :class="`h6 col-2 bi bi-${index + 1}-circle-fill`"></i>
           <span class="col-8"> {{ collaborator.name || 'No Data' }} </span>
-          <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle"> {{ collaborator.attention_counter || 0 }} </span>
+          <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle">
+            {{ collaborator.attention_counter || 0 }}
+          </span>
         </div>
-        <hr>
+        <hr />
       </div>
     </div>
     <div v-else>
@@ -43,14 +46,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

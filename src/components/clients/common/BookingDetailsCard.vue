@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
@@ -17,8 +17,8 @@ export default {
   data() {
     return {
       loading: false,
-      extendedEntity: false
-    }
+      extendedEntity: false,
+    };
   },
   methods: {
     showDetails() {
@@ -46,7 +46,7 @@ export default {
     },
     formatIdNumber(commerce, idNumber) {
       return formatIdNumber(commerce, idNumber);
-    }
+    },
   },
   watch: {
     detailsOpened: {
@@ -54,29 +54,40 @@ export default {
       deep: true,
       async handler() {
         this.extendedEntity = this.detailsOpened;
-      }
+      },
     },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="row metric-card centered">
       <div v-if="booking.servicesDetails" class="idNumber-title lefted">
-        <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
-        <span v-if="booking.packageId" class="badge bg-secondary service-badge"> <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span> </span>
+        <span
+          v-for="serv in booking.servicesDetails"
+          :key="serv.id"
+          class="badge service-badge bg-primary p-1"
+        >
+          {{ serv.name }}
+        </span>
+        <span v-if="booking.packageId" class="badge bg-secondary service-badge">
+          <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span>
+        </span>
       </div>
       <div class="col-4 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
-        {{ booking.userName?.trim().toUpperCase() || '' }} {{ booking.userLastName?.trim().toUpperCase() || '' }}
-        <span v-if="booking.termsConditionsAcceptedCode"> <i class="bi bi-person-fill-check mx-1"></i> </span>
+        {{ booking.userName?.trim().toUpperCase() || '' }}
+        {{ booking.userLastName?.trim().toUpperCase() || '' }}
+        <span v-if="booking.termsConditionsAcceptedCode">
+          <i class="bi bi-person-fill-check mx-1"></i>
+        </span>
         <i v-if="booking.paid" class="bi bi-coin mx-1 blue-icon"> </i>
       </div>
       <div class="col-5">
@@ -89,21 +100,18 @@ export default {
     </div>
     <div class="details-arrow">
       <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
+        <span href="#" @click.prevent="showDetails()">
+          <span class="details-title">{{ $t('dashboard.details') }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
-      <div
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow">
+      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ booking.userName || 'N/I' }} {{ booking.userLastName || '' }} <a class="btn copy-icon"
-                @click="copyBooking()">
+              <i class="bi bi-person-circle mx-1"></i> {{ booking.userName || 'N/I' }}
+              {{ booking.userLastName || '' }}
+              <a class="btn copy-icon" @click="copyBooking()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
             </div>
@@ -113,16 +121,18 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+booking.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + booking.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+booking.userEmail"
-                target="_blank">
+                :href="'mailto:' + booking.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ booking.userEmail || 'N/I' }}
               </a>
             </div>
@@ -134,21 +144,24 @@ export default {
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+booking.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + booking.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+booking.userEmail"
-                target="_blank">
+                :href="'mailto:' + booking.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ booking.userEmail || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ formatIdNumber(commerce, booking.userIdNumber) || 'N/I' }}
+              <i class="bi bi-person-vcard mx-1"></i>
+              {{ formatIdNumber(commerce, booking.userIdNumber) || 'N/I' }}
             </div>
           </div>
         </div>
@@ -156,56 +169,110 @@ export default {
           <div class="col">
             <div class="" v-if="booking.paid">
               <div class="mb-2">
-                <i class="bi bi-check-circle-fill mx-1"> </i> <span class="mb-1">{{ $t("collaboratorBookingsView.paymentData") }}</span>
+                <i class="bi bi-check-circle-fill mx-1"> </i>
+                <span class="mb-1">{{ $t('collaboratorBookingsView.paymentData') }}</span>
               </div>
               <div v-if="booking.paid">
                 <span v-if="booking.paymentType" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentType') }} </span>
-                  {{ $t(`paymentTypes.${booking.paymentType}`) }}</span>
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('paymentData.paymentType') }}
+                  </span>
+                  {{ $t(`paymentTypes.${booking.paymentType}`) }}</span
+                >
                 <span v-if="booking.paymentMethod" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentMethod') }} </span>
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('paymentData.paymentMethod') }}
+                  </span>
                   {{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}
                 </span>
-                <span v-if="booking.paymentMethod && booking.paymentMethod === 'HEALTH_AGREEMENT' && booking.healthAgreementId && booking.healthAgreementName" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('commerceQueuesView.healthAgreementText') }} </span>
+                <span
+                  v-if="
+                    booking.paymentMethod &&
+                    booking.paymentMethod === 'HEALTH_AGREEMENT' &&
+                    booking.healthAgreementId &&
+                    booking.healthAgreementName
+                  "
+                  class="badge mx-1 detail-data-badge"
+                >
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('commerceQueuesView.healthAgreementText') }}
+                  </span>
                   {{ booking.healthAgreementName }}
                 </span>
                 <span v-if="booking.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentAmount') }} </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentAmount }}</span>
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('paymentData.paymentAmount') }}
+                  </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentAmount }}</span
+                >
                 <span v-if="booking.paymentCommission" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.paymentCommission') }} </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentCommission }}</span>
-                <span v-if="booking.packageId && booking.packageName" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.package') }} </span>
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('paymentData.paymentCommission') }}
+                  </span>
+                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentCommission }}</span
+                >
+                <span
+                  v-if="booking.packageId && booking.packageName"
+                  class="badge mx-1 detail-data-badge"
+                >
+                  <span class="fw-bold detail-data-badge-title">
+                    {{ $t('paymentData.package') }}
+                  </span>
                   {{ booking.packageName }}
-                  <span class="badge mx-1 bg-secondary">{{ booking.packageProcedureNumber }} / {{ booking.packageProceduresTotalNumber }}</span>
+                  <span class="badge mx-1 bg-secondary"
+                    >{{ booking.packageProcedureNumber }} /
+                    {{ booking.packageProceduresTotalNumber }}</span
+                  >
                   <i class="bi bi-check-circle-fill green-icon" v-if="booking.packagePaid"> </i>
                 </span>
               </div>
-              <hr>
+              <hr />
             </div>
             <div class="mt-2">
               <div class="mb-2">
-                <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
+                <i class="bi bi-qr-code mx-1"> </i>
+                <span class="mb-1">{{ $t('dashboard.attData') }}</span>
               </div>
               <span v-if="booking.queueName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
-                {{ booking.queueName }}</span>
-              <span v-if="booking.commerceName && booking.commerceTag" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-                {{ booking.commerceName }} - {{ booking.commerceTag }}</span>
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.queueData') }}
+                </span>
+                {{ booking.queueName }}</span
+              >
+              <span
+                v-if="booking.commerceName && booking.commerceTag"
+                class="badge mx-1 detail-data-badge"
+              >
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.commerceData') }}
+                </span>
+                {{ booking.commerceName }} - {{ booking.commerceTag }}</span
+              >
               <span v-if="booking.servicesDetails" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
-                <span v-for="serv in booking.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }} </span>
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('paymentData.service') }}
+                </span>
+                <span
+                  v-for="serv in booking.servicesDetails"
+                  :key="serv.id"
+                  class="badge bg-primary mx-1"
+                >
+                  {{ serv.name }}
+                </span>
               </span>
               <span v-if="booking.termsConditionsToAcceptedAt" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.termsAccepted') }} </span>
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('paymentData.termsAccepted') }}
+                </span>
                 <span> {{ getDate(booking.termsConditionsToAcceptedAt) }} </span>
               </span>
-              <br><br>
-              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.bookingId }}</span>
-              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(booking.createdDate) }}</span>
+              <br /><br />
+              <span class="metric-card-details mx-1"
+                ><strong>Id:</strong> {{ booking.bookingId }}</span
+              >
+              <span class="metric-card-details"
+                ><strong>Date:</strong> {{ getDate(booking.createdDate) }}</span
+              >
             </div>
           </div>
         </div>
@@ -217,10 +284,10 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
-  margin: .5rem;
+  padding: 0.1rem;
+  margin: 0.5rem;
   margin-bottom: 0;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -234,24 +301,24 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
+  line-height: 0.7rem;
 }
 .checked-icon {
   color: var(--azul-turno);
 }
 .metric-card-details {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 400;
 }
 </style>

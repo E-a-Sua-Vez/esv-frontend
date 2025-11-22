@@ -13,24 +13,21 @@ export default {
   components: { DetailsCard, AttentionDaysSinceDetails, DefaultSkeleton, CollectionDetails },
   props: {
     show: { type: Boolean, default: true },
-    commerces: { type: Array, default: [] }
+    commerces: { type: Array, default: [] },
   },
   async setup(props) {
     const router = useRouter();
 
-    let loading = ref(false);
-    let loadingSpy = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const loadingSpy = ref(false);
+    const alertError = ref('');
 
-    const {
-      show,
-      commerces
-    } = toRefs(props);
+    const { show, commerces } = toRefs(props);
 
     const state = reactive({
       commerces: [],
-      startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0,10),
-      endDate: new Date().toISOString().slice(0,10),
+      startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0, 10),
+      endDate: new Date().toISOString().slice(0, 10),
       togglesSpy: {},
       timeUpdate: 60,
       incomeTicker: 60,
@@ -39,8 +36,8 @@ export default {
         'survey.created': {},
         'notification.created': {},
         'booking.created': {},
-        'clients': {}
-      }
+        clients: {},
+      },
     });
 
     onBeforeMount(async () => {
@@ -58,37 +55,41 @@ export default {
           }, 1000);*/
         }
       } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
+        alertError.value = error ? (error.response ? error.respose.status : 500) : 500;
         loading.value = false;
       }
-    })
+    });
 
     const getSpyMetric = async () => {
       try {
         loadingSpy.value = true;
-        const date = new Date().toISOString().slice(0,10);
-        const [ year, month, day ] = date.split('-');
+        const date = new Date().toISOString().slice(0, 10);
+        const [year, month, day] = date.split('-');
         state.startDate = `${year}-${month}-01`;
         state.endDate = `${year}-${month}-${day}`;
         state.calculatedMetrics = await getCalculatedMetrics();
         alertError.value = '';
         loadingSpy.value = false;
       } catch (error) {
-        alertError.value = error ? error.response ? error.respose.status : 500 : 500;
+        alertError.value = error ? (error.response ? error.respose.status : 500) : 500;
         loadingSpy.value = false;
       }
-    }
+    };
 
     const getCalculatedMetrics = async () => {
       if (commerces.value && commerces.value.length > 0) {
         const commercesId = commerces.value.map(commerce => commerce.id);
-        const { calculatedMetrics } = await getSpyMetrics(commercesId, state.startDate, state.endDate);
+        const { calculatedMetrics } = await getSpyMetrics(
+          commercesId,
+          state.startDate,
+          state.endDate
+        );
         return calculatedMetrics;
       }
       return {};
-    }
+    };
 
-    const goToOption = async (option) => {
+    const goToOption = async option => {
       try {
         loading.value = true;
         alertError.value = '';
@@ -102,15 +103,12 @@ export default {
       }
     };
 
-    watch(
-      commerces,
-      async () => {
-        state.commerces = commerces.value;
-        if (show.value === true) {
-          await getSpyMetric();
-        }
+    watch(commerces, async () => {
+      state.commerces = commerces.value;
+      if (show.value === true) {
+        await getSpyMetric();
       }
-    )
+    });
 
     return {
       state,
@@ -119,10 +117,10 @@ export default {
       loadingSpy,
       alertError,
       getSpyMetric,
-      goToOption
-    }
-  }
-}
+      goToOption,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -137,32 +135,45 @@ export default {
           <button
             class="btn btn-sm btn-dark rounded-pill mx-2 px-3 metric-filters"
             @click="getSpyMetric()"
-            >
+          >
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
           <div hidden>
-            <span class="spy-update">{{ $t('dashboard.spyUpdate') }} </span> <span class="fw-bold spy-update">{{ state.incomeTicker }} </span> <span class="spy-update"> {{  $t('dashboard.second') }} <i class="bi bi-clock"></i></span>
+            <span class="spy-update">{{ $t('dashboard.spyUpdate') }} </span>
+            <span class="fw-bold spy-update">{{ state.incomeTicker }} </span>
+            <span class="spy-update">
+              {{ $t('dashboard.second') }} <i class="bi bi-clock"></i
+            ></span>
           </div>
         </div>
-        <hr>
+        <hr />
         <div class="spy-subdetails">
-          <span class="spy-subdetails">{{ $t('dashboard.spySubDetails') }}</span><br>
-          <span class="spy-details" @click="goToOption('dashboard')"> {{ $t('dashboard.spyDetails') }}<i class="bi bi-arrow-up-right-circle mx-1"></i></span>
+          <span class="spy-subdetails">{{ $t('dashboard.spySubDetails') }}</span
+          ><br />
+          <span class="spy-details" @click="goToOption('dashboard')">
+            {{ $t('dashboard.spyDetails') }}<i class="bi bi-arrow-up-right-circle mx-1"></i
+          ></span>
         </div>
         <div id="attention-number">
           <DetailsCard
             :show="!!state.togglesSpy['dashboard.attention-number.view']"
             :data="state.calculatedMetrics['attention.created'].attentionNumber"
-            :subdatapastperiod="state.calculatedMetrics['attention.created'].pastPeriodAttentionNumber"
-            :subdatapastmonth="state.calculatedMetrics['attention.created'].pastMonthAttentionNumber"
-            :subdatacurrentperiod="state.calculatedMetrics['attention.created'].currentMonthAttentionNumber"
+            :subdatapastperiod="
+              state.calculatedMetrics['attention.created'].pastPeriodAttentionNumber
+            "
+            :subdatapastmonth="
+              state.calculatedMetrics['attention.created'].pastMonthAttentionNumber
+            "
+            :subdatacurrentperiod="
+              state.calculatedMetrics['attention.created'].currentMonthAttentionNumber
+            "
             :title="$t('dashboard.items.attentions.1')"
-            :showTooltip="false"
+            :show-tooltip="false"
             :icon="'bi-qr-code'"
-            :iconStyleClass="'blue-icon'"
-            :detailsOpened="false"
-            :showDetailsSection="false"
-            >
+            :icon-style-class="'blue-icon'"
+            :details-opened="false"
+            :show-details-section="false"
+          >
           </DetailsCard>
         </div>
         <div id="booking-number">
@@ -171,13 +182,13 @@ export default {
             :data="state.calculatedMetrics['booking.created'].bookingNumber || 0"
             :subdata="state.calculatedMetrics['booking.created'].stillPendingBookings"
             :title="$t('dashboard.items.attentions.27')"
-            :showTooltip="true"
+            :show-tooltip="true"
             :description="$t('dashboard.booking')"
             :icon="'bi-calendar2-check-fill'"
-            :iconStyleClass="'orange-icon'"
-            :detailsOpened="false"
-            :showDetailsSection="false"
-            >
+            :icon-style-class="'orange-icon'"
+            :details-opened="false"
+            :show-details-section="false"
+          >
           </DetailsCard>
         </div>
         <div id="attention-daysSince-clients">
@@ -191,9 +202,9 @@ export default {
         <div id="attention-collection-clients">
           <CollectionDetails
             :show="!!state.togglesSpy['dashboard.collection-details.view']"
-            :calculatedMetrics="state.calculatedMetrics"
-            :detailsOpened="false"
-            :showDetailsSection="false"
+            :calculated-metrics="state.calculatedMetrics"
+            :details-opened="false"
+            :show-details-section="false"
           >
           </CollectionDetails>
         </div>
@@ -204,13 +215,13 @@ export default {
               :data="state.calculatedMetrics['survey.created'].avgRating || 0"
               :subdata="state.calculatedMetrics['survey.created'].count_rating || 0"
               :title="$t('dashboard.items.attentions.3')"
-              :showTooltip="true"
+              :show-tooltip="true"
               :description="$t('dashboard.rating')"
               :icon="'bi-star-fill'"
-              :iconStyleClass="'yellow-icon'"
-              :detailsOpened="false"
-              :showDetailsSection="false"
-              >
+              :icon-style-class="'yellow-icon'"
+              :details-opened="false"
+              :show-details-section="false"
+            >
             </DetailsCard>
           </div>
           <div id="attention-nps-avg" class="col-6">
@@ -219,28 +230,36 @@ export default {
               :data="state.calculatedMetrics['survey.created'].nps || 0"
               :subdata="state.calculatedMetrics['survey.created'].count_nps || 0"
               :title="$t('dashboard.items.attentions.24')"
-              :showTooltip="true"
+              :show-tooltip="true"
               :description="$t('dashboard.nps')"
               :icon="'bi-megaphone-fill'"
-              :detailsOpened="false"
-              :showDetailsSection="false"
-              >
+              :details-opened="false"
+              :show-details-section="false"
+            >
             </DetailsCard>
           </div>
         </div>
         <div id="attention-origin-avg">
           <DetailsCard
             :show="!!state.togglesSpy['dashboard.attention-origin-avg.view']"
-            :data="state.calculatedMetrics['clients']['maxOrigin']?.name ? $t(`origin.${state.calculatedMetrics['clients']['maxOrigin']?.name}`) : 'No Data'"
-            :subdata="state.calculatedMetrics['clients']['maxOrigin'] ? state.calculatedMetrics['clients']['maxOrigin']?.count : 0"
+            :data="
+              state.calculatedMetrics['clients']['maxOrigin']?.name
+                ? $t(`origin.${state.calculatedMetrics['clients']['maxOrigin']?.name}`)
+                : 'No Data'
+            "
+            :subdata="
+              state.calculatedMetrics['clients']['maxOrigin']
+                ? state.calculatedMetrics['clients']['maxOrigin']?.count
+                : 0
+            "
             :title="$t('dashboard.items.attentions.31')"
-            :showTooltip="true"
+            :show-tooltip="true"
             :description="$t('dashboard.origin')"
             :icon="'bi-emoji-heart-eyes-fill'"
-            :iconStyleClass="'orange-icon'"
-            :detailsOpened="false"
-            :showDetailsSection="false"
-            >
+            :icon-style-class="'orange-icon'"
+            :details-opened="false"
+            :show-details-section="false"
+          >
           </DetailsCard>
         </div>
       </div>
@@ -254,27 +273,27 @@ export default {
   line-height: 1rem;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;
 }
 .spy-details {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  line-height: .75rem;
+  line-height: 0.75rem;
   cursor: pointer;
 }
 .spy-subdetails {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 400;
   line-height: 1rem;
 }
 .spy-update {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  line-height: .75rem;
+  line-height: 0.75rem;
 }
 .spy-title {
   font-size: 1.1rem;

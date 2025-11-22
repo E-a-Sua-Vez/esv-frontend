@@ -16,20 +16,20 @@ export default {
 
     onBeforeMount(async () => {
       await store.resetSession;
-    })
+    });
 
     const goSite = () => {
       router.push('/');
-    }
+    };
 
-    const commerceQueuesUrl = `/interno/colaborador/menu`;
+    const commerceQueuesUrl = '/interno/colaborador/menu';
 
     return {
       commerceQueuesUrl,
-      goSite
-    }
-  }
-}
+      goSite,
+    };
+  },
+};
 </script>
 
 <template>
@@ -38,17 +38,14 @@ export default {
       <CommerceLogo @click="goSite()"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
-          <span>{{ $t("collaboratorLogin.welcome") }}</span>
+          <span>{{ $t('collaboratorLogin.welcome') }}</span>
         </div>
         <div class="login-message">
-          <span>{{ $t("collaboratorLogin.login") }}</span>
+          <span>{{ $t('collaboratorLogin.login') }}</span>
         </div>
       </div>
       <div>
-        <Login
-          :userType="'collaborator'"
-          :urlOkRedirect="commerceQueuesUrl"
-        ></Login>
+        <Login :user-type="'collaborator'" :url-ok-redirect="commerceQueuesUrl"></Login>
       </div>
     </div>
     <PoweredBy />

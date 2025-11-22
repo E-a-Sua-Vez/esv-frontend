@@ -1,5 +1,5 @@
 <script>
-import QrcodeVue from 'qrcode.vue'
+import QrcodeVue from 'qrcode.vue';
 
 export default {
   name: 'QR',
@@ -8,12 +8,12 @@ export default {
     value: { type: String, default: '' },
     size: { type: Number, default: 132 },
     background: { type: String, default: '#00008B' },
-    foreground: { type: String, default: '#ffffff' }
+    foreground: { type: String, default: '#ffffff' },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>

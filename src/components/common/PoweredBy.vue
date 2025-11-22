@@ -6,9 +6,9 @@ export default {
     logo: { type: String, default: '/images/estuturno_logo_powered.png' },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>
@@ -17,10 +17,10 @@ export default {
       <span>{{ name }}</span>
     </div>
     <div class="mt-2">
-      <span>{{ $t("poweredBy") }}</span>
+      <span>{{ $t('poweredBy') }}</span>
     </div>
     <div>
-      <img class="rounded img-fluid mx-auto logo-powered" :src="$t('logoPoweredBy')">
+      <img class="rounded img-fluid mx-auto logo-powered" :src="$t('logoPoweredBy')" />
     </div>
   </div>
 </template>
@@ -28,15 +28,15 @@ export default {
 <style scoped>
 .logo-powered {
   display: flex;
-  width: 120px;
+  width: 70px;
   background-repeat: no-repeat;
   background-size: 100%;
 }
 .powered {
   padding: 1rem;
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  line-height: .7rem;
+  line-height: 0.7rem;
 }
 .name {
   padding-bottom: 1rem;

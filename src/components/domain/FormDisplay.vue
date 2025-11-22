@@ -4,7 +4,11 @@ import Message from '../common/Message.vue';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 import LikeForm from '../form/LikeForm.vue';
-import { getCivilStatuses, getPatientHistoryItemFrequenciesTypes, getSexs } from '../../shared/utils/data';
+import {
+  getCivilStatuses,
+  getPatientHistoryItemFrequenciesTypes,
+  getSexs,
+} from '../../shared/utils/data';
 import { useI18n } from 'vue-i18n';
 import Warning from '../common/Warning.vue';
 
@@ -15,7 +19,7 @@ export default {
     Message,
     Spinner,
     LikeForm,
-    Warning
+    Warning,
   },
   props: {
     formPersonalized: { type: Object, default: {} },
@@ -23,7 +27,7 @@ export default {
     clientId: { type: String, default: undefined },
     attentionId: { type: String, default: undefined },
     bookingId: { type: String, default: undefined },
-    queueId: { type: String, default: undefined }
+    queueId: { type: String, default: undefined },
   },
   data() {
     const { t } = useI18n();
@@ -43,39 +47,46 @@ export default {
       civilStatuses: [],
       errorsAdd: [],
       body: {},
-      t
-    }
+      t,
+    };
   },
   beforeMount() {
     this.patientHistoryItemFrequenciesTypes = getPatientHistoryItemFrequenciesTypes();
-    this.sexs = getSexs().map(sex => sex.id).join(',');
-    this.civilStatuses = getCivilStatuses().map(sex => sex.id).join(',');
-    if (this.formPersonalized && this.formPersonalized.questions && this.formPersonalized.questions.length > 0) {
+    this.sexs = getSexs()
+      .map(sex => sex.id)
+      .join(',');
+    this.civilStatuses = getCivilStatuses()
+      .map(sex => sex.id)
+      .join(',');
+    if (
+      this.formPersonalized &&
+      this.formPersonalized.questions &&
+      this.formPersonalized.questions.length > 0
+    ) {
       if (this.formPersonalized.type === 'FIRST_ATTENTION') {
         this.formPersonalized.questions.forEach(question => {
-        if (question.patientHistoryItem.type === 'PERSONAL_HISTORY') {
-          if (question.patientHistoryItem.characteristics.check === true) {
-            this.answers.push({ check: false });
-          } else if (question.patientHistoryItem.characteristics.selectN === true) {
+          if (question.patientHistoryItem.type === 'PERSONAL_HISTORY') {
+            if (question.patientHistoryItem.characteristics.check === true) {
+              this.answers.push({ check: false });
+            } else if (question.patientHistoryItem.characteristics.selectN === true) {
+              this.answers.push([]);
+            } else if (question.patientHistoryItem.characteristics.select1 === true) {
+              this.answers.push([]);
+            } else if (question.patientHistoryItem.characteristics.yesNo === true) {
+              this.answers.push({});
+            } else {
+              this.answers.push({});
+            }
+          } else {
             this.answers.push([]);
-          } else if (question.patientHistoryItem.characteristics.select1 === true) {
-            this.answers.push([]);
-          } else if (question.patientHistoryItem.characteristics.yesNo === true) {
-            this.answers.push({});
-          }else {
-            this.answers.push({});
           }
-        } else {
-          this.answers.push([]);
-        }
-      })
-    }}
+        });
+      }
+    }
   },
   methods: {
     checkOption(event, index, option) {
-      if (this.answers[index] === undefined ||
-        Object.keys(this.answers[index]).length === 0
-      ) {
+      if (this.answers[index] === undefined || Object.keys(this.answers[index]).length === 0) {
         this.answers[index] = [];
       }
       if (event.target.checked) {
@@ -95,7 +106,11 @@ export default {
         const options = event.target.value.toUpperCase().split(',');
         option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
         if (!this.answers[index].includes(option)) {
-          const filtered = this.answers[index].filter(ans => question.patientHistoryItem.characteristics.options.toUpperCase().includes(ans) && ans.length > 0);
+          const filtered = this.answers[index].filter(
+            ans =>
+              question.patientHistoryItem.characteristics.options.toUpperCase().includes(ans) &&
+              ans.length > 0
+          );
           this.answers[index] = Array.from(new Set([...filtered, ...option]));
         }
       } else {
@@ -143,7 +158,9 @@ export default {
         const result = this.answers[index].result ? this.answers[index].result : [];
         this.answers[index].result = Array.from(new Set([...result, ...option]));
       } else {
-        this.answers[index].result = this.answers[index].result.filter(ans => item.characteristics.options.includes(ans));
+        this.answers[index].result = this.answers[index].result.filter(ans =>
+          item.characteristics.options.includes(ans)
+        );
       }
     },
     setCommentOption(event, index) {
@@ -154,17 +171,20 @@ export default {
     },
     backToBooking() {
       if (this.bookingId) {
-        this.$router.push({  name: 'commerce-queue-booking', params: { id: this.bookingId } })
+        this.$router.push({ name: 'commerce-queue-booking', params: { id: this.bookingId } });
       }
     },
     backToAttention() {
       if (this.attentionId) {
-        this.$router.push({  name: 'commerce-queue-attention', params: { id: this.attentionId, queueId: this.queueId } })
+        this.$router.push({
+          name: 'commerce-queue-attention',
+          params: { id: this.attentionId, queueId: this.queueId },
+        });
       }
     },
     checkActual(index, $event) {
       if ($event.target.checked !== undefined) {
-        this.answers[index].actual = $event.target.checked ;
+        this.answers[index].actual = $event.target.checked;
       }
     },
     checkItem(index, $event) {
@@ -172,7 +192,7 @@ export default {
         this.answers[index].check = $event.target.checked;
       }
     },
-    validateAnswers () {
+    validateAnswers() {
       this.errorsAdd = [];
       if (this.body) {
         let questionWithoutAnswer = 0;
@@ -181,14 +201,14 @@ export default {
             if (Object.keys(ans.answer).length === 0) {
               questionWithoutAnswer += 1;
             }
-          })
+          });
 
           if (questionWithoutAnswer > 0) {
             this.errorsAdd.push('attentionForm.validate.withoutAnswer');
           }
         }
       }
-      if(this.errorsAdd.length === 0) {
+      if (this.errorsAdd.length === 0) {
         return true;
       }
       return false;
@@ -199,18 +219,18 @@ export default {
         this.alertError = '';
         let answersCollected = [];
         if (this.formPersonalized.questions && this.formPersonalized.questions.length > 0) {
-          answersCollected = this.formPersonalized.questions.map((question, ind) =>  {
+          answersCollected = this.formPersonalized.questions.map((question, ind) => {
             if (question) {
               const answer = {
                 id: question.patientHistoryItem?.id || undefined,
                 characteristics: question.patientHistoryItem?.characteristics || undefined,
                 title: question.title,
                 type: question.patientHistoryItem?.type || question.type,
-                answer: this.answers[ind]
+                answer: this.answers[ind],
               };
               return answer;
             }
-          })
+          });
         }
         this.body = {
           commerceId: this.commerceId,
@@ -220,7 +240,7 @@ export default {
           bookingId: this.bookingId,
           type: this.formPersonalized.type,
           questions: this.formPersonalized.questions || [],
-          answers: answersCollected || []
+          answers: answersCollected || [],
         };
         if (this.validateAnswers()) {
           await createForm(this.body);
@@ -231,60 +251,113 @@ export default {
         this.loading = false;
         this.alertError = error.message;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <div v-if="formPersonalized.id" class="mt-4">
     <div v-if="!formCompleted">
       <div v-if="formPersonalized.questions && formPersonalized.questions.length > 0">
-        <div v-for="(question, index) in formPersonalized.questions" :key="`question-${index}`" class="mt-4">
+        <div
+          v-for="(question, index) in formPersonalized.questions"
+          :key="`question-${index}`"
+          class="mt-4"
+        >
           <div class="your-rating">
             <span> {{ question.title.trim() }}</span>
           </div>
           <div v-if="formPersonalized.type === 'FIRST_ATTENTION'">
-            <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PATIENT_SEX'">
-              <div class="form-check form-switch check-option" v-for="(option, ind) in sexs.split(',')" :key="`sex-${ind}`">
+            <div
+              v-if="
+                question.patientHistoryItem && question.patientHistoryItem.type === 'PATIENT_SEX'
+              "
+            >
+              <div
+                class="form-check form-switch check-option"
+                v-for="(option, ind) in sexs.split(',')"
+                :key="`sex-${ind}`"
+              >
                 <input
                   class="form-check-input"
                   type="radio"
                   :name="`option-sex-${option.id}`"
                   :id="`option-sex-${0}`"
                   @click="selectOption($event, index, option)"
-                  >
-                <label class="form-check-label" :for="`option-${0}`">{{ $t(`sexs.${option.toUpperCase().trim()}`) }}</label>
+                />
+                <label class="form-check-label" :for="`option-${0}`">{{
+                  $t(`sexs.${option.toUpperCase().trim()}`)
+                }}</label>
               </div>
             </div>
-            <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PATIENT_CIVIL_STATUS'">
-              <div class="form-check form-switch check-option" v-for="(option, ind) in civilStatuses.split(',')" :key="`civilStatus-${ind}`">
+            <div
+              v-if="
+                question.patientHistoryItem &&
+                question.patientHistoryItem.type === 'PATIENT_CIVIL_STATUS'
+              "
+            >
+              <div
+                class="form-check form-switch check-option"
+                v-for="(option, ind) in civilStatuses.split(',')"
+                :key="`civilStatus-${ind}`"
+              >
                 <input
                   class="form-check-input"
                   type="radio"
                   :name="`option-civilStatus-${option.id}`"
                   :id="`option-civilStatus-${0}`"
                   @click="selectOption($event, index, option)"
-                  >
-                <label class="form-check-label" :for="`option-${1}`">{{ $t(`civilStatuses.${option.toUpperCase().trim()}`) }}</label>
+                />
+                <label class="form-check-label" :for="`option-${1}`">{{
+                  $t(`civilStatuses.${option.toUpperCase().trim()}`)
+                }}</label>
               </div>
             </div>
-            <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PATIENT_OCCUPATION'">
+            <div
+              v-if="
+                question.patientHistoryItem &&
+                question.patientHistoryItem.type === 'PATIENT_OCCUPATION'
+              "
+            >
               <div>
                 <input
                   type="text"
                   class="form-control mt-2 form-control-sm"
                   v-model.trim="occupation"
-                  @keyup="setOption(index, occupation)">
+                  @keyup="setOption(index, occupation)"
+                />
               </div>
             </div>
-            <div v-if="question.patientHistoryItem && question.patientHistoryItem.type === 'PERSONAL_HISTORY'">
+            <div
+              v-if="
+                question.patientHistoryItem &&
+                question.patientHistoryItem.type === 'PERSONAL_HISTORY'
+              "
+            >
               <div>
-                <div v-if="question.patientHistoryItem.active === true && question.patientHistoryItem.online === true" class="row">
+                <div
+                  v-if="
+                    question.patientHistoryItem.active === true &&
+                    question.patientHistoryItem.online === true
+                  "
+                  class="row"
+                >
                   <div :id="`details-${question.patientHistoryItem.id}`" class="mt-2">
                     <!-- SELECT 1 -->
-                    <div v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.select1">
-                      <div class="form-check form-switch check-option" v-for="(option, ind) in question.patientHistoryItem.characteristics.options.split(',')" :key="`option-${ind}`">
+                    <div
+                      v-if="
+                        question.patientHistoryItem.characteristics &&
+                        question.patientHistoryItem.characteristics.select1
+                      "
+                    >
+                      <div
+                        class="form-check form-switch check-option"
+                        v-for="(
+                          option, ind
+                        ) in question.patientHistoryItem.characteristics.options.split(',')"
+                        :key="`option-${ind}`"
+                      >
                         <input
                           class="form-check-input"
                           type="radio"
@@ -292,8 +365,10 @@ export default {
                           :id="`option-${index}`"
                           :checked="this.answers[index]?.includes(option.toUpperCase())"
                           @click="checkOption($event, index, option)"
-                          >
-                        <label class="form-check-label" :for="`option-${index}`">{{ option.toUpperCase().trim() }}</label>
+                        />
+                        <label class="form-check-label" :for="`option-${index}`">{{
+                          option.toUpperCase().trim()
+                        }}</label>
                       </div>
                       <div class="col form-floating">
                         <input
@@ -303,22 +378,46 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           placeholder="Other"
-                          :value="this.answers[index]?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
-                          v-on:blur="checkOtherOption($event, index, question)">
-                          <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
+                          :value="
+                            this.answers[index]?.filter(
+                              ans =>
+                                !question.patientHistoryItem.characteristics.options
+                                  .toUpperCase()
+                                  .split(',')
+                                  .includes(ans)
+                            )
+                          "
+                          v-on:blur="checkOtherOption($event, index, question)"
+                        />
+                        <label for="option-other" class="label-form">{{
+                          $t('attentionForm.other')
+                        }}</label>
                       </div>
                     </div>
                     <!-- SELECT N -->
-                    <div v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.selectN">
-                      <div class="form-check form-switch check-option" v-for="(option, ind) in question.patientHistoryItem.characteristics.options.split(',')" :key="`option-${ind}`">
+                    <div
+                      v-else-if="
+                        question.patientHistoryItem.characteristics &&
+                        question.patientHistoryItem.characteristics.selectN
+                      "
+                    >
+                      <div
+                        class="form-check form-switch check-option"
+                        v-for="(
+                          option, ind
+                        ) in question.patientHistoryItem.characteristics.options.split(',')"
+                        :key="`option-${ind}`"
+                      >
                         <input
                           class="form-check-input"
                           type="checkbox"
                           :name="`option-${option.title}`"
                           :id="`option-${index}`"
                           @click="selectOption($event, index, option)"
-                          >
-                        <label class="form-check-label" for="option">{{ option.toUpperCase().trim() }}</label>
+                        />
+                        <label class="form-check-label" for="option">{{
+                          option.toUpperCase().trim()
+                        }}</label>
                       </div>
                       <div class="col form-floating">
                         <input
@@ -328,18 +427,36 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           placeholder="Other"
-                          :value="this.answers[index]?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
-                          v-on:blur="fillOtherOption($event, index, question)">
-                          <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
+                          :value="
+                            this.answers[index]?.filter(
+                              ans =>
+                                !question.patientHistoryItem.characteristics.options
+                                  .toUpperCase()
+                                  .split(',')
+                                  .includes(ans)
+                            )
+                          "
+                          v-on:blur="fillOtherOption($event, index, question)"
+                        />
+                        <label for="option-other" class="label-form">{{
+                          $t('attentionForm.other')
+                        }}</label>
                       </div>
                     </div>
                     <!-- SELECT YES NO -->
-                    <div v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.yesNo">
-                      <LikeForm
-                        :show="true"
-                        v-model:like="answers[index].answer"
-                      ></LikeForm>
-                      <div v-if="question.patientHistoryItem.characteristics.result && answers[index].answer === 'YES'">
+                    <div
+                      v-else-if="
+                        question.patientHistoryItem.characteristics &&
+                        question.patientHistoryItem.characteristics.yesNo
+                      "
+                    >
+                      <LikeForm :show="true" v-model:like="answers[index].answer"></LikeForm>
+                      <div
+                        v-if="
+                          question.patientHistoryItem.characteristics.result &&
+                          answers[index].answer === 'YES'
+                        "
+                      >
                         <input
                           :id="`option-other-${index}`"
                           maxlength="50"
@@ -347,22 +464,60 @@ export default {
                           class="form-control form-control-solid"
                           :name="`option-other`"
                           :placeholder="$t('attentionForm.yesExplain')"
-                          :value="this.answers[index].result?.filter(ans => !question.patientHistoryItem.characteristics.options.toUpperCase().split(',').includes(ans))"
-                          v-on:blur="setResultOption($event, index)">
+                          :value="
+                            this.answers[index].result?.filter(
+                              ans =>
+                                !question.patientHistoryItem.characteristics.options
+                                  .toUpperCase()
+                                  .split(',')
+                                  .includes(ans)
+                            )
+                          "
+                          v-on:blur="setResultOption($event, index)"
+                        />
                       </div>
                     </div>
                     <!-- SELECT CHECK -->
-                    <div v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.check">
+                    <div
+                      v-else-if="
+                        question.patientHistoryItem.characteristics &&
+                        question.patientHistoryItem.characteristics.check
+                      "
+                    >
                       <div>
-                        <div class="form-check form-switch centered" v-if="question.patientHistoryItem.characteristics.check && question.patientHistoryItem.characteristics.check === true">
-                          <input class="form-check-input" type="checkbox" :name="question.patientHistoryItem.name" id="item.id" @click="checkItem(index, $event)">
+                        <div
+                          class="form-check form-switch centered"
+                          v-if="
+                            question.patientHistoryItem.characteristics.check &&
+                            question.patientHistoryItem.characteristics.check === true
+                          "
+                        >
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            :name="question.patientHistoryItem.name"
+                            id="item.id"
+                            @click="checkItem(index, $event)"
+                          />
                         </div>
                       </div>
                       <div v-if="answers[index].check === true" class="">
-                        <div v-if="question.patientHistoryItem.characteristics.actual && question.patientHistoryItem.characteristics.actual === true">
+                        <div
+                          v-if="
+                            question.patientHistoryItem.characteristics.actual &&
+                            question.patientHistoryItem.characteristics.actual === true
+                          "
+                        >
                           <div class="form-check form-switch centered">
-                            <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.actual") }}</label>
-                            <input class="form-check-input m-1" type="checkbox" :id="`actual-${question.patientHistoryItem.id}`" @click="checkActual(index, $event)">
+                            <label class="form-check-label metric-card-subtitle">{{
+                              $t('businessPatientHistoryItemAdmin.actual')
+                            }}</label>
+                            <input
+                              class="form-check-input m-1"
+                              type="checkbox"
+                              :id="`actual-${question.patientHistoryItem.id}`"
+                              @click="checkActual(index, $event)"
+                            />
                           </div>
                         </div>
                         <div>
@@ -370,7 +525,9 @@ export default {
                             <div class="col-6">
                               <div class="row">
                                 <div class="col">
-                                  <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageFrom") }}</label>
+                                  <label class="form-check-label metric-card-subtitle">{{
+                                    $t('businessPatientHistoryItemAdmin.ageFrom')
+                                  }}</label>
                                 </div>
                                 <div class="col">
                                   <input
@@ -379,14 +536,24 @@ export default {
                                     type="number"
                                     @keyup="sendData"
                                     v-model.trim="answers[index].ageFrom"
-                                    class="form-control form-control-sm">
+                                    class="form-control form-control-sm"
+                                  />
                                 </div>
                               </div>
                             </div>
-                            <div class="col-6" v-if="question.patientHistoryItem.characteristics.ageFrom && question.patientHistoryItem.characteristics.ageFrom === true && !answers[index].actual">
+                            <div
+                              class="col-6"
+                              v-if="
+                                question.patientHistoryItem.characteristics.ageFrom &&
+                                question.patientHistoryItem.characteristics.ageFrom === true &&
+                                !answers[index].actual
+                              "
+                            >
                               <div class="row">
                                 <div class="col">
-                                  <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageTo") }}</label>
+                                  <label class="form-check-label metric-card-subtitle">{{
+                                    $t('businessPatientHistoryItemAdmin.ageTo')
+                                  }}</label>
                                 </div>
                                 <div class="col">
                                   <input
@@ -394,19 +561,38 @@ export default {
                                     max="100"
                                     type="number"
                                     v-model.trim="answers[index].ageTo"
-                                    class="form-control form-control-sm">
+                                    class="form-control form-control-sm"
+                                  />
                                 </div>
                               </div>
                             </div>
                           </div>
-                          <div class="row centered" v-if="question.patientHistoryItem.characteristics.frequency && question.patientHistoryItem.characteristics.frequency === true">
+                          <div
+                            class="row centered"
+                            v-if="
+                              question.patientHistoryItem.characteristics.frequency &&
+                              question.patientHistoryItem.characteristics.frequency === true
+                            "
+                          >
                             <div class="row mt-1">
                               <div class="col">
-                                <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.frequency") }}</label>
+                                <label class="form-check-label metric-card-subtitle">{{
+                                  $t('businessPatientHistoryItemAdmin.frequency')
+                                }}</label>
                               </div>
                               <div class="col">
-                                <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="answers[index].frequency">
-                                  <option v-for="value in patientHistoryItemFrequenciesTypes" :key="value.id" :value="value.id" id="select-block">{{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}</option>
+                                <select
+                                  class="btn btn-sm btn-light fw-bold text-dark select"
+                                  v-model="answers[index].frequency"
+                                >
+                                  <option
+                                    v-for="value in patientHistoryItemFrequenciesTypes"
+                                    :key="value.id"
+                                    :value="value.id"
+                                    id="select-block"
+                                  >
+                                    {{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}
+                                  </option>
                                 </select>
                               </div>
                             </div>
@@ -415,15 +601,28 @@ export default {
                       </div>
                     </div>
                     <!-- SELECT COMMENT -->
-                    <div class="row" v-else-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
-                      <div class="col mb-1" v-if="question.patientHistoryItem.characteristics && question.patientHistoryItem.characteristics.comment">
+                    <div
+                      class="row"
+                      v-else-if="
+                        question.patientHistoryItem.characteristics &&
+                        question.patientHistoryItem.characteristics.comment
+                      "
+                    >
+                      <div
+                        class="col mb-1"
+                        v-if="
+                          question.patientHistoryItem.characteristics &&
+                          question.patientHistoryItem.characteristics.comment
+                        "
+                      >
                         <textarea
                           class="form-control form-control-sm"
                           rows="3"
                           :max="200"
                           :value="''"
                           :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                          v-on:blur="setCommentOption($event, index)">
+                          v-on:blur="setCommentOption($event, index)"
+                        >
                         </textarea>
                       </div>
                     </div>
@@ -434,24 +633,23 @@ export default {
           </div>
           <div v-else-if="formPersonalized.type === 'PRE_ATTENTION'">
             <div v-if="question.type === 'YES_OR_NOT'">
-              <LikeForm
-                :show="true"
-                v-model:like="answers[index]"
-              ></LikeForm>
+              <LikeForm :show="true" v-model:like="answers[index]"></LikeForm>
             </div>
             <div v-else-if="question.type === 'OPEN_TEXT_FIELD'">
               <input
                 type="text"
                 class="form-control mt-2"
                 v-model.trim="answers[index]"
-                :placeholder="$t('attentionForm.writing.placeholder')">
+                :placeholder="$t('attentionForm.writing.placeholder')"
+              />
             </div>
             <div v-else-if="question.type === 'OPEN_NUMBER_FIELD'">
               <input
                 type="number"
                 class="form-control mt-2"
                 v-model.trim="answers[index]"
-                :placeholder="$t('attentionForm.writing.placeholder')">
+                :placeholder="$t('attentionForm.writing.placeholder')"
+              />
             </div>
             <div v-else-if="question.type === 'OPEN_WRITING'">
               <textarea
@@ -459,21 +657,31 @@ export default {
                 id="commennt"
                 rows="3"
                 v-model.trim="answers[index]"
-                :placeholder="$t('attentionForm.writing.placeholder')">
+                :placeholder="$t('attentionForm.writing.placeholder')"
+              >
               </textarea>
             </div>
             <div v-else-if="question.type === 'OPEN_OPTIONS'" class="mt-3">
-              <div class="form-check form-switch check-option" v-for="(option, ind) in question.options.split(',')" :key="`option-${ind}`">
+              <div
+                class="form-check form-switch check-option"
+                v-for="(option, ind) in question.options.split(',')"
+                :key="`option-${ind}`"
+              >
                 <input
                   class="form-check-input"
                   type="checkbox"
                   :name="`option-${option.title}`"
                   :id="`option-${index}`"
                   @click="checkOption($event, index, option)"
-                  >
-                <label class="form-check-label" for="option">{{ option.toUpperCase().trim() }}</label>
+                />
+                <label class="form-check-label" for="option">{{
+                  option.toUpperCase().trim()
+                }}</label>
               </div>
-              <div class="col form-floating" v-if="question.otherOption && question.otherOptionOpen">
+              <div
+                class="col form-floating"
+                v-if="question.otherOption && question.otherOptionOpen"
+              >
                 <input
                   :id="`option-other-${index}`"
                   maxlength="50"
@@ -481,8 +689,9 @@ export default {
                   class="form-control form-control-solid"
                   :name="`option-other`"
                   placeholder="Other"
-                  v-on:blur="fillOtherOption($event, index, option)">
-                  <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
+                  v-on:blur="fillOtherOption($event, index, option)"
+                />
+                <label for="option-other" class="label-form">{{ $t('attentionForm.other') }}</label>
               </div>
               <div v-else-if="question.otherOption && !question.otherOptionOpen">
                 <div class="form-check form-switch check-option">
@@ -492,23 +701,34 @@ export default {
                     :name="`option-other-${index}`"
                     :id="`option-${index}`"
                     @click="checkOption($event, index, 'OTHER')"
-                    >
-                  <label class="form-check-label" for="option">{{ $t("attentionForm.other") }}</label>
+                  />
+                  <label class="form-check-label" for="option">{{
+                    $t('attentionForm.other')
+                  }}</label>
                 </div>
               </div>
             </div>
             <div v-else-if="question.type === 'CHOOSE_OPTION'" class="mt-2">
-              <div class="form-check form-switch check-option" v-for="(option, ind) in question.options.split(',')" :key="`option-${ind}`">
+              <div
+                class="form-check form-switch check-option"
+                v-for="(option, ind) in question.options.split(',')"
+                :key="`option-${ind}`"
+              >
                 <input
                   class="form-check-input"
                   type="radio"
                   :name="`option-${question.title}`"
                   :id="`option-${index}`"
                   @click="selectOption($event, index, option)"
-                  >
-                <label class="form-check-label" :for="`option-${index}`">{{ option.toUpperCase().trim() }}</label>
+                />
+                <label class="form-check-label" :for="`option-${index}`">{{
+                  option.toUpperCase().trim()
+                }}</label>
               </div>
-              <div class="col form-floating" v-if="question.otherOption && question.otherOptionOpen">
+              <div
+                class="col form-floating"
+                v-if="question.otherOption && question.otherOptionOpen"
+              >
                 <input
                   :id="`option-other-${index}`"
                   maxlength="50"
@@ -516,8 +736,9 @@ export default {
                   class="form-control form-control-solid"
                   :name="`option-other`"
                   placeholder="Other"
-                  v-on:blur="fillOtherOption($event, index, option)">
-                  <label for="option-other" class="label-form">{{ $t("attentionForm.other") }}</label>
+                  v-on:blur="fillOtherOption($event, index, option)"
+                />
+                <label for="option-other" class="label-form">{{ $t('attentionForm.other') }}</label>
               </div>
               <div v-else-if="question.otherOption && !question.otherOptionOpen">
                 <div class="form-check form-switch check-option">
@@ -527,25 +748,28 @@ export default {
                     :name="`option-${question.title}`"
                     :id="`option-${index}`"
                     @click="checkOption($event, index, 'OTHER')"
-                    >
-                  <label class="form-check-label" for="option">{{ 'OTHER'.toUpperCase().trim() }}</label>
+                  />
+                  <label class="form-check-label" for="option">{{
+                    'OTHER'.toUpperCase().trim()
+                  }}</label>
                 </div>
               </div>
             </div>
           </div>
-          <hr>
+          <hr />
         </div>
       </div>
       <div class="mt-3">
         <a
           class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-          @click="saveForm()">
-          {{ $t("attentionForm.actions.1.action") }} <i class="bi bi-check-all"></i>
+          @click="saveForm()"
+        >
+          {{ $t('attentionForm.actions.1.action') }} <i class="bi bi-check-all"></i>
         </a>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
-      <div class="row g-1 errors" id="feedback" v-if="(errorsAdd.length > 0)">
+      <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
         <Warning>
           <template v-slot:message>
             <li v-for="(error, index) in errorsAdd" :key="index">
@@ -559,19 +783,22 @@ export default {
       <Message
         :title="$t('attentionForm.message.1.title')"
         :content="$t('attentionForm.message.1.content')"
-        :icon="'bi bi-emoji-sunglasses'">
+        :icon="'bi bi-emoji-sunglasses'"
+      >
       </Message>
       <a
         v-if="bookingId"
         class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-        @click="backToBooking()">
-        {{ $t("attentionForm.actions.2.action") }} <i class="bi bi-arrow-left"></i>
+        @click="backToBooking()"
+      >
+        {{ $t('attentionForm.actions.2.action') }} <i class="bi bi-arrow-left"></i>
       </a>
       <a
         v-else-if="attentionId"
         class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-        @click="backToAttention()">
-        {{ $t("attentionForm.actions.3.action") }} <i class="bi bi-arrow-left"></i>
+        @click="backToAttention()"
+      >
+        {{ $t('attentionForm.actions.3.action') }} <i class="bi bi-arrow-left"></i>
       </a>
     </div>
   </div>
@@ -579,7 +806,8 @@ export default {
     <Message
       :title="$t('attentionForm.message.2.title')"
       :content="$t('attentionForm.message.2.content')"
-      :icon="'bi bi-emoji-sunglasses'">
+      :icon="'bi bi-emoji-sunglasses'"
+    >
     </Message>
   </div>
 </template>
@@ -589,11 +817,11 @@ export default {
   line-height: normal;
 }
 .your-rating {
- line-height: 1.1rem;
+  line-height: 1.1rem;
 }
 .your-rating-2 {
- line-height: 1.1rem;
- text-align: left;
+  line-height: 1.1rem;
+  text-align: left;
 }
 .check-option {
   text-align: left;
