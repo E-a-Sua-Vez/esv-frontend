@@ -37,6 +37,7 @@ export default {
     <li>Website: the It's Your Turn site, which can be accessed through these URLs: estuturno.app, estuturno.net</li>
     <li>You: a person or entity that is registered with It's Your Turn to use the Services.</li>
     </ul>
+    </p>
     <h5>What information do we collect?</h5>
     <p>We collect information from you when you visit our platform, register on our site, place an order, subscribe to our newsletter, respond to a survey or fill out a form.</p>
     <ul><li>Name/username</li><li>Phone numbers</li><li>Emails</li><li>Email addresses</li><li>Billing addresses </li><li>Age</li><li>Password</li>

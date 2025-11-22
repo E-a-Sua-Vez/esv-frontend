@@ -2,6 +2,7 @@
 import { ref, reactive, onBeforeMount, computed, watch, onUnmounted, toRefs } from 'vue';
 import { getActiveFeature } from '../../../shared/features';
 import { bookingCollection } from '../../../application/firebase';
+import { query, where, onSnapshot } from 'firebase/firestore';
 import { DateModel } from '../../../shared/utils/date.model';
 import Message from '../../common/Message.vue';
 import Alert from '../../common/Alert.vue';
@@ -158,12 +159,14 @@ export default {
       const values = ref([]);
       let unsubscribe;
       if (date !== undefined && queueId !== undefined) {
-        const bookingsQuery = bookingCollection
-          .where('commerceId', '==', commerce.value.id)
-          .where('queueId', '==', queueId)
-          .where('status', 'in', ['PENDING', 'CONFIRMED'])
-          .where('date', '==', date);
-        unsubscribe = bookingsQuery.onSnapshot(snapshot => {
+        const bookingsQuery = query(
+          bookingCollection,
+          where('commerceId', '==', commerce.value.id),
+          where('queueId', '==', queueId),
+          where('status', 'in', ['PENDING', 'CONFIRMED']),
+          where('date', '==', date)
+        );
+        unsubscribe = onSnapshot(bookingsQuery, snapshot => {
           values.value = snapshot.docs.map(doc => {
             const booking = { id: doc.id, ...doc.data() };
             return booking;

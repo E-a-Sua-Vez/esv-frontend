@@ -8,6 +8,7 @@ import {
 } from '../../../application/services/booking';
 import { dateYYYYMMDD, getDate } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
+import { query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { getAvailableAttentiosnByQueue } from '../../../application/services/attention';
 import {
   getQueueBlockDetailsByDayByCommerceId,
@@ -133,12 +134,14 @@ export default {
       const values = ref([]);
       let unsubscribe;
       if (date !== undefined && queueId) {
-        const bookingsQuery = bookingCollection
-          .where('queueId', '==', queueId)
-          .where('status', 'in', ['PENDING', 'CONFIRMED'])
-          .where('date', '==', date)
-          .orderBy('number', 'asc');
-        unsubscribe = bookingsQuery.onSnapshot(snapshot => {
+        const bookingsQuery = query(
+          bookingCollection,
+          where('queueId', '==', queueId),
+          where('status', 'in', ['PENDING', 'CONFIRMED']),
+          where('date', '==', date),
+          orderBy('number', 'asc')
+        );
+        unsubscribe = onSnapshot(bookingsQuery, snapshot => {
           values.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         });
       }
@@ -206,12 +209,14 @@ export default {
       const values = ref([]);
       let unsubscribe;
       if (date !== undefined && queueId) {
-        const waitlistQuery = waitlistCollection
-          .where('queueId', '==', queueId)
-          .where('status', '==', 'PENDING')
-          .where('date', '==', date)
-          .orderBy('createdAt', 'asc');
-        unsubscribe = waitlistQuery.onSnapshot(snapshot => {
+        const waitlistQuery = query(
+          waitlistCollection,
+          where('queueId', '==', queueId),
+          where('status', '==', 'PENDING'),
+          where('date', '==', date),
+          orderBy('createdAt', 'asc')
+        );
+        unsubscribe = onSnapshot(waitlistQuery, snapshot => {
           values.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         });
       }

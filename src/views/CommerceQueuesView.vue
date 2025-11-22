@@ -31,7 +31,7 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import Warning from '../components/common/Warning.vue';
 import NotificationConditions from '../components/conditions/NotificationConditions.vue';
-import firebase from 'firebase/app';
+import { Timestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';
 import ServiceForm from '../components/domain/ServiceForm.vue';
@@ -428,11 +428,13 @@ export default {
     const updatedBookings = date => {
       let unsubscribe;
       if (date !== undefined) {
-        const bookingsQuery = bookingCollection
-          .where('commerceId', '==', state.commerce.id)
-          .where('status', 'in', [BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED])
-          .where('date', '==', date);
-        unsubscribe = bookingsQuery.onSnapshot(snapshot => {
+        const bookingsQuery = query(
+          bookingCollection,
+          where('commerceId', '==', state.commerce.id),
+          where('status', 'in', [BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED]),
+          where('date', '==', date)
+        );
+        unsubscribe = onSnapshot(bookingsQuery, snapshot => {
           state.allBookings = snapshot.docs.map(doc => {
             const booking = { id: doc.id, ...doc.data() };
             return booking;
@@ -850,7 +852,9 @@ export default {
           };
           await bookingBlockNumberUsedCollection.add(body);
         }
-      } catch (error) {}
+      } catch (error) {
+        // Error handled silently
+      }
     };
 
     const getWaitList = async () => {
@@ -1300,18 +1304,20 @@ export default {
       const date = new Date(
         new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10)
       );
-      const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
-      const attentionsQuery = attentionCollection
-        .where('commerceId', '==', state.commerce.id)
-        .where('status', 'in', [
+      const dateToRequest = Timestamp.fromDate(date);
+      const attentionsQuery = query(
+        attentionCollection,
+        where('commerceId', '==', state.commerce.id),
+        where('status', 'in', [
           ATTENTION_STATUS.PENDING,
           ATTENTION_STATUS.TERMINATED,
           ATTENTION_STATUS.RATED,
-        ])
-        .orderBy('createdAt', 'asc')
-        .orderBy('number', 'asc')
-        .where('createdAt', '>', dateToRequest);
-      unsubscribe = attentionsQuery.onSnapshot(snapshot => {
+        ]),
+        where('createdAt', '>', dateToRequest),
+        orderBy('createdAt', 'asc'),
+        orderBy('number', 'asc')
+      );
+      unsubscribe = onSnapshot(attentionsQuery, snapshot => {
         values.value = snapshot.docs.map(doc => {
           const attention = { id: doc.id, ...doc.data() };
           return attention;

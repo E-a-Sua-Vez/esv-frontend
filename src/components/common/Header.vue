@@ -5,6 +5,7 @@ import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
 import { getDateAndHour } from '../../shared/utils/date';
 import { messageCollection } from '../../application/firebase';
+import { query, where, orderBy, onSnapshot as firestoreOnSnapshot } from 'firebase/firestore';
 import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
@@ -30,19 +31,23 @@ export default {
       const { collaboratorId, administratorId } = messageQueryParams.value;
 
       if (collaboratorId) {
-        return messageCollection
-          .where('collaboratorId', '==', collaboratorId)
-          .where('active', '==', true)
-          .where('read', '==', false)
-          .orderBy('createdAt', 'asc')
-          .onSnapshot(onSnapshot, onError);
+        const messageQuery = query(
+          messageCollection,
+          where('collaboratorId', '==', collaboratorId),
+          where('active', '==', true),
+          where('read', '==', false),
+          orderBy('createdAt', 'asc')
+        );
+        return firestoreOnSnapshot(messageQuery, onSnapshot, onError);
       } else if (administratorId) {
-        return messageCollection
-          .where('administratorId', '==', administratorId)
-          .where('active', '==', true)
-          .where('read', '==', false)
-          .orderBy('createdAt', 'asc')
-          .onSnapshot(onSnapshot, onError);
+        const messageQuery = query(
+          messageCollection,
+          where('administratorId', '==', administratorId),
+          where('active', '==', true),
+          where('read', '==', false),
+          orderBy('createdAt', 'asc')
+        );
+        return firestoreOnSnapshot(messageQuery, onSnapshot, onError);
       }
 
       // Return no-op unsubscribe if no query
