@@ -3,14 +3,17 @@
 ## Executive Summary
 
 **Project**: ESV Frontend - Queue Management System ("Es tu turno" / "Spot+")
-**Type**: SaaS Platform for Digital Queue Management
-**Purpose**: Enable businesses to manage customer queues, bookings, waitlists, and client interactions digitally
-**Target Market**: Businesses needing queue management (retail, healthcare, services, etc.)
+**Type**: SaaS Platform for Digital Queue Management **Purpose**: Enable
+businesses to manage customer queues, bookings, waitlists, and client
+interactions digitally **Target Market**: Businesses needing queue management
+(retail, healthcare, services, etc.)
 
 ## Project Purpose & Value Proposition
 
 ### Core Purpose
-This is a **multi-tenant SaaS platform** that digitizes traditional queue management systems. It allows businesses to:
+
+This is a **multi-tenant SaaS platform** that digitizes traditional queue
+management systems. It allows businesses to:
 
 1. **Manage Digital Queues**: Replace physical queue systems with digital ones
 2. **Handle Bookings**: Schedule and manage appointments
@@ -19,11 +22,15 @@ This is a **multi-tenant SaaS platform** that digitizes traditional queue manage
 5. **Multi-location Support**: Manage multiple commerces/locations per business
 
 ### Value Proposition
-- **For Businesses**: Reduce wait times, improve customer experience, gain insights
-- **For Customers**: Join queues remotely, receive notifications, avoid physical waiting
+
+- **For Businesses**: Reduce wait times, improve customer experience, gain
+  insights
+- **For Customers**: Join queues remotely, receive notifications, avoid physical
+  waiting
 - **For Staff**: Better organization, real-time updates, streamlined operations
 
 ### Business Model
+
 - Multi-tier subscription plans (based on features)
 - Multi-tenant architecture (business → commerces → queues)
 - Role-based access (business admin, collaborator, master admin)
@@ -33,21 +40,25 @@ This is a **multi-tenant SaaS platform** that digitizes traditional queue manage
 ### ✅ Strengths
 
 1. **Clear Separation of Concerns**
+
    - Services layer separated from components
    - Views vs Components distinction
    - Router organization (interno/publico)
 
 2. **Feature-Based Component Organization**
+
    - Components organized by feature (attentions/, bookings/, clients/, etc.)
    - Common components separated
    - Domain components for business logic
 
 3. **Consistent Service Pattern**
+
    - All services follow same structure
    - Centralized API configuration
    - Consistent error handling approach
 
 4. **Internationalization**
+
    - Full i18n support (ES, EN, PT)
    - Centralized translation files
    - Good coverage
@@ -60,21 +71,25 @@ This is a **multi-tenant SaaS platform** that digitizes traditional queue manage
 ### ⚠️ Areas for Improvement
 
 1. **State Management Anti-patterns**
+
    - Async getters in Pinia (should use computed/actions)
    - localStorage mixed with Pinia state
    - Potential race conditions
 
 2. **Component Architecture**
+
    - Mix of Options API and Composition API
    - Some components too large (Header.vue)
    - Inconsistent patterns
 
 3. **Code Duplication**
+
    - Similar patterns repeated across services
    - Common logic not extracted
    - Repeated Firebase listener patterns
 
 4. **Error Handling**
+
    - No centralized error handling
    - Inconsistent error messages
    - No error boundaries
@@ -91,15 +106,17 @@ This is a **multi-tenant SaaS platform** that digitizes traditional queue manage
 #### 1. Fix State Management Anti-patterns
 
 **Current Issue**: Async getters in Pinia store
+
 ```javascript
 // ❌ Current (Anti-pattern)
-getCurrentUser: async (state) => {
+getCurrentUser: async state => {
   const localValue = localStorage.getItem('currentUser');
   // ...
-}
+};
 ```
 
 **Recommended Fix**:
+
 ```javascript
 // ✅ Better approach
 import { defineStore } from 'pinia';
@@ -113,7 +130,7 @@ export const globalStore = defineStore('globalStore', {
 
   getters: {
     // Synchronous getters
-    getCurrentUser: (state) => {
+    getCurrentUser: state => {
       if (state.currentUser) return state.currentUser;
       const local = localStorage.getItem('currentUser');
       return local ? JSON.parse(local) : null;
@@ -139,6 +156,7 @@ export const globalStore = defineStore('globalStore', {
 ```
 
 **Benefits**:
+
 - Reactive getters work properly
 - No async getter issues
 - Better performance
@@ -147,6 +165,7 @@ export const globalStore = defineStore('globalStore', {
 #### 2. Implement Centralized Error Handling
 
 **Create**: `src/application/errorHandler.js`
+
 ```javascript
 import { ElMessage } from 'element-plus'; // or your notification system
 
@@ -181,6 +200,7 @@ export const handleError = (error, context = '') => {
 ```
 
 **Add to API interceptor**:
+
 ```javascript
 // src/application/api.js
 requestBackend.interceptors.response.use(
@@ -195,12 +215,14 @@ requestBackend.interceptors.response.use(
 #### 3. Refactor Large Components
 
 **Header.vue** is too large. Split into:
+
 - `HeaderNavigation.vue`
 - `HeaderUserMenu.vue`
 - `HeaderMessages.vue`
 - `HeaderLocaleSelector.vue`
 
 **Pattern**:
+
 ```vue
 <!-- Header.vue -->
 <script setup>
@@ -225,6 +247,7 @@ import HeaderUserMenu from './HeaderUserMenu.vue';
 **Create Composables**:
 
 `src/composables/useFirebaseListener.js`:
+
 ```javascript
 import { ref, onUnmounted } from 'vue';
 
@@ -233,10 +256,10 @@ export function useFirebaseListener(queryFn) {
   let unsubscribe = null;
 
   const start = () => {
-    unsubscribe = queryFn((snapshot) => {
+    unsubscribe = queryFn(snapshot => {
       data.value = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
     });
   };
@@ -250,12 +273,13 @@ export function useFirebaseListener(queryFn) {
 ```
 
 **Usage**:
+
 ```vue
 <script setup>
 import { useFirebaseListener } from '@/composables/useFirebaseListener';
 import { messageCollection } from '@/application/firebase';
 
-const { data: messages, start } = useFirebaseListener((callback) => {
+const { data: messages, start } = useFirebaseListener(callback => {
   return messageCollection
     .where('collaboratorId', '==', collaboratorId)
     .onSnapshot(callback);
@@ -268,11 +292,13 @@ onMounted(() => start());
 #### 5. Add TypeScript Gradually
 
 **Start with**:
+
 1. Services layer (type definitions for API responses)
 2. Store (type state and actions)
 3. Utils (type utility functions)
 
 **Example**:
+
 ```typescript
 // src/types/user.ts
 export interface User {
@@ -295,6 +321,7 @@ export const getUserById = async (id: string): Promise<User> => {
 #### 6. Improve Component Consistency
 
 **Create Component Template**:
+
 ```vue
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
@@ -350,11 +377,14 @@ onMounted(() => {
 #### 7. Performance Optimizations
 
 **Lazy Load Routes** (already done, but verify):
+
 ```javascript
-const BusinessDashboard = () => import('../../views/business/BusinessDashboard.vue');
+const BusinessDashboard = () =>
+  import('../../views/business/BusinessDashboard.vue');
 ```
 
 **Virtual Scrolling for Large Lists**:
+
 ```vue
 <template>
   <RecycleScroller
@@ -370,6 +400,7 @@ const BusinessDashboard = () => import('../../views/business/BusinessDashboard.v
 ```
 
 **Image Optimization**:
+
 - Use WebP format
 - Lazy load images
 - Responsive images
@@ -377,11 +408,13 @@ const BusinessDashboard = () => import('../../views/business/BusinessDashboard.v
 #### 8. Testing Strategy
 
 **Add Tests**:
+
 1. Unit tests for services
 2. Component tests for critical components
 3. E2E tests for critical flows
 
 **Example**:
+
 ```javascript
 // tests/services/user.test.js
 import { describe, it, expect } from 'vitest';
@@ -399,6 +432,7 @@ describe('User Service', () => {
 #### 9. Documentation Improvements
 
 **Add**:
+
 - API documentation (OpenAPI/Swagger)
 - Component Storybook
 - Architecture diagrams (Mermaid)
@@ -407,6 +441,7 @@ describe('User Service', () => {
 #### 10. Developer Experience
 
 **Add**:
+
 - VS Code workspace settings
 - Recommended extensions
 - Debug configurations
@@ -416,8 +451,7 @@ describe('User Service', () => {
 
 ### 1. Consider Feature Modules
 
-**Current**: Flat component structure
-**Recommended**: Feature-based modules
+**Current**: Flat component structure **Recommended**: Feature-based modules
 
 ```
 src/
@@ -436,6 +470,7 @@ src/
 ### 2. API Layer Improvements
 
 **Add**:
+
 - Request/response interceptors
 - Retry logic
 - Request cancellation
@@ -444,6 +479,7 @@ src/
 ### 3. State Management Improvements
 
 **Consider**:
+
 - Separate stores per feature
 - Store composition
 - Persistence plugins
@@ -467,6 +503,7 @@ src/
 ## Monitoring & Observability
 
 **Add**:
+
 - Error tracking (Sentry)
 - Performance monitoring
 - User analytics
@@ -475,16 +512,19 @@ src/
 ## Migration Path
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 - Fix state management anti-patterns
 - Add centralized error handling
 - Extract common patterns
 
 ### Phase 2: Quality (Weeks 3-4)
+
 - Add TypeScript to services
 - Refactor large components
 - Add unit tests
 
 ### Phase 3: Enhancement (Weeks 5-6)
+
 - Performance optimizations
 - Add monitoring
 - Improve documentation
@@ -499,6 +539,7 @@ src/
 ## Conclusion
 
 This is a **well-organized, feature-rich SaaS application** with:
+
 - ✅ Clear business purpose
 - ✅ Good separation of concerns
 - ✅ Comprehensive features
@@ -506,11 +547,12 @@ This is a **well-organized, feature-rich SaaS application** with:
 - ⚠️ Opportunities for improvement
 
 **Priority Focus Areas**:
+
 1. State management refactoring
 2. Error handling centralization
 3. Component consistency
 4. Type safety (TypeScript)
 5. Testing infrastructure
 
-The project shows good architectural thinking and can benefit significantly from the recommended improvements.
-
+The project shows good architectural thinking and can benefit significantly from
+the recommended improvements.

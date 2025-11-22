@@ -2,13 +2,15 @@
 
 ## Purpose
 
-This guide ensures that improvements don't break existing functionality. Use this checklist before and after each change.
+This guide ensures that improvements don't break existing functionality. Use
+this checklist before and after each change.
 
 ## Pre-Change Baseline
 
 ### 1. Document Current State
 
 **Take Notes**:
+
 - Current behavior for each feature
 - Error messages
 - Loading states
@@ -16,6 +18,7 @@ This guide ensures that improvements don't break existing functionality. Use thi
 - API responses
 
 **Screenshot Key Screens** (optional):
+
 - Login pages
 - Dashboards
 - Forms
@@ -40,6 +43,7 @@ ls -lh dist/assets/*.js
 ### Authentication & Authorization
 
 #### Business User
+
 - [ ] Can login with valid credentials
 - [ ] Redirected to business menu after login
 - [ ] Session persists on page refresh
@@ -49,6 +53,7 @@ ls -lh dist/assets/*.js
 - [ ] Can access all business routes
 
 #### Collaborator User
+
 - [ ] Can login with valid credentials
 - [ ] Redirected to collaborator menu after login
 - [ ] Session persists on page refresh
@@ -58,6 +63,7 @@ ls -lh dist/assets/*.js
 - [ ] Can access all collaborator routes
 
 #### Master User
+
 - [ ] Can login with valid credentials
 - [ ] Redirected to master menu after login
 - [ ] Can select business
@@ -67,6 +73,7 @@ ls -lh dist/assets/*.js
 - [ ] Can access all master routes
 
 #### Invited User
+
 - [ ] Can access public queue pages
 - [ ] Session expires after 6 hours
 - [ ] Can join queues
@@ -75,6 +82,7 @@ ls -lh dist/assets/*.js
 ### Queue Management
 
 #### Business Queue Admin
+
 - [ ] Can view all queues
 - [ ] Can create new queue
 - [ ] Can edit existing queue
@@ -82,6 +90,7 @@ ls -lh dist/assets/*.js
 - [ ] Queue list updates in real-time
 
 #### Public Queue Access
+
 - [ ] Can view queue via QR code
 - [ ] Can join queue
 - [ ] Receives queue number
@@ -174,16 +183,19 @@ ls -lh dist/assets/*.js
 ## Automated Testing (When Available)
 
 ### Unit Tests
+
 ```bash
 npm run test:unit
 ```
 
 ### Component Tests
+
 ```bash
 npm run test:component
 ```
 
 ### E2E Tests
+
 ```bash
 npm run test:e2e
 ```
@@ -191,6 +203,7 @@ npm run test:e2e
 ## Browser Testing
 
 Test in:
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (latest)
@@ -201,12 +214,14 @@ Test in:
 ## Performance Testing
 
 ### Lighthouse Audit
+
 ```bash
 # Run Lighthouse
 # Target: 90+ Performance, 90+ Accessibility
 ```
 
 ### Bundle Analysis
+
 ```bash
 npm run build:br
 # Check bundle size hasn't increased significantly
@@ -215,6 +230,7 @@ npm run build:br
 ## Regression Test Script
 
 ### Quick Test (5 minutes)
+
 1. Login as business user
 2. Navigate to dashboard
 3. Create a queue
@@ -222,12 +238,14 @@ npm run build:br
 5. Logout
 
 ### Full Test (30 minutes)
+
 1. Complete authentication checklist
 2. Test 3-4 key features
 3. Check console for errors
 4. Verify real-time updates
 
 ### Comprehensive Test (2 hours)
+
 1. Complete all checklists
 2. Test all user types
 3. Test all major features
@@ -237,18 +255,21 @@ npm run build:br
 ## After Each Change
 
 ### Immediate Checks
+
 1. ✅ App builds without errors
 2. ✅ No console errors
 3. ✅ Login works
 4. ✅ Key feature works
 
 ### Before Committing
+
 1. ✅ All tests pass
 2. ✅ No new warnings
 3. ✅ Code formatted
 4. ✅ Documentation updated
 
 ### Before Merging
+
 1. ✅ Full regression test
 2. ✅ Code review
 3. ✅ Performance check
@@ -257,21 +278,25 @@ npm run build:br
 ## Common Issues to Watch For
 
 ### State Management
+
 - ❌ Store getters return undefined
 - ❌ State doesn't persist
 - ❌ Race conditions
 
 ### API Calls
+
 - ❌ Requests fail silently
 - ❌ Error handling breaks
 - ❌ Loading states stuck
 
 ### Real-time
+
 - ❌ Listeners don't unsubscribe
 - ❌ Memory leaks
 - ❌ Updates don't appear
 
 ### Components
+
 - ❌ Components don't render
 - ❌ Props not passed correctly
 - ❌ Events not emitted
@@ -281,6 +306,7 @@ npm run build:br
 If you find a regression:
 
 1. **Document**:
+
    - What changed
    - What broke
    - Steps to reproduce
@@ -296,12 +322,10 @@ If you find a regression:
 
 ## Success Criteria
 
-✅ **Zero Regressions**: All existing functionality works
-✅ **No New Errors**: Console clean
-✅ **Performance Maintained**: Same or better
-✅ **User Experience**: No negative impact
+✅ **Zero Regressions**: All existing functionality works ✅ **No New Errors**:
+Console clean ✅ **Performance Maintained**: Same or better ✅ **User
+Experience**: No negative impact
 
 ---
 
 **Remember**: When in doubt, test more! 🧪
-

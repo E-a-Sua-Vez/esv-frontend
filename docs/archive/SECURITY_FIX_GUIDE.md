@@ -1,6 +1,7 @@
 # Security Fix Guide
 
-This guide provides step-by-step instructions for fixing the remaining security vulnerabilities.
+This guide provides step-by-step instructions for fixing the remaining security
+vulnerabilities.
 
 ## Quick Fixes (No Breaking Changes)
 
@@ -13,6 +14,7 @@ npm install lint-staged@latest --save-dev
 This updates lint-staged which will pull in a fixed version of micromatch.
 
 **Verification**:
+
 ```bash
 npm audit | grep micromatch
 ```
@@ -32,16 +34,19 @@ npm install jspdf@latest
 ```
 
 **Breaking Changes to Review**:
+
 - Check jspdf v3.x changelog
 - Test all PDF generation functionality
 - Update code if API changed
 
 **Verification**:
+
 ```bash
 npm audit | grep dompurify
 ```
 
 **If PDF generation breaks**:
+
 - Review jspdf v3 migration guide
 - Or consider alternative: `pdfmake`, `pdfkit`, or `react-pdf`
 
@@ -56,17 +61,20 @@ npm install vite@latest @vitejs/plugin-vue@latest --save-dev
 ```
 
 **Breaking Changes**:
+
 - Vite 7.x has breaking changes
 - Review [Vite Migration Guide](https://vitejs.dev/guide/migration.html)
 - Test build process thoroughly
 
 **Verification**:
+
 ```bash
 npm run build:br
 npm run build:net
 ```
 
 **Option B: Accept Risk (Recommended for now)**
+
 - This vulnerability only affects the development server
 - Not a production risk
 - Can be addressed in next major update
@@ -78,6 +86,7 @@ npm run build:net
 **⚠️ IMPORTANT**: Firebase v9+ uses a completely different modular SDK API.
 
 **Current Code Pattern (v8)**:
+
 ```javascript
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -89,6 +98,7 @@ const firestore = firebase.firestore();
 ```
 
 **New Pattern (v9+)**:
+
 ```javascript
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -102,16 +112,19 @@ const firestore = getFirestore(app);
 **Migration Steps**:
 
 1. **Install Firebase v9+**:
+
    ```bash
    npm install firebase@latest
    ```
 
 2. **Update firebase.js**:
+
    - Convert to modular imports
    - Update all collection references
    - Update all auth methods
 
 3. **Update all components using Firebase**:
+
    - Update imports
    - Update method calls
    - Test real-time listeners
@@ -123,10 +136,12 @@ const firestore = getFirestore(app);
    - All Firebase features
 
 **Resources**:
+
 - [Firebase Migration Guide](https://firebase.google.com/docs/web/modular-upgrade)
 - [Firebase v9 Documentation](https://firebase.google.com/docs/web/modular-api)
 
 **Recommendation**:
+
 - Plan as a separate migration task
 - Create a feature branch
 - Migrate incrementally
@@ -138,7 +153,8 @@ const firestore = getFirestore(app);
 
 **Option A: Remove if not needed**
 
-Check if `vue-cli-plugin-i18n` is actually used. You're using `@intlify/unplugin-vue-i18n`, so this might be redundant.
+Check if `vue-cli-plugin-i18n` is actually used. You're using
+`@intlify/unplugin-vue-i18n`, so this might be redundant.
 
 ```bash
 # Check usage
@@ -161,21 +177,25 @@ npm install vue-cli-plugin-i18n@latest --save-dev
 ## Recommended Fix Order
 
 ### Phase 1: Quick Wins (Do Now)
+
 1. ✅ Update lint-staged (fixes micromatch)
 2. ✅ Review and remove vue-cli-plugin-i18n if not needed
 
 ### Phase 2: Low Risk Updates (Test First)
+
 3. ⚠️ Update jspdf (if PDF generation is critical)
    - Test PDF generation
    - Review breaking changes
 
 ### Phase 3: Development Updates (Plan)
+
 4. ⚠️ Update Vite (plan for next major update)
    - Review migration guide
    - Test build process
    - Update CI/CD if needed
 
 ### Phase 4: Major Migration (Separate Task)
+
 5. ⚠️ Migrate Firebase to v9+ modular SDK
    - Create migration plan
    - Allocate dedicated time
@@ -204,12 +224,14 @@ After each update, test:
 If an update breaks functionality:
 
 1. **Revert the change**:
+
    ```bash
    git checkout package.json package-lock.json
    npm install
    ```
 
 2. **Document the issue**:
+
    - What broke?
    - Why did it break?
    - What's the workaround?
@@ -230,16 +252,16 @@ Create `.github/dependabot.yml`:
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 10
     reviewers:
-      - "your-team"
+      - 'your-team'
     labels:
-      - "dependencies"
-      - "security"
+      - 'dependencies'
+      - 'security'
 ```
 
 ### Add to CI/CD
@@ -264,4 +286,3 @@ Add security check to your build pipeline:
 ---
 
 **Last Updated**: 2024
-

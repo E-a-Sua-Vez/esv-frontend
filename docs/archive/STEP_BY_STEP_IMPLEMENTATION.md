@@ -1,11 +1,14 @@
 # Step-by-Step Implementation Guide
 
 ## 🎯 Goal
-Implement improvements **one step at a time** with **testing after each step** to ensure zero regressions.
+
+Implement improvements **one step at a time** with **testing after each step**
+to ensure zero regressions.
 
 ## 📋 Pre-Implementation Checklist
 
 Before starting, ensure:
+
 - [ ] App is running: `npm run dev:br`
 - [ ] No uncommitted changes (or commit current work)
 - [ ] Browser DevTools open (Console tab)
@@ -16,15 +19,22 @@ Before starting, ensure:
 ## Step 1: Add Constants to Router (Safest - 5 minutes)
 
 ### What We're Doing
-Replacing magic strings with constants. **Zero logic change** - just using constants instead of strings.
+
+Replacing magic strings with constants. **Zero logic change** - just using
+constants instead of strings.
 
 ### Implementation
 
 1. **Open** `src/router/index.js`
 
 2. **Add import at the top** (after existing imports):
+
 ```javascript
-import { USER_TYPES, SESSION_TIMEOUT_DAYS, INVITED_SESSION_TIMEOUT_HOURS } from '@/shared/constants';
+import {
+  USER_TYPES,
+  SESSION_TIMEOUT_DAYS,
+  INVITED_SESSION_TIMEOUT_HOURS,
+} from '@/shared/constants';
 ```
 
 3. **Replace string comparisons** (one at a time):
@@ -62,6 +72,7 @@ if (currentUserType === USER_TYPES.COLLABORATOR) {
 ```
 
 Continue replacing all instances of:
+
 - `'business'` → `USER_TYPES.BUSINESS`
 - `'collaborator'` → `USER_TYPES.COLLABORATOR`
 - `'master'` → `USER_TYPES.MASTER`
@@ -70,6 +81,7 @@ Continue replacing all instances of:
 ### Testing (2 minutes)
 
 **Quick Test**:
+
 1. ✅ Save file, check console for errors
 2. ✅ Login as **Business** user → Should redirect to business menu
 3. ✅ Logout
@@ -83,6 +95,7 @@ Continue replacing all instances of:
 **If anything breaks**: Revert the change immediately.
 
 ### Commit
+
 ```bash
 git add src/router/index.js
 git commit -m "refactor: use constants for user types in router"
@@ -93,20 +106,29 @@ git commit -m "refactor: use constants for user types in router"
 ## Step 2: Use Storage Utilities in Store (10 minutes)
 
 ### What We're Doing
-Replacing localStorage code with safe utilities. **Same behavior** - just safer and cleaner.
+
+Replacing localStorage code with safe utilities. **Same behavior** - just safer
+and cleaner.
 
 ### Implementation
 
 1. **Open** `src/stores/index.js`
 
 2. **Add imports at the top**:
+
 ```javascript
-import { getStorageItem, setStorageItem, removeStorageItem, STORAGE_KEYS } from '@/shared/utils/storage';
+import {
+  getStorageItem,
+  setStorageItem,
+  removeStorageItem,
+  STORAGE_KEYS,
+} from '@/shared/utils/storage';
 ```
 
 3. **Update getters** (one at a time, test after each):
 
 #### Update `getCurrentUser`:
+
 ```javascript
 // BEFORE (lines 18-24):
 getCurrentUser: (state) => {
@@ -123,9 +145,11 @@ getCurrentUser: (state) => {
 },
 ```
 
-**Test immediately**: Login, verify user loads, refresh page, verify persistence.
+**Test immediately**: Login, verify user loads, refresh page, verify
+persistence.
 
 #### Update `getCurrentPermissions`:
+
 ```javascript
 // BEFORE:
 getCurrentPermissions: (state) => {
@@ -143,6 +167,7 @@ getCurrentPermissions: (state) => {
 ```
 
 #### Update `getCurrentQueue`:
+
 ```javascript
 // BEFORE:
 getCurrentQueue: async (state) => {
@@ -160,6 +185,7 @@ getCurrentQueue: (state) => {
 ```
 
 #### Update `getCurrentUserType`:
+
 ```javascript
 // BEFORE:
 getCurrentUserType: async (state) => {
@@ -176,6 +202,7 @@ getCurrentUserType: (state) => {
 ```
 
 #### Update `getCurrentCommerce`:
+
 ```javascript
 // BEFORE:
 getCurrentCommerce: async (state) => {
@@ -193,6 +220,7 @@ getCurrentCommerce: (state) => {
 ```
 
 #### Update `getCurrentBusiness`:
+
 ```javascript
 // BEFORE:
 getCurrentBusiness: async (state) => {
@@ -210,6 +238,7 @@ getCurrentBusiness: (state) => {
 ```
 
 #### Update `getCurrentAttentionChannel`:
+
 ```javascript
 // BEFORE:
 getCurrentAttentionChannel: async (state) => {
@@ -226,6 +255,7 @@ getCurrentAttentionChannel: (state) => {
 ```
 
 #### Update `getCurrentActiveAttentions`:
+
 ```javascript
 // BEFORE:
 getCurrentActiveAttentions: async (state) => {
@@ -245,6 +275,7 @@ getCurrentActiveAttentions: (state) => {
 4. **Update setters**:
 
 #### Update `setCurrentUser`:
+
 ```javascript
 // BEFORE:
 async setCurrentUser(value) {
@@ -263,6 +294,7 @@ async setCurrentUser(value) {
 Continue for all setters following the same pattern.
 
 5. **Update `resetSession`**:
+
 ```javascript
 // BEFORE:
 async resetSession() {
@@ -299,6 +331,7 @@ async resetSession() {
 ### Testing (5 minutes)
 
 **Critical Test**:
+
 1. ✅ **Login** as business user
 2. ✅ **Verify** user data loads correctly
 3. ✅ **Refresh page** (F5) → Session should persist
@@ -308,6 +341,7 @@ async resetSession() {
 7. ✅ **Check localStorage** in DevTools → Keys should be correct
 
 **Expected Result**:
+
 - Same behavior as before
 - No console errors
 - Session persists correctly
@@ -316,6 +350,7 @@ async resetSession() {
 **If anything breaks**: Revert immediately.
 
 ### Commit
+
 ```bash
 git add src/stores/index.js
 git commit -m "refactor: use storage utilities in store"
@@ -326,11 +361,13 @@ git commit -m "refactor: use storage utilities in store"
 ## Step 3: Update Components Using Store (Gradual)
 
 ### What We're Doing
+
 Updating components that use async store getters to use synchronous getters.
 
 ### Find Components Using Async Getters
 
 Search for:
+
 ```bash
 grep -r "await store.getCurrent" src/
 ```
@@ -338,11 +375,13 @@ grep -r "await store.getCurrent" src/
 ### Update Pattern
 
 **BEFORE**:
+
 ```javascript
 const user = await store.getCurrentUser;
 ```
 
 **AFTER**:
+
 ```javascript
 const user = store.getCurrentUser; // Now synchronous
 ```
@@ -352,6 +391,7 @@ Update **one component at a time**, test after each.
 ### Testing
 
 After each component update:
+
 1. ✅ Component renders
 2. ✅ Data loads correctly
 3. ✅ No console errors
@@ -366,11 +406,13 @@ The error handler is ready. To enable it:
 1. **Open** `src/application/api.js`
 
 2. **Add import**:
+
 ```javascript
 import { handleApiError } from './errorHandler';
 ```
 
 3. **Add interceptor** (before export):
+
 ```javascript
 // Add error interceptor (non-breaking - only handles errors)
 requestBackend.interceptors.response.use(
@@ -398,6 +440,7 @@ requestBackend.interceptors.response.use(
 After all steps, run full test:
 
 ### Authentication
+
 - [ ] Business login works
 - [ ] Collaborator login works
 - [ ] Master login works
@@ -407,17 +450,20 @@ After all steps, run full test:
 - [ ] Logout works
 
 ### Data Loading
+
 - [ ] All API calls work
 - [ ] Store getters return correct data
 - [ ] Store setters update correctly
 - [ ] localStorage syncs properly
 
 ### Navigation
+
 - [ ] All routes accessible
 - [ ] Route guards work
 - [ ] Redirects work correctly
 
 ### Real-time
+
 - [ ] Firebase listeners work
 - [ ] Real-time updates appear
 - [ ] No memory leaks
@@ -457,4 +503,3 @@ After all steps, run full test:
 ---
 
 **Ready to start? Begin with Step 1!** 🚀
-

@@ -2,9 +2,11 @@
 
 ## Philosophy
 
-**Goal**: Improve code quality, fix technical debt, and enhance maintainability **without changing any business logic or user-facing behavior**.
+**Goal**: Improve code quality, fix technical debt, and enhance maintainability
+**without changing any business logic or user-facing behavior**.
 
 **Principles**:
+
 1. ✅ Refactor code structure, not behavior
 2. ✅ Add abstractions without changing functionality
 3. ✅ Improve error handling without changing success paths
@@ -16,13 +18,13 @@
 
 ### 1.1 Extract Constants and Configuration
 
-**What**: Move magic strings and numbers to constants
-**Risk**: ⭐ Very Low (no logic change)
-**Time**: 2-3 hours
+**What**: Move magic strings and numbers to constants **Risk**: ⭐ Very Low (no
+logic change) **Time**: 2-3 hours
 
 **Steps**:
 
 1. Create `src/shared/constants/index.js`:
+
 ```javascript
 // Session constants
 export const SESSION_TIMEOUT_DAYS = 1;
@@ -57,6 +59,7 @@ export const STORAGE_KEYS = {
 ```
 
 2. Update `src/router/index.js`:
+
 ```javascript
 // Before
 if (currentUserType === 'business') {
@@ -67,16 +70,18 @@ if (currentUserType === USER_TYPES.BUSINESS) {
 ```
 
 3. Update `src/stores/index.js`:
+
 ```javascript
 // Before
-localStorage.getItem('currentUser')
+localStorage.getItem('currentUser');
 
 // After
 import { STORAGE_KEYS } from '@/shared/constants';
-localStorage.getItem(STORAGE_KEYS.CURRENT_USER)
+localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
 ```
 
 **Verification**:
+
 - ✅ Run app, test all user types login
 - ✅ Verify session timeouts work
 - ✅ Check localStorage keys are correct
@@ -85,13 +90,13 @@ localStorage.getItem(STORAGE_KEYS.CURRENT_USER)
 
 ### 1.2 Create Utility Functions for Common Patterns
 
-**What**: Extract repeated localStorage and JSON parsing logic
-**Risk**: ⭐ Very Low (pure functions, no side effects)
-**Time**: 2-3 hours
+**What**: Extract repeated localStorage and JSON parsing logic **Risk**: ⭐ Very
+Low (pure functions, no side effects) **Time**: 2-3 hours
 
 **Steps**:
 
 1. Create `src/shared/utils/storage.js`:
+
 ```javascript
 import { STORAGE_KEYS } from '../constants';
 
@@ -139,25 +144,31 @@ export function removeStorageItem(key) {
 ```
 
 2. Update store to use utilities:
+
 ```javascript
 // Before (in stores/index.js)
-getCurrentUser: (state) => {
+getCurrentUser: state => {
   const localValue = localStorage.getItem('currentUser');
   let value = state.currentUser || localValue || undefined;
   value = value === 'undefined' ? undefined : value;
   value = value ? JSON.parse(value) : value;
   return value;
-}
+};
 
 // After
-import { getStorageItem, setStorageItem, STORAGE_KEYS } from '@/shared/utils/storage';
+import {
+  getStorageItem,
+  setStorageItem,
+  STORAGE_KEYS,
+} from '@/shared/utils/storage';
 
-getCurrentUser: (state) => {
+getCurrentUser: state => {
   return state.currentUser || getStorageItem(STORAGE_KEYS.CURRENT_USER);
-}
+};
 ```
 
 **Verification**:
+
 - ✅ Test all store getters/setters
 - ✅ Verify localStorage persistence
 - ✅ Test with invalid JSON (should handle gracefully)
@@ -166,13 +177,13 @@ getCurrentUser: (state) => {
 
 ### 1.3 Extract API Error Handling
 
-**What**: Add error interceptor without changing success flow
-**Risk**: ⭐ Low (only affects error cases)
-**Time**: 2-3 hours
+**What**: Add error interceptor without changing success flow **Risk**: ⭐ Low
+(only affects error cases) **Time**: 2-3 hours
 
 **Steps**:
 
 1. Create `src/application/errorHandler.js`:
+
 ```javascript
 /**
  * Handle API errors consistently
@@ -216,6 +227,7 @@ export function handleApiError(error, context = 'API') {
 ```
 
 2. Update `src/application/api.js`:
+
 ```javascript
 import { handleApiError } from './errorHandler';
 
@@ -238,6 +250,7 @@ requestBackend.interceptors.response.use(
 ```
 
 **Verification**:
+
 - ✅ Test successful API calls (should work exactly as before)
 - ✅ Test error cases (should provide better error messages)
 - ✅ Verify no breaking changes to error handling in components
@@ -249,8 +262,7 @@ requestBackend.interceptors.response.use(
 ### 2.1 Refactor Store Getters (Maintain Behavior)
 
 **What**: Convert async getters to computed + actions, but keep same behavior
-**Risk**: ⭐⭐ Low-Medium (requires careful testing)
-**Time**: 4-6 hours
+**Risk**: ⭐⭐ Low-Medium (requires careful testing) **Time**: 4-6 hours
 
 **Steps**:
 
@@ -259,7 +271,11 @@ requestBackend.interceptors.response.use(
 ```javascript
 // src/stores/index.js
 import { defineStore } from 'pinia';
-import { getStorageItem, setStorageItem, STORAGE_KEYS } from '@/shared/utils/storage';
+import {
+  getStorageItem,
+  setStorageItem,
+  STORAGE_KEYS,
+} from '@/shared/utils/storage';
 import { getActiveCommercesByBusinessId } from '../application/services/commerce';
 import { getBusinessById } from '../application/services/business';
 
@@ -315,7 +331,9 @@ export const globalStore = defineStore('globalStore', {
 
     getCurrentAttentionChannel(state) {
       if (state.currentAttentionChannel) return state.currentAttentionChannel;
-      const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL);
+      const stored = localStorage.getItem(
+        STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL
+      );
       return stored && stored !== 'undefined' ? stored : 'QR';
     },
 
@@ -375,8 +393,10 @@ export const globalStore = defineStore('globalStore', {
 
       // Clear storage
       Object.values(STORAGE_KEYS).forEach(key => {
-        if (key !== STORAGE_KEYS.CURRENT_USER_TYPE &&
-            key !== STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL) {
+        if (
+          key !== STORAGE_KEYS.CURRENT_USER_TYPE &&
+          key !== STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL
+        ) {
           localStorage.removeItem(key);
         }
       });
@@ -391,8 +411,12 @@ export const globalStore = defineStore('globalStore', {
       const currentUser = this.getCurrentUser;
       const currentCommerce = this.getCurrentCommerce;
 
-      if (!business && ((currentUser?.businessId) || (currentCommerce?.businessId))) {
-        const businessId = currentUser?.businessId || currentCommerce?.businessId;
+      if (
+        !business &&
+        (currentUser?.businessId || currentCommerce?.businessId)
+      ) {
+        const businessId =
+          currentUser?.businessId || currentCommerce?.businessId;
         business = await getBusinessById(businessId);
         await this.setCurrentBusiness(business);
       }
@@ -403,8 +427,9 @@ export const globalStore = defineStore('globalStore', {
       const currentUser = this.getCurrentUser;
       const currentCommerce = this.getCurrentCommerce;
 
-      if ((currentUser?.businessId) || (currentCommerce?.businessId)) {
-        const businessId = currentUser?.businessId || currentCommerce?.businessId;
+      if (currentUser?.businessId || currentCommerce?.businessId) {
+        const businessId =
+          currentUser?.businessId || currentCommerce?.businessId;
         const business = await getBusinessById(businessId);
         await this.setCurrentBusiness(business);
         return business;
@@ -423,8 +448,8 @@ export const globalStore = defineStore('globalStore', {
       }
 
       if (currentUser?.commercesId?.length > 0) {
-        const availableCommerces = commerces.filter(
-          com => currentUser.commercesId.includes(com.id)
+        const availableCommerces = commerces.filter(com =>
+          currentUser.commercesId.includes(com.id)
         );
         if (availableCommerces?.length > 0) {
           commerces = availableCommerces;
@@ -448,6 +473,7 @@ const user = store.getCurrentUser; // Now synchronous, but same result
 ```
 
 **Verification Checklist**:
+
 - ✅ Test all user types login/logout
 - ✅ Verify session persistence across page reloads
 - ✅ Test all routes and route guards
@@ -462,12 +488,12 @@ const user = store.getCurrentUser; // Now synchronous, but same result
 ### 3.1 Extract Composable for Firebase Listeners
 
 **What**: Create reusable composable without changing listener behavior
-**Risk**: ⭐ Very Low (pure extraction)
-**Time**: 3-4 hours
+**Risk**: ⭐ Very Low (pure extraction) **Time**: 3-4 hours
 
 **Steps**:
 
 1. Create `src/composables/useFirebaseListener.js`:
+
 ```javascript
 import { ref, onUnmounted } from 'vue';
 
@@ -488,23 +514,27 @@ export function useFirebaseListener(queryFn) {
       isLoading.value = true;
       error.value = null;
 
-      unsubscribe = queryFn((snapshot) => {
-        data.value = snapshot.docs.map(doc => {
-          const docData = doc.data();
-          // Maintain same data transformation as before
-          return {
-            id: doc.id,
-            ...docData,
-            // Handle createdAt if it exists (same as before)
-            createdAt: docData.createdAt?.toDate?.()?.toString() || docData.createdAt,
-          };
-        });
-        isLoading.value = false;
-      }, (err) => {
-        error.value = err;
-        isLoading.value = false;
-        console.error('Firebase listener error:', err);
-      });
+      unsubscribe = queryFn(
+        snapshot => {
+          data.value = snapshot.docs.map(doc => {
+            const docData = doc.data();
+            // Maintain same data transformation as before
+            return {
+              id: doc.id,
+              ...docData,
+              // Handle createdAt if it exists (same as before)
+              createdAt:
+                docData.createdAt?.toDate?.()?.toString() || docData.createdAt,
+            };
+          });
+          isLoading.value = false;
+        },
+        err => {
+          error.value = err;
+          isLoading.value = false;
+          console.error('Firebase listener error:', err);
+        }
+      );
     } catch (err) {
       error.value = err;
       isLoading.value = false;
@@ -529,7 +559,8 @@ export function useFirebaseListener(queryFn) {
 }
 ```
 
-2. Update `src/application/firebase.js` to use composable pattern (optional, can keep existing functions):
+2. Update `src/application/firebase.js` to use composable pattern (optional, can
+   keep existing functions):
 
 ```javascript
 // Keep existing functions for backward compatibility
@@ -539,17 +570,20 @@ export function updatedAvailableMessages(collaboratorId, administratorId) {
   if (collaboratorId) {
     const messages = ref([]);
     const messageQuery = messageCollection
-      .where('collaboratorId', "==", collaboratorId)
-      .where('active', "==", true)
-      .where('read', "==", false)
+      .where('collaboratorId', '==', collaboratorId)
+      .where('active', '==', true)
+      .where('read', '==', false)
       .orderBy('createdAt', 'asc');
     const unsubscribe = messageQuery.onSnapshot(snapshot => {
-      messages.value = snapshot.docs
-        .map(doc => {
-          return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-        })
-    })
-    onUnmounted(unsubscribe)
+      messages.value = snapshot.docs.map(doc => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt.toDate().toString(),
+        };
+      });
+    });
+    onUnmounted(unsubscribe);
     return messages;
   }
   // ... existing code
@@ -568,7 +602,11 @@ const props = defineProps({
   collaboratorId: String,
 });
 
-const { data: messages, isLoading, start } = useFirebaseListener((onSnapshot, onError) => {
+const {
+  data: messages,
+  isLoading,
+  start,
+} = useFirebaseListener((onSnapshot, onError) => {
   return messageCollection
     .where('collaboratorId', '==', props.collaboratorId)
     .where('active', '==', true)
@@ -582,6 +620,7 @@ onMounted(() => start());
 ```
 
 **Verification**:
+
 - ✅ Test all Firebase listeners work identically
 - ✅ Verify real-time updates still work
 - ✅ Check unsubscribe happens correctly
@@ -591,13 +630,13 @@ onMounted(() => start());
 
 ### 3.2 Extract Common Component Patterns
 
-**What**: Create reusable components without changing existing ones
-**Risk**: ⭐ Very Low (additive only)
-**Time**: 4-6 hours
+**What**: Create reusable components without changing existing ones **Risk**: ⭐
+Very Low (additive only) **Time**: 4-6 hours
 
 **Steps**:
 
 1. Create `src/components/common/LoadingState.vue`:
+
 ```vue
 <script setup>
 defineProps({
@@ -623,19 +662,17 @@ defineProps({
 ```
 
 2. Use in new components (existing components unchanged):
+
 ```vue
 <template>
-  <LoadingState
-    :loading="loading"
-    :error="error"
-    :empty="items.length === 0"
-  >
+  <LoadingState :loading="loading" :error="error" :empty="items.length === 0">
     <ItemList :items="items" />
   </LoadingState>
 </template>
 ```
 
 **Verification**:
+
 - ✅ New components work correctly
 - ✅ Existing components unchanged
 - ✅ No visual regressions
@@ -646,13 +683,13 @@ defineProps({
 
 ### 4.1 Add JSDoc Type Annotations
 
-**What**: Add type hints without changing code
-**Risk**: ⭐ Very Low (comments only)
-**Time**: Ongoing
+**What**: Add type hints without changing code **Risk**: ⭐ Very Low (comments
+only) **Time**: Ongoing
 
 **Steps**:
 
 1. Add JSDoc to services:
+
 ```javascript
 /**
  * Get commerce by ID
@@ -660,12 +697,13 @@ defineProps({
  * @returns {Promise<Commerce>} Commerce object
  * @throws {Error} If commerce not found
  */
-export const getCommerceById = async (id) => {
+export const getCommerceById = async id => {
   return (await requestBackend.get(`/commerce/${id}`, await getHeaders())).data;
 };
 ```
 
 2. Add JSDoc to components:
+
 ```javascript
 /**
  * @typedef {Object} Props
@@ -686,6 +724,7 @@ export default {
 ```
 
 **Verification**:
+
 - ✅ Code works exactly the same
 - ✅ IDE provides better autocomplete
 - ✅ No runtime changes
@@ -697,11 +736,13 @@ export default {
 ### Before Each Change
 
 1. **Document Current Behavior**:
+
    - List all user flows
    - Note all edge cases
    - Record current error messages
 
 2. **Create Test Checklist**:
+
    - Manual test scenarios
    - Expected results
    - Browser console checks
@@ -714,6 +755,7 @@ export default {
 ### After Each Change
 
 1. **Run Full Test Suite**:
+
    ```bash
    # Test all user types
    - Business login → Dashboard → All menus
@@ -723,6 +765,7 @@ export default {
    ```
 
 2. **Verify No Console Errors**:
+
    - Check browser console
    - Check network tab
    - Verify no new warnings
@@ -735,6 +778,7 @@ export default {
 ### Regression Testing Checklist
 
 **Authentication**:
+
 - [ ] All user types can login
 - [ ] Session persists on refresh
 - [ ] Session expires correctly
@@ -742,18 +786,21 @@ export default {
 - [ ] Route guards work
 
 **Data Loading**:
+
 - [ ] All API calls work
 - [ ] Real-time updates work
 - [ ] Error handling works
 - [ ] Loading states display
 
 **State Management**:
+
 - [ ] Store getters return correct data
 - [ ] Store actions update correctly
 - [ ] localStorage syncs properly
 - [ ] No data loss on refresh
 
 **Components**:
+
 - [ ] All components render
 - [ ] All interactions work
 - [ ] No visual regressions
@@ -764,22 +811,26 @@ export default {
 ## Implementation Order
 
 ### Week 1: Foundation (Safest)
+
 1. ✅ Extract constants (Day 1)
 2. ✅ Create storage utilities (Day 2)
 3. ✅ Add error handler (Day 3)
 4. ✅ Testing & verification (Day 4-5)
 
 ### Week 2: State Management
+
 1. ✅ Refactor store getters (Day 1-2)
 2. ✅ Update components gradually (Day 3-4)
 3. ✅ Testing & verification (Day 5)
 
 ### Week 3: Components
+
 1. ✅ Create composables (Day 1-2)
 2. ✅ Extract common patterns (Day 3-4)
 3. ✅ Testing & verification (Day 5)
 
 ### Week 4: Polish
+
 1. ✅ Add JSDoc (Ongoing)
 2. ✅ Code review
 3. ✅ Final testing
@@ -791,6 +842,7 @@ export default {
 If any change causes issues:
 
 1. **Immediate**: Revert the specific commit
+
    ```bash
    git revert <commit-hash>
    ```
@@ -803,11 +855,10 @@ If any change causes issues:
 
 ## Success Criteria
 
-✅ **No Logic Changes**: All business logic identical
-✅ **No Visual Changes**: UI looks exactly the same
-✅ **No Performance Regression**: Same or better performance
-✅ **Better Code Quality**: Easier to maintain and extend
-✅ **Better Developer Experience**: Easier to work with
+✅ **No Logic Changes**: All business logic identical ✅ **No Visual Changes**:
+UI looks exactly the same ✅ **No Performance Regression**: Same or better
+performance ✅ **Better Code Quality**: Easier to maintain and extend ✅
+**Better Developer Experience**: Easier to work with
 
 ---
 
@@ -820,4 +871,3 @@ If any change causes issues:
 5. Proceed incrementally
 
 **Remember**: It's better to go slow and be safe than to break production! 🚀
-
