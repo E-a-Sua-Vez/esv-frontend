@@ -12,7 +12,7 @@ export const getDailyMetrics = async (type, subtype, from, to, events = false) =
 };
 
 const getEvents = async (type, from, to, events, goals, subtype) => {
-  const options = getOptions();
+  const options = {};
   options.params = { type, from, to, events, goals };
   if (subtype) options.params.subtype = subtype;
   options.paramsSerializer = params => qs.stringify(params);

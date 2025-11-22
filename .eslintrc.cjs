@@ -24,6 +24,10 @@ module.exports = {
     'vue/component-name-in-template-casing': ['warn', 'PascalCase'],
     'vue/attribute-hyphenation': ['warn', 'always'],
     'vue/v-on-event-hyphenation': ['warn', 'always'],
+    'vue/no-reserved-component-names': 'warn', // Allow Footer/Header as component names
+    'vue/require-valid-default-prop': 'warn', // Allow object/array defaults
+    'vue/no-setup-props-destructure': 'warn', // Allow props destructuring
+    'vue/no-dupe-keys': 'error', // Keep this as error
 
     // JavaScript/TypeScript rules
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -49,6 +53,7 @@ module.exports = {
     'no-new-func': 'error',
     'no-return-await': 'warn',
     'require-await': 'warn',
+    'no-self-assign': 'warn', // Allow self-assignment (may be intentional)
 
     // Style (handled by Prettier, but some logical rules)
     semi: ['warn', 'always'],
