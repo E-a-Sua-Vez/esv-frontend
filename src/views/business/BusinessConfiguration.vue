@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -25,14 +25,14 @@ export default {
     ToggleCapabilities,
     ComponentMenu,
     ConfigurationFeaturesManagement,
-    ConfigurationWhatsappManagement
+    ConfigurationWhatsappManagement,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -43,7 +43,7 @@ export default {
       showConfigurations: true,
       showWhatsapp: false,
       whatsappStatus: undefined,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -52,19 +52,18 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.toggles = await getPermissions('configuration', 'admin');
         loading.value = false;
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -72,22 +71,22 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showConfigurations = () => {
       state.showConfigurations = true;
       state.showWhatsapp = false;
-    }
+    };
 
     const showWhatsapp = async () => {
       state.showConfigurations = false;
       state.showWhatsapp = true;
       await getWhatsappStatus();
-    }
+    };
 
     const getWhatsappStatus = async () => {
       try {
@@ -101,7 +100,7 @@ export default {
         state.whatsappStatus = undefined;
         loading.value = false;
       }
-    }
+    };
 
     return {
       state,
@@ -112,10 +111,10 @@ export default {
       selectCommerce,
       showConfigurations,
       showWhatsapp,
-      getWhatsappStatus
-    }
-  }
-}
+      getWhatsappStatus,
+    };
+  },
+};
 </script>
 
 <template>
@@ -125,8 +124,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessConfiguration.title`)"
         :toggles="state.toggles"
-        componentName="businessConfiguration"
-        @goBack="goBack">
+        component-name="businessConfiguration"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -137,15 +137,23 @@ export default {
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('businessConfiguration.message.3.title')"
-              :content="$t('businessConfiguration.message.3.content')" />
+              :content="$t('businessConfiguration.message.3.content')"
+            />
           </div>
           <div v-else class="control-box">
             <div id="dashboard-controls">
               <div class="row">
                 <div class="col" v-if="state.commerces">
-                  <span>{{ $t("dashboard.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+                  <span>{{ $t('dashboard.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    id="modules"
+                    @change="selectCommerce(state.commerce)"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -158,8 +166,10 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showConfigurations ? 'btn-selected' : ''"
                   @click="showConfigurations()"
-                  :disabled="!state.toggles['configuration.admin.features']">
-                  {{ $t("businessConfiguration.features") }} <br> <i class="bi bi-toggles"></i>
+                  :disabled="!state.toggles['configuration.admin.features']"
+                >
+                  {{ $t('businessConfiguration.features') }} <br />
+                  <i class="bi bi-toggles"></i>
                 </button>
               </div>
               <div class="col-6 centered">
@@ -167,25 +177,27 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showWhatsapp ? 'btn-selected' : ''"
                   @click="showWhatsapp()"
-                  :disabled="!state.toggles['configuration.admin.whatsapps']">
-                  {{ $t("businessConfiguration.whatsapps") }} <br> <i class="bi bi-whatsapp"></i>
+                  :disabled="!state.toggles['configuration.admin.whatsapps']"
+                >
+                  {{ $t('businessConfiguration.whatsapps') }} <br />
+                  <i class="bi bi-whatsapp"></i>
                 </button>
               </div>
             </div>
             <div>
               <ConfigurationFeaturesManagement
-                :showConfigurations="state.showConfigurations"
+                :show-configurations="state.showConfigurations"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :business="state.business"
               >
               </ConfigurationFeaturesManagement>
               <ConfigurationWhatsappManagement
-                :showConfigurations="state.showWhatsapp"
+                :show-configurations="state.showWhatsapp"
                 :toggles="state.toggles"
                 :business="state.business"
-                :whatsappStatus="state.whatsappStatus"
-                :getWhatsappStatusFromContainer="getWhatsappStatus"
+                :whatsapp-status="state.whatsappStatus"
+                :get-whatsapp-status-from-container="getWhatsappStatus"
               >
               </ConfigurationWhatsappManagement>
             </div>
@@ -194,7 +206,8 @@ export default {
         <div v-if="!isActiveBusiness() && !loading">
           <Message
             :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')" />
+            :content="$t('dashboard.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -210,23 +223,23 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -241,7 +254,7 @@ export default {
   color: var(--amarillo-star);
 }
 .metric-card-subtitle {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
 </style>

@@ -8,14 +8,14 @@ export default {
   data() {
     return {
       extendedEntity: false,
-    }
+    };
   },
   methods: {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -29,16 +29,14 @@ export default {
       <span class="tag-name" v-if="queue.type !== 'STANDARD'">
         <i class="bi bi-tags-fill"></i> {{ queue.tag }}
       </span>
-      <span class="tag-name" v-else>
-        <i class="bi bi-tags-fill"></i> {{ queue.type }}
-      </span>
+      <span class="tag-name" v-else> <i class="bi bi-tags-fill"></i> {{ queue.type }} </span>
     </div>
   </div>
 </template>
 
 <style scoped>
 .show {
-  padding: .5rem;
+  padding: 0.5rem;
   overflow-y: auto;
 }
 .queue-details {
@@ -53,6 +51,6 @@ export default {
 .tag-name {
   background-color: var(--gris-clear);
   font-weight: 900;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 </style>

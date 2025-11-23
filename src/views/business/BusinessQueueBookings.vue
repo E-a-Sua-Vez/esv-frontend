@@ -16,12 +16,21 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessQueueBookings',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, BookingCalendar, ComponentMenu },
+  components: {
+    CommerceLogo,
+    Message,
+    PoweredBy,
+    VueRecaptcha,
+    Spinner,
+    Alert,
+    BookingCalendar,
+    ComponentMenu,
+  },
   async setup() {
     const router = useRouter();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const store = globalStore();
 
@@ -36,18 +45,18 @@ export default {
       activeCommerce: false,
       captcha: false,
       locale: 'es',
-      date: (new Date()).setDate(new Date().getDate() + 1),
+      date: new Date().setDate(new Date().getDate() + 1),
       bookings: ref([]),
       waitlists: ref([]),
       availableBlocks: [],
       blocksByDay: [],
       blocks: [],
       availableAttentionBlocks: [],
-      minDate: (new Date()).setDate(new Date().getDate() + 1),
-      maxDate: (new Date()).setDate(new Date().getDate() + 90),
+      minDate: new Date().setDate(new Date().getDate() + 1),
+      maxDate: new Date().setDate(new Date().getDate() + 90),
       showBooking: true,
       showWaitlist: false,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -56,7 +65,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const queues = await getQueuesByCommerceId(state.commerce.id);
         state.queues = queues;
         store.setCurrentCommerce(state.commerce);
@@ -69,17 +79,15 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveCommerce = () => {
-      return state.commerce && state.commerce.active === true;
-    };
+    const isActiveCommerce = () => state.commerce && state.commerce.active === true;
 
     const goBack = () => {
-      router.push({ path: `/interno/business/menu` });
-    }
+      router.push({ path: '/interno/business/menu' });
+    };
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -92,7 +100,7 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     return {
       state,
@@ -100,10 +108,10 @@ export default {
       alertError,
       selectCommerce,
       isActiveCommerce,
-      goBack
-    }
-  }
-}
+      goBack,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -112,8 +120,9 @@ export default {
       <ComponentMenu
         :title="$t(`collaboratorBookingsView.welcome`)"
         :toggles="state.toggles"
-        componentName="collaboratorBookingsView"
-        @goBack="goBack">
+        component-name="collaboratorBookingsView"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -121,39 +130,66 @@ export default {
         <div id="businessQueuesAdmin-controls" class="control-box">
           <div class="row">
             <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t("collaboratorBookingsView.commerce") }} </span>
-              <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="commerces">
-                <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+              <span>{{ $t('collaboratorBookingsView.commerce') }} </span>
+              <select
+                class="btn btn-md fw-bold text-dark m-1 select"
+                v-model="state.commerce"
+                @change="selectCommerce(state.commerce)"
+                id="commerces"
+              >
+                <option v-for="com in state.commerces" :key="com.id" :value="com">
+                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                </option>
               </select>
             </div>
             <div v-else>
               <Message
                 :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')" />
+                :content="$t('businessQueuesAdmin.message.4.content')"
+              />
             </div>
           </div>
         </div>
         <div class="mb-1 mt-2">
-          <div class="choose-attention"><span> {{ $t("collaboratorBookingsView.manageAll") }} </span></div>
+          <div class="choose-attention">
+            <span> {{ $t('collaboratorBookingsView.manageAll') }} </span>
+          </div>
           <button
             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
             data-bs-toggle="modal"
             data-bs-target="#modalAgenda"
             :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
-            >
-            <i class="bi bi-calendar-check-fill"></i> {{ $t("collaboratorBookingsView.schedules") }}
+          >
+            <i class="bi bi-calendar-check-fill"></i> {{ $t('collaboratorBookingsView.schedules') }}
           </button>
         </div>
       </div>
     </div>
     <PoweredBy :name="state.commerce.name" />
     <!-- Modal Agenda -->
-    <div class="modal fade" id="modalAgenda" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+    <div
+      class="modal fade"
+      id="modalAgenda"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-calendar-check-fill"></i> Agenda {{ state.commerce.name }} - {{ state.commerce.tag}} </h5>
-            <button id="close-modal" class="btn-close btn-light" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-calendar-check-fill"></i> Agenda {{ state.commerce.name }} -
+              {{ state.commerce.tag }}
+            </h5>
+            <button
+              id="close-modal"
+              class="btn-close btn-light"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0" id="attentions-component">
@@ -176,19 +212,19 @@ export default {
   font-weight: 700;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .indicator {
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .2rem;
-  margin-bottom: .2rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding: 0.5rem;
+  margin: 0.2rem;
+  margin-bottom: 0.2rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
@@ -199,7 +235,7 @@ export default {
   font-size: small;
   margin-bottom: 2rem;
   padding: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
 }
 </style>

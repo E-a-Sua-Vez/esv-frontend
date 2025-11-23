@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { globalStore } from '../stores';
 import { logout } from '../application/firebase';
 import { signInInvited, signOut } from '../application/services/auth';
+import { USER_TYPES } from '@/shared/constants';
 import NotFoundView from '../views/NotFoundView.vue';
 import PrivateUserRoutes from './interno/user';
 import PrivateCollaboratorRoutes from './interno/collaborator';
@@ -17,18 +18,16 @@ const privateChildren = [
   ...PrivateCollaboratorRoutes,
   ...PrivateUserRoutes,
   ...PrivateCommerceRoutes,
-  ...PrivateMasterRoutes
+  ...PrivateMasterRoutes,
 ];
 const publicChildren = [
   ...PublicCollaboratorRoutes,
   ...PublicBusinessRoutes,
   ...PublicCommerceRoutes,
-  ...PublicMasterRoutes
+  ...PublicMasterRoutes,
 ];
 
-const rootChildren = [
-  ...RootRoutes
-]
+const rootChildren = [...RootRoutes];
 
 const rootViews = RootRoutes.map(route => route.name);
 
@@ -42,14 +41,13 @@ const publicBusinessViews = PublicBusinessRoutes.map(route => route.name);
 const publicCommerceViews = PublicCommerceRoutes.map(route => route.name);
 const publicMasterRoutes = PublicMasterRoutes.map(route => route.name);
 
-
 /**
  * Define las rutas
  */
 const router = createRouter({
   history: createWebHistory(),
   scrollBehavior(to, from, savedPosition) {
-    return { top: 0 }
+    return { top: 0 };
   },
   routes: [
     ...rootChildren,
@@ -57,73 +55,76 @@ const router = createRouter({
     ...publicChildren,
     {
       path: '/:pathMatch(.*)*',
-      component: NotFoundView
+      component: NotFoundView,
     },
-  ]
-})
+  ],
+});
 
-const getSessionIsNotAlive = (currentUser) => {
+const getSessionIsNotAlive = currentUser => {
+  if (!currentUser) {
+    return true;
+  }
   const currentDate = new Date();
-    let days = 1;
-    if (currentUser.lastSignIn) {
-      days = Math.abs(currentDate - new Date(currentUser.lastSignIn)) / (1000 * 60 * 60 * 24);
-    }
-  return days > 1 ;
-}
+  let days = 1;
+  if (currentUser.lastSignIn) {
+    days = Math.abs(currentDate - new Date(currentUser.lastSignIn)) / (1000 * 60 * 60 * 24);
+  }
+  return days > 1;
+};
 
-const getInvitedSessionAlive = (sessionDate) => {
+const getInvitedSessionAlive = sessionDate => {
   let diff = (new Date().getTime() - new Date(sessionDate).getTime()) / 1000;
-  diff /= (60 * 60);
+  diff /= 60 * 60;
   const hours = Math.abs(Math.round(diff));
   return hours >= 6;
- }
+};
 
 /**
  * Casos de uso
  */
 router.beforeEach(async (to, from, next) => {
   const store = globalStore();
-  const currentUser = await store.getCurrentUser;
-  const currentUserType = await store.getCurrentUserType;
-  const userNotExists = currentUser === undefined;
+  const currentUser = store.getCurrentUser;
+  const currentUserType = store.getCurrentUserType;
+  const userNotExists = currentUser === undefined || currentUser === null;
 
   /**
    * ROOT
    */
   if (rootViews.includes(to.name)) {
     if (!userNotExists && !getSessionIsNotAlive(currentUser)) {
-      if (currentUserType === 'collaborator') {
+      if (currentUserType === USER_TYPES.COLLABORATOR) {
         next({ name: 'collaborator-menu', replace: true, params: { id: currentUser.commerceId } });
         return;
-      } else if (currentUserType === 'business') {
+      } else if (currentUserType === USER_TYPES.BUSINESS) {
         next({ name: 'business-menu', replace: true });
         return;
-      } else if (currentUserType === 'master') {
+      } else if (currentUserType === USER_TYPES.MASTER) {
         next({ name: 'master-menu', replace: true });
         return;
       }
     }
   }
 
-   /**
+  /**
    * MASTER - Rutas Publicas
    */
-   if (publicMasterRoutes.includes(to.name)) {
+  if (publicMasterRoutes.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'master-login') {
         await store.resetSession();
-        await store.setCurrentUserType('master');
+        await store.setCurrentUserType(USER_TYPES.MASTER);
         next();
         return;
       }
     } else {
-      if (currentUserType === 'master') {
+      if (currentUserType === USER_TYPES.MASTER) {
         next();
         return;
       } else {
         await logout();
         await store.resetSession();
-        store.setCurrentUserType('master');
+        store.setCurrentUserType(USER_TYPES.MASTER);
         if (to.name !== 'master-login') {
           next({ name: 'master-login', replace: true });
         }
@@ -140,18 +141,18 @@ router.beforeEach(async (to, from, next) => {
     if (userNotExists) {
       if (to.name === 'collaborator-login') {
         await store.resetSession();
-        await store.setCurrentUserType('collaborator');
+        await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
         next();
         return;
       }
     } else {
-      if (currentUserType === 'colaborator') {
+      if (currentUserType === USER_TYPES.COLLABORATOR) {
         next();
         return;
       } else {
         await logout();
         await store.resetSession();
-        store.setCurrentUserType('collaborator');
+        store.setCurrentUserType(USER_TYPES.COLLABORATOR);
         if (to.name !== 'collaborator-login') {
           next({ name: 'collaborator-login', replace: true });
         }
@@ -168,18 +169,18 @@ router.beforeEach(async (to, from, next) => {
     if (userNotExists) {
       if (to.name === 'business-login') {
         await store.resetSession();
-        await store.setCurrentUserType('business');
+        await store.setCurrentUserType(USER_TYPES.BUSINESS);
         next();
         return;
       }
     } else {
-      if (currentUserType === 'business') {
+      if (currentUserType === USER_TYPES.BUSINESS) {
         next();
         return;
       } else {
         await logout();
         await store.resetSession();
-        store.setCurrentUserType('business');
+        store.setCurrentUserType(USER_TYPES.BUSINESS);
         next({ name: 'business-login', replace: true });
         return;
       }
@@ -191,16 +192,18 @@ router.beforeEach(async (to, from, next) => {
    */
   if (publicCommerceViews.includes(to.name) || privateUserViews.includes(to.name)) {
     const environment = import.meta.env.VITE_NODE_ENV || 'local';
-    const currentUserType = await store.getCurrentUserType;
-    if (environment !== 'local' &&
-      ((currentUserType !== 'invited') ||
-      (currentUserType === 'invited' && userNotExists) ||
-      (currentUserType === 'invited' && getInvitedSessionAlive(currentUser.time)))) {
-        await signOut(undefined, currentUserType);
-        await store.resetSession();
-        store.setCurrentUserType('invited');
-        const user = await signInInvited();
-        store.setCurrentUser(user);
+    const currentUserType = store.getCurrentUserType;
+    if (
+      environment !== 'local' &&
+      (currentUserType !== USER_TYPES.INVITED ||
+        (currentUserType === USER_TYPES.INVITED && userNotExists) ||
+        (currentUserType === USER_TYPES.INVITED && getInvitedSessionAlive(currentUser.time)))
+    ) {
+      await signOut(undefined, currentUserType);
+      await store.resetSession();
+      store.setCurrentUserType(USER_TYPES.INVITED);
+      const user = await signInInvited();
+      store.setCurrentUser(user);
     }
     next();
     return;
@@ -211,11 +214,11 @@ router.beforeEach(async (to, from, next) => {
    */
   if (privateMasterViews.includes(to.name)) {
     if (userNotExists) {
-      if (currentUserType === 'master') {
+      if (currentUserType === USER_TYPES.MASTER) {
         await logout();
       }
       await store.resetSession();
-      await store.setCurrentUserType('master');
+      await store.setCurrentUserType(USER_TYPES.MASTER);
       next({ name: 'master-login', replace: true });
       return;
     } else {
@@ -224,18 +227,18 @@ router.beforeEach(async (to, from, next) => {
         if (to.name !== 'master-login') {
           await logout();
           await store.resetSession();
-          await store.setCurrentUserType('master');
+          await store.setCurrentUserType(USER_TYPES.MASTER);
           router.go({ name: 'master-login', replace: true });
           return;
         }
       } else {
-        if (currentUserType === 'master') {
+        if (currentUserType === USER_TYPES.MASTER) {
           next();
           return;
         } else {
           await logout();
           await store.resetSession();
-          store.setCurrentUserType('master');
+          store.setCurrentUserType(USER_TYPES.MASTER);
           router.go({ name: 'master-login', replace: true });
           return;
         }
@@ -248,11 +251,11 @@ router.beforeEach(async (to, from, next) => {
    */
   if (privateCollaboratorViews.includes(to.name)) {
     if (userNotExists) {
-      if (currentUserType === 'collaborator') {
+      if (currentUserType === USER_TYPES.COLLABORATOR) {
         await logout();
       }
       await store.resetSession();
-      await store.setCurrentUserType('collaborator');
+      await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
       next({ name: 'collaborator-login', replace: true });
       return;
     } else {
@@ -261,18 +264,18 @@ router.beforeEach(async (to, from, next) => {
         if (to.name !== 'collaborator-login') {
           await logout();
           await store.resetSession();
-          await store.setCurrentUserType('collaborator');
+          await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
           router.go({ name: 'collaborator-login', replace: true });
           return;
         }
       } else {
-        if (currentUserType === 'collaborator') {
+        if (currentUserType === USER_TYPES.COLLABORATOR) {
           next();
           return;
         } else {
           await logout();
           await store.resetSession();
-          store.setCurrentUserType('collaborator');
+          store.setCurrentUserType(USER_TYPES.COLLABORATOR);
           router.go({ name: 'collaborator-login', replace: true });
           return;
         }
@@ -285,11 +288,11 @@ router.beforeEach(async (to, from, next) => {
    */
   if (privateCommerceViews.includes(to.name)) {
     if (userNotExists) {
-      if (currentUserType === 'business') {
+      if (currentUserType === USER_TYPES.BUSINESS) {
         await logout();
       }
       await store.resetSession();
-      await store.setCurrentUserType('business');
+      await store.setCurrentUserType(USER_TYPES.BUSINESS);
       next({ name: 'business-login', replace: true });
       return;
     } else {
@@ -298,18 +301,18 @@ router.beforeEach(async (to, from, next) => {
         if (to.name !== 'business-login') {
           await logout();
           await store.resetSession();
-          await store.setCurrentUserType('business');
+          await store.setCurrentUserType(USER_TYPES.BUSINESS);
           router.go({ name: 'business-login', replace: true });
           return;
         }
       } else {
-        if (currentUserType === 'business') {
+        if (currentUserType === USER_TYPES.BUSINESS) {
           next();
           return;
         } else {
           await logout();
           await store.resetSession();
-          store.setCurrentUserType('business');
+          store.setCurrentUserType(USER_TYPES.BUSINESS);
           router.go({ name: 'business-login', replace: true });
           return;
         }
@@ -320,4 +323,4 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-export default router
+export default router;

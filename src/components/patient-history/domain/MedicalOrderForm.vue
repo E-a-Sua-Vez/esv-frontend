@@ -16,19 +16,12 @@ export default {
     patientHistoryData: { type: Object, default: {} },
     toggles: { type: Object, default: {} },
     errorsAdd: { type: Array, default: [] },
-    receiveData: { type: Function, default: () => {} }
+    receiveData: { type: Function, default: () => {} },
   },
   async setup(props) {
+    const loading = ref(false);
 
-    let loading = ref(false);
-
-    const {
-      commerce,
-      cacheData,
-      patientHistoryData,
-      toggles,
-      errorsAdd,
-    } = toRefs(props);
+    const { commerce, cacheData, patientHistoryData, toggles, errorsAdd } = toRefs(props);
 
     const { receiveData } = props;
 
@@ -37,8 +30,8 @@ export default {
       oldMedicalOrder: [],
       captcha: false,
       medicalOrderError: false,
-      asc: true
-    })
+      asc: true,
+    });
 
     onBeforeMount(async () => {
       try {
@@ -53,13 +46,13 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
     const sendData = () => {
       receiveData(state.newMedicalOrder);
-    }
+    };
 
-    const checkAsc = (event) => {
+    const checkAsc = event => {
       if (event.target.checked) {
         state.asc = true;
       } else {
@@ -69,28 +62,30 @@ export default {
         let elementsSorted = [];
         const elements = state.oldMedicalOrder;
         if (state.asc) {
-          elementsSorted = elements.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
         } else {
-          elementsSorted = elements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         }
         state.oldMedicalOrder = elementsSorted;
       }
-    }
+    };
 
-    watch (
-      patientHistoryData,
-      async () => {
-        loading.value = true;
-        if (patientHistoryData.value && patientHistoryData.value.id) {
-          if (patientHistoryData.value.medicalOrder &&
-            patientHistoryData.value.medicalOrder.length > 0 &&
-            patientHistoryData.value.medicalOrder[0]
-          )
+    watch(patientHistoryData, async () => {
+      loading.value = true;
+      if (patientHistoryData.value && patientHistoryData.value.id) {
+        if (
+          patientHistoryData.value.medicalOrder &&
+          patientHistoryData.value.medicalOrder.length > 0 &&
+          patientHistoryData.value.medicalOrder[0]
+        )
           state.oldMedicalOrder = patientHistoryData.value.medicalOrder;
-        }
-        loading.value = false;
       }
-    )
+      loading.value = false;
+    });
 
     return {
       state,
@@ -99,10 +94,10 @@ export default {
       toggles,
       errorsAdd,
       sendData,
-      checkAsc
-    }
-  }
-}
+      checkAsc,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -111,7 +106,8 @@ export default {
         <div class="col-12 col-md-6 mt-2">
           <div id="patient-name-form-add" class="row m-1">
             <div class="col-12 text-label">
-              {{ $t("patientHistoryView.medicalOrder") }} <i class="bi bi-file-earmark-medical-fill mx-1"></i>
+              {{ $t('patientHistoryView.medicalOrder') }}
+              <i class="bi bi-file-earmark-medical-fill mx-1"></i>
             </div>
             <div class="col-12">
               <textarea
@@ -123,7 +119,8 @@ export default {
                 @keyup="sendData"
                 v-bind:class="{ 'is-invalid': state.medicalOrderError }"
                 :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                v-model="state.newMedicalOrder.medicalOrder">
+                v-model="state.newMedicalOrder.medicalOrder"
+              >
               </textarea>
             </div>
           </div>
@@ -139,13 +136,27 @@ export default {
         </div>
         <div class="col-12 col-md-6 mt-2 blocks-section">
           <div class="col-12 text-label fw-bold">
-            {{ $t("patientHistoryView.history") }} <i class="bi bi-clock-fill mx-1"></i>
+            {{ $t('patientHistoryView.history') }} <i class="bi bi-clock-fill mx-1"></i>
             <div class="form-check form-switch centered">
-              <input class="form-check-input m-1" :class="state.asc === false ? 'bg-danger' : ''" type="checkbox" name="asc" id="asc" v-model="state.asc" @click="checkAsc($event)">
-              <label class="form-check-label metric-card-subtitle" for="asc">{{ state.asc ? $t("dashboard.asc") :  $t("dashboard.desc") }}</label>
+              <input
+                class="form-check-input m-1"
+                :class="state.asc === false ? 'bg-danger' : ''"
+                type="checkbox"
+                name="asc"
+                id="asc"
+                v-model="state.asc"
+                @click="checkAsc($event)"
+              />
+              <label class="form-check-label metric-card-subtitle" for="asc">{{
+                state.asc ? $t('dashboard.asc') : $t('dashboard.desc')
+              }}</label>
             </div>
           </div>
-          <div v-if="state.oldMedicalOrder && state.oldMedicalOrder.length > 0 && state.oldMedicalOrder[0]">
+          <div
+            v-if="
+              state.oldMedicalOrder && state.oldMedicalOrder.length > 0 && state.oldMedicalOrder[0]
+            "
+          >
             <div v-for="(element, index) in state.oldMedicalOrder" :key="`medicalOrder-${index}`">
               <HistoryDetailsCard
                 :show="toggles['patient.history.view']"
@@ -158,7 +169,8 @@ export default {
           <div v-else>
             <Message
               :title="$t('patientHistoryView.message.1.title')"
-              :content="$t('patientHistoryView.message.1.content')" />
+              :content="$t('patientHistoryView.message.1.content')"
+            />
           </div>
         </div>
       </div>
@@ -171,9 +183,9 @@ export default {
   max-height: 800px;
   font-size: small;
   margin-bottom: 2rem;
-  padding: .5rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   background-color: var(--color-background);
 }
 </style>

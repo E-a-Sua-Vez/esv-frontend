@@ -1,5 +1,5 @@
 {
-  "logo": "/images/spot+_white.png",
+  "logo": "/images/hub_logo.png",
   "logoAlt": "Spot+",
   "homeTitle": "Spot+ {'|'} Atención 100% digital",
   "email": "hola{'@'}estuturno.app",
@@ -9,7 +9,7 @@
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "backToInit": "Ir al inicio",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/spot+_white.png",
+  "logoPoweredBy": "/images/esv_peq_transparente.png",
   "enableAll": "¡Habilita más capacidades!",
   "curious": "¿Curioso?",
   "wantToKnowMore": "¡Quiero saber más!",
@@ -22,7 +22,7 @@
   "logout": "Cerrar Sesión",
   "capacities": "¿Qué puedo hacer?",
   "upgrade": "Haz un Upgrade de tu plan para obtener más beneficios.",
-  "logoValues": "/images/es_tu_turno_values.png",
+  "logoValues": "/images/hub_logo.png",
   "logoValuesAlt": "Spot+",
   "noResults": "😓 Sin Resultados",
   "sureAction": "¿Estás seguro que deseas realizar esta acción?",
@@ -615,7 +615,7 @@
     "action": "Reportar error"
   },
   "footer": {
-    "copyright": "Copyright \u00A9 2024, Es Tu Turno. Todos los derechos reservados.",
+    "copyright": "Copyright \u00A9 2025, Es Tu Turno. Todos los derechos reservados.",
     "contactUs": "Contáctanos",
     "mailbox": "Acciones",
     "faq": "Preguntas frecuentes",
@@ -2066,7 +2066,7 @@
     "go-minisite": "Minisite",
     "seeSpy": "MetricSpy",
     "seeMenu": "Menú",
-    "booking-manage":"Reservas Visión 360°",
+    "booking-manage": "Reservas Visión 360°",
     "patient-history-item-admin": "Items Historia Médica",
     "message": {
       "1": {
@@ -2100,7 +2100,7 @@
           "marketing": "Marketing",
           "patients": "Gestión de Pacientes",
           "outcome-types-admin": "Administrar Tipos de Egreso",
-          "booking-manage":"Reservas Visión 360°",
+          "booking-manage": "Reservas Visión 360°",
           "company-admin": "Compañías",
           "patient-history-item-admin": "Items Historia Médica"
         }
@@ -2543,7 +2543,7 @@
       "levels": "Valida que los niveles y sus cantidades estén correctos"
     }
   },
-  "businessProductStockAdmin" : {
+  "businessProductStockAdmin": {
     "title": "Control de Stock",
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
@@ -2638,7 +2638,7 @@
       "replacement": "Este producto no tiene disponibilidad, consulte al administrador"
     }
   },
-  "businessFinancial" : {
+  "businessFinancial": {
     "title": "Gestión Financiera",
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
@@ -3187,7 +3187,7 @@
           "attention-payments": "Informe de Pagos de Atenciones",
           "incomes": "Informe de Ingresos",
           "outcomes": "Informe de Egresos",
-          "attention-products":"Informe de Uso de Stock Atenciones"
+          "attention-products": "Informe de Uso de Stock Atenciones"
         }
       }
     }
@@ -3360,7 +3360,7 @@
         "admin": {
           "view": "Acceder a esta sección",
           "edit": "Editar las Configuraciones",
-          "add":"Agregar Configuraciones",
+          "add": "Agregar Configuraciones",
           "whatsapp-notify-now": "Editar Notificación Whatsapp Es tu Turno",
           "whatsapp-notify-five": "Editar Notificación Whatsapp Faltan 5",
           "only-survey": "Editar Modo Solo Encuesta",
@@ -3406,7 +3406,7 @@
         "admin": {
           "view": "Acceder a esta sección",
           "edit": "Editar los Documentos",
-          "add":"Agregar Documentos"
+          "add": "Agregar Documentos"
         }
       }
     },
@@ -4020,7 +4020,7 @@
       "clients-management": {
         "view": "Ver Sección Contacto Clientes - Sección Administrar Clientes"
       },
-      "collection-details":{
+      "collection-details": {
         "view": "Ver Ingresos Detalles - Sección Financiera"
       },
       "client-data-management": {
@@ -4103,7 +4103,7 @@
         "confirm": "Confirmar Reserva",
         "transfer": "Transferir Reservas",
         "edit": "Editar Reservas",
-        "admin":"Administrar Reservas"
+        "admin": "Administrar Reservas"
       },
       "waitlists": {
         "book": "Reservar Lista de Espera"
@@ -4111,9 +4111,9 @@
       "main-menu": {
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
         "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
-        "queue-manage":"Habilitar Atender Filas del Día - Menú Principal Colaborador",
+        "queue-manage": "Habilitar Atender Filas del Día - Menú Principal Colaborador",
         "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador",
-        "product-stock":"Habilitar Gestionar Stock - Menú Principal Colaborador"
+        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador"
       }
     },
     "roles": {
@@ -4194,11 +4194,11 @@
         "add-replacement": "Agregar Reposición - Gestión de Stock",
         "view-attention": "Ver Consumo de Atenciones - Gestión de Stock",
         "view-consumption": "Ver Consumo - Gestión de Stock",
-        "view-replacement":"Ver Reposición - Gestión de Stock"
+        "view-replacement": "Ver Reposición - Gestión de Stock"
       },
       "reports": {
         "details": "Reporte Control de Stock - Gestión de Stock",
-        "replacement-details":"Reporte de Reposición de Producto - Gestión de Stock",
+        "replacement-details": "Reporte de Reposición de Producto - Gestión de Stock",
         "consumption-details": "Reporte de Consumo de Producto - Gestión de Stock"
       }
     },

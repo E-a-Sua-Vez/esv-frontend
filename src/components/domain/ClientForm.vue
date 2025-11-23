@@ -36,9 +36,8 @@ export default {
     clientFront: { type: Boolean, default: true },
   },
   async setup(props) {
-
-    let loading = ref(false);
-    let loadingSearch = ref(false);
+    const loading = ref(false);
+    const loadingSearch = ref(false);
     const siteKey = import.meta.env.VITE_RECAPTCHA_CHECK;
 
     const {
@@ -60,7 +59,7 @@ export default {
       healthAgreementId,
       client,
       errorsAdd,
-      clientFront
+      clientFront,
     } = toRefs(props);
 
     const { receiveData } = props;
@@ -82,8 +81,8 @@ export default {
       documentServiceConditions: undefined,
       fileServiceConditions: undefined,
       clientSearched: {},
-      errorsSearch: []
-    })
+      errorsSearch: [],
+    });
 
     onBeforeMount(async () => {
       try {
@@ -93,14 +92,26 @@ export default {
         if (show.value === true) {
           if (clientFront.value === true) {
             if (getActiveFeature(commerce.value, 'user-service-conditions', 'PRODUCT')) {
-              state.documentServiceConditions = await getDocumentByOption(commerce.value.id, 'terms_of_service');
-              if (state.documentServiceConditions && state.documentServiceConditions.active === true) {
-                state.fileServiceConditions = await getDocument(`${commerce.value.id}.pdf`, 'terms_of_service');
+              state.documentServiceConditions = await getDocumentByOption(
+                commerce.value.id,
+                'terms_of_service'
+              );
+              if (
+                state.documentServiceConditions &&
+                state.documentServiceConditions.active === true
+              ) {
+                state.fileServiceConditions = await getDocument(
+                  `${commerce.value.id}.pdf`,
+                  'terms_of_service'
+                );
               }
             }
           }
           if (getActiveFeature(commerce.value, 'attention-user-health-agreement', 'USER')) {
-            state.healthAgreementCompanies = await getActiveCompaniesByCommerceIdAnyType(commerce.value.id, 'HEALTH_AGREEMENT');
+            state.healthAgreementCompanies = await getActiveCompaniesByCommerceIdAnyType(
+              commerce.value.id,
+              'HEALTH_AGREEMENT'
+            );
           }
           if (commerce.value && commerce.value.localeInfo.country) {
             state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
@@ -112,27 +123,33 @@ export default {
             state.newUser.lastName = lastName.value !== 'undefined' ? lastName.value : '';
           }
           if (idNumber.value) {
-            const idNumberIn = idNumber.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+            const idNumberIn = idNumber.value.replace(
+              /[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g,
+              ''
+            );
             state.newUser.idNumber = idNumberIn !== 'undefined' ? idNumberIn : '';
           }
           if (email.value) {
-            state.newUser.email = email.value !== 'undefined' ? email.value : ''
+            state.newUser.email = email.value !== 'undefined' ? email.value : '';
           }
           if (phone.value) {
             const phoneIn = phone.value.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-            state.newUser.phoneCode = phoneIn !== 'undefined' ? phoneIn.slice(0,2) : '';
-            state.newUser.phone = phoneIn !== 'undefined' ? phoneIn.slice(2,20) : '';
+            state.newUser.phoneCode = phoneIn !== 'undefined' ? phoneIn.slice(0, 2) : '';
+            state.newUser.phone = phoneIn !== 'undefined' ? phoneIn.slice(2, 20) : '';
           }
           if (birthday.value) {
             state.newUser.birthday = birthday.value != 'undefined' ? birthday.value : '';
           } else {
-            state.newUser.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0,10);
+            state.newUser.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18))
+              .toISOString()
+              .slice(0, 10);
           }
           if (addressText.value) {
             state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
           }
           if (addressComplement.value) {
-            state.newUser.addressComplement = addressComplement.value != 'undefined' ? addressComplement.value : '';
+            state.newUser.addressComplement =
+              addressComplement.value != 'undefined' ? addressComplement.value : '';
           }
           if (addressCode.value) {
             state.newUser.addressCode = addressCode.value != 'undefined' ? addressCode.value : '';
@@ -150,22 +167,26 @@ export default {
             state.newUser.code3 = code3.value != 'undefined' ? code3.value : '';
           }
           if (healthAgreementId.value) {
-            state.newUser.healthAgreementId = healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
+            state.newUser.healthAgreementId =
+              healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
           }
         }
         loading.value = false;
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
     const sendData = () => {
       receiveData(state.newUser);
-    }
+    };
 
     const sendDataOnlyNumber = () => {
       if (state.newUser.idNumber && state.newUser.idNumber.length > 0) {
-        const idNumber = state.newUser.idNumber.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        const idNumber = state.newUser.idNumber.replace(
+          /[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g,
+          ''
+        );
         state.newUser.idNumber = idNumber;
       }
       if (state.newUser.phone && state.newUser.phone.length > 0) {
@@ -173,24 +194,29 @@ export default {
         state.newUser.phone = phone;
       }
       if (state.newUser.addressCode && state.newUser.addressCode.length > 0) {
-        const addressCode = state.newUser.addressCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+        const addressCode = state.newUser.addressCode.replace(
+          /[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g,
+          ''
+        );
         state.newUser.addressCode = addressCode;
       }
       receiveData(state.newUser);
-    }
+    };
 
     const replaceOnlyNumber = () => {
       if (state.idNumber && state.idNumber.length > 0) {
         const idNumber = state.idNumber.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
         state.idNumber = idNumber;
       }
-    }
+    };
 
     const isDataActive = () => {
       let active = false;
       let features = [];
-      if (commerce.value !== undefined && commerce.value.features.length > 0) {
-        features = commerce.value.features.filter(feature => feature.type === 'USER' && feature.active === true);
+      if (commerce.value && commerce.value.features && commerce.value.features.length > 0) {
+        features = commerce.value.features.filter(
+          feature => feature.type === 'USER' && feature.active === true
+        );
         if (features.length > 0) {
           active = true;
         }
@@ -201,17 +227,15 @@ export default {
       return active;
     };
 
-    const isActiveCommerce = () => {
-      return commerce.value.active === true;
-    };
+    const isActiveCommerce = () => commerce.value.active === true;
 
-    const findPhoneCode = (codeIn) => {
+    const findPhoneCode = codeIn => {
       const search = state.phoneCodes.find(code => code.id === codeIn);
       if (search) {
         return search.code;
       }
       return '';
-    }
+    };
 
     const getAddress = async () => {
       const addressCode = state.newUser.addressCode;
@@ -240,7 +264,7 @@ export default {
           }
         }
       }
-    }
+    };
 
     const showConditions = () => {
       if (
@@ -261,7 +285,7 @@ export default {
       }
       state.accept = false;
       return false;
-    }
+    };
 
     const validate = () => {
       let valid = false;
@@ -276,7 +300,7 @@ export default {
         valid = true;
       }
       return valid;
-    }
+    };
 
     const searchClient = async () => {
       try {
@@ -290,10 +314,13 @@ export default {
           if (result) {
             state.clientSearched = result;
             if (state.clientSearched && state.clientSearched.id) {
-              if (state.clientSearched.neededToInclude && state.clientSearched.neededToInclude.length > 0) {
+              if (
+                state.clientSearched.neededToInclude &&
+                state.clientSearched.neededToInclude.length > 0
+              ) {
                 state.newUser = {
                   clientId: state.clientSearched.id,
-                  neededToInclude: state.clientSearched.neededToInclude
+                  neededToInclude: state.clientSearched.neededToInclude,
                 };
                 sendData();
                 state.showNewClient = true;
@@ -302,7 +329,7 @@ export default {
                 state.newUser = {
                   clientId: state.clientSearched.id,
                   name: state.clientSearched.name,
-                  neededToInclude: state.clientSearched.neededToInclude
+                  neededToInclude: state.clientSearched.neededToInclude,
                 };
                 sendData();
               }
@@ -324,7 +351,7 @@ export default {
         state.idNumber = '';
         showNewClient();
       }
-    }
+    };
 
     const showFormInput = (commerce, name, type) => {
       if (getActiveFeature(commerce, 'attention-user-search', 'USER')) {
@@ -332,7 +359,10 @@ export default {
           state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
         }
         if (state.clientSearched && state.clientSearched.id) {
-          if (state.clientSearched.neededToInclude && state.clientSearched.neededToInclude.length > 0) {
+          if (
+            state.clientSearched.neededToInclude &&
+            state.clientSearched.neededToInclude.length > 0
+          ) {
             if (state.clientSearched.neededToInclude.includes(name)) {
               return true;
             }
@@ -343,7 +373,7 @@ export default {
       } else {
         return getActiveFeature(commerce, name, type);
       }
-    }
+    };
 
     const clearClient = () => {
       state.idNumberError = false;
@@ -354,22 +384,22 @@ export default {
       if (commerce.value && commerce.value.localeInfo.country) {
         state.newUser.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
       }
-    }
+    };
 
     const showNewClient = () => {
       state.showNewClient = true;
       state.showOldClient = false;
       clearClient();
-    }
+    };
 
     const showOldClient = () => {
       state.showNewClient = false;
       state.showOldClient = true;
       clearClient();
-    }
+    };
 
-    const validateCaptchaOk = (response) => {
-      if(response) {
+    const validateCaptchaOk = response => {
+      if (response) {
         state.captcha = true;
       }
     };
@@ -378,26 +408,23 @@ export default {
       state.errorsAdd.push('clientNotifyData.validate.common.3');
     };
 
-    const onlyNumber = ($event) => {
-      let keyCode = ($event.keyCode ? $event.keyCode : $event.which);
-      if ((keyCode < 48 || keyCode > 57) && keyCode !== 46) { // 46 is dot
+    const onlyNumber = $event => {
+      const keyCode = $event.keyCode ? $event.keyCode : $event.which;
+      if ((keyCode < 48 || keyCode > 57) && keyCode !== 46) {
+        // 46 is dot
         $event.preventDefault();
       }
-    }
+    };
 
-    const getDocumentServiceConditions = async () =>{
+    const getDocumentServiceConditions = async () => {
       try {
         if (state.fileServiceConditions) {
-          const file = new Blob(
-            [state.fileServiceConditions],
-            { type: 'application/pdf' }
-          );
+          const file = new Blob([state.fileServiceConditions], { type: 'application/pdf' });
           const fileURL = URL.createObjectURL(file);
           window.open(fileURL, '_blank').focus();
         }
-      } catch (error) {
-      }
-    }
+      } catch (error) {}
+    };
 
     return {
       state,
@@ -425,34 +452,43 @@ export default {
       onlyNumber,
       getDocumentServiceConditions,
       sendDataOnlyNumber,
-      replaceOnlyNumber
-    }
-  }
-}
+      replaceOnlyNumber,
+    };
+  },
+};
 </script>
 <template>
   <div v-if="show">
     <div id="data" v-if="isDataActive()">
       <div v-if="isActiveCommerce() && clientFront === true" class="choose-attention py-2 pt-3">
         <i class="bi bi-1-circle-fill h5"></i>
-        <span class="fw-bold h6 m-1">{{ $t("commerceQueuesView.data") }}</span>
+        <span class="fw-bold h6 m-1">{{ $t('commerceQueuesView.data') }}</span>
       </div>
       <div class="col col-md-10 offset-md-1 data-card">
-        <div class="row g-1" v-if="getActiveFeature(commerce, 'attention-user-search', 'USER') && !client && clientFront === true">
+        <div
+          class="row g-1"
+          v-if="
+            getActiveFeature(commerce, 'attention-user-search', 'USER') &&
+            !client &&
+            clientFront === true
+          "
+        >
           <div class="col-6">
             <button
               class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
               :class="state.showNewClient ? 'btn-selected' : ''"
-              @click="showNewClient">
-              {{ $t("commerceQueuesView.newClient") }} <i class="bi bi-person-fill-add"></i>
+              @click="showNewClient"
+            >
+              {{ $t('commerceQueuesView.newClient') }} <i class="bi bi-person-fill-add"></i>
             </button>
           </div>
           <div class="col-6">
             <button
               class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
               :class="state.showOldClient ? 'btn-selected' : ''"
-              @click="showOldClient">
-              {{ $t("commerceQueuesView.oldClient") }} <i class="bi bi-person-heart"></i>
+              @click="showOldClient"
+            >
+              {{ $t('commerceQueuesView.oldClient') }} <i class="bi bi-person-heart"></i>
             </button>
           </div>
         </div>
@@ -466,12 +502,13 @@ export default {
               :placeholder="$t('dashboard.search3')"
               @keyup="replaceOnlyNumber"
               @keypress="onlyNumber"
-            >
+            />
           </div>
           <div class="col-2 col-md-2 centered">
             <button
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-              @click="clearClient()">
+              @click="clearClient()"
+            >
               <span><i class="bi bi-eraser-fill"></i></span>
             </button>
           </div>
@@ -494,13 +531,13 @@ export default {
                 class="btn btn-sm fw-bold btn-dark rounded-pill px-5"
                 @click="searchClient()"
                 :disabled="state.clientSearched.id"
-                >
+              >
                 <span>{{ $t('dashboard.refresh') }}<i class="bi bi-search mx-1"></i></span>
               </button>
             </div>
           </div>
           <Spinner :show="loadingSearch"> </Spinner>
-          <div class="row g-1 errors" id="feedback" v-if="(state.errorsSearch.length > 0)">
+          <div class="row g-1 errors" id="feedback" v-if="state.errorsSearch.length > 0">
             <Warning>
               <template v-slot:message>
                 <li v-for="(error, index) in state.errorsSearch" :key="index">
@@ -510,29 +547,67 @@ export default {
             </Warning>
           </div>
           <div class="welcome-user" v-if="state.clientSearched && state.clientSearched.id">
-            {{ $t("collaboratorAttentionValidate.hello-user") }}, {{ state.clientSearched.name || state.clientSearched.idNumber }}!
+            {{ $t('collaboratorAttentionValidate.hello-user') }},
+            {{ state.clientSearched.name || state.clientSearched.idNumber }}!
           </div>
-          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions">
-            <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
-              <input type="checkbox" class="col-2 form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
-                {{ $t("clientNotifyData.accept.3") }}
-                <a href="#conditions" @click="getDocumentServiceConditions()"> {{ $t("clientNotifyData.accept.4") }}</a>
+          <div
+            id="conditions"
+            v-if="
+              getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') &&
+              state.documentServiceConditions &&
+              state.fileServiceConditions
+            "
+          >
+            <div
+              class="recaptcha-area form-check form-check-inline centered"
+              v-if="state.clientSearched && state.clientSearched.id"
+            >
+              <input
+                type="checkbox"
+                class="col-2 form-check-input mx-1"
+                id="conditions"
+                v-model="state.newUser.accept"
+                @change="sendData"
+              />
+              <label class="form-check-label label-conditions text-left" for="conditions">
+                {{ $t('clientNotifyData.accept.1') }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal">
+                  {{ $t('clientNotifyData.accept.2') }}</a
+                >
+                {{ $t('clientNotifyData.accept.3') }}
+                <a href="#conditions" @click="getDocumentServiceConditions()">
+                  {{ $t('clientNotifyData.accept.4') }}</a
+                >
               </label>
             </div>
           </div>
           <div v-else>
-            <div class="recaptcha-area form-check form-check-inline centered" v-if="state.clientSearched && state.clientSearched.id">
-              <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+            <div
+              class="recaptcha-area form-check form-check-inline centered"
+              v-if="state.clientSearched && state.clientSearched.id"
+            >
+              <input
+                type="checkbox"
+                class="form-check-input mx-1"
+                id="conditions"
+                v-model="state.newUser.accept"
+                @change="sendData"
+              />
+              <label class="form-check-label label-conditions text-left" for="conditions">
+                {{ $t('clientNotifyData.accept.1') }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal">
+                  {{ $t('clientNotifyData.accept.2') }}</a
+                >
               </label>
             </div>
           </div>
         </div>
         <div class="row g-1 mt-2" v-if="state.showNewClient">
-          <div id="attention-name-form-add" class="row g-1" v-if="showFormInput(commerce, 'attention-user-name', 'USER')">
+          <div
+            id="attention-name-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-name', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-name-input-add"
@@ -542,11 +617,17 @@ export default {
                 v-model.trim="state.newUser.name"
                 placeholder="Ex. Jhon"
                 @keyup="sendData"
-                >
-                <label for="attention-name-input-add" class="label-form">{{ $t("commerceQueuesView.name") }} <i class="bi bi-person"></i></label>
+              />
+              <label for="attention-name-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.name') }} <i class="bi bi-person"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-lastname-form-add" class="row g-1" v-if="showFormInput(commerce, 'attention-user-lastName', 'USER')">
+          <div
+            id="attention-lastname-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-lastName', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-lastname-input-add"
@@ -556,11 +637,17 @@ export default {
                 v-model.trim="state.newUser.lastName"
                 placeholder="Ex. Pérez"
                 @keyup="sendData"
-                >
-                <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.lastName") }} <i class="bi bi-person"></i></label>
+              />
+              <label for="attention-lastname-input-add"
+                >{{ $t('commerceQueuesView.lastName') }} <i class="bi bi-person"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-idnumber-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-idNumber', 'USER')">
+          <div
+            id="attention-idnumber-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-idNumber', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-idnumber-input-add"
@@ -571,12 +658,20 @@ export default {
                 placeholder="Ex. 112223334"
                 @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
-                >
-                <label for="attention-idnumber-input-add">{{ $t("commerceQueuesView.idNumber") }} <i class="bi bi-person-vcard"></i></label>
+              />
+              <label for="attention-idnumber-input-add"
+                >{{ $t('commerceQueuesView.idNumber') }} <i class="bi bi-person-vcard"></i
+              ></label>
             </div>
-            <label class="examples mt-2"> {{ $t('clientNotifyData.validate.idNumber.example') }} </label>
+            <label class="examples mt-2">
+              {{ $t('clientNotifyData.validate.idNumber.example') }}
+            </label>
           </div>
-          <div id="attention-email-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-email', 'USER')">
+          <div
+            id="attention-email-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-email', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-email-input-add"
@@ -586,20 +681,31 @@ export default {
                 v-model.trim="state.newUser.email"
                 placeholder="Ex. jhon@user.com"
                 @keyup="sendData"
-                >
-                <label for="attention-lastname-input-add">{{ $t("commerceQueuesView.email") }} <i class="bi bi-envelope"></i></label>
+              />
+              <label for="attention-lastname-input-add"
+                >{{ $t('commerceQueuesView.email') }} <i class="bi bi-envelope"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-phone-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-phone', 'USER')">
+          <div
+            id="attention-phone-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-phone', 'USER')"
+          >
             <div class="col-3 form-floating">
               <select
                 class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
                 v-model.trim="state.newUser.phoneCode"
                 @change="sendData"
-                id="attention-phoneCode-input-add">
-                <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">{{ code.label }}</option>
+                id="attention-phoneCode-input-add"
+              >
+                <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
+                  {{ code.label }}
+                </option>
               </select>
-              <label for="attention-phoneCode-input-add"> {{ $t("commerceQueuesView.phoneCode") }}</label>
+              <label for="attention-phoneCode-input-add">
+                {{ $t('commerceQueuesView.phoneCode') }}</label
+              >
             </div>
             <div class="col-9 form-floating">
               <input
@@ -611,13 +717,23 @@ export default {
                 placeholder="Ex.: 56233445533"
                 @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
-                >
-                <label for="attention-phone-input-add">{{ $t("commerceQueuesView.phone") }} <i class="bi bi-phone-vibrate"></i> </label>
+              />
+              <label for="attention-phone-input-add"
+                >{{ $t('commerceQueuesView.phone') }} <i class="bi bi-phone-vibrate"></i>
+              </label>
             </div>
-            <label v-if="!state.newUser.phoneCode" class="examples mt-2"> {{ $t('clientNotifyData.validate.cellphone.example') }} </label>
-            <label v-else class="examples mt-1"> {{ $t(`clientNotifyData.validate.cellphone.examples.${state.newUser.phoneCode}`) }} </label>
+            <label v-if="!state.newUser.phoneCode" class="examples mt-2">
+              {{ $t('clientNotifyData.validate.cellphone.example') }}
+            </label>
+            <label v-else class="examples mt-1">
+              {{ $t(`clientNotifyData.validate.cellphone.examples.${state.newUser.phoneCode}`) }}
+            </label>
           </div>
-          <div id="attention-birthday-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-birthday', 'USER')">
+          <div
+            id="attention-birthday-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-birthday', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-birthday-input-add"
@@ -625,11 +741,17 @@ export default {
                 type="date"
                 v-model.trim="state.newUser.birthday"
                 @keyup="sendData"
-                >
-                <label for="attention-birthday-input-add" class="label-form">{{ $t("commerceQueuesView.birthday") }} <i class="bi bi-calendar"></i></label>
+              />
+              <label for="attention-birthday-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.birthday') }} <i class="bi bi-calendar"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-addressCode-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
+          <div
+            id="attention-addressCode-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-address', 'USER')"
+          >
             <div class="col-12 col-md-6 form-floating">
               <input
                 id="attention-addressCode-input-add"
@@ -642,8 +764,10 @@ export default {
                 @keyup="sendDataOnlyNumber"
                 @keypress="onlyNumber"
                 v-bind:class="{ 'is-invalid': state.addressCodeError }"
-                >
-                <label for="attention-addressCode-input-add" class="label-form">{{ $t("commerceQueuesView.addressCode") }} <i class="bi bi-geo-alt-fill"></i></label>
+              />
+              <label for="attention-addressCode-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.addressCode') }} <i class="bi bi-geo-alt-fill"></i
+              ></label>
             </div>
             <div class="col-12 col-md-6 form-floating">
               <input
@@ -654,11 +778,17 @@ export default {
                 v-model.trim="state.newUser.addressComplement"
                 placeholder="00000-00"
                 @keyup="sendData"
-                >
-                <label for="attention-addressComplement-input-add" class="label-form">{{ $t("commerceQueuesView.addressComplement") }} <i class="bi bi-geo-alt-fill"></i></label>
+              />
+              <label for="attention-addressComplement-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.addressComplement') }} <i class="bi bi-geo-alt-fill"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-addressCode-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-address', 'USER')">
+          <div
+            id="attention-addressCode-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-address', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-addressText-input-add"
@@ -668,11 +798,17 @@ export default {
                 v-model.trim="state.newUser.addressText"
                 placeholder="00000-00"
                 @keyup="sendData"
-                >
-                <label for="attention-addressText-input-add" class="label-form">{{ $t("commerceQueuesView.addressText") }} <i class="bi bi-geo-alt-fill"></i></label>
+              />
+              <label for="attention-addressText-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.addressText') }} <i class="bi bi-geo-alt-fill"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-code1-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code1', 'USER')">
+          <div
+            id="attention-code1-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-code1', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-code1-input-add"
@@ -682,11 +818,17 @@ export default {
                 v-model.trim="state.newUser.code1"
                 placeholder="Code 1"
                 @keyup="sendData"
-                >
-                <label for="attention-code1-input-add" class="label-form">{{ $t("commerceQueuesView.code1") }} <i class="bi bi-hash"></i></label>
+              />
+              <label for="attention-code1-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.code1') }} <i class="bi bi-hash"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-code2-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code2', 'USER')">
+          <div
+            id="attention-code2-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-code2', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-code2-input-add"
@@ -696,11 +838,17 @@ export default {
                 v-model.trim="state.newUser.code2"
                 placeholder="Code 1"
                 @keyup="sendData"
-                >
-                <label for="attention-code2-input-add" class="label-form">{{ $t("commerceQueuesView.code2") }} <i class="bi bi-hash"></i></label>
+              />
+              <label for="attention-code2-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.code2') }} <i class="bi bi-hash"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-code3-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-code3', 'USER')">
+          <div
+            id="attention-code3-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-code3', 'USER')"
+          >
             <div class="col form-floating">
               <input
                 id="attention-code3-input-add"
@@ -710,26 +858,41 @@ export default {
                 v-model.trim="state.newUser.code3"
                 placeholder="Code 1"
                 @keyup="sendData"
-                >
-                <label for="attention-code3-input-add" class="label-form">{{ $t("commerceQueuesView.code3") }} <i class="bi bi-hash"></i></label>
+              />
+              <label for="attention-code3-input-add" class="label-form"
+                >{{ $t('commerceQueuesView.code3') }} <i class="bi bi-hash"></i
+              ></label>
             </div>
           </div>
-          <div id="attention-origin-form-add" class="row g-1"  v-if="showFormInput(commerce, 'attention-user-origin', 'USER')">
+          <div
+            id="attention-origin-form-add"
+            class="row g-1"
+            v-if="showFormInput(commerce, 'attention-user-origin', 'USER')"
+          >
             <div class="col form-floating">
               <select
                 class="form-control form-select btn btn-light select"
                 v-model="state.newUser.origin"
                 id="attention-origin-input-add"
                 @change="sendData"
-                >
-                <option v-for="code in state.originCodes" :key="code.id" :value="code.code">{{ $t(`origin.${code.id}`) }}</option>
+              >
+                <option v-for="code in state.originCodes" :key="code.id" :value="code.code">
+                  {{ $t(`origin.${code.id}`) }}
+                </option>
               </select>
-              <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.originText") }}</label>
+              <label for="attention-origin-input-add">
+                {{ $t('commerceQueuesView.originText') }}</label
+              >
             </div>
           </div>
-          <div id="attention-health-agreement-form-add" class="row g-1"
-            v-if="showFormInput(commerce, 'attention-user-health-agreement', 'USER') &&
-              state.healthAgreementCompanies && state.healthAgreementCompanies.length > 0"
+          <div
+            id="attention-health-agreement-form-add"
+            class="row g-1"
+            v-if="
+              showFormInput(commerce, 'attention-user-health-agreement', 'USER') &&
+              state.healthAgreementCompanies &&
+              state.healthAgreementCompanies.length > 0
+            "
           >
             <div class="col form-floating">
               <select
@@ -737,27 +900,69 @@ export default {
                 v-model="state.newUser.healthAgreementId"
                 id="attention-healthAgreementId-input-add"
                 @change="sendData"
+              >
+                <option
+                  v-for="company in state.healthAgreementCompanies"
+                  :key="company.id"
+                  :value="company.id"
                 >
-                <option v-for="company in state.healthAgreementCompanies" :key="company.id" :value="company.id">{{ company.tag }}</option>
+                  {{ company.tag }}
+                </option>
               </select>
-              <label for="attention-origin-input-add"> {{ $t("commerceQueuesView.healthAgreementText") }}</label>
+              <label for="attention-origin-input-add">
+                {{ $t('commerceQueuesView.healthAgreementText') }}</label
+              >
             </div>
           </div>
-          <div id="conditions" v-if="getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') && state.documentServiceConditions && state.fileServiceConditions && clientFront === true">
-            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions()">
-              <input type="checkbox" class="col-2 form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
-                {{ $t("clientNotifyData.accept.3") }}
-                <a href="#conditions" @click="getDocumentServiceConditions()"> {{ $t("clientNotifyData.accept.4") }}</a>
+          <div
+            id="conditions"
+            v-if="
+              getActiveFeature(commerce, 'user-service-conditions', 'PRODUCT') &&
+              state.documentServiceConditions &&
+              state.fileServiceConditions &&
+              clientFront === true
+            "
+          >
+            <div
+              class="recaptcha-area form-check form-check-inline centered"
+              v-if="showConditions()"
+            >
+              <input
+                type="checkbox"
+                class="col-2 form-check-input mx-1"
+                id="conditions"
+                v-model="state.newUser.accept"
+                @change="sendData"
+              />
+              <label class="form-check-label label-conditions text-left" for="conditions">
+                {{ $t('clientNotifyData.accept.1') }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal">
+                  {{ $t('clientNotifyData.accept.2') }}</a
+                >
+                {{ $t('clientNotifyData.accept.3') }}
+                <a href="#conditions" @click="getDocumentServiceConditions()">
+                  {{ $t('clientNotifyData.accept.4') }}</a
+                >
               </label>
             </div>
           </div>
           <div v-else>
-            <div class="recaptcha-area form-check form-check-inline centered" v-if="showConditions() && clientFront === true">
-              <input type="checkbox" class="form-check-input mx-1" id="conditions" v-model="state.newUser.accept" @change="sendData">
-              <label class="form-check-label label-conditions text-left" for="conditions"> {{ $t("clientNotifyData.accept.1") }}
-                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal"> {{ $t("clientNotifyData.accept.2") }}</a>
+            <div
+              class="recaptcha-area form-check form-check-inline centered"
+              v-if="showConditions() && clientFront === true"
+            >
+              <input
+                type="checkbox"
+                class="form-check-input mx-1"
+                id="conditions"
+                v-model="state.newUser.accept"
+                @change="sendData"
+              />
+              <label class="form-check-label label-conditions text-left" for="conditions">
+                {{ $t('clientNotifyData.accept.1') }}
+                <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal">
+                  {{ $t('clientNotifyData.accept.2') }}</a
+                >
               </label>
             </div>
           </div>
@@ -769,7 +974,7 @@ export default {
 <style scoped>
 .choose-attention {
   padding-bottom: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1rem;
 }
@@ -777,7 +982,7 @@ export default {
   text-align: center !important;
   transform-origin: center center !important;
   font-weight: 700;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .form-control {
   border: 1.75px solid #ced4da !important;
@@ -787,20 +992,20 @@ export default {
 }
 .data-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .examples {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1rem;
-  color: .5px solid var(--gris-default);
+  color: 0.5px solid var(--gris-default);
 }
 .label-conditions {
-  font-size:1rem;
+  font-size: 1rem;
   line-height: 1rem;
-  margin-left: .3rem;
+  margin-left: 0.3rem;
 }
 </style>

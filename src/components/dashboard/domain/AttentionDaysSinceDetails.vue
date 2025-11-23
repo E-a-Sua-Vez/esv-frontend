@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 
 export default {
   name: 'AttentionDaysSinceDetails',
@@ -7,18 +7,17 @@ export default {
   props: {
     show: { type: Boolean, default: true },
     count: { type: [String, Number], default: 'No Data' },
-    distribution: { type: Object, default: {} }
+    distribution: { type: Object, default: {} },
   },
   data() {
-    return {
-    }
+    return {};
   },
   methods: {
-    scorePercentage(total, tag){
-      return parseFloat((tag * 100 / total).toFixed(2), 2) || 0;
-    }
-  }
-}
+    scorePercentage(total, tag) {
+      return parseFloat(((tag * 100) / total).toFixed(2), 2) || 0;
+    },
+  },
+};
 </script>
 
 <template>
@@ -26,13 +25,11 @@ export default {
     <div class="metric-card h4">
       <div class="metric-card-title centered">
         <span class="px-2"> {{ $t('dashboard.items.attentions.33') }} </span>
-        <span v-if="count >= 0" class="badge rounded-pill bg-secondary metric-card-subtitle"> {{ count || 0 }} </span>
-        <Popper
-          :class="'dark px-2'"
-          arrow
-          disableClickAway
-          :content="$t('dashboard.daysSince')">
-          <i class='bi bi-info-circle-fill h7'></i>
+        <span v-if="count >= 0" class="badge rounded-pill bg-secondary metric-card-subtitle">
+          {{ count || 0 }}
+        </span>
+        <Popper :class="'dark px-2'" arrow disable-click-away :content="$t('dashboard.daysSince')">
+          <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </div>
       <div class="row m-1" v-if="count">
@@ -43,7 +40,9 @@ export default {
           </div>
           <div class="centered">
             <span class="h5 fw-bold m-1">{{ distribution.EARLY ? distribution.EARLY : 0 }}</span>
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0) }} % </span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1">
+              {{ scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0) }} %
+            </span>
           </div>
         </div>
         <div class="col-4 col-md-4">
@@ -53,7 +52,9 @@ export default {
           </div>
           <div class="centered">
             <span class="h5 fw-bold m-1">{{ distribution.MEDIUM ? distribution.MEDIUM : 0 }}</span>
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.MEDIUM ? distribution.MEDIUM : 0) }} % </span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1">
+              {{ scorePercentage(count, distribution.MEDIUM ? distribution.MEDIUM : 0) }} %
+            </span>
           </div>
         </div>
         <div class="col-4 col-md-4">
@@ -63,20 +64,49 @@ export default {
           </div>
           <div class="centered">
             <span class="h5 fw-bold m-1">{{ distribution.LATE ? distribution.LATE : 0 }}</span>
-            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1"> {{ scorePercentage(count, distribution.LATE ? distribution.LATE : 0) }} % </span>
+            <span class="badge rounded-pill bg-secondary metric-card-subtitle m-1">
+              {{ scorePercentage(count, distribution.LATE ? distribution.LATE : 0) }} %
+            </span>
           </div>
         </div>
       </div>
       <div class="row m-1" v-if="count">
         <div class="mt-2 mb-2">
-          <div class="progress" style="height: 30px;">
-            <div class="progress-bar green-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.EARLY ? distribution.EARLY : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress" style="height: 30px">
+            <div
+              class="progress-bar green-area"
+              role="progressbar"
+              :style="`height: 30px; width: ${scorePercentage(
+                count,
+                distribution.EARLY ? distribution.EARLY : 0
+              )}%`"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
               {{ distribution.EARLY ? distribution.EARLY : 0 || 'N/I' }}
             </div>
-            <div class="progress-bar yellow-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.MEDIUM ? distribution.MEDIUM : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+            <div
+              class="progress-bar yellow-area"
+              role="progressbar"
+              :style="`height: 30px; width: ${scorePercentage(
+                count,
+                distribution.MEDIUM ? distribution.MEDIUM : 0
+              )}%`"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
               {{ distribution.MEDIUM ? distribution.MEDIUM : 0 || 'N/I' }}
             </div>
-            <div class="progress-bar red-area" role="progressbar" :style="`height: 30px; width: ${scorePercentage(count, distribution.LATE ? distribution.LATE : 0)}%`" aria-valuemin="0" aria-valuemax="100">
+            <div
+              class="progress-bar red-area"
+              role="progressbar"
+              :style="`height: 30px; width: ${scorePercentage(
+                count,
+                distribution.LATE ? distribution.LATE : 0
+              )}%`"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
               {{ distribution.LATE ? distribution.LATE : 0 || 'N/I' }}
             </div>
           </div>
@@ -99,14 +129,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

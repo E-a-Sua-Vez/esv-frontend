@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactClient } from '../../../application/services/client';
 import { getDate } from '../../../shared/utils/date';
@@ -17,7 +17,7 @@ export default {
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     queues: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined }
+    commerces: { type: Array, default: undefined },
   },
   data() {
     return {
@@ -28,9 +28,9 @@ export default {
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
         { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
-        { id: 'REJECTED', name: 'REJECTED' }
-      ]
-    }
+        { id: 'REJECTED', name: 'REJECTED' },
+      ],
+    };
   },
   methods: {
     showDetails() {
@@ -59,9 +59,9 @@ export default {
     },
     goToCreateBooking() {
       const commerceKeyName = this.commerce.keyName;
-      let url = `/interno/commerce/${commerceKeyName}/filas`;
+      const url = `/interno/commerce/${commerceKeyName}/filas`;
       let resolvedRoute;
-      let query = {};
+      const query = {};
       if (this.client && this.client.id) {
         query['client'] = this.client.id;
       }
@@ -72,7 +72,7 @@ export default {
       }
       window.open(resolvedRoute.href, '_blank');
     },
-    clasifyDaysContacted(score){
+    clasifyDaysContacted(score) {
       if (score === undefined) {
         return 'bi-chat-left-dots-fill blue-icon';
       } else if (score <= 90) {
@@ -83,7 +83,7 @@ export default {
         return 'bi-chat-left-dots-fill red-icon';
       }
     },
-    clasifyContactResult(result){
+    clasifyContactResult(result) {
       if (result === undefined) {
         return 'bi-patch-check-fill blue-icon';
       } else if (result === 'INTERESTED') {
@@ -101,28 +101,30 @@ export default {
       deep: true,
       async handler() {
         this.extendedEntity = this.detailsOpened;
-      }
+      },
     },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="row metric-card">
       <div class="col-6 card-client-title lefted fw-bold mt-1" v-if="client && client.userName">
-        {{ client.userName?.trim().toUpperCase() || '' }} {{ client.userLastName?.trim().toUpperCase() || '' }}
+        {{ client.userName?.trim().toUpperCase() || '' }}
+        {{ client.userLastName?.trim().toUpperCase() || '' }}
         <i :class="`bi ${clasifyContactResult(client.clientContactResult || undefined)} mx-1`"> </i>
       </div>
       <div class="col-2 centered fw-bold card-client-title">
-        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContact || 0)} mx-1`"> </i> {{ client.daysSinceContact || 0 }}
+        <i :class="`bi ${clasifyDaysContacted(client.daysSinceContact || 0)} mx-1`"> </i>
+        {{ client.daysSinceContact || 0 }}
       </div>
       <div class="col-4 centered date-title">
         {{ getDate(client.contactCreatedDate || client.createdAt) }}
@@ -130,23 +132,19 @@ export default {
     </div>
     <div class="details-arrow">
       <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
+        <span href="#" @click.prevent="showDetails()">
+          <span class="details-title">{{ $t('dashboard.details') }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
       <Spinner :show="loading"></Spinner>
-      <div
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow">
+      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ client.userName || 'N/I' }} {{ client.userLastName || '' }}
-              <a class="btn copy-icon"
-                @click="copyAttention()">
+              <i class="bi bi-person-circle mx-1"></i> {{ client.userName || 'N/I' }}
+              {{ client.userLastName || '' }}
+              <a class="btn copy-icon" @click="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
             </div>
@@ -155,16 +153,18 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+client.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + client.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ client.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+client.userEmail"
-                target="_blank">
+                :href="'mailto:' + client.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ client.userEmail || 'N/I' }}
               </a>
             </div>
@@ -176,16 +176,18 @@ export default {
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+client.userPhone"
-                target="_blank">
+                :href="'https://wa.me/' + client.userPhone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ client.userPhone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+client.userEmail"
-                target="_blank">
+                :href="'mailto:' + client.userEmail"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ client.userEmail || 'N/I' }}
               </a>
             </div>
@@ -199,33 +201,59 @@ export default {
             <span>{{ client.comment }}</span>
           </div>
           <div class="col-3">
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-              @click="goTogoToCreateBookingLink()" >
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              @click="goTogoToCreateBookingLink()"
+            >
               <i class="bi bi-calendar-check-fill"></i>
             </button>
           </div>
         </div>
-        <hr>
+        <hr />
         <div class="row m-1 centered">
           <div class="col">
             <div class="mt-2">
               <div class="mb-2">
-                <i class="bi bi-chat-left-dots-fill mx-1"> </i> <span class="mb-1">{{ $t("dashboard.contactData") }}</span>
+                <i class="bi bi-chat-left-dots-fill mx-1"> </i>
+                <span class="mb-1">{{ $t('dashboard.contactData') }}</span>
               </div>
               <span v-if="client.clientContactType" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.contactType') }} </span>
-                {{ client.clientContactType }}</span>
-              <span v-if="client.clientContactResult" class="badge mx-1 detail-data-badge bg-warning">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.contactResult') }} </span>
-                {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span><br>
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.contactType') }}
+                </span>
+                {{ client.clientContactType }}</span
+              >
+              <span
+                v-if="client.clientContactResult"
+                class="badge mx-1 detail-data-badge bg-warning"
+              >
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.contactResult') }}
+                </span>
+                {{ $t(`contactResultTypes.${client.clientContactResult}`) }}</span
+              ><br />
               <span v-if="client.collaboratorName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.userData') }} </span>
-                <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span>
-              <span v-if="client.commerceName && client.commerceTag" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-                {{ client.commerceName }} - {{ client.commerceTag }}</span><br><br>
-              <span class="metric-card-details mx-1"><strong>Id:</strong> {{ client.clientId }}</span>
-              <span class="metric-card-details"><strong>Date:</strong> {{ getDate(client.contactCreatedDate || client.createdAt) }}</span>
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.userData') }}
+                </span>
+                <i class="bi bi-person-fill"> </i> {{ client.collaboratorName }}</span
+              >
+              <span
+                v-if="client.commerceName && client.commerceTag"
+                class="badge mx-1 detail-data-badge"
+              >
+                <span class="fw-bold detail-data-badge-title">
+                  {{ $t('dashboard.commerceData') }}
+                </span>
+                {{ client.commerceName }} - {{ client.commerceTag }}</span
+              ><br /><br />
+              <span class="metric-card-details mx-1"
+                ><strong>Id:</strong> {{ client.clientId }}</span
+              >
+              <span class="metric-card-details"
+                ><strong>Date:</strong>
+                {{ getDate(client.contactCreatedDate || client.createdAt) }}</span
+              >
             </div>
           </div>
         </div>
@@ -237,10 +265,10 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
-  margin: .5rem;
+  padding: 0.1rem;
+  margin: 0.5rem;
   margin-bottom: 0;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -254,24 +282,24 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
+  line-height: 0.7rem;
 }
 .checked-icon {
   color: var(--azul-turno);
 }
 .metric-card-details {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 400;
 }
 </style>

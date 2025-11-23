@@ -1,16 +1,15 @@
 <script>
-
 export default {
   name: 'Offline',
   props: {
     show: { type: Boolean, default: false },
     canReaload: { type: Boolean, default: false },
-    realoadUrl: { type: String }
+    realoadUrl: { type: String },
   },
   data() {
     return {
-      onLine: navigator.onLine
-    }
+      onLine: navigator.onLine,
+    };
   },
   methods: {
     refresh() {
@@ -18,7 +17,7 @@ export default {
     },
     close() {
       this.onLine = true;
-    }
+    },
   },
   watch: {
     store: {
@@ -27,11 +26,11 @@ export default {
       async handler() {
         setInterval(() => {
           this.onLine = navigator.onLine;
-        }, 4000)
-      }
-    }
-  }
-}
+        }, 4000);
+      },
+    },
+  },
+};
 </script>
 
 <template>
@@ -48,7 +47,13 @@ export default {
                 {{ $t('lostConnection') }}
               </div>
               <div class="col-2 alert-error">
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" @click="close()"></button>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="toast"
+                  aria-label="Close"
+                  @click="close()"
+                ></button>
               </div>
             </div>
           </div>
@@ -65,15 +70,15 @@ export default {
   opacity: 0.6;
 }
 .alert-error {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  line-height: .9rem;
+  line-height: 0.9rem;
   text-align: center;
 }
 .refresh {
   color: var(--color-text);
-  margin-top: .5rem;
-  font-size: .8rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 </style>

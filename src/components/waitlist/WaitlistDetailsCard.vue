@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { createBookingFromWaitlist } from '../../application/services/booking';
 import { getDate } from '../../shared/utils/date';
@@ -22,8 +22,8 @@ export default {
       extendedEntity: false,
       checked: false,
       block: undefined,
-      alertError: undefined
-    }
+      alertError: undefined,
+    };
   },
   methods: {
     showDetails() {
@@ -58,17 +58,17 @@ export default {
       deep: true,
       async handler() {
         this.extendedEntity = this.detailsOpened;
-      }
+      },
     },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
@@ -80,22 +80,18 @@ export default {
     </div>
     <div class="details-arrow">
       <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
+        <span href="#" @click.prevent="showDetails()">
+          <span class="details-title">{{ $t('dashboard.details') }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
-      <div
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow">
+      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-5">
             <div class="col-12 centered">
-              <i class="bi bi-person-circle mx-1"></i> {{ waitlist.user.name || 'N/I' }} {{ waitlist.user.lastName || '' }}
-              <a class="btn copy-icon"
-                @click="copyWaitlist()">
+              <i class="bi bi-person-circle mx-1"></i> {{ waitlist.user.name || 'N/I' }}
+              {{ waitlist.user.lastName || '' }}
+              <a class="btn copy-icon" @click="copyWaitlist()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
             </div>
@@ -104,16 +100,18 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+waitlist.user.phone"
-                target="_blank">
+                :href="'https://wa.me/' + waitlist.user.phone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ waitlist.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+waitlist.user.email"
-                target="_blank">
+                :href="'mailto:' + waitlist.user.email"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ waitlist.user.email || 'N/I' }}
               </a>
             </div>
@@ -125,16 +123,18 @@ export default {
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+waitlist.user.phone"
-                target="_blank">
+                :href="'https://wa.me/' + waitlist.user.phone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ waitlist.user.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'mailto:'+waitlist.user.email"
-                target="_blank">
+                :href="'mailto:' + waitlist.user.email"
+                target="_blank"
+              >
                 <i class="bi bi-envelope mx-1"></i> {{ waitlist.user.email || 'N/I' }}
               </a>
             </div>
@@ -147,13 +147,30 @@ export default {
           <Spinner :show="loading"></Spinner>
           <div v-if="availableBlocks && availableBlocks.length > 0">
             <div class="col-12 centered" v-if="!loading">
-              <select class="btn btn-md btn-light fw-bold text-dark select" aria-label=".form-select-sm" v-model="block">
-                <option v-for="block in availableBlocks" :key="block.number" :value="block" id="select-block">{{ block.hourFrom }} - {{ block.hourTo }}</option>
-              </select>
-              <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3"
-                @click="process()"
-                :disabled="waitlist.status === 'PROCESSED' || waitlist.cancelled || !block || !toggles['collaborator.waitlists.book']"
+              <select
+                class="btn btn-md btn-light fw-bold text-dark select"
+                aria-label=".form-select-sm"
+                v-model="block"
+              >
+                <option
+                  v-for="block in availableBlocks"
+                  :key="block.number"
+                  :value="block"
+                  id="select-block"
                 >
+                  {{ block.hourFrom }} - {{ block.hourTo }}
+                </option>
+              </select>
+              <button
+                class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3"
+                @click="process()"
+                :disabled="
+                  waitlist.status === 'PROCESSED' ||
+                  waitlist.cancelled ||
+                  !block ||
+                  !toggles['collaborator.waitlists.book']
+                "
+              >
                 <i class="bi bi-person-check-fill"> </i>
               </button>
             </div>
@@ -163,7 +180,9 @@ export default {
         <div class="row m-0 mt-3 centered">
           <div class="col">
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ waitlist.id }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(waitlist.createdAt) }}</span>
+            <span class="metric-card-details"
+              ><strong>Date:</strong> {{ getDate(waitlist.createdAt) }}</span
+            >
           </div>
         </div>
       </div>
@@ -174,22 +193,22 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .2rem;
-  margin: .5rem;
+  padding: 0.2rem;
+  margin: 0.5rem;
   margin-bottom: 0;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
 }
 .details-arrow {
-  margin: .5rem;
+  margin: 0.5rem;
   margin-top: 0;
-  border-bottom-left-radius: .5rem;
-  border-bottom-right-radius: .5rem;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
   line-height: 1.1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   border-top: 0;
 }
 .show {
@@ -199,25 +218,25 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 .metric-card-detail-title {
   font-size: 1rem;
   font-weight: 600;
-  line-height: .7rem;
+  line-height: 0.7rem;
 }
 
 .checked-icon {
   color: var(--azul-turno);
 }
 .metric-card-details {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 400;
 }
 </style>

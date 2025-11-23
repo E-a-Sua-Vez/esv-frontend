@@ -7,14 +7,14 @@ export default {
   props: {
     show: { type: Boolean, default: false },
     content: { type: String, default: 'por favor reintenta.' },
-    stack: { type: [String, Number] }
+    stack: { type: [String, Number] },
   },
   data() {
     return {
       reportedError: false,
       messageTitle: '',
-      messageDetail: ''
-    }
+      messageDetail: '',
+    };
   },
   methods: {
     reportError() {
@@ -43,10 +43,10 @@ export default {
         this.messageTitle = this.$t('alert.message.1');
         this.messageDetail = this.$t('alert.message.2');
       }
-    }
+    },
   },
   updated() {
-    this.alertMessage()
+    this.alertMessage();
   },
   watch: {
     stack: {
@@ -54,22 +54,34 @@ export default {
       deep: true,
       async handler() {
         this.alertMessage();
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
-  <div v-if="stack !== '' && !show" class="alert-error alert alert-danger alert-dismissible my-2" role="alert">
+  <div
+    v-if="stack !== '' && !show"
+    class="alert-error alert alert-danger alert-dismissible my-2"
+    role="alert"
+  >
     <div v-if="!reportedError">
       <strong>{{ messageTitle }} </strong> {{ messageDetail }}
-      <a v-if="!reportedError" class="alert-link" @click="reportError()"> {{ $t("alert.action") }}</a>
+      <a v-if="!reportedError" class="alert-link" @click="reportError()">
+        {{ $t('alert.action') }}</a
+      >
     </div>
     <div v-else>
-      <strong>{{ $t("alert.message.3") }} </strong>
+      <strong>{{ $t('alert.message.3') }} </strong>
     </div>
-    <button id="close-alert" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+    <button
+      id="close-alert"
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
@@ -77,8 +89,8 @@ export default {
 
 <style scoped>
 .alert-error {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 </style>

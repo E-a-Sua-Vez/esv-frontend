@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'AttentionCommentsDetails',
   props: {
@@ -11,8 +10,7 @@ export default {
     limit: { type: Number, default: 5 },
   },
   data() {
-    return {
-    }
+    return {};
   },
   methods: {
     clasifyScoredComment(messageScore) {
@@ -26,16 +24,16 @@ export default {
         return 'bi-emoji-smile-fill green-icon';
       }
     },
-    wrapComment(comment){
+    wrapComment(comment) {
       if (!comment) {
         return 'No Data';
       } else if (comment.length > 30) {
-        return comment.slice(0,30) + '...';
+        return comment.slice(0, 30) + '...';
       }
       return comment;
     },
   },
-}
+};
 </script>
 
 <template>
@@ -60,7 +58,7 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div class="row m-1" v-if="distribution">
       <div class="col-4 col-md-4">
         <div class="metric-card-title centered">
@@ -90,16 +88,18 @@ export default {
         </div>
       </div>
     </div>
-    <hr>
+    <hr />
     <div v-if="messages">
       <div v-if="messages.length > 0">
-        <div class="row mx-2" v-for="(message) in messages.slice(0, limit)" :key="message.id">
+        <div class="row mx-2" v-for="message in messages.slice(0, limit)" :key="message.id">
           <div class="metric-card-title">
             <i :class="`h6 col-2 bi ${clasifyScoredComment(message.messageScore)}`"> </i>
             <span class="col-8"> {{ wrapComment(message.message) }} </span>
-            <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle"> {{ message.messageScore || 'N/I' }} </span>
+            <span class="col-2 badge rounded-pill bg-secondary metric-card-subtitle">
+              {{ message.messageScore || 'N/I' }}
+            </span>
           </div>
-          <hr>
+          <hr />
         </div>
       </div>
       <div v-else>
@@ -118,14 +118,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

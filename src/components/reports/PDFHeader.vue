@@ -1,5 +1,4 @@
 <script>
-
 export default {
   name: 'PDFHeader',
   props: {
@@ -10,26 +9,29 @@ export default {
     commerce: { type: Object, default: { name: 'N/I', tag: 'N/I' } },
   },
   data() {
-    return { }
+    return {};
   },
-  methods: { },
-}
+  methods: {},
+};
 </script>
 
 <template>
-  <div id="pdf-header" v-if="show" class="my-4" style="display:none">
+  <div id="pdf-header" v-if="show" class="my-4" style="display: none">
     <div class="centered">
-      <img style="width:220px;" :src="$t('logoPoweredBy')">
+      <img style="width: 220px" :src="$t('logoPoweredBy')" />
     </div>
     <div class="centered">
-      <span class="fw-bold" style="font-size:1rem"> {{ title }} </span>
+      <span class="fw-bold" style="font-size: 1rem"> {{ title }} </span>
     </div>
     <div class="pdf-details">
-      <span class="fw-bold"> Filters :: </span> <span> From: {{ startDate }}, To: {{ endDate }}, Commerce: {{ commerce.name + ' - ' + commerce.tag }} </span>
+      <span class="fw-bold"> Filters :: </span>
+      <span>
+        From: {{ startDate }}, To: {{ endDate }}, Commerce:
+        {{ commerce.name + ' - ' + commerce.tag }}
+      </span>
     </div>
-    <hr>
+    <hr />
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

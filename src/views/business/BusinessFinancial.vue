@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getCommerceById } from '../../application/services/commerce';
@@ -27,14 +27,14 @@ export default {
     ComponentMenu,
     ResumeFinancialManagement,
     IncomesFinancialManagement,
-    OutcomesFinancialManagement
+    OutcomesFinancialManagement,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const attentionCreated = {
       attentionNumber: 0,
@@ -48,8 +48,8 @@ export default {
       pastPeriodAttentionNumber: {},
       pastMonthAttentionNumber: {},
       currentMonthAttentionNumber: {},
-      pastPeriodEvolution: {}
-    }
+      pastPeriodEvolution: {},
+    };
 
     const state = reactive({
       currentUser: {},
@@ -64,7 +64,7 @@ export default {
       showResume: true,
       showIncomes: false,
       showOutcomes: false,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -73,7 +73,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.selectedCommerces = [state.commerce];
         const commerce = await getCommerceById(state.commerce.id);
         state.queues = commerce.queues;
@@ -82,13 +83,11 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.selectedCommerces = undefined;
@@ -108,9 +107,9 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
-    const getLocalHour = (hour) => {
+    const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
       if (state.commerce.country) {
@@ -122,29 +121,26 @@ export default {
           return hourDate.getHours();
         }
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showResume = () => {
       state.showResume = true;
-      state.showIncomes = false,
-      state.showOutcomes = false;
-    }
+      (state.showIncomes = false), (state.showOutcomes = false);
+    };
 
     const showIncomes = () => {
       state.showResume = false;
-      state.showIncomes = true,
-      state.showOutcomes = false;
-    }
+      (state.showIncomes = true), (state.showOutcomes = false);
+    };
 
     const showOutcomes = () => {
       state.showResume = false;
-      state.showIncomes = false,
-      state.showOutcomes = true;
-    }
+      (state.showIncomes = false), (state.showOutcomes = true);
+    };
 
     return {
       state,
@@ -156,10 +152,10 @@ export default {
       showResume,
       showIncomes,
       showOutcomes,
-      getLocalHour
-    }
-  }
-}
+      getLocalHour,
+    };
+  },
+};
 </script>
 
 <template>
@@ -169,8 +165,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessFinancial.title`)"
         :toggles="state.toggles"
-        componentName="businessFinancial"
-        @goBack="goBack">
+        component-name="businessFinancial"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -181,16 +178,26 @@ export default {
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('businessFinancial.message.3.title')"
-              :content="$t('businessFinancial.message.3.content')" />
+              :content="$t('businessFinancial.message.3.content')"
+            />
           </div>
           <div v-else class="control-box">
             <div id="businessFinancial-controls">
               <div class="row">
                 <div class="col" v-if="state.commerces">
-                  <span>{{ $t("businessFinancial.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                    <option key="ALL" :value="{id:'ALL'}">{{ $t("businessFinancial.all") }}</option>
+                  <span>{{ $t('businessFinancial.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    id="modules"
+                    @change="selectCommerce(state.commerce)"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                    <option key="ALL" :value="{ id: 'ALL' }">
+                      {{ $t('businessFinancial.all') }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -203,8 +210,10 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showResume ? 'btn-selected' : ''"
                   @click="showResume()"
-                  :disabled="!state.toggles['financial.resume.view']">
-                  {{ $t("businessFinancial.resume") }} <br> <i class="bi bi-graph-up"></i>
+                  :disabled="!state.toggles['financial.resume.view']"
+                >
+                  {{ $t('businessFinancial.resume') }} <br />
+                  <i class="bi bi-graph-up"></i>
                 </button>
               </div>
               <div class="col-5 centered">
@@ -212,8 +221,10 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showIncomes ? 'btn-selected' : ''"
                   @click="showIncomes()"
-                  :disabled="!state.toggles['financial.incomes.view']">
-                  {{ $t("businessFinancial.incomes") }} <br> <i class="bi bi-arrow-down-circle-fill"></i>
+                  :disabled="!state.toggles['financial.incomes.view']"
+                >
+                  {{ $t('businessFinancial.incomes') }} <br />
+                  <i class="bi bi-arrow-down-circle-fill"></i>
                 </button>
               </div>
               <div class="col-4 centered">
@@ -221,14 +232,16 @@ export default {
                   class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                   :class="state.showOutcomes ? 'btn-selected' : ''"
                   @click="showOutcomes()"
-                  :disabled="!state.toggles['financial.outcomes.view']">
-                  {{ $t("businessFinancial.outcomes") }} <br> <i class="bi bi-arrow-up-circle-fill"></i>
+                  :disabled="!state.toggles['financial.outcomes.view']"
+                >
+                  {{ $t('businessFinancial.outcomes') }} <br />
+                  <i class="bi bi-arrow-up-circle-fill"></i>
                 </button>
               </div>
             </div>
             <div>
               <ResumeFinancialManagement
-                :showResumeFinancialManagement="state.showResume"
+                :show-resume-financial-management="state.showResume"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -237,7 +250,7 @@ export default {
               >
               </ResumeFinancialManagement>
               <IncomesFinancialManagement
-                :showIncomesFinancialManagement="state.showIncomes"
+                :show-incomes-financial-management="state.showIncomes"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -246,7 +259,7 @@ export default {
               >
               </IncomesFinancialManagement>
               <OutcomesFinancialManagement
-                :showOutcomesFinancialManagement="state.showOutcomes"
+                :show-outcomes-financial-management="state.showOutcomes"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -260,7 +273,8 @@ export default {
         <div v-if="!isActiveBusiness() && !loading">
           <Message
             :title="$t('businessFinancial.message.1.title')"
-            :content="$t('businessFinancial.message.1.content')" />
+            :content="$t('businessFinancial.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -276,23 +290,23 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -307,7 +321,7 @@ export default {
   color: var(--amarillo-star);
 }
 .metric-card-subtitle {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
 </style>

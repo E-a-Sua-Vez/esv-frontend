@@ -1,5 +1,5 @@
 <script>
-import { GoogleMap, Marker } from "vue3-google-map";
+import { GoogleMap, Marker } from 'vue3-google-map';
 import { useI18n } from 'vue-i18n';
 import { getActiveFeature } from '../../shared/features';
 
@@ -17,8 +17,8 @@ export default {
       showContact: false,
       showLocation: false,
       showService: false,
-      t
-    }
+      t,
+    };
   },
   methods: {
     attentionDays() {
@@ -27,17 +27,16 @@ export default {
       if (days && days.length > 0) {
         days.forEach((day, index) => {
           dayList.push(this.t(`days.${index + 1}`));
-        })
+        });
       }
       return dayList.join(', ');
     },
     mapsPosition() {
-      if (this.commerce.localeInfo.addressLat &&
-      this.commerce.localeInfo.addressLng) {
+      if (this.commerce.localeInfo.addressLat && this.commerce.localeInfo.addressLng) {
         return {
           lat: this.commerce.localeInfo.addressLat || 0,
-          lng: this.commerce.localeInfo.addressLng || 0
-        }
+          lng: this.commerce.localeInfo.addressLng || 0,
+        };
       }
       return undefined;
     },
@@ -45,10 +44,10 @@ export default {
       const minsFrom = attentionHourFrom * 60;
       const hours = Math.floor(minsFrom / 60);
       const minutes = minsFrom % 60;
-      return `${hours}:${minutes === 0 ? '00': minutes}`;
+      return `${hours}:${minutes === 0 ? '00' : minutes}`;
     },
     showContacts() {
-      this.showContact = !this.showContact ;
+      this.showContact = !this.showContact;
       this.showLocation = false;
       this.showService = false;
     },
@@ -63,104 +62,135 @@ export default {
       this.showService = !this.showService;
     },
     getActiveFeature(commerce, name, type) {
-      return getActiveFeature(commerce, name, type)
-    }
-  }
-}
+      return getActiveFeature(commerce, name, type);
+    },
+  },
+};
 </script>
 
 <template>
   <div>
     <div v-if="getActiveFeature(commerce, 'attention-stock-register', 'PRODUCT')" class="row mb-3">
-        <div class="col-12" v-if="commerce.contactInfo.whatsapp">
-          <div class="centered">
-            <span> {{ $t("commerceQRSetup.questions") }} </span>
-          </div>
-          <div class="centered">
-            <a
-              v-if="commerce.contactInfo.whatsapp"
-              class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill whatsapp-button"
-              :href="'https://wa.me/'+commerce.contactInfo.whatsapp"
-              target="_blank">
-              <i class="bi bi-whatsapp"></i> {{ $t("commerceQRSetup.whatsapp") }}
-            </a>
-          </div>
+      <div class="col-12" v-if="commerce.contactInfo.whatsapp">
+        <div class="centered">
+          <span> {{ $t('commerceQRSetup.questions') }} </span>
+        </div>
+        <div class="centered">
+          <a
+            v-if="commerce.contactInfo.whatsapp"
+            class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill whatsapp-button"
+            :href="'https://wa.me/' + commerce.contactInfo.whatsapp"
+            target="_blank"
+          >
+            <i class="bi bi-whatsapp"></i> {{ $t('commerceQRSetup.whatsapp') }}
+          </a>
         </div>
       </div>
+    </div>
     <div class="text-center">
       <div id="commerce-info centered">
         <div class="row centered">
           <div class="col-4" v-if="commerce.serviceInfo">
             <button
               class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
-              @click="showServices">
-              {{ $t("commerceQRSetup.services") }} <br> <i class="bi bi-info-circle"></i>
+              @click="showServices"
+            >
+              {{ $t('commerceQRSetup.services') }} <br />
+              <i class="bi bi-info-circle"></i>
             </button>
           </div>
           <div class="col-4" v-if="commerce.contactInfo && commerce.contactInfo.phone">
             <button
               class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
-              @click="showContacts">
-              {{ $t("commerceQRSetup.contact") }} <br> <i class="bi bi-whatsapp"></i>
+              @click="showContacts"
+            >
+              {{ $t('commerceQRSetup.contact') }} <br />
+              <i class="bi bi-whatsapp"></i>
             </button>
           </div>
           <div class="col-4" v-if="commerce.localeInfo && commerce.localeInfo.address">
             <button
               class="btn btn-sm btn-block btn-size fw-bold btn-secondary rounded-pill"
-              @click="showLocations">
-              {{ $t("commerceQRSetup.location") }} <br><i class="bi bi-pin-map"></i>
-          </button>
+              @click="showLocations"
+            >
+              {{ $t('commerceQRSetup.location') }} <br /><i class="bi bi-pin-map"></i>
+            </button>
           </div>
         </div>
         <div id="service-info" v-if="showService">
           <div v-if="commerce.serviceInfo" class="row info-card mt-4">
             <div v-if="commerce.category">
-              <span class="fw-bold"> {{ $t("commerceQRSetup.category") }} </span>
-              <p> {{ $t(`categories.${commerce.category}`) }}</p>
+              <span class="fw-bold"> {{ $t('commerceQRSetup.category') }} </span>
+              <p>{{ $t(`categories.${commerce.category}`) }}</p>
             </div>
             <div v-if="commerce.serviceInfo.personalized === false">
-              <div v-if="commerce.serviceInfo.attentionHourFrom >= 0 && commerce.serviceInfo.attentionHourTo >= 0">
-                <span class="fw-bold mb-1"> {{ $t("commerceQRSetup.attentionHours") }} </span>
+              <div
+                v-if="
+                  commerce.serviceInfo.attentionHourFrom >= 0 &&
+                  commerce.serviceInfo.attentionHourTo >= 0
+                "
+              >
+                <span class="fw-bold mb-1"> {{ $t('commerceQRSetup.attentionHours') }} </span>
                 {{ attentionDays() }}
-                {{ $t("commerceQRSetup.from") }}
-                <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.attentionHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
-                {{ $t("commerceQRSetup.to") }}
-                <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.attentionHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
+                {{ $t('commerceQRSetup.from') }}
+                <span class="fw-bold"
+                  >{{ timeConvert(commerce.serviceInfo.attentionHourFrom) }}
+                  {{ $t('commerceQRSetup.hrs') }}</span
+                >
+                {{ $t('commerceQRSetup.to') }}
+                <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.attentionHourTo) }}</span>
+                {{ $t('commerceQRSetup.hrs') }}
               </div>
             </div>
             <div v-else>
               <div v-if="commerce.serviceInfo.personalizedHours">
-                <span class="fw-bold mb-1"> {{ $t("commerceQRSetup.attentionHours") }} </span>
-                <div v-for="day in Object.keys(commerce.serviceInfo.personalizedHours || {})" :key="day">
-                  {{ $t(`days.${day}`)}}
-                  {{ $t("commerceQRSetup.from") }}
-                  <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
-                  {{ $t("commerceQRSetup.to") }}
-                  <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
+                <span class="fw-bold mb-1"> {{ $t('commerceQRSetup.attentionHours') }} </span>
+                <div
+                  v-for="day in Object.keys(commerce.serviceInfo.personalizedHours || {})"
+                  :key="day"
+                >
+                  {{ $t(`days.${day}`) }}
+                  {{ $t('commerceQRSetup.from') }}
+                  <span class="fw-bold"
+                    >{{
+                      timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourFrom)
+                    }}
+                    {{ $t('commerceQRSetup.hrs') }}</span
+                  >
+                  {{ $t('commerceQRSetup.to') }}
+                  <span class="fw-bold">{{
+                    timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourTo)
+                  }}</span>
+                  {{ $t('commerceQRSetup.hrs') }}
                 </div>
               </div>
             </div>
             <div v-if="commerce.serviceInfo.break === true" class="mt-2">
-              <span class="fw-bold"> {{ $t("commerceQRSetup.breakHours") }} </span>
-              {{ $t("commerceQRSetup.from") }}
-              <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.breakHourFrom) }} {{ $t("commerceQRSetup.hrs") }}</span>
-              {{ $t("commerceQRSetup.to") }}
-              <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.breakHourTo) }}</span> {{ $t("commerceQRSetup.hrs") }}
+              <span class="fw-bold"> {{ $t('commerceQRSetup.breakHours') }} </span>
+              {{ $t('commerceQRSetup.from') }}
+              <span class="fw-bold"
+                >{{ timeConvert(commerce.serviceInfo.breakHourFrom) }}
+                {{ $t('commerceQRSetup.hrs') }}</span
+              >
+              {{ $t('commerceQRSetup.to') }}
+              <span class="fw-bold">{{ timeConvert(commerce.serviceInfo.breakHourTo) }}</span>
+              {{ $t('commerceQRSetup.hrs') }}
             </div>
             <div v-if="commerce.serviceInfo.serviceUrl">
               <a
                 type="button"
                 class="btn-size btn btn-lg btn-block fw-bold btn-dark rounded-pill mt-3 my-1"
                 :href="commerce.serviceInfo.serviceUrl"
-                target="_blank">
-                {{ $t("commerceQRSetup.menu") }} <i class="bi bi-menu-up"></i>
+                target="_blank"
+              >
+                {{ $t('commerceQRSetup.menu') }} <i class="bi bi-menu-up"></i>
               </a>
             </div>
           </div>
         </div>
         <div id="contact-info" v-if="showContact">
           <div v-if="commerce.contactInfo" class="row info-card mt-4">
-            <span class="fw-bold"> {{ $t("commerceQRSetup.phones") }} </span>
+            <span class="fw-bold"> {{ $t('commerceQRSetup.phones') }} </span>
             <span v-if="commerce.contactInfo.phone"> +{{ commerce.contactInfo.phone }} </span>
             <span v-if="commerce.contactInfo.phone2"> / +{{ commerce.contactInfo.phone2 }} </span>
             <div class="mt-2">
@@ -169,15 +199,17 @@ export default {
                 v-if="commerce.contactInfo.url"
                 class="btn-size btn btn-lg btn-block fw-bold rounded-pill my-2"
                 :href="commerce.contactInfo.url"
-                target="_blank">
+                target="_blank"
+              >
                 <i class="bi bi-link"></i> {{ commerce.contactInfo.url }}
               </a>
               <a
                 type="button"
                 v-if="commerce.contactInfo.email"
                 class="btn-size btn btn-lg btn-block fw-bold rounded-pill my-2"
-                :href="'mailto:'+commerce.contactInfo.email"
-                target="_blank">
+                :href="'mailto:' + commerce.contactInfo.email"
+                target="_blank"
+              >
                 <i class="bi bi-envelope"></i> {{ commerce.contactInfo.email }}
               </a>
             </div>
@@ -186,57 +218,63 @@ export default {
                 <a
                   v-if="commerce.contactInfo.whatsapp"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 whatsapp-button"
-                  :href="'https://wa.me/'+commerce.contactInfo.whatsapp"
-                  target="_blank">
+                  :href="'https://wa.me/' + commerce.contactInfo.whatsapp"
+                  target="_blank"
+                >
                   <i class="bi bi-whatsapp"></i>
-              </a>
+                </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.facebook">
                 <a
                   v-if="commerce.contactInfo.facebook"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 facebook-button"
-                  :href="'https://www.facebook.com/'+commerce.contactInfo.facebook"
-                  target="_blank">
+                  :href="'https://www.facebook.com/' + commerce.contactInfo.facebook"
+                  target="_blank"
+                >
                   <i class="bi bi-facebook"></i>
-              </a>
+                </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.instagram">
                 <a
                   type="button"
                   v-if="commerce.contactInfo.instagram"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 instagram-button"
-                  :href="'https://www.instagram.com/'+commerce.contactInfo.instagram"
-                  target="_blank">
+                  :href="'https://www.instagram.com/' + commerce.contactInfo.instagram"
+                  target="_blank"
+                >
                   <i class="bi bi-instagram"></i>
-              </a>
+                </a>
               </div>
               <div class="col-3" v-if="commerce.contactInfo.twitter">
                 <a
                   v-if="commerce.contactInfo.twitter"
                   class="btn btn-lg btn-size btn-block fw-bold btn-dark rounded-pill mt-2 twitter-button"
-                  :href="'https://www.twitter.com/'+commerce.contactInfo.twitter"
-                  target="_blank">
+                  :href="'https://www.twitter.com/' + commerce.contactInfo.twitter"
+                  target="_blank"
+                >
                   <i class="bi bi-twitter"></i>
-              </a>
+                </a>
               </div>
             </div>
           </div>
         </div>
         <div id="map-info" v-if="showLocation">
           <div v-if="commerce.localeInfo" class="row info-card mt-4">
-            <span class="fw-bold"> {{ $t("commerceQRSetup.address") }} </span>
+            <span class="fw-bold"> {{ $t('commerceQRSetup.address') }} </span>
             <span v-if="commerce.localeInfo.address"> {{ commerce.localeInfo.address }} </span>
             <GoogleMap
               v-if="mapsPosition()"
               :api-key="mapsKey"
-              class="mt-3" style="width: 100%; height: 300px" :zoom="15"
-              :center="mapsPosition()">
+              class="mt-3"
+              style="width: 100%; height: 300px"
+              :zoom="15"
+              :center="mapsPosition()"
+            >
               <Marker :options="{ position: mapsPosition() }" />
             </GoogleMap>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -249,20 +287,20 @@ export default {
 }
 .get-attention {
   padding-bottom: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 .btn {
-  border-color: var(--color-text)
+  border-color: var(--color-text);
 }
 .info-card {
   line-height: 1.2rem;
   background-color: var(--color-background);
   padding: 1rem;
-  margin: .5rem;
+  margin: 0.5rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   margin-bottom: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 </style>

@@ -4,12 +4,12 @@ export default {
   props: {
     type: { type: String, default: '' },
     attentionDefault: { type: Boolean, default: false },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>
@@ -35,6 +35,6 @@ export default {
 .survey-name {
   background-color: var(--gris-clear);
   font-weight: 900;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 </style>

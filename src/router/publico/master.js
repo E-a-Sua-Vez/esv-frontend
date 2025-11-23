@@ -4,8 +4,8 @@ const PublicMasterRoutes = [
   {
     path: '/publico/master/login',
     name: 'master-login',
-    component: MasterLogin
-  }
-]
+    component: MasterLogin,
+  },
+];
 
 export default PublicMasterRoutes;

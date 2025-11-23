@@ -4,12 +4,12 @@ export default {
   props: {
     name: { type: String, default: '' },
     tag: { type: String, default: '' },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>
@@ -19,9 +19,7 @@ export default {
     </span>
   </div>
   <div class="tag">
-    <span class="tag-name">
-      <i class="bi bi-tags-fill"></i> {{ tag }}
-    </span>
+    <span class="tag-name"> <i class="bi bi-tags-fill"></i> {{ tag }} </span>
   </div>
 </template>
 
@@ -35,6 +33,6 @@ export default {
 .tag-name {
   background-color: var(--gris-clear);
   font-weight: 900;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 </style>

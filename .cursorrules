@@ -1,0 +1,242 @@
+# ESV Frontend - Cursor AI Guidelines
+
+## Project Overview
+This is a Vue 3 frontend application for a queue management system ("Es tu turno" / "It's your turn"). The application manages queues, bookings, waitlists, and client interactions for businesses.
+
+## Architecture
+
+### Tech Stack
+- **Framework**: Vue 3 (Composition API + Options API)
+- **Build Tool**: Vite 3
+- **State Management**: Pinia (primary), Vuex (legacy, consider removing)
+- **Routing**: Vue Router 4
+- **UI Framework**: Bootstrap 5
+- **Internationalization**: vue-i18n (ES, EN, PT)
+- **Authentication**: Firebase Auth
+- **Real-time Data**: Firebase Firestore
+- **HTTP Client**: Axios
+- **Styling**: Bootstrap + Custom CSS
+
+### Project Structure
+```
+src/
+├── application/          # Core application logic
+│   ├── api.js           # Axios instances and request configuration
+│   ├── firebase.js      # Firebase initialization and real-time listeners
+│   ├── crypt.js         # Encryption utilities
+│   ├── data/            # Static data
+│   ├── events/          # Event definitions (TypeScript)
+│   └── services/        # API service layer (one file per entity)
+├── components/          # Vue components organized by feature
+│   ├── common/         # Shared components (Header, Footer, etc.)
+│   ├── domain/         # Domain-specific components
+│   └── [feature]/      # Feature-specific components
+├── views/              # Route-level components
+├── router/             # Vue Router configuration
+│   ├── interno/        # Private routes (authenticated)
+│   └── publico/        # Public routes
+├── stores/             # Pinia stores
+├── locales/            # i18n translation files (es.json, en.json, pt.json)
+└── shared/             # Shared utilities and features
+```
+
+## User Types & Authentication
+
+### User Types
+1. **business**: Business administrators
+2. **collaborator**: Staff/collaborators
+3. **master**: Master administrators (multi-business)
+4. **invited**: Anonymous users (for public queues)
+
+### Authentication Flow
+- Uses Firebase Authentication
+- Token-based API authentication
+- Session management via Pinia store + localStorage
+- Session timeout: 1 day for authenticated users, 6 hours for invited users
+
+## Coding Standards
+
+### Style Guide
+- **Quotes**: Single quotes for strings
+- **Semicolons**: Always use semicolons
+- **Indentation**: 2 spaces
+- **Line Length**: 100 characters (Prettier)
+- **Trailing Commas**: ES5 style (objects, arrays)
+
+### Vue Component Patterns
+- Prefer Composition API for new components
+- Options API is acceptable for existing components
+- Use `<script setup>` when possible
+- Component names: PascalCase
+- File names: kebab-case for components, camelCase for utilities
+
+### Naming Conventions
+- **Components**: PascalCase (e.g., `UserQueueAttention.vue`)
+- **Files**: kebab-case for components, camelCase for JS files
+- **Variables/Functions**: camelCase
+- **Constants**: UPPER_SNAKE_CASE
+- **Store Actions**: camelCase
+- **Store Getters**: camelCase (prefixed with `get`)
+
+### Service Layer Pattern
+Services follow a consistent pattern:
+```javascript
+import { requestBackend, getHeaders } from '../api';
+
+const entity = 'entityName';
+
+export const getEntityById = async id => {
+  return (await requestBackend.get(`/${entity}/${id}`, await getHeaders())).data;
+}
+
+export const updateEntity = async (id, entity) => {
+  return (await requestBackend.patch(`/${entity}/${id}`, entity, await getHeaders())).data;
+}
+```
+
+## Key Patterns
+
+### API Calls
+- Always use `await getHeaders()` for authenticated requests
+- Use `requestBackend`, `requestEvent`, or `requestQuery` based on endpoint
+- Handle errors consistently (consider adding error interceptor)
+
+### State Management
+- Use Pinia stores for global state
+- Store user data in both Pinia state and localStorage
+- ⚠️ Note: Current store uses async getters (anti-pattern) - consider refactoring
+
+### Real-time Updates
+- Use Firebase Firestore listeners for real-time data
+- Always unsubscribe in `onUnmounted` hook
+- Pattern: `updated[Entity]By[Filter]()` functions return reactive refs
+
+### Internationalization
+- All user-facing text must use `$t()` or `t()` from vue-i18n
+- Translation keys follow dot notation: `feature.section.key`
+- Never hardcode strings in components
+
+### Router Guards
+- Complex authentication logic in `router/index.js`
+- Route guards check user type and session validity
+- Redirects based on user type and authentication status
+
+## Environment Configuration
+
+### Environments
+- **BR**: Brazil production (`vite.config-br.js`)
+- **NET**: Network production (`vite.config-net.js`)
+- **TEST-BR**: Brazil test (`vite.config-test-br.js`)
+
+### Environment Variables
+- All env vars prefixed with `VITE_`
+- Never commit `.env` files or `env*.sh` files
+- Use environment-specific configs for different deployments
+
+## Common Tasks
+
+### Adding a New Service
+1. Create file in `src/application/services/[entity].js`
+2. Follow the service pattern (see above)
+3. Import `requestBackend` and `getHeaders`
+4. Export CRUD operations as named exports
+
+### Adding a New Component
+1. Place in appropriate `components/[feature]/` directory
+2. Use Composition API with `<script setup>` if possible
+3. Add i18n keys for all text
+4. Follow naming conventions
+
+### Adding a New Route
+1. Add route definition in appropriate router file (`interno/` or `publico/`)
+2. Add route guard logic in `router/index.js` if needed
+3. Create view component in `views/`
+4. Add i18n keys for route labels
+
+### Working with Firebase
+- Use collections exported from `firebase.js`
+- Create listener functions following the `updated*` pattern
+- Always handle unsubscribe in component lifecycle
+- Use Firestore timestamps for date queries
+
+## Important Notes
+
+### Security
+- ⚠️ Never commit API keys or secrets
+- Environment files (`env*.sh`) are gitignored
+- Firebase API keys are client-side (expected for Firebase)
+- Always validate user inputs
+- Use Firebase Security Rules for data access control
+
+### Performance
+- Large components should be split (e.g., Header.vue)
+- Consider lazy loading for routes
+- Optimize Firebase queries with proper indexes
+- Use `v-memo` for expensive list rendering
+
+### Known Issues
+- Router typo: `'colaborator'` vs `'collaborator'` (line 148)
+- Async getters in Pinia store (should use computed/actions)
+- Mix of Vuex and Pinia (consider removing Vuex)
+- Some components too large (refactor needed)
+
+### Dependencies to Review
+- `vuex`: Consider removing (using Pinia)
+- `bcrypt`: Unusual for client-side, review usage
+- `firebase`: v8, consider upgrading to v9+ modular SDK
+
+## Testing
+- Cypress config exists but tests need to be added
+- Add unit tests for services
+- Add component tests for critical components
+- Test authentication flows thoroughly
+
+## Deployment
+- Uses Docker for containerization
+- Deploys to Google Cloud Run
+- Multiple build configs for different environments
+- Uses Google Cloud Build for CI/CD
+
+## When Making Changes
+
+1. **Follow existing patterns** - Maintain consistency with codebase
+2. **Use i18n** - Never hardcode user-facing strings
+3. **Handle errors** - Add proper error handling
+4. **Update types** - If adding TypeScript, update types
+5. **Test thoroughly** - Especially authentication and real-time features
+6. **Check security** - Validate inputs, sanitize outputs
+7. **Update docs** - If adding features, update relevant documentation
+
+## Quick Reference
+
+### Import Paths
+- `@/` aliases to `src/`
+- Services: `@/application/services/[name]`
+- Components: `@/components/[feature]/[name]`
+- Stores: `@/stores`
+- Utils: `@/shared/utils/[name]`
+
+### Common Utilities
+- Date formatting: `getDateAndHour` from `@/shared/utils/date`
+- Features: `getFeature`, `getActiveFeature` from `@/shared/features`
+
+### Store Usage
+```javascript
+import { globalStore } from '@/stores';
+
+const store = globalStore();
+const user = await store.getCurrentUser;
+await store.setCurrentUser(newUser);
+```
+
+### i18n Usage
+```javascript
+// In template
+{{ $t('key.path') }}
+
+// In script (Composition API)
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+const message = t('key.path');
+```
+

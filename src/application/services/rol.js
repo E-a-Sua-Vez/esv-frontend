@@ -6,26 +6,23 @@ export const getRolByName = async name => {
   const permissions = await store.getCurrentPermissions;
   if (!permissions) {
     const rol = (await requestBackend.get(`/rol/name/${name}`, await getHeaders())).data;
-    if(rol.permissions) {
+    if (rol.permissions) {
       await store.setCurrentPermissions(rol.permissions);
     }
     return rol;
   }
-}
+};
 
-export const getRoles = async () => {
-  return (await requestBackend.get(`/rol`, await getHeaders())).data;
-}
+export const getRoles = async () => (await requestBackend.get('/rol', await getHeaders())).data;
 
-export const updateRolPermission = async (id, permission) => {
-  return (await requestBackend.patch(`/rol/${id}/permission`, permission, await getHeaders())).data;
-}
+export const updateRolPermission = async (id, permission) =>
+  (await requestBackend.patch(`/rol/${id}/permission`, permission, await getHeaders())).data;
 
 export const updatePermissionsByRolName = async name => {
   const store = globalStore();
   const rol = (await requestBackend.get(`/rol/name/${name}`, await getHeaders())).data;
-  if(rol.permissions) {
+  if (rol.permissions) {
     await store.setCurrentPermissions(rol.permissions);
   }
   return rol;
-}
+};

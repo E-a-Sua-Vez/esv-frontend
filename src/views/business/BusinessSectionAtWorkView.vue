@@ -15,8 +15,8 @@ export default {
   async setup() {
     const router = useRouter();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const store = globalStore();
 
@@ -36,24 +36,22 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true &&
-        state.business.queues.length > 0
-    };
+    });
+    const isActiveBusiness = () =>
+      state.business && state.business.active === true && state.business.queues.length > 0;
     const goBack = () => {
       router.back();
-    }
+    };
 
     return {
       state,
       loading,
       alertError,
       isActiveBusiness,
-      goBack
-    }
-  }
-}
+      goBack,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -62,8 +60,13 @@ export default {
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
           <div id="welcome">
-            <span v-if="!state.currentUser" class="welcome">{{ $t("businessSectionAtWorkView.welcome") }}</span>
-            <span v-else class="welcome-user">{{ $t("businessSectionAtWorkView.welcome-user") }}, {{ state.currentUser.name }}!</span>
+            <span v-if="!state.currentUser" class="welcome">{{
+              $t('businessSectionAtWorkView.welcome')
+            }}</span>
+            <span v-else class="welcome-user"
+              >{{ $t('businessSectionAtWorkView.welcome-user') }},
+              {{ state.currentUser.name }}!</span
+            >
           </div>
         </div>
         <Spinner :show="loading"></Spinner>
@@ -73,7 +76,8 @@ export default {
           <Message
             :title="$t('businessSectionAtWorkView.message.1.title')"
             :content="$t('businessSectionAtWorkView.message.1.content')"
-            :icon="'bi bi-tools'">
+            :icon="'bi bi-tools'"
+          >
           </Message>
           <ComponentMenu @goBack="goBack"></ComponentMenu>
         </div>
@@ -89,7 +93,7 @@ export default {
   font-weight: 700;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 </style>

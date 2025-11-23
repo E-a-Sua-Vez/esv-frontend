@@ -1,5 +1,5 @@
 {
-  "logo": "/images/spot+_white.png",
+  "logo": "/images/hub_logo.png",
   "logoAlt": "It's your turn",
   "homeTitle": "It's your turn {'|'} Service of attention queues 100% digital",
   "email": "hola{'@'}estuturno.app",
@@ -9,7 +9,7 @@
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "backToInit": "Back to init",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/spot+_white.png",
+  "logoPoweredBy": "/images/esv_peq_transparente.png",
   "enableAll": "Enable more the capabilities!",
   "curious": "Curious?",
   "wantToKnowMore": "I Want to know More!",
@@ -23,7 +23,7 @@
   "capacities": "What I'm able to do?",
   "upgrade": "Upgrade your plan to get more benefits.",
   "sureAction": "Are you sure you want to complete this action?",
-  "logoValues": "/images/es_tu_turno_values.png",
+  "logoValues": "/images/hub_logo.png",
   "logoValuesAlt": "It's your turn",
   "searcher": "🔎 Search",
   "close": "Close",
@@ -1122,7 +1122,7 @@
           "tracing": "Go to Clients Management",
           "queue-manage": "Attend Queues of the Day",
           "booking-manage": "Bookings 360° Vision",
-          "product-stock":"Stock Control"
+          "product-stock": "Stock Control"
         }
       }
     }
@@ -1761,7 +1761,7 @@
       "1": {
         "title": "Ups!",
         "content": "This commerce does not exists or is inactive now. Check the URL or reach out to a commerce associate for help."
-      } ,
+      },
       "2": {
         "title": "Ups!",
         "content": "There's not data to show, please validate the filter and try again."
@@ -2383,7 +2383,7 @@
           "update": "Update the Companies",
           "add": "Add Companies",
           "limit": "Limit amount of Companies",
-          "unavailable":"Delete Companies"
+          "unavailable": "Delete Companies"
         }
       }
     },
@@ -2457,7 +2457,7 @@
           "update": "Update the Items",
           "add": "Add Items",
           "limit": "Limit amount of Items",
-          "unavailable":"Delete Items"
+          "unavailable": "Delete Items"
         }
       }
     },
@@ -2543,7 +2543,7 @@
       "levels": "Seeify if the levels and amounts are valid"
     }
   },
-  "businessFinancial" : {
+  "businessFinancial": {
     "title": "Financial Management",
     "commerce": "Select a commerce:",
     "return": "Back",
@@ -2627,9 +2627,9 @@
       "amount": "Should enter the quantity"
     }
   },
-  "businessProductStockAdmin" : {
+  "businessProductStockAdmin": {
     "title": "Stock Control",
-    "commerce":"Select a commerce:",
+    "commerce": "Select a commerce:",
     "return": "Back",
     "products": "Products",
     "attentions": "Attentions",
@@ -4009,7 +4009,7 @@
       "attention-client-contact": {
         "view": "See Client Contacts - Section Performance Hub"
       },
-      "attention-days-since-clients":{
+      "attention-days-since-clients": {
         "view": "See Days Since Attention Clients - Section Performance Hub"
       },
       "attentions-management": {
@@ -4024,7 +4024,7 @@
       "clients-management": {
         "view": "See Clients Management - Clients Management Section"
       },
-      "collection-details":{
+      "collection-details": {
         "view": "See Collection Details - Financial Section"
       },
       "tracing": {
@@ -4114,9 +4114,9 @@
       "main-menu": {
         "booking-manage": "Enable Bookings Manage - Main Menu Collaborator",
         "dashboard": "Enable Performance Hub - Main Menu Collaborator",
-        "queue-manage":"Enable Attend Queues of the Day - Main Menu Collaborator",
+        "queue-manage": "Enable Attend Queues of the Day - Main Menu Collaborator",
         "tracing": "Enable Manage Clients - Main Menu Collaborator",
-        "product-stock":"Enable Stock Manage - Main Menu Collaborator"
+        "product-stock": "Enable Stock Manage - Main Menu Collaborator"
       }
     },
     "roles": {
@@ -4190,11 +4190,11 @@
         "add-replacement": "Add Reposition - Stock Management",
         "view-attention": "See Consumption Attentions - Stock Management",
         "view-consumption": "See Consumption - Stock Management",
-        "view-replacement":"See Reposition - Stock Management"
+        "view-replacement": "See Reposition - Stock Management"
       },
       "reports": {
         "details": "Inform Stock Control - Stock Management",
-        "replacement-details":"Inform Product Reposition - Stock Management",
+        "replacement-details": "Inform Product Reposition - Stock Management",
         "consumption-details": "Inform Product Consumption - Stock Management"
       }
     },

@@ -7,33 +7,33 @@ const PrivateUserRoutes = [
   {
     path: '/interno/fila/:queueId/atencion/:id/',
     name: 'commerce-queue-attention',
-    component: UserQueueAttention
+    component: UserQueueAttention,
   },
   {
     path: '/interno/booking/:id/',
     name: 'commerce-queue-booking',
-    component: UserQueueBooking
+    component: UserQueueBooking,
   },
   {
     path: '/interno/waitlist/:id/:block',
     name: 'commerce-queue-waitlist',
-    component: UserQueueWaitlist
+    component: UserQueueWaitlist,
   },
   {
     path: '/interno/form/:formId/client/:clientId/booking/:bookingId',
     name: 'commerce-form-booking',
-    component: UserFormAttention
+    component: UserFormAttention,
   },
   {
     path: '/interno/form/:formId/client/:clientId/attention/:attentionId',
     name: 'commerce-form-attention',
-    component: UserFormAttention
+    component: UserFormAttention,
   },
   {
     path: '/interno/acceptterms/booking/:id/:code',
     name: 'commerce-booking-terms-confirm',
-    component: UserQueueBooking
+    component: UserQueueBooking,
   },
-]
+];
 
 export default PrivateUserRoutes;

@@ -15,10 +15,9 @@ export default {
   name: 'MasterMenu',
   components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SearchBar, WelcomeMenu },
   async setup() {
-
     const router = useRouter();
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const store = globalStore();
 
@@ -32,7 +31,7 @@ export default {
         'business-master-admin',
         'plans-master-admin',
         'features-master-admin',
-        'plan-activations-admin'
+        'plan-activations-admin',
       ],
       businessMenuOptions: [
         'dashboard',
@@ -43,7 +42,7 @@ export default {
         'documents',
         'your-plan',
         'business-master-resume',
-        'go-minisite'
+        'go-minisite',
       ],
       manageControlSubMenuOptions: [
         'tracing',
@@ -65,16 +64,16 @@ export default {
         'company-master-admin',
         'patient-history-item-master-admin',
         'product-master-admin',
-        'permissions-master-admin'
-      ]
+        'permissions-master-admin',
+      ],
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.currentUser = await store.getCurrentUser;
+        state.currentUser = store.getCurrentUser;
         state.businesses = await getBusinesses();
-        state.business = await store.getCurrentBusiness;
+        state.business = store.getCurrentBusiness;
         if (state.business && state.business.id !== undefined) {
           state.currentUser.businessId = state.business.id;
         }
@@ -84,9 +83,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const goToOption = async (option) => {
+    const goToOption = async option => {
       try {
         loading.value = true;
         alertError.value = '';
@@ -106,22 +105,22 @@ export default {
       }
     };
 
-    const selectBusiness = (business) => {
+    const selectBusiness = business => {
       state.business = business;
       state.currentUser.businessId = business.id;
       store.setCurrentBusiness(state.business);
-    }
+    };
 
     const closeBusiness = () => {
       state.business = undefined;
       state.currentUser.businessId = undefined;
       store.setCurrentBusiness(undefined);
-    }
+    };
 
     const getBusinessLink = () => {
       const businessKeyName = state.business.keyName;
       return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
-    }
+    };
 
     return {
       state,
@@ -130,38 +129,35 @@ export default {
       goToOption,
       selectBusiness,
       closeBusiness,
-      getBusinessLink
-    }
-  }
-}
+      getBusinessLink,
+    };
+  },
+};
 </script>
 <template>
   <div>
-    <div  class="content text-center">
+    <div class="content text-center">
       <CommerceLogo></CommerceLogo>
-      <WelcomeMenu
-        :name="state.currentUser.name"
-        :toggles="undefined"
-        :componentName="undefined"
-      >
+      <WelcomeMenu :name="state.currentUser.name" :toggles="undefined" :component-name="undefined">
       </WelcomeMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <div class="choose-attention">
-          <span>{{ $t("masterMenu.choose") }}</span>
+          <span>{{ $t('masterMenu.choose') }}</span>
         </div>
         <div id="master-menu">
           <div class="row">
             <div
               v-for="option in state.masterMenuOptions"
               :key="option"
-              class="d-grid btn-group btn-group-justified">
+              class="d-grid btn-group btn-group-justified"
+            >
               <div>
                 <button
                   type="button"
                   class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
                   @click="goToOption(option)"
-                  >
+                >
                   {{ $t(`masterMenu.${option}`) }}
                 </button>
               </div>
@@ -172,32 +168,40 @@ export default {
           <SearchBar
             :list="state.businesses"
             :label="$t('masterMenu.business')"
-            @selectItem="selectBusiness">
+            @selectItem="selectBusiness"
+          >
           </SearchBar>
         </div>
         <div class="business-admin">
           <div v-if="state.business && state.business.id" class="card mt-1 mb-3">
             <div class="row d-flex m-1 business-title">
               <div class="col-4">
-                <img :src="state.business.logo" class="img-thumbnail rounded-start item-image">
+                <img :src="state.business.logo" class="img-thumbnail rounded-start item-image" />
               </div>
               <div class="col-7">
                 <span class="item-title fw-bold"> {{ state.business.name }} </span>
               </div>
-              <button type="button" class="btn-close" aria-label="Close" @click="closeBusiness()"></button>
+              <button
+                type="button"
+                class="btn-close"
+                aria-label="Close"
+                @click="closeBusiness()"
+              ></button>
             </div>
             <div id="business-menu" class="my-2">
               <div class="row">
                 <div
                   v-for="option in state.businessMenuOptions"
                   :key="option"
-                  class="d-grid btn-group btn-group-justified">
+                  class="d-grid btn-group btn-group-justified"
+                >
                   <div v-if="option === 'go-minisite'" class="centered">
                     <a
                       type="button"
                       class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
                       :href="`${getBusinessLink()}`"
-                      target="_blank">
+                      target="_blank"
+                    >
                       {{ $t(`masterMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
                     </a>
                   </div>
@@ -206,38 +210,61 @@ export default {
                       type="button"
                       class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
                       @click="goToOption(option)"
-                      >
+                    >
                       {{ $t(`masterMenu.${option}`) }}
-                      <i v-if="option === 'manage-master-admin'" :class="`bi ${state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                      <i v-if="option === 'control-master-admin'" :class="`bi ${state.manageControlSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                      <i
+                        v-if="option === 'manage-master-admin'"
+                        :class="`bi ${
+                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'control-master-admin'"
+                        :class="`bi ${
+                          state.manageControlSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
                     </button>
-                    <div v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true" class="mb-1">
+                    <div
+                      v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true"
+                      class="mb-1"
+                    >
                       <div
                         v-for="opt in state.manageSubMenuOptions"
                         :key="opt"
-                        class="centered mx-3">
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                            @click="goToOption(opt)"
-                            >
-                            {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                        class="centered mx-3"
+                      >
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          @click="goToOption(opt)"
+                        >
+                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
+                      </div>
                     </div>
-                    <div v-if="option === 'control-master-admin' && state.manageControlSubMenuOption === true" class="mb-1">
+                    <div
+                      v-if="
+                        option === 'control-master-admin' &&
+                        state.manageControlSubMenuOption === true
+                      "
+                      class="mb-1"
+                    >
                       <div
                         v-for="opt in state.manageControlSubMenuOption"
                         :key="opt"
-                        class="centered mx-3">
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                            @click="goToOption(opt)"
-                            >
-                            {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                        class="centered mx-3"
+                      >
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          @click="goToOption(opt)"
+                        >
+                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -261,9 +288,9 @@ export default {
   justify-content: center;
   align-items: center;
   max-height: 3rem;
-  margin: .3rem;
+  margin: 0.3rem;
   font-size: 1rem;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 .item-image {
   max-width: 100px;

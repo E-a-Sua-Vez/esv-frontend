@@ -4,8 +4,8 @@ const PublicColaboratorRoutes = [
   {
     path: '/publico/colaborador/login',
     name: 'collaborator-login',
-    component: CollaboratorLogin
-  }
-]
+    component: CollaboratorLogin,
+  },
+];
 
 export default PublicColaboratorRoutes;

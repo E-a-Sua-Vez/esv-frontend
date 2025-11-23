@@ -4,7 +4,7 @@ import SimpleCard from './common/SimpleCard.vue';
 import DetailsCard from './common/DetailsCard.vue';
 import Message from '../../components/common/Message.vue';
 import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
-import html2pdf from "html2pdf.js";
+import html2pdf from 'html2pdf.js';
 import AttentionRatingDetails from './domain/AttentionRatingDetails.vue';
 import AttentionNPSDetails from './domain/AttentionNPSDetails.vue';
 import AttentionCommentsDetails from './domain/AttentionCommentsDetails.vue';
@@ -36,7 +36,7 @@ export default {
     AttentionOriginDetails,
     AttentionClientContactDetails,
     AttentionDaysSinceDetails,
-    CollectionDetails
+    CollectionDetails,
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -44,20 +44,26 @@ export default {
     toggles: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
-    commerce: { type: Object, default: undefined }
+    commerce: { type: Object, default: undefined },
   },
   data() {
     return {
       loading: false,
       detailsOpened: false,
-      sentimentScore: {}
-    }
+      sentimentScore: {},
+    };
   },
   beforeMount() {
-    if (this.calculatedMetrics['survey.created'] && this.calculatedMetrics['survey.created']['sentimentScore']) {
-      this.sentimentScore['totalSentimentBad'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentBad'] || 0;
-      this.sentimentScore['totalSentimentNeutral'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentNeutral'] || 0;
-      this.sentimentScore['totalSentimentGood'] = this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentGood'] || 0;
+    if (
+      this.calculatedMetrics['survey.created'] &&
+      this.calculatedMetrics['survey.created']['sentimentScore']
+    ) {
+      this.sentimentScore['totalSentimentBad'] =
+        this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentBad'] || 0;
+      this.sentimentScore['totalSentimentNeutral'] =
+        this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentNeutral'] || 0;
+      this.sentimentScore['totalSentimentGood'] =
+        this.calculatedMetrics['survey.created']['sentimentScore']['totalSentimentGood'] || 0;
     }
   },
   methods: {
@@ -66,54 +72,63 @@ export default {
       this.detailsOpened = true;
       const filename = `indicators-${this.commerce.name}-${this.commerce.tag}-${this.startDate}-${this.endDate}.pdf`;
       const options = {
-				margin: .5,
-  			filename,
+        margin: 0.5,
+        filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-			};
-      let doc = document.getElementById("indicators-component");
-      document.getElementById("pdf-header").style.display = "block";
-      document.getElementById("pdf-footer").style.display = "block";
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      };
+      let doc = document.getElementById('indicators-component');
+      document.getElementById('pdf-header').style.display = 'block';
+      document.getElementById('pdf-footer').style.display = 'block';
       setTimeout(() => {
-        html2pdf().set(options).from(doc).save().then(() => {
-          document.getElementById("pdf-header").style.display = "none";
-          document.getElementById("pdf-footer").style.display = "none";
-          doc = undefined;
-          this.detailsOpened = false;
-          this.loading = false;
-        }).catch(error => {
-          document.getElementById("pdf-header").style.display = "none";
-          document.getElementById("pdf-footer").style.display = "none";
-          this.detailsOpened = false;
-          doc = undefined;
-          this.loading = false;
-        });
+        html2pdf()
+          .set(options)
+          .from(doc)
+          .save()
+          .then(() => {
+            document.getElementById('pdf-header').style.display = 'none';
+            document.getElementById('pdf-footer').style.display = 'none';
+            doc = undefined;
+            this.detailsOpened = false;
+            this.loading = false;
+          })
+          .catch(error => {
+            document.getElementById('pdf-header').style.display = 'none';
+            document.getElementById('pdf-footer').style.display = 'none';
+            this.detailsOpened = false;
+            doc = undefined;
+            this.loading = false;
+          });
       }, 1000);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
-  <div id="indicators" class="row" v-if="showIndicators === true && toggles['dashboard.indicators.view']">
+  <div
+    id="indicators"
+    class="row"
+    v-if="showIndicators === true && toggles['dashboard.indicators.view']"
+  >
     <SimpleDownloadCard
       :download="toggles['dashboard.reports.indicators']"
       :title="$t('dashboard.reports.indicators.title')"
-      :showTooltip="true"
+      :show-tooltip="true"
       :description="$t('dashboard.reports.indicators.description')"
       :icon="'bi-file-earmark-pdf'"
       @download="exportToPDF"
-      :canDownload="toggles['dashboard.reports.indicators'] === true"
+      :can-download="toggles['dashboard.reports.indicators'] === true"
     ></SimpleDownloadCard>
     <Spinner :show="loading"></Spinner>
     <div id="indicators-component">
       <PDFHeader
         :show="toggles['dashboard.reports.indicators']"
         :title="$t('dashboard.reports.indicators.title')"
-        :startDate="startDate"
-        :endDate="endDate"
+        :start-date="startDate"
+        :end-date="endDate"
         :commerce="commerce"
       >
       </PDFHeader>
@@ -125,11 +140,11 @@ export default {
           :subdatapastmonth="calculatedMetrics['attention.created'].pastMonthAttentionNumber"
           :subdatacurrentperiod="calculatedMetrics['attention.created'].currentMonthAttentionNumber"
           :title="$t('dashboard.items.attentions.1')"
-          :showTooltip="false"
+          :show-tooltip="false"
           :icon="'bi-qr-code'"
-          :iconStyleClass="'blue-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'blue-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <div id="attention-number-details" class="row">
               <div class="col-4">
@@ -138,7 +153,9 @@ export default {
                   {{ $t('dashboard.items.attentions.16') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.STANDARD || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['attention.created'].typesFlow.STANDARD || 0
+                  }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -147,7 +164,9 @@ export default {
                   {{ $t('dashboard.items.attentions.17') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0
+                  }}</span>
                 </div>
               </div>
               <div class="col-4">
@@ -156,7 +175,9 @@ export default {
                   {{ $t('dashboard.items.attentions.18') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -169,12 +190,12 @@ export default {
           :data="calculatedMetrics['booking.created'].bookingNumber"
           :subdata="calculatedMetrics['booking.created'].stillPendingBookings"
           :title="$t('dashboard.items.attentions.27')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.booking')"
           :icon="'bi-calendar2-check-fill'"
-          :iconStyleClass="'orange-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'orange-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <div id="booking-number-details" class="row centered">
               <div class="col-3">
@@ -185,7 +206,9 @@ export default {
                   {{ $t('dashboard.items.attentions.28') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0
+                  }}</span>
                 </div>
               </div>
               <div class="col-3">
@@ -196,7 +219,9 @@ export default {
                   {{ $t('dashboard.items.attentions.35') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0
+                  }}</span>
                 </div>
               </div>
               <div class="col-3">
@@ -207,7 +232,9 @@ export default {
                   {{ $t('dashboard.items.attentions.29') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0
+                  }}</span>
                 </div>
               </div>
               <div class="col-3">
@@ -218,7 +245,9 @@ export default {
                   {{ $t('dashboard.items.attentions.30') }}
                 </div>
                 <div class="centered">
-                  <span class="h5 fw-bold">{{ calculatedMetrics['booking.created'].bookingFlow.datasets[3] || 0 }}</span>
+                  <span class="h5 fw-bold">{{
+                    calculatedMetrics['booking.created'].bookingFlow.datasets[3] || 0
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -232,10 +261,11 @@ export default {
               :show="!!toggles['dashboard.attention-time-avg.view']"
               :data="calculatedMetrics['attention.created'].avgDuration"
               :title="$t('dashboard.items.attentions.2')"
-              :showTooltip="true"
+              :show-tooltip="true"
               :description="$t('dashboard.seconds')"
               :icon="'bi-clock-history'"
-              :iconStyleClass="'green-icon'">
+              :icon-style-class="'green-icon'"
+            >
             </SimpleCard>
           </div>
           <div id="attention-no-device" class="col">
@@ -244,9 +274,10 @@ export default {
               :data="calculatedMetrics['attention.created'].noDevicePer || 0 + '%'"
               :subdata="calculatedMetrics['attention.created'].noDevice || 0"
               :title="$t('dashboard.items.attentions.5')"
-              :showTooltip="false"
+              :show-tooltip="false"
               :icon="'bi-people-fill'"
-              :iconStyleClass="'orange-icon'">
+              :icon-style-class="'orange-icon'"
+            >
             </SimpleCard>
           </div>
         </div>
@@ -257,9 +288,10 @@ export default {
           :data="calculatedMetrics['attention.created'].maxQueue"
           :subdata="calculatedMetrics['attention.created'].maxQueueCount"
           :title="$t('dashboard.items.attentions.4')"
-          :showTooltip="false"
+          :show-tooltip="false"
           :icon="'bi-person-heart'"
-          :iconStyleClass="'red-icon'">
+          :icon-style-class="'red-icon'"
+        >
         </SimpleCard>
       </div>
       <div id="attention-rating-avg">
@@ -268,12 +300,12 @@ export default {
           :data="calculatedMetrics['survey.created'].avgRating || 0"
           :subdata="calculatedMetrics['survey.created'].count_rating || 0"
           :title="$t('dashboard.items.attentions.3')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.rating')"
           :icon="'bi-star-fill'"
-          :iconStyleClass="'yellow-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'yellow-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionRatingDetails
               :show="toggles['dashboard.attention-rating-avg.view']"
@@ -294,11 +326,11 @@ export default {
           :data="calculatedMetrics['survey.created'].nps || 0"
           :subdata="calculatedMetrics['survey.created'].count_nps || 0"
           :title="$t('dashboard.items.attentions.24')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.nps')"
           :icon="'bi-megaphone-fill'"
-          :detailsOpened="detailsOpened"
-          >
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionNPSDetails
               :show="!!toggles['dashboard.attention-nps-avg.view']"
@@ -319,12 +351,12 @@ export default {
           :data="calculatedMetrics['survey.created']?.prom_score"
           :subdata="calculatedMetrics['survey.created']['scoredMessages']?.length"
           :title="$t('dashboard.items.attentions.21')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.sentiment')"
           :icon="'bi-chat-heart-fill'"
-          :iconStyleClass="'red-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'red-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionCommentsDetails
               :show="!!toggles['dashboard.attention-comments-avg.view']"
@@ -340,18 +372,32 @@ export default {
       </div>
       <div id="attention-collaborators">
         <DetailsCard
-          :show="!!toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
-          :data="calculatedMetrics['collaborators'] ? calculatedMetrics['collaborators'][0]?.name : 'No Data'"
-          :subdata="calculatedMetrics['collaborators'] ? calculatedMetrics['collaborators'][0]?.attention_counter : 0"
+          :show="
+            !!toggles['dashboard.attention-collaborators.view'] &&
+            calculatedMetrics['collaborators'].length > 0
+          "
+          :data="
+            calculatedMetrics['collaborators']
+              ? calculatedMetrics['collaborators'][0]?.name
+              : 'No Data'
+          "
+          :subdata="
+            calculatedMetrics['collaborators']
+              ? calculatedMetrics['collaborators'][0]?.attention_counter
+              : 0
+          "
           :title="$t('dashboard.items.attentions.20')"
-          :showTooltip="false"
+          :show-tooltip="false"
           :icon="'bi-trophy-fill'"
-          :iconStyleClass="'green-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'green-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionCollaboratorsDetails
-              :show="!!toggles['dashboard.attention-collaborators.view'] && calculatedMetrics['collaborators'].length > 0"
+              :show="
+                !!toggles['dashboard.attention-collaborators.view'] &&
+                calculatedMetrics['collaborators'].length > 0
+              "
               :collaborators="calculatedMetrics['collaborators']"
               :limit="5"
             >
@@ -362,15 +408,23 @@ export default {
       <div id="attention-origin-avg">
         <DetailsCard
           :show="!!toggles['dashboard.attention-origin-avg.view']"
-          :data="calculatedMetrics['clients']['maxOrigin']?.name ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`) : 'No Data'"
-          :subdata="calculatedMetrics['clients']['maxOrigin'] ? calculatedMetrics['clients']['maxOrigin']?.count : 0"
+          :data="
+            calculatedMetrics['clients']['maxOrigin']?.name
+              ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`)
+              : 'No Data'
+          "
+          :subdata="
+            calculatedMetrics['clients']['maxOrigin']
+              ? calculatedMetrics['clients']['maxOrigin']?.count
+              : 0
+          "
           :title="$t('dashboard.items.attentions.31')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.origin')"
           :icon="'bi-emoji-heart-eyes-fill'"
-          :iconStyleClass="'orange-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'orange-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionOriginDetails
               :show="!!toggles['dashboard.attention-origin-avg.view']"
@@ -385,20 +439,24 @@ export default {
       <div id="attention-client-contact">
         <DetailsCard
           :show="!!toggles['dashboard.attention-client-contact.view']"
-          :data="calculatedMetrics['clients']?.contactTotal ? calculatedMetrics['clients']?.contactTotal : 0"
+          :data="
+            calculatedMetrics['clients']?.contactTotal
+              ? calculatedMetrics['clients']?.contactTotal
+              : 0
+          "
           :subdata="undefined"
           :title="$t('dashboard.items.attentions.32')"
-          :showTooltip="true"
+          :show-tooltip="true"
           :description="$t('dashboard.contacts')"
           :icon="'bi-chat-left-dots-fill'"
-          :iconStyleClass="'yellow-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'yellow-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionClientContactDetails
               :show="!!toggles['dashboard.attention-client-contact.view']"
-              :distributionType="calculatedMetrics['clients']['typeContactDistribution']"
-              :distributionResult="calculatedMetrics['clients']['resultContactDistribution']"
+              :distribution-type="calculatedMetrics['clients']['typeContactDistribution']"
+              :distribution-result="calculatedMetrics['clients']['resultContactDistribution']"
               :count="calculatedMetrics['clients'].contactTotal || 0"
             >
             </AttentionClientContactDetails>
@@ -416,8 +474,8 @@ export default {
       <div id="attention-collection-clients">
         <CollectionDetails
           :show="!!toggles['dashboard.collection-details.view']"
-          :calculatedMetrics="calculatedMetrics"
-          :detailsOpened="detailsOpened"
+          :calculated-metrics="calculatedMetrics"
+          :details-opened="detailsOpened"
         >
         </CollectionDetails>
       </div>
@@ -426,11 +484,11 @@ export default {
           :show="!!toggles['dashboard.attention-notification.view']"
           :data="calculatedMetrics['notification.created'].notificationNumber"
           :title="$t('dashboard.items.attentions.6')"
-          :showTooltip="false"
+          :show-tooltip="false"
           :icon="'bi-send-check-fill'"
-          :iconStyleClass="'blue-icon'"
-          :detailsOpened="detailsOpened"
-          >
+          :icon-style-class="'blue-icon'"
+          :details-opened="detailsOpened"
+        >
           <template v-slot:details>
             <AttentionNotificationDetails
               :show="!!toggles['dashboard.attention-notification.view']"
@@ -444,30 +502,29 @@ export default {
           </template>
         </DetailsCard>
       </div>
-      <PDFFooter
-        :show="toggles['dashboard.reports.indicators']"
-      ></PDFFooter>
+      <PDFFooter :show="toggles['dashboard.reports.indicators']"></PDFFooter>
     </div>
   </div>
   <div v-if="showIndicators === true && !toggles['dashboard.indicators.view']">
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')" />
+      :content="$t('dashboard.message.1.content')"
+    />
   </div>
 </template>
 
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;

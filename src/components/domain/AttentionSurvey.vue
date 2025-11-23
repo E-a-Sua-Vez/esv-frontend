@@ -18,12 +18,12 @@ export default {
     NPSSurvey,
     LikeSurvey,
     AgreeSurvey,
-    StarSurvey
+    StarSurvey,
   },
   props: {
     surveyPersonalized: { type: Object, default: {} },
     attentionId: { type: String, default: '' },
-    attentionType: { type: String, default: 'STANDARD'},
+    attentionType: { type: String, default: 'STANDARD' },
     attention: { type: Object, default: {} },
     commerce: { type: Object, default: {} },
   },
@@ -38,8 +38,8 @@ export default {
       surveyCompleted: false,
       surveyPersonalizedIn: {},
       loading: false,
-      alertError: ''
-    }
+      alertError: '',
+    };
   },
   methods: {
     checkOption(event, index, option) {
@@ -65,7 +65,7 @@ export default {
           this.answers[index].push(option);
         }
       } else {
-        this.answers[index] = this.answers[index].filter(el => el !== option);;
+        this.answers[index] = this.answers[index].filter(el => el !== option);
       }
     },
     selectOption(event, index, option) {
@@ -78,17 +78,20 @@ export default {
       const dateCorrected = new Date(
         new Date(createdAt).toLocaleString('en-US', {
           timeZone: timeZoneIn,
-        }),
+        })
       );
-      return dateCorrected.toLocaleString("en-GB");
+      return dateCorrected.toLocaleString('en-GB');
     },
-    showSurvey () {
-      if (this.commerce && this.commerce.serviceInfo
-        && this.attention.status === 'TERMINATED'
-        && (this.attention.surveyPostAttentionDateScheduled === undefined ||
-        new DateModel().toString() >= this.attention.surveyPostAttentionDateScheduled)
-        && this.surveyPersonalized.id) {
-          return true;
+    showSurvey() {
+      if (
+        this.commerce &&
+        this.commerce.serviceInfo &&
+        this.attention.status === 'TERMINATED' &&
+        (this.attention.surveyPostAttentionDateScheduled === undefined ||
+          new DateModel().toString() >= this.attention.surveyPostAttentionDateScheduled) &&
+        this.surveyPersonalized.id
+      ) {
+        return true;
       }
       return false;
     },
@@ -98,19 +101,19 @@ export default {
         this.alertError = '';
         let answersCollected = [];
         if (this.surveyPersonalized.questions && this.surveyPersonalized.questions.length > 0) {
-          answersCollected = this.surveyPersonalized.questions.map((question, ind) =>  {
+          answersCollected = this.surveyPersonalized.questions.map((question, ind) => {
             if (question) {
               const answer = {
                 title: question.title,
                 type: question.type,
-                answer: this.answers[ind]
+                answer: this.answers[ind],
               };
               if (question['analize'] !== undefined) {
                 answer['analize'] = question['analize'];
               }
               return answer;
             }
-          })
+          });
         }
         const body = {
           personalizedId: this.surveyPersonalized.id || undefined,
@@ -120,7 +123,7 @@ export default {
           nps: this.nps || 0,
           questions: this.surveyPersonalized.questions || [],
           answers: answersCollected || [],
-          message: this.message || ''
+          message: this.message || '',
         };
         await createSurvey(body);
         this.surveyCompleted = true;
@@ -129,44 +132,41 @@ export default {
         this.loading = false;
         this.alertError = error.message;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <div v-if="showSurvey()" class="mt-4">
-    <div v-if="!surveyCompleted && attentionType !=='NODEVICE'">
+    <div v-if="!surveyCompleted && attentionType !== 'NODEVICE'">
       <div v-if="surveyPersonalized.hasCSAT">
         <div class="your-rating">
-          <span> {{ $t("attentionSurvey.rateYourAttention") }}</span>
+          <span> {{ $t('attentionSurvey.rateYourAttention') }}</span>
         </div>
         <div class="m-0">
-          <StarSurvey
-            :show="true"
-            v-model:rating="rating"
-          ></StarSurvey>
-        </div><hr>
+          <StarSurvey :show="true" v-model:rating="rating"></StarSurvey>
+        </div>
+        <hr />
       </div>
       <div v-if="surveyPersonalized.hasNPS">
         <div class="your-rating">
-          <span> {{ $t("attentionSurvey.nps.title") }}</span>
+          <span> {{ $t('attentionSurvey.nps.title') }}</span>
         </div>
-        <NPSSurvey
-          :show="true"
-          v-model:nps="nps"
-        ></NPSSurvey><hr>
+        <NPSSurvey :show="true" v-model:nps="nps"></NPSSurvey>
+        <hr />
       </div>
       <div v-if="surveyPersonalized.questions && surveyPersonalized.questions.length > 0">
-        <div v-for="(question, index) in surveyPersonalized.questions" :key="`question-${index}`" class="my-4">
+        <div
+          v-for="(question, index) in surveyPersonalized.questions"
+          :key="`question-${index}`"
+          class="my-4"
+        >
           <div class="your-rating">
             <span> {{ question.title.trim() }}</span>
           </div>
           <div v-if="question.type === 'YES_OR_NOT'">
-            <LikeSurvey
-              :show="true"
-              v-model:like="answers[index]"
-            ></LikeSurvey>
+            <LikeSurvey :show="true" v-model:like="answers[index]"></LikeSurvey>
           </div>
           <div v-else-if="question.type === 'OPEN_WRITING'">
             <textarea
@@ -174,31 +174,34 @@ export default {
               id="commennt"
               rows="3"
               v-model="answers[index]"
-              :placeholder="$t('attentionSurvey.writing.placeholder')">
+              :placeholder="$t('attentionSurvey.writing.placeholder')"
+            >
             </textarea>
           </div>
           <div v-else-if="question.type === 'RATING_TO_5'">
-            <span class="title"> <i class="bi bi-hand-thumbs-down-fill"></i> {{ $t("attentionSurvey.to5.subtitle") }} <i class="bi bi-hand-thumbs-up-fill"></i>  </span> <br>
-            <StarSurvey
-              :show="true"
-              v-model:rating="answers[index]"
-            ></StarSurvey>
+            <span class="title">
+              <i class="bi bi-hand-thumbs-down-fill"></i> {{ $t('attentionSurvey.to5.subtitle') }}
+              <i class="bi bi-hand-thumbs-up-fill"></i>
+            </span>
+            <br />
+            <StarSurvey :show="true" v-model:rating="answers[index]"></StarSurvey>
           </div>
           <div v-else-if="question.type === 'RATING_TO_10'">
-            <AgreeSurvey
-              :show="true"
-              v-model:agree="answers[index]"
-            ></AgreeSurvey>
+            <AgreeSurvey :show="true" v-model:agree="answers[index]"></AgreeSurvey>
           </div>
           <div v-else-if="question.type === 'OPEN_OPTIONS'" class="mt-3">
-            <div class="form-check form-switch check-option" v-for="(option, ind) in question.options.split(',')" :key="`option-${ind}`">
+            <div
+              class="form-check form-switch check-option"
+              v-for="(option, ind) in question.options.split(',')"
+              :key="`option-${ind}`"
+            >
               <input
                 class="form-check-input"
                 type="checkbox"
                 :name="`option-${option.title}`"
                 :id="`option-${index}`"
                 @click="checkOption($event, index, option)"
-                >
+              />
               <label class="form-check-label" for="option">{{ option.toUpperCase().trim() }}</label>
             </div>
             <div class="col form-floating" v-if="question.otherOption && question.otherOptionOpen">
@@ -209,8 +212,9 @@ export default {
                 class="form-control form-control-solid"
                 :name="`option-other`"
                 placeholder="Other"
-                v-on:blur="fillOtherOption($event, index, option)">
-                <label for="option-other" class="label-form">{{ $t("attentionSurvey.other") }}</label>
+                v-on:blur="fillOtherOption($event, index, option)"
+              />
+              <label for="option-other" class="label-form">{{ $t('attentionSurvey.other') }}</label>
             </div>
             <div v-else-if="question.otherOption && !question.otherOptionOpen">
               <div class="form-check form-switch check-option">
@@ -220,21 +224,29 @@ export default {
                   :name="`option-other-${index}`"
                   :id="`option-${index}`"
                   @click="checkOption($event, index, 'OTHER')"
-                  >
-                <label class="form-check-label" for="option">{{ $t("attentionSurvey.other") }}</label>
+                />
+                <label class="form-check-label" for="option">{{
+                  $t('attentionSurvey.other')
+                }}</label>
               </div>
             </div>
           </div>
           <div v-else-if="question.type === 'CHOOSE_OPTION'" class="mt-3">
-            <div class="form-check form-switch check-option" v-for="(option, ind) in question.options.split(',')" :key="`option-${ind}`">
+            <div
+              class="form-check form-switch check-option"
+              v-for="(option, ind) in question.options.split(',')"
+              :key="`option-${ind}`"
+            >
               <input
                 class="form-check-input"
                 type="radio"
                 :name="`option-${question.title}`"
                 :id="`option-${index}`"
                 @click="selectOption($event, index, option)"
-                >
-              <label class="form-check-label" :for="`option-${index}`">{{ option.toUpperCase().trim() }}</label>
+              />
+              <label class="form-check-label" :for="`option-${index}`">{{
+                option.toUpperCase().trim()
+              }}</label>
             </div>
             <div class="col form-floating" v-if="question.otherOption && question.otherOptionOpen">
               <input
@@ -244,8 +256,9 @@ export default {
                 class="form-control form-control-solid"
                 :name="`option-other`"
                 placeholder="Other"
-                v-on:blur="fillOtherOption($event, index, option)">
-                <label for="option-other" class="label-form">{{ $t("attentionSurvey.other") }}</label>
+                v-on:blur="fillOtherOption($event, index, option)"
+              />
+              <label for="option-other" class="label-form">{{ $t('attentionSurvey.other') }}</label>
             </div>
             <div v-else-if="question.otherOption && !question.otherOptionOpen">
               <div class="form-check form-switch check-option">
@@ -255,29 +268,36 @@ export default {
                   :name="`option-${question.title}`"
                   :id="`option-${index}`"
                   @click="checkOption($event, index, 'OTHER')"
-                  >
-                <label class="form-check-label" for="option">{{ 'OTHER'.toUpperCase().trim() }}</label>
+                />
+                <label class="form-check-label" for="option">{{
+                  'OTHER'.toUpperCase().trim()
+                }}</label>
               </div>
             </div>
-          </div><hr>
+          </div>
+          <hr />
         </div>
       </div>
       <div v-if="surveyPersonalized.hasMessage">
         <div class="mb-2 mx-2">
-          <label for="commennt" class="form-label ml-1 your-rating">{{ $t("attentionSurvey.survey.label") }}</label>
+          <label for="commennt" class="form-label ml-1 your-rating">{{
+            $t('attentionSurvey.survey.label')
+          }}</label>
           <textarea
             class="form-control"
             id="commennt"
             rows="3"
             v-model="message"
-            :placeholder="$t('attentionSurvey.survey.placeholder')"></textarea>
+            :placeholder="$t('attentionSurvey.survey.placeholder')"
+          ></textarea>
         </div>
       </div>
       <div class="mt-3">
         <a
           class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-          @click="saveRating()">
-          {{ $t("attentionSurvey.actions.1.action") }} <i class="bi bi-check-all"></i>
+          @click="saveRating()"
+        >
+          {{ $t('attentionSurvey.actions.1.action') }} <i class="bi bi-check-all"></i>
         </a>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
@@ -292,7 +312,8 @@ export default {
       <Message
         :title="$t('attentionSurvey.message.1.title')"
         :content="$t('attentionSurvey.message.1.content')"
-        :icon="'bi bi-emoji-sunglasses'">
+        :icon="'bi bi-emoji-sunglasses'"
+      >
       </Message>
     </div>
   </div>
@@ -300,7 +321,8 @@ export default {
     <Message
       :title="$t('attentionSurvey.message.2.title')"
       :content="$t('attentionSurvey.message.2.content')"
-      :icon="'bi bi-emoji-sunglasses'">
+      :icon="'bi bi-emoji-sunglasses'"
+    >
     </Message>
   </div>
 </template>
@@ -310,7 +332,7 @@ export default {
   line-height: normal;
 }
 .your-rating {
- line-height: 1.1rem;
+  line-height: 1.1rem;
 }
 .check-option {
   text-align: left;
@@ -323,8 +345,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: .4rem;
-  margin-right: .4rem;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
   margin-top: 1rem;
   margin-bottom: 0rem;
 }

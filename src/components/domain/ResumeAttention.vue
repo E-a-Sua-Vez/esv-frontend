@@ -22,8 +22,8 @@ export default {
       errors: [],
       store,
       queue: undefined,
-      router
-    }
+      router,
+    };
   },
   methods: {
     async attend() {
@@ -34,10 +34,17 @@ export default {
         if (this.attentionNumber !== undefined || this.attentionNumber.length > 0) {
           let attention;
           try {
-            attention = await reactivate(this.attentionNumber, { queueId: this.queue.id, collaboratorId: this.currentUser.id});
+            attention = await reactivate(this.attentionNumber, {
+              queueId: this.queue.id,
+              collaboratorId: this.currentUser.id,
+            });
             this.attentionNumber = undefined;
             this.closeModal();
-            this.$router.push({ path: `/interno/colaborador/atencion/${attention.id}/validar` }).then(() => { this.$router.go() });
+            this.$router
+              .push({ path: `/interno/colaborador/atencion/${attention.id}/validar` })
+              .then(() => {
+                this.$router.go();
+              });
           } catch (error) {
             this.errors.push('resumeAttention.validate.resume');
           }
@@ -60,14 +67,14 @@ export default {
       this.currentUser = await this.store.getCurrentUser;
     },
     isCollabotator() {
-      return this.userType === 'collaborator'
+      return this.userType === 'collaborator';
     },
     isQueueSelected() {
-      return this.store.currentQueue !== undefined
+      return this.store.currentQueue !== undefined;
     },
     closeModal() {
       this.$emit('close-modal');
-    }
+    },
   },
   async beforeMount() {
     await this.getUserType();
@@ -81,17 +88,19 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getQueue();
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="isCollabotator() && isQueueSelected()" id="resumeAttention" class="card mb-4">
-    <p class="mb-2 details"><span class="fw-bold">{{ $t("resumeAttention.subtitle.1.1") }}</span></p>
+    <p class="mb-2 details">
+      <span class="fw-bold">{{ $t('resumeAttention.subtitle.1.1') }}</span>
+    </p>
     <QueueName :queue="queue"></QueueName>
-    <p class="details-subtitle mt-2">{{ $t("resumeAttention.subtitle.1.2") }}</p>
+    <p class="details-subtitle mt-2">{{ $t('resumeAttention.subtitle.1.2') }}</p>
     <div class="mb-2">
       <div class="col-12">
         <input
@@ -99,16 +108,18 @@ export default {
           class="form-control mb-2"
           id="attention-number"
           placeholder="Ej: 24"
-          v-model="attentionNumber">
-          <button
-            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-            @click="attend()"
-            :disabled="!attentionNumber">
-            {{ $t("resumeAttention.actions.1") }} <i class="bi bi-qr-code-scan"></i>
-          </button>
+          v-model="attentionNumber"
+        />
+        <button
+          class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+          @click="attend()"
+          :disabled="!attentionNumber"
+        >
+          {{ $t('resumeAttention.actions.1') }} <i class="bi bi-qr-code-scan"></i>
+        </button>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
-        <div class="errors" id="feedback" v-if="(errors.length > 0)">
+        <div class="errors" id="feedback" v-if="errors.length > 0">
           <Warning>
             <template v-slot:message>
               <li v-for="(error, index) in errors" :key="index">
@@ -128,17 +139,17 @@ export default {
   line-height: 1rem;
 }
 .details-subtitle {
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 .card {
   background-color: var(--color-background);
   margin-top: 1rem;
   margin-bottom: 1rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 1rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 </style>

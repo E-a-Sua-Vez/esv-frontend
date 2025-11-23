@@ -2,11 +2,14 @@
 import Spinner from '../../common/Spinner.vue';
 import Alert from '../../common/Alert.vue';
 import Warning from '../../common/Warning.vue';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import { globalStore } from '../../../stores';
-import { savePatientHistory, updatePatientHistoryControl } from '../../../application/services/patient-history';
+import {
+  savePatientHistory,
+  updatePatientHistoryControl,
+} from '../../../application/services/patient-history';
 import { getPermissions } from '../../../application/services/permissions';
 import { getDateAndHour } from '../../../shared/utils/date';
 import PatientPersonalDataForm from './PatientPersonalDataForm.vue';
@@ -23,7 +26,25 @@ import DocumentsForm from './DocumentsForm.vue';
 
 export default {
   name: 'PatientHistoryManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, Alert, Warning, PatientPersonalDataForm, ConsultationReasonForm, CurrentIllnessForm, PatientAnamneseForm, FunctionalExamForm, PhysicalExamForm, DiagnosticForm, MedicalOrderForm, PatientResumeForm, ControlForm, DocumentsForm },
+  components: {
+    Message,
+    SimpleDownloadCard,
+    Spinner,
+    Popper,
+    Alert,
+    Warning,
+    PatientPersonalDataForm,
+    ConsultationReasonForm,
+    CurrentIllnessForm,
+    PatientAnamneseForm,
+    FunctionalExamForm,
+    PhysicalExamForm,
+    DiagnosticForm,
+    MedicalOrderForm,
+    PatientResumeForm,
+    ControlForm,
+    DocumentsForm,
+  },
   props: {
     showPatientHistoryManagement: { type: Boolean, default: false },
     client: { type: Object, default: undefined },
@@ -31,7 +52,7 @@ export default {
     commerce: { type: Object, default: undefined },
     patientHistoryIn: { type: Object, default: {} },
     patientHistoryItems: { type: Array, default: [] },
-    patientForms: { type: Array, default: [] }
+    patientForms: { type: Array, default: [] },
   },
   emits: ['getPatientHistory', 'closeModal'],
   data() {
@@ -76,8 +97,8 @@ export default {
       newDiagnostic: undefined,
       newMedicalOrder: undefined,
       newDocument: undefined,
-      newControl: undefined
-    }
+      newControl: undefined,
+    };
   },
   async beforeMount() {
     this.toggles = await getPermissions('patient', 'history');
@@ -93,7 +114,10 @@ export default {
       this.page = pageIn;
     },
     getDate(date) {
-      const timeZone = this.commerce && this.commerce.localeInfo ? this.commerce.localeInfo.timezone : 'America/Sao_Paulo';
+      const timeZone =
+        this.commerce && this.commerce.localeInfo
+          ? this.commerce.localeInfo.timezone
+          : 'America/Sao_Paulo';
       return getDateAndHour(date, timeZone);
     },
     async clear() {
@@ -137,7 +161,7 @@ export default {
       this.newDiagnostic = undefined;
       this.newMedicalOrder = undefined;
       this.newDocuments = undefined;
-      this.newControl = undefined
+      this.newControl = undefined;
     },
     onPersonalData() {
       this.resetButtons();
@@ -179,67 +203,67 @@ export default {
       this.resetButtons();
       this.showDocuments = true;
     },
-    receivePersonalData (data) {
+    receivePersonalData(data) {
       if (data) {
         this.dataChanged = true;
         this.newPersonalData = data;
-      };
+      }
     },
-    receiveConsultationReasonData (data) {
+    receiveConsultationReasonData(data) {
       if (data) {
         this.dataChanged = true;
         this.newConsultationReason = data;
-      };
+      }
     },
-    receiveCurrentIllnessData (data) {
+    receiveCurrentIllnessData(data) {
       if (data) {
         this.dataChanged = true;
         this.newCurrentIllness = data;
-      };
+      }
     },
-    receivePatientAnamneseData (data) {
+    receivePatientAnamneseData(data) {
       if (data) {
         this.dataChanged = true;
         this.newPatientAnamnese = data;
-      };
+      }
     },
-    receiveFunctionalExamData (data) {
+    receiveFunctionalExamData(data) {
       if (data) {
         this.dataChanged = true;
         this.newFunctionalExam = data;
-      };
+      }
     },
-    receivePhysicalExamData (data) {
+    receivePhysicalExamData(data) {
       if (data) {
         this.dataChanged = true;
         this.newPhysicalExam = data;
-      };
+      }
     },
-    receiveDiagnosticData (data) {
+    receiveDiagnosticData(data) {
       if (data) {
         this.dataChanged = true;
         this.newDiagnostic = data;
-      };
+      }
     },
-    receiveMedicalOrderData (data) {
+    receiveMedicalOrderData(data) {
       if (data) {
         this.dataChanged = true;
         this.newMedicalOrder = data;
-      };
+      }
     },
-    receiveControlData (data) {
+    receiveControlData(data) {
       if (data) {
         this.dataChanged = true;
         this.newControl = data;
-      };
+      }
     },
-    async receiveDocumentsData (data) {
+    async receiveDocumentsData(data) {
       if (data) {
         this.newDocument = data;
         await this.onSave();
-      };
+      }
     },
-    validate (personalData) {
+    validate(personalData) {
       this.errorsAdd = [];
       if (personalData) {
         if (!personalData.name || personalData.name.length === 0) {
@@ -318,8 +342,8 @@ export default {
             medicalOrder: this.newMedicalOrder,
             patientDocument: this.newDocument,
             control: this.newControl,
-            lastAttentionId: this.attention
-          }
+            lastAttentionId: this.attention,
+          };
           this.patientHistory = await savePatientHistory(body);
           this.refresh();
         }
@@ -335,9 +359,9 @@ export default {
         this.alertError = '';
         if (this.validate(this.newPersonalData)) {
           const body = {
-            control: control,
-            lastAttentionId: this.attention
-          }
+            control,
+            lastAttentionId: this.attention,
+          };
           const id = this.patientHistory.id;
           this.patientHistory = await updatePatientHistoryControl(id, body);
           this.refresh();
@@ -354,9 +378,9 @@ export default {
         this.alertError = '';
         if (this.validate(this.newPersonalData)) {
           const body = {
-            patientDocument: patientDocument,
-            lastAttentionId: this.attention
-          }
+            patientDocument,
+            lastAttentionId: this.attention,
+          };
           const id = this.patientHistory.id;
           this.patientHistory = await updatePatientHistoryControl(id, body);
           this.refresh();
@@ -372,39 +396,49 @@ export default {
       this.showResume = true;
     },
     refresh() {
-      if (this.patientHistory && this.patientHistory.control && this.patientHistory.control.length > 0) {
-        const pendingControl = this.patientHistory.control.filter(ctrol => ctrol.status === 'PENDING');
+      if (
+        this.patientHistory &&
+        this.patientHistory.control &&
+        this.patientHistory.control.length > 0
+      ) {
+        const pendingControl = this.patientHistory.control.filter(
+          ctrol => ctrol.status === 'PENDING'
+        );
         if (pendingControl && pendingControl.length > 0) {
           this.pendingControlNumber = pendingControl.length;
         }
       }
     },
-    async onItensMedicalHistory () {
+    async onItensMedicalHistory() {
       if (this.userType && this.userType === 'business') {
         this.$emit('closeModal');
         this.$router.push({ path: '/interno/negocio/patient-history-item-admin' });
       }
     },
-    async onMobileMenu () {
+    async onMobileMenu() {
       const modalCloseButton = document.getElementById('menu-mobile-button');
       modalCloseButton.click();
-    }
+    },
   },
   computed: {
     changedData() {
       const { dataChanged, autoSaving } = this;
       return {
         dataChanged,
-        autoSaving
-      }
-    }
+        autoSaving,
+      };
+    },
   },
   watch: {
     changedData: {
       immediate: true,
       deep: true,
       async handler(newData, oldData) {
-        if (this.dataChanged === true && (newData.dataChanged !== oldData.dataChanged) && this.autoSaving === true) {
+        if (
+          this.dataChanged === true &&
+          newData.dataChanged !== oldData.dataChanged &&
+          this.autoSaving === true
+        ) {
           this.saveIntervalId = setInterval(async () => {
             if (this.newPersonalData) {
               await this.onSave();
@@ -416,7 +450,7 @@ export default {
             clearInterval(this.saveIntervalId);
           }
         }
-      }
+      },
     },
     store: {
       immediate: true,
@@ -424,7 +458,7 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getUser();
-      }
+      },
     },
     patientHistoryIn: {
       immediate: true,
@@ -438,14 +472,18 @@ export default {
             this.newPersonalData = personalData;
           }
         }
-      }
-    }
-  }
-}
+      },
+    },
+  },
+};
 </script>
 
 <template>
-  <div id="patientHistory-management" class="row modal-body" v-if="showPatientHistoryManagement === true && toggles['patient.history.view']">
+  <div
+    id="patientHistory-management"
+    class="row modal-body"
+    v-if="showPatientHistoryManagement === true && toggles['patient.history.view']"
+  >
     <div class="col">
       <div id="patient-history-management-component">
         <Spinner :show="loading"></Spinner>
@@ -457,69 +495,86 @@ export default {
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showPersonalData ? 'btn-selected' : ''"
-                @click="onPersonalData">
-                {{ $t("patientHistoryView.showPersonalData") }}
+                @click="onPersonalData"
+              >
+                {{ $t('patientHistoryView.showPersonalData') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showPatientAnamnese ? 'btn-selected' : ''"
-                @click="onPatientAnamnese">
-                {{ $t("patientHistoryView.showPatientAnamnese") }}
+                @click="onPatientAnamnese"
+              >
+                {{ $t('patientHistoryView.showPatientAnamnese') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showConsultationReason ? 'btn-selected' : ''"
-                @click="onConsultationReason">
-                {{ $t("patientHistoryView.showConsultationReason") }}
+                @click="onConsultationReason"
+              >
+                {{ $t('patientHistoryView.showConsultationReason') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showCurrentIllness ? 'btn-selected' : ''"
-                @click="onCurrentIllness">
-                {{ $t("patientHistoryView.showCurrentIllness") }}
+                @click="onCurrentIllness"
+              >
+                {{ $t('patientHistoryView.showCurrentIllness') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showFunctionalExam ? 'btn-selected' : ''"
-                @click="onFunctionalExam">
-                {{ $t("patientHistoryView.showFunctionalExam") }}
+                @click="onFunctionalExam"
+              >
+                {{ $t('patientHistoryView.showFunctionalExam') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showPhysicalExam ? 'btn-selected' : ''"
-                @click="onPhysicalExam">
-                {{ $t("patientHistoryView.showPhysicalExam") }}
+                @click="onPhysicalExam"
+              >
+                {{ $t('patientHistoryView.showPhysicalExam') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showDiagnostic ? 'btn-selected' : ''"
-                @click="onDiagnostic">
-                {{ $t("patientHistoryView.showDiagnostic") }}
+                @click="onDiagnostic"
+              >
+                {{ $t('patientHistoryView.showDiagnostic') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showMedicalOrder ? 'btn-selected' : ''"
-                @click="onMedicalOrder">
-                {{ $t("patientHistoryView.showMedicalOrder") }}
+                @click="onMedicalOrder"
+              >
+                {{ $t('patientHistoryView.showMedicalOrder') }}
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showControl ? 'btn-selected' : ''"
-                @click="onControl">
-                {{ $t("patientHistoryView.showControl") }}
-                <span class="badge bg-warning rounded-pill alert-pending" v-if="pendingControlNumber > 0"> {{ pendingControlNumber }}</span>
+                @click="onControl"
+              >
+                {{ $t('patientHistoryView.showControl') }}
+                <span
+                  class="badge bg-warning rounded-pill alert-pending"
+                  v-if="pendingControlNumber > 0"
+                >
+                  {{ pendingControlNumber }}</span
+                >
               </button>
               <button
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                 :class="showDocuments ? 'btn-selected' : ''"
-                @click="onDocuments">
-                {{ $t("patientHistoryView.showDocuments") }}
+                @click="onDocuments"
+              >
+                {{ $t('patientHistoryView.showDocuments') }}
               </button>
               <button
                 v-if="userType === 'business'"
                 class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                @click="onItensMedicalHistory">
-                {{ $t("patientHistoryView.showItensMedicalHistory") }} <i class="bi bi-gear-fill"></i>
+                @click="onItensMedicalHistory"
+              >
+                {{ $t('patientHistoryView.showItensMedicalHistory') }}
+                <i class="bi bi-gear-fill"></i>
               </button>
             </div>
           </div>
@@ -529,8 +584,9 @@ export default {
                 id="menu-mobile-button"
                 class="nav-link"
                 data-bs-toggle="collapse"
-                href="#menu-options-mobile">
-                {{ $t("patientHistoryView.menu") }} <i class="bi bi-chevron-down"></i>
+                href="#menu-options-mobile"
+              >
+                {{ $t('patientHistoryView.menu') }} <i class="bi bi-chevron-down"></i>
               </a>
             </div>
             <div id="menu-options-mobile" class="collapse">
@@ -538,69 +594,86 @@ export default {
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showPersonalData ? 'btn-selected' : ''"
-                  @click="onPersonalData">
-                  {{ $t("patientHistoryView.showPersonalData") }}
+                  @click="onPersonalData"
+                >
+                  {{ $t('patientHistoryView.showPersonalData') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showPatientAnamnese ? 'btn-selected' : ''"
-                  @click="onPatientAnamnese">
-                  {{ $t("patientHistoryView.showPatientAnamnese") }}
+                  @click="onPatientAnamnese"
+                >
+                  {{ $t('patientHistoryView.showPatientAnamnese') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showConsultationReason ? 'btn-selected' : ''"
-                  @click="onConsultationReason">
-                  {{ $t("patientHistoryView.showConsultationReason") }}
+                  @click="onConsultationReason"
+                >
+                  {{ $t('patientHistoryView.showConsultationReason') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showCurrentIllness ? 'btn-selected' : ''"
-                  @click="onCurrentIllness">
-                  {{ $t("patientHistoryView.showCurrentIllness") }}
+                  @click="onCurrentIllness"
+                >
+                  {{ $t('patientHistoryView.showCurrentIllness') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showFunctionalExam ? 'btn-selected' : ''"
-                  @click="onFunctionalExam">
-                  {{ $t("patientHistoryView.showFunctionalExam") }}
+                  @click="onFunctionalExam"
+                >
+                  {{ $t('patientHistoryView.showFunctionalExam') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showPhysicalExam ? 'btn-selected' : ''"
-                  @click="onPhysicalExam">
-                  {{ $t("patientHistoryView.showPhysicalExam") }}
+                  @click="onPhysicalExam"
+                >
+                  {{ $t('patientHistoryView.showPhysicalExam') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showDiagnostic ? 'btn-selected' : ''"
-                  @click="onDiagnostic">
-                  {{ $t("patientHistoryView.showDiagnostic") }}
+                  @click="onDiagnostic"
+                >
+                  {{ $t('patientHistoryView.showDiagnostic') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showMedicalOrder ? 'btn-selected' : ''"
-                  @click="onMedicalOrder">
-                  {{ $t("patientHistoryView.showMedicalOrder") }}
+                  @click="onMedicalOrder"
+                >
+                  {{ $t('patientHistoryView.showMedicalOrder') }}
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showControl ? 'btn-selected' : ''"
-                  @click="onControl">
-                  {{ $t("patientHistoryView.showControl") }}
-                  <span class="badge bg-warning rounded-pill alert-pending" v-if="pendingControlNumber > 0"> {{ pendingControlNumber }}</span>
+                  @click="onControl"
+                >
+                  {{ $t('patientHistoryView.showControl') }}
+                  <span
+                    class="badge bg-warning rounded-pill alert-pending"
+                    v-if="pendingControlNumber > 0"
+                  >
+                    {{ pendingControlNumber }}</span
+                  >
                 </button>
                 <button
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showDocuments ? 'btn-selected' : ''"
-                  @click="onDocuments">
-                  {{ $t("patientHistoryView.showDocuments") }}
+                  @click="onDocuments"
+                >
+                  {{ $t('patientHistoryView.showDocuments') }}
                 </button>
                 <button
                   v-if="userType === 'business'"
                   class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  @click="onItensMedicalHistory">
-                  {{ $t("patientHistoryView.showItensMedicalHistory") }} <i class="bi bi-gear-fill"></i>
+                  @click="onItensMedicalHistory"
+                >
+                  {{ $t('patientHistoryView.showItensMedicalHistory') }}
+                  <i class="bi bi-gear-fill"></i>
                 </button>
               </div>
             </div>
@@ -610,12 +683,27 @@ export default {
             <div class="row righted mb-2">
               <div class="col-12 col-md-6 centered my-1">
                 <div class="metric-card-number">
-                  <span v-if="patientHistory.personalData && patientHistory.personalData.name && patientHistory.personalData.lastName">
-                    <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }} {{ patientHistory.personalData.lastName }} <br>
-                    <span class="badge bg-warning detail-data-badge-title alert-pending" v-if="pendingControlNumber > 0"> {{ $t("patientHistoryView.pendingControls") }} {{ pendingControlNumber }}</span>
+                  <span
+                    v-if="
+                      patientHistory.personalData &&
+                      patientHistory.personalData.name &&
+                      patientHistory.personalData.lastName
+                    "
+                  >
+                    <i class="bi bi-person-fill"> </i> {{ patientHistory.personalData.name }}
+                    {{ patientHistory.personalData.lastName }} <br />
+                    <span
+                      class="badge bg-warning detail-data-badge-title alert-pending"
+                      v-if="pendingControlNumber > 0"
+                    >
+                      {{ $t('patientHistoryView.pendingControls') }}
+                      {{ pendingControlNumber }}</span
+                    >
                   </span>
                   <div v-else class="parpadea">
-                    <span class="badge bg-danger detail-data-badge danger-pending"> {{ $t("patientHistoryView.clickSave") }} <i class="bi bi-save"></i> </span>
+                    <span class="badge bg-danger detail-data-badge danger-pending">
+                      {{ $t('patientHistoryView.clickSave') }} <i class="bi bi-save"></i>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -623,158 +711,172 @@ export default {
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
                   :class="showResume ? 'btn-selected' : ''"
-                  @click="onResume()">
-                  {{ $t("patientHistoryView.resume") }} <i class="bi bi-file-fill"></i>
+                  @click="onResume()"
+                >
+                  {{ $t('patientHistoryView.resume') }} <i class="bi bi-file-fill"></i>
                 </button>
               </div>
               <div class="col-6 col-md-3">
                 <button
                   class="col btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-                  @click="onSave()">
-                  {{ $t("patientHistoryView.save") }} <i class="bi bi-save"></i>
+                  @click="onSave()"
+                >
+                  {{ $t('patientHistoryView.save') }} <i class="bi bi-save"></i>
                 </button>
               </div>
             </div>
             <div class="row centered blocks-section">
               <div v-if="showResume">
                 <PatientResumeForm
-                  :patientHistoryData="patientHistory"
+                  :patient-history-data="patientHistory"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
+                  :errors-add="errorsAdd"
                 >
                 </PatientResumeForm>
               </div>
               <div v-if="showPersonalData">
                 <PatientPersonalDataForm
-                  :patientHistoryData="patientHistory"
-                  :clientData="client"
-                  :cacheData="newPersonalData"
-                  :patientForms="patientForms"
+                  :patient-history-data="patientHistory"
+                  :client-data="client"
+                  :cache-data="newPersonalData"
+                  :patient-forms="patientForms"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receivePersonalData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receivePersonalData"
                 >
                 </PatientPersonalDataForm>
               </div>
               <div v-if="showConsultationReason">
                 <ConsultationReasonForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newConsultationReason"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newConsultationReason"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveConsultationReasonData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveConsultationReasonData"
                 >
                 </ConsultationReasonForm>
               </div>
               <div v-if="showCurrentIllness">
                 <CurrentIllnessForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newCurrentIllness"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newCurrentIllness"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveCurrentIllnessData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveCurrentIllnessData"
                 >
                 </CurrentIllnessForm>
               </div>
               <div v-if="showPatientAnamnese">
                 <PatientAnamneseForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newPatientAnamnese"
-                  :patientForms="patientForms"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newPatientAnamnese"
+                  :patient-forms="patientForms"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :patientHistoryItems="patientHistoryItems"
-                  :receiveData="receivePatientAnamneseData"
+                  :errors-add="errorsAdd"
+                  :patient-history-items="patientHistoryItems"
+                  :receive-data="receivePatientAnamneseData"
                 >
                 </PatientAnamneseForm>
               </div>
               <div v-if="showFunctionalExam">
                 <FunctionalExamForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newFunctionalExam"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newFunctionalExam"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveFunctionalExamData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveFunctionalExamData"
                 >
                 </FunctionalExamForm>
               </div>
               <div v-if="showPhysicalExam">
                 <PhysicalExamForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newPhysicalExam"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newPhysicalExam"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :patientHistoryItems="patientHistoryItems"
-                  :receiveData="receivePhysicalExamData"
+                  :errors-add="errorsAdd"
+                  :patient-history-items="patientHistoryItems"
+                  :receive-data="receivePhysicalExamData"
                 >
                 </PhysicalExamForm>
               </div>
               <div v-if="showDiagnostic">
                 <DiagnosticForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newDiagnostic"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newDiagnostic"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveDiagnosticData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveDiagnosticData"
                 >
                 </DiagnosticForm>
               </div>
               <div v-if="showMedicalOrder">
                 <MedicalOrderForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newMedicalOrder"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newMedicalOrder"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveMedicalOrderData"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveMedicalOrderData"
                 >
                 </MedicalOrderForm>
               </div>
               <div v-if="showControl">
                 <ControlForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newControl"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newControl"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :errorsAdd="errorsAdd"
-                  :receiveData="receiveControlData"
-                  :onSave="onSave"
-                  :onUpdate="onControlUpdate"
+                  :errors-add="errorsAdd"
+                  :receive-data="receiveControlData"
+                  :on-save="onSave"
+                  :on-update="onControlUpdate"
                 >
                 </ControlForm>
               </div>
               <div v-if="showDocuments">
                 <DocumentsForm
-                  :patientHistoryData="patientHistory"
-                  :cacheData="newDocument"
+                  :patient-history-data="patientHistory"
+                  :cache-data="newDocument"
                   :commerce="commerce"
                   :toggles="toggles"
-                  :clientData="client"
-                  :errorsAdd="errorsAdd"
-                  :patientHistoryItems="patientHistoryItems"
-                  :receiveData="receiveDocumentsData"
-                  :onUpdate="onPatientDocumentUpdate"
+                  :client-data="client"
+                  :errors-add="errorsAdd"
+                  :patient-history-items="patientHistoryItems"
+                  :receive-data="receiveDocumentsData"
+                  :on-update="onPatientDocumentUpdate"
                 >
                 </DocumentsForm>
               </div>
             </div>
             <div class="row">
               <div class="form-check form-switch righted habit-title">
-                <input class="form-check-input mx-1" type="checkbox" id="item.id" v-model="autoSaving">
-                <label class="form-check-label metric-card-subtitle">{{ $t('patientHistoryView.autoSaving') }}</label>
+                <input
+                  class="form-check-input mx-1"
+                  type="checkbox"
+                  id="item.id"
+                  v-model="autoSaving"
+                />
+                <label class="form-check-label metric-card-subtitle">{{
+                  $t('patientHistoryView.autoSaving')
+                }}</label>
               </div>
               <div>
-                <span class="resume-patient-subtitle righted" v-if="patientHistory.updatedDate || patientHistory.modifiedAt">
-                  <span class=""> {{ $t("patientHistoryView.updated") }} </span>
-                  <span class="mx-1">{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }} </span>
+                <span
+                  class="resume-patient-subtitle righted"
+                  v-if="patientHistory.updatedDate || patientHistory.modifiedAt"
+                >
+                  <span class=""> {{ $t('patientHistoryView.updated') }} </span>
+                  <span class="mx-1"
+                    >{{ getDate(patientHistory.modifiedAt || patientHistory.updatedDate) }}
+                  </span>
                 </span>
               </div>
             </div>
@@ -787,38 +889,39 @@ export default {
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')" />
+      :content="$t('dashboard.message.1.content')"
+    />
   </div>
 </template>
 
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .filter-card {
   background-color: var(--color-background);
-  padding-top: .2rem;
-  padding-bottom: .2rem;
-  margin: .2rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  margin: 0.2rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  line-height: .8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
 }
 .metric-card-comment {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 .metric-card-number {
   font-size: 1.2rem;
@@ -826,33 +929,33 @@ export default {
   line-height: 1.2rem;
 }
 .metric-keyword-tag {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 400;
   cursor: pointer;
 }
 .metric-keyword-tag-selected {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 400;
   background-color: var(--azul-es) !important;
 }
 .metric-keyword-tag:hover {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 400;
   cursor: pointer;
   background-color: var(--azul-es) !important;
 }
 .metric-keyword-subtitle {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .text-label {
-  font-size: .9rem;
-  line-height: .9rem;
+  font-size: 0.9rem;
+  line-height: 0.9rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -862,13 +965,13 @@ export default {
   max-height: 490px;
   font-size: small;
   margin-bottom: 2rem;
-  padding: .5rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   background-color: var(--color-background);
 }
 .resume-patient-subtitle {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-style: italic;
 }
 .show {
@@ -876,7 +979,7 @@ export default {
   overflow-y: visible;
 }
 .menu-mobile {
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .alert-pending {
   color: var(--color-text);

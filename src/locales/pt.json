@@ -1,5 +1,5 @@
 {
-  "logo": "/images/spot+_white.png",
+  "logo": "/images/hub_logo.png",
   "logoAlt": "E a sua vez",
   "homeTitle": "É a sua vez {'|'} Serviço de Filas 100% digital",
   "backToInit": "Ir para começar",
@@ -9,7 +9,7 @@
   "blog": "https://blog.easuavez.com",
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/spot+_white.png",
+  "logoPoweredBy": "/images/esv_peq_transparente.png",
   "enableAll": "Ative mais recursos!",
   "curious": "Curioso?",
   "wantToKnowMore": "Quero saber mais!",
@@ -25,7 +25,7 @@
   "searcher": "🔎 Pesquisar",
   "noResults": "😓 Sem Resultados",
   "sureAction": "Você tem certeza de realizar esta ação?",
-  "logoValues": "/images/es_tu_turno_values_br.png",
+  "logoValues": "/images/hub_logo_br.png",
   "logoValuesAlt": "E a sua vez",
   "close": "Fechar",
   "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
@@ -231,7 +231,7 @@
     "LITERS": "(L)",
     "UNITS": "(U)"
   },
-  "outcomes":  {
+  "outcomes": {
     "types": {
       "OTHER": "Outro",
       "STANDARD": "Egreso Normal",
@@ -263,7 +263,7 @@
       "HEALTH_AGREEMENT": "Convenio Saúde"
     }
   },
-   "collaborators": {
+  "collaborators": {
     "types": {
       "STANDARD": "Standard",
       "FULL": "Full",
@@ -1069,7 +1069,7 @@
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°",
-          "product-stock":"Controle de Estoque"
+          "product-stock": "Controle de Estoque"
         }
       }
     }
@@ -1128,7 +1128,7 @@
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
           "booking-manage": "Reservas Visão 360°",
-          "product-stock":"Controle de Estoque"
+          "product-stock": "Controle de Estoque"
         }
       }
     }
@@ -2331,7 +2331,7 @@
           "add": "Adicionar Serviços",
           "limit": "Número limite de Serviços",
           "queue-limit": "Limite de Serviços",
-          "unavailable":"Deletar Serviços"
+          "unavailable": "Deletar Serviços"
         }
       }
     },
@@ -2388,7 +2388,7 @@
           "add": "Adicionar Empresas",
           "limit": "Número limite de Empresas",
           "queue-limit": "Limite de Empresas",
-          "unavailable":"Deletar Empresas"
+          "unavailable": "Deletar Empresas"
         }
       }
     },
@@ -2460,7 +2460,7 @@
           "add": "Adicionar Itens",
           "limit": "Número limite de Itens",
           "queue-limit": "Limite de Itens",
-          "unavailable":"Deletar Itens"
+          "unavailable": "Deletar Itens"
         }
       }
     },
@@ -2545,10 +2545,9 @@
       "replacementLevel": "Você deve digitar o nivel de recarregamento",
       "maximumLevel": "Você deve digitar o nivel máximo",
       "levels": "Valide que os níveis e quantidades sejan corretos"
-
     }
   },
-  "businessFinancial" : {
+  "businessFinancial": {
     "title": "Gestão Financeira",
     "commerce": "Selecione uma unidade:",
     "return": "Voltar",
@@ -2632,7 +2631,7 @@
       "amount": "Deve digitar a quantidade"
     }
   },
-  "businessProductStockAdmin" : {
+  "businessProductStockAdmin": {
     "title": "Controle de Estoque",
     "commerce": "Selecione uma unidade:",
     "return": "Voltar",
@@ -2918,7 +2917,7 @@
           "update": "Atualizar os Colaboradores",
           "add": "Adicionar Colaboradores",
           "limit": "Número limite de Colaboradores",
-          "unavailable":"Deletar Colaboradores"
+          "unavailable": "Deletar Colaboradores"
         }
       }
     },
@@ -3005,7 +3004,7 @@
           "update": "Atualizar os Comércios",
           "add": "Adicionar Comércios",
           "limit": "Número limite de Comércios",
-          "unavailable":"Deletar Comércios"
+          "unavailable": "Deletar Comércios"
         }
       }
     },
@@ -3993,7 +3992,7 @@
       "attention-client-contact": {
         "view": "Ver Contato de Clientes - Seção Performance Hub"
       },
-      "attention-days-since-clients":{
+      "attention-days-since-clients": {
         "view": "Ver Dias Atendimento Clientes - Section Performance Hub"
       },
       "client-contacts-management": {
@@ -4011,7 +4010,7 @@
       "clients-management": {
         "view": "Ver Seção Contacto Clientes - Seção Gestão Clientes"
       },
-      "collection-details":{
+      "collection-details": {
         "view": "Ver Recebidos Detalhes - Seção Financeira"
       },
       "client-data-management": {
@@ -4087,7 +4086,7 @@
       },
       "bookings": {
         "admin": "Gerenciar Reservas",
-        "cancel":"Cancelar Reserva",
+        "cancel": "Cancelar Reserva",
         "confirm": "Confirmar Reservas",
         "edit": "Editar Reserva",
         "manage": "Gerenciar Reservas",
@@ -4175,11 +4174,11 @@
         "add-replacement": "Adicionar Recarregamento - Gestão de Estoque",
         "view-attention": "Ver Consumo de Atendimentos - Gestão de Estoque",
         "view-consumption": "Ver Consumo - Gestão de Estoque",
-        "view-replacement":"Ver Recarregamento - Gestão de Estoque"
+        "view-replacement": "Ver Recarregamento - Gestão de Estoque"
       },
       "reports": {
         "details": "Reporte Controle de Estoque - Gestão de Estoque",
-        "replacement-details":"Reporte de Recarregamento de Producto - Gestão de Estoque",
+        "replacement-details": "Reporte de Recarregamento de Producto - Gestão de Estoque",
         "consumption-details": "Reporte de Consumo de Producto - Gestão de Estoque"
       }
     },

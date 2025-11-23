@@ -4,8 +4,8 @@ const PublicBusinessRoutes = [
   {
     path: '/publico/negocio/login',
     name: 'business-login',
-    component: BusinessLogin
-  }
-]
+    component: BusinessLogin,
+  },
+];
 
 export default PublicBusinessRoutes;
