@@ -76,7 +76,7 @@ export default {
       state.userName = undefined;
       state.currentUserType = undefined;
       state.currentUser = store.getCurrentUser;
-      if (state.currentUser !== undefined) {
+      if (state.currentUser !== undefined && state.currentUser !== null) {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
       state.currentUserType = store.getCurrentUserType;

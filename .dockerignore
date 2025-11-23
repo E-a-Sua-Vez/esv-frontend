@@ -1,0 +1,33 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.env
+.env.*
+*.log
+.DS_Store
+coverage
+.vscode
+.idea
+*.swp
+*.swo
+*~
+test
+tests
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+docs
+README.md
+.eslintrc*
+.prettierrc*
+# vite.config*.js - Keep vite config files, they're needed for build
+cypress
+cypress.config.js
+vitest.config.js
+public/blog
+# public/images - Keep images, they're needed for build
+public/wanda
+

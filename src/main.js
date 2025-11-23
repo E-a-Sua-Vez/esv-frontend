@@ -5,7 +5,9 @@ import vue3StarRatings from 'vue3-star-ratings';
 import VCalendar from 'v-calendar';
 import App from './App.vue';
 import router from './router';
-import messages from '@intlify/unplugin-vue-i18n/messages';
+import es from './locales/es.json';
+import en from './locales/en.json';
+import pt from './locales/pt.json';
 
 import 'v-calendar/style.css';
 
@@ -19,7 +21,11 @@ const i18n = createI18n({
   locale: 'es',
   fallbackLocale: 'es',
   availableLocales: ['es', 'en', 'pt'],
-  messages,
+  messages: {
+    es,
+    en,
+    pt,
+  },
 });
 
 const app = createApp(App);

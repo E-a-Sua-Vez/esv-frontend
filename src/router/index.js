@@ -61,6 +61,9 @@ const router = createRouter({
 });
 
 const getSessionIsNotAlive = currentUser => {
+  if (!currentUser) {
+    return true;
+  }
   const currentDate = new Date();
   let days = 1;
   if (currentUser.lastSignIn) {
@@ -83,7 +86,7 @@ router.beforeEach(async (to, from, next) => {
   const store = globalStore();
   const currentUser = store.getCurrentUser;
   const currentUserType = store.getCurrentUserType;
-  const userNotExists = currentUser === undefined;
+  const userNotExists = currentUser === undefined || currentUser === null;
 
   /**
    * ROOT

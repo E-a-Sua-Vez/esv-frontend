@@ -44,7 +44,7 @@ export default {
       state.currentUserType = undefined;
       state.currentUser = await store.getCurrentUser;
       state.currentBusiness = await store.getCurrentBusiness;
-      if (state.currentUser !== undefined) {
+      if (state.currentUser !== undefined && state.currentUser !== null) {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
       state.currentUserType = await store.getCurrentUserType;
@@ -161,7 +161,6 @@ export default {
       store,
       loading,
       alertError,
-      messages,
       getDateAndHour,
       logout,
       loginInvited,
