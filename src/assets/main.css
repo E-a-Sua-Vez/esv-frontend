@@ -241,11 +241,18 @@
   text-align: right;
   margin-top: 3rem;
 }
-.btn-selected {
+.btn-selected,
+.btn-dark.btn-selected {
   --bs-btn-bg: var(--azul-qr) !important;
   --bs-btn-border-color: var(--azul-qr) !important;
   --bs-btn-active-bg: var(--azul-qr) !important;
+  --bs-btn-active-color: #ffffff !important;
+  --bs-btn-color: #ffffff !important;
+  --bs-btn-hover-bg: var(--azul-qr) !important;
+  --bs-btn-hover-color: #ffffff !important;
+  background-color: var(--azul-qr) !important;
   border-color: var(--azul-qr) !important;
+  color: #ffffff !important;
 }
 .green-area {
   background-color: var(--verde-tu) !important;
