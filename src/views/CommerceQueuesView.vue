@@ -332,15 +332,15 @@ export default {
           state.newUser.healthAgreementId = data.healthAgreementId;
         }
         if (data.phoneCode && data.phone) {
-          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
+          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         } else if (data.phone) {
           state.phoneCode = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+            .replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '')
             .slice(0, 2);
           state.phone = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+            .replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '')
             .slice(2, data.phone.length);
           state.newUser.phone = `${state.phoneCode}${state.phone}`;
         }
@@ -502,7 +502,7 @@ export default {
     const isDataActive = commerce => {
       let active = false;
       let features = [];
-      if (commerce !== undefined && commerce.features.length > 0) {
+      if (commerce !== undefined && commerce !== null && commerce.features && commerce.features.length > 0) {
         features = commerce.features.filter(
           feature => feature.type === 'USER' && feature.active === true
         );
