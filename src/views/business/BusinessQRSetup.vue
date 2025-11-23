@@ -95,6 +95,9 @@ export default {
     };
 
     const getFeature = (commerce, name) => {
+      if (!commerce || !commerce.features) {
+        return {};
+      }
       const features = commerce.features;
       let feature = {};
       if (features && features.length > 0) {

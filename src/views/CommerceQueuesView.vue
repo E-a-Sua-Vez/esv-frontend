@@ -454,6 +454,9 @@ export default {
     const isActiveCommerce = commerce => commerce.active === true;
 
     const getFeature = (commerce, name) => {
+      if (!commerce || !commerce.features) {
+        return {};
+      }
       const features = commerce.features;
       const feature = features.find(feat => feat.name === name);
       return feature || {};
@@ -2296,7 +2299,7 @@ export default {
                           <div v-if="!loadingCalendar">
                             <VDatePicker
                               :locale="state.locale"
-                              v-model.string="state.specificCalendarDate"
+                              v-model="state.specificCalendarDate"
                               :mask="dateMask"
                               :min-date="state.minDate"
                               :max-date="state.maxDate"
@@ -2635,7 +2638,7 @@ export default {
                           <div v-if="!loadingCalendar">
                             <VDatePicker
                               :locale="state.locale"
-                              v-model.string="state.date"
+                              v-model="state.date"
                               :mask="dateMask"
                               :min-date="state.minDate"
                               :max-date="state.maxDate"

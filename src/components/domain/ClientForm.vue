@@ -213,7 +213,7 @@ export default {
     const isDataActive = () => {
       let active = false;
       let features = [];
-      if (commerce.value !== undefined && commerce.value.features.length > 0) {
+      if (commerce.value && commerce.value.features && commerce.value.features.length > 0) {
         features = commerce.value.features.filter(
           feature => feature.type === 'USER' && feature.active === true
         );

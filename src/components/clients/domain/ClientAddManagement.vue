@@ -125,7 +125,7 @@ export default {
     const isDataActive = commerce => {
       let active = false;
       let features = [];
-      if (commerce !== undefined && commerce.features.length > 0) {
+      if (commerce && commerce.features && commerce.features.length > 0) {
         features = commerce.features.filter(
           feature => feature.type === 'USER' && feature.active === true
         );
@@ -355,67 +355,69 @@ export default {
 };
 </script>
 <template>
-  <div
-    id="clientData-management"
-    class="row"
-    v-if="showClientAddManagement === true && toggles['client.admin.add']"
-  >
-    <div class="content text-center">
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="!loading">
-        <div>
-          <!-- FORM -->
-          <ClientForm
-            :show="visible"
-            :commerce="commerce"
-            :name="state.newUser.name"
-            :last-name="state.newUser.lastName"
-            :id-number="state.newUser.idNumber"
-            :email="state.newUser.email"
-            :phone="state.newUser.phone"
-            :birthday="state.newUser.birthday"
-            :address-text="state.newUser.addressText"
-            :address-code="state.newUser.addressCode"
-            :address-complement="state.newUser.addressComplement"
-            :origin="state.newUser.origin"
-            :code1="state.newUser.code1"
-            :code2="state.newUser.code2"
-            :code3="state.newUser.code3"
-            :health-agreement-id="state.newUser.healthAgreementId"
-            :client="client.id"
-            :errors-add="state.errorsAdd"
-            :receive-data="receiveData"
-            :client-front="false"
-          >
-          </ClientForm>
-          <div class="row mx-4">
-            <button
-              class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
-              @click="add()"
+  <div>
+    <div
+      id="clientData-management"
+      class="row"
+      v-if="showClientAddManagement === true && toggles['client.admin.add']"
+    >
+      <div class="content text-center">
+        <Spinner :show="loading"></Spinner>
+        <Alert :show="loading" :stack="alertError"></Alert>
+        <div v-if="!loading">
+          <div>
+            <!-- FORM -->
+            <ClientForm
+              :show="visible"
+              :commerce="commerce"
+              :name="state.newUser.name"
+              :last-name="state.newUser.lastName"
+              :id-number="state.newUser.idNumber"
+              :email="state.newUser.email"
+              :phone="state.newUser.phone"
+              :birthday="state.newUser.birthday"
+              :address-text="state.newUser.addressText"
+              :address-code="state.newUser.addressCode"
+              :address-complement="state.newUser.addressComplement"
+              :origin="state.newUser.origin"
+              :code1="state.newUser.code1"
+              :code2="state.newUser.code2"
+              :code3="state.newUser.code3"
+              :health-agreement-id="state.newUser.healthAgreementId"
+              :client="client.id"
+              :errors-add="state.errorsAdd"
+              :receive-data="receiveData"
+              :client-front="false"
             >
-              {{ $t('businessCommercesAdmin.add') }} <i class="bi bi-save"></i>
-            </button>
-          </div>
-          <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-            <Warning>
-              <template v-slot:message>
-                <li v-for="(error, index) in state.errorsAdd" :key="index">
-                  {{ $t(error) }}
-                </li>
-              </template>
-            </Warning>
+            </ClientForm>
+            <div class="row mx-4">
+              <button
+                class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                @click="add()"
+              >
+                {{ $t('businessCommercesAdmin.add') }} <i class="bi bi-save"></i>
+              </button>
+            </div>
+            <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+              <Warning>
+                <template v-slot:message>
+                  <li v-for="(error, index) in state.errorsAdd" :key="index">
+                    {{ $t(error) }}
+                  </li>
+                </template>
+              </Warning>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div v-if="showClientAddManagement === true && !toggles['client.admin.add']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showClientAddManagement === true && !toggles['client.admin.add']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 <style scoped>
