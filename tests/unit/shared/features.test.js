@@ -101,9 +101,7 @@ describe('Features Module', () => {
 
     it('should return false when feature is found but inactive', () => {
       const commerce = {
-        features: [
-          { name: 'test-feature', type: 'PRODUCT', active: false },
-        ],
+        features: [{ name: 'test-feature', type: 'PRODUCT', active: false }],
       };
       const result = getActiveFeature(commerce, 'test-feature', 'PRODUCT');
       expect(result).toBe(false);
@@ -111,9 +109,7 @@ describe('Features Module', () => {
 
     it('should return true when feature is found and active', () => {
       const commerce = {
-        features: [
-          { name: 'test-feature', type: 'PRODUCT', active: true },
-        ],
+        features: [{ name: 'test-feature', type: 'PRODUCT', active: true }],
       };
       const result = getActiveFeature(commerce, 'test-feature', 'PRODUCT');
       expect(result).toBe(true);
@@ -151,4 +147,3 @@ describe('Features Module', () => {
     });
   });
 });
-
