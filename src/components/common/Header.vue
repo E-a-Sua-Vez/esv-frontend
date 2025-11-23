@@ -231,7 +231,6 @@ export default {
       state,
       store,
       loading,
-      messages,
       getDateAndHour,
       logout,
       loginInvited,
