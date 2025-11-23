@@ -1,4 +1,7 @@
 export const getFeature = (commerce, name) => {
+  if (!commerce || !commerce.features) {
+    return {};
+  }
   const features = commerce.features;
   const feature = features.find(feat => {
     return feat.name === name;

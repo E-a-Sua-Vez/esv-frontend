@@ -196,7 +196,9 @@ export default {
         state.sessionId = uuidv4().toString();
         if (keyName) {
           state.commerce = await getCommerceByKeyName(keyName);
-          state.locale = state.commerce.localeInfo.language || 'es';
+          if (state.commerce && state.commerce.localeInfo) {
+            state.locale = state.commerce.localeInfo.language || 'es';
+          }
           store.setCurrentCommerce(state.commerce);
           if (client && client !== undefined) {
             const clientById = await getClientById(client);
@@ -939,8 +941,8 @@ export default {
 
     const getQueue = async queueIn => {
       state.queue = queueIn;
-      if (state.queue.id) {
-        if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+      if (state.queue && state.queue.id) {
+        if (state.commerce && getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
           getDisabledDates();
           state.date = undefined;
           state.specificCalendarDate = undefined;

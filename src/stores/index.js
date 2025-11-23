@@ -16,18 +16,28 @@ export const globalStore = defineStore('globalStore', {
     currentActiveAttentions: null,
   }),
   getters: {
-    getCurrentUser: state => state.currentUser || getStorageItem(STORAGE_KEYS.CURRENT_USER),
+    getCurrentUser: state => {
+      const user = state.currentUser || getStorageItem(STORAGE_KEYS.CURRENT_USER);
+      return user || null;
+    },
     getCurrentPermissions: state =>
       state.currentPermissions || getStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS),
-    getCurrentQueue: state => state.currentQueue || getStorageItem(STORAGE_KEYS.CURRENT_QUEUE),
+    getCurrentQueue: state => {
+      const queue = state.currentQueue || getStorageItem(STORAGE_KEYS.CURRENT_QUEUE);
+      return queue || null;
+    },
     getCurrentUserType: state => {
       const stored = state.currentUserType || localStorage.getItem(STORAGE_KEYS.CURRENT_USER_TYPE);
       return stored && stored !== 'undefined' ? stored : null;
     },
-    getCurrentCommerce: state =>
-      state.currentCommerce || getStorageItem(STORAGE_KEYS.CURRENT_COMMERCE),
-    getCurrentBusiness: state =>
-      state.currentBusiness || getStorageItem(STORAGE_KEYS.CURRENT_BUSINESS),
+    getCurrentCommerce: state => {
+      const commerce = state.currentCommerce || getStorageItem(STORAGE_KEYS.CURRENT_COMMERCE);
+      return commerce || null;
+    },
+    getCurrentBusiness: state => {
+      const business = state.currentBusiness || getStorageItem(STORAGE_KEYS.CURRENT_BUSINESS);
+      return business || null;
+    },
     getCurrentAttentionChannel: state => {
       const stored =
         state.currentAttentionChannel ||
