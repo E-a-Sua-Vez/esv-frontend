@@ -46,7 +46,7 @@ export async function lazyLoadChartJs() {
  * const { LineChart, BarChart } = await lazyLoadVueCharts();
  */
 export async function lazyLoadVueCharts() {
-  return await import('vue-chart-3');
+  return import('vue-chart-3');
 }
 
 /**
