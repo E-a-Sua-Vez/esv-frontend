@@ -1,11 +1,10 @@
 <script>
 import { globalStore } from '../stores';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 
 export default {
   name: 'Home',
-  components: { CommerceLogo, PoweredBy },
+  components: { CommerceLogo },
   data() {
     const store = globalStore();
     return {
@@ -91,7 +90,6 @@ export default {
             >{{ $t('enterMaster') }} <i class="bi bi-person-fill-gear"></i></span
         ></a>
       </div>
-      <PoweredBy />
     </div>
   </div>
 </template>

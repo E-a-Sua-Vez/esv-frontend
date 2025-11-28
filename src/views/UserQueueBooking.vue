@@ -258,11 +258,7 @@ export default {
           if (!state.formFirstAttentionCompleted && formFirstAttention) {
             state.showFormButton = true;
             state.form = formFirstAttention;
-          } else if (
-            !state.formFirstAttentionCompleted &&
-            !state.formPreAttentionCompleted &&
-            formFirstAttention
-          ) {
+          } else if (!state.formPreAttentionCompleted && formFirstAttention) {
             state.showFormButton = true;
             state.form = formFirstAttention;
           } else if (

@@ -32,22 +32,7 @@ export default {
           <!-- Brand Column -->
           <div class="col-12 col-md-6 col-lg-4 footer-brand mb-4 mb-md-0">
             <div class="footer-logo mb-3">
-              <img src="/images/hub/logo/hub-blanco-transparente.png" alt="Hub" class="logo-img">
-            </div>
-            <p class="footer-description">{{ $t('footer.description') || 'Transforme seu atendimento ao cliente com nossa plataforma digital completa de filas, agendamentos e pesquisas de satisfação.' }}</p>
-            <div class="footer-social mt-3">
-              <a href="https://twitter.com/estuturnocl" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Twitter">
-                <i class="bi bi-twitter"></i>
-              </a>
-              <a href="https://instagram.com/estuturnobr/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
-                <i class="bi bi-instagram"></i>
-              </a>
-              <a href="https://www.facebook.com/estuturnocl" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook">
-                <i class="bi bi-facebook"></i>
-              </a>
-              <a href="https://www.linkedin.com/company/estuturno" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn">
-                <i class="bi bi-linkedin"></i>
-              </a>
+              <img src="/images/hub/logo/hub-blanco-transparente.png" alt="Hub" class="logo-img" />
             </div>
           </div>
 
@@ -61,7 +46,7 @@ export default {
                   data-bs-toggle="modal"
                   data-bs-target="#modalBuzon"
                   @click="closeMenu()"
-                  style="cursor: pointer;"
+                  style="cursor: pointer"
                 >
                   <i class="bi bi-box-fill me-2"></i>{{ $t('footer.mailbox') || 'Ações' }}
                 </a>
@@ -88,11 +73,6 @@ export default {
                   <i class="bi bi-envelope me-2"></i>{{ $t('footer.emailDir') }}
                 </a>
               </li>
-              <li>
-                <a href="https://calendly.com/estuturno/conoce-mas-de-es-tu-turno" target="_blank" class="footer-link">
-                  <i class="bi bi-calendar-check me-2"></i>{{ $t('footer.schedule') || 'Agendar Reunião' }}
-                </a>
-              </li>
             </ul>
           </div>
         </div>
@@ -102,17 +82,6 @@ export default {
           <div class="row align-items-center">
             <div class="col-12 col-md-6 footer-copyright">
               <p class="mb-0">{{ $t('footer.copyright') }}</p>
-            </div>
-          </div>
-          <!-- Powered by / Desenvolvido por -->
-          <div class="row mt-3">
-            <div class="col-12">
-              <div class="footer-powered-by">
-                <span class="powered-by-text">{{ $t('footer.poweredBy') || 'Desenvolvido por' }}</span>
-                <a :href="$t('publicSiteUrl')" target="_blank" class="powered-by-link">
-                  <img src="/images/esv/esv-blanco-horizontal-transparente.png" alt="É a sua Vez" class="powered-by-logo">
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -155,11 +124,19 @@ export default {
 
 <style scoped>
 .modern-footer {
-  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #1a1a2e 100%);
+  background: linear-gradient(
+    135deg,
+    #0a0a1a 0%,
+    #1a1a2e 25%,
+    #16213e 50%,
+    #0f3460 75%,
+    #1a1a2e 100%
+  );
   color: rgba(255, 255, 255, 0.9);
   position: relative;
   margin-top: 4rem;
-  padding-top: 3rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 .modern-footer::before {
@@ -169,7 +146,12 @@ export default {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
 }
 
 .modern-footer::after {
@@ -179,8 +161,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(0, 74, 173, 0.3) 0%, transparent 50%),
+  background: radial-gradient(circle at 20% 30%, rgba(0, 74, 173, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 70%, rgba(0, 194, 203, 0.2) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
@@ -193,9 +174,9 @@ export default {
 }
 
 .footer-main {
-  padding-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .footer-brand {
@@ -203,48 +184,14 @@ export default {
 }
 
 .footer-logo {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .logo-img {
-  max-width: 180px;
+  max-width: 140px;
   height: auto;
   width: auto;
   object-fit: contain;
-}
-
-.footer-description {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 1rem;
-}
-
-.footer-social {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.social-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
-}
-
-.social-link:hover {
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.4);
 }
 
 .footer-column {
@@ -289,7 +236,7 @@ export default {
 }
 
 .footer-bottom {
-  padding: 1.5rem 0;
+  padding: 1rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -299,52 +246,10 @@ export default {
   margin: 0;
 }
 
-.footer-powered-by {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: 1rem;
-}
-
-.powered-by-text {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 400;
-}
-
-.powered-by-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  opacity: 0.8;
-}
-
-.powered-by-link:hover {
-  opacity: 1;
-  transform: translateY(-2px);
-}
-
-.powered-by-logo {
-  max-width: 120px;
-  height: auto;
-  width: auto;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-  transition: all 0.3s ease;
-}
-
-.powered-by-link:hover .powered-by-logo {
-  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));
-}
-
 @media (max-width: 768px) {
   .modern-footer {
     padding-top: 2rem;
-    margin-top: 2rem;
+    margin-top: 4rem;
   }
 
   .footer-main {
@@ -364,28 +269,9 @@ export default {
     padding: 0;
     margin-bottom: 2rem;
   }
-
-  .footer-powered-by {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    margin-top: 0.75rem;
-  }
-
-  .powered-by-text {
-    font-size: 0.8rem;
-  }
-
-  .powered-by-logo {
-    max-width: 100px;
-  }
 }
 
 @media (max-width: 576px) {
-  .footer-description {
-    font-size: 0.9rem;
-  }
-
   .footer-title {
     font-size: 0.95rem;
   }

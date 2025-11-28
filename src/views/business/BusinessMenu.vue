@@ -6,7 +6,6 @@ import { getPermissions } from '../../application/services/permissions';
 import { getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -19,7 +18,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     PlanStatus,
@@ -168,116 +166,126 @@ export default {
           <PlanStatus :show="true" :plan-activation="state.currentPlanActivation" :can-admin="true">
           </PlanStatus>
         </div>
-        <div id="menu-mobile" class="d-block d-md-none">
-        <div class="sub-menu-spy">
-          <span v-if="state.showMobileMenuSide" @click="onShowMobileSpySide()"
-            >{{ $t('businessMenu.seeSpy') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
-          </span>
-          <span v-else @click="onShowMobileMenuSide()"
-            >{{ $t('businessMenu.seeMenu') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
-          </span>
-        </div>
-        <div class="mobile-content-wrapper">
-          <Transition name="slide" mode="out-in">
-            <div
-              v-if="state.showMobileMenuSide === true"
-              id="menu-side-mobile"
-              :key="`menu-side-mobile`"
-            >
-              <div class="choose-attention my-3 mt-4">
-                <span>{{ $t('businessMenu.choose') }}</span>
-              </div>
-              <div class="row">
-                <div
-                  v-for="option in state.menuOptions"
-                  :key="option"
-                  class="d-grid btn-group btn-group-justified mobile-button-wrapper"
-                >
-                  <div v-if="option === 'go-minisite'" class="centered">
-                    <a
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
-                      :href="`${getBusinessLink()}`"
-                      target="_blank"
-                    >
-                      {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                    </a>
-                  </div>
-                  <div v-else>
-                    <button
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style mobile-menu-btn"
-                      @click="goToOption(option)"
-                      :disabled="!state.toggles[`business.main-menu.${option}`]"
-                    >
-                      {{ $t(`businessMenu.${option}`) }}
-                      <i
-                        v-if="option === 'manage-admin'"
-                        :class="`bi ${
-                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                      <i
-                        v-if="option === 'control-admin'"
-                        :class="`bi ${
-                          state.manageControlSubMenuOption === true
-                            ? 'bi-chevron-up'
-                            : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                    </button>
-                    <div
-                      v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                      class="mobile-submenu-container"
-                    >
-                      <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="mobile-submenu-item">
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                        >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
+        <div id="menu-mobile">
+          <div class="sub-menu-spy">
+            <span v-if="state.showMobileMenuSide" @click="onShowMobileSpySide()"
+              >{{ $t('businessMenu.seeSpy') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
+            </span>
+            <span v-else @click="onShowMobileMenuSide()"
+              >{{ $t('businessMenu.seeMenu') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
+            </span>
+          </div>
+          <div class="mobile-content-wrapper">
+            <Transition name="slide" mode="out-in">
+              <div
+                v-if="state.showMobileMenuSide === true"
+                id="menu-side-mobile"
+                :key="`menu-side-mobile`"
+              >
+                <div class="choose-attention my-3 mt-4">
+                  <span>{{ $t('businessMenu.choose') }}</span>
+                </div>
+                <div class="row">
+                  <div
+                    v-for="option in state.menuOptions"
+                    :key="option"
+                    class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                  >
+                    <div v-if="option === 'go-minisite'" class="centered">
+                      <a
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                        :href="`${getBusinessLink()}`"
+                        target="_blank"
+                      >
+                        {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                      </a>
                     </div>
-                    <div
-                      v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
-                      class="mobile-submenu-container"
-                    >
-                      <div v-for="opt in state.manageControlSubMenuOptions" :key="opt" class="mobile-submenu-item">
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                    <div v-else>
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style mobile-menu-btn"
+                        @click="goToOption(option)"
+                        :disabled="!state.toggles[`business.main-menu.${option}`]"
+                      >
+                        {{ $t(`businessMenu.${option}`) }}
+                        <i
+                          v-if="option === 'manage-admin'"
+                          :class="`bi ${
+                            state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                        <i
+                          v-if="option === 'control-admin'"
+                          :class="`bi ${
+                            state.manageControlSubMenuOption === true
+                              ? 'bi-chevron-up'
+                              : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </button>
+                      <div
+                        v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                        class="mobile-submenu-container"
+                      >
+                        <div
+                          v-for="opt in state.manageSubMenuOptions"
+                          :key="opt"
+                          class="mobile-submenu-item"
                         >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                          >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          option === 'control-admin' && state.manageControlSubMenuOption === true
+                        "
+                        class="mobile-submenu-container"
+                      >
+                        <div
+                          v-for="opt in state.manageControlSubMenuOptions"
+                          :key="opt"
+                          class="mobile-submenu-item"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                          >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+                <div v-if="!isActiveBusiness() && !loading">
+                  <Message
+                    :title="$t('businessMenu.message.1.title')"
+                    :content="$t('businessMenu.message.1.content')"
+                    :icon="'bi bi-emoji-dizzy'"
+                  >
+                  </Message>
+                </div>
               </div>
-              <div v-if="!isActiveBusiness() && !loading">
-                <Message
-                  :title="$t('businessMenu.message.1.title')"
-                  :content="$t('businessMenu.message.1.content')"
-                  :icon="'bi bi-emoji-dizzy'"
-                >
-                </Message>
+              <div
+                v-else-if="state.showMobileSpySide"
+                id="spy-side-mobile"
+                :key="`spy-side-mobile`"
+              >
+                <SpySection :show="true" :commerces="state.commerces"> </SpySection>
               </div>
-            </div>
-            <div
-              v-else-if="state.showMobileSpySide"
-              id="spy-side-mobile"
-              :key="`spy-side-mobile`"
-            >
-              <SpySection :show="true" :commerces="state.commerces"> </SpySection>
-            </div>
-          </Transition>
+            </Transition>
+          </div>
         </div>
-      </div>
       </div>
       <!-- Desktop Layout -->
       <div class="d-none d-lg-block desktop-menu-layout">
@@ -288,19 +296,9 @@ export default {
         </div>
         <div class="row align-items-center mb-3 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || state.business.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
+            <CommerceLogo :src="state.business.logo" :loading="loading" />
           </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0;">
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
             <WelcomeMenu
               :name="state.currentUser.name"
               :toggles="state.toggles"
@@ -358,7 +356,11 @@ export default {
                       v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
                       class="submenu-container"
                     >
-                      <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="submenu-item">
+                      <div
+                        v-for="opt in state.manageSubMenuOptions"
+                        :key="opt"
+                        class="submenu-item"
+                      >
                         <button
                           type="button"
                           class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
@@ -375,7 +377,11 @@ export default {
                       v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
                       class="submenu-container"
                     >
-                      <div v-for="opt in state.manageControlSubMenuOptions" :key="opt" class="submenu-item">
+                      <div
+                        v-for="opt in state.manageControlSubMenuOptions"
+                        :key="opt"
+                        class="submenu-item"
+                      >
                         <button
                           type="button"
                           class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
@@ -405,7 +411,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 <style scoped>
@@ -420,8 +425,8 @@ export default {
   border: 1.5px solid var(--gris-clear);
 }
 .btn-style {
-  line-height: 0.8rem;
-  padding: 0.5rem 0rem;
+  line-height: 1rem;
+  padding: 0.65rem 0rem;
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;
@@ -590,7 +595,6 @@ export default {
     justify-content: center;
   }
 }
-
 
 /* Desktop Menu Layout Styles */
 @media (min-width: 992px) {

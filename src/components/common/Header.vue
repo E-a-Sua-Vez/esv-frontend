@@ -59,7 +59,10 @@ export default {
       currentUserType: '',
       currentUser: {},
       currentBusiness: {},
+      currentCommerce: {},
       messages: [],
+      manageSubMenuOption: false,
+      manageControlSubMenuOption: false,
     });
 
     // Watch for changes in messages data and update state
@@ -81,6 +84,7 @@ export default {
       }
       state.currentUserType = store.getCurrentUserType;
       state.currentBusiness = store.getCurrentBusiness;
+      state.currentCommerce = store.getCurrentCommerce;
       getMessages();
     };
 
@@ -292,6 +296,7 @@ export default {
     );
 
     const mobileMenuOpen = ref(false);
+    const desktopMenuOpen = ref(false);
 
     const toggleMobileMenu = () => {
       mobileMenuOpen.value = !mobileMenuOpen.value;
@@ -299,6 +304,130 @@ export default {
 
     const closeMobileMenu = () => {
       mobileMenuOpen.value = false;
+    };
+
+    const toggleDesktopMenu = () => {
+      desktopMenuOpen.value = !desktopMenuOpen.value;
+    };
+
+    const closeDesktopMenu = () => {
+      desktopMenuOpen.value = false;
+    };
+
+    // Get menu options based on user type - matching exact structure from BusinessMenu, CollaboratorMenu, MasterMenu
+    const getMenuOptions = () => {
+      const userType = state.currentUserType;
+      if (userType === USER_TYPES.BUSINESS) {
+        return [
+          'dashboard',
+          'reports',
+          'booking-manage',
+          'control-admin',
+          'manage-admin',
+          'configuration',
+          'documents',
+          'your-plan',
+          'business-resume',
+        ];
+      } else if (userType === USER_TYPES.COLLABORATOR) {
+        return ['queue-manage', 'booking-manage', 'tracing', 'product-stock', 'dashboard'];
+      } else if (userType === USER_TYPES.MASTER) {
+        return [
+          'business-master-admin',
+          'plans-master-admin',
+          'features-master-admin',
+          'plan-activations-admin',
+        ];
+      }
+      return [];
+    };
+
+    // Get submenu options for business
+    const getManageSubMenuOptions = () => {
+      if (state.currentUserType === USER_TYPES.BUSINESS) {
+        return [
+          'commerce-admin',
+          'service-admin',
+          'modules-admin',
+          'queues-admin',
+          'collaborators-admin',
+          'surveys-admin',
+          'product-admin',
+          'outcome-types-admin',
+          'company-admin',
+          'forms-admin',
+          'patient-history-item-admin',
+          'permissions-admin',
+        ];
+      }
+      return [];
+    };
+
+    const getControlSubMenuOptions = () => {
+      if (state.currentUserType === USER_TYPES.BUSINESS) {
+        return ['tracing', 'product-stock', 'financial'];
+      }
+      return [];
+    };
+
+    // Navigate to menu option - matching exact logic from BusinessMenu.goToOption
+    const navigateToMenuOption = async (option, closeMenu = true) => {
+      try {
+        if (!option) return;
+
+        const userType = state.currentUserType;
+
+        if (userType === USER_TYPES.BUSINESS) {
+          if (option === 'manage-admin') {
+            state.manageSubMenuOption = !state.manageSubMenuOption;
+            state.manageControlSubMenuOption = false;
+            // Don't close menu when toggling submenu
+            return;
+          } else if (option === 'control-admin') {
+            state.manageControlSubMenuOption = !state.manageControlSubMenuOption;
+            state.manageSubMenuOption = false;
+            // Don't close menu when toggling submenu
+            return;
+          } else {
+            router.push({ path: `/interno/negocio/${option}` });
+          }
+        } else if (userType === USER_TYPES.COLLABORATOR) {
+          const commerceId = state.currentCommerce?.id || state.currentUser?.commerceId || '';
+          if (option === 'queue-manage') {
+            router.push({ path: `/interno/commerce/${commerceId}/colaborador/filas` });
+          } else if (option === 'booking-manage') {
+            router.push({ path: `/interno/commerce/${commerceId}/colaborador/bookings` });
+          } else if (option === 'dashboard') {
+            router.push({ path: '/interno/colaborador/dashboard' });
+          } else if (option === 'tracing') {
+            router.push({ path: '/interno/colaborador/tracing' });
+          } else if (option === 'product-stock') {
+            router.push({ path: '/interno/colaborador/product-stock' });
+          }
+        } else if (userType === USER_TYPES.MASTER) {
+          router.push({ path: `/interno/master/${option}` });
+        }
+
+        // Only close menus if we actually navigated (not just toggled submenu)
+        if (closeMenu) {
+          closeMobileMenu();
+          closeDesktopMenu();
+        }
+      } catch (error) {
+        console.error('Error navigating to menu option:', error);
+      }
+    };
+
+    const getMenuTranslationKey = () => {
+      const userType = state.currentUserType;
+      if (userType === USER_TYPES.BUSINESS) {
+        return 'businessMenu';
+      } else if (userType === USER_TYPES.COLLABORATOR) {
+        return 'collaboratorMenu';
+      } else if (userType === USER_TYPES.MASTER) {
+        return 'masterMenu';
+      }
+      return '';
     };
 
     return {
@@ -314,6 +443,14 @@ export default {
       mobileMenuOpen,
       toggleMobileMenu,
       closeMobileMenu,
+      desktopMenuOpen,
+      toggleDesktopMenu,
+      closeDesktopMenu,
+      getMenuOptions,
+      navigateToMenuOption,
+      getMenuTranslationKey,
+      getManageSubMenuOptions,
+      getControlSubMenuOptions,
     };
   },
 };
@@ -322,11 +459,14 @@ export default {
 <template>
   <div>
     <div class="header-wrapper">
-      <nav class="navbar navbar-expand-lg fixed-top navbar-light modern-nav" :class="{ 'scrolled': scrolled }">
+      <nav
+        class="navbar navbar-expand-lg fixed-top navbar-light modern-nav"
+        :class="{ scrolled: scrolled }"
+      >
         <div class="container-fluid nav-container">
           <div class="navbar-brand-wrapper">
             <a class="navbar-brand" href="/">
-              <img :src="$t('hubLogoBlanco')" alt="Hub" class="logo">
+              <img :src="$t('hubLogoBlanco')" alt="Hub" class="logo" />
             </a>
             <LocaleSelector class="d-none d-lg-block"></LocaleSelector>
           </div>
@@ -344,7 +484,7 @@ export default {
               class="user-info"
             >
               <a class="user-name-link" data-bs-toggle="modal" :data-bs-target="`#userModal`">
-                <span class="fw-bold">
+                <span class="fw-bold user-name-display">
                   <i class="bi bi-person-circle"></i> {{ state.userName }}
                 </span>
                 <span
@@ -354,8 +494,17 @@ export default {
                   <i class="bi bi-envelope-fill"></i> {{ state.messages.length || 0 }}
                 </span>
               </a>
-              <button class="logout-btn btn btn-light rounded-pill" @click="logout()">
-                {{ $t('logout') }} <i class="bi bi-box-arrow-right"></i>
+              <button
+                class="user-menu-trigger-icon"
+                @click="toggleDesktopMenu"
+                :class="{ active: desktopMenuOpen }"
+                aria-label="Toggle menu"
+                title="Abrir menú"
+              >
+                <i
+                  class="bi bi-arrow-left-circle user-menu-icon"
+                  :class="{ rotated: desktopMenuOpen }"
+                ></i>
               </button>
             </div>
           </div>
@@ -371,7 +520,7 @@ export default {
             :aria-expanded="mobileMenuOpen"
             aria-label="Toggle navigation"
           >
-            <span class="hamburger-icon" :class="{ 'active': mobileMenuOpen }">
+            <span class="hamburger-icon" :class="{ active: mobileMenuOpen }">
               <span></span>
               <span></span>
               <span></span>
@@ -383,9 +532,187 @@ export default {
         </div>
       </nav>
 
+      <!-- Desktop Side Menu Overlay -->
+      <div
+        class="desktop-menu-overlay d-none d-lg-block"
+        :class="{ active: desktopMenuOpen }"
+        @click="closeDesktopMenu"
+      ></div>
+
+      <!-- Desktop Side Menu -->
+      <div class="desktop-side-menu d-none d-lg-block" :class="{ active: desktopMenuOpen }">
+        <div class="desktop-menu-header">
+          <h5 class="desktop-menu-title">
+            <i class="bi bi-person-circle me-2"></i>
+            {{ state.userName || $t('menu') }}
+          </h5>
+          <button class="desktop-menu-close" @click="closeDesktopMenu" aria-label="Close menu">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="desktop-menu-body">
+          <!-- Idioma Section -->
+          <div class="desktop-menu-item-wrapper">
+            <div class="desktop-menu-label">
+              <span>{{ $t('language') || 'Idioma' }}</span>
+            </div>
+            <LocaleSelector class="desktop-locale-selector"></LocaleSelector>
+          </div>
+
+          <!-- Mi Perfil Section -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <a
+              class="desktop-menu-item"
+              data-bs-toggle="modal"
+              :data-bs-target="`#userModal`"
+              @click="closeDesktopMenu"
+              data-bs-dismiss="offcanvas"
+            >
+              <i class="bi bi-person-circle"></i>
+              <span>{{ $t('myUser.title') || 'Mi Perfil' }}</span>
+              <span
+                v-if="state.messages.length > 0"
+                class="message-indicator badge bg-danger rounded-pill ms-auto"
+              >
+                {{ state.messages.length || 0 }}
+              </span>
+            </a>
+          </div>
+
+          <!-- Menu Options Section -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <div class="choose-attention my-3 mt-4">
+              <span>{{ $t(`${getMenuTranslationKey()}.choose`) || 'Menu' }}</span>
+            </div>
+            <div class="row">
+              <div
+                v-for="option in getMenuOptions()"
+                :key="option"
+                class="d-grid btn-group btn-group-justified desktop-button-wrapper"
+              >
+                <div class="centered">
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
+                    @click="navigateToMenuOption(option, true)"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i
+                      v-if="option === 'manage-admin'"
+                      :class="`bi ${
+                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                    <i
+                      v-if="option === 'control-admin'"
+                      :class="`bi ${
+                        state.manageControlSubMenuOption === true
+                          ? 'bi-chevron-up'
+                          : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                  </button>
+                  <!-- Manage Admin Submenu -->
+                  <div
+                    v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                    class="desktop-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getManageSubMenuOptions()"
+                      :key="subOption"
+                      class="desktop-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                        @click="
+                          navigateToMenuOption(subOption);
+                          closeDesktopMenu();
+                        "
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Control Admin Submenu -->
+                  <div
+                    v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
+                    class="desktop-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getControlSubMenuOptions()"
+                      :key="subOption"
+                      class="desktop-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                        @click="
+                          navigateToMenuOption(subOption);
+                          closeDesktopMenu();
+                        "
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logout Section (at the end) -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="desktop-menu-item-wrapper logout-wrapper"
+          >
+            <button
+              class="desktop-menu-item logout-item"
+              @click="
+                logout();
+                closeDesktopMenu();
+              "
+            >
+              <i class="bi bi-box-arrow-right"></i>
+              <span>{{ $t('logout') }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Mobile Off-Canvas Menu -->
-      <div class="mobile-menu-overlay" :class="{ 'active': mobileMenuOpen }" @click="closeMobileMenu"></div>
-      <div class="mobile-menu d-lg-none" :class="{ 'active': mobileMenuOpen }">
+      <div
+        class="mobile-menu-overlay"
+        :class="{ active: mobileMenuOpen }"
+        @click="closeMobileMenu"
+      ></div>
+      <div class="mobile-menu d-lg-none" :class="{ active: mobileMenuOpen }">
         <div class="mobile-menu-header">
           <h5 class="mobile-menu-title">
             <i class="bi bi-person-circle me-2"></i>
@@ -396,9 +723,15 @@ export default {
           </button>
         </div>
         <div class="mobile-menu-body">
+          <!-- Idioma Section -->
           <div class="mobile-menu-item-wrapper">
+            <div class="mobile-menu-label">
+              <span>{{ $t('language') || 'Idioma' }}</span>
+            </div>
             <LocaleSelector class="mobile-locale-selector"></LocaleSelector>
           </div>
+
+          <!-- Mi Perfil Section -->
           <div
             v-if="
               state.currentUser &&
@@ -409,15 +742,15 @@ export default {
             "
             class="mobile-menu-item-wrapper"
           >
-              <a
-                class="mobile-menu-item"
-                data-bs-toggle="modal"
-                :data-bs-target="`#userModal`"
-                @click="closeMobileMenu"
-                data-bs-dismiss="offcanvas"
-              >
+            <a
+              class="mobile-menu-item"
+              data-bs-toggle="modal"
+              :data-bs-target="`#userModal`"
+              @click="closeMobileMenu"
+              data-bs-dismiss="offcanvas"
+            >
               <i class="bi bi-person-circle"></i>
-              <span>{{ state.userName }}</span>
+              <span>{{ $t('myUser.title') || 'Mi Perfil' }}</span>
               <span
                 v-if="state.messages.length > 0"
                 class="message-indicator badge bg-danger rounded-pill ms-auto"
@@ -425,7 +758,113 @@ export default {
                 {{ state.messages.length || 0 }}
               </span>
             </a>
-            <button class="mobile-menu-item logout-item" @click="logout(); closeMobileMenu();">
+          </div>
+
+          <!-- Menu Options Section -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="mobile-menu-item-wrapper"
+          >
+            <div class="choose-attention my-3 mt-4">
+              <span>{{ $t(`${getMenuTranslationKey()}.choose`) || 'Menu' }}</span>
+            </div>
+            <div class="row">
+              <div
+                v-for="option in getMenuOptions()"
+                :key="option"
+                class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+              >
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-1 btn-style mobile-menu-btn"
+                    @click="navigateToMenuOption(option)"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i
+                      v-if="option === 'manage-admin'"
+                      :class="`bi ${
+                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                    <i
+                      v-if="option === 'control-admin'"
+                      :class="`bi ${
+                        state.manageControlSubMenuOption === true
+                          ? 'bi-chevron-up'
+                          : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                  </button>
+                  <!-- Manage Admin Submenu -->
+                  <div
+                    v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                    class="mobile-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getManageSubMenuOptions()"
+                      :key="subOption"
+                      class="mobile-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                        @click="navigateToMenuOption(subOption)"
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Control Admin Submenu -->
+                  <div
+                    v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
+                    class="mobile-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getControlSubMenuOptions()"
+                      :key="subOption"
+                      class="mobile-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                        @click="navigateToMenuOption(subOption)"
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logout Section (at the end) -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="mobile-menu-item-wrapper logout-wrapper"
+          >
+            <button
+              class="mobile-menu-item logout-item"
+              @click="
+                logout();
+                closeMobileMenu();
+              "
+            >
               <i class="bi bi-box-arrow-right"></i>
               <span>{{ $t('logout') }}</span>
             </button>
@@ -551,16 +990,58 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: opacity 0.2s;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .user-name-link:hover {
-  opacity: 0.9;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
   color: var(--color-background);
 }
 
 .user-name-link i {
   font-size: 1.2rem;
+}
+
+/* Desktop Menu Trigger Icon */
+.user-menu-trigger-icon {
+  background: none;
+  border: none;
+  color: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.user-menu-trigger-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.user-menu-trigger-icon.active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.user-name-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-menu-icon {
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.user-menu-icon.rotated {
+  transform: rotate(-180deg);
 }
 
 .message-indicator {
@@ -569,7 +1050,8 @@ export default {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -783,7 +1265,7 @@ export default {
 .mobile-menu-header {
   background: linear-gradient(135deg, var(--azul-hub, #1f3f92) 0%, rgba(31, 63, 146, 0.95) 100%);
   color: var(--color-background);
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -792,7 +1274,7 @@ export default {
 
 .mobile-menu-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -817,21 +1299,24 @@ export default {
 
 .mobile-menu-body {
   flex: 1;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .mobile-menu-item-wrapper {
   border-bottom: 1px solid var(--gris-default, #e0e0e0);
-  padding: 0.75rem 0;
+  padding: 0.4rem 0;
 }
 
 .mobile-menu-item {
   display: flex;
   align-items: center;
-  padding: 0.875rem 1.25rem;
+  padding: 0.6rem 1rem;
   color: var(--color-text, #333);
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
   transition: background-color 0.2s;
   border: none;
@@ -863,23 +1348,327 @@ export default {
   color: var(--rojo-warning, #dc3545);
 }
 
+.mobile-menu-label {
+  padding: 0.3rem 1rem 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--azul-hub, #1f3f92);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .mobile-locale-selector {
-  padding: 0 1.25rem;
+  padding: 0 1rem 0.3rem;
   width: 100%;
 }
 
 .mobile-locale-selector select {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--gris-default, #e0e0e0);
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+/* Mobile menu button styles - matching BusinessMenu standard */
+.choose-attention {
+  padding-bottom: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1rem;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+.btn-style {
+  line-height: 1rem;
+  padding: 0.65rem 0rem;
+}
+
+.btn-light {
+  --bs-btn-bg: #dcddde !important;
+}
+
+/* Mobile menu button responsive adjustments - matching BusinessMenu */
+@media (max-width: 991px) {
+  .mobile-button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-button-wrapper > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .mobile-menu-btn.col-8 {
+    flex: 0 0 auto;
+    width: 66.666667%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Mobile submenu styles */
+  .mobile-submenu-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .mobile-submenu-item {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .mobile-submenu-btn {
+    width: 66.666667%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.logout-wrapper {
+  margin-top: auto;
+  border-top: 2px solid var(--gris-default, #e0e0e0);
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  position: sticky;
+  bottom: 0;
   background-color: var(--color-background);
 }
 
 @media (max-width: 400px) {
   .mobile-menu {
     width: 90%;
+  }
+}
+
+/* Desktop Side Menu Styles */
+.desktop-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1035;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.desktop-menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.desktop-side-menu {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 380px;
+  max-width: 90vw;
+  height: 100vh;
+  background-color: var(--color-background);
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 1040;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.desktop-side-menu.active {
+  right: 0;
+}
+
+.desktop-menu-header {
+  background: linear-gradient(135deg, var(--azul-hub, #1f3f92) 0%, rgba(31, 63, 146, 0.95) 100%);
+  color: var(--color-background);
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.desktop-menu-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.desktop-menu-close {
+  background: none;
+  border: none;
+  color: var(--color-background);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+  border-radius: 0.25rem;
+}
+
+.desktop-menu-close:hover {
+  transform: rotate(90deg);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-menu-body {
+  flex: 1;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.desktop-menu-item-wrapper {
+  border-bottom: 1px solid var(--gris-default, #e0e0e0);
+  padding: 0.4rem 0;
+}
+
+.desktop-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  color: var(--color-text, #333);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.desktop-menu-item:hover,
+.desktop-menu-item:focus {
+  background-color: var(--gris-clear, #f5f5f5);
+  color: var(--azul-hub, #1f3f92);
+}
+
+.desktop-menu-item i {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  width: 24px;
+  text-align: center;
+}
+
+.desktop-menu-item.logout-item {
+  color: var(--rojo-warning, #dc3545);
+}
+
+.desktop-menu-item.logout-item:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--rojo-warning, #dc3545);
+}
+
+.desktop-menu-label {
+  padding: 0.3rem 1rem 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--azul-hub, #1f3f92);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.desktop-locale-selector {
+  padding: 0 1rem 0.3rem;
+  width: 100%;
+}
+
+.desktop-locale-selector select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-default, #e0e0e0);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+.desktop-button-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.desktop-button-wrapper > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.desktop-menu-btn.col-8 {
+  flex: 0 0 auto;
+  width: 66.666667%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.desktop-submenu-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.desktop-submenu-item {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.desktop-submenu-btn {
+  width: 66.666667%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.desktop-menu-item-wrapper.logout-wrapper {
+  margin-top: auto;
+  border-top: 2px solid var(--gris-default, #e0e0e0);
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  position: sticky;
+  bottom: 0;
+  background-color: var(--color-background);
+}
+
+/* Desktop menu responsive adjustments */
+@media (min-width: 992px) {
+  .desktop-side-menu {
+    width: 400px;
   }
 }
 </style>

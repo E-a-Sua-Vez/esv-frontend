@@ -23,7 +23,7 @@
   margin-bottom: 0 !important;
 }
 .masthead {
-  padding-top: calc(.3rem + 70px);
+  padding-top: calc(0.3rem + 70px);
 }
 
 /* Screen reader only - for accessibility and SEO */
@@ -105,8 +105,13 @@
   margin-top: 0 !important;
 }
 
+/* Footer should have margin-top by default */
+.main-content-wrapper > footer.modern-footer {
+  margin-top: 4rem !important;
+}
+
 /* Override with dynamic header height when available via inline style */
-.main-content-wrapper[style*="padding-top"] {
+.main-content-wrapper[style*='padding-top'] {
   /* Keep inline style priority, but ensure minimum */
 }
 
@@ -699,11 +704,14 @@
 }
 
 /* Standardized typography for consistency - from public site */
-p, .text, .description {
+p,
+.text,
+.description {
   line-height: 1.4;
 }
 
-.subtitle, .subtitle-text {
+.subtitle,
+.subtitle-text {
   line-height: 1.4;
 }
 
@@ -749,7 +757,7 @@ p, .text, .description {
 
 .btn-ett {
   line-height: 1rem !important;
-  padding: .7rem !important;
+  padding: 0.7rem !important;
 }
 
 /* Modern card styles - standardized for all pages */

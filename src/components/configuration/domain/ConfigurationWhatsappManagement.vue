@@ -11,7 +11,6 @@ import {
 import { getPermissions } from '../../../application/services/permissions';
 import { getDate } from '../../../shared/utils/date';
 import Message from '../../common/Message.vue';
-import PoweredBy from '../../common/PoweredBy.vue';
 import CommerceLogo from '../../common/CommerceLogo.vue';
 import Spinner from '../../common/Spinner.vue';
 import Alert from '../../common/Alert.vue';
@@ -26,7 +25,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     Warning,
@@ -233,7 +231,11 @@ export default {
 
     const changeWhatsappStatus = computed(() => {
       const { whatsappStatus } = props;
-      state.whatsappConnectionStatus = whatsappStatus;
+      return whatsappStatus;
+    });
+
+    watch(changeWhatsappStatus, newStatus => {
+      state.whatsappConnectionStatus = newStatus;
     });
 
     watch(changeWhatsappRequest, async () => {
@@ -252,8 +254,6 @@ export default {
       }
       loading.value = false;
     });
-
-    watch(changeWhatsappStatus, async () => {});
 
     return {
       state,

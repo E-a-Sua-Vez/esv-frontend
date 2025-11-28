@@ -8,7 +8,6 @@ import { Chart, registerables } from 'chart.js';
 import { LineChart, DoughnutChart, BarChart, useBarChart } from 'vue-chart-3';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -26,7 +25,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     LineChart,
@@ -415,6 +413,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionNumberEvolutionProps } = useBarChart({
       chartData: attentionNumberEvolution,
@@ -452,6 +451,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionDurationEvolutionProps } = useBarChart({
       chartData: attentionDurationEvolution,
@@ -480,6 +480,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionHourDistributionProps } = useBarChart({
       chartData: attentionHourDistribution,
@@ -508,6 +509,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionDayDistributionProps } = useBarChart({
       chartData: attentionDayDistribution,
@@ -526,6 +528,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionQueuesProps } = useBarChart({ chartData: attentionQueues });
 
@@ -544,6 +547,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionFlowProps } = useBarChart({ chartData: attentionFlow });
 
@@ -564,6 +568,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: surveyFlowProps } = useBarChart({ chartData: surveyFlow });
 
@@ -599,6 +604,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({
       chartData: attentionRateDurationEvolution,
@@ -621,6 +627,7 @@ export default {
           ],
         };
       }
+      return undefined;
     });
     const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
 
@@ -663,6 +670,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: bookingNumberEvolutionProps } = useBarChart({
       chartData: bookingNumberEvolution,
@@ -693,6 +701,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: bookingHourDistributionProps } = useBarChart({
       chartData: bookingHourDistribution,
@@ -723,6 +732,7 @@ export default {
           },
         };
       }
+      return undefined;
     });
     const { barChartProps: bookingDayDistributionProps } = useBarChart({
       chartData: bookingDayDistribution,
@@ -790,187 +800,187 @@ export default {
             </div>
             <div v-else class="control-box">
               <div id="dashboard-controls">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t('dashboard.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    id="modules"
-                    @change="selectCommerce(state.commerce)"
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('dashboard.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getToday()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.today') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getCurrentMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.thisMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastThreeMonths()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastThreeMonths') }}
+                    </button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6">
+                    <input
+                      id="startDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.startDate"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      id="endDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.endDate"
+                    />
+                  </div>
+                </div>
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="refresh()"
+                    :disabled="loading"
                   >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
+                    <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
+                  </button>
                 </div>
               </div>
-              <div class="row my-2">
-                <div class="col-3">
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div id="title" class="metric-title">
+                <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+                <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+                <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+              </div>
+              <div id="sub-title" class="metric-subtitle">
+                ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+                {{ $t('dashboard.dates.to') }} {{ state.endDate }})
+              </div>
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-4 centered">
                   <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getToday()"
-                    :disabled="loading"
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showIndicators ? 'btn-selected' : ''"
+                    @click="showIndicators()"
+                    :disabled="!state.toggles['dashboard.indicators.view']"
                   >
-                    {{ $t('dashboard.today') }}
+                    {{ $t('dashboard.indicators') }} <br />
+                    <i class="bi bi-stoplights-fill"></i>
                   </button>
                 </div>
-                <div class="col-3">
+                <div class="col-4 centered">
                   <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getCurrentMonth()"
-                    :disabled="loading"
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showGraphs ? 'btn-selected' : ''"
+                    @click="showGraphs()"
+                    :disabled="!state.toggles['dashboard.graphs.view']"
                   >
-                    {{ $t('dashboard.thisMonth') }}
+                    {{ $t('dashboard.graph') }} <br />
+                    <i class="bi bi-bar-chart-line-fill"></i>
                   </button>
                 </div>
-                <div class="col-3">
+                <div class="col-4 centered">
                   <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getLastMonth()"
-                    :disabled="loading"
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showSurveyResults ? 'btn-selected' : ''"
+                    @click="showSurvey()"
+                    :disabled="!state.toggles['dashboard.surveys.view']"
                   >
-                    {{ $t('dashboard.lastMonth') }}
-                  </button>
-                </div>
-                <div class="col-3">
-                  <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getLastThreeMonths()"
-                    :disabled="loading"
-                  >
-                    {{ $t('dashboard.lastThreeMonths') }}
+                    {{ $t('dashboard.surveys') }} <br />
+                    <i class="bi bi-patch-question-fill"></i>
                   </button>
                 </div>
               </div>
-              <div class="row">
-                <div class="col-6">
-                  <input
-                    id="startDate"
-                    class="form-control metric-controls"
-                    type="date"
-                    v-model="state.startDate"
-                  />
-                </div>
-                <div class="col-6">
-                  <input
-                    id="endDate"
-                    class="form-control metric-controls"
-                    type="date"
-                    v-model="state.endDate"
-                  />
-                </div>
-              </div>
-              <div class="col">
-                <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                  @click="refresh()"
-                  :disabled="loading"
+              <div>
+                <DashboardIndicators
+                  :show-indicators="state.showIndicators"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
                 >
-                  <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
-                </button>
+                </DashboardIndicators>
+                <DashboardGraphs
+                  :show-graphs="state.showGraphs"
+                  :calculated-metrics="{
+                    attentionNumberEvolutionProps,
+                    attentionDurationEvolutionProps,
+                    attentionHourDistributionProps,
+                    attentionQueuesProps,
+                    attentionFlowProps,
+                    attentionRateDurationEvolutionProps,
+                    surveyFlowProps,
+                    bookingFlowProps,
+                    bookingNumberEvolutionProps,
+                    attentionDayDistributionProps,
+                    bookingDayDistributionProps,
+                    bookingHourDistributionProps,
+                    ...state.calculatedMetrics,
+                  }"
+                  :toggles="state.toggles"
+                  :graphs="state.graphs"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
+                >
+                </DashboardGraphs>
+                <DashboardSurveys
+                  :show-survey="state.showSurveyResults"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                >
+                </DashboardSurveys>
               </div>
             </div>
           </div>
-          <div v-if="!loading" id="dashboard-result" class="mt-2">
-            <div id="title" class="metric-title">
-              <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
-              <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
-              <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
-            </div>
-            <div id="sub-title" class="metric-subtitle">
-              ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
-              {{ $t('dashboard.dates.to') }} {{ state.endDate }})
-            </div>
-            <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showIndicators ? 'btn-selected' : ''"
-                  @click="showIndicators()"
-                  :disabled="!state.toggles['dashboard.indicators.view']"
-                >
-                  {{ $t('dashboard.indicators') }} <br />
-                  <i class="bi bi-stoplights-fill"></i>
-                </button>
-              </div>
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showGraphs ? 'btn-selected' : ''"
-                  @click="showGraphs()"
-                  :disabled="!state.toggles['dashboard.graphs.view']"
-                >
-                  {{ $t('dashboard.graph') }} <br />
-                  <i class="bi bi-bar-chart-line-fill"></i>
-                </button>
-              </div>
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showSurveyResults ? 'btn-selected' : ''"
-                  @click="showSurvey()"
-                  :disabled="!state.toggles['dashboard.surveys.view']"
-                >
-                  {{ $t('dashboard.surveys') }} <br />
-                  <i class="bi bi-patch-question-fill"></i>
-                </button>
-              </div>
-            </div>
-            <div>
-              <DashboardIndicators
-                :show-indicators="state.showIndicators"
-                :calculated-metrics="state.calculatedMetrics"
-                :toggles="state.toggles"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-              >
-              </DashboardIndicators>
-              <DashboardGraphs
-                :show-graphs="state.showGraphs"
-                :calculated-metrics="{
-                  attentionNumberEvolutionProps,
-                  attentionDurationEvolutionProps,
-                  attentionHourDistributionProps,
-                  attentionQueuesProps,
-                  attentionFlowProps,
-                  attentionRateDurationEvolutionProps,
-                  surveyFlowProps,
-                  bookingFlowProps,
-                  bookingNumberEvolutionProps,
-                  attentionDayDistributionProps,
-                  bookingDayDistributionProps,
-                  bookingHourDistributionProps,
-                  ...state.calculatedMetrics,
-                }"
-                :toggles="state.toggles"
-                :graphs="state.graphs"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-              >
-              </DashboardGraphs>
-              <DashboardSurveys
-                :show-survey="state.showSurveyResults"
-                :calculated-metrics="state.calculatedMetrics"
-                :toggles="state.toggles"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-                :queues="state.queues"
-              >
-              </DashboardSurveys>
-            </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
           </div>
         </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')"
-          />
-        </div>
-      </div>
       </div>
       <!-- Desktop Layout -->
       <div class="d-none d-lg-block desktop-dashboard-layout">
@@ -992,7 +1002,7 @@ export default {
               </div>
             </div>
           </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0;">
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
             <ComponentMenu
               :title="$t(`dashboard.title`)"
               :toggles="state.toggles"
@@ -1199,7 +1209,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 

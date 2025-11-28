@@ -131,9 +131,9 @@ export default {
 };
 </script>
 <template>
-  <div>
+  <div class="login-container">
     <form @submit.prevent="login">
-      <div class="client-data-card text-center mx-4">
+      <div class="client-data-card text-center">
         <div>
           <div id="email-form" class="row g-2 mb-3">
             <div class="col-2 icon">
@@ -245,30 +245,63 @@ export default {
   </div>
 </template>
 <style scoped>
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .client-data-card {
   margin-top: 0.2rem;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 1.5rem;
   background-color: var(--color-background);
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
   font-weight: 400;
   line-height: 2.5rem;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .icon {
   font-size: 1.5rem;
 }
+
 .errors {
   font-size: small;
   color: var(--rojo-warning);
 }
+
 .btn-area {
   z-index: 99;
   position: relative;
   top: 0;
   right: 0;
 }
+
 .link {
   cursor: pointer;
+}
+
+.recaptcha-area {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+@media (min-width: 768px) {
+  .login-container {
+    padding: 0 2rem;
+  }
+
+  .client-data-card {
+    padding: 2rem;
+  }
 }
 </style>

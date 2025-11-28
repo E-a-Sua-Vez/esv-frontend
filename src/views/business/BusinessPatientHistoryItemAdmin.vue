@@ -66,7 +66,6 @@ export default {
       orderUpdateError: false,
       estimatedTimeAddError: false,
       estimatedTimeUpdateError: false,
-      types: [],
       toggles: {},
       filtered: [],
     });

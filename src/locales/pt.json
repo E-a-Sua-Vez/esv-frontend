@@ -1,7 +1,7 @@
 {
   "logo": "/images/hub/logo/hub-color-transparente.png",
-  "hubLogoBlanco": "/images/hub/logo/hub-blanco-transparente.png",
   "logoAlt": "Hub",
+  "hubLogoBlanco": "/images/hub/logo/hub-blanco-transparente.png",
   "homeTitle": "Hub {'|'} Serviço de Filas 100% digital",
   "backToInit": "Ir para começar",
   "email": "ola{'@'}easuavez.com",
@@ -10,7 +10,7 @@
   "blog": "https://blog.easuavez.com",
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/esv/esv-color-horizontal-transparente.png",
+  "logoPoweredBy": "/images/esv/esv-blanco-horizontal-transparente.png",
   "enableAll": "Ative mais recursos!",
   "curious": "Curioso?",
   "wantToKnowMore": "Quero saber mais!",

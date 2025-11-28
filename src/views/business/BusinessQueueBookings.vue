@@ -7,7 +7,6 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -19,7 +18,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     VueRecaptcha,
     Spinner,
     Alert,
@@ -165,7 +163,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
     <!-- Modal Agenda -->
     <div
       class="modal fade"
