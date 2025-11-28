@@ -5,7 +5,7 @@ import Warning from '../../common/Warning.vue';
 import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../../shared/utils/lazyLoad';
 import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
 import SimpleCard from '../../dashboard/common/SimpleCard.vue';
@@ -197,27 +197,37 @@ export default {
       let doc = document.getElementById('financial-component');
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-            this.detailsOpened = false;
-          })
-          .catch(error => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-            this.detailsOpened = false;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+              this.detailsOpened = false;
+            })
+            .catch(error => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+              this.detailsOpened = false;
+            });
+        } catch (error) {
+          document.getElementById('pdf-header').style.display = 'none';
+          document.getElementById('pdf-footer').style.display = 'none';
+          doc = undefined;
+          this.loading = false;
+          this.downloading = false;
+          this.detailsOpened = false;
+        }
       }, 1100);
     },
     async getUserType() {

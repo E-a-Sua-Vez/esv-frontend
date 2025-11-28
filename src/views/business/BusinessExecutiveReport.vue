@@ -64,7 +64,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error?.response?.status || error?.status || 500;
         loading.value = false;
       }
     });
@@ -88,7 +88,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error?.response?.status || error?.status || 500;
         loading.value = false;
       }
     };

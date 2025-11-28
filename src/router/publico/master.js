@@ -1,4 +1,4 @@
-const MasterLogin = () => import('../../views/master/MasterLogin.vue');
+const MasterLogin = () => import('@/views/master/MasterLogin.vue');
 
 const PublicMasterRoutes = [
   {

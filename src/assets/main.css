@@ -1,11 +1,42 @@
 @import './base.css';
 
+/* Optimize font loading */
+@font-face {
+  font-family: 'Raleway';
+  font-display: swap; /* Show fallback font immediately, swap when loaded */
+}
+
 #app {
+  width: 100%;
   min-height: 100vh;
   line-height: 1.8;
   font-family: 'Raleway', sans-serif;
 }
+
+/* Ensure navbar has no bottom margin */
+.navbar,
+.navbar.fixed-top,
+.modern-nav,
+.header-wrapper,
+.header-wrapper > nav,
+.header-wrapper nav {
+  margin-bottom: 0 !important;
+}
 .masthead {
+  padding-top: calc(.3rem + 70px);
+}
+
+/* Screen reader only - for accessibility and SEO */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 .divider-custom {
   margin: 0rem 0 0rem;
@@ -42,18 +73,104 @@
 .divider-custom.divider-light .divider-custom-icon {
   color: var(--azul-es);
 }
-.page-section .page-section-heading {
+.page-section .page-section-heading,
+.page-section-heading,
+.portfolio-modal-title {
   font-size: 2.25rem;
   line-height: 2rem;
+  font-weight: 700;
 }
 @media (min-width: 992px) {
-  .page-section .page-section-heading {
+  .page-section .page-section-heading,
+  .page-section-heading,
+  .portfolio-modal-title {
     font-size: 3rem;
     line-height: 2.5rem;
   }
 }
+/* Main content wrapper - compensates for fixed navbar */
+/* Using safe values to account for varying header heights and content */
+.main-content-wrapper {
+  padding-top: 110px !important;
+  min-height: calc(100vh - 110px);
+  position: relative;
+  display: block;
+  margin-top: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Ensure the wrapper has proper spacing */
+.main-content-wrapper > * {
+  position: relative;
+  margin-top: 0 !important;
+}
+
+/* Override with dynamic header height when available via inline style */
+.main-content-wrapper[style*="padding-top"] {
+  /* Keep inline style priority, but ensure minimum */
+}
+
+/* Main content container - responsive width */
+.main-content-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Desktop: wider container for better space usage */
+@media (min-width: 768px) {
+  .main-content-container {
+    max-width: 1200px;
+    padding: 0 2rem;
+  }
+}
+
+/* Large desktop: even wider */
+@media (min-width: 1200px) {
+  .main-content-container {
+    max-width: 1400px;
+  }
+}
+
+/* Large screens - extra margin for safety */
+@media (min-width: 1200px) {
+  .main-content-wrapper {
+    padding-top: 80px;
+  }
+}
+
+/* Tablet and medium screens */
+@media (max-width: 991px) {
+  .main-content-wrapper {
+    padding-top: 80px;
+  }
+}
+
+/* Small tablets and large phones */
+@media (max-width: 768px) {
+  .main-content-wrapper {
+    padding-top: 75px;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 576px) {
+  .main-content-wrapper {
+    padding-top: 70px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 400px) {
+  .main-content-wrapper {
+    padding-top: 65px;
+  }
+}
+
 .content {
-  padding: 0 2rem 0 2rem;
+  padding: 1rem 2rem 0 2rem;
+  padding-top: 1rem !important;
   background: rgb(195, 218, 246);
   background: linear-gradient(
     0deg,
@@ -61,6 +178,18 @@
     rgba(255, 255, 255, 0.894016981792717) 43%,
     rgba(255, 255, 255, 1) 100%
   );
+}
+
+/* Desktop: better alignment for content */
+@media (min-width: 768px) {
+  .content.text-center {
+    text-align: left;
+  }
+
+  .content.text-center #commerce-logo,
+  .content.text-center #page-header {
+    text-align: center;
+  }
 }
 .welcome {
   padding: 0.1rem;
@@ -567,4 +696,73 @@
 .slide-fade-leave-to {
   transform: translateX(20px);
   opacity: 0;
+}
+
+/* Standardized typography for consistency - from public site */
+p, .text, .description {
+  line-height: 1.4;
+}
+
+.subtitle, .subtitle-text {
+  line-height: 1.4;
+}
+
+/* Modern button styles - standardized for all buttons */
+.btn-dark.rounded-pill,
+.btn-dark {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border: none;
+  color: white !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+  font-weight: 600;
+}
+
+.btn-dark.rounded-pill:hover,
+.btn-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.4);
+  color: white !important;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+}
+
+.btn-dark.rounded-pill:active,
+.btn-dark:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.3);
+}
+
+.btn-dark.rounded-pill i,
+.btn-dark i {
+  transition: transform 0.2s;
+}
+
+.btn-dark.rounded-pill:hover i.bi-arrow-left,
+.btn-dark:hover i.bi-arrow-left {
+  transform: translateX(-3px);
+}
+
+.btn-dark.rounded-pill:hover i.bi-arrow-right,
+.btn-dark:hover i.bi-arrow-right {
+  transform: translateX(3px);
+}
+
+.btn-ett {
+  line-height: 1rem !important;
+  padding: .7rem !important;
+}
+
+/* Modern card styles - standardized for all pages */
+.modern-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 2rem 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.modern-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }

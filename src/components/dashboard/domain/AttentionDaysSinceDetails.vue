@@ -115,9 +115,9 @@ export default {
       <div v-else>
         <div class="row centered">
           <div class="col">
-            <div class="py-1">
+            <div class="py-1 centered">
               <i class="bi bi-qr-code blue-icon h4 fw-bold m-1"></i>
-              <span class="col-8 fw-bold"> {{ 'No Data' }} </span>
+              <span class="fw-bold"> {{ 'No Data' }} </span>
             </div>
           </div>
         </div>
@@ -141,4 +141,12 @@ export default {
   justify-content: center;
   display: flex;
 }
+
+.centered {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100%;
+}
+
 </style>

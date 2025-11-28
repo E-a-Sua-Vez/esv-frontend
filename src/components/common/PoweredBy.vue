@@ -19,25 +19,41 @@ export default {
     <div class="mt-2">
       <span>{{ $t('poweredBy') }}</span>
     </div>
-    <div>
-      <img class="rounded img-fluid mx-auto logo-powered" :src="$t('logoPoweredBy')" />
+    <div class="logo-container">
+      <img
+        class="rounded img-fluid mx-auto logo-powered"
+        :src="$t('logoPoweredBy')"
+        alt="Powered by É a sua Vez"
+        loading="lazy"
+        width="120"
+        height="auto"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
+.logo-container {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .logo-powered {
   display: flex;
-  width: 70px;
+  width: 120px;
+  max-width: 100%;
+  height: auto;
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: contain;
 }
+
 .powered {
   padding: 1rem;
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 0.7rem;
 }
+
 .name {
   padding-bottom: 1rem;
   font-size: 1.1rem;

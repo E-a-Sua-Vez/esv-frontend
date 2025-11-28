@@ -196,3 +196,6 @@ Total (gzipped): <2MB     (75% reduction)
 - Repeat load < 1 second
 - Lighthouse score > 90
 - All functionality preserved
+
+
+

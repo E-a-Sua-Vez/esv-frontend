@@ -3,7 +3,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import { LineChart, DoughnutChart, BarChart } from 'vue-chart-3';
 import Message from '../../components/common/Message.vue';
 import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../shared/utils/lazyLoad';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 
@@ -15,7 +15,6 @@ export default {
     BarChart,
     Message,
     SimpleDownloadCard,
-    html2pdf,
     PDFHeader,
     PDFFooter,
     Spinner,
@@ -156,7 +155,7 @@ export default {
       this.showAttentions = false;
       this.showBookings = true;
     },
-    exportToPDF() {
+    async exportToPDF() {
       this.loading = true;
       this.downloading = true;
       const filename = `graphs-${this.commerce.name}-${this.commerce.tag}-${this.startDate}-${this.endDate}.pdf`;
@@ -171,25 +170,34 @@ export default {
       let doc = document.getElementById('graphs-component');
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-          })
-          .catch(error => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+            })
+            .catch(error => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+            });
+        } catch (error) {
+          document.getElementById('pdf-header').style.display = 'none';
+          document.getElementById('pdf-footer').style.display = 'none';
+          doc = undefined;
+          this.loading = false;
+          this.downloading = false;
+        }
       }, 2100);
     },
   },

@@ -41,7 +41,7 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="toggle-capabilities-wrapper">
     <Popper class="dark" arrow>
       <span class="what-do-title">{{ $t('capacities') }}</span>
       <template #content>
@@ -62,7 +62,15 @@ export default {
 </template>
 
 <style scoped>
+.toggle-capabilities-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
 .what-do-title {
   text-decoration: underline;
+  cursor: pointer;
 }
 </style>

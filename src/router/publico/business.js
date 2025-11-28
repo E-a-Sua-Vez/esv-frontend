@@ -1,4 +1,4 @@
-const BusinessLogin = () => import('../../views/business/BusinessLogin.vue');
+const BusinessLogin = () => import('@/views/business/BusinessLogin.vue');
 
 const PublicBusinessRoutes = [
   {

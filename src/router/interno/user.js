@@ -1,7 +1,7 @@
-const UserQueueAttention = () => import('../../views/UserQueueAttention.vue');
-const UserQueueBooking = () => import('../../views/UserQueueBooking.vue');
-const UserQueueWaitlist = () => import('../../views/UserQueueWaitlist.vue');
-const UserFormAttention = () => import('../../views/UserFormAttention.vue');
+const UserQueueAttention = () => import('@/views/UserQueueAttention.vue');
+const UserQueueBooking = () => import('@/views/UserQueueBooking.vue');
+const UserQueueWaitlist = () => import('@/views/UserQueueWaitlist.vue');
+const UserFormAttention = () => import('@/views/UserFormAttention.vue');
 
 const PrivateUserRoutes = [
   {

@@ -43,6 +43,9 @@ export default {
           class="rounded img-fluid mx-auto logo"
           :alt="this.$t('logoAlt')"
           :src="this.$t('logo')"
+          width="300"
+          height="auto"
+          fetchpriority="high"
         />
       </div>
       <div class="row my-4">
@@ -95,7 +98,8 @@ export default {
 
 <style scoped>
 .logo {
-  width: 500px;
+  width: 300px;
+  max-width: 100%;
   background-repeat: no-repeat;
   background-size: 100%;
 }
@@ -124,7 +128,8 @@ export default {
 }
 @media (min-width: 1024px) {
   .logo {
-    width: 500px;
+    width: 300px;
+    max-width: 100%;
     background-position: center;
   }
 }

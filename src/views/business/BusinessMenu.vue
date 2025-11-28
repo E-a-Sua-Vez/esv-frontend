@@ -151,20 +151,24 @@ export default {
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <WelcomeMenu
-        :name="state.currentUser.name"
-        :toggles="state.toggles"
-        component-name="businessMenu"
-      >
-      </WelcomeMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <PlanStatus :show="true" :plan-activation="state.currentPlanActivation" :can-admin="true">
-        </PlanStatus>
-      </div>
-      <div id="menu-mobile" class="d-block d-md-none">
+    <div class="content">
+      <!-- Mobile/Tablet Layout -->
+      <div class="d-block d-lg-none mobile-menu-layout">
+        <div class="text-center">
+          <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+          <WelcomeMenu
+            :name="state.currentUser.name"
+            :toggles="state.toggles"
+            component-name="businessMenu"
+          >
+          </WelcomeMenu>
+        </div>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <PlanStatus :show="true" :plan-activation="state.currentPlanActivation" :can-admin="true">
+          </PlanStatus>
+        </div>
+        <div id="menu-mobile" class="d-block d-md-none">
         <div class="sub-menu-spy">
           <span v-if="state.showMobileMenuSide" @click="onShowMobileSpySide()"
             >{{ $t('businessMenu.seeSpy') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
@@ -173,63 +177,63 @@ export default {
             >{{ $t('businessMenu.seeMenu') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
           </span>
         </div>
-        <Transition name="flip">
-          <div
-            id="menu-side-mobile"
-            :key="`menu-side-mobile`"
-            v-if="state.showMobileMenuSide === true"
-          >
-            <div class="choose-attention my-3 mt-4">
-              <span>{{ $t('businessMenu.choose') }}</span>
-            </div>
-            <div class="row">
-              <div
-                v-for="option in state.menuOptions"
-                :key="option"
-                class="d-grid btn-group btn-group-justified"
-              >
-                <div v-if="option === 'go-minisite'" class="centered">
-                  <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style"
-                    :href="`${getBusinessLink()}`"
-                    target="_blank"
-                  >
-                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                  </a>
-                </div>
-                <div v-else>
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
-                    @click="goToOption(option)"
-                    :disabled="!state.toggles[`business.main-menu.${option}`]"
-                  >
-                    {{ $t(`businessMenu.${option}`) }}
-                    <i
-                      v-if="option === 'manage-admin'"
-                      :class="`bi ${
-                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                    <i
-                      v-if="option === 'control-admin'"
-                      :class="`bi ${
-                        state.manageControlSubMenuOption === true
-                          ? 'bi-chevron-up'
-                          : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </button>
-                  <div
-                    v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                    class="mb-1"
-                  >
-                    <div v-for="opt in state.manageSubMenuOptions" :key="opt">
-                      <div class="centered mx-3">
+        <div class="mobile-content-wrapper">
+          <Transition name="slide" mode="out-in">
+            <div
+              v-if="state.showMobileMenuSide === true"
+              id="menu-side-mobile"
+              :key="`menu-side-mobile`"
+            >
+              <div class="choose-attention my-3 mt-4">
+                <span>{{ $t('businessMenu.choose') }}</span>
+              </div>
+              <div class="row">
+                <div
+                  v-for="option in state.menuOptions"
+                  :key="option"
+                  class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                >
+                  <div v-if="option === 'go-minisite'" class="centered">
+                    <a
+                      type="button"
+                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                      :href="`${getBusinessLink()}`"
+                      target="_blank"
+                    >
+                      {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                  </div>
+                  <div v-else>
+                    <button
+                      type="button"
+                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style mobile-menu-btn"
+                      @click="goToOption(option)"
+                      :disabled="!state.toggles[`business.main-menu.${option}`]"
+                    >
+                      {{ $t(`businessMenu.${option}`) }}
+                      <i
+                        v-if="option === 'manage-admin'"
+                        :class="`bi ${
+                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'control-admin'"
+                        :class="`bi ${
+                          state.manageControlSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </button>
+                    <div
+                      v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                      class="mobile-submenu-container"
+                    >
+                      <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="mobile-submenu-item">
                         <button
                           type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
                           @click="goToOption(opt)"
                           :disabled="!state.toggles[`business.main-menu.${opt}`]"
                         >
@@ -237,16 +241,14 @@ export default {
                         </button>
                       </div>
                     </div>
-                  </div>
-                  <div
-                    v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
-                    class="mb-1"
-                  >
-                    <div v-for="opt in state.manageControlSubMenuOptions" :key="opt">
-                      <div class="centered mx-3">
+                    <div
+                      v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
+                      class="mobile-submenu-container"
+                    >
+                      <div v-for="opt in state.manageControlSubMenuOptions" :key="opt" class="mobile-submenu-item">
                         <button
                           type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
                           @click="goToOption(opt)"
                           :disabled="!state.toggles[`business.main-menu.${opt}`]"
                         >
@@ -257,39 +259,71 @@ export default {
                   </div>
                 </div>
               </div>
+              <div v-if="!isActiveBusiness() && !loading">
+                <Message
+                  :title="$t('businessMenu.message.1.title')"
+                  :content="$t('businessMenu.message.1.content')"
+                  :icon="'bi bi-emoji-dizzy'"
+                >
+                </Message>
+              </div>
             </div>
-            <div v-if="!isActiveBusiness() && !loading">
-              <Message
-                :title="$t('businessMenu.message.1.title')"
-                :content="$t('businessMenu.message.1.content')"
-                :icon="'bi bi-emoji-dizzy'"
-              >
-              </Message>
+            <div
+              v-else-if="state.showMobileSpySide"
+              id="spy-side-mobile"
+              :key="`spy-side-mobile`"
+            >
+              <SpySection :show="true" :commerces="state.commerces"> </SpySection>
             </div>
-          </div>
-        </Transition>
-        <Transition name="flip">
-          <div id="spy-side-mobile" :key="`spy-side-mobile`" v-if="state.showMobileSpySide">
-            <SpySection :show="true" :commerces="state.commerces"> </SpySection>
-          </div>
-        </Transition>
+          </Transition>
+        </div>
       </div>
-      <div id="menu-desktop" class="d-none d-md-block">
-        <div class="row">
-          <div id="menu-side" class="col-6">
+      </div>
+      <!-- Desktop Layout -->
+      <div class="d-none d-lg-block desktop-menu-layout">
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <PlanStatus :show="true" :plan-activation="state.currentPlanActivation" :can-admin="true">
+          </PlanStatus>
+        </div>
+        <div class="row align-items-center mb-3 desktop-header-row">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0;">
+            <WelcomeMenu
+              :name="state.currentUser.name"
+              :toggles="state.toggles"
+              component-name="businessMenu"
+            >
+            </WelcomeMenu>
+          </div>
+        </div>
+        <div id="menu-desktop" class="row desktop-menu-content">
+          <div id="menu-side" class="col-lg-5 desktop-menu-column">
             <div class="choose-attention my-3 mb-4">
               <span>{{ $t('businessMenu.choose') }}</span>
             </div>
-            <div class="row">
+            <div class="row menu-buttons-grid">
               <div
                 v-for="option in state.menuOptions"
                 :key="option"
-                class="d-grid btn-group btn-group-justified"
+                class="col-12 col-lg-6 menu-button-wrapper"
               >
                 <div v-if="option === 'go-minisite'" class="centered">
                   <a
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
                     :href="`${getBusinessLink()}`"
                     target="_blank"
                   >
@@ -299,7 +333,7 @@ export default {
                 <div v-else>
                   <button
                     type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
                     @click="goToOption(option)"
                     :disabled="!state.toggles[`business.main-menu.${option}`]"
                   >
@@ -322,38 +356,34 @@ export default {
                   <Transition name="fade">
                     <div
                       v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                      class="mb-1"
+                      class="submenu-container"
                     >
-                      <div v-for="opt in state.manageSubMenuOptions" :key="opt">
-                        <div class="centered mx-3">
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                          >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                      <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="submenu-item">
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                          @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                        >
+                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
                       </div>
                     </div>
                   </Transition>
                   <Transition name="fade">
                     <div
                       v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
-                      class="mb-1"
+                      class="submenu-container"
                     >
-                      <div v-for="opt in state.manageControlSubMenuOptions" :key="opt">
-                        <div class="centered mx-3">
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                          >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                      <div v-for="opt in state.manageControlSubMenuOptions" :key="opt" class="submenu-item">
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                          @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                        >
+                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
                       </div>
                     </div>
                   </Transition>
@@ -369,7 +399,7 @@ export default {
               </Message>
             </div>
           </div>
-          <div id="spy-side" class="col-6" v-if="!loading">
+          <div id="spy-side" class="col-lg-7 desktop-spy-column" v-if="!loading">
             <SpySection :show="true" :commerces="state.commerces"> </SpySection>
           </div>
         </div>
@@ -383,6 +413,7 @@ export default {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1rem;
+  text-align: center;
 }
 .select {
   border-radius: 0.5rem;
@@ -405,21 +436,53 @@ export default {
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1rem;
+  text-align: center;
 }
-.flip-enter-active,
-.flip-leave-active {
-  transition: all 1s ease;
+/* Mobile card container for slide transition */
+.mobile-card-container {
+  position: relative;
+  overflow: hidden;
 }
-.flip-enter-from,
-.flip-leave-to {
-  transform: rotateY(180deg);
+
+.mobile-content-wrapper {
+  position: relative;
+  min-height: 400px;
+  width: 100%;
+}
+
+/* Slide transition for mobile card swap */
+.slide-enter-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-leave-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.slide-enter-from {
+  transform: translateX(100%);
   opacity: 0;
 }
-.flip-enter-active {
-  animation: bounce-in 0.5s;
+
+.slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
 }
-.flip-leave-active {
-  animation: bounce-in 0.5s reverse;
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+#menu-side-mobile,
+#spy-side-mobile {
+  width: 100%;
+  will-change: transform, opacity;
 }
 .sub-menu-spy {
   text-decoration: underline;
@@ -429,5 +492,244 @@ export default {
   font-weight: 500;
   line-height: 0.8rem;
   cursor: pointer;
+}
+
+/* Desktop menu layout improvements */
+.menu-buttons-grid {
+  gap: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.menu-button-wrapper {
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+
+.menu-button-wrapper > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.desktop-menu-btn {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Submenu styles */
+.submenu-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.submenu-item {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.submenu-item .desktop-submenu-btn {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Desktop: more compact button layout */
+@media (min-width: 992px) {
+  .desktop-menu-btn {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    margin: 0 auto;
+  }
+
+  .desktop-submenu-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .menu-button-wrapper {
+    padding: 0 0.25rem;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .submenu-container {
+    width: 100%;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .submenu-item {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .menu-buttons-grid {
+    gap: 0.35rem;
+    justify-content: center;
+  }
+}
+
+
+/* Desktop Menu Layout Styles */
+@media (min-width: 992px) {
+  .desktop-menu-layout {
+    padding: 0;
+    width: 100%;
+  }
+
+  .desktop-menu-layout .content {
+    padding-left: 15px;
+    padding-right: 15px;
+    max-width: 100%;
+  }
+
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+  }
+
+  .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+  }
+
+  .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+  }
+
+  .desktop-menu-content {
+    align-items: flex-start;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .desktop-menu-column {
+    padding-right: 1.5rem;
+  }
+
+  .desktop-spy-column {
+    min-width: 0;
+    padding-left: 1.5rem;
+  }
+
+  /* Align titles to the center in desktop layout */
+  .desktop-menu-column .choose-attention {
+    text-align: center;
+  }
+
+  .desktop-spy-column .spy-title {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .desktop-spy-column .spy-subdetails {
+    text-align: center;
+  }
+
+  .desktop-spy-column .spy-details {
+    text-align: center;
+  }
+}
+
+/* Mobile: Center menu buttons */
+@media (max-width: 991px) {
+  #menu-side-mobile .row {
+    justify-content: center;
+  }
+
+  .mobile-button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .mobile-button-wrapper > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .mobile-menu-btn.col-8 {
+    flex: 0 0 auto;
+    width: 66.666667%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Mobile submenu styles */
+  .mobile-submenu-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-submenu-item {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .mobile-submenu-btn {
+    width: 66.666667%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 </style>

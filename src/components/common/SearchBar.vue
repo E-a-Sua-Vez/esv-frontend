@@ -62,6 +62,10 @@ export default {
                 v-if="item.logo"
                 :src="item.logo"
                 class="img-thumbnail rounded-start item-image"
+                loading="lazy"
+                width="80"
+                height="70"
+                alt="Logo"
               />
               <i v-else class="bi bi-person-circle"> </i>
             </div>

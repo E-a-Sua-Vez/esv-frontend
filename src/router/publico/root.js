@@ -1,4 +1,4 @@
-const HomeView = () => import('../../views/HomeView.vue');
+const HomeView = () => import('@/views/HomeView.vue');
 
 const RootRoutes = [
   {

@@ -14,8 +14,9 @@
  * html2pdf().from(element).save();
  */
 export async function lazyLoadHtml2Pdf() {
-  const html2pdf = (await import('html2pdf.js')).default;
-  return html2pdf;
+  const html2pdfModule = await import('html2pdf.js');
+  // html2pdf.js may not have a default export, try both
+  return html2pdfModule.default || html2pdfModule;
 }
 
 /**

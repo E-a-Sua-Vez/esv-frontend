@@ -300,4 +300,46 @@ export default {
   font-weight: 700;
   line-height: 1rem;
 }
+
+/* Mobile: Center spy section titles and details */
+@media (max-width: 991px) {
+  .spy-title {
+    text-align: center !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .spy-subdetails {
+    text-align: center !important;
+    display: block;
+    width: 100%;
+  }
+
+  .spy-details {
+    text-align: center !important;
+    display: block;
+    width: 100%;
+  }
+}
+
+/* Desktop: Center spy section titles and details */
+@media (min-width: 992px) {
+  .spy-title {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .spy-subdetails {
+    text-align: center;
+  }
+
+  .spy-details {
+    text-align: center;
+    display: block;
+  }
+}
 </style>

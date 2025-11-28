@@ -19,8 +19,17 @@ export default defineConfig(({ command, mode }) =>
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
+      extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     },
-    envDir: 'br',
+    server: {
+      fs: {
+        strict: false,
+        allow: ['..'],
+      },
+      hmr: {
+        overlay: true,
+      },
+    },
     // Build optimizations for better performance
     build: {
       // Target modern browsers for smaller bundles

@@ -4,7 +4,7 @@ import SimpleCard from './common/SimpleCard.vue';
 import DetailsCard from './common/DetailsCard.vue';
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../shared/utils/lazyLoad';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionRatingDetails from './domain/AttentionRatingDetails.vue';
@@ -28,7 +28,6 @@ export default {
     SimpleCard,
     DetailsCard,
     Message,
-    html2pdf,
     SimpleDownloadCard,
     PDFHeader,
     PDFFooter,
@@ -118,25 +117,34 @@ export default {
       let doc = document.getElementById('survey-component');
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            this.detailsOpened = false;
-            this.loading = false;
-            doc = undefined;
-          })
-          .catch(error => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            this.detailsOpened = false;
-            this.loading = false;
-            doc = undefined;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              this.detailsOpened = false;
+              this.loading = false;
+              doc = undefined;
+            })
+            .catch(error => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              this.detailsOpened = false;
+              this.loading = false;
+              doc = undefined;
+            });
+        } catch (error) {
+          document.getElementById('pdf-header').style.display = 'none';
+          document.getElementById('pdf-footer').style.display = 'none';
+          this.detailsOpened = false;
+          this.loading = false;
+          doc = undefined;
+        }
       }, 1000);
     },
   },

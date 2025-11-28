@@ -24,7 +24,10 @@ export default {
       v-else
       class="rounded img-fluid mx-auto logo"
       :alt="this.$t('logoAlt')"
-      :src="src === undefined ? this.$t('logo') : src"
+      :src="src === undefined ? this.$t('hubLogoBlanco') : src"
+      loading="lazy"
+      width="250"
+      height="230"
     />
   </div>
 </template>

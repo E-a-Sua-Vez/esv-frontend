@@ -19,6 +19,20 @@ export default {
       extendedEntity: false,
     };
   },
+  computed: {
+    incomesCreated() {
+      return this.calculatedMetrics?.['incomes.created'] || {};
+    },
+    outcomesCreated() {
+      return this.calculatedMetrics?.['outcomes.created'] || {};
+    },
+    incomesPaymentData() {
+      return this.incomesCreated?.paymentData || {};
+    },
+    outcomesPaymentData() {
+      return this.outcomesCreated?.paymentData || {};
+    },
+  },
   methods: {
     scorePercentage(total, tag) {
       return parseFloat(((tag * 100) / total).toFixed(2), 2) || 0;
@@ -66,7 +80,7 @@ export default {
       </div>
       <Transition name="flip">
         <div v-if="showIncomesCollection">
-          <div class="metric-card-title">
+          <div class="metric-card-title centered">
             <span class="px-2"> {{ $t('dashboard.items.attentions.34') }} </span>
             <Popper
               :class="'dark px-2'"
@@ -79,14 +93,12 @@ export default {
           </div>
           <IncomesCollectionDetails
             :show="show"
-            :distribution="calculatedMetrics['incomes.created'].paymentData"
-            :count="calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0"
-            :distribution-payment="calculatedMetrics['incomes.created'].paymentDistribution"
-            :distribution-type="calculatedMetrics['incomes.created'].paymentTypeDistribution"
-            :distribution-method="calculatedMetrics['incomes.created'].paymentMethodDistribution"
-            :distribution-fiscal-note="
-              calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution
-            "
+            :distribution="incomesPaymentData"
+            :count="incomesPaymentData.paymentCounter || 0"
+            :distribution-payment="incomesCreated.paymentDistribution"
+            :distribution-type="incomesCreated.paymentTypeDistribution"
+            :distribution-method="incomesCreated.paymentMethodDistribution"
+            :distribution-fiscal-note="incomesCreated.paymentFiscalNoteDistribution"
             :details-opened="detailsOpened"
             :show-details-section="showDetailsSection"
           >
@@ -95,7 +107,7 @@ export default {
       </Transition>
       <Transition name="flip">
         <div v-if="showOutcomesCollection">
-          <div class="metric-card-title">
+          <div class="metric-card-title centered">
             <span class="px-2"> {{ $t('dashboard.items.attentions.36') }} </span>
             <Popper
               :class="'dark px-2'"
@@ -108,10 +120,10 @@ export default {
           </div>
           <OutcomesCollectionDetails
             :show="show"
-            :distribution="calculatedMetrics['outcomes.created'].paymentData"
-            :distribution-payment="calculatedMetrics['outcomes.created'].paymentDistribution"
-            :count="calculatedMetrics['outcomes.created']['paymentData'].paymentCounter || 0"
-            :distribution-type="calculatedMetrics['outcomes.created'].paymentTypeDistribution"
+            :distribution="outcomesPaymentData"
+            :distribution-payment="outcomesCreated.paymentDistribution"
+            :count="outcomesPaymentData.paymentCounter || 0"
+            :distribution-type="outcomesCreated.paymentTypeDistribution"
             :details-opened="detailsOpened"
             :show-details-section="showDetailsSection"
           >
@@ -146,6 +158,7 @@ export default {
   line-height: 0.8rem;
   cursor: pointer;
 }
+
 .details-title {
   cursor: pointer;
   text-decoration: underline;
