@@ -3,7 +3,6 @@ import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -11,7 +10,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessbusinessSectionAtWorkView',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ComponentMenu },
+  components: { CommerceLogo, Message, Spinner, Alert, ComponentMenu },
   async setup() {
     const router = useRouter();
 
@@ -83,7 +82,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 <style scoped>

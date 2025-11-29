@@ -135,6 +135,7 @@ export default {
   color: rgba(255, 255, 255, 0.9);
   position: relative;
   margin-top: 4rem;
+  margin-bottom: 0;
   padding-top: 1.5rem;
   padding-bottom: 1rem;
 }
@@ -249,7 +250,15 @@ export default {
 @media (max-width: 768px) {
   .modern-footer {
     padding-top: 2rem;
+    padding-bottom: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
     margin-top: 4rem;
+  }
+
+  .footer-container .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   .footer-main {
@@ -269,9 +278,33 @@ export default {
     padding: 0;
     margin-bottom: 2rem;
   }
+
+  .footer-bottom {
+    padding: 1.5rem 0;
+  }
 }
 
 @media (max-width: 576px) {
+  .modern-footer {
+    padding-top: 2rem;
+    padding-bottom: 2.5rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .footer-container .container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .footer-main {
+    padding-bottom: 2.5rem;
+  }
+
+  .footer-bottom {
+    padding: 2rem 0;
+  }
+
   .footer-title {
     font-size: 0.95rem;
   }

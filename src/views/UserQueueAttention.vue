@@ -18,7 +18,6 @@ import Message from '../components/common/Message.vue';
 import AttentionSurvey from '../components/domain/AttentionSurvey.vue';
 import QueueName from '../components/common/QueueName.vue';
 import AttentionNumber from '../components/common/AttentionNumber.vue';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import QR from '../components/common/QR.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import ClientNotifyData from '../components/domain/ClientNotifyData.vue';
@@ -31,7 +30,6 @@ export default {
   name: 'UserQueueAttention',
   components: {
     AreYouSure,
-    PoweredBy,
     QR,
     CommerceLogo,
     ClientNotifyData,
@@ -440,6 +438,7 @@ export default {
       speak,
       goToForm,
       getActiveFeature,
+      ATTENTION_STATUS,
     };
   },
 };
@@ -828,7 +827,6 @@ export default {
       </div>
       <div></div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 

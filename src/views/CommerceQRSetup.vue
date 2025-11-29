@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../stores';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import Message from '../components/common/Message.vue';
 import QR from '../components/common/QR.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
@@ -16,7 +15,6 @@ export default {
   name: 'CommerceQRSetup',
   components: {
     CommerceLogo,
-    PoweredBy,
     Message,
     QR,
     VueRecaptcha,
@@ -324,7 +322,6 @@ export default {
         </Message>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 

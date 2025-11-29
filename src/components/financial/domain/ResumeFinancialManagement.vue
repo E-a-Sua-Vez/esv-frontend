@@ -48,6 +48,7 @@ export default {
     commerces: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     const store = globalStore();
@@ -281,6 +282,21 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :refresh="refresh"
+    :start-date="startDate"
+    :end-date="endDate"
+    :loading="loading"
+  ></slot>
+
   <div>
     <div
       id="financialResume-management"
@@ -305,7 +321,8 @@ export default {
                     ></SimpleDownloadButton>
                   </div>
                 </div>
-                <div class="my-2 row metric-card">
+                <!-- Filters Section - Can be shown in component or exposed via slot -->
+                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
                   <div class="col-12">
                     <span class="metric-card-subtitle">
                       <span
@@ -392,105 +409,105 @@ export default {
                   </div>
                 </div>
               </div>
-              <div id="financial-component" v-if="this.financialResume">
-                <PDFHeader
-                  :show="toggles['financial.reports.resume']"
-                  :title="$t('businessFinancial.reports.resume.title')"
-                  :start-date="startDate"
-                  :end-date="endDate"
-                  :commerce="commerce"
-                >
-                </PDFHeader>
-                <div>
-                  <div class="row">
-                    <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
-                      <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
-                        <div class="metric-card-title">
-                          <span> {{ $t('dashboard.incomes') }} </span>
-                        </div>
-                        <IncomesCollectionDetails
-                          :show="!!toggles['financial.reports.resume']"
-                          :distribution="calculatedMetrics['incomes.created'].paymentData"
-                          :count="
-                            calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0
-                          "
-                          :distribution-payment="
-                            calculatedMetrics['incomes.created'].paymentDistribution
-                          "
-                          :distribution-type="
-                            calculatedMetrics['incomes.created'].paymentTypeDistribution
-                          "
-                          :distribution-method="
-                            calculatedMetrics['incomes.created'].paymentMethodDistribution
-                          "
-                          :distribution-fiscal-note="
-                            calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution
-                          "
-                          :details-opened="detailsOpened"
-                        >
-                        </IncomesCollectionDetails>
+            </div>
+            <div id="financial-component" v-if="this.financialResume">
+              <PDFHeader
+                :show="toggles['financial.reports.resume']"
+                :title="$t('businessFinancial.reports.resume.title')"
+                :start-date="startDate"
+                :end-date="endDate"
+                :commerce="commerce"
+              >
+              </PDFHeader>
+              <div>
+                <div class="row">
+                  <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
+                    <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
+                      <div class="metric-card-title">
+                        <span> {{ $t('dashboard.incomes') }} </span>
                       </div>
-                      <div class="metric-card" v-if="calculatedMetrics['outcomes.created']">
-                        <div class="metric-card-title">
-                          <span> {{ $t('dashboard.outcomes') }} </span>
-                        </div>
-                        <OutcomesCollectionDetails
-                          :show="!!toggles['financial.reports.resume']"
-                          :distribution="calculatedMetrics['outcomes.created'].paymentData"
-                          :distribution-payment="
-                            calculatedMetrics['outcomes.created'].paymentDistribution
-                          "
-                          :count="
-                            calculatedMetrics['outcomes.created']['paymentData'].paymentCounter || 0
-                          "
-                          :distribution-type="
-                            calculatedMetrics['outcomes.created'].paymentTypeDistribution
-                          "
-                          :details-opened="detailsOpened"
-                        >
-                        </OutcomesCollectionDetails>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div id="profit" class="col">
-                      <SimpleCard
-                        :show="true"
-                        :data="+financialResume['resume']['diff'] || 0"
-                        :subdata="`${+financialResume['resume']['avg'] || 0}%`"
-                        :title="$t('businessFinancial.profit')"
-                        :show-tooltip="false"
-                        :icon="'bi-arrow-up-circle-fill'"
-                        :icon-style-class="'green-icon'"
+                      <IncomesCollectionDetails
+                        :show="!!toggles['financial.reports.resume']"
+                        :distribution="calculatedMetrics['incomes.created'].paymentData"
+                        :count="
+                          calculatedMetrics['incomes.created']['paymentData'].paymentCounter || 0
+                        "
+                        :distribution-payment="
+                          calculatedMetrics['incomes.created'].paymentDistribution
+                        "
+                        :distribution-type="
+                          calculatedMetrics['incomes.created'].paymentTypeDistribution
+                        "
+                        :distribution-method="
+                          calculatedMetrics['incomes.created'].paymentMethodDistribution
+                        "
+                        :distribution-fiscal-note="
+                          calculatedMetrics['incomes.created'].paymentFiscalNoteDistribution
+                        "
+                        :details-opened="detailsOpened"
                       >
-                      </SimpleCard>
+                      </IncomesCollectionDetails>
                     </div>
-                  </div>
-                  <div
-                    class="row mx-2 mt-3"
-                    v-if="
-                      calculatedMetrics['incomes.created']?.evolution?.datasets &&
-                      calculatedMetrics['outcomes.created']?.evolution?.datasets
-                    "
-                  >
-                    <div class="card col centered p-4">
-                      <div class="fw-bold mb-2">
-                        <span>{{ $t('businessFinancial.evolution') }} </span>
+                    <div class="metric-card" v-if="calculatedMetrics['outcomes.created']">
+                      <div class="metric-card-title">
+                        <span> {{ $t('dashboard.outcomes') }} </span>
                       </div>
-                      <LineChart class="centered" v-bind="financialResume.evolution" />
+                      <OutcomesCollectionDetails
+                        :show="!!toggles['financial.reports.resume']"
+                        :distribution="calculatedMetrics['outcomes.created'].paymentData"
+                        :distribution-payment="
+                          calculatedMetrics['outcomes.created'].paymentDistribution
+                        "
+                        :count="
+                          calculatedMetrics['outcomes.created']['paymentData'].paymentCounter || 0
+                        "
+                        :distribution-type="
+                          calculatedMetrics['outcomes.created'].paymentTypeDistribution
+                        "
+                        :details-opened="detailsOpened"
+                      >
+                      </OutcomesCollectionDetails>
                     </div>
                   </div>
-                  <div v-else></div>
                 </div>
-                <PDFFooter :show="toggles['financial.reports.resume']"></PDFFooter>
+                <div class="row">
+                  <div id="profit" class="col">
+                    <SimpleCard
+                      :show="true"
+                      :data="+financialResume['resume']['diff'] || 0"
+                      :subdata="`${+financialResume['resume']['avg'] || 0}%`"
+                      :title="$t('businessFinancial.profit')"
+                      :show-tooltip="false"
+                      :icon="'bi-arrow-up-circle-fill'"
+                      :icon-style-class="'green-icon'"
+                    >
+                    </SimpleCard>
+                  </div>
+                </div>
+                <div
+                  class="row mx-2 mt-3"
+                  v-if="
+                    calculatedMetrics['incomes.created']?.evolution?.datasets &&
+                    calculatedMetrics['outcomes.created']?.evolution?.datasets
+                  "
+                >
+                  <div class="card col centered p-4">
+                    <div class="fw-bold mb-2">
+                      <span>{{ $t('businessFinancial.evolution') }} </span>
+                    </div>
+                    <LineChart class="centered" v-bind="financialResume.evolution" />
+                  </div>
+                </div>
+                <div v-else></div>
               </div>
-              <div v-else>
-                <Message
-                  :icon="'bi-graph-up-arrow'"
-                  :title="$t('dashboard.message.2.title')"
-                  :content="$t('dashboard.message.2.content')"
-                />
-              </div>
+              <PDFFooter :show="toggles['financial.reports.resume']"></PDFFooter>
+            </div>
+            <div v-else>
+              <Message
+                :icon="'bi-graph-up-arrow'"
+                :title="$t('dashboard.message.2.title')"
+                :content="$t('dashboard.message.2.content')"
+              />
             </div>
           </div>
         </div>

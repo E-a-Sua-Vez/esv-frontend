@@ -72,24 +72,36 @@ export default {
 
 <style scoped>
 .metric-card {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin: 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
+  background: #ffffff;
+  padding: 1.5rem;
+  margin: 0.75rem 0.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
 .metric-card-title {
-  margin: 0.1rem;
-  font-size: 1rem;
-  font-weight: 500;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
   display: flex;
+  align-items: center;
   align-self: center;
+  color: rgba(0, 0, 0, 0.75);
 }
+
 .configuration-details-container {
   font-size: 0.8rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   margin-bottom: 0;
 }
 </style>

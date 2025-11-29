@@ -29,6 +29,7 @@ export default {
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -292,6 +293,36 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :refresh="refresh"
+    :start-date="startDate"
+    :end-date="endDate"
+    :search-text="searchText"
+    :queue-id="queueId"
+    :service-id="serviceId"
+    :queues="queues"
+    :services="services"
+    :loading="loading"
+    :days-since-type="daysSinceType"
+    :days-since-contacted="daysSinceContacted"
+    :contact-result-type="contactResultType"
+    :contactable="contactable"
+    :contacted="contacted"
+    :survey="survey"
+    :asc="asc"
+    :check-contactable="checkContactable"
+    :check-contacted="checkContacted"
+    :check-survey="checkSurvey"
+    :check-asc="checkAsc"
+  ></slot>
   <div
     id="attentions-management"
     class="row"
@@ -313,7 +344,8 @@ export default {
                 ></SimpleDownloadButton>
               </div>
             </div>
-            <div class="my-2 row metric-card">
+            <!-- Filters Section - Can be shown in component or exposed via slot -->
+            <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
                   <span

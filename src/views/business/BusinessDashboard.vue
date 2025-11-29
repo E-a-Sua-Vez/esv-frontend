@@ -13,10 +13,12 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
 import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
-import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import { DateModel } from '../../shared/utils/date.model';
+import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
+import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 
 Chart.register(...registerables);
 
@@ -32,9 +34,11 @@ export default {
     BarChart,
     DashboardIndicators,
     DashboardGraphs,
-    DashboardSurveysResult,
     DashboardSurveys,
     ComponentMenu,
+    DesktopContentLayout,
+    DesktopFiltersPanel,
+    DateRangeFilters,
   },
   async setup() {
     const router = useRouter();
@@ -738,6 +742,32 @@ export default {
       chartData: bookingDayDistribution,
     });
 
+    const handleCommerceChanged = async commerce => {
+      await selectCommerce(commerce);
+    };
+
+    const handleFiltersToggle = collapsed => {
+      // Filters toggle handled by DesktopContentLayout
+    };
+
+    const handleQuickDateSelect = async ({ type, startDate, endDate }) => {
+      state.startDate = startDate;
+      state.endDate = endDate;
+      await refresh();
+    };
+
+    const handleDateRangeChange = async () => {
+      await refresh();
+    };
+
+    const handleStartDateChange = value => {
+      state.startDate = value;
+    };
+
+    const handleEndDateChange = value => {
+      state.endDate = value;
+    };
+
     return {
       state,
       loading,
@@ -766,6 +796,12 @@ export default {
       getLastThreeMonths,
       getLocalHour,
       getToday,
+      handleCommerceChanged,
+      handleFiltersToggle,
+      handleQuickDateSelect,
+      handleDateRangeChange,
+      handleStartDateChange,
+      handleEndDateChange,
     };
   },
 };
@@ -988,7 +1024,7 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="loading" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-3 desktop-header-row">
+        <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
@@ -1019,186 +1055,197 @@ export default {
               :content="$t('dashboard.message.3.content')"
             />
           </div>
-          <div v-else class="row desktop-dashboard-content">
-            <div class="col-lg-5 desktop-controls-column">
-              <div id="dashboard-controls" class="control-box">
-                <div class="row">
-                  <div class="col" v-if="state.commerces">
-                    <span>{{ $t('dashboard.commerce') }} </span>
-                    <select
-                      class="btn btn-md fw-bold text-dark m-1 select"
-                      v-model="state.commerce"
-                      id="modules"
-                      @change="selectCommerce(state.commerce)"
-                    >
-                      <option v-for="com in state.commerces" :key="com.id" :value="com">
-                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row my-2">
-                  <div class="col-6">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
-                      @click="getToday()"
+          <div v-else>
+            <DesktopContentLayout
+              :show-filters="true"
+              :filters-sticky="true"
+              @filters-toggle="handleFiltersToggle"
+            >
+              <template #filters="{ onToggle, collapsed }">
+                <DesktopFiltersPanel
+                  :model-value="{ commerce: state.commerce }"
+                  :loading="loading"
+                  :commerces="Array.isArray(state.commerces) ? state.commerces : []"
+                  :show-commerce-selector="true"
+                  :show-date-filters="false"
+                  :show-quick-date-buttons="false"
+                  :show-refresh-button="false"
+                  :sticky="true"
+                  :show-all-option="false"
+                  :commerce-selector-id="'dashboard-commerce-selector'"
+                  :on-toggle="onToggle"
+                  :collapsed="collapsed"
+                  @commerce-changed="handleCommerceChanged"
+                >
+                  <template #custom-filters>
+                    <DateRangeFilters
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :show-quick-buttons="true"
                       :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-6">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                </div>
-                <div class="row my-2">
-                  <div class="col-6">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-6">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <input
-                      id="startDateDesktop"
-                      class="form-control metric-controls mb-2"
-                      type="date"
-                      v-model="state.startDate"
+                      :show-search-button="true"
+                      @update:startDate="handleStartDateChange"
+                      @update:endDate="handleEndDateChange"
+                      @quick-select="handleQuickDateSelect"
+                      @search="handleDateRangeChange"
                     />
-                  </div>
-                  <div class="col-12">
-                    <input
-                      id="endDateDesktop"
-                      class="form-control metric-controls"
-                      type="date"
-                      v-model="state.endDate"
-                    />
-                  </div>
-                </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 w-100"
-                    @click="refresh()"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-7 desktop-result-column">
-              <div v-if="!loading" id="dashboard-result">
-                <div id="title" class="metric-title">
-                  <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
-                  <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
-                  <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
-                </div>
-                <div id="sub-title" class="metric-subtitle">
-                  ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
-                  {{ $t('dashboard.dates.to') }} {{ state.endDate }})
-                </div>
-                <div class="row col mx-1 mt-3 mb-1">
-                  <div class="col-4 centered">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                      :class="state.showIndicators ? 'btn-selected' : ''"
-                      @click="showIndicators()"
-                      :disabled="!state.toggles['dashboard.indicators.view']"
+
+                    <!-- Filters from DashboardSurveys - shown when surveys tab is active -->
+                    <!-- Render both components to expose filters for both tabs (Resume and Consolidated) -->
+                    <DashboardSurveys
+                      v-if="state.showSurveyResults"
+                      :show-survey="false"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="state.commerce"
+                      :queues="Array.isArray(state.queues) ? state.queues : []"
+                      filters-location="slot"
                     >
-                      {{ $t('dashboard.indicators') }} <br />
-                      <i class="bi bi-stoplights-fill"></i>
-                    </button>
+                      <template #filters-exposed="filterProps">
+                        <div class="filters-content-wrapper">
+                          <!-- Queue selector -->
+                          <div
+                            class="mb-3"
+                            v-if="filterProps.queues && filterProps.queues.length > 1"
+                          >
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('dashboard.queue')
+                            }}</label>
+                            <select
+                              class="form-select metric-controls"
+                              :value="filterProps.queueId"
+                              @change="
+                                e => {
+                                  filterProps.queueId = e.target.value;
+                                  filterProps.refresh();
+                                }
+                              "
+                            >
+                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                              <option
+                                v-for="queue in filterProps.queues"
+                                :key="queue.id"
+                                :value="queue.id"
+                              >
+                                {{ queue.name }}
+                              </option>
+                            </select>
+                          </div>
+
+                          <!-- Clear button -->
+                          <div class="mb-3">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                              @click="filterProps.clear()"
+                            >
+                              <i class="bi bi-eraser-fill"></i>
+                              {{ $t('dashboard.clear') || 'Limpiar' }}
+                            </button>
+                          </div>
+                        </div>
+                      </template>
+                    </DashboardSurveys>
+                  </template>
+                </DesktopFiltersPanel>
+              </template>
+
+              <template #content>
+                <div v-if="!loading" id="dashboard-result">
+                  <div id="title" class="metric-title">
+                    <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+                    <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+                    <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
                   </div>
-                  <div class="col-4 centered">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                      :class="state.showGraphs ? 'btn-selected' : ''"
-                      @click="showGraphs()"
-                      :disabled="!state.toggles['dashboard.graphs.view']"
-                    >
-                      {{ $t('dashboard.graph') }} <br />
-                      <i class="bi bi-bar-chart-line-fill"></i>
-                    </button>
+                  <div id="sub-title" class="metric-subtitle">
+                    ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+                    {{ $t('dashboard.dates.to') }} {{ state.endDate }})
                   </div>
-                  <div class="col-4 centered">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                      :class="state.showSurveyResults ? 'btn-selected' : ''"
-                      @click="showSurvey()"
-                      :disabled="!state.toggles['dashboard.surveys.view']"
+                  <div class="row col mx-1 mt-3 mb-1">
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showIndicators ? 'btn-selected' : ''"
+                        @click="showIndicators()"
+                        :disabled="!state.toggles['dashboard.indicators.view']"
+                      >
+                        {{ $t('dashboard.indicators') }} <br />
+                        <i class="bi bi-stoplights-fill"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showGraphs ? 'btn-selected' : ''"
+                        @click="showGraphs()"
+                        :disabled="!state.toggles['dashboard.graphs.view']"
+                      >
+                        {{ $t('dashboard.graph') }} <br />
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showSurveyResults ? 'btn-selected' : ''"
+                        @click="showSurvey()"
+                        :disabled="!state.toggles['dashboard.surveys.view']"
+                      >
+                        {{ $t('dashboard.surveys') }} <br />
+                        <i class="bi bi-patch-question-fill"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <DashboardIndicators
+                      :show-indicators="state.showIndicators"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="state.commerce"
                     >
-                      {{ $t('dashboard.surveys') }} <br />
-                      <i class="bi bi-patch-question-fill"></i>
-                    </button>
+                    </DashboardIndicators>
+                    <DashboardGraphs
+                      :show-graphs="state.showGraphs"
+                      :calculated-metrics="{
+                        attentionNumberEvolutionProps,
+                        attentionDurationEvolutionProps,
+                        attentionHourDistributionProps,
+                        attentionQueuesProps,
+                        attentionFlowProps,
+                        attentionRateDurationEvolutionProps,
+                        surveyFlowProps,
+                        bookingFlowProps,
+                        bookingNumberEvolutionProps,
+                        attentionDayDistributionProps,
+                        bookingDayDistributionProps,
+                        bookingHourDistributionProps,
+                        ...state.calculatedMetrics,
+                      }"
+                      :toggles="state.toggles"
+                      :graphs="state.graphs"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="state.commerce"
+                    >
+                    </DashboardGraphs>
+                    <DashboardSurveys
+                      :show-survey="state.showSurveyResults"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="state.commerce"
+                      :queues="Array.isArray(state.queues) ? state.queues : []"
+                      filters-location="slot"
+                    >
+                    </DashboardSurveys>
                   </div>
                 </div>
-                <div>
-                  <DashboardIndicators
-                    :show-indicators="state.showIndicators"
-                    :calculated-metrics="state.calculatedMetrics"
-                    :toggles="state.toggles"
-                    :start-date="state.startDate"
-                    :end-date="state.endDate"
-                    :commerce="state.commerce"
-                  >
-                  </DashboardIndicators>
-                  <DashboardGraphs
-                    :show-graphs="state.showGraphs"
-                    :calculated-metrics="{
-                      attentionNumberEvolutionProps,
-                      attentionDurationEvolutionProps,
-                      attentionHourDistributionProps,
-                      attentionQueuesProps,
-                      attentionFlowProps,
-                      attentionRateDurationEvolutionProps,
-                      surveyFlowProps,
-                      bookingFlowProps,
-                      bookingNumberEvolutionProps,
-                      attentionDayDistributionProps,
-                      bookingDayDistributionProps,
-                      bookingHourDistributionProps,
-                      ...state.calculatedMetrics,
-                    }"
-                    :toggles="state.toggles"
-                    :graphs="state.graphs"
-                    :start-date="state.startDate"
-                    :end-date="state.endDate"
-                    :commerce="state.commerce"
-                  >
-                  </DashboardGraphs>
-                  <DashboardSurveys
-                    :show-survey="state.showSurveyResults"
-                    :calculated-metrics="state.calculatedMetrics"
-                    :toggles="state.toggles"
-                    :start-date="state.startDate"
-                    :end-date="state.endDate"
-                    :commerce="state.commerce"
-                    :queues="state.queues"
-                  >
-                  </DashboardSurveys>
-                </div>
-              </div>
-            </div>
+              </template>
+            </DesktopContentLayout>
           </div>
         </div>
         <div v-if="!isActiveBusiness() && !loading">
@@ -1215,13 +1262,30 @@ export default {
 <style scoped>
 .metric-title {
   text-align: left;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #000;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
+
+.metric-title::before {
+  content: '';
+  width: 4px;
+  height: 2rem;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 2px;
+}
+
 .metric-subtitle {
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 1.5rem;
+  padding-left: 1rem;
 }
 .select {
   border-radius: 0.5rem;
@@ -1325,12 +1389,6 @@ export default {
   .desktop-result-column {
     min-width: 0;
     padding-left: 1.5rem;
-  }
-
-  .control-box {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background-color: var(--color-background, #ffffff);
   }
 
   #dashboard-controls {

@@ -7,7 +7,6 @@ import { getValidatedPlanActivationByBusinessId } from '../../application/servic
 import { getCommerceById } from '../../application/services/commerce';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -19,7 +18,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     PlanStatus,
@@ -186,7 +184,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 <style scoped>

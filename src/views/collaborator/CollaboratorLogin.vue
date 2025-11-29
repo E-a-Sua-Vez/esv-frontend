@@ -34,7 +34,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo @click="goSite()"></CommerceLogo>
+      <CommerceLogo :src="$t('logo')" @click="goSite()"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
           <span>{{ $t('collaboratorLogin.welcome') }}</span>

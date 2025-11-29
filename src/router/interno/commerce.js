@@ -21,7 +21,8 @@ const BusinessOutcomeTypesAdmin = () => import('@/views/business/BusinessOutcome
 const BusinessFinancial = () => import('@/views/business/BusinessFinancial.vue');
 const BusinessQueueBookings = () => import('@/views/business/BusinessQueueBookings.vue');
 const BusinessCompaniesAdmin = () => import('@/views/business/BusinessCompaniesAdmin.vue');
-const BusinessPatientHistoryItemAdmin = () => import('@/views/business/BusinessPatientHistoryItemAdmin.vue');
+const BusinessPatientHistoryItemAdmin = () =>
+  import('@/views/business/BusinessPatientHistoryItemAdmin.vue');
 const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 
 const PrivateCommerceRoutes = [

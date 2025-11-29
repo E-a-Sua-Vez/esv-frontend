@@ -24,6 +24,7 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -47,6 +48,37 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - forward from child components -->
+  <DashboardSurveysResult
+    v-if="filtersLocation === 'slot' && showSurveyResults"
+    :show-survey-results="false"
+    :calculated-metrics="calculatedMetrics"
+    :toggles="toggles"
+    :start-date="startDate"
+    :end-date="endDate"
+    :commerce="commerce"
+    :queues="queues"
+    filters-location="slot"
+  >
+    <template #filters-exposed="filterProps">
+      <slot name="filters-exposed" v-bind="filterProps"></slot>
+    </template>
+  </DashboardSurveysResult>
+  <DashboardSurveysConsolidated
+    v-if="filtersLocation === 'slot' && showSurveyConsolidated"
+    :show-survey-consolidated="false"
+    :toggles="toggles"
+    :start-date="startDate"
+    :end-date="endDate"
+    :commerce="commerce"
+    :queues="queues"
+    filters-location="slot"
+  >
+    <template #filters-exposed="filterProps">
+      <slot name="filters-exposed" v-bind="filterProps"></slot>
+    </template>
+  </DashboardSurveysConsolidated>
+
   <div id="surveys" class="row" v-if="showSurvey === true && toggles['dashboard.surveys.view']">
     <div>
       <hr />
@@ -81,6 +113,7 @@ export default {
           :end-date="endDate"
           :commerce="commerce"
           :queues="queues"
+          :filters-location="filtersLocation"
         >
         </DashboardSurveysResult>
         <DashboardSurveysConsolidated
@@ -90,6 +123,7 @@ export default {
           :end-date="endDate"
           :commerce="commerce"
           :queues="queues"
+          :filters-location="filtersLocation"
         >
         </DashboardSurveysConsolidated>
       </div>

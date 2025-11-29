@@ -1207,23 +1207,125 @@ export default {
   border: 1px solid var(--gris-default);
 }
 .metric-card-graph {
-  background-color: var(--color-background);
-  padding: 1.5rem;
-  margin: 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 2rem 1.5rem;
+  margin: 1rem 0.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
+
+.metric-card-graph::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  opacity: 0.8;
+}
+
+.metric-card-graph:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .metric-conclusion {
-  padding: 0.5rem;
-  margin: 0.5rem;
-  font-size: 0.8rem;
-  line-height: 0.9rem;
+  padding: 1.25rem;
+  margin: 1rem 0 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
+
 .metric-card-title {
-  font-size: 0.8rem;
-  line-height: 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
   align-items: center;
   justify-content: center;
   display: flex;
+  color: #000;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.1);
+}
+
+.metric-card-title strong {
+  color: var(--azul-turno);
+}
+
+/* Enhanced graph container */
+.centered {
+  padding: 1rem 0;
+}
+
+/* Improved conclusion styling */
+.metric-conclusion .row {
+  margin: 0;
+}
+
+.metric-conclusion .centered {
+  padding: 0.5rem;
+}
+
+.metric-conclusion i {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.metric-conclusion .fw-bold {
+  color: var(--azul-turno);
+  font-weight: 700;
+}
+
+/* Badge improvements */
+.badge {
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.bg-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #446ffc 100%) !important;
+}
+
+.bg-secondary {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #000 !important;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .metric-card-graph {
+    padding: 1.5rem 1rem;
+    margin: 0.75rem 0.25rem;
+  }
+
+  .metric-card-title {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .metric-conclusion {
+    padding: 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .metric-card-graph {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .metric-card-title {
+    font-size: 0.85rem;
+  }
 }
 </style>

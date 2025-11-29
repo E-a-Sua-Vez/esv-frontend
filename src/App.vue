@@ -28,7 +28,17 @@ export default {
         <Header></Header>
       </template>
       <template #fallback>
-        <div style="height: 85px; background: rgba(31, 63, 146, 0.98); position: fixed; top: 0; left: 0; right: 0; z-index: 1030;"></div>
+        <div
+          style="
+            height: 75px;
+            background: rgba(31, 63, 146, 0.98);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+          "
+        ></div>
       </template>
     </Suspense>
     <RouterView v-slot="{ Component }">

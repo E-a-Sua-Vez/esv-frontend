@@ -28,12 +28,12 @@ export default {
   <div>
     <div
       :class="
-        selected === true ? 'selected bg-primary' : queue.active === true ? 'active' : 'desactived'
+        selected === true ? 'selected bg-primary' : queue?.active === true ? 'active' : 'desactived'
       "
     >
       <span v-if="details" class="queue-details" data-bs-toggle="modal" href="#queueModal">
         <div class="row centered">
-          <div class="col-8"><i class="bi bi-person-lines-fill"></i> {{ queue.name }}</div>
+          <div class="col-8"><i class="bi bi-person-lines-fill"></i> {{ queue?.name }}</div>
           <div class="col-3">
             <span data-bs-toggle="modal" href="#queueModal">
               <span class="see-queue"> {{ $t('collaboratorQueueAttentions.seeQueue') }} </span>
@@ -47,12 +47,12 @@ export default {
         :class="
           selected === true
             ? 'selected bg-primary'
-            : queue.active === true
+            : queue?.active === true
             ? 'active'
             : 'desactived'
         "
       >
-        <i class="bi bi-person-lines-fill"></i> {{ queue.name }}
+        <i class="bi bi-person-lines-fill"></i> {{ queue?.name }}
       </span>
     </div>
     <!-- Modal Queue Details -->
@@ -69,10 +69,10 @@ export default {
         <div class="modal-content">
           <div
             class="modal-header border-0 centered"
-            :class="queue.active === true ? 'active-name' : 'desactived-name'"
+            :class="queue?.active === true ? 'active-name' : 'desactived-name'"
           >
             <h5 class="modal-title fw-bold">
-              <i class="bi bi-person-lines-fill"></i> {{ queue.name }}
+              <i class="bi bi-person-lines-fill"></i> {{ queue?.name }}
             </h5>
             <button
               id="close-modal"

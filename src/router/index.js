@@ -52,7 +52,7 @@ const router = createRouter({
       return savedPosition;
     }
     // Otherwise, scroll to top and ensure padding is updated
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       // Wait for next tick to ensure DOM is updated
       setTimeout(() => {
         // Update padding for fixed header

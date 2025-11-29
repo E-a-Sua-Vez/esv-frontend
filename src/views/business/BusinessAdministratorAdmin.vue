@@ -11,7 +11,6 @@ import { getPermissions } from '../../application/services/permissions';
 import CollaboratorName from '../../components/common/CollaboratorName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -24,7 +23,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     CollaboratorName,
@@ -226,307 +224,639 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessAdministratorAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessAdministratorAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessAdministratorAdmin">
-        <div v-if="isActiveBusiness && state.toggles['administrators.admin.view']">
-          <div v-if="!loading" id="businessAdministratorAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.administrators.length === 0">
-                <Message
-                  :title="$t('businessAdministratorAdmin.message.2.title')"
-                  :content="$t('businessAdministratorAdmin.message.2.content')"
-                />
-              </div>
-              <div v-if="state.commerces" class="row mb-2">
-                <div class="col-8 text-labe">
-                  <span>{{ $t('businessAdministratorAdmin.listResult') }}</span>
-                  <span class="fw-bold m-2">{{ state.administrators.length }}</span>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessAdministratorAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessAdministratorAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessAdministratorAdmin">
+          <div v-if="isActiveBusiness && state.toggles['administrators.admin.view']">
+            <div v-if="!loading" id="businessAdministratorAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.administrators.length === 0">
+                  <Message
+                    :title="$t('businessAdministratorAdmin.message.2.title')"
+                    :content="$t('businessAdministratorAdmin.message.2.content')"
+                  />
                 </div>
-                <div class="col-4">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(administrator)"
-                    :disabled="!state.toggles['administrators.admin.add']"
+                <div v-if="state.commerces" class="row mb-2">
+                  <div class="col-8 text-labe">
+                    <span>{{ $t('businessAdministratorAdmin.listResult') }}</span>
+                    <span class="fw-bold m-2">{{ state.administrators.length }}</span>
+                  </div>
+                  <div class="col-4">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(administrator)"
+                      :disabled="!state.toggles['administrators.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="add-administrator"
+                  class="administrator-card mb-4"
+                  v-if="state.showAdd && state.toggles['administrators.admin.add']"
+                >
+                  <div
+                    v-if="state.administrators.length < state.toggles['administrators.admin.limit']"
                   >
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              </div>
-              <div
-                id="add-administrator"
-                class="administrator-card mb-4"
-                v-if="state.showAdd && state.toggles['administrators.admin.add']"
-              >
-                <div
-                  v-if="state.administrators.length < state.toggles['administrators.admin.limit']"
-                >
-                  <div class="row g-1">
-                    <div id="administrator-name-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.name') }}
+                    <div class="row g-1">
+                      <div id="administrator-name-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.name') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="state.newAdministrator.name"
+                            v-bind:class="{ 'is-invalid': state.nameError }"
+                            placeholder="Jhon Pérez"
+                          />
+                        </div>
                       </div>
-                      <div class="col-8">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newAdministrator.name"
-                          v-bind:class="{ 'is-invalid': state.nameError }"
-                          placeholder="Jhon Pérez"
-                        />
+                      <div id="administrator-email-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.email') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="10"
+                            type="email"
+                            class="form-control"
+                            v-model="state.newAdministrator.email"
+                            v-bind:class="{ 'is-invalid': state.emailError }"
+                            placeholder="name@email.com"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div id="administrator-email-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.email') }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          min="10"
-                          type="email"
-                          class="form-control"
-                          v-model="state.newAdministrator.email"
-                          v-bind:class="{ 'is-invalid': state.emailError }"
-                          placeholder="name@email.com"
-                        />
-                      </div>
-                    </div>
-                    <div id="administrator-commerces-form-add" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.commerces') }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md fw-bold text-dark m-1 select"
-                          v-model="state.commerce"
-                          @change="selectCommerce(state.newAdministrator, state.commerce)"
-                          id="commerces"
-                        >
-                          <option v-for="com in state.commerces" :key="com.id" :value="com">
-                            {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                          </option>
-                        </select>
-                        <div
-                          class="select p-1"
-                          v-if="
-                            state.newAdministrator.commercesId &&
-                            state.newAdministrator.commercesId.length > 0
-                          "
-                        >
-                          <span
-                            class="badge state rounded-pill bg-secondary p-2 mx-1"
-                            v-for="com in state.newAdministrator.commercesId"
-                            :key="com.id"
+                      <div id="administrator-commerces-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.commerces') }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md fw-bold text-dark m-1 select"
+                            v-model="state.commerce"
+                            @change="selectCommerce(state.newAdministrator, state.commerce)"
+                            id="commerces"
                           >
-                            {{ showCommerce(com) }}
-                            <button
-                              type="button"
-                              class="btn btn-md btn-close btn-close-white"
-                              aria-label="Close"
-                              @click="deleteCommerce(state.newAdministrator, com)"
-                            ></button>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="add(state.newAdministrator)"
-                      >
-                        {{ $t('businessAdministratorAdmin.add') }} <i class="bi bi-save"></i>
-                      </button>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsAdd" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
-                    </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessAdministratorAdmin.message.3.title')"
-                    :content="$t('businessAdministratorAdmin.message.3.content')"
-                  />
-                </div>
-              </div>
-              <div
-                v-for="(administrator, index) in state.administrators"
-                :key="index"
-                class="administrator-card"
-              >
-                <div class="row">
-                  <div class="col-10">
-                    <CollaboratorName
-                      :name="administrator.name"
-                      :email="administrator.email"
-                      :active="administrator.active"
-                    ></CollaboratorName>
-                  </div>
-                  <div class="col-2">
-                    <a href="#" @click.prevent="showUpdateForm(index)">
-                      <i
-                        :id="index"
-                        :class="`bi ${
-                          state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                    </a>
-                  </div>
-                </div>
-                <div
-                  v-if="state.toggles['administrators.admin.read']"
-                  :class="{ show: state.extendedEntity === index }"
-                  class="detailed-data transition-slow"
-                >
-                  <div class="row g-1">
-                    <div id="administrator-name-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.name') }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="true"
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="administrator.name"
-                          placeholder="Jhon Pérez"
-                        />
-                      </div>
-                    </div>
-                    <div id="administrator-email-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.email') }}
-                      </div>
-                      <div class="col-8">
-                        <input
-                          :disabled="true"
-                          min="10"
-                          type="email"
-                          class="form-control"
-                          v-model="administrator.email"
-                          placeholder="name@email.com"
-                        />
-                      </div>
-                    </div>
-                    <div id="administrator-commerces-form-update" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.commerces') }}
-                      </div>
-                      <div class="col-8">
-                        <select
-                          class="btn btn-md fw-bold text-dark m-1 select"
-                          v-model="state.commerce"
-                          @change="selectCommerceIndex(index, state.commerce)"
-                          id="commerces"
-                        >
-                          <option v-for="com in state.commerces" :key="com.id" :value="com">
-                            {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                          </option>
-                        </select>
-                        <div
-                          class="select p-1"
-                          v-if="administrator.commercesId && administrator.commercesId.length > 0"
-                        >
-                          <span
-                            class="badge state rounded-pill bg-secondary p-2 mx-1"
-                            v-for="com in administrator.commercesId"
-                            :key="com.id"
+                            <option v-for="com in state.commerces" :key="com.id" :value="com">
+                              {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                            </option>
+                          </select>
+                          <div
+                            class="select p-1"
+                            v-if="
+                              state.newAdministrator.commercesId &&
+                              state.newAdministrator.commercesId.length > 0
+                            "
                           >
-                            {{ showCommerce(com) }}
-                            <button
-                              type="button"
-                              class="btn btn-md btn-close btn-close-white"
-                              aria-label="Close"
-                              @click="deleteCommerce(administrator, com)"
-                            ></button>
-                          </span>
+                            <span
+                              class="badge state rounded-pill bg-secondary p-2 mx-1"
+                              v-for="com in state.newAdministrator.commercesId"
+                              :key="com.id"
+                            >
+                              {{ showCommerce(com) }}
+                              <button
+                                type="button"
+                                class="btn btn-md btn-close btn-close-white"
+                                aria-label="Close"
+                                @click="deleteCommerce(state.newAdministrator, com)"
+                              ></button>
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div id="administrator-active-form" class="row g-1">
-                      <div class="col-4 text-label">
-                        {{ $t('businessAdministratorAdmin.active') }}
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="add(state.newAdministrator)"
+                        >
+                          {{ $t('businessAdministratorAdmin.add') }} <i class="bi bi-save"></i>
+                        </button>
                       </div>
-                      <div class="col-8">
-                        <Toggle
-                          v-model="administrator.active"
-                          :disabled="!state.toggles['administrators.admin.edit']"
-                        />
+                      <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsAdd" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
                       </div>
                     </div>
-                    <div id="administrator-id-form" class="row -2 mb-g3">
-                      <div class="row administrator-details-container">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ administrator.id }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(administrator)"
-                        :disabled="!state.toggles['administrators.admin.update']"
-                      >
-                        {{ $t('businessAdministratorAdmin.update') }} <i class="bi bi-save"></i>
-                      </button>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
-                    </div>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessAdministratorAdmin.message.3.title')"
+                      :content="$t('businessAdministratorAdmin.message.3.content')"
+                    />
                   </div>
                 </div>
                 <div
-                  v-if="
-                    (!isActiveBusiness() || !state.toggles['administrators.admin.read']) && !loading
-                  "
+                  v-for="(administrator, index) in state.administrators"
+                  :key="index"
+                  class="administrator-card"
                 >
-                  <Message
-                    :title="$t('businessAdministratorAdmin.message.1.title')"
-                    :content="$t('businessAdministratorAdmin.message.1.content')"
-                  />
+                  <div class="row">
+                    <div class="col-10">
+                      <CollaboratorName
+                        :name="administrator.name"
+                        :email="administrator.email"
+                        :active="administrator.active"
+                      ></CollaboratorName>
+                    </div>
+                    <div class="col-2">
+                      <a href="#" @click.prevent="showUpdateForm(index)">
+                        <i
+                          :id="index"
+                          :class="`bi ${
+                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </a>
+                    </div>
+                  </div>
+                  <div
+                    v-if="state.toggles['administrators.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
+                  >
+                    <div class="row g-1">
+                      <div id="administrator-name-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.name') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="administrator.name"
+                            placeholder="Jhon Pérez"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-email-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.email') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            min="10"
+                            type="email"
+                            class="form-control"
+                            v-model="administrator.email"
+                            placeholder="name@email.com"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-commerces-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.commerces') }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md fw-bold text-dark m-1 select"
+                            v-model="state.commerce"
+                            @change="selectCommerceIndex(index, state.commerce)"
+                            id="commerces"
+                          >
+                            <option v-for="com in state.commerces" :key="com.id" :value="com">
+                              {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                            </option>
+                          </select>
+                          <div
+                            class="select p-1"
+                            v-if="administrator.commercesId && administrator.commercesId.length > 0"
+                          >
+                            <span
+                              class="badge state rounded-pill bg-secondary p-2 mx-1"
+                              v-for="com in administrator.commercesId"
+                              :key="com.id"
+                            >
+                              {{ showCommerce(com) }}
+                              <button
+                                type="button"
+                                class="btn btn-md btn-close btn-close-white"
+                                aria-label="Close"
+                                @click="deleteCommerce(administrator, com)"
+                              ></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="administrator-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.active') }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="administrator.active"
+                            :disabled="!state.toggles['administrators.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-id-form" class="row -2 mb-g3">
+                        <div class="row administrator-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ administrator.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(administrator)"
+                          :disabled="!state.toggles['administrators.admin.update']"
+                        >
+                          {{ $t('businessAdministratorAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                      </div>
+                      <div
+                        class="row g-1 errors"
+                        id="feedback"
+                        v-if="state.errorsUpdate.length > 0"
+                      >
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-if="
+                      (!isActiveBusiness() || !state.toggles['administrators.admin.read']) &&
+                      !loading
+                    "
+                  >
+                    <Message
+                      :title="$t('businessAdministratorAdmin.message.1.title')"
+                      :content="$t('businessAdministratorAdmin.message.1.content')"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div
-          v-if="(!isActiveBusiness() || !state.toggles['administrators.admin.view']) && !loading"
-        >
-          <Message
-            :title="$t('businessAdministratorAdmin.message.1.title')"
-            :content="$t('businessAdministratorAdmin.message.1.content')"
-          />
+          <div
+            v-if="(!isActiveBusiness() || !state.toggles['administrators.admin.view']) && !loading"
+          >
+            <Message
+              :title="$t('businessAdministratorAdmin.message.1.title')"
+              :content="$t('businessAdministratorAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessAdministratorAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessAdministratorAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessAdministratorAdmin">
+          <div v-if="isActiveBusiness && state.toggles['administrators.admin.view']">
+            <div v-if="!loading" id="businessAdministratorAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.administrators.length === 0">
+                  <Message
+                    :title="$t('businessAdministratorAdmin.message.2.title')"
+                    :content="$t('businessAdministratorAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerces" class="row mb-2">
+                  <div class="col-8 text-labe">
+                    <span>{{ $t('businessAdministratorAdmin.listResult') }}</span>
+                    <span class="fw-bold m-2">{{ state.administrators.length }}</span>
+                  </div>
+                  <div class="col-4">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(administrator)"
+                      :disabled="!state.toggles['administrators.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="add-administrator"
+                  class="administrator-card mb-4"
+                  v-if="state.showAdd && state.toggles['administrators.admin.add']"
+                >
+                  <div
+                    v-if="state.administrators.length < state.toggles['administrators.admin.limit']"
+                  >
+                    <div class="row g-1">
+                      <div id="administrator-name-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.name') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="state.newAdministrator.name"
+                            v-bind:class="{ 'is-invalid': state.nameError }"
+                            placeholder="Jhon Pérez"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-email-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.email') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            min="10"
+                            type="email"
+                            class="form-control"
+                            v-model="state.newAdministrator.email"
+                            v-bind:class="{ 'is-invalid': state.emailError }"
+                            placeholder="name@email.com"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-commerces-form-add" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.commerces') }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md fw-bold text-dark m-1 select"
+                            v-model="state.commerce"
+                            @change="selectCommerce(state.newAdministrator, state.commerce)"
+                            id="commerces"
+                          >
+                            <option v-for="com in state.commerces" :key="com.id" :value="com">
+                              {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                            </option>
+                          </select>
+                          <div
+                            class="select p-1"
+                            v-if="
+                              state.newAdministrator.commercesId &&
+                              state.newAdministrator.commercesId.length > 0
+                            "
+                          >
+                            <span
+                              class="badge state rounded-pill bg-secondary p-2 mx-1"
+                              v-for="com in state.newAdministrator.commercesId"
+                              :key="com.id"
+                            >
+                              {{ showCommerce(com) }}
+                              <button
+                                type="button"
+                                class="btn btn-md btn-close btn-close-white"
+                                aria-label="Close"
+                                @click="deleteCommerce(state.newAdministrator, com)"
+                              ></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="add(state.newAdministrator)"
+                        >
+                          {{ $t('businessAdministratorAdmin.add') }} <i class="bi bi-save"></i>
+                        </button>
+                      </div>
+                      <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsAdd" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessAdministratorAdmin.message.3.title')"
+                      :content="$t('businessAdministratorAdmin.message.3.content')"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-for="(administrator, index) in state.administrators"
+                  :key="index"
+                  class="administrator-card"
+                >
+                  <div class="row">
+                    <div class="col-10">
+                      <CollaboratorName
+                        :name="administrator.name"
+                        :email="administrator.email"
+                        :active="administrator.active"
+                      ></CollaboratorName>
+                    </div>
+                    <div class="col-2">
+                      <a href="#" @click.prevent="showUpdateForm(index)">
+                        <i
+                          :id="index"
+                          :class="`bi ${
+                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </a>
+                    </div>
+                  </div>
+                  <div
+                    v-if="state.toggles['administrators.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
+                  >
+                    <div class="row g-1">
+                      <div id="administrator-name-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.name') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="administrator.name"
+                            placeholder="Jhon Pérez"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-email-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.email') }}
+                        </div>
+                        <div class="col-8">
+                          <input
+                            :disabled="true"
+                            min="10"
+                            type="email"
+                            class="form-control"
+                            v-model="administrator.email"
+                            placeholder="name@email.com"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-commerces-form-update" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.commerces') }}
+                        </div>
+                        <div class="col-8">
+                          <select
+                            class="btn btn-md fw-bold text-dark m-1 select"
+                            v-model="state.commerce"
+                            @change="selectCommerceIndex(index, state.commerce)"
+                            id="commerces"
+                          >
+                            <option v-for="com in state.commerces" :key="com.id" :value="com">
+                              {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                            </option>
+                          </select>
+                          <div
+                            class="select p-1"
+                            v-if="administrator.commercesId && administrator.commercesId.length > 0"
+                          >
+                            <span
+                              class="badge state rounded-pill bg-secondary p-2 mx-1"
+                              v-for="com in administrator.commercesId"
+                              :key="com.id"
+                            >
+                              {{ showCommerce(com) }}
+                              <button
+                                type="button"
+                                class="btn btn-md btn-close btn-close-white"
+                                aria-label="Close"
+                                @click="deleteCommerce(administrator, com)"
+                              ></button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="administrator-active-form" class="row g-1">
+                        <div class="col-4 text-label">
+                          {{ $t('businessAdministratorAdmin.active') }}
+                        </div>
+                        <div class="col-8">
+                          <Toggle
+                            v-model="administrator.active"
+                            :disabled="!state.toggles['administrators.admin.edit']"
+                          />
+                        </div>
+                      </div>
+                      <div id="administrator-id-form" class="row -2 mb-g3">
+                        <div class="row administrator-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ administrator.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(administrator)"
+                          :disabled="!state.toggles['administrators.admin.update']"
+                        >
+                          {{ $t('businessAdministratorAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                      </div>
+                      <div
+                        class="row g-1 errors"
+                        id="feedback"
+                        v-if="state.errorsUpdate.length > 0"
+                      >
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-if="
+                      (!isActiveBusiness() || !state.toggles['administrators.admin.read']) &&
+                      !loading
+                    "
+                  >
+                    <Message
+                      :title="$t('businessAdministratorAdmin.message.1.title')"
+                      :content="$t('businessAdministratorAdmin.message.1.content')"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="(!isActiveBusiness() || !state.toggles['administrators.admin.view']) && !loading"
+          >
+            <Message
+              :title="$t('businessAdministratorAdmin.message.1.title')"
+              :content="$t('businessAdministratorAdmin.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -534,6 +864,53 @@ export default {
 .select {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 .administrator-card {
   background-color: var(--color-background);

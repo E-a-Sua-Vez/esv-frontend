@@ -103,17 +103,26 @@ export default {
           if (option === 'manage-admin') {
             state.manageSubMenuOption = !state.manageSubMenuOption;
             state.manageControlSubMenuOption = false;
+            loading.value = false;
           } else if (option === 'control-admin') {
             state.manageControlSubMenuOption = !state.manageControlSubMenuOption;
             state.manageSubMenuOption = false;
+            loading.value = false;
           } else {
-            router.push({ path: `/interno/negocio/${option}` });
+            try {
+              await router.push({ path: `/interno/negocio/${option}` });
+              loading.value = false;
+            } catch (routeError) {
+              console.error('Navigation error:', routeError);
+              loading.value = false;
+              alertError.value = routeError?.message || 'Error navigating to route';
+            }
           }
         }
-        loading.value = false;
       } catch (error) {
         loading.value = false;
-        alertError.value = error.message;
+        alertError.value = error?.message || 'An unexpected error occurred';
+        console.error('goToOption error:', error);
       }
     };
 
@@ -294,7 +303,7 @@ export default {
           <PlanStatus :show="true" :plan-activation="state.currentPlanActivation" :can-admin="true">
           </PlanStatus>
         </div>
-        <div class="row align-items-center mb-3 desktop-header-row">
+        <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
             <CommerceLogo :src="state.business.logo" :loading="loading" />
           </div>

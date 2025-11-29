@@ -44,6 +44,7 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   async setup(props) {
     const loading = ref(false);
@@ -453,6 +454,17 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :refresh="refresh"
+    :queue-id="state.queueId"
+    :queues="queues"
+    :loading="loading"
+  ></slot>
+
   <div
     id="surveys-consolidated"
     class="row"
@@ -470,7 +482,11 @@ export default {
       ></SimpleDownloadCard>
       <Spinner :show="loading"></Spinner>
       <div>
-        <div class="my-2 row metric-card" v-if="queues && queues.length > 1">
+        <!-- Filters Section - Can be shown in component or exposed via slot -->
+        <div
+          class="my-2 row metric-card"
+          v-if="filtersLocation === 'component' && queues && queues.length > 1"
+        >
           <div class="col-12">
             <span class="metric-card-subtitle">
               <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
@@ -559,7 +575,7 @@ export default {
                   :subdata="+state.calculatedSurveyMetricsYear.countNPS || 0"
                   :title="$t('dashboard.items.attentions.24')"
                   :show-tooltip="true"
-                  :description="$t('dashboard.nps')"
+                  :description="$t('dashboard.nps.description')"
                   :icon="'bi-megaphone-fill'"
                   :details-opened="state.detailsOpened"
                 >

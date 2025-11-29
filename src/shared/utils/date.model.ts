@@ -34,6 +34,11 @@ export class DateModel {
     return new DateModel(newDayjsObj.toString());
   }
 
+  public startOfMonth(): DateModel {
+    const newDayjsObj = this.dayjsObj.startOf('month');
+    return new DateModel(newDayjsObj.toString());
+  }
+
   public endOfMonth(): DateModel {
     const newDayjsObj = this.dayjsObj.endOf('month');
     return new DateModel(newDayjsObj.toString());

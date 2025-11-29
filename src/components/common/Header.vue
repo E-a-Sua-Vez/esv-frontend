@@ -192,11 +192,33 @@ export default {
       setTimeout(updateMainContentPadding, 100);
       setTimeout(updateMainContentPadding, 300);
       setTimeout(updateMainContentPadding, 500);
+
+      // Fix aria-hidden accessibility issue: blur focused elements when modal is hidden
+      const userModal = document.getElementById('userModal');
+      if (userModal) {
+        const handleModalHidden = () => {
+          // Blur any focused elements inside the modal to prevent aria-hidden warning
+          const focusedElement = userModal.querySelector(':focus');
+          if (focusedElement && focusedElement instanceof HTMLElement) {
+            focusedElement.blur();
+          }
+        };
+        userModal.addEventListener('hidden.bs.modal', handleModalHidden);
+        // Store handler for cleanup
+        userModal._modalHiddenHandler = handleModalHidden;
+      }
     });
 
     onBeforeUnmount(() => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateMainContentPadding);
+
+      // Clean up modal event listener
+      const userModal = document.getElementById('userModal');
+      if (userModal && userModal._modalHiddenHandler) {
+        userModal.removeEventListener('hidden.bs.modal', userModal._modalHiddenHandler);
+        delete userModal._modalHiddenHandler;
+      }
     });
 
     const logout = async () => {
@@ -499,12 +521,12 @@ export default {
                 @click="toggleDesktopMenu"
                 :class="{ active: desktopMenuOpen }"
                 aria-label="Toggle menu"
-                title="Abrir menú"
+                :title="desktopMenuOpen ? $t('close') : $t('menu')"
               >
-                <i
-                  class="bi bi-arrow-left-circle user-menu-icon"
-                  :class="{ rotated: desktopMenuOpen }"
-                ></i>
+                <i class="bi bi-list user-menu-icon" :class="{ rotated: desktopMenuOpen }"></i>
+                <span class="menu-label">{{
+                  desktopMenuOpen ? $t('close') || 'Cerrar' : $t('menu') || 'Menú'
+                }}</span>
               </button>
             </div>
           </div>
@@ -1007,26 +1029,56 @@ export default {
 
 /* Desktop Menu Trigger Icon */
 .user-menu-trigger-icon {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   color: var(--color-background);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  height: fit-content;
+}
+
+.user-menu-trigger-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.user-menu-trigger-icon:hover::before {
+  width: 100px;
+  height: 100px;
 }
 
 .user-menu-trigger-icon:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.user-menu-trigger-icon:active {
+  transform: translateY(0);
 }
 
 .user-menu-trigger-icon.active {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  animation: menuPulse 2s ease-in-out infinite;
 }
 
 .user-name-display {
@@ -1036,12 +1088,33 @@ export default {
 }
 
 .user-menu-icon {
-  font-size: 1.5rem;
-  transition: transform 0.3s ease;
+  font-size: 1.2rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
 }
 
 .user-menu-icon.rotated {
-  transform: rotate(-180deg);
+  transform: rotate(90deg);
+}
+
+.menu-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s ease;
+}
+
+@keyframes menuPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
 }
 
 .message-indicator {

@@ -4,25 +4,29 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DocumentsManagement from '../../components/document/domain/DocumentsManagement.vue';
+import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
+import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 
 export default {
   name: 'BusinessDocuments',
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     ToggleCapabilities,
     ComponentMenu,
     DocumentsManagement,
+    DesktopContentLayout,
+    DesktopFiltersPanel,
+    DateRangeFilters,
   },
   async setup() {
     const router = useRouter();
@@ -35,8 +39,8 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref({}),
-      selectedCommerces: ref({}),
+      commerces: ref([]),
+      selectedCommerces: ref([]),
       queues: ref({}),
       services: ref({}),
       queue: {},
@@ -103,6 +107,14 @@ export default {
       router.back();
     };
 
+    const handleFiltersToggle = collapsed => {
+      state.filtersCollapsed = collapsed;
+    };
+
+    const handleCommerceChanged = commerce => {
+      selectCommerce(commerce);
+    };
+
     return {
       state,
       loading,
@@ -111,6 +123,8 @@ export default {
       isActiveBusiness,
       selectCommerce,
       getLocalHour,
+      handleFiltersToggle,
+      handleCommerceChanged,
     };
   },
 };
@@ -118,58 +132,321 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessDocument.title`)"
+    <!-- Render DocumentsManagement component once outside responsive sections for the modal -->
+    <!-- This ensures single modal ID - buttons in both mobile and desktop will target this modal -->
+    <!-- Bootstrap modals are appended to body when opened, so this hidden instance will work -->
+    <!-- Always render this instance first to ensure modal is always accessible -->
+    <div
+      style="
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        visibility: hidden;
+        pointer-events: none;
+      "
+    >
+      <DocumentsManagement
+        :show-client-management="true"
         :toggles="state.toggles"
-        component-name="businessDocument"
-        @goBack="goBack"
+        :commerce="state.commerce"
+        :commerces="state.selectedCommerces"
       >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+      </DocumentsManagement>
+    </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessDocument.title`)"
+          :toggles="state.toggles"
+          component-name="businessDocument"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessDocument">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('dashboard.message.3.title')"
+                :content="$t('dashboard.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="dashboard-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('dashboard.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                      <option key="ALL" :value="{ id: 'ALL' }">{{ $t('dashboard.all') }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div>
+                <DocumentsManagement
+                  :show-client-management="true"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :commerces="state.selectedCommerces"
+                >
+                </DocumentsManagement>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
+        </div>
       </div>
-      <div id="businessDocument">
-        <div v-if="isActiveBusiness()">
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessDocument.title`)"
+              :toggles="state.toggles"
+              component-name="businessDocument"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessDocument" v-if="isActiveBusiness()">
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('dashboard.message.3.title')"
               :content="$t('dashboard.message.3.content')"
             />
           </div>
-          <div v-else class="control-box">
-            <div id="dashboard-controls">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t('dashboard.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    id="modules"
-                    @change="selectCommerce(state.commerce)"
+          <DesktopContentLayout
+            v-else
+            :show-filters="true"
+            :filters-sticky="true"
+            @filters-toggle="handleFiltersToggle"
+          >
+            <template #filters="{ onToggle, collapsed }">
+              <DesktopFiltersPanel
+                :model-value="{ commerce: state.commerce }"
+                :loading="loading"
+                :commerces="Array.isArray(state.commerces) ? state.commerces : []"
+                :show-commerce-selector="true"
+                :show-date-filters="false"
+                :show-quick-date-buttons="false"
+                :show-refresh-button="false"
+                :sticky="true"
+                :show-all-option="true"
+                :commerce-selector-id="'documents-commerce-selector'"
+                :on-toggle="onToggle"
+                :collapsed="collapsed"
+                @commerce-changed="handleCommerceChanged"
+              >
+                <template #custom-filters>
+                  <!-- Filters from DocumentsManagement component -->
+                  <DocumentsManagement
+                    v-if="state.toggles && state.toggles['document-commerce.admin.view']"
+                    :show-client-management="false"
+                    :toggles="state.toggles"
+                    :commerce="state.commerce"
+                    :commerces="
+                      Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []
+                    "
+                    filters-location="slot"
                   >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                    <option key="ALL" :value="{ id: 'ALL' }">{{ $t('dashboard.all') }}</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div v-if="!loading" id="dashboard-result" class="mt-2">
-            <div>
+                    <template #filters-exposed="filterProps">
+                      <div class="filters-content-wrapper">
+                        <!-- Date quick buttons -->
+                        <div class="row my-2">
+                          <div class="col-6 mb-2">
+                            <button
+                              class="btn btn-sm btn-dark rounded-pill w-100"
+                              @click="filterProps.getToday()"
+                              :disabled="filterProps.loading"
+                            >
+                              {{ $t('dashboard.today') }}
+                            </button>
+                          </div>
+                          <div class="col-6 mb-2">
+                            <button
+                              class="btn btn-sm btn-dark rounded-pill w-100"
+                              @click="filterProps.getCurrentMonth()"
+                              :disabled="filterProps.loading"
+                            >
+                              {{ $t('dashboard.thisMonth') }}
+                            </button>
+                          </div>
+                          <div class="col-6 mb-2">
+                            <button
+                              class="btn btn-sm btn-dark rounded-pill w-100"
+                              @click="filterProps.getLastMonth()"
+                              :disabled="filterProps.loading"
+                            >
+                              {{ $t('dashboard.lastMonth') }}
+                            </button>
+                          </div>
+                          <div class="col-6 mb-2">
+                            <button
+                              class="btn btn-sm btn-dark rounded-pill w-100"
+                              @click="filterProps.getLastThreeMonths()"
+                              :disabled="filterProps.loading"
+                            >
+                              {{ $t('dashboard.lastThreeMonths') }}
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- DateRangeFilters with search button -->
+                        <DateRangeFilters
+                          :start-date="filterProps.startDate"
+                          :end-date="filterProps.endDate"
+                          :show-quick-buttons="false"
+                          :disabled="filterProps.loading"
+                          :show-search-button="true"
+                          @update:startDate="
+                            val => {
+                              filterProps.startDate = val;
+                            }
+                          "
+                          @update:endDate="
+                            val => {
+                              filterProps.endDate = val;
+                            }
+                          "
+                          @search="() => filterProps.refresh(1)"
+                        />
+
+                        <!-- Search field -->
+                        <div class="mb-3">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.search') || 'Buscar'
+                          }}</label>
+                          <div class="d-flex gap-2">
+                            <input
+                              type="text"
+                              class="form-control flex-grow-1"
+                              :value="filterProps.searchText"
+                              @input="
+                                e => {
+                                  filterProps.searchText = e.target.value;
+                                }
+                              "
+                              :placeholder="$t('dashboard.search')"
+                            />
+                            <button
+                              class="btn btn-sm btn-dark rounded-pill"
+                              @click="filterProps.refresh(1)"
+                              :disabled="filterProps.loading"
+                              style="flex-shrink: 0"
+                            >
+                              <i class="bi bi-search"></i>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Type selector -->
+                        <div class="mb-3" v-if="filterProps.types && filterProps.types.length > 1">
+                          <label class="form-label fw-bold mb-2">{{ $t('dashboard.type') }}</label>
+                          <select
+                            class="form-select metric-controls"
+                            :value="filterProps.type"
+                            @change="
+                              e => {
+                                filterProps.type = e.target.value;
+                                filterProps.refresh(1);
+                              }
+                            "
+                          >
+                            <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                            <option v-for="typ in filterProps.types" :key="typ.id" :value="typ.id">
+                              {{ $t(`documents.types.${typ.name}`) }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <!-- Ascending/Descending toggle -->
+                        <div class="mb-3">
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              :class="filterProps.asc === false ? 'bg-danger' : ''"
+                              type="checkbox"
+                              :checked="filterProps.asc"
+                              @change="filterProps.checkAsc($event)"
+                              id="documents-asc-toggle"
+                            />
+                            <label class="form-check-label" for="documents-asc-toggle">
+                              {{ $t('dashboard.ascending') || 'Ascendente' }}
+                            </label>
+                          </div>
+                        </div>
+
+                        <!-- Clear button -->
+                        <div class="mb-3">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                            @click="filterProps.clear()"
+                          >
+                            <i class="bi bi-eraser-fill"></i>
+                            {{ $t('dashboard.clear') || 'Limpiar' }}
+                          </button>
+                        </div>
+                      </div>
+                    </template>
+                  </DocumentsManagement>
+                </template>
+              </DesktopFiltersPanel>
+            </template>
+
+            <template #content>
               <DocumentsManagement
                 :show-client-management="true"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
-                :commerces="state.selectedCommerces"
+                :commerces="Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []"
+                filters-location="slot"
               >
               </DocumentsManagement>
-            </div>
-          </div>
+            </template>
+          </DesktopContentLayout>
         </div>
         <div v-if="!isActiveBusiness() && !loading">
           <Message
@@ -179,7 +456,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 
@@ -224,5 +500,52 @@ export default {
 .metric-card-subtitle {
   font-size: 0.6rem;
   font-weight: 500;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

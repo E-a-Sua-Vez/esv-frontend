@@ -45,8 +45,8 @@ app.use(router);
 app.use(i18n);
 app.use(VueGtag, {
   config: {
-    id: vueGtagId
+    id: vueGtagId,
   },
-  router
+  router,
 });
 app.mount('#app');

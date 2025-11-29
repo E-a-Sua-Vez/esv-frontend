@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { getBusinesses } from '../../application/services/business';
 import { globalStore } from '../../stores';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -13,7 +12,7 @@ import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
 
 export default {
   name: 'MasterMenu',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SearchBar, WelcomeMenu },
+  components: { CommerceLogo, Message, Spinner, Alert, SearchBar, WelcomeMenu },
   async setup() {
     const router = useRouter();
     const loading = ref(false);
@@ -274,7 +273,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business?.name || ''" />
   </div>
 </template>
 <style scoped>

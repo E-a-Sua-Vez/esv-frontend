@@ -49,6 +49,7 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -169,6 +170,17 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :refresh="refresh"
+    :queue-id="queueId"
+    :queues="queues"
+    :loading="loading"
+  ></slot>
+
   <div
     id="surveys-result"
     class="row"
@@ -185,7 +197,11 @@ export default {
         :can-download="toggles['dashboard.reports.surveys'] === true"
       ></SimpleDownloadCard>
       <Spinner :show="loading"></Spinner>
-      <div class="my-2 row metric-card" v-if="queues && queues.length >= 1">
+      <!-- Filters Section - Can be shown in component or exposed via slot -->
+      <div
+        class="my-2 row metric-card"
+        v-if="filtersLocation === 'component' && queues && queues.length >= 1"
+      >
         <div class="col-12">
           <span class="metric-card-subtitle">
             <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
@@ -258,7 +274,7 @@ export default {
                 :subdata="metrics['survey.created'].count_nps"
                 :title="$t('dashboard.items.attentions.24')"
                 :show-tooltip="true"
-                :description="$t('dashboard.nps')"
+                :description="$t('dashboard.nps.description')"
                 :icon="'bi-megaphone-fill'"
                 :icon-style-class="'orange-icon'"
                 :details-opened="detailsOpened"

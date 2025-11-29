@@ -113,18 +113,92 @@ export default {
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`collaboratorBookingsView.welcome`)"
-        :toggles="state.toggles"
-        component-name="collaboratorBookingsView"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`collaboratorBookingsView.welcome`)"
+          :toggles="state.toggles"
+          component-name="collaboratorBookingsView"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+          <div id="businessQueuesAdmin-controls" class="control-box">
+            <div class="row">
+              <div class="col" v-if="state.commerces.length > 0">
+                <span>{{ $t('collaboratorBookingsView.commerce') }} </span>
+                <select
+                  class="btn btn-md fw-bold text-dark m-1 select"
+                  v-model="state.commerce"
+                  @change="selectCommerce(state.commerce)"
+                  id="commerces"
+                >
+                  <option v-for="com in state.commerces" :key="com.id" :value="com">
+                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                  </option>
+                </select>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessQueuesAdmin.message.4.title')"
+                  :content="$t('businessQueuesAdmin.message.4.content')"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="mb-1 mt-2">
+            <div class="choose-attention">
+              <span> {{ $t('collaboratorBookingsView.manageAll') }} </span>
+            </div>
+            <button
+              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
+              data-bs-toggle="modal"
+              data-bs-target="#modalAgenda"
+              :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
+            >
+              <i class="bi bi-calendar-check-fill"></i>
+              {{ $t('collaboratorBookingsView.schedules') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.commerce.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`collaboratorBookingsView.welcome`)"
+              :toggles="state.toggles"
+              component-name="collaboratorBookingsView"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
         <div id="businessQueuesAdmin-controls" class="control-box">
           <div class="row">
             <div class="col" v-if="state.commerces.length > 0">
@@ -234,5 +308,52 @@ export default {
   padding: 1rem;
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>
