@@ -1,10 +1,10 @@
 import { fileURLToPath, URL } from 'node:url';
 import { resolve, dirname } from 'node:path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
-export default defineConfig(({ command, mode }) =>
+export default defineConfig(({ mode }) =>
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   ({
@@ -49,9 +49,10 @@ export default defineConfig(({ command, mode }) =>
           manualChunks: id => {
             // Split node_modules into separate chunks
             if (id.includes('node_modules')) {
-              // Heavy libraries get their own chunks
+              // CRITICAL: Exclude html2pdf.js completely from chunking
+              // It has circular dependencies that break when bundled
               if (id.includes('html2pdf.js')) {
-                return 'html2pdf';
+                return undefined; // Let it be a separate dynamic import chunk
               }
               if (id.includes('chart.js') || id.includes('vue-chart-3')) {
                 return 'charts';
@@ -88,8 +89,13 @@ export default defineConfig(({ command, mode }) =>
             return 'assets/[ext]/[name]-[hash][extname]';
           },
         },
-        // Ensure html2pdf.js is properly handled as commonjs if needed
-        // Extra config from HEAD version not strictly needed; rollup chunking covers it
+      },
+      // CommonJS options - exclude html2pdf to prevent transformation issues
+      commonjsOptions: {
+        include: [/node_modules/],
+        exclude: [/html2pdf\.js/], // Exclude html2pdf from CommonJS transformation
+        transformMixedEsModules: true,
+        strictRequires: false,
       },
       // Source maps for production (can disable for smaller builds)
       sourcemap: false,

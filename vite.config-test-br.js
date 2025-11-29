@@ -40,9 +40,10 @@ export default defineConfig(({ mode }) =>
           manualChunks: id => {
             // Split node_modules into separate chunks
             if (id.includes('node_modules')) {
-              // Heavy libraries get their own chunks
+              // CRITICAL: Exclude html2pdf.js completely from chunking
+              // It has circular dependencies that break when bundled
               if (id.includes('html2pdf.js')) {
-                return 'html2pdf';
+                return undefined; // Let it be a separate dynamic import chunk
               }
               if (id.includes('chart.js') || id.includes('vue-chart-3')) {
                 return 'charts';
@@ -82,8 +83,10 @@ export default defineConfig(({ mode }) =>
       },
       // CommonJS options for html2pdf.js
       commonjsOptions: {
-        include: [/html2pdf\.js/, /node_modules/],
-        transformMixedEsModules: true, // Handle mixed ES/CommonJS modules
+        include: [/node_modules/],
+        exclude: [/html2pdf\.js/], // Exclude html2pdf from CommonJS transformation
+        transformMixedEsModules: true,
+        strictRequires: false,
       },
       // Source maps for production (can disable for smaller builds)
       sourcemap: false,
