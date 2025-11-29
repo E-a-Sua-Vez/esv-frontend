@@ -278,32 +278,6 @@ export default {
             />
           </div>
           <div v-else>
-            <!-- Header with tabs -->
-            <div class="row col mx-1 mt-3 mb-3">
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showProducts ? 'btn-selected' : ''"
-                  @click="showProducts()"
-                  :disabled="!state.toggles['products-stock.products.view']"
-                >
-                  {{ $t('businessProductStockAdmin.products') }} <br />
-                  <i class="bi bi-eyedropper"></i>
-                </button>
-              </div>
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showAttentions ? 'btn-selected' : ''"
-                  @click="showAttentions()"
-                  :disabled="!state.toggles['products-stock.attentions.view']"
-                >
-                  {{ $t('businessProductStockAdmin.attentions') }} <br />
-                  <i class="bi bi-qr-code"></i>
-                </button>
-              </div>
-            </div>
-
             <DesktopContentLayout
               v-if="!loading"
               :show-filters="true"
@@ -803,6 +777,31 @@ export default {
                 </DesktopFiltersPanel>
               </template>
               <template #content>
+                <!-- Header with tabs -->
+                <div class="row col mx-1 mt-3 mb-3">
+                  <div class="col-6 centered">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                      :class="state.showProducts ? 'btn-selected' : ''"
+                      @click="showProducts()"
+                      :disabled="!state.toggles['products-stock.products.view']"
+                    >
+                      {{ $t('businessProductStockAdmin.products') }} <br />
+                      <i class="bi bi-eyedropper"></i>
+                    </button>
+                  </div>
+                  <div class="col-6 centered">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                      :class="state.showAttentions ? 'btn-selected' : ''"
+                      @click="showAttentions()"
+                      :disabled="!state.toggles['products-stock.attentions.view']"
+                    >
+                      {{ $t('businessProductStockAdmin.attentions') }} <br />
+                      <i class="bi bi-qr-code"></i>
+                    </button>
+                  </div>
+                </div>
                 <!-- Main content components -->
                 <ProductsStockManagement
                   :show-product-stock-management="state.showProducts"
