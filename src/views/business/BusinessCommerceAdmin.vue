@@ -13,7 +13,6 @@ import Popper from 'vue3-popper';
 import CommerceName from '../../components/common/CommerceName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -28,7 +27,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     CommerceName,
@@ -516,684 +514,501 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessCommercesAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessCommercesAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessCommercesAdmin">
-        <div v-if="isActiveBusiness && state.toggles['commerces.admin.view']">
-          <div v-if="!loading" id="businessCommercesAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.commerces.length === 0" class="control-box">
-                <Message
-                  :title="$t('businessCommercesAdmin.message.2.title')"
-                  :content="$t('businessCommercesAdmin.message.2.content')"
-                />
-              </div>
-              <div class="row my-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd()"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-commerce`"
-                    :disabled="!state.toggles['commerces.admin.add']"
-                  >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
-                </div>
-              </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessCommercesAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessCommercesAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessCommercesAdmin">
+          <div v-if="isActiveBusiness && state.toggles['commerces.admin.view']">
+            <div v-if="!loading" id="businessCommercesAdmin-result" class="mt-4">
               <div>
-                <SearchAdminItem
-                  :business-items="state.commerces"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <CommerceName
-                        :name="commerce.name"
-                        :tag="commerce.tag"
-                        :active="commerce.active"
-                      ></CommerceName>
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                          :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
+                <div v-if="state.commerces.length === 0" class="control-box">
+                  <Message
+                    :title="$t('businessCommercesAdmin.message.2.title')"
+                    :content="$t('businessCommercesAdmin.message.2.content')"
+                  />
+                </div>
+                <div class="row my-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-commerce`"
+                      :disabled="!state.toggles['commerces.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
                   </div>
-                  <div
-                    v-if="state.toggles['commerces.admin.read']"
-                    :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.commerces"
+                    :receive-filtered-items="receiveFilteredItems"
                   >
-                    <div class="row g-1">
-                      <div id="commerce-link-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.link') }}
-                        </div>
-                        <div class="col-8">
-                          <a class="btn copy-icon" @click="copyLink(commerce)">
-                            <i class="bi bi-file-earmark-spreadsheet"></i>
-                          </a>
-                          <a
-                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                            :href="`${getCommerceLink(commerce)}`"
-                            target="_blank"
-                          >
-                            <i class="bi bi-box-arrow-up-right"></i>
-                            {{ $t('businessCommercesAdmin.go') }}
-                          </a>
-                        </div>
+                  </SearchAdminItem>
+                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <CommerceName
+                          :name="commerce.name"
+                          :tag="commerce.tag"
+                          :active="commerce.active"
+                        ></CommerceName>
                       </div>
-                      <div id="commerce-name-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.name') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="commerce.name"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-keyName-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.keyName') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="commerce.keyName"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-email-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.email') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="10"
-                            type="email"
-                            class="form-control"
-                            v-model="commerce.email"
-                            placeholder="commerce@email.com"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-tag-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.tag') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            :disabled="!state.toggles['commerces.admin.edit']"
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="commerce.tag"
-                            v-bind:class="{ 'is-invalid': state.tagUpdateError }"
-                            placeholder="brilliant-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-logo-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.logo') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="10"
-                            type="text"
-                            class="form-control"
-                            v-model="commerce.logo"
-                            placeholder="url/logo.png"
-                          />
-                        </div>
-                      </div>
-                      <div id="commerce-category-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.category') }}
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="commerce.category"
-                            id="caterogies"
-                          >
-                            <option v-for="cat in state.categories" :key="cat" :value="cat">
-                              {{ $t(`categories.${cat}`) }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="commerce-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.active') }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="commerce.active"
-                            :disabled="!state.toggles['commerces.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <!-- Datos de localizacion -->
-                      <div class="row g-1">
-                        <a
-                          class="nav-link subdata-title centered active"
-                          data-bs-toggle="collapse"
-                          aria-expanded="true"
-                          aria-controls="update-location"
-                          href="#update-location"
-                        >
-                          {{ $t('businessCommercesAdmin.location') }}
-                          <i class="bi bi-chevron-down"></i>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
                         </a>
                       </div>
-                      <div id="update-location" class="collapse row m-0">
-                        <div id="commerce-country-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.country') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="12"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.localeInfo.country"
-                              placeholder="Ex. ve, br, cl"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-language-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.language') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="3"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.localeInfo.language"
-                              placeholder="Ex.: es / en / pt"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-timezone-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.timezone') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="30"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.localeInfo.timezone"
-                              placeholder="Ex.: America/Caracas"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-address-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.address') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="80"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.localeInfo.address"
-                              v-bind:class="{ 'is-invalid': state.addressAddError }"
-                              placeholder="Street 1, Building 56, City, State"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-addressLat-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.addressLat') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="10"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.localeInfo.addressLat"
-                              placeholder="Ex.: 10.65656"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-addressLng-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.addressLng') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="10"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.localeInfo.addressLng"
-                              placeholder="Ex.: -10.65656"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Datos de Contacto -->
+                    </div>
+                    <div
+                      v-if="state.toggles['commerces.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
                       <div class="row g-1">
-                        <a
-                          class="nav-link subdata-title centered active"
-                          data-bs-toggle="collapse"
-                          href="#update-contact"
-                        >
-                          {{ $t('businessCommercesAdmin.contact') }}
-                          <i class="bi bi-chevron-down"></i>
-                        </a>
-                      </div>
-                      <div id="update-contact" class="collapse row m-0">
-                        <div id="commerce-contact-email-form-update" class="row g-1">
+                        <div id="commerce-link-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.link') }}
+                          </div>
+                          <div class="col-8">
+                            <a class="btn copy-icon" @click="copyLink(commerce)">
+                              <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </a>
+                            <a
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                              :href="`${getCommerceLink(commerce)}`"
+                              target="_blank"
+                            >
+                              <i class="bi bi-box-arrow-up-right"></i>
+                              {{ $t('businessCommercesAdmin.go') }}
+                            </a>
+                          </div>
+                        </div>
+                        <div id="commerce-name-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.name') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.name"
+                              placeholder="brilliant-shop-1"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-keyName-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.keyName') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.keyName"
+                              placeholder="brilliant-shop-1"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-email-form-add" class="row g-1">
                           <div class="col-4 text-label">
                             {{ $t('businessCommercesAdmin.email') }}
                           </div>
                           <div class="col-8">
                             <input
-                              min="1"
-                              max="30"
+                              min="10"
                               type="email"
                               class="form-control"
-                              v-model="commerce.contactInfo.email"
-                              placeholder="Ex.: contact@commerce.com"
+                              v-model="commerce.email"
+                              placeholder="commerce@email.com"
                             />
                           </div>
                         </div>
-                        <div id="commerce-contact-url-form-update" class="row g-1">
+                        <div id="commerce-tag-form-add" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.url') }}
+                            {{ $t('businessCommercesAdmin.tag') }}
                           </div>
                           <div class="col-8">
                             <input
+                              :disabled="!state.toggles['commerces.admin.edit']"
                               min="1"
-                              max="30"
+                              max="50"
                               type="text"
                               class="form-control"
-                              v-model="commerce.contactInfo.url"
-                              placeholder="Ex.: https://www.commerce.com/"
+                              v-model="commerce.tag"
+                              v-bind:class="{ 'is-invalid': state.tagUpdateError }"
+                              placeholder="brilliant-1"
                             />
                           </div>
                         </div>
-                        <div id="commerce-phone-form-update" class="row g-1">
+                        <div id="commerce-logo-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.phone') }}
+                            {{ $t('businessCommercesAdmin.logo') }}
                           </div>
                           <div class="col-8">
                             <input
                               min="10"
-                              type="tel"
-                              class="form-control"
-                              v-model="commerce.contactInfo.phone"
-                              v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
-                              placeholder="Cod. Pais + Numero"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-contact-phone2-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.phone2') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="9"
-                              max="12"
-                              type="tel"
-                              class="form-control"
-                              v-model="commerce.contactInfo.phone2"
-                              placeholder="Ex.: 56233445533"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-contact-whatsapp-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.whatsapp') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="9"
-                              max="12"
-                              type="tel"
-                              class="form-control"
-                              v-model="commerce.contactInfo.whatsapp"
-                              placeholder="Ex.: 56233445533"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-contact-twitter-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.twitter') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
                               type="text"
                               class="form-control"
-                              v-model="commerce.contactInfo.twitter"
-                              placeholder="Ex.: tw_commerce"
+                              v-model="commerce.logo"
+                              placeholder="url/logo.png"
                             />
                           </div>
                         </div>
-                        <div id="commerce-contact-instagram-form-update" class="row g-1">
+                        <div id="commerce-category-form-update" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.instagram') }}
+                            {{ $t('businessCommercesAdmin.category') }}
                           </div>
                           <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.contactInfo.instagram"
-                              placeholder="Ex.: ig_commerce"
-                            />
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="commerce.category"
+                              id="caterogies"
+                            >
+                              <option v-for="cat in state.categories" :key="cat" :value="cat">
+                                {{ $t(`categories.${cat}`) }}
+                              </option>
+                            </select>
                           </div>
                         </div>
-                        <div id="commerce-contact-facebook-form-update" class="row g-1">
+                        <div id="commerce-active-form" class="row g-1">
                           <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.facebook') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.contactInfo.facebook"
-                              placeholder="Ex.: fb_commerce"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Datos de Servicio -->
-                      <div class="row g-1">
-                        <a
-                          class="nav-link subdata-title centered active"
-                          data-bs-toggle="collapse"
-                          href="#update-service"
-                        >
-                          {{ $t('businessCommercesAdmin.service') }}
-                          <i class="bi bi-chevron-down"></i>
-                        </a>
-                      </div>
-                      <div id="update-service" class="collapse row m-0">
-                        <div id="commerce-serviceUrl-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.serviceUrl') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="12"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.serviceUrl"
-                              placeholder="Ex. https://menu.commerce.com"
-                            />
-                          </div>
-                        </div>
-                        <div
-                          id="commerce-confirmNotificationDaysBefore-form-update"
-                          class="row g-1"
-                        >
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.confirmNotificationDaysBefore') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="8"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.confirmNotificationDaysBefore"
-                              placeholder="5"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-surveyPostAttentionDaysAfter-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.surveyPostAttentionDaysAfter') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="8"
-                              type="text"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.surveyPostAttentionDaysAfter"
-                              placeholder="5"
-                            />
-                          </div>
-                        </div>
-                        <div id="commerce-attentionHour-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.attentionHour') }}
-                          </div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="2"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.attentionHourFrom"
-                              placeholder="Ex. 8"
-                            />
-                          </div>
-                          <div class="col-2">-</div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="2"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.attentionHourTo"
-                              placeholder="Ex. 16"
-                            />
-                          </div>
-                        </div>
-                        <div id="add-commerce-break-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.break') }}
+                            {{ $t('businessCommercesAdmin.active') }}
                           </div>
                           <div class="col-8">
                             <Toggle
-                              v-model="commerce.serviceInfo.break"
+                              v-model="commerce.active"
                               :disabled="!state.toggles['commerces.admin.edit']"
                             />
                           </div>
                         </div>
-                        <div
-                          id="commerce-attentionBreak-form-add"
-                          v-if="commerce.serviceInfo.break"
-                          class="row g-1"
-                        >
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.breakHour') }}
-                          </div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="5"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.breakHourFrom"
-                              placeholder="Ex. 8"
-                            />
-                          </div>
-                          <div class="col-2">-</div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="5"
-                              type="number"
-                              class="form-control"
-                              v-model="commerce.serviceInfo.breakHourTo"
-                              placeholder="Ex. 16"
-                            />
-                          </div>
+                        <!-- Datos de localizacion -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            aria-expanded="true"
+                            aria-controls="update-location"
+                            href="#update-location"
+                          >
+                            {{ $t('businessCommercesAdmin.location') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
                         </div>
-                        <div id="commerce-attentionDays-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.attentionDays') }}
+                        <div id="update-location" class="collapse row m-0">
+                          <div id="commerce-country-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.country') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="12"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.country"
+                                placeholder="Ex. ve, br, cl"
+                              />
+                            </div>
                           </div>
-                          <div class="col-8">
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="monday"
-                                :checked="dayChecked(commerce.serviceInfo, 1)"
-                                @click="checkDay($event, commerce.serviceInfo, 1)"
-                              />
-                              <label class="form-check-label" for="monday">{{
-                                $t('days.1')
-                              }}</label>
+                          <div id="commerce-language-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.language') }}
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="col-8">
                               <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="tuesday"
-                                :checked="dayChecked(commerce.serviceInfo, 2)"
-                                @click="checkDay($event, commerce.serviceInfo, 2)"
+                                min="1"
+                                max="3"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.language"
+                                placeholder="Ex.: es / en / pt"
                               />
-                              <label class="form-check-label" for="tuesday">{{
-                                $t('days.2')
-                              }}</label>
                             </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="wednesday"
-                                :checked="dayChecked(commerce.serviceInfo, 3)"
-                                @click="checkDay($event, commerce.serviceInfo, 3)"
-                              />
-                              <label class="form-check-label" for="wednesday">{{
-                                $t('days.3')
-                              }}</label>
+                          </div>
+                          <div id="commerce-timezone-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.timezone') }}
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="col-8">
                               <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="thursday"
-                                :checked="dayChecked(commerce.serviceInfo, 4)"
-                                @click="checkDay($event, commerce.serviceInfo, 4)"
+                                min="1"
+                                max="30"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.timezone"
+                                placeholder="Ex.: America/Caracas"
                               />
-                              <label class="form-check-label" for="thursday">{{
-                                $t('days.4')
-                              }}</label>
                             </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="friday"
-                                :checked="dayChecked(commerce.serviceInfo, 5)"
-                                @click="checkDay($event, commerce.serviceInfo, 5)"
-                              />
-                              <label class="form-check-label" for="friday">{{
-                                $t('days.5')
-                              }}</label>
+                          </div>
+                          <div id="commerce-address-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.address') }}
                             </div>
-                            <div class="form-check form-switch">
+                            <div class="col-8">
                               <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="sabado"
-                                :checked="dayChecked(commerce.serviceInfo, 6)"
-                                @click="checkDay($event, commerce.serviceInfo, 6)"
+                                min="1"
+                                max="80"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.address"
+                                v-bind:class="{ 'is-invalid': state.addressAddError }"
+                                placeholder="Street 1, Building 56, City, State"
                               />
-                              <label class="form-check-label" for="sabado">{{
-                                $t('days.6')
-                              }}</label>
                             </div>
-                            <div class="form-check form-switch">
+                          </div>
+                          <div id="commerce-addressLat-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.addressLat') }}
+                            </div>
+                            <div class="col-8">
                               <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="domingo"
-                                :checked="dayChecked(commerce.serviceInfo, 7)"
-                                @click="checkDay($event, commerce.serviceInfo, 7)"
+                                min="1"
+                                max="10"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.localeInfo.addressLat"
+                                placeholder="Ex.: 10.65656"
                               />
-                              <label class="form-check-label" for="domingo">{{
-                                $t('days.7')
-                              }}</label>
+                            </div>
+                          </div>
+                          <div id="commerce-addressLng-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.addressLng') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="10"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.localeInfo.addressLng"
+                                placeholder="Ex.: -10.65656"
+                              />
                             </div>
                           </div>
                         </div>
-                        <div id="update-commerce-personalized-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.personalized') }}
+                        <!-- Datos de Contacto -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-contact"
+                          >
+                            {{ $t('businessCommercesAdmin.contact') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-contact" class="collapse row m-0">
+                          <div id="commerce-contact-email-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.email') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="30"
+                                type="email"
+                                class="form-control"
+                                v-model="commerce.contactInfo.email"
+                                placeholder="Ex.: contact@commerce.com"
+                              />
+                            </div>
                           </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="commerce.serviceInfo.personalized"
-                              :disabled="!state.toggles['commerces.admin.edit']"
-                              @click="initializedParsonalizedHours(commerce.serviceInfo)"
-                            />
+                          <div id="commerce-contact-url-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.url') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="30"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.url"
+                                placeholder="Ex.: https://www.commerce.com/"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-phone-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.phone') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="10"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.phone"
+                                v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
+                                placeholder="Cod. Pais + Numero"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-phone2-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.phone2') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="9"
+                                max="12"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.phone2"
+                                placeholder="Ex.: 56233445533"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-whatsapp-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.whatsapp') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="9"
+                                max="12"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.whatsapp"
+                                placeholder="Ex.: 56233445533"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-twitter-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.twitter') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.twitter"
+                                placeholder="Ex.: tw_commerce"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-instagram-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.instagram') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.instagram"
+                                placeholder="Ex.: ig_commerce"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-facebook-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.facebook') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.facebook"
+                                placeholder="Ex.: fb_commerce"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div
-                          id="commerce-personalized-form-update"
-                          v-if="commerce.serviceInfo.personalized"
-                          class="row g-1"
-                        >
-                          <hr />
+                        <!-- Datos de Servicio -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-service"
+                          >
+                            {{ $t('businessCommercesAdmin.service') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-service" class="collapse row m-0">
+                          <div id="commerce-serviceUrl-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.serviceUrl') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="12"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.serviceUrl"
+                                placeholder="Ex. https://menu.commerce.com"
+                              />
+                            </div>
+                          </div>
                           <div
+                            id="commerce-confirmNotificationDaysBefore-form-update"
                             class="row g-1"
-                            v-for="day in commerce.serviceInfo.attentionDays"
-                            :key="day"
                           >
                             <div class="col-4 text-label">
-                              {{ $t(`days.${day}`) }}
+                              {{ $t('businessCommercesAdmin.confirmNotificationDaysBefore') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="8"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.confirmNotificationDaysBefore"
+                                placeholder="5"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-surveyPostAttentionDaysAfter-form-update"
+                            class="row g-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.surveyPostAttentionDaysAfter') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="8"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.surveyPostAttentionDaysAfter"
+                                placeholder="5"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-attentionHour-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.attentionHour') }}
                             </div>
                             <div class="col-3">
                               <input
@@ -1202,10 +1017,8 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control form-control-sm"
-                                v-model="
-                                  commerce.serviceInfo.personalizedHours[day].attentionHourFrom
-                                "
+                                class="form-control"
+                                v-model="commerce.serviceInfo.attentionHourFrom"
                                 placeholder="Ex. 8"
                               />
                             </div>
@@ -1217,108 +1030,1128 @@ export default {
                                 minlength="1"
                                 maxlength="2"
                                 type="number"
-                                class="form-control form-control-sm"
-                                v-model="
-                                  commerce.serviceInfo.personalizedHours[day].attentionHourTo
-                                "
+                                class="form-control"
+                                v-model="commerce.serviceInfo.attentionHourTo"
                                 placeholder="Ex. 16"
                               />
                             </div>
                           </div>
+                          <div id="add-commerce-break-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.break') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.break"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-attentionBreak-form-add"
+                            v-if="commerce.serviceInfo.break"
+                            class="row g-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.breakHour') }}
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.breakHourFrom"
+                                placeholder="Ex. 8"
+                              />
+                            </div>
+                            <div class="col-2">-</div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.breakHourTo"
+                                placeholder="Ex. 16"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-attentionDays-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.attentionDays') }}
+                            </div>
+                            <div class="col-8">
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="monday"
+                                  :checked="dayChecked(commerce.serviceInfo, 1)"
+                                  @click="checkDay($event, commerce.serviceInfo, 1)"
+                                />
+                                <label class="form-check-label" for="monday">{{
+                                  $t('days.1')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="tuesday"
+                                  :checked="dayChecked(commerce.serviceInfo, 2)"
+                                  @click="checkDay($event, commerce.serviceInfo, 2)"
+                                />
+                                <label class="form-check-label" for="tuesday">{{
+                                  $t('days.2')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="wednesday"
+                                  :checked="dayChecked(commerce.serviceInfo, 3)"
+                                  @click="checkDay($event, commerce.serviceInfo, 3)"
+                                />
+                                <label class="form-check-label" for="wednesday">{{
+                                  $t('days.3')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="thursday"
+                                  :checked="dayChecked(commerce.serviceInfo, 4)"
+                                  @click="checkDay($event, commerce.serviceInfo, 4)"
+                                />
+                                <label class="form-check-label" for="thursday">{{
+                                  $t('days.4')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="friday"
+                                  :checked="dayChecked(commerce.serviceInfo, 5)"
+                                  @click="checkDay($event, commerce.serviceInfo, 5)"
+                                />
+                                <label class="form-check-label" for="friday">{{
+                                  $t('days.5')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="sabado"
+                                  :checked="dayChecked(commerce.serviceInfo, 6)"
+                                  @click="checkDay($event, commerce.serviceInfo, 6)"
+                                />
+                                <label class="form-check-label" for="sabado">{{
+                                  $t('days.6')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="domingo"
+                                  :checked="dayChecked(commerce.serviceInfo, 7)"
+                                  @click="checkDay($event, commerce.serviceInfo, 7)"
+                                />
+                                <label class="form-check-label" for="domingo">{{
+                                  $t('days.7')
+                                }}</label>
+                              </div>
+                            </div>
+                          </div>
+                          <div id="update-commerce-personalized-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.personalized') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.personalized"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                                @click="initializedParsonalizedHours(commerce.serviceInfo)"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-personalized-form-update"
+                            v-if="commerce.serviceInfo.personalized"
+                            class="row g-1"
+                          >
+                            <hr />
+                            <div
+                              class="row g-1"
+                              v-for="day in commerce.serviceInfo.attentionDays"
+                              :key="day"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t(`days.${day}`) }}
+                              </div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  v-model="
+                                    commerce.serviceInfo.personalizedHours[day].attentionHourFrom
+                                  "
+                                  placeholder="Ex. 8"
+                                />
+                              </div>
+                              <div class="col-2">-</div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  v-model="
+                                    commerce.serviceInfo.personalizedHours[day].attentionHourTo
+                                  "
+                                  placeholder="Ex. 16"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div id="commerce-specificCalendar-active-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.specificCalendar') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.specificCalendar"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                                @click="initializedSpecificCalendar(commerce.serviceInfo)"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-specificCalendarDays-form-update"
+                            v-if="commerce.serviceInfo.specificCalendar"
+                            class="g-1"
+                          >
+                            <hr />
+                            <SpecificCalendarForm
+                              :show="commerce.serviceInfo.specificCalendar"
+                              :locale="state.locale"
+                              :structure="commerce"
+                            >
+                            </SpecificCalendarForm>
+                          </div>
                         </div>
-                        <div id="commerce-specificCalendar-active-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.specificCalendar') }}
+                        <div id="commerce-id-form" class="row -2 mb-g3">
+                          <div class="row commerce-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ commerce.id }}</span>
+                            </div>
                           </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="commerce.serviceInfo.specificCalendar"
-                              :disabled="!state.toggles['commerces.admin.edit']"
-                              @click="initializedSpecificCalendar(commerce.serviceInfo)"
-                            />
-                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(commerce)"
+                            :disabled="!state.toggles['commerces.admin.update']"
+                          >
+                            {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['commerces.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['commerces.admin.unavailable']"
+                            :no-disabled="state.toggles['commerces.admin.unavailable']"
+                            @actionYes="unavailable(commerce)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
                         </div>
                         <div
-                          id="commerce-specificCalendarDays-form-update"
-                          v-if="commerce.serviceInfo.specificCalendar"
-                          class="g-1"
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
                         >
-                          <hr />
-                          <SpecificCalendarForm
-                            :show="commerce.serviceInfo.specificCalendar"
-                            :locale="state.locale"
-                            :structure="commerce"
-                          >
-                          </SpecificCalendarForm>
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
                         </div>
-                      </div>
-                      <div id="commerce-id-form" class="row -2 mb-g3">
-                        <div class="row commerce-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ commerce.id }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(commerce)"
-                          :disabled="!state.toggles['commerces.admin.update']"
-                        >
-                          {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['commerces.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['commerces.admin.unavailable']"
-                          :no-disabled="state.toggles['commerces.admin.unavailable']"
-                          @actionYes="unavailable(commerce)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                      <div
-                        class="row g-1 errors"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
                       </div>
                     </div>
-                  </div>
-                  <div
-                    v-if="
-                      (!isActiveBusiness() || !state.toggles['commerces.admin.read']) && !loading
-                    "
-                  >
-                    <Message
-                      :title="$t('businessCommercesAdmin.message.1.title')"
-                      :content="$t('businessCommercesAdmin.message.1.content')"
-                    />
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['commerces.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessCommercesAdmin.message.1.title')"
+                        :content="$t('businessCommercesAdmin.message.1.content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['commerces.admin.view']) && !loading">
+            <Message
+              :title="$t('businessCommercesAdmin.message.1.title')"
+              :content="$t('businessCommercesAdmin.message.1.content')"
+            />
+          </div>
         </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['commerces.admin.view']) && !loading">
-          <Message
-            :title="$t('businessCommercesAdmin.message.1.title')"
-            :content="$t('businessCommercesAdmin.message.1.content')"
-          />
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessCommercesAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessCommercesAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessCommercesAdmin">
+          <div v-if="isActiveBusiness && state.toggles['commerces.admin.view']">
+            <div v-if="!loading" id="businessCommercesAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.commerces.length === 0" class="control-box">
+                  <Message
+                    :title="$t('businessCommercesAdmin.message.2.title')"
+                    :content="$t('businessCommercesAdmin.message.2.content')"
+                  />
+                </div>
+                <div class="row my-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-commerce`"
+                      :disabled="!state.toggles['commerces.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.commerces"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <CommerceName
+                          :name="commerce.name"
+                          :tag="commerce.tag"
+                          :active="commerce.active"
+                        ></CommerceName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['commerces.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="commerce-link-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.link') }}
+                          </div>
+                          <div class="col-8">
+                            <a class="btn copy-icon" @click="copyLink(commerce)">
+                              <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </a>
+                            <a
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                              :href="`${getCommerceLink(commerce)}`"
+                              target="_blank"
+                            >
+                              <i class="bi bi-box-arrow-up-right"></i>
+                              {{ $t('businessCommercesAdmin.go') }}
+                            </a>
+                          </div>
+                        </div>
+                        <div id="commerce-name-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.name') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.name"
+                              placeholder="brilliant-shop-1"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-keyName-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.keyName') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.keyName"
+                              placeholder="brilliant-shop-1"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-email-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.email') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="10"
+                              type="email"
+                              class="form-control"
+                              v-model="commerce.email"
+                              placeholder="commerce@email.com"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-tag-form-add" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.tag') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="!state.toggles['commerces.admin.edit']"
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.tag"
+                              v-bind:class="{ 'is-invalid': state.tagUpdateError }"
+                              placeholder="brilliant-1"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-logo-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.logo') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="10"
+                              type="text"
+                              class="form-control"
+                              v-model="commerce.logo"
+                              placeholder="url/logo.png"
+                            />
+                          </div>
+                        </div>
+                        <div id="commerce-category-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.category') }}
+                          </div>
+                          <div class="col-8">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="commerce.category"
+                              id="caterogies"
+                            >
+                              <option v-for="cat in state.categories" :key="cat" :value="cat">
+                                {{ $t(`categories.${cat}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="commerce-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCommercesAdmin.active') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="commerce.active"
+                              :disabled="!state.toggles['commerces.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <!-- Datos de localizacion -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            aria-expanded="true"
+                            aria-controls="update-location"
+                            href="#update-location"
+                          >
+                            {{ $t('businessCommercesAdmin.location') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-location" class="collapse row m-0">
+                          <div id="commerce-country-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.country') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="12"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.country"
+                                placeholder="Ex. ve, br, cl"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-language-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.language') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="3"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.language"
+                                placeholder="Ex.: es / en / pt"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-timezone-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.timezone') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="30"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.timezone"
+                                placeholder="Ex.: America/Caracas"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-address-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.address') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="80"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.localeInfo.address"
+                                v-bind:class="{ 'is-invalid': state.addressAddError }"
+                                placeholder="Street 1, Building 56, City, State"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-addressLat-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.addressLat') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="10"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.localeInfo.addressLat"
+                                placeholder="Ex.: 10.65656"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-addressLng-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.addressLng') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="10"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.localeInfo.addressLng"
+                                placeholder="Ex.: -10.65656"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Datos de Contacto -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-contact"
+                          >
+                            {{ $t('businessCommercesAdmin.contact') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-contact" class="collapse row m-0">
+                          <div id="commerce-contact-email-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.email') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="30"
+                                type="email"
+                                class="form-control"
+                                v-model="commerce.contactInfo.email"
+                                placeholder="Ex.: contact@commerce.com"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-url-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.url') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="30"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.url"
+                                placeholder="Ex.: https://www.commerce.com/"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-phone-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.phone') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="10"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.phone"
+                                v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
+                                placeholder="Cod. Pais + Numero"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-phone2-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.phone2') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="9"
+                                max="12"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.phone2"
+                                placeholder="Ex.: 56233445533"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-whatsapp-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.whatsapp') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="9"
+                                max="12"
+                                type="tel"
+                                class="form-control"
+                                v-model="commerce.contactInfo.whatsapp"
+                                placeholder="Ex.: 56233445533"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-twitter-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.twitter') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.twitter"
+                                placeholder="Ex.: tw_commerce"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-instagram-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.instagram') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.instagram"
+                                placeholder="Ex.: ig_commerce"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-contact-facebook-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.facebook') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="5"
+                                max="20"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.contactInfo.facebook"
+                                placeholder="Ex.: fb_commerce"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Datos de Servicio -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-service"
+                          >
+                            {{ $t('businessCommercesAdmin.service') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-service" class="collapse row m-0">
+                          <div id="commerce-serviceUrl-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.serviceUrl') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="12"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.serviceUrl"
+                                placeholder="Ex. https://menu.commerce.com"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-confirmNotificationDaysBefore-form-update"
+                            class="row g-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.confirmNotificationDaysBefore') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="8"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.confirmNotificationDaysBefore"
+                                placeholder="5"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-surveyPostAttentionDaysAfter-form-update"
+                            class="row g-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.surveyPostAttentionDaysAfter') }}
+                            </div>
+                            <div class="col-8">
+                              <input
+                                min="1"
+                                max="8"
+                                type="text"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.surveyPostAttentionDaysAfter"
+                                placeholder="5"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-attentionHour-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.attentionHour') }}
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.attentionHourFrom"
+                                placeholder="Ex. 8"
+                              />
+                            </div>
+                            <div class="col-2">-</div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="2"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.attentionHourTo"
+                                placeholder="Ex. 16"
+                              />
+                            </div>
+                          </div>
+                          <div id="add-commerce-break-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.break') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.break"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-attentionBreak-form-add"
+                            v-if="commerce.serviceInfo.break"
+                            class="row g-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.breakHour') }}
+                            </div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.breakHourFrom"
+                                placeholder="Ex. 8"
+                              />
+                            </div>
+                            <div class="col-2">-</div>
+                            <div class="col-3">
+                              <input
+                                min="0"
+                                max="24"
+                                minlength="1"
+                                maxlength="5"
+                                type="number"
+                                class="form-control"
+                                v-model="commerce.serviceInfo.breakHourTo"
+                                placeholder="Ex. 16"
+                              />
+                            </div>
+                          </div>
+                          <div id="commerce-attentionDays-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.attentionDays') }}
+                            </div>
+                            <div class="col-8">
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="monday"
+                                  :checked="dayChecked(commerce.serviceInfo, 1)"
+                                  @click="checkDay($event, commerce.serviceInfo, 1)"
+                                />
+                                <label class="form-check-label" for="monday">{{
+                                  $t('days.1')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="tuesday"
+                                  :checked="dayChecked(commerce.serviceInfo, 2)"
+                                  @click="checkDay($event, commerce.serviceInfo, 2)"
+                                />
+                                <label class="form-check-label" for="tuesday">{{
+                                  $t('days.2')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="wednesday"
+                                  :checked="dayChecked(commerce.serviceInfo, 3)"
+                                  @click="checkDay($event, commerce.serviceInfo, 3)"
+                                />
+                                <label class="form-check-label" for="wednesday">{{
+                                  $t('days.3')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="thursday"
+                                  :checked="dayChecked(commerce.serviceInfo, 4)"
+                                  @click="checkDay($event, commerce.serviceInfo, 4)"
+                                />
+                                <label class="form-check-label" for="thursday">{{
+                                  $t('days.4')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="friday"
+                                  :checked="dayChecked(commerce.serviceInfo, 5)"
+                                  @click="checkDay($event, commerce.serviceInfo, 5)"
+                                />
+                                <label class="form-check-label" for="friday">{{
+                                  $t('days.5')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="sabado"
+                                  :checked="dayChecked(commerce.serviceInfo, 6)"
+                                  @click="checkDay($event, commerce.serviceInfo, 6)"
+                                />
+                                <label class="form-check-label" for="sabado">{{
+                                  $t('days.6')
+                                }}</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  id="domingo"
+                                  :checked="dayChecked(commerce.serviceInfo, 7)"
+                                  @click="checkDay($event, commerce.serviceInfo, 7)"
+                                />
+                                <label class="form-check-label" for="domingo">{{
+                                  $t('days.7')
+                                }}</label>
+                              </div>
+                            </div>
+                          </div>
+                          <div id="update-commerce-personalized-active-form" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.personalized') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.personalized"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                                @click="initializedParsonalizedHours(commerce.serviceInfo)"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-personalized-form-update"
+                            v-if="commerce.serviceInfo.personalized"
+                            class="row g-1"
+                          >
+                            <hr />
+                            <div
+                              class="row g-1"
+                              v-for="day in commerce.serviceInfo.attentionDays"
+                              :key="day"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t(`days.${day}`) }}
+                              </div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  v-model="
+                                    commerce.serviceInfo.personalizedHours[day].attentionHourFrom
+                                  "
+                                  placeholder="Ex. 8"
+                                />
+                              </div>
+                              <div class="col-2">-</div>
+                              <div class="col-3">
+                                <input
+                                  min="0"
+                                  max="24"
+                                  minlength="1"
+                                  maxlength="2"
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  v-model="
+                                    commerce.serviceInfo.personalizedHours[day].attentionHourTo
+                                  "
+                                  placeholder="Ex. 16"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div id="commerce-specificCalendar-active-form-update" class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessCommercesAdmin.specificCalendar') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle
+                                v-model="commerce.serviceInfo.specificCalendar"
+                                :disabled="!state.toggles['commerces.admin.edit']"
+                                @click="initializedSpecificCalendar(commerce.serviceInfo)"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            id="commerce-specificCalendarDays-form-update"
+                            v-if="commerce.serviceInfo.specificCalendar"
+                            class="g-1"
+                          >
+                            <hr />
+                            <SpecificCalendarForm
+                              :show="commerce.serviceInfo.specificCalendar"
+                              :locale="state.locale"
+                              :structure="commerce"
+                            >
+                            </SpecificCalendarForm>
+                          </div>
+                        </div>
+                        <div id="commerce-id-form" class="row -2 mb-g3">
+                          <div class="row commerce-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ commerce.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(commerce)"
+                            :disabled="!state.toggles['commerces.admin.update']"
+                          >
+                            {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['commerces.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['commerces.admin.unavailable']"
+                            :no-disabled="state.toggles['commerces.admin.unavailable']"
+                            @actionYes="unavailable(commerce)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['commerces.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessCommercesAdmin.message.1.title')"
+                        :content="$t('businessCommercesAdmin.message.1.content')"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['commerces.admin.view']) && !loading">
+            <Message
+              :title="$t('businessCommercesAdmin.message.1.title')"
+              :content="$t('businessCommercesAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -2041,7 +2874,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 
@@ -2071,5 +2903,52 @@ export default {
 }
 .selected-days-title {
   line-height: 1rem;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

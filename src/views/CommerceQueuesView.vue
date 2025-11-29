@@ -25,7 +25,6 @@ import {
   getCollaboratorDetailsById,
 } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
@@ -44,7 +43,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     Warning,
@@ -689,6 +687,32 @@ export default {
       return user;
     };
 
+    const convertBlockToPlainObject = block => {
+      if (!block) {
+        return undefined;
+      }
+      // Convert block to plain object to avoid Firestore serialization issues
+      if (block.blockNumbers && block.blocks) {
+        // Multiple blocks case
+        return {
+          blockNumbers: block.blockNumbers,
+          blocks: block.blocks.map(b => ({
+            number: b.number,
+            hourFrom: b.hourFrom,
+            hourTo: b.hourTo,
+          })),
+        };
+      } else if (block.number) {
+        // Single block case
+        return {
+          number: block.number,
+          hourFrom: block.hourFrom,
+          hourTo: block.hourTo,
+        };
+      }
+      return block;
+    };
+
     const getAttention = async block => {
       try {
         loadingService.value = true;
@@ -713,7 +737,7 @@ export default {
             clientId: state.newUser.clientId,
           };
           if (block && block.number) {
-            body = { ...body, block };
+            body = { ...body, block: convertBlockToPlainObject(block) };
           }
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
@@ -775,7 +799,7 @@ export default {
             channel: state.currentChannel,
             user: newUser,
             date: formattedDate(state.date || state.specificCalendarDate),
-            block: state.block,
+            block: convertBlockToPlainObject(state.block),
             clientId: state.newUser.clientId,
             sessionId: state.sessionId,
           };
@@ -928,7 +952,12 @@ export default {
         const day = new Date().getDay();
         return state.blocksByDay[day];
       } else {
-        const [year, month, day] = state.date.slice(0, 10).split('-');
+        // Ensure state.date is a string (handle Date objects)
+        const dateString =
+          typeof state.date === 'string'
+            ? state.date
+            : new Date(state.date).toISOString().slice(0, 10);
+        const [year, month, day] = dateString.split('-');
         let dayNumber = new Date(+year, +month - 1, +day).getDay();
         if (dayNumber === 0) {
           dayNumber = 7;
@@ -2992,7 +3021,6 @@ export default {
       <Spinner :show="loadingService"></Spinner>
       <Alert :show="loading" :stack="alertError"></Alert>
     </div>
-    <PoweredBy :name="state.commerce.name" />
     <!-- Modal Conditions -->
     <div
       class="modal fade"
@@ -3035,35 +3063,106 @@ export default {
   line-height: 1rem;
 }
 .data-card {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   align-items: left;
 }
+
+.data-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
 .booking-data-card {
   --margin-top: 0.2rem;
-  margin-bottom: 0.5rem;
-  background-color: var(--color-background);
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  font-weight: 400;
-}
-.waitlist-box {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin: 0.3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
   border-radius: 1rem;
-  border: 0.5px solid var(--gris-default);
-  margin-bottom: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  font-weight: 400;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-data-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.waitlist-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 1.5rem;
+  margin: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.waitlist-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 .select {
   border-radius: 0.5rem;
   border: 1px solid var(--gris-clear);
+  transition: all 0.2s ease;
 }
+
+.select:hover {
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 0.15rem rgba(0, 74, 173, 0.1);
+}
+
 .subtitle-info {
   font-size: 0.9rem;
   line-height: 1rem;
+}
+
+/* Modern badge styles */
+.badge {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  color: white;
+  font-weight: 600;
+  border: none;
+}
+
+.badge.bg-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
+  color: white;
+  font-weight: 600;
+  border: none;
+}
+
+/* Modern button improvements */
+.btn-dark.rounded-pill {
+  transition: all 0.3s ease;
+}
+
+.btn-dark.rounded-pill:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+}
+
+.btn-selected {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
+  border-color: var(--azul-turno) !important;
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.25);
 }
 </style>

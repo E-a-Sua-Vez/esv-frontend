@@ -5,7 +5,7 @@ import Warning from '../../common/Warning.vue';
 import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../../shared/utils/lazyLoad';
 import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
 import SimpleCard from '../../dashboard/common/SimpleCard.vue';
@@ -48,6 +48,7 @@ export default {
     commerces: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     const store = globalStore();
@@ -197,27 +198,37 @@ export default {
       let doc = document.getElementById('financial-component');
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-            this.detailsOpened = false;
-          })
-          .catch(error => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            doc = undefined;
-            this.loading = false;
-            this.downloading = false;
-            this.detailsOpened = false;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+              this.detailsOpened = false;
+            })
+            .catch(error => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              doc = undefined;
+              this.loading = false;
+              this.downloading = false;
+              this.detailsOpened = false;
+            });
+        } catch (error) {
+          document.getElementById('pdf-header').style.display = 'none';
+          document.getElementById('pdf-footer').style.display = 'none';
+          doc = undefined;
+          this.loading = false;
+          this.downloading = false;
+          this.detailsOpened = false;
+        }
       }, 1100);
     },
     async getUserType() {
@@ -271,110 +282,128 @@ export default {
 </script>
 
 <template>
-  <div
-    id="financialResume-management"
-    class="row"
-    v-if="showResumeFinancialManagement === true && toggles['financial.resume.view']"
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :refresh="refresh"
+    :start-date="startDate"
+    :end-date="endDate"
+    :loading="loading"
+  ></slot>
+
+  <div>
+    <div
+      id="financialResume-management"
+      class="row"
+      v-if="showResumeFinancialManagement === true && toggles['financial.resume.view']"
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
           <div>
             <div>
-              <div id="admin-sub-menu" class="row mt-3 mx-0">
-                <div class="col lefted">
-                  <SimpleDownloadButton
-                    :download="toggles['financial.reports.resume']"
-                    :show-tooltip="true"
-                    :description="$t('businessFinancial.reports.resume.description')"
-                    @download="exportToPDF"
-                    :can-download="toggles['financial.reports.resume'] === true"
-                  ></SimpleDownloadButton>
-                </div>
-              </div>
-              <div class="my-2 row metric-card">
-                <div class="col-12">
-                  <span class="metric-card-subtitle">
-                    <span
-                      class="form-check-label metric-keyword-subtitle mx-1"
-                      @click="showFilters()"
-                    >
-                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                    </span>
-                  </span>
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                    @click="clear()"
-                  >
-                    <span><i class="bi bi-eraser-fill"></i></span>
-                  </button>
-                </div>
-                <div>
-                  <div class="row my-1">
-                    <div class="col-3">
-                      <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
-                        @click="getToday()"
-                        :disabled="loading"
-                      >
-                        {{ $t('dashboard.today') }}
-                      </button>
-                    </div>
-                    <div class="col-3">
-                      <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
-                        @click="getCurrentMonth()"
-                        :disabled="loading"
-                      >
-                        {{ $t('dashboard.thisMonth') }}
-                      </button>
-                    </div>
-                    <div class="col-3">
-                      <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
-                        @click="getLastMonth()"
-                        :disabled="loading"
-                      >
-                        {{ $t('dashboard.lastMonth') }}
-                      </button>
-                    </div>
-                    <div class="col-3">
-                      <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
-                        @click="getLastThreeMonths()"
-                        :disabled="loading"
-                      >
-                        {{ $t('dashboard.lastThreeMonths') }}
-                      </button>
-                    </div>
+              <div>
+                <div id="admin-sub-menu" class="row mt-3 mx-0">
+                  <div class="col lefted">
+                    <SimpleDownloadButton
+                      :download="toggles['financial.reports.resume']"
+                      :show-tooltip="true"
+                      :description="$t('businessFinancial.reports.resume.description')"
+                      @download="exportToPDF"
+                      :can-download="toggles['financial.reports.resume'] === true"
+                    ></SimpleDownloadButton>
                   </div>
-                  <div class="m-1">
-                    <div class="row">
-                      <div class="col-5">
-                        <input
-                          id="startDate"
-                          class="form-control metric-controls"
-                          type="date"
-                          v-model="startDate"
-                        />
-                      </div>
-                      <div class="col-5">
-                        <input
-                          id="endDate"
-                          class="form-control metric-controls"
-                          type="date"
-                          v-model="endDate"
-                        />
-                      </div>
-                      <div class="col-2">
+                </div>
+                <!-- Filters Section - Can be shown in component or exposed via slot -->
+                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                  <div class="col-12">
+                    <span class="metric-card-subtitle">
+                      <span
+                        class="form-check-label metric-keyword-subtitle mx-1"
+                        @click="showFilters()"
+                      >
+                        <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                      </span>
+                    </span>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                      @click="clear()"
+                    >
+                      <span><i class="bi bi-eraser-fill"></i></span>
+                    </button>
+                  </div>
+                  <div>
+                    <div class="row my-1">
+                      <div class="col-3">
                         <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                          @click="refresh()"
+                          class="btn btn-dark rounded-pill px-2 metric-filters"
+                          @click="getToday()"
+                          :disabled="loading"
                         >
-                          <span><i class="bi bi-search"></i></span>
+                          {{ $t('dashboard.today') }}
                         </button>
+                      </div>
+                      <div class="col-3">
+                        <button
+                          class="btn btn-dark rounded-pill px-2 metric-filters"
+                          @click="getCurrentMonth()"
+                          :disabled="loading"
+                        >
+                          {{ $t('dashboard.thisMonth') }}
+                        </button>
+                      </div>
+                      <div class="col-3">
+                        <button
+                          class="btn btn-dark rounded-pill px-2 metric-filters"
+                          @click="getLastMonth()"
+                          :disabled="loading"
+                        >
+                          {{ $t('dashboard.lastMonth') }}
+                        </button>
+                      </div>
+                      <div class="col-3">
+                        <button
+                          class="btn btn-dark rounded-pill px-2 metric-filters"
+                          @click="getLastThreeMonths()"
+                          :disabled="loading"
+                        >
+                          {{ $t('dashboard.lastThreeMonths') }}
+                        </button>
+                      </div>
+                    </div>
+                    <div class="m-1">
+                      <div class="row">
+                        <div class="col-5">
+                          <input
+                            id="startDate"
+                            class="form-control metric-controls"
+                            type="date"
+                            v-model="startDate"
+                          />
+                        </div>
+                        <div class="col-5">
+                          <input
+                            id="endDate"
+                            class="form-control metric-controls"
+                            type="date"
+                            v-model="endDate"
+                          />
+                        </div>
+                        <div class="col-2">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                            @click="refresh()"
+                          >
+                            <span><i class="bi bi-search"></i></span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -392,7 +421,7 @@ export default {
               </PDFHeader>
               <div>
                 <div class="row">
-                  <div v-if="calculatedMetrics !== {}">
+                  <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
                     <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
                       <div class="metric-card-title">
                         <span> {{ $t('dashboard.incomes') }} </span>
@@ -484,13 +513,13 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-  <div v-if="showResumeFinancialManagement === true && !toggles['financial.resume.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showResumeFinancialManagement === true && !toggles['financial.resume.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

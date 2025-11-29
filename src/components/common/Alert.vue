@@ -17,10 +17,15 @@ export default {
     };
   },
   methods: {
-    reportError() {
+    async reportError() {
       const body = { error: this.stack };
       const errorReported = new ErrorReported(new Date(), body);
-      createEvent(errorReported);
+      try {
+        await createEvent(errorReported);
+      } catch (error) {
+        // Error is already handled in createEvent, but catch here to prevent unhandled promise rejection
+        // Silently fail - error reporting is non-critical
+      }
       this.reportedError = true;
     },
     alertMessage() {

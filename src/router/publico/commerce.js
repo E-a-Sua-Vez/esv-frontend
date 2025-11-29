@@ -1,6 +1,6 @@
-const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
-const CommerceQRSetup = () => import('../../views/CommerceQRSetup.vue');
-const BusinessQRSetup = () => import('../../views/business/BusinessQRSetup.vue');
+const CommerceQueuesView = () => import('@/views/CommerceQueuesView.vue');
+const CommerceQRSetup = () => import('@/views/CommerceQRSetup.vue');
+const BusinessQRSetup = () => import('@/views/business/BusinessQRSetup.vue');
 
 const PublicCommerceRoutes = [
   {

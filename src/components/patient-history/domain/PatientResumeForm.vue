@@ -7,7 +7,7 @@ import Toggle from '@vueform/toggle';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 import { getDateAndHour, getDate } from '../../../shared/utils/date';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../../shared/utils/lazyLoad';
 import Message from '../../common/Message.vue';
 import HistoryDetailsWithItemsCard from '../common/HistoryDetailsWithItemsCard.vue';
 
@@ -46,19 +46,25 @@ export default {
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       };
       let doc = document.getElementById('patient-history-resume');
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            doc = undefined;
-            loading.value = false;
-          })
-          .catch(error => {
-            doc = undefined;
-            loading.value = false;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              doc = undefined;
+              loading.value = false;
+            })
+            .catch(error => {
+              doc = undefined;
+              loading.value = false;
+            });
+        } catch (error) {
+          doc = undefined;
+          loading.value = false;
+        }
       }, 2100);
     };
 

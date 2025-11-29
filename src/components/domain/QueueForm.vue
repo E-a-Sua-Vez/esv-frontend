@@ -495,12 +495,19 @@ export default {
   line-height: 1.5rem;
 }
 .data-card {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   align-items: left;
+}
+
+.data-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 .examples {
   font-size: 0.8rem;

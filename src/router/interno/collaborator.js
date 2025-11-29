@@ -1,19 +1,19 @@
 const CollaboratorAttentionValidate = () =>
-  import('../../views/collaborator/CollaboratorAttentionValidate.vue');
-const CollaboratorQueuesView = () => import('../../views/collaborator/CollaboratorQueuesView.vue');
+  import('@/views/collaborator/CollaboratorAttentionValidate.vue');
+const CollaboratorQueuesView = () => import('@/views/collaborator/CollaboratorQueuesView.vue');
 const CollaboratorQueueAttentions = () =>
-  import('../../views/collaborator/CollaboratorQueueAttentions.vue');
-const CollaboratorMenu = () => import('../../views/collaborator/CollaboratorMenu.vue');
-const CollaboratorDashboard = () => import('../../views/collaborator/CollaboratorDashboard.vue');
+  import('@/views/collaborator/CollaboratorQueueAttentions.vue');
+const CollaboratorMenu = () => import('@/views/collaborator/CollaboratorMenu.vue');
+const CollaboratorDashboard = () => import('@/views/collaborator/CollaboratorDashboard.vue');
 const CollaboratorQueueBookings = () =>
-  import('../../views/collaborator/CollaboratorQueueBookings.vue');
-const CollaboratorTracing = () => import('../../views/collaborator/CollaboratorTracing.vue');
+  import('@/views/collaborator/CollaboratorQueueBookings.vue');
+const CollaboratorTracing = () => import('@/views/collaborator/CollaboratorTracing.vue');
 const CollaboratorProductStockAdmin = () =>
-  import('../../views/collaborator/CollaboratorProductStockAdmin.vue');
-const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
-const UserQueueAttention = () => import('../../views/UserQueueAttention.vue');
-const UserQueueBooking = () => import('../../views/UserQueueBooking.vue');
-const UserQueueWaitlist = () => import('../../views/UserQueueWaitlist.vue');
+  import('@/views/collaborator/CollaboratorProductStockAdmin.vue');
+const CommerceQueuesView = () => import('@/views/CommerceQueuesView.vue');
+const UserQueueAttention = () => import('@/views/UserQueueAttention.vue');
+const UserQueueBooking = () => import('@/views/UserQueueBooking.vue');
+const UserQueueWaitlist = () => import('@/views/UserQueueWaitlist.vue');
 
 const PrivateCollaboratorRoutes = [
   {

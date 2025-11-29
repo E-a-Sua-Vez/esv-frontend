@@ -102,7 +102,7 @@ export function isValidPhone(phone) {
     return false;
   }
   // Remove common formatting characters
-  const cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+  const cleaned = phone.replace(/[\s\-()+]/g, '');
   // Check if it's all digits and has reasonable length (7-15 digits)
   return /^\d{7,15}$/.test(cleaned);
 }
@@ -186,4 +186,3 @@ export function logSecurityEvent(event, details = {}) {
   // In production, you might want to send this to a logging service
   // Example: sendToLoggingService({ event, details, timestamp: new Date() });
 }
-

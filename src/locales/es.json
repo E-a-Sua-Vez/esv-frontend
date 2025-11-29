@@ -1,7 +1,8 @@
 {
-  "logo": "/images/hub_logo.png",
-  "logoAlt": "Spot+",
-  "homeTitle": "Spot+ {'|'} Atención 100% digital",
+  "logo": "/images/hub/logo/hub-color-transparente.png",
+  "logoAlt": "Hub",
+  "hubLogoBlanco": "/images/hub/logo/hub-blanco-transparente.png",
+  "homeTitle": "Hub {'|'} Atención 100% digital",
   "email": "hola{'@'}estuturno.app",
   "blog": "https://blog.estuturno.app",
   "publicSite": "Sitio Público",
@@ -9,7 +10,7 @@
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "backToInit": "Ir al inicio",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/esv_peq_transparente.png",
+  "logoPoweredBy": "/images/esv/esv-blanco-horizontal-transparente.png",
   "enableAll": "¡Habilita más capacidades!",
   "curious": "¿Curioso?",
   "wantToKnowMore": "¡Quiero saber más!",
@@ -22,13 +23,15 @@
   "logout": "Cerrar Sesión",
   "capacities": "¿Qué puedo hacer?",
   "upgrade": "Haz un Upgrade de tu plan para obtener más beneficios.",
-  "logoValues": "/images/hub_logo.png",
-  "logoValuesAlt": "Spot+",
+  "logoValues": "/images/hub/logo/hub-color-transparente.png",
+  "logoValuesAlt": "Hub",
   "noResults": "😓 Sin Resultados",
   "sureAction": "¿Estás seguro que deseas realizar esta acción?",
   "lostConnection": "Perdiste la conexión a internet. Revisa tu conexión y refresca la página.",
   "refresh": "Refrescar",
   "close": "Cerrar",
+  "language": "Idioma",
+  "menu": "Menú",
   "yes": "Sí",
   "YES": "Sí",
   "NO": "No",
@@ -621,7 +624,12 @@
     "faq": "Preguntas frecuentes",
     "blog": "Blog",
     "email": "Reporta vía email",
-    "emailDir": "hola{'@'}estuturno.app"
+    "emailDir": "hola{'@'}estuturno.app",
+    "description": "Transforma la atención al cliente con nuestra plataforma digital completa de filas, reservas y encuestas de satisfacción.",
+    "contact": "Contacto",
+    "schedule": "Agendar Reunión",
+    "resources": "Recursos",
+    "poweredBy": "Desarrollado por"
   },
   "contactTypes": {
     "CALL": "Llamada",
@@ -753,7 +761,7 @@
     "scan": "¡Escanea el código QR para ser atendido!",
     "youllReceive": "Recibirás en tu teléfono el número de tu turno.",
     "request": "Si no puedes escanear el código QR, haz click en el siguiente botón:",
-    "action": "Quiero ser atendido",
+    "action": "Haz clic aquí",
     "commerce": "Selecciona el comercio:",
     "services": "Servicios",
     "contact": "Contacto",
@@ -1493,6 +1501,7 @@
     "attentions": "Atenciones",
     "commerce": "Comercio:",
     "refresh": "Buscar",
+    "clear": "Limpiar",
     "return": "Volver",
     "indicators": "Indicadores",
     "graph": "Tendencias",
@@ -1508,7 +1517,7 @@
     "keyWords": "Palabras clave: ¿De qué hablan tus clientes?",
     "sentiment": "Análisis de sentimientos de los comentarios de los clientes. Malo: -1 a 0.1, Regular: 0.1 a 0.5, Bueno: 0.5 a 1.",
     "rating": "Calificación de satisfacción los clientes. Malo: 0 a 2.5, Regular: 2.5 a 4, Bueno: 4 a 5.",
-    "nps": "Puntuación del cliente promotor. Excelente: 75-100, Bueno: 50-74, Razonable: 0-40, Malo: valor negativo",
+    "npsDescription": "Puntuación del cliente promotor. Excelente: 75-100, Bueno: 50-74, Razonable: 0-40, Malo: valor negativo",
     "origin": "Origen o medio por el cual el cliente conoció el negocio",
     "contacts": "Análisis de Contactos a Clientes",
     "daysSince": "Última atención de clientes: Verde: Menos de 3 meses, Amarillo: entre 3 y 6 meses, Rojo: más de 6 meses.",
@@ -1516,6 +1525,7 @@
     "collection": "Recaudación por concepto de confirmación de Reservas y Atenciones",
     "today": "Hoy",
     "thisMonth": "Este Mes",
+    "ascending": "Ascendente",
     "lastMonth": "Mes Pasado",
     "lastThreeMonths": "3 Meses",
     "showAll": "Mostrar todo",
@@ -1585,6 +1595,33 @@
       "from": "Del",
       "to": "al"
     },
+    "summary": {
+      "title": "Resumen Ejecutivo",
+      "subtitle": "Métricas clave y proyecciones"
+    },
+    "detailedMetrics": "Métricas Detalladas",
+    "days": "días",
+    "avgDuration": "Promedio",
+    "projection": "Proyección mensual",
+    "pending": "Pendientes",
+    "ratings": "evaluaciones",
+    "stars": "Estrellas",
+    "responses": "respuestas",
+    "vsPrevious": "vs período anterior",
+    "npsScore": "Puntuación NPS",
+    "nps": {
+      "description": "Puntuación del cliente promotor. Excelente: 75-100, Bueno: 50-74, Razonable: 0-40, Malo: valor negativo",
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "poor": "Mejorable",
+      "desc": {
+        "excellent": "Clientes muy satisfechos",
+        "good": "Clientes satisfechos",
+        "poor": "Oportunidad de mejora"
+      }
+    },
+    "startDate": "Fecha Inicio",
+    "endDate": "Fecha Fin",
     "spy": "MetricSpy",
     "spyDetails": "Vea más detalles en la sección Performance Hub",
     "spySubDetails": "Datos del mes calendario, todos los comercios.",
@@ -2560,6 +2597,7 @@
     "price": "Costo Total:",
     "replacement": "Req. Reposición",
     "search": "🔎 Nombre o Código",
+    "status": "Estado",
     "addReplacement": "Nueva Reposición",
     "addConsuption": "Agregar Consumo",
     "commerces": "Comercio:",
@@ -2670,6 +2708,9 @@
     "outcomeBeneficiary": "Beneficiario:",
     "commission": "Comisión",
     "expireDate": "Vencimiento:",
+    "incomeStatus": "Estado",
+    "fiscalNote": "Nota Fiscal",
+    "automatic": "Automático",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2678,6 +2719,10 @@
       "2": {
         "title": "¡Ups!",
         "content": "No hay datos para mostrar, valida el filtro e intenta nuevamente."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "No hay comercios disponibles. Verifica que tengas comercios creados o comunícate con nosotros."
       }
     },
     "reports": {

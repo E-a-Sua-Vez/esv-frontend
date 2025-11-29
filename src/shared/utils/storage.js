@@ -6,11 +6,7 @@
  */
 
 // Sensitive keys that should use sessionStorage (cleared on tab close)
-const SENSITIVE_KEYS = [
-  'currentUser',
-  'currentPermissions',
-  'currentActiveAttentions',
-];
+const SENSITIVE_KEYS = ['currentUser', 'currentPermissions', 'currentActiveAttentions'];
 
 /**
  * Determine which storage to use based on key sensitivity

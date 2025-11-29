@@ -1683,13 +1683,6 @@ export default {
   font-size: 0.7rem;
   font-weight: 400;
 }
-.control-box {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin: 0.1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
-}
 .blocks-section {
   overflow-y: scroll;
   max-height: 600px;

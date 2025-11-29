@@ -4,7 +4,7 @@ import SimpleCard from './common/SimpleCard.vue';
 import DetailsCard from './common/DetailsCard.vue';
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
-import html2pdf from 'html2pdf.js';
+import { lazyLoadHtml2Pdf } from '../../shared/utils/lazyLoad';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionRatingDetails from './domain/AttentionRatingDetails.vue';
@@ -28,7 +28,6 @@ export default {
     SimpleCard,
     DetailsCard,
     Message,
-    html2pdf,
     SimpleDownloadCard,
     PDFHeader,
     PDFFooter,
@@ -50,6 +49,7 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Object, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -118,25 +118,34 @@ export default {
       let doc = document.getElementById('survey-component');
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(() => {
-        html2pdf()
-          .set(options)
-          .from(doc)
-          .save()
-          .then(() => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            this.detailsOpened = false;
-            this.loading = false;
-            doc = undefined;
-          })
-          .catch(error => {
-            document.getElementById('pdf-header').style.display = 'none';
-            document.getElementById('pdf-footer').style.display = 'none';
-            this.detailsOpened = false;
-            this.loading = false;
-            doc = undefined;
-          });
+      setTimeout(async () => {
+        try {
+          const html2pdf = await lazyLoadHtml2Pdf();
+          html2pdf()
+            .set(options)
+            .from(doc)
+            .save()
+            .then(() => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              this.detailsOpened = false;
+              this.loading = false;
+              doc = undefined;
+            })
+            .catch(error => {
+              document.getElementById('pdf-header').style.display = 'none';
+              document.getElementById('pdf-footer').style.display = 'none';
+              this.detailsOpened = false;
+              this.loading = false;
+              doc = undefined;
+            });
+        } catch (error) {
+          document.getElementById('pdf-header').style.display = 'none';
+          document.getElementById('pdf-footer').style.display = 'none';
+          this.detailsOpened = false;
+          this.loading = false;
+          doc = undefined;
+        }
       }, 1000);
     },
   },
@@ -161,6 +170,17 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :refresh="refresh"
+    :queue-id="queueId"
+    :queues="queues"
+    :loading="loading"
+  ></slot>
+
   <div
     id="surveys-result"
     class="row"
@@ -177,7 +197,11 @@ export default {
         :can-download="toggles['dashboard.reports.surveys'] === true"
       ></SimpleDownloadCard>
       <Spinner :show="loading"></Spinner>
-      <div class="my-2 row metric-card" v-if="queues && queues.length >= 1">
+      <!-- Filters Section - Can be shown in component or exposed via slot -->
+      <div
+        class="my-2 row metric-card"
+        v-if="filtersLocation === 'component' && queues && queues.length >= 1"
+      >
         <div class="col-12">
           <span class="metric-card-subtitle">
             <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
@@ -250,7 +274,7 @@ export default {
                 :subdata="metrics['survey.created'].count_nps"
                 :title="$t('dashboard.items.attentions.24')"
                 :show-tooltip="true"
-                :description="$t('dashboard.nps')"
+                :description="$t('dashboard.nps.description')"
                 :icon="'bi-megaphone-fill'"
                 :icon-style-class="'orange-icon'"
                 :details-opened="detailsOpened"

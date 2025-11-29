@@ -31,9 +31,16 @@ export default {
         this.loading = true;
         this.alertError = '';
         this.errors = [];
-        if (this.attentionNumber !== undefined || this.attentionNumber.length > 0) {
+        if (
+          this.attentionNumber !== undefined &&
+          this.attentionNumber !== null &&
+          this.attentionNumber.toString().length > 0
+        ) {
           let attention;
           try {
+            if (!this.queue || !this.queue.id) {
+              throw new Error('Queue not available');
+            }
             attention = await reactivate(this.attentionNumber, {
               queueId: this.queue.id,
               collaboratorId: this.currentUser.id,
@@ -57,14 +64,14 @@ export default {
         this.alertError = error.message;
       }
     },
-    async getQueue() {
-      this.queue = await this.store.getCurrentQueue;
+    getQueue() {
+      this.queue = this.store.getCurrentQueue;
     },
-    async getUserType() {
-      this.userType = await this.store.getCurrentUserType;
+    getUserType() {
+      this.userType = this.store.getCurrentUserType;
     },
-    async getCurrentUser() {
-      this.currentUser = await this.store.getCurrentUser;
+    getCurrentUser() {
+      this.currentUser = this.store.getCurrentUser;
     },
     isCollabotator() {
       return this.userType === 'collaborator';
@@ -76,18 +83,28 @@ export default {
       this.$emit('close-modal');
     },
   },
-  async beforeMount() {
-    await this.getUserType();
-    await this.getCurrentUser();
-    await this.getQueue();
+  beforeMount() {
+    this.getUserType();
+    this.getCurrentUser();
+    this.getQueue();
   },
   watch: {
-    store: {
+    'store.currentQueue': {
       immediate: true,
-      deep: true,
-      async handler() {
-        await this.getUserType();
-        await this.getQueue();
+      handler() {
+        this.getQueue();
+      },
+    },
+    'store.currentUserType': {
+      immediate: true,
+      handler() {
+        this.getUserType();
+      },
+    },
+    'store.currentUser': {
+      immediate: true,
+      handler() {
+        this.getCurrentUser();
       },
     },
   },
@@ -99,7 +116,7 @@ export default {
     <p class="mb-2 details">
       <span class="fw-bold">{{ $t('resumeAttention.subtitle.1.1') }}</span>
     </p>
-    <QueueName :queue="queue"></QueueName>
+    <QueueName v-if="queue" :queue="queue"></QueueName>
     <p class="details-subtitle mt-2">{{ $t('resumeAttention.subtitle.1.2') }}</p>
     <div class="mb-2">
       <div class="col-12">

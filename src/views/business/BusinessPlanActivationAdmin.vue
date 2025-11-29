@@ -11,7 +11,6 @@ import {
 import { useI18n } from 'vue-i18n';
 import PlanName from '../../components/common/PlanName.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -25,7 +24,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     PlanName,
@@ -207,21 +205,24 @@ export default {
       }
     };
 
-    const filter = computed(() => {
-      if (state.searchString.length >= 3) {
-        state.oldActivations = state.oldActivations.filter(i =>
-          i.business.name.toLowerCase().startsWith(state.searchString.toLowerCase())
-        );
-      } else {
-        state.oldActivations = state.oldActivationsList;
-      }
-    });
+    watch(
+      () => state.searchString,
+      () => {
+        if (state.searchString.length >= 3) {
+          state.oldActivations = state.oldActivationsList.filter(i =>
+            i.business.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+          );
+        } else {
+          state.oldActivations = state.oldActivationsList;
+        }
+      },
+      { immediate: true }
+    );
 
     return {
       state,
       loading,
       alertError,
-      filter,
       goBack,
       showForm,
       showOldForm,
@@ -427,7 +428,6 @@ export default {
                     v-model="state.searchString"
                     :placeholder="$t('enterSearcher')"
                   />
-                  {{ filter }}
                 </div>
                 <div v-if="state.oldActivations.length > 0">
                   <div
@@ -600,7 +600,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="''" />
   </div>
 </template>
 

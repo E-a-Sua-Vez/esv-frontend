@@ -39,34 +39,48 @@ export default {
 
     const { messages } = toRefs(props);
 
-    const getUser = async store => {
+    const getUser = store => {
       state.userName = undefined;
       state.currentUserType = undefined;
-      state.currentUser = await store.getCurrentUser;
-      state.currentBusiness = await store.getCurrentBusiness;
+      state.currentUser = store.getCurrentUser;
+      state.currentBusiness = store.getCurrentBusiness;
       if (state.currentUser !== undefined && state.currentUser !== null) {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
-      state.currentUserType = await store.getCurrentUserType;
+      state.currentUserType = store.getCurrentUserType;
     };
 
-    onBeforeMount(async () => {
+    onBeforeMount(() => {
       store = globalStore();
-      await getUser(store);
+      getUser(store);
     });
 
     watch(
-      () => store,
-      async (newStore, oldStore) => {
-        await getUser(newStore);
+      () => store.currentUser,
+      () => {
+        getUser(store);
       },
-      { immediate: true, deep: true }
+      { immediate: true }
+    );
+    watch(
+      () => store.currentUserType,
+      () => {
+        getUser(store);
+      },
+      { immediate: true }
+    );
+    watch(
+      () => store.currentBusiness,
+      () => {
+        getUser(store);
+      },
+      { immediate: true }
     );
 
     const loginInvited = async () => {
       const environment = import.meta.env.VITE_NODE_ENV || 'local';
-      const currentUser = await store.getCurrentUser;
-      const currentUserType = await store.getCurrentUserType;
+      const currentUser = store.getCurrentUser;
+      const currentUserType = store.getCurrentUserType;
       if (environment !== 'local' && (!currentUserType || !currentUser)) {
         await signOut(undefined, currentUserType);
         await store.resetSession();
@@ -79,8 +93,8 @@ export default {
     const logout = async () => {
       try {
         loading.value = true;
-        const currentUser = await store.getCurrentUser;
-        const currentUserType = await store.getCurrentUserType;
+        const currentUser = store.getCurrentUser;
+        const currentUserType = store.getCurrentUserType;
         await signOut(currentUser.email, currentUserType);
         await store.resetSession();
         let path = '/';

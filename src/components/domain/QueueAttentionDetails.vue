@@ -50,10 +50,10 @@ export default {
       }
     },
     beforeCurrentQueue() {
-      if (this.queue.currentNumber === 0) {
+      if (!this.queue || this.queue.currentNumber === 0) {
         return 0;
       }
-      return this.queue.currentNumber - this.queue.currentAttentionNumber + 1;
+      return this.queue.currentNumber - (this.queue.currentAttentionNumber || 0) + 1;
     },
     goToProcessingAttention(attention) {
       this.$router.push({ path: `/interno/colaborador/atencion/${attention.id}/validar` });
@@ -78,7 +78,7 @@ export default {
 <template>
   <div>
     <Spinner :show="loading"></Spinner>
-    <div v-if="queue.active && !loading" id="indicators">
+    <div v-if="queue?.active && !loading" id="indicators">
       <div class="row indicators py-2">
         <div class="col metric-card">
           <div class="metric-card-title">
@@ -113,7 +113,7 @@ export default {
         </div>
       </div>
     </div>
-    <div v-if="queue.active && !loading" class="row mt-2" id="attentions">
+    <div v-if="queue?.active && !loading" class="row mt-2" id="attentions">
       <div class="col-7">
         <div>
           <span class="fw-bold"

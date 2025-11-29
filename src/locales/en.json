@@ -1,7 +1,8 @@
 {
-  "logo": "/images/hub_logo.png",
-  "logoAlt": "It's your turn",
-  "homeTitle": "It's your turn {'|'} Service of attention queues 100% digital",
+  "logo": "/images/hub/logo/hub-color-transparente.png",
+  "logoAlt": "Hub",
+  "hubLogoBlanco": "/images/hub/logo/hub-blanco-transparente.png",
+  "homeTitle": "Hub {'|'} 100% Digital Service",
   "email": "hola{'@'}estuturno.app",
   "blog": "https://blog.estuturno.app",
   "publicSite": "Public Site",
@@ -9,7 +10,7 @@
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "backToInit": "Back to init",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/esv_peq_transparente.png",
+  "logoPoweredBy": "/images/esv/esv-blanco-horizontal-transparente.png",
   "enableAll": "Enable more the capabilities!",
   "curious": "Curious?",
   "wantToKnowMore": "I Want to know More!",
@@ -23,10 +24,12 @@
   "capacities": "What I'm able to do?",
   "upgrade": "Upgrade your plan to get more benefits.",
   "sureAction": "Are you sure you want to complete this action?",
-  "logoValues": "/images/hub_logo.png",
-  "logoValuesAlt": "It's your turn",
+  "logoValues": "/images/hub/logo/hub-color-transparente.png",
+  "logoValuesAlt": "Hub",
   "searcher": "🔎 Search",
   "close": "Close",
+  "language": "Language",
+  "menu": "Menu",
   "noResults": "😓 No Results",
   "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
   "refresh": "Reload",
@@ -620,7 +623,12 @@
     "blog": "Blog",
     "faq": "FAQ",
     "email": "Report by email",
-    "emailDir": "hola{'@'}estuturno.app"
+    "emailDir": "hola{'@'}estuturno.app",
+    "description": "Transform your customer service with our complete digital platform for queues, bookings and satisfaction surveys.",
+    "contact": "Contact",
+    "schedule": "Schedule Meeting",
+    "resources": "Resources",
+    "poweredBy": "Powered by"
   },
   "contactTypes": {
     "CALL": "Call",
@@ -749,7 +757,7 @@
     "scan": "Scan the QR code to be attended!",
     "youllReceive": "You'll receive your turn number on your phone.",
     "request": "If you cannot scan the QR code, click on the following button:",
-    "action": "I want to be Attended",
+    "action": "Click Here",
     "commerce": "Select a commerce:",
     "services": "Services",
     "contact": "Contact",
@@ -1493,6 +1501,7 @@
     "attentions": "Attentions",
     "commerce": "Commerce: ",
     "refresh": "Search",
+    "clear": "Clear",
     "return": "Return",
     "indicators": "Indicators",
     "graph": "Trends",
@@ -1508,7 +1517,7 @@
     "keyWords": "Key Words: What are your clients talking about?",
     "sentiment": "Sentiment analysis of customer feedback. Bad: -1 to 0.1, Fair: 0.1 to 0.7, Good: 0.5 to 1.",
     "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",
-    "nps": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
+    "npsDescription": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
     "origin": "Origin through which the client knew the business",
     "contacts": "Client Contacts Analysis",
     "daysSince": "Last client attention: Green: Less than 3 months, Yellow: between 3 and 6 months, Red: more than 6 months.",
@@ -1516,6 +1525,7 @@
     "collection": "Collection due to the confirmation of bookings and attentions.",
     "today": "Today",
     "thisMonth": "This Month",
+    "ascending": "Ascending",
     "lastMonth": "Last Month",
     "lastThreeMonths": "3 Months",
     "showAll": "Show all",
@@ -1584,6 +1594,33 @@
       "from": "From",
       "to": "to"
     },
+    "summary": {
+      "title": "Executive Summary",
+      "subtitle": "Key metrics and projections"
+    },
+    "detailedMetrics": "Detailed Metrics",
+    "days": "days",
+    "avgDuration": "Average",
+    "projection": "Monthly projection",
+    "pending": "Pending",
+    "ratings": "ratings",
+    "stars": "Stars",
+    "responses": "responses",
+    "vsPrevious": "vs previous period",
+    "npsScore": "NPS Score",
+    "nps": {
+      "description": "Net Promoter Customer Score. Excellent: 75-100, Good: 50-74, Enough: 0-40, Bad: negative value.",
+      "excellent": "Excellent",
+      "good": "Good",
+      "poor": "Needs Improvement",
+      "desc": {
+        "excellent": "Highly satisfied customers",
+        "good": "Satisfied customers",
+        "poor": "Opportunity for improvement"
+      }
+    },
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "spy": "MetricSpy",
     "spyDetails": "See more details on the Performance Hub Section",
     "spySubDetails": "Data of actual month, all commerces.",
@@ -2574,6 +2611,9 @@
     "outcomePaymentAmount": "Amount:",
     "outcomeBeneficiary": "Beneficiary:",
     "expireDate": "Expiration:",
+    "incomeStatus": "Status",
+    "fiscalNote": "Fiscal Note",
+    "automatic": "Automatic",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -2582,6 +2622,10 @@
       "2": {
         "title": "Oh no!",
         "content": "There's not data to show, please validate the filter and try again."
+      },
+      "3": {
+        "title": "Oh no!",
+        "content": "There are no commerces available. Please verify that you have commerces created or contact us."
       }
     },
     "reports": {
@@ -2644,6 +2688,7 @@
     "price": "Total Cost:",
     "replacement": "Replacements Req.",
     "search": "🔎 Name or Code",
+    "status": "Status",
     "addReplacement": "New Replacement",
     "addConsuption": "Add Consumption",
     "commerces": "Commerce:",

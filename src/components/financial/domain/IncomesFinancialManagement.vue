@@ -34,6 +34,7 @@ export default {
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     const store = globalStore();
@@ -337,6 +338,29 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :refresh="refresh"
+    :start-date="startDate"
+    :end-date="endDate"
+    :search-text="searchText"
+    :income-status="incomeStatus"
+    :fiscal-note="fiscalNote"
+    :automatic="automatic"
+    :asc="asc"
+    :loading="loading"
+    :check-fiscal-note="checkFiscalNote"
+    :check-automatic="checkAutomatic"
+    :check-asc="checkAsc"
+  ></slot>
+
   <div
     id="financialIncomes-management"
     class="row"
@@ -369,7 +393,8 @@ export default {
                   ></SimpleDownloadButton>
                 </div>
               </div>
-              <div class="my-2 row metric-card">
+              <!-- Filters Section - Can be shown in component or exposed via slot -->
+              <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
                     <span

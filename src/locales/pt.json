@@ -1,7 +1,8 @@
 {
-  "logo": "/images/hub_logo.png",
-  "logoAlt": "E a sua vez",
-  "homeTitle": "É a sua vez {'|'} Serviço de Filas 100% digital",
+  "logo": "/images/hub/logo/hub-color-transparente.png",
+  "logoAlt": "Hub",
+  "hubLogoBlanco": "/images/hub/logo/hub-blanco-transparente.png",
+  "homeTitle": "Hub {'|'} Serviço de Filas 100% digital",
   "backToInit": "Ir para começar",
   "email": "ola{'@'}easuavez.com",
   "publicSite": "Site Público",
@@ -9,7 +10,7 @@
   "blog": "https://blog.easuavez.com",
   "serviceStatusUrl": "https://stats.uptimerobot.com/h0FFm0DpSc",
   "poweredBy": "Powered By",
-  "logoPoweredBy": "/images/esv_peq_transparente.png",
+  "logoPoweredBy": "/images/esv/esv-blanco-horizontal-transparente.png",
   "enableAll": "Ative mais recursos!",
   "curious": "Curioso?",
   "wantToKnowMore": "Quero saber mais!",
@@ -25,9 +26,11 @@
   "searcher": "🔎 Pesquisar",
   "noResults": "😓 Sem Resultados",
   "sureAction": "Você tem certeza de realizar esta ação?",
-  "logoValues": "/images/hub_logo_br.png",
-  "logoValuesAlt": "E a sua vez",
+  "logoValues": "/images/hub/logo/hub-color-transparente.png",
+  "logoValuesAlt": "Hub",
   "close": "Fechar",
+  "language": "Idioma",
+  "menu": "Menu",
   "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
   "refresh": "Reload",
   "yes": "Sim",
@@ -620,7 +623,13 @@
     "blog": "Blog",
     "faq": "Perguntas frequentes",
     "email": "Denuncie por e-mail",
-    "emailDir": "ola{'@'}easuavez.com"
+    "emailDir": "ola{'@'}easuavez.com",
+    "description": "Transforme seu atendimento ao cliente com nossa plataforma digital completa de filas, agendamentos e pesquisas de satisfação.",
+    "contact": "Contato",
+    "schedule": "Agendar Reunião",
+    "resources": "Recursos",
+    "poweredBy": "Desenvolvido por",
+    "copyright": "Copyright © 2025, É a sua Vez. Todos os direitos reservados."
   },
   "contactResultTypes": {
     "INTERESTED": "Teve Interesse",
@@ -750,7 +759,7 @@
     "scan": "Escaneie o código QR para ser atendido!",
     "youllReceive": "Você receberá seu número de atendimento em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
-    "action": "Quero ser atendido",
+    "action": "Clique Aqui",
     "commerce": "Selecione uma unidade:",
     "services": "Serviços",
     "contact": "Contato",
@@ -1494,6 +1503,7 @@
     "clients": "Clientes",
     "commerce": "Comércio",
     "refresh": "Pesquisar",
+    "clear": "Limpar",
     "return": "Voltar",
     "bookings": "Reservas",
     "indicators": "Indicadores",
@@ -1509,7 +1519,7 @@
     "keyWords": "Palavras chave: Sobre o que seus clientes falam?",
     "sentiment": "Análise de sentimento do feedback do cliente. Ruim: -1 a 0.1, Regular: 0.1 a 0.5, Bom: 0.5 a 1.",
     "rating": "Classificação de satisfação do cliente. Ruim: 0 a 2,5, Regular: 2,5 a 4, Bom: 4 a 5.",
-    "nps": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
+    "npsDescription": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
     "origin": "Meio pelo qual o cliente conheceu o negócio",
     "contacts": "Análise de Contatos de Clientes",
     "daysSince": "Último atendimento de clientes: Verde: Há menos 3 meses, Amarelo: entre 3 e 6 meses, Vermelho: mais 6 meses.",
@@ -1517,7 +1527,8 @@
     "collection": "Cobrança por confirmação de Reservas e Atendimentos.",
     "today": "Hoje",
     "thisMonth": "Esse Mês",
-    "lastMonth": "Mês Passado",
+    "ascending": "Ascendente",
+    "lastMonth": "Mês Ant.",
     "lastThreeMonths": "3 Meses",
     "asc": "Crescente",
     "desc": "Decrescente",
@@ -1586,6 +1597,33 @@
       "from": "Do",
       "to": "a"
     },
+    "summary": {
+      "title": "Resumo Executivo",
+      "subtitle": "Métricas-chave e projeções"
+    },
+    "detailedMetrics": "Métricas Detalhadas",
+    "days": "dias",
+    "avgDuration": "Média",
+    "projection": "Projeção mensal",
+    "pending": "Pendentes",
+    "ratings": "avaliações",
+    "stars": "Estrelas",
+    "responses": "respostas",
+    "vsPrevious": "vs período anterior",
+    "npsScore": "Pontuação NPS",
+    "nps": {
+      "description": "Pontuação do cliente promotor. Excelente: 75-100, Bom: 50-74, Razoável: 0-40, Ruim: negativo",
+      "excellent": "Excelente",
+      "good": "Bom",
+      "poor": "Melhorável",
+      "desc": {
+        "excellent": "Clientes muito satisfeitos",
+        "good": "Clientes satisfeitos",
+        "poor": "Oportunidade de melhoria"
+      }
+    },
+    "startDate": "Data Início",
+    "endDate": "Data Fim",
     "spy": "Espiadinha",
     "spyDetails": "Veja mais detalhes na seção Performance Hub",
     "spySubDetails": "Dados do mês calendario, todas as unidades.",
@@ -2578,6 +2616,9 @@
     "outcomePaymentAmount": "Valor:",
     "outcomeBeneficiary": "Beneficiário:",
     "expireDate": "Vencimento:",
+    "incomeStatus": "Status",
+    "fiscalNote": "Nota Fiscal",
+    "automatic": "Automático",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2586,6 +2627,10 @@
       "2": {
         "title": "Ups!",
         "content": "Não temos data, verifique os filtros e tente novamente."
+      },
+      "3": {
+        "title": "Ups!",
+        "content": "Não há unidades disponíveis. Verifique se você tem unidades criadas ou entre em contato conosco."
       }
     },
     "reports": {
@@ -2648,6 +2693,7 @@
     "price": "Custo Total:",
     "replacement": "Req. Recarregar",
     "search": "🔎 Nome o Código",
+    "status": "Status",
     "addReplacement": "Novo Recarregamento",
     "addConsuption": "Adicionar Consumo",
     "commerces": "Unidade:",

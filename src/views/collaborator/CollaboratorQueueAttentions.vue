@@ -20,7 +20,6 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
@@ -29,7 +28,6 @@ export default {
   name: 'CollaboratorQueueAttentions',
   components: {
     Message,
-    PoweredBy,
     CommerceLogo,
     QueueName,
     AttentionNumber,
@@ -73,8 +71,7 @@ export default {
       }
     });
 
-    const queues = ref([]);
-    queues.value = updatedQueues(id);
+    const queues = updatedQueues(id);
 
     const attentions = ref([]);
     attentions.value = updatedAttentionsByDateAndCommerceAndQueue(id);
@@ -92,10 +89,13 @@ export default {
         }
         if (state.attention.commerce) {
           state.commerce = state.attention.commerce;
-        } else {
-          if (queue.commerceId !== oldQueue.commerceId) {
-            state.commerce = await getCommerceById(state.queue.commerceId);
-          }
+        }
+        // Always ensure commerce is loaded, even if not in attention
+        if (!state.commerce || !state.commerce.id) {
+          state.commerce = await getCommerceById(queue.commerceId);
+        } else if (oldQueue && oldQueue.commerceId && queue.commerceId !== oldQueue.commerceId) {
+          // Only reload if commerceId changed
+          state.commerce = await getCommerceById(queue.commerceId);
         }
         loading.value = false;
       } else {
@@ -103,11 +103,18 @@ export default {
       }
     };
 
-    watch(queues, async (newQueue, oldQueue) => {
-      if (newQueue && oldQueue) {
-        await getQueueValues(newQueue[0], oldQueue);
-      }
-    });
+    watch(
+      () => queues.value,
+      async (newQueue, oldQueue) => {
+        if (newQueue && newQueue.length > 0) {
+          await getQueueValues(
+            newQueue[0],
+            oldQueue && oldQueue.length > 0 ? oldQueue[0] : undefined,
+          );
+        }
+      },
+      { immediate: true },
+    );
 
     const collaboratorQueues = () => {
       router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` });
@@ -248,7 +255,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 

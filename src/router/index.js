@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { globalStore } from '../stores';
-import { logout } from '../application/firebase';
-import { signInInvited, signOut } from '../application/services/auth';
+import { globalStore } from '@/stores';
+import { logout } from '@/application/firebase';
+import { signInInvited, signOut } from '@/application/services/auth';
 import { USER_TYPES } from '@/shared/constants';
-import NotFoundView from '../views/NotFoundView.vue';
+import NotFoundView from '@/views/NotFoundView.vue';
 import PrivateUserRoutes from './interno/user';
 import PrivateCollaboratorRoutes from './interno/collaborator';
 import PrivateCommerceRoutes from './interno/commerce';
@@ -47,7 +47,26 @@ const publicMasterRoutes = PublicMasterRoutes.map(route => route.name);
 const router = createRouter({
   history: createWebHistory(),
   scrollBehavior(to, from, savedPosition) {
-    return { top: 0 };
+    // If there's a saved position (e.g., back button), use it
+    if (savedPosition) {
+      return savedPosition;
+    }
+    // Otherwise, scroll to top and ensure padding is updated
+    return new Promise(resolve => {
+      // Wait for next tick to ensure DOM is updated
+      setTimeout(() => {
+        // Update padding for fixed header
+        const header = document.querySelector('.modern-nav');
+        const mainContent = document.querySelector('.main-content-wrapper');
+        if (header && mainContent) {
+          const headerHeight = header.offsetHeight;
+          mainContent.style.paddingTop = `${headerHeight + 10}px`;
+        }
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        resolve({ top: 0, behavior: 'smooth' });
+      }, 150);
+    });
   },
   routes: [
     ...rootChildren,
@@ -321,6 +340,35 @@ router.beforeEach(async (to, from, next) => {
   }
 
   next();
+});
+
+// Update padding after each navigation to ensure content is not covered by fixed header
+router.afterEach(() => {
+  // Wait for DOM to update, then update padding multiple times to ensure it's applied
+  const updatePadding = () => {
+    const header = document.querySelector('.modern-nav');
+    const mainContent = document.querySelector('.main-content-wrapper');
+    if (header && mainContent) {
+      const headerHeight = header.offsetHeight;
+      const paddingValue = `${headerHeight + 15}px`;
+      mainContent.style.paddingTop = paddingValue;
+      // Also update CSS variable if needed
+      document.documentElement.style.setProperty('--header-height', paddingValue);
+    }
+  };
+
+  // Update immediately
+  updatePadding();
+
+  // Update after a short delay to ensure DOM is ready
+  setTimeout(updatePadding, 100);
+
+  // Update again after route transition completes
+  setTimeout(() => {
+    updatePadding();
+    // Ensure we're scrolled to top (accounting for header)
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, 300);
 });
 
 export default router;

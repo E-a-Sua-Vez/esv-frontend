@@ -8,7 +8,7 @@ const eventURL = import.meta.env.VITE_EVENT_URL;
 const queryURL = import.meta.env.VITE_QUERY_URL;
 
 // HTTPS enforcement in production
-const validateHttps = (url) => {
+const validateHttps = url => {
   if (!url) return;
   const environment = import.meta.env.VITE_NODE_ENV || 'local';
   if (environment === 'prod' || environment === 'production') {
@@ -47,14 +47,14 @@ const requestEvent = axios.create(CONFIG_EVENT);
 const requestQuery = axios.create(CONFIG_QUERY);
 
 // Request interceptor: Automatically inject auth headers
-const setupRequestInterceptor = (instance) => {
+const setupRequestInterceptor = instance => {
   instance.interceptors.request.use(
-    async (config) => {
+    async config => {
       const headers = await authHeader();
       config.headers = { ...config.headers, ...headers };
       return config;
     },
-    (error) => Promise.reject(error)
+    error => Promise.reject(error)
   );
 };
 
@@ -130,9 +130,7 @@ const setupResponseInterceptor = (instance, apiName) => {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               return instance(originalRequest);
             })
-            .catch(err => {
-              return Promise.reject(err);
-            });
+            .catch(err => Promise.reject(err));
         }
 
         originalRequest._retry = true;

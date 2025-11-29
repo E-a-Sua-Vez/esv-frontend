@@ -18,7 +18,6 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import QR from '../../components/common/QR.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -32,7 +31,6 @@ export default {
   name: 'CollaboratorAttentionValidate',
   components: {
     Message,
-    PoweredBy,
     QR,
     CommerceLogo,
     QueueName,
@@ -404,7 +402,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
     <!-- Modal Products -->
     <div
       class="modal fade"

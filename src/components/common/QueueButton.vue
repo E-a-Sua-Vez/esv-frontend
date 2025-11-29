@@ -204,17 +204,42 @@ export default {
   color: 0.5px solid var(--gris-default);
 }
 .queue-btn {
-  border: 0.5px solid var(--gris-default);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 0.75rem;
 }
+
+.queue-btn:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.queue-btn.btn-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
+  border-color: var(--azul-turno) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+}
+
+.queue-btn.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.4);
+  transform: translateY(-4px);
+}
+
 .queue-title {
   font-size: 1rem;
-  line-height: 1rem;
+  line-height: 1.2rem;
   text-align: left;
+  font-weight: 600;
 }
+
 .queue-time-title {
-  font-size: 0.7rem;
-  line-height: 0.8rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
   font-weight: 500;
   text-align: left;
+  color: var(--gris-elite-1);
 }
 </style>

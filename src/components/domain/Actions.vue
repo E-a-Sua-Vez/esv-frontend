@@ -45,12 +45,16 @@ export default {
     this.getQueue();
   },
   watch: {
-    store: {
+    'store.currentQueue': {
       immediate: true,
-      deep: true,
+      handler() {
+        this.getQueue();
+      },
+    },
+    'store.currentUserType': {
+      immediate: true,
       handler() {
         this.getUserType();
-        this.getQueue();
       },
     },
   },

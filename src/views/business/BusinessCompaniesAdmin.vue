@@ -12,7 +12,6 @@ import Popper from 'vue3-popper';
 import ServiceSimpleName from '../../components/common/ServiceSimpleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -27,7 +26,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     ServiceSimpleName,
@@ -270,254 +268,528 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessCompaniesAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessCompaniesAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessCompaniesAdmin">
-        <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
-          <div id="businessCompaniesAdmin-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t('businessCompaniesAdmin.commerce') }} </span>
-                <select
-                  class="btn btn-md fw-bold text-dark m-1 select"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="modules"
-                >
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">
-                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                  </option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessCompaniesAdmin.message.4.title')"
-                  :content="$t('businessCompaniesAdmin.message.4.content')"
-                />
-              </div>
-            </div>
-          </div>
-          <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.companies.length === 0">
-                <Message
-                  :title="$t('businessCompaniesAdmin.message.2.title')"
-                  :content="$t('businessCompaniesAdmin.message.2.content')"
-                />
-              </div>
-              <div v-if="state.commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(service)"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-service`"
-                    :disabled="!state.toggles['companies.admin.add']"
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessCompaniesAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessCompaniesAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessCompaniesAdmin">
+          <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
+            <div id="businessCompaniesAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessCompaniesAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
                   >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessCompaniesAdmin.message.4.title')"
+                    :content="$t('businessCompaniesAdmin.message.4.content')"
+                  />
                 </div>
               </div>
+            </div>
+            <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
               <div>
-                <SearchAdminItem
-                  :business-items="state.companies"
-                  :type="'companies'"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <ServiceSimpleName :service="service"></ServiceSimpleName>
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                          :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
+                <div v-if="state.companies.length === 0">
+                  <Message
+                    :title="$t('businessCompaniesAdmin.message.2.title')"
+                    :content="$t('businessCompaniesAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(service)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-service`"
+                      :disabled="!state.toggles['companies.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
                   </div>
-                  <div
-                    v-if="state.toggles['companies.admin.read']"
-                    :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.companies"
+                    :type="'companies'"
+                    :receive-filtered-items="receiveFilteredItems"
                   >
-                    <div class="row g-1">
-                      <div id="queue-type-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessQueuesAdmin.type') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            :disabled="true"
-                            type="text"
-                            class="form-control"
-                            v-model="service.type"
-                            placeholder="Type"
-                          />
-                        </div>
+                  </SearchAdminItem>
+                  <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <ServiceSimpleName :service="service"></ServiceSimpleName>
                       </div>
-                      <div id="service-tag-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCompaniesAdmin.tag') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessCompaniesAdmin.tagHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="service.tag"
-                            v-bind:class="{ 'is-invalid': state.tagError }"
-                            placeholder="Serv-A"
-                          />
-                        </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
                       </div>
-                      <div id="service-order-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCompaniesAdmin.order') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessCompaniesAdmin.orderHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <input
-                            :disabled="!state.toggles['companies.admin.edit']"
-                            min="1"
-                            :max="state.companies.length"
-                            type="number"
-                            class="form-control"
-                            v-model="service.order"
-                            v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                            placeholder="1"
-                          />
-                        </div>
-                      </div>
-                      <div id="service-online-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCompaniesAdmin.online') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessCompaniesAdmin.onlineHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="service.online"
-                            :disabled="!state.toggles['companies.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="service-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCompaniesAdmin.active') }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="service.active"
-                            :disabled="!state.toggles['companies.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="service-id-form" class="row -2 mb-g3">
-                        <div class="row service-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ service.id }}</span>
+                    </div>
+                    <div
+                      v-if="state.toggles['companies.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="queue-type-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessQueuesAdmin.type') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="true"
+                              type="text"
+                              class="form-control"
+                              v-model="service.type"
+                              placeholder="Type"
+                            />
                           </div>
                         </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(service)"
-                          :disabled="!state.toggles['companies.admin.update']"
+                        <div id="service-tag-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.tag') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.tagHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="service.tag"
+                              v-bind:class="{ 'is-invalid': state.tagError }"
+                              placeholder="Serv-A"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-order-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.order') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.orderHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="!state.toggles['companies.admin.edit']"
+                              min="1"
+                              :max="state.companies.length"
+                              type="number"
+                              class="form-control"
+                              v-model="service.order"
+                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-online-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.online') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.onlineHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="service.online"
+                              :disabled="!state.toggles['companies.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.active') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="service.active"
+                              :disabled="!state.toggles['companies.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-id-form" class="row -2 mb-g3">
+                          <div class="row service-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ service.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(service)"
+                            :disabled="!state.toggles['companies.admin.update']"
+                          >
+                            {{ $t('businessCompaniesAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['companies.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['companies.admin.unavailable']"
+                            :no-disabled="state.toggles['companies.admin.unavailable']"
+                            @actionYes="unavailable(service)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
                         >
-                          {{ $t('businessCompaniesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['companies.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['companies.admin.unavailable']"
-                          :no-disabled="state.toggles['companies.admin.unavailable']"
-                          @actionYes="unavailable(service)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                      <div
-                        class="row g-1 errors"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div
-                    v-if="
-                      (!isActiveBusiness() || !state.toggles['companies.admin.read']) && !loading
-                    "
-                  >
-                    <Message
-                      :title="$t('businessCompaniesAdmin.message.1.title')"
-                      :content="$t('businessCompaniesAdmin.message.1.content')"
-                    />
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['companies.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessCompaniesAdmin.message.1.title')"
+                        :content="$t('businessCompaniesAdmin.message.1.content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['companies.admin.view']) && !loading">
+            <Message
+              :title="$t('businessCompaniesAdmin.message.1.title')"
+              :content="$t('businessCompaniesAdmin.message.1.content')"
+            />
+          </div>
         </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['companies.admin.view']) && !loading">
-          <Message
-            :title="$t('businessCompaniesAdmin.message.1.title')"
-            :content="$t('businessCompaniesAdmin.message.1.content')"
-          />
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessCompaniesAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessCompaniesAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessCompaniesAdmin">
+          <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
+            <div id="businessCompaniesAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessCompaniesAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessCompaniesAdmin.message.4.title')"
+                    :content="$t('businessCompaniesAdmin.message.4.content')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.companies.length === 0">
+                  <Message
+                    :title="$t('businessCompaniesAdmin.message.2.title')"
+                    :content="$t('businessCompaniesAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(service)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-service`"
+                      :disabled="!state.toggles['companies.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.companies"
+                    :type="'companies'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <ServiceSimpleName :service="service"></ServiceSimpleName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['companies.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="queue-type-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessQueuesAdmin.type') }}
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="true"
+                              type="text"
+                              class="form-control"
+                              v-model="service.type"
+                              placeholder="Type"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-tag-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.tag') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.tagHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="service.tag"
+                              v-bind:class="{ 'is-invalid': state.tagError }"
+                              placeholder="Serv-A"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-order-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.order') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.orderHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <input
+                              :disabled="!state.toggles['companies.admin.edit']"
+                              min="1"
+                              :max="state.companies.length"
+                              type="number"
+                              class="form-control"
+                              v-model="service.order"
+                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-online-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.online') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessCompaniesAdmin.onlineHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="service.online"
+                              :disabled="!state.toggles['companies.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessCompaniesAdmin.active') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="service.active"
+                              :disabled="!state.toggles['companies.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="service-id-form" class="row -2 mb-g3">
+                          <div class="row service-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ service.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(service)"
+                            :disabled="!state.toggles['companies.admin.update']"
+                          >
+                            {{ $t('businessCompaniesAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['companies.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['companies.admin.unavailable']"
+                            :no-disabled="state.toggles['companies.admin.unavailable']"
+                            @actionYes="unavailable(service)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['companies.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessCompaniesAdmin.message.1.title')"
+                        :content="$t('businessCompaniesAdmin.message.1.content')"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['companies.admin.view']) && !loading">
+            <Message
+              :title="$t('businessCompaniesAdmin.message.1.title')"
+              :content="$t('businessCompaniesAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -698,7 +970,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 
@@ -721,5 +992,52 @@ export default {
   padding: 10px;
   max-height: 1500px !important;
   overflow-y: auto;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

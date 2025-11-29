@@ -6,7 +6,6 @@ import { getPlans, updatePlanPermission } from '../../application/services/plan'
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../common/ToggleCapabilities.vue';
 import Message from '../common/Message.vue';
-import PoweredBy from '../common/PoweredBy.vue';
 import CommerceLogo from '../common/CommerceLogo.vue';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
@@ -18,7 +17,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     ToggleCapabilities,
@@ -170,23 +168,28 @@ export default {
       }
     };
 
-    const filter = computed(() => {
-      if (state.searchString.length >= 3) {
-        if (state.planSelected && state.planSelected.permissions.length > 0) {
-          state.permissions = state.planSelected.permissions.filter(i =>
-            i.name.toLowerCase().startsWith(state.searchString.toLowerCase())
-          );
+    watch(
+      () => state.searchString,
+      () => {
+        if (state.searchString.length >= 3) {
+          if (state.planSelected && state.planSelected.permissions.length > 0) {
+            state.permissions = state.planSelected.permissions.filter(i =>
+              i.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+            );
+          }
+        } else {
+          if (state.planSelected) {
+            state.permissions = state.planSelected.permissions;
+          }
         }
-      } else {
-        state.permissions = state.planSelected.permissions;
-      }
-    });
+      },
+      { immediate: true }
+    );
 
     return {
       state,
       loading,
       alertError,
-      filter,
       add,
       update,
       goBack,
@@ -230,7 +233,6 @@ export default {
               v-model="state.searchString"
               :placeholder="$t('enterSearcher')"
             />
-            {{ filter }}
           </div>
         </div>
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">

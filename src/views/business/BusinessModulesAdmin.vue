@@ -8,7 +8,6 @@ import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ModuleName from '../../components/common/ModuleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -22,7 +21,6 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     ModuleName,
@@ -464,7 +462,6 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 

@@ -47,6 +47,11 @@ export function handleApiError(error, context = 'API') {
         message = 'Resource not found.';
         break;
 
+      case 405:
+        // Method not allowed
+        message = 'Method not allowed. The requested action is not permitted.';
+        break;
+
       case 422:
         // Validation error
         message = data?.message || 'Validation error. Please check your input.';

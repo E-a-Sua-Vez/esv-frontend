@@ -19,6 +19,7 @@ export default {
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -42,6 +43,21 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot from DashboardAttentionsManagement for desktop -->
+  <DashboardAttentionsManagement
+    v-if="filtersLocation === 'slot'"
+    :show-attention-management="false"
+    :toggles="toggles"
+    :commerce="commerce"
+    :queues="queues"
+    :commerces="commerces"
+    :services="services"
+    filters-location="slot"
+  >
+    <template #filters-exposed="filterProps">
+      <slot name="filters-exposed" v-bind="filterProps"></slot>
+    </template>
+  </DashboardAttentionsManagement>
   <div
     id="surveys"
     class="row"
@@ -79,6 +95,7 @@ export default {
           :queues="this.queues"
           :commerces="this.commerces"
           :services="this.services"
+          :filters-location="filtersLocation"
         >
         </DashboardAttentionsManagement>
         <DashboardBookingsManagement

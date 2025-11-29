@@ -5,7 +5,6 @@ import { createBookingFromWaitlist } from '../application/services/booking';
 import { getWaitlistDetails } from '../application/services/waitlist';
 import Message from '../components/common/Message.vue';
 import QueueName from '../components/common/QueueName.vue';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
@@ -13,7 +12,6 @@ import Alert from '../components/common/Alert.vue';
 export default {
   name: 'UserQueueWaitlist',
   components: {
-    PoweredBy,
     CommerceLogo,
     QueueName,
     Message,
@@ -120,7 +118,6 @@ export default {
       </div>
       <div></div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 

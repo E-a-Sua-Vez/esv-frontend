@@ -30,7 +30,7 @@ export default {
             </div>
           </div>
         </div>
-        <div class="toggle-title" v-if="toggles && componentName">
+        <div class="toggle-title centered" v-if="toggles && componentName">
           <ToggleCapabilities
             :toggles="toggles"
             :component-name="componentName"
@@ -59,5 +59,8 @@ export default {
   line-height: 1rem;
   padding-bottom: 0.5rem;
   padding-top: 0rem !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

@@ -1,11 +1,10 @@
 <script>
 import { globalStore } from '../stores';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 
 export default {
   name: 'Home',
-  components: { CommerceLogo, PoweredBy },
+  components: { CommerceLogo },
   data() {
     const store = globalStore();
     return {
@@ -43,6 +42,9 @@ export default {
           class="rounded img-fluid mx-auto logo"
           :alt="this.$t('logoAlt')"
           :src="this.$t('logo')"
+          width="300"
+          height="auto"
+          fetchpriority="high"
         />
       </div>
       <div class="row my-4">
@@ -88,14 +90,14 @@ export default {
             >{{ $t('enterMaster') }} <i class="bi bi-person-fill-gear"></i></span
         ></a>
       </div>
-      <PoweredBy />
     </div>
   </div>
 </template>
 
 <style scoped>
 .logo {
-  width: 500px;
+  width: 300px;
+  max-width: 100%;
   background-repeat: no-repeat;
   background-size: 100%;
 }
@@ -124,7 +126,8 @@ export default {
 }
 @media (min-width: 1024px) {
   .logo {
-    width: 500px;
+    width: 300px;
+    max-width: 100%;
     background-position: center;
   }
 }

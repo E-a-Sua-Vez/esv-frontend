@@ -16,7 +16,6 @@ import { BOOKING_STATUS, USER_TYPES } from '../shared/constants';
 import Message from '../components/common/Message.vue';
 import AttentionNumber from '../components/common/AttentionNumber.vue';
 import QueueName from '../components/common/QueueName.vue';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import QR from '../components/common/QR.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import ClientNotifyData from '../components/domain/ClientNotifyData.vue';
@@ -29,7 +28,6 @@ import AreYouSure from '../components/common/AreYouSure.vue';
 export default {
   name: 'UserQueueBooking',
   components: {
-    PoweredBy,
     QR,
     CommerceLogo,
     ClientNotifyData,
@@ -258,11 +256,7 @@ export default {
           if (!state.formFirstAttentionCompleted && formFirstAttention) {
             state.showFormButton = true;
             state.form = formFirstAttention;
-          } else if (
-            !state.formFirstAttentionCompleted &&
-            !state.formPreAttentionCompleted &&
-            formFirstAttention
-          ) {
+          } else if (!state.formPreAttentionCompleted && formFirstAttention) {
             state.showFormButton = true;
             state.form = formFirstAttention;
           } else if (
@@ -505,7 +499,6 @@ export default {
       </div>
       <div></div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 
