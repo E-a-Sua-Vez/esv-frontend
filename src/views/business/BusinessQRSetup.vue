@@ -281,7 +281,7 @@ export default {
               <div class="action-icon-container">
                 <i class="bi bi-ticket-perforated action-icon"></i>
               </div>
-              <h2 class="action-title">{{ $t('commerceQRSetup.action') }}</h2>
+              <h2 class="action-title">{{ $t('commerceQRSetup.wantToBeAttended') }}</h2>
               <p class="action-description">{{ $t('commerceQRSetup.request') }}</p>
 
               <div class="action-button-container">
