@@ -20,6 +20,14 @@ export default defineConfig(({ command, mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       }
     },
+    optimizeDeps: {
+      include: ['html2pdf.js']
+    },
+    build: {
+      commonjsOptions: {
+        include: [/html2pdf\.js/, /node_modules/]
+      }
+    },
     envDir: 'net'
   }
 })
