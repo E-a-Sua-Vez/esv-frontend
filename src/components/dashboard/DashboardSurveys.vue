@@ -14,7 +14,7 @@ export default {
     DetailsCard,
     Message,
     DashboardSurveysResult,
-    DashboardSurveysConsolidated
+    DashboardSurveysConsolidated,
   },
   props: {
     showSurvey: { type: Boolean, default: false },
@@ -24,14 +24,15 @@ export default {
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
       loading: false,
       detailsOpened: false,
       showSurveyResults: true,
-      showSurveyConsolidated: false
-    }
+      showSurveyConsolidated: false,
+    };
   },
   methods: {
     showSurveysResults() {
@@ -41,23 +42,55 @@ export default {
     showSurveysConsolidated() {
       this.showSurveyResults = false;
       this.showSurveyConsolidated = true;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - forward from child components -->
+  <DashboardSurveysResult
+    v-if="filtersLocation === 'slot' && showSurveyResults"
+    :show-survey-results="false"
+    :calculated-metrics="calculatedMetrics"
+    :toggles="toggles"
+    :start-date="startDate"
+    :end-date="endDate"
+    :commerce="commerce"
+    :queues="queues"
+    filters-location="slot"
+  >
+    <template #filters-exposed="filterProps">
+      <slot name="filters-exposed" v-bind="filterProps"></slot>
+    </template>
+  </DashboardSurveysResult>
+  <DashboardSurveysConsolidated
+    v-if="filtersLocation === 'slot' && showSurveyConsolidated"
+    :show-survey-consolidated="false"
+    :toggles="toggles"
+    :start-date="startDate"
+    :end-date="endDate"
+    :commerce="commerce"
+    :queues="queues"
+    filters-location="slot"
+  >
+    <template #filters-exposed="filterProps">
+      <slot name="filters-exposed" v-bind="filterProps"></slot>
+    </template>
+  </DashboardSurveysConsolidated>
+
   <div id="surveys" class="row" v-if="showSurvey === true && toggles['dashboard.surveys.view']">
     <div>
-      <hr>
+      <hr />
       <div class="row col m-1 mb-2">
         <div class="col-6 centered">
           <button
             class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
             :class="showSurveyResults ? 'btn-selected' : ''"
             @click="showSurveysResults()"
-            :disabled="!toggles['dashboard.surveys.view']">
-            {{ $t("dashboard.resume") }}
+            :disabled="!toggles['dashboard.surveys.view']"
+          >
+            {{ $t('dashboard.resume') }}
           </button>
         </div>
         <div class="col-6 centered">
@@ -65,29 +98,32 @@ export default {
             class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
             :class="showSurveyConsolidated ? 'btn-selected' : ''"
             @click="showSurveysConsolidated()"
-            :disabled="!toggles['dashboard.surveys-consolidated.view']">
-            {{ $t("dashboard.consolidated") }}
+            :disabled="!toggles['dashboard.surveys-consolidated.view']"
+          >
+            {{ $t('dashboard.consolidated') }}
           </button>
         </div>
       </div>
       <div>
         <DashboardSurveysResult
-          :showSurveyResults="showSurveyResults"
-          :calculatedMetrics="calculatedMetrics"
+          :show-survey-results="showSurveyResults"
+          :calculated-metrics="calculatedMetrics"
           :toggles="toggles"
-          :startDate="startDate"
-          :endDate="endDate"
+          :start-date="startDate"
+          :end-date="endDate"
           :commerce="commerce"
           :queues="queues"
+          :filters-location="filtersLocation"
         >
         </DashboardSurveysResult>
         <DashboardSurveysConsolidated
-          :showSurveyConsolidated="showSurveyConsolidated"
+          :show-survey-consolidated="showSurveyConsolidated"
           :toggles="toggles"
-          :startDate="startDate"
-          :endDate="endDate"
+          :start-date="startDate"
+          :end-date="endDate"
           :commerce="commerce"
           :queues="queues"
+          :filters-location="filtersLocation"
         >
         </DashboardSurveysConsolidated>
       </div>
@@ -97,37 +133,38 @@ export default {
     <Message
       :icon="'bi-graph-up-arrow'"
       :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')" />
+      :content="$t('dashboard.message.1.content')"
+    />
   </div>
 </template>
 
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  line-height: .8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
 }
 .metric-card-comment {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 .metric-card-number {
   font-size: 1.2rem;
   font-weight: 700;
 }
 .metric-card-score {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 </style>

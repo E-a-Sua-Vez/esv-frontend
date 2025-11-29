@@ -1,11 +1,10 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue'
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { createBookingFromWaitlist } from '../application/services/booking';
 import { getWaitlistDetails } from '../application/services/waitlist';
 import Message from '../components/common/Message.vue';
 import QueueName from '../components/common/QueueName.vue';
-import PoweredBy from '../components/common/PoweredBy.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
@@ -13,20 +12,19 @@ import Alert from '../components/common/Alert.vue';
 export default {
   name: 'UserQueueWaitlist',
   components: {
-    PoweredBy,
     CommerceLogo,
     QueueName,
     Message,
     Spinner,
-    Alert
+    Alert,
   },
   async setup() {
     const route = useRoute();
     const router = useRouter();
     const { id, block } = route.params;
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       booking: {},
@@ -35,7 +33,7 @@ export default {
       user: {},
       waitlist: {},
       bookingCreated: true,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -57,33 +55,32 @@ export default {
             state.bookingCreated = false;
           }
         } else {
-          router.push({ path: `/not-found` });
+          router.push({ path: '/not-found' });
         }
         loading.value = false;
       } catch (error) {
         state.bookingCreated = false;
         loading.value = false;
       }
-    })
+    });
 
     const backToCommerceQueues = () => {
-      router.push({ path: `/interno/comercio/${state.commerce.keyName}` })
-    }
+      router.push({ path: `/interno/comercio/${state.commerce.keyName}` });
+    };
 
     return {
       id,
       state,
       loading,
       alertError,
-      backToCommerceQueues
-    }
-  }
-
-}
+      backToCommerceQueues,
+    };
+  },
+};
 </script>
 <template>
   <div>
-    <div  class="content text-center">
+    <div class="content text-center">
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
       <QueueName :queue="state.queue"></QueueName>
       <Spinner :show="loading"></Spinner>
@@ -92,7 +89,7 @@ export default {
         <div id="page-header" class="text-center mt-4">
           <div>
             <div class="welcome">
-              <span>{{ $t("userQueueWaitlist.hello") }}</span>
+              <span>{{ $t('userQueueWaitlist.hello') }}</span>
             </div>
           </div>
         </div>
@@ -101,15 +98,17 @@ export default {
             <Message
               :title="$t('userQueueWaitlist.message.1.title')"
               :content="$t('userQueueWaitlist.message.1.content')"
-              :icon="'bi bi-emoji-dizzy'">
+              :icon="'bi bi-emoji-dizzy'"
+            >
             </Message>
             <div class="to-goal">
               <div class="mt-2">
                 <div class="mt-2">
                   <button
                     class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                    @click="backToCommerceQueues()">
-                    {{ $t("userQueueWaitlist.actions.1.action") }} <i class="bi bi-arrow-left"></i>
+                    @click="backToCommerceQueues()"
+                  >
+                    {{ $t('userQueueWaitlist.actions.1.action') }} <i class="bi bi-arrow-left"></i>
                   </button>
                 </div>
               </div>
@@ -117,61 +116,59 @@ export default {
           </div>
         </div>
       </div>
-      <div>
+      <div></div>
     </div>
-    </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 
 <style scoped>
 .booking-details-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin-left: .1rem;
-  margin-right: .1rem;
-  margin-bottom: .2rem;
+  padding: 0.5rem;
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
+  margin-bottom: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
 .booking-shortly-details-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin-left: .4rem;
-  margin-right: .4rem;
-  margin-bottom: .2rem;
+  padding: 0.5rem;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  margin-bottom: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
 .booking-details-date {
   background-color: var(--color-background);
-  padding: .2rem;
-  margin: .2rem;
+  padding: 0.2rem;
+  margin: 0.2rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 .booking-details-sound {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .3rem;
+  padding: 0.5rem;
+  margin: 0.3rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
-  margin-bottom: .5rem;
+  border: 0.5px solid var(--gris-default);
+  margin-bottom: 0.5rem;
 }
 .booking-details-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: .4rem;
-  margin-right: .4rem;
-  margin-top: .5rem;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  margin-top: 0.5rem;
   margin-bottom: 0rem;
 }
 .booking-details-title {
-  font-size: .7rem;
-  line-height: .8rem !important;
+  font-size: 0.7rem;
+  line-height: 0.8rem !important;
 }
 .booking-details-content {
   font-size: 1.1rem;
@@ -182,19 +179,19 @@ export default {
   line-height: 1rem;
   padding-top: 1rem;
   font-weight: 700;
-  margin-block-start: .2rem;
+  margin-block-start: 0.2rem;
 }
 .booking-details-data {
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .booking-sound {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1.1rem;
 }
 .booking-notification-title {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1rem;
-  padding: .2rem;
+  padding: 0.2rem;
 }
 .parpadea {
   animation-name: parpadeo;
@@ -202,7 +199,7 @@ export default {
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 
-  -webkit-animation-name:parpadeo;
+  -webkit-animation-name: parpadeo;
   -webkit-animation-duration: 1s;
   -webkit-animation-timing-function: linear;
   -webkit-animation-iteration-count: infinite;
@@ -213,27 +210,45 @@ export default {
   font-weight: 400;
 }
 .test-sound {
-  font-size: .6rem;
-  line-height: .8rem;
+  font-size: 0.6rem;
+  line-height: 0.8rem;
   font-weight: 800;
   text-decoration: underline;
   cursor: pointer;
 }
-@-moz-keyframes parpadeo{
-  0% { opacity: 1.0; }
-  50% { opacity: 0.0; }
-  100% { opacity: 1.0; }
+@-moz-keyframes parpadeo {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-webkit-keyframes parpadeo {
-  0% { opacity: 1.0; }
-  50% { opacity: 0.0; }
-   100% { opacity: 1.0; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes parpadeo {
-  0% { opacity: 1.0; }
-   50% { opacity: 0.0; }
-  100% { opacity: 1.0; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

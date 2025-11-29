@@ -1,0 +1,26 @@
+{
+  "name": "Hub - Plataforma de Gerenciamento de Filas Digitais",
+  "short_name": "Hub",
+  "description": "Plataforma completa de gerenciamento de filas digitais, agendamentos e pesquisas de satisfação do cliente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f3f92",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+

@@ -1,11 +1,11 @@
-const HomeView = () => import('../../views/HomeView.vue');
+const HomeView = () => import('@/views/HomeView.vue');
 
 const RootRoutes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView
-  }
-]
+    component: HomeView,
+  },
+];
 
 export default RootRoutes;

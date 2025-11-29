@@ -2,13 +2,16 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getProductByCommerce, updateProduct, addProduct } from '../../application/services/product';
+import {
+  getProductByCommerce,
+  updateProduct,
+  addProduct,
+} from '../../application/services/product';
 import { getPermissions } from '../../application/services/permissions';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import ProductSimpleName from '../../components/common/ProductSimpleName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -20,13 +23,25 @@ import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessProductsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, ProductSimpleName, Toggle, Warning, AreYouSure, Popper, ComponentMenu, SearchAdminItem },
+  components: {
+    CommerceLogo,
+    Message,
+    Spinner,
+    Alert,
+    ProductSimpleName,
+    Toggle,
+    Warning,
+    AreYouSure,
+    Popper,
+    ComponentMenu,
+    SearchAdminItem,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -58,7 +73,7 @@ export default {
       replacementLevelUpdateError: false,
       replacementLevelAddError: false,
       toggles: {},
-      filtered: []
+      filtered: [],
     });
 
     onBeforeMount(async () => {
@@ -69,7 +84,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
           state.products = await getProductByCommerce(state.commerce.id);
         }
@@ -81,73 +97,71 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const validateAdd = (product) => {
+    const validateAdd = product => {
       state.errorsAdd = [];
-      if(!product.name || product.name.length === 0) {
+      if (!product.name || product.name.length === 0) {
         state.nameError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.name');
       } else {
         state.nameError = false;
       }
-      if(!product.tag || product.tag.length === 0) {
+      if (!product.tag || product.tag.length === 0) {
         state.tagError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.tag');
       } else {
         state.tagError = false;
       }
-      if(!product.type || product.type.length === 0) {
+      if (!product.type || product.type.length === 0) {
         state.typeAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.type');
       } else {
         state.typeAddError = false;
       }
-      if(!product.measureType || product.measureType.length === 0) {
+      if (!product.measureType || product.measureType.length === 0) {
         state.measureTypeAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.measureType');
       } else {
         state.measureTypeAddError = false;
       }
-      if(!product.order || product.order.length === 0) {
+      if (!product.order || product.order.length === 0) {
         state.orderAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.order');
       } else {
         state.orderAddError = false;
       }
-      if(product.actualLevel === undefined || product.actualLevel < 0) {
+      if (product.actualLevel === undefined || product.actualLevel < 0) {
         state.actualLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.actualLevel');
       } else {
         state.actualLevelAddError = false;
       }
-      if(product.optimumLevel === undefined || product.optimumLevel < 0) {
+      if (product.optimumLevel === undefined || product.optimumLevel < 0) {
         state.optimumLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.optimumLevel');
       } else {
         state.optimumLevelAddError = false;
       }
-      if(product.replacementLevel === undefined || product.replacementLevel < 0) {
+      if (product.replacementLevel === undefined || product.replacementLevel < 0) {
         state.replacementLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.replacementLevel');
       } else {
         state.replacementLevelAddError = false;
       }
-      if(product.maximumLevel === undefined || product.maximumLevel < 0) {
+      if (product.maximumLevel === undefined || product.maximumLevel < 0) {
         state.maximumLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
       } else {
         state.maximumLevelAddError = false;
       }
-      if(product.optimumLevel < product.replacementLevel) {
+      if (product.optimumLevel < product.replacementLevel) {
         state.optimumLevelAddError = true;
         state.replacementLevelAddError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.levels');
@@ -155,57 +169,57 @@ export default {
         state.optimumLevelAddError = false;
         state.replacementLevelAddError = false;
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const validateUpdate = (product) => {
+    const validateUpdate = product => {
       state.errorsUpdate = [];
-      if(!product.type || product.type.length === 0) {
+      if (!product.type || product.type.length === 0) {
         state.typeUpdateError = true;
         state.errorsUpdate.push('businessProductsAdmin.validate.type');
       } else {
         state.typeUpdateError = false;
       }
-      if(!product.measureType || product.measureType.length === 0) {
+      if (!product.measureType || product.measureType.length === 0) {
         state.measureTypeUpdateError = true;
         state.errorsUpdate.push('businessProductsAdmin.validate.measureType');
       } else {
         state.measureTypeUpdateError = false;
       }
-      if(!product.order || product.order.length === 0) {
+      if (!product.order || product.order.length === 0) {
         state.orderUpdateError = true;
         state.errorsUpdate.push('businessProductsAdmin.validate.order');
       } else {
         state.orderUpdateError = false;
       }
-      if(product.actualLevel === undefined || product.actualLevel < 0) {
+      if (product.actualLevel === undefined || product.actualLevel < 0) {
         state.actualLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.actualLevel');
       } else {
         state.actualLevelUpdateError = false;
       }
-      if(product.optimumLevel === undefined || product.optimumLevel < 0) {
+      if (product.optimumLevel === undefined || product.optimumLevel < 0) {
         state.optimumLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.optimumLevel');
       } else {
         state.optimumLevelUpdateError = false;
       }
-      if(product.replacementLevel === undefined || product.replacementLevel < 0) {
+      if (product.replacementLevel === undefined || product.replacementLevel < 0) {
         state.replacementLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.replacementLevel');
       } else {
         state.replacementLevelUpdateError = false;
       }
-      if(product.maximumLevel === undefined || product.maximumLevel < 0) {
+      if (product.maximumLevel === undefined || product.maximumLevel < 0) {
         state.maximumLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.maximumLevel');
       } else {
         state.maximumLevelUpdateError = false;
       }
-      if(product.optimumLevel < product.replacementLevel) {
+      if (product.optimumLevel < product.replacementLevel) {
         state.optimumLevelUpdateError = true;
         state.replacementLevelUpdateError = true;
         state.errorsAdd.push('businessProductsAdmin.validate.levels');
@@ -213,20 +227,20 @@ export default {
         state.optimumLevelUpdateError = true;
         state.replacementLevelUpdateError = true;
       }
-      if(state.errorsUpdate.length === 0) {
+      if (state.errorsUpdate.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
     const showAdd = () => {
       state.showAdd = true;
       state.newProduct = {
         order: state.products.length + 1,
         online: true,
-        productInfo: {}
-      }
-    }
+        productInfo: {},
+      };
+    };
 
     const add = async () => {
       try {
@@ -237,7 +251,7 @@ export default {
           state.products = await getProductByCommerce(state.commerce.id);
           state.showAdd = false;
           closeAddModal();
-          state.newProduct = {}
+          state.newProduct = {};
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -246,9 +260,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const update = async (product) => {
+    const update = async product => {
       try {
         loading.value = true;
         if (validateUpdate(product)) {
@@ -262,9 +276,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const unavailable = async (product) => {
+    const unavailable = async product => {
       try {
         loading.value = true;
         if (product && product.id) {
@@ -281,17 +295,17 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const goToUnavailable = () => {
       state.goToUnavailable = !state.goToUnavailable;
-    }
+    };
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    }
+    };
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -302,20 +316,20 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const showUpdateForm = (index) => {
+    const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
-    }
+    };
 
-    const receiveFilteredItems = (items) => {
+    const receiveFilteredItems = items => {
       state.filtered = items;
-    }
+    };
 
     const closeAddModal = () => {
       const modalCloseButton = document.getElementById('close-modal');
       modalCloseButton.click();
-    }
+    };
 
     return {
       state,
@@ -331,353 +345,819 @@ export default {
       unavailable,
       goToUnavailable,
       unavailableCancel,
-      receiveFilteredItems
-    }
-  }
-}
+      receiveFilteredItems,
+    };
+  },
+};
 </script>
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessProductsAdmin.title`)"
-        :toggles="state.toggles"
-        componentName="businessProductsAdmin"
-        @goBack="goBack">
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessProductsAdmin">
-        <div v-if="isActiveBusiness && state.toggles['products.admin.view']">
-          <div id="businessProductsAdmin-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t("businessProductsAdmin.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessProductsAdmin.message.4.title')"
-                  :content="$t('businessProductsAdmin.message.4.content')" />
-              </div>
-            </div>
-          </div>
-          <div v-if="!loading" id="businessProductsAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.products.length === 0">
-                <Message
-                  :title="$t('businessProductsAdmin.message.2.title')"
-                  :content="$t('businessProductsAdmin.message.2.content')" />
-              </div>
-              <div v-if="state.commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(product)"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-product`"
-                    :disabled="!state.toggles['products.admin.add']">
-                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
-                  </button>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessProductsAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessProductsAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessProductsAdmin">
+          <div v-if="isActiveBusiness && state.toggles['products.admin.view']">
+            <div id="businessProductsAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessProductsAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessProductsAdmin.message.4.title')"
+                    :content="$t('businessProductsAdmin.message.4.content')"
+                  />
                 </div>
               </div>
+            </div>
+            <div v-if="!loading" id="businessProductsAdmin-result" class="mt-4">
               <div>
-                <SearchAdminItem
-                  :businessItems="state.products"
-                  :type="'product'"
-                  :receiveFilteredItems="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(product, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <ProductSimpleName :product="product"></ProductSimpleName>
-                    </div>
-                    <div class="col-2">
-                      <a
-                        href="#"
-                        @click.prevent="showUpdateForm(index)">
-                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                      </a>
-                    </div>
-                  </div>
-                  <div v-if="state.toggles['products.admin.read']"
-                    :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                <div v-if="state.products.length === 0">
+                  <Message
+                    :title="$t('businessProductsAdmin.message.2.title')"
+                    :content="$t('businessProductsAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(product)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-product`"
+                      :disabled="!state.toggles['products.admin.add']"
                     >
-                    <div class="row g-1">
-                      <div id="product-code-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.code") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.codeHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="product.code"
-                            placeholder="External Code">
-                        </div>
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.products"
+                    :type="'product'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(product, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <ProductSimpleName :product="product"></ProductSimpleName>
                       </div>
-                      <div id="product-type-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.type") }}
-                        </div>
-                        <div class="col-6">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="product.type"
-                            id="types"
-                            v-bind:class="{ 'is-invalid': state.typeError }">
-                            <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`product.types.${typ.name}`) }}</option>
-                          </select>
-                        </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
                       </div>
-                      <div id="product-measuretype-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.measureType") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.measureTypeHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="product.measureType"
-                            id="types"
-                            v-bind:class="{ 'is-invalid': state.measureTypeError }">
-                            <option v-for="typ in state.measureTypes" :key="typ.name" :value="typ.id">{{ $t(`productMeasuresTypes.${typ.name}`) }}</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="product-actuallevel-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.actualLevel") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.actualLevelHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            :min="0"
-                            type="number"
-                            class="form-control"
-                            v-model="product.actualLevel"
-                            v-bind:class="{ 'is-invalid': state.actualLevelAddError }"
-                            placeholder="1">
-                        </div>
-                      </div>
-                      <div id="product-optimumLevel-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.optimumLevel") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.optimumLevelHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            :min="0"
-                            type="number"
-                            class="form-control"
-                            v-model="product.optimumLevel"
-                            v-bind:class="{ 'is-invalid': state.optimumLevelAddError }"
-                            placeholder="1">
-                        </div>
-                      </div>
-                      <div id="product-replacementLevel-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.replacementLevel") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.replacementLevelHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            :min="0"
-                            type="number"
-                            class="form-control"
-                            v-model="product.replacementLevel"
-                            v-bind:class="{ 'is-invalid': state.replacementLevelUpdateError }"
-                            placeholder="1">
-                        </div>
-                      </div>
-                      <div id="product-maximumLevel-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.maximumLevel") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.maximumLevelHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            :min="0"
-                            type="number"
-                            class="form-control"
-                            v-model="product.maximumLevel"
-                            v-bind:class="{ 'is-invalid': state.maximumLevelUpdateError }"
-                            placeholder="1">
-                        </div>
-                      </div>
-                      <div id="product-order-form" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.order") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.orderHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <input
-                            :disabled="!state.toggles['products.admin.edit']"
-                            min="1"
-                            :max="state.products.length"
-                            type="number"
-                            class="form-control"
-                            v-model="product.order"
-                            v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                            placeholder="1">
-                        </div>
-                      </div>
-                      <div id="product-online-form" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.online") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessProductsAdmin.onlineHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-6">
-                          <Toggle
-                            v-model="product.online"
-                            :disabled="!state.toggles['products.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="product-active-form" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t("businessProductsAdmin.active") }}
-                        </div>
-                        <div class="col-6">
-                          <Toggle
-                            v-model="product.active"
-                            :disabled="!state.toggles['products.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="product-id-form" class="row -2 mb-g3">
-                        <div class="row product-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ product.id }}</span>
+                    </div>
+                    <div
+                      v-if="state.toggles['products.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="product-code-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.code') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.codeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="product.code"
+                              placeholder="External Code"
+                            />
                           </div>
                         </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(product)"
-                          :disabled="!state.toggles['products.admin.update']">
-                          {{ $t("businessProductsAdmin.update") }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['products.admin.unavailable']">
-                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yesDisabled="state.toggles['products.admin.unavailable']"
-                          :noDisabled="state.toggles['products.admin.unavailable']"
-                          @actionYes="unavailable(product)"
-                          @actionNo="unavailableCancel()"
+                        <div id="product-type-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.type') }}
+                          </div>
+                          <div class="col-6">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="product.type"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.typeError }"
+                            >
+                              <option v-for="typ in state.types" :key="typ.name" :value="typ.id">
+                                {{ $t(`product.types.${typ.name}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="product-measuretype-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.measureType') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.measureTypeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="product.measureType"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.measureTypeError }"
+                            >
+                              <option
+                                v-for="typ in state.measureTypes"
+                                :key="typ.name"
+                                :value="typ.id"
+                              >
+                                {{ $t(`productMeasuresTypes.${typ.name}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="product-actuallevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.actualLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.actualLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.actualLevel"
+                              v-bind:class="{ 'is-invalid': state.actualLevelAddError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-optimumLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.optimumLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.optimumLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.optimumLevel"
+                              v-bind:class="{ 'is-invalid': state.optimumLevelAddError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-replacementLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.replacementLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.replacementLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.replacementLevel"
+                              v-bind:class="{ 'is-invalid': state.replacementLevelUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-maximumLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.maximumLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.maximumLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.maximumLevel"
+                              v-bind:class="{ 'is-invalid': state.maximumLevelUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-order-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.order') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.orderHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :disabled="!state.toggles['products.admin.edit']"
+                              min="1"
+                              :max="state.products.length"
+                              type="number"
+                              class="form-control"
+                              v-model="product.order"
+                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-online-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.online') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.onlineHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="product.online"
+                              :disabled="!state.toggles['products.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-active-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.active') }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="product.active"
+                              :disabled="!state.toggles['products.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-id-form" class="row -2 mb-g3">
+                          <div class="row product-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ product.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(product)"
+                            :disabled="!state.toggles['products.admin.update']"
+                          >
+                            {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['products.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['products.admin.unavailable']"
+                            :no-disabled="state.toggles['products.admin.unavailable']"
+                            @actionYes="unavailable(product)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
                         >
-                        </AreYouSure>
-                      </div>
-                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div v-if="(!isActiveBusiness() || !state.toggles['products.admin.read']) && !loading">
-                    <Message
-                      :title="$t('businessProductsAdmin.message.1.title')"
-                      :content="$t('businessProductsAdmin.message.1.content')" />
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['products.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessProductsAdmin.message.1.title')"
+                        :content="$t('businessProductsAdmin.message.1.content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['products.admin.view']) && !loading">
+            <Message
+              :title="$t('businessProductsAdmin.message.1.title')"
+              :content="$t('businessProductsAdmin.message.1.content')"
+            />
+          </div>
         </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['products.admin.view']) && !loading">
-          <Message
-            :title="$t('businessProductsAdmin.message.1.title')"
-            :content="$t('businessProductsAdmin.message.1.content')" />
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessProductsAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessProductsAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessProductsAdmin">
+          <div v-if="isActiveBusiness && state.toggles['products.admin.view']">
+            <div id="businessProductsAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessProductsAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessProductsAdmin.message.4.title')"
+                    :content="$t('businessProductsAdmin.message.4.content')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="businessProductsAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.products.length === 0">
+                  <Message
+                    :title="$t('businessProductsAdmin.message.2.title')"
+                    :content="$t('businessProductsAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(product)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-product`"
+                      :disabled="!state.toggles['products.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.products"
+                    :type="'product'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(product, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <ProductSimpleName :product="product"></ProductSimpleName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['products.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="product-code-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.code') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.codeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control"
+                              v-model="product.code"
+                              placeholder="External Code"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-type-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.type') }}
+                          </div>
+                          <div class="col-6">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="product.type"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.typeError }"
+                            >
+                              <option v-for="typ in state.types" :key="typ.name" :value="typ.id">
+                                {{ $t(`product.types.${typ.name}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="product-measuretype-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.measureType') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.measureTypeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="product.measureType"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.measureTypeError }"
+                            >
+                              <option
+                                v-for="typ in state.measureTypes"
+                                :key="typ.name"
+                                :value="typ.id"
+                              >
+                                {{ $t(`productMeasuresTypes.${typ.name}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="product-actuallevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.actualLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.actualLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.actualLevel"
+                              v-bind:class="{ 'is-invalid': state.actualLevelAddError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-optimumLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.optimumLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.optimumLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.optimumLevel"
+                              v-bind:class="{ 'is-invalid': state.optimumLevelAddError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-replacementLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.replacementLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.replacementLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.replacementLevel"
+                              v-bind:class="{ 'is-invalid': state.replacementLevelUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-maximumLevel-form-update" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.maximumLevel') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.maximumLevelHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :min="0"
+                              type="number"
+                              class="form-control"
+                              v-model="product.maximumLevel"
+                              v-bind:class="{ 'is-invalid': state.maximumLevelUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-order-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.order') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.orderHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <input
+                              :disabled="!state.toggles['products.admin.edit']"
+                              min="1"
+                              :max="state.products.length"
+                              type="number"
+                              class="form-control"
+                              v-model="product.order"
+                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                              placeholder="1"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-online-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.online') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessProductsAdmin.onlineHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="product.online"
+                              :disabled="!state.toggles['products.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-active-form" class="row g-1">
+                          <div class="col-6 text-label">
+                            {{ $t('businessProductsAdmin.active') }}
+                          </div>
+                          <div class="col-6">
+                            <Toggle
+                              v-model="product.active"
+                              :disabled="!state.toggles['products.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div id="product-id-form" class="row -2 mb-g3">
+                          <div class="row product-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ product.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(product)"
+                            :disabled="!state.toggles['products.admin.update']"
+                          >
+                            {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['products.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['products.admin.unavailable']"
+                            :no-disabled="state.toggles['products.admin.unavailable']"
+                            @actionYes="unavailable(product)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['products.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessProductsAdmin.message.1.title')"
+                        :content="$t('businessProductsAdmin.message.1.content')"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['products.admin.view']) && !loading">
+            <Message
+              :title="$t('businessProductsAdmin.message.1.title')"
+              :content="$t('businessProductsAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
     <!-- Modal Add -->
-    <div class="modal fade" :id="`add-product`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+    <div
+      class="modal fade"
+      :id="`add-product`"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
-            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <button
+              id="close-modal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-product" class="result-card mb-4" v-if="state.showAdd && state.toggles['products.admin.add']">
+            <div
+              id="add-product"
+              class="result-card mb-4"
+              v-if="state.showAdd && state.toggles['products.admin.add']"
+            >
               <div v-if="state.products.length < state.toggles['products.admin.limit']">
                 <div class="row g-1">
                   <div id="product-name-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.name") }}
+                      {{ $t('businessProductsAdmin.name') }}
                     </div>
                     <div class="col-6">
                       <input
@@ -687,18 +1167,20 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.name"
                         v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="Product A">
+                        placeholder="Product A"
+                      />
                     </div>
                   </div>
                   <div id="product-tag-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.tag") }}
+                      {{ $t('businessProductsAdmin.tag') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.tagHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.tagHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -709,18 +1191,20 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.tag"
                         v-bind:class="{ 'is-invalid': state.tagError }"
-                        placeholder="Prod-A">
+                        placeholder="Prod-A"
+                      />
                     </div>
                   </div>
                   <div id="product-code-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.code") }}
+                      {{ $t('businessProductsAdmin.code') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.codeHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.codeHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -730,32 +1214,37 @@ export default {
                         type="text"
                         class="form-control"
                         v-model="state.newProduct.code"
-                        placeholder="External Code">
+                        placeholder="External Code"
+                      />
                     </div>
                   </div>
                   <div id="product-type-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.type") }}
+                      {{ $t('businessProductsAdmin.type') }}
                     </div>
                     <div class="col-6">
                       <select
                         class="btn btn-md btn-light fw-bold text-dark select"
                         v-model="state.newProduct.type"
                         id="types"
-                        v-bind:class="{ 'is-invalid': state.typeAddError }">
-                        <option v-for="typ in state.types" :key="typ.name" :value="typ.id">{{ $t(`product.types.${typ.name}`) }}</option>
+                        v-bind:class="{ 'is-invalid': state.typeAddError }"
+                      >
+                        <option v-for="typ in state.types" :key="typ.name" :value="typ.id">
+                          {{ $t(`product.types.${typ.name}`) }}
+                        </option>
                       </select>
                     </div>
                   </div>
                   <div id="product-measuretype-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.measureType") }}
+                      {{ $t('businessProductsAdmin.measureType') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.measureTypeHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.measureTypeHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -763,20 +1252,24 @@ export default {
                         class="btn btn-md btn-light fw-bold text-dark select"
                         v-model="state.newProduct.measureType"
                         id="types"
-                        v-bind:class="{ 'is-invalid': state.measureTypeAddError }">
-                        <option v-for="typ in state.measureTypes" :key="typ.name" :value="typ.id">{{ $t(`productMeasuresTypes.${typ.name}`) }}</option>
+                        v-bind:class="{ 'is-invalid': state.measureTypeAddError }"
+                      >
+                        <option v-for="typ in state.measureTypes" :key="typ.name" :value="typ.id">
+                          {{ $t(`productMeasuresTypes.${typ.name}`) }}
+                        </option>
                       </select>
                     </div>
                   </div>
                   <div id="product-actuallevel-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.actualLevel") }}
+                      {{ $t('businessProductsAdmin.actualLevel') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.actualLevelHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.actualLevelHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -786,18 +1279,20 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.actualLevel"
                         v-bind:class="{ 'is-invalid': state.actualLevelAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="product-optimumLevel-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.optimumLevel") }}
+                      {{ $t('businessProductsAdmin.optimumLevel') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.optimumLevelHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.optimumLevelHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -807,18 +1302,20 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.optimumLevel"
                         v-bind:class="{ 'is-invalid': state.optimumLevelAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="product-replacementLevel-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.replacementLevel") }}
+                      {{ $t('businessProductsAdmin.replacementLevel') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.replacementLevelHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.replacementLevelHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -828,18 +1325,20 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.replacementLevel"
                         v-bind:class="{ 'is-invalid': state.replacementLevelAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="product-maximumLevel-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.maximumLevel") }}
+                      {{ $t('businessProductsAdmin.maximumLevel') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessProductsAdmin.maximumLevel')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.maximumLevel')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-6">
@@ -849,19 +1348,21 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.maximumLevel"
                         v-bind:class="{ 'is-invalid': state.maximumLevelAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="product-order-form-add" class="row g-1">
                     <div class="col-6 text-label">
-                      {{ $t("businessProductsAdmin.order") }}
+                      {{ $t('businessProductsAdmin.order') }}
                       <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessProductsAdmin.orderHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
+                        :class="'dark p-1'"
+                        arrow
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.orderHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
+                      </Popper>
                     </div>
                     <div class="col-6">
                       <input
@@ -871,35 +1372,38 @@ export default {
                         class="form-control"
                         v-model="state.newProduct.order"
                         v-bind:class="{ 'is-invalid': state.orderAddError }"
-                        placeholder="1">
+                        placeholder="1"
+                      />
                     </div>
                   </div>
                   <div id="add-product-online-form" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t("businessProductsAdmin.online") }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disableClickAway
-                          :content="$t('businessProductsAdmin.onlineHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
-                        </Popper>
-                      </div>
-                      <div class="col-6">
-                        <Toggle
-                          v-model="state.newProduct.online"
-                          :disabled="!state.toggles['products.admin.edit']"
-                        />
-                      </div>
+                    <div class="col-6 text-label">
+                      {{ $t('businessProductsAdmin.online') }}
+                      <Popper
+                        :class="'dark p-1'"
+                        arrow
+                        disable-click-away
+                        :content="$t('businessProductsAdmin.onlineHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
+                      </Popper>
+                    </div>
+                    <div class="col-6">
+                      <Toggle
+                        v-model="state.newProduct.online"
+                        :disabled="!state.toggles['products.admin.edit']"
+                      />
+                    </div>
                   </div>
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newProduct)">
-                      {{ $t("businessProductsAdmin.add") }} <i class="bi bi-save"></i>
+                      @click="add(state.newProduct)"
+                    >
+                      {{ $t('businessProductsAdmin.add') }} <i class="bi bi-save"></i>
                     </button>
                   </div>
-                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                     <Warning>
                       <template v-slot:message>
                         <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -913,30 +1417,35 @@ export default {
               <div v-else>
                 <Message
                   :title="$t('businessProductsAdmin.message.3.title')"
-                  :content="$t('businessProductsAdmin.message.3.content')" />
+                  :content="$t('businessProductsAdmin.message.3.content')"
+                />
               </div>
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .product-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {
@@ -946,5 +1455,52 @@ export default {
   padding: 10px;
   max-height: 1500px !important;
   overflow-y: auto;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

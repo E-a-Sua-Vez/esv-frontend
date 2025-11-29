@@ -2,17 +2,17 @@
 export default {
   name: 'NotificationConditionsEN',
   props: {
-    localeIn: { type: String, default: undefined }
+    localeIn: { type: String, default: undefined },
   },
   data() {
     return {
-      locale
-    }
+      locale,
+    };
   },
   beforeMount() {
     this.locale = this.localeIn || 'es';
-  }
-}
+  },
+};
 </script>
 
 <template>

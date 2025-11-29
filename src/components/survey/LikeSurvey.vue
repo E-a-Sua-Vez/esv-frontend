@@ -3,13 +3,13 @@ export default {
   name: 'LikeSurvey',
   props: {
     show: { type: Boolean, default: false },
-    like: { type: String, default: 'YES' }
+    like: { type: String, default: 'YES' },
   },
   emits: ['update:like'],
   data() {
     return {
-      selected: 'YES'
-    }
+      selected: 'YES',
+    };
   },
   beforeMount() {
     this.select('YES');
@@ -18,18 +18,32 @@ export default {
     select(value) {
       this.selected = value;
       this.$emit('update:like', this.selected);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="nps-container">
       <div class="widget">
-        <span class="title"> <i class="bi bi-hand-thumbs-down-fill"></i> {{ $t("attentionSurvey.like.subtitle") }} <i class="bi bi-hand-thumbs-up-fill"></i>  </span> <br>
-        <button :class="`button no ${selected == 'NO' ? 'no-selected': ''} m-2`" @click="select('NO')"><i class="bi bi-hand-thumbs-down-fill"></i></button>
-        <button :class="`button yes ${selected == 'YES' ? 'yes-selected': ''} m-2`" @click="select('YES')"><i class="bi bi-hand-thumbs-up-fill"></i></button>
+        <span class="title">
+          <i class="bi bi-hand-thumbs-down-fill"></i> {{ $t('attentionSurvey.like.subtitle') }}
+          <i class="bi bi-hand-thumbs-up-fill"></i>
+        </span>
+        <br />
+        <button
+          :class="`button no ${selected == 'NO' ? 'no-selected' : ''} m-2`"
+          @click="select('NO')"
+        >
+          <i class="bi bi-hand-thumbs-down-fill"></i>
+        </button>
+        <button
+          :class="`button yes ${selected == 'YES' ? 'yes-selected' : ''} m-2`"
+          @click="select('YES')"
+        >
+          <i class="bi bi-hand-thumbs-up-fill"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -57,7 +71,7 @@ export default {
   text-align: center;
   font-weight: 700;
   border-radius: 100%;
-  margin: .2rem;
+  margin: 0.2rem;
   outline: none;
   margin-left: -1px;
   width: 40px;
@@ -67,17 +81,17 @@ export default {
 }
 
 .no:hover {
-  background: #F44336;
+  background: #f44336;
   color: white;
-  border-color: lighten(#F44336, 5%);
+  border-color: lighten(#f44336, 5%);
   transform: scale(1);
 }
 
 .no-selected {
-  background: #F44336;
+  background: #f44336;
   color: white;
-  border-color: lighten(#F44336, 5%);
-  transform: scale(1.20);
+  border-color: lighten(#f44336, 5%);
+  transform: scale(1.2);
 }
 
 .yes:hover {
@@ -91,6 +105,6 @@ export default {
   background: #3b5998;
   color: white;
   border-color: lighten(#3b5998, 5%);
-  transform: scale(1.20);
+  transform: scale(1.2);
 }
 </style>

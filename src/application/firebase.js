@@ -1,8 +1,26 @@
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  signInAnonymously,
+  sendPasswordResetEmail,
+  verifyPasswordResetCode,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  Timestamp,
+} from 'firebase/firestore';
 
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue';
+import { ATTENTION_STATUS } from '../shared/constants';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,223 +33,238 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
+const auth = getAuth(app);
 // Initialize Firebase Authentication and get a reference to the service
 
-const firestore = firebase.firestore();
-export const attentionCollection = firestore.collection('attention');
-export const queueCollection = firestore.collection('queue');
-export const bookingCollection = firestore.collection('booking');
-export const waitlistCollection = firestore.collection('waitlist');
-export const messageCollection = firestore.collection('message');
-export const bookingBlockNumberUsedCollection = firestore.collection('booking-block-number-used');
+const firestore = getFirestore(app);
+export const attentionCollection = collection(firestore, 'attention');
+export const queueCollection = collection(firestore, 'queue');
+export const bookingCollection = collection(firestore, 'booking');
+export const waitlistCollection = collection(firestore, 'waitlist');
+export const messageCollection = collection(firestore, 'message');
+export const bookingBlockNumberUsedCollection = collection(firestore, 'booking-block-number-used');
 
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);
-  const attentionQuery = attentionCollection.where('id', "==", attentionId);
-  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
-    attentions.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const attentionQuery = query(attentionCollection, where('id', '==', attentionId));
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  onUnmounted(unsubscribe);
   return attentions;
 }
 
 export function updatedQueues(queueId) {
   const queues = ref([]);
-  const queueQuery = queueCollection.where('id', "==", queueId);
-  const unsubscribe = queueQuery.onSnapshot(snapshot => {
-    queues.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const queueQuery = query(queueCollection, where('id', '==', queueId));
+  const unsubscribe = onSnapshot(queueQuery, snapshot => {
+    queues.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  });
+  onUnmounted(unsubscribe);
   return queues;
 }
 
 export function updatedAvailableAttentions(queueId) {
   const attentions = ref([]);
-  const attentionQuery = attentionCollection
-    .where('queueId', "==", queueId)
-    .where('status', 'in', ['PENDING'])
-    .orderBy('number', 'asc');
-  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
-    attentions.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const attentionQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('status', 'in', [ATTENTION_STATUS.PENDING]),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  onUnmounted(unsubscribe);
   return attentions;
 }
 
 export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
   const attentions = ref([]);
-  const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
-  const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
-  const attentionQuery = attentionCollection
-    .where('queueId', "==", queueId)
-    .where('status', "in", ['PENDING', 'TERMINATED', 'RATED'])
-    .where('createdAt', '>', dateToRequest)
-    .orderBy('createdAt', 'asc')
-    .orderBy('number', 'asc');
-  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
-    attentions.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const date = new Date(
+    new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10)
+  );
+  const dateToRequest = Timestamp.fromDate(date);
+  const attentionQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('status', 'in', [
+      ATTENTION_STATUS.PENDING,
+      ATTENTION_STATUS.TERMINATED,
+      ATTENTION_STATUS.RATED,
+    ]),
+    where('createdAt', '>', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  onUnmounted(unsubscribe);
   return attentions;
 }
 
 export function updatedAvailableAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
-  const attentionQuery = attentionCollection
-    .where('commerceId', "==", commerceId)
-    .where('status', 'in', ['PENDING'])
-    .orderBy('number', 'asc');
-  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
-    attentions.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const attentionQuery = query(
+    attentionCollection,
+    where('commerceId', '==', commerceId),
+    where('status', 'in', ['PENDING']),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  onUnmounted(unsubscribe);
   return attentions;
 }
 
 export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
   const attentions = ref([]);
-  const date = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0,10));
-  const dateToRequest = firebase.firestore.Timestamp.fromDate(date);
-  const attentionQuery = attentionCollection
-    .where('queueId', "==", queueId)
-    .where('createdAt', '>', dateToRequest)
-    .orderBy('createdAt', 'asc')
-    .orderBy('number', 'asc');
-  const unsubscribe = attentionQuery.onSnapshot(snapshot => {
-    attentions.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const date = new Date(
+    new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().slice(0, 10)
+  );
+  const dateToRequest = Timestamp.fromDate(date);
+  const attentionQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('createdAt', '>', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  onUnmounted(unsubscribe);
   return attentions;
 }
 
 export function updatedQueuesByCommerce(commerceId) {
   const queues = ref([]);
-  const queueQuery = queueCollection.where('commerceId', "==", commerceId).orderBy('order');
-  const unsubscribe = queueQuery.onSnapshot(snapshot => {
-    queues.value = snapshot.docs
-      .map(doc => {
-        return { id: doc.id, ...doc.data() }
-      })
-  })
-  onUnmounted(unsubscribe)
+  const queueQuery = query(
+    queueCollection,
+    where('commerceId', '==', commerceId),
+    orderBy('order')
+  );
+  const unsubscribe = onSnapshot(queueQuery, snapshot => {
+    queues.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  });
+  onUnmounted(unsubscribe);
   return queues;
 }
 
 export function updatedAvailableMessages(collaboratorId, administratorId) {
   if (collaboratorId) {
     const messages = ref([]);
-    const messageQuery = messageCollection
-      .where('collaboratorId', "==", collaboratorId)
-      .where('active', "==", true)
-      .where('read', "==", false)
-      .orderBy('createdAt', 'asc');
-    const unsubscribe = messageQuery.onSnapshot(snapshot => {
-      messages.value = snapshot.docs
-        .map(doc => {
-          return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-        })
-    })
-    onUnmounted(unsubscribe)
+    const messageQuery = query(
+      messageCollection,
+      where('collaboratorId', '==', collaboratorId),
+      where('active', '==', true),
+      where('read', '==', false),
+      orderBy('createdAt', 'asc')
+    );
+    const unsubscribe = onSnapshot(messageQuery, snapshot => {
+      messages.value = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate().toString(),
+      }));
+    });
+    onUnmounted(unsubscribe);
     return messages;
   } else if (administratorId) {
     const messages = ref([]);
-    const messageQuery = messageCollection
-      .where('administratorId', "==", administratorId)
-      .where('active', "==", true)
-      .where('read', "==", false)
-      .orderBy('createdAt', 'asc');
-    const unsubscribe = messageQuery.onSnapshot(snapshot => {
-      messages.value = snapshot.docs
-        .map(doc => {
-          return { id: doc.id, ...doc.data(), createdAt: doc.data().createdAt.toDate().toString() }
-        })
-    })
-    onUnmounted(unsubscribe)
+    const messageQuery = query(
+      messageCollection,
+      where('administratorId', '==', administratorId),
+      where('active', '==', true),
+      where('read', '==', false),
+      orderBy('createdAt', 'asc')
+    );
+    const unsubscribe = onSnapshot(messageQuery, snapshot => {
+      messages.value = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate().toString(),
+      }));
+    });
+    onUnmounted(unsubscribe);
     return messages;
   }
 }
 
 export async function login(email, password) {
   let accessToken;
-  return auth.signInWithEmailAndPassword(email, password)
-    .then(async (userCredential) => {
-      await userCredential.user.getIdToken().then((token) => {
+  return signInWithEmailAndPassword(auth, email, password)
+    .then(async userCredential => {
+      await userCredential.user.getIdToken().then(token => {
         accessToken = token;
-      })
+      });
       return accessToken;
     })
-    .catch((error) => {
-      return `Usuario no registrado o password inválida: ${error.message}`;
-  });
+    .catch(error => `Usuario no registrado o password inválida: ${error.message}`);
 }
 
 export async function register(email, password) {
-  return auth.createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      return 'Created';
-    })
-    .catch((error) => {
+  return createUserWithEmailAndPassword(auth, email, password)
+    .then(userCredential => 'Created')
+    .catch(error => {
       const errorMessage = error.message;
       return errorMessage;
     });
 }
 
 export async function logout() {
-  return auth.signOut();
+  return signOut(auth);
 }
 
 export async function invited() {
   let accessToken;
-  return auth.signInAnonymously()
-    .then(async (userCredential) => {
-      await userCredential.user.getIdToken().then((token) => {
+  return signInAnonymously(auth)
+    .then(async userCredential => {
+      await userCredential.user.getIdToken().then(token => {
         accessToken = token;
-      })
+      });
       return accessToken;
     })
-    .catch((error) => {
-      return `Usuario invitado no pudo ser logeado: ${error.message}`;
-  });
+    .catch(error => `Usuario invitado no pudo ser logeado: ${error.message}`);
 }
 
 export async function sendResetPasswordEmail(email) {
-  return auth.sendPasswordResetEmail(email)
-    .then(() => {
-      return 'Email Sent';
-    })
-    .catch((error) => {
+  return sendPasswordResetEmail(auth, email)
+    .then(() => 'Email Sent')
+    .catch(error => {
       const errorMessage = error.message;
       return errorMessage;
     });
 }
 
 export async function confirmResetPassword(code) {
-  return auth.verifyPasswordResetCode(code)
-    .then(() => {
-      return 'Email Sent';
-    })
-    .catch((error) => {
+  return verifyPasswordResetCode(auth, code)
+    .then(() => 'Email Sent')
+    .catch(error => {
       const errorMessage = error.message;
       return errorMessage;
     });
@@ -239,11 +272,17 @@ export async function confirmResetPassword(code) {
 
 export async function getCurrentUser() {
   return new Promise((resolve, reject) => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-       unsubscribe();
-       if (user) {
-        resolve(user.getIdToken());
-       }
-    }, reject);
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      user => {
+        unsubscribe();
+        if (user) {
+          resolve(user.getIdToken());
+        } else {
+          resolve(undefined);
+        }
+      },
+      reject
+    );
   });
 }

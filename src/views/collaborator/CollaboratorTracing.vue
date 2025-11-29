@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getMetrics } from '../../application/services/query-stack';
@@ -10,7 +10,6 @@ import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getServiceByCommerce } from '../../application/services/service';
 import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -25,21 +24,20 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
     DashboardClientsManagement,
     ComponentMenu,
-    DashboardAttentionsAndBookingsManagement
+    DashboardAttentionsAndBookingsManagement,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const attentionCreated = {
       attentionNumber: 0,
@@ -53,18 +51,18 @@ export default {
       pastPeriodAttentionNumber: {},
       pastMonthAttentionNumber: {},
       currentMonthAttentionNumber: {},
-      pastPeriodEvolution: {}
-    }
+      pastPeriodEvolution: {},
+    };
 
     const surveyCreated = {
-      avgRating: 0
-    }
+      avgRating: 0,
+    };
 
     const notificationCreated = {
       notificationNumber: 0,
       channelFlow: {},
-      typesFlow: {}
-    }
+      typesFlow: {},
+    };
 
     const state = reactive({
       currentUser: {},
@@ -83,16 +81,16 @@ export default {
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
-        'notification.created': notificationCreated
+        'notification.created': notificationCreated,
       },
       calculatedSurveyMetrics: {},
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.currentUser = await store.getCurrentUser;
+        state.currentUser = store.getCurrentUser;
         state.collaborator = state.currentUser;
         if (!state.collaborator) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
@@ -105,7 +103,8 @@ export default {
           if (commercesId && commercesId.length > 0) {
             state.business = await store.getActualBusiness();
             state.commerces = await store.getAvailableCommerces(state.business.commerces);
-            state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+            state.commerce =
+              state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
             state.selectedCommerces = [state.commerce];
             if (state.commerce) {
               const commerce = await getCommerceById(state.commerce.id);
@@ -115,14 +114,20 @@ export default {
           } else if (state.collaborator.commerceId) {
             const commerce = await getCommerceById(state.collaborator.commerceId);
             state.commerces = [commerce];
-            state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+            state.commerce =
+              state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
             state.selectedCommerces = [state.commerce];
             state.queues = commerce.queues;
             state.services = await getServiceByCommerce(commerce.id);
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-              if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-                const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+              if (
+                Object.keys(state.groupedQueues).length > 0 &&
+                state.collaborator.type === 'STANDARD'
+              ) {
+                const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
+                  queue => queue.collaboratorId === state.collaborator.id
+                );
                 const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
                 const queues = [...collaboratorQueues, ...otherQueues];
                 state.queues = queues;
@@ -132,7 +137,8 @@ export default {
         } else {
           state.business = await store.getActualBusiness();
           state.commerces = await store.getAvailableCommerces(state.business.commerces);
-          state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+          state.commerce =
+            state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
           state.selectedCommerces = state.commerces;
         }
         state.toggles = await getPermissions('dashboard');
@@ -140,13 +146,11 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.commerce && state.commerce.active === true;
-    };
+    const isActiveBusiness = () => state.commerce && state.commerce.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.selectedCommerces = undefined;
@@ -163,8 +167,13 @@ export default {
           state.queues = queuesByCommerce.queues;
           if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
             state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-            if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-              const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+            if (
+              Object.keys(state.groupedQueues).length > 0 &&
+              state.collaborator.type === 'STANDARD'
+            ) {
+              const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
+                queue => queue.collaboratorId === state.collaborator.id
+              );
               const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
               const queues = [...collaboratorQueues, ...otherQueues];
               state.queues = queues;
@@ -175,9 +184,9 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
-    const getLocalHour = (hour) => {
+    const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
       if (state.commerce.country) {
@@ -189,29 +198,26 @@ export default {
           return hourDate.getHours();
         }
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showClients = () => {
       state.showClients = true;
-      state.showAttentions = false,
-      state.showSurveyManagement = false;
-    }
+      (state.showAttentions = false), (state.showSurveyManagement = false);
+    };
 
     const showSurveys = () => {
       state.showClients = false;
-      state.showAttentions = false,
-      state.showSurveyManagement = true;
-    }
+      (state.showAttentions = false), (state.showSurveyManagement = true);
+    };
 
     const showAttentions = () => {
       state.showClients = false;
-      state.showAttentions = true,
-      state.showSurveyManagement = false;
-    }
+      (state.showAttentions = true), (state.showSurveyManagement = false);
+    };
 
     return {
       state,
@@ -223,10 +229,10 @@ export default {
       showAttentions,
       showSurveys,
       getLocalHour,
-      showClients
-    }
-  }
-}
+      showClients,
+    };
+  },
+};
 </script>
 
 <template>
@@ -236,8 +242,9 @@ export default {
       <ComponentMenu
         :title="$t(`dashboard.tracing.title`)"
         :toggles="state.toggles"
-        componentName="dashboard"
-        @goBack="goBack">
+        component-name="dashboard"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="centered">
         <Spinner :show="loading"></Spinner>
@@ -248,16 +255,30 @@ export default {
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
               :title="$t('dashboard.message.3.title')"
-              :content="$t('dashboard.message.3.content')" />
+              :content="$t('dashboard.message.3.content')"
+            />
           </div>
           <div v-else class="control-box">
             <div id="tracing-controls">
               <div class="row">
                 <div class="col" v-if="state.commerces">
-                  <span>{{ $t("dashboard.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                    <option v-if="state.collaborator.type === 'FULL'" key="ALL" :value="{id:'ALL',active:true}">{{ $t("dashboard.all") }}</option>
+                  <span>{{ $t('dashboard.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    id="modules"
+                    @change="selectCommerce(state.commerce)"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                    <option
+                      v-if="state.collaborator.type === 'FULL'"
+                      key="ALL"
+                      :value="{ id: 'ALL', active: true }"
+                    >
+                      {{ $t('dashboard.all') }}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -270,8 +291,10 @@ export default {
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
                   :class="state.showClients ? 'btn-selected' : ''"
                   @click="showClients()"
-                  :disabled="!state.toggles['dashboard.clients-management.view']">
-                  {{ $t("dashboard.clients") }} <br> <i class="bi bi-person-fill"></i>
+                  :disabled="!state.toggles['dashboard.clients-management.view']"
+                >
+                  {{ $t('dashboard.clients') }} <br />
+                  <i class="bi bi-person-fill"></i>
                 </button>
               </div>
               <div class="col-5 centered">
@@ -279,8 +302,10 @@ export default {
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
                   :class="state.showAttentions ? 'btn-selected' : ''"
                   @click="showAttentions()"
-                  :disabled="!state.toggles['dashboard.attentions-management.view']">
-                  {{ $t("dashboard.attentions") }} <br> <i class="bi bi-qr-code"></i>
+                  :disabled="!state.toggles['dashboard.attentions-management.view']"
+                >
+                  {{ $t('dashboard.attentions') }} <br />
+                  <i class="bi bi-qr-code"></i>
                 </button>
               </div>
               <div class="col-4 centered">
@@ -288,14 +313,16 @@ export default {
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
                   :class="state.showSurveyManagement ? 'btn-selected' : ''"
                   @click="showSurveys()"
-                  :disabled="!state.toggles['dashboard.surveys-management.view']">
-                  {{ $t("dashboard.satisfaction") }} <br> <i class="bi bi-chat-heart-fill"></i>
+                  :disabled="!state.toggles['dashboard.surveys-management.view']"
+                >
+                  {{ $t('dashboard.satisfaction') }} <br />
+                  <i class="bi bi-chat-heart-fill"></i>
                 </button>
               </div>
             </div>
             <div>
               <DashboardClientsManagement
-                :showClientManagement="state.showClients"
+                :show-client-management="state.showClients"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -305,7 +332,7 @@ export default {
               >
               </DashboardClientsManagement>
               <DashboardAttentionsAndBookingsManagement
-                :showAttentionManagement="state.showAttentions"
+                :show-attention-management="state.showAttentions"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -314,8 +341,8 @@ export default {
               >
               </DashboardAttentionsAndBookingsManagement>
               <DashboardSurveysManagement
-                :showSurveyManagement="state.showSurveyManagement"
-                :calculatedMetrics="state.calculatedMetrics"
+                :show-survey-management="state.showSurveyManagement"
+                :calculated-metrics="state.calculatedMetrics"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
                 :queues="state.queues"
@@ -329,16 +356,15 @@ export default {
         <div v-if="!isActiveBusiness() && !loading">
           <Message
             :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')" />
+            :content="$t('dashboard.message.1.content')"
+          />
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 
 <style scoped>
-
 .metric-title {
   text-align: left;
   font-size: 1.1rem;
@@ -346,23 +372,23 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
   align-items: center;
   justify-content: center;
   display: flex;
@@ -377,8 +403,7 @@ export default {
   color: var(--amarillo-star);
 }
 .metric-card-subtitle {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 500;
 }
-
 </style>

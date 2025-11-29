@@ -1,0 +1,22 @@
+# Development Dockerfile for Frontend
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies with BuildKit cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --legacy-peer-deps
+
+# Copy application files
+COPY . .
+
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Start development server
+CMD ["npm", "run", "dev:br"]
+
+

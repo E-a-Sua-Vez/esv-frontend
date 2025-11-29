@@ -2,13 +2,16 @@
 import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getSurveyPersonalizedByCommerceId, updateSurveyPersonalized, createSurveyPersonalized } from '../../application/services/survey-personalized';
+import {
+  getSurveyPersonalizedByCommerceId,
+  updateSurveyPersonalized,
+  createSurveyPersonalized,
+} from '../../application/services/survey-personalized';
 import { getPermissions } from '../../application/services/permissions';
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import SurveyName from '../../components/common/SurveyName.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -21,13 +24,25 @@ import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
   name: 'BusinessSurveysAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, SurveyName, Toggle, Warning, Popper, AreYouSure, ComponentMenu, SearchAdminItem },
+  components: {
+    CommerceLogo,
+    Message,
+    Spinner,
+    Alert,
+    SurveyName,
+    Toggle,
+    Warning,
+    Popper,
+    AreYouSure,
+    ComponentMenu,
+    SearchAdminItem,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -50,7 +65,7 @@ export default {
       errorsUpdate: [],
       typeError: false,
       toggles: {},
-      filtered: []
+      filtered: [],
     });
 
     onBeforeMount(async () => {
@@ -61,7 +76,8 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
           const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
           state.surveys = surveys;
@@ -76,43 +92,41 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
     const goBack = () => {
       router.back();
-    }
+    };
 
-    const validateAdd = (survey) => {
+    const validateAdd = survey => {
       state.errorsAdd = [];
-      if(!survey.type || survey.type.length === 0) {
+      if (!survey.type || survey.type.length === 0) {
         state.typeError = true;
         state.errorsAdd.push('businessSurveysAdmin.validate.type');
       } else {
         state.typeError = false;
       }
-      if(state.errorsAdd.length === 0) {
+      if (state.errorsAdd.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
-    const validateUpdate = (survey) => {
+    const validateUpdate = survey => {
       state.errorsUpdate = [];
-      if(!survey.type || survey.type.length === 0) {
+      if (!survey.type || survey.type.length === 0) {
         state.typeError = true;
         state.errorsUpdate.push('businessSurveysAdmin.validate.type');
       } else {
         state.typeError = false;
       }
-      if(state.errorsUpdate.length === 0) {
+      if (state.errorsUpdate.length === 0) {
         return true;
       }
       return false;
-    }
+    };
 
     const showAdd = () => {
       state.showAdd = true;
@@ -120,9 +134,9 @@ export default {
         attentionDefault: true,
         hasCSAT: false,
         hasNPS: false,
-        hasMessage: false
-      }
-    }
+        hasMessage: false,
+      };
+    };
 
     const add = async () => {
       try {
@@ -137,7 +151,7 @@ export default {
           state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
           state.showAdd = false;
           closeAddModal();
-          state.newSurvey = {}
+          state.newSurvey = {};
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -146,9 +160,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const update = async (survey) => {
+    const update = async survey => {
       try {
         loading.value = true;
         if (validateUpdate(survey)) {
@@ -165,9 +179,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
-    const unavailable = async (survey) => {
+    const unavailable = async survey => {
       try {
         loading.value = true;
         if (survey && survey.id) {
@@ -184,17 +198,17 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const goToUnavailable = () => {
       state.goToUnavailable = !state.goToUnavailable;
-    }
+    };
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    }
+    };
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -206,7 +220,7 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const selectType = (survey, operation) => {
       if (operation === 'add') {
@@ -222,7 +236,7 @@ export default {
         survey.hasCSAT = false;
         survey.hasNPS = true;
         survey.hasMessage = true;
-      } else if (survey.type === 'SIMPLE_CSAT_NPS'){
+      } else if (survey.type === 'SIMPLE_CSAT_NPS') {
         survey.hasCSAT = true;
         survey.hasNPS = true;
         survey.hasMessage = true;
@@ -236,73 +250,73 @@ export default {
           state.showUpdateQuestions = true;
         }
       }
-    }
+    };
 
-    const showUpdateForm = (index) => {
+    const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
-    }
+    };
 
-    const addAddQuestion = (questions) => {
+    const addAddQuestion = questions => {
       const question = {
         title: '',
         active: true,
         order: state.questions.length + 1,
         otherOption: false,
         otherOptionOpen: false,
-        analize: false
-      }
+        analize: false,
+      };
       if (questions === undefined) {
         questions = [];
       }
       questions.push(question);
-    }
+    };
 
-    const addUpdateQuestion = (index) => {
+    const addUpdateQuestion = index => {
       const survey = state.surveys[index];
       const question = {
         title: '',
         active: true,
-        order: survey.questions.length + 1
-      }
+        order: survey.questions.length + 1,
+      };
       if (survey.questions === undefined) {
         survey.questions = [];
       }
       survey.questions.push(question);
       state.surveys[index] = survey;
-    }
+    };
 
-    const deleteAddQuestion = (question) => {
+    const deleteAddQuestion = question => {
       state.questions = state.questions.filter(item => item.title !== question.title);
-    }
+    };
 
     const deleteUpdateQuestion = (question, index) => {
       const survey = state.surveys[index];
       survey.questions = survey.questions.filter(item => item.title !== question.title);
       state.surveys[index] = survey;
-    }
+    };
 
-    const getSurveyLink = (survey) => {
+    const getSurveyLink = survey => {
       const commerceKeyName = state.commerce.keyName;
       const queueId = survey.queueId;
       if (queueId) {
         return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
       }
       return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas`;
-    }
+    };
 
-    const copyLink = (survey) => {
+    const copyLink = survey => {
       const textToCopy = getSurveyLink(survey);
       navigator.clipboard.writeText(textToCopy);
-    }
+    };
 
-    const receiveFilteredItems = (items) => {
+    const receiveFilteredItems = items => {
       state.filtered = items;
-    }
+    };
 
     const closeAddModal = () => {
       const modalCloseButton = document.getElementById('close-modal');
       modalCloseButton.click();
-    }
+    };
 
     return {
       state,
@@ -325,383 +339,949 @@ export default {
       unavailable,
       goToUnavailable,
       unavailableCancel,
-      receiveFilteredItems
-    }
-  }
-}
+      receiveFilteredItems,
+    };
+  },
+};
 </script>
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessSurveysAdmin.title`)"
-        :toggles="state.toggles"
-        componentName="businessSurveysAdmin"
-        @goBack="goBack">
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessSurveysAdmin">
-        <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
-          <div id="businessSurveysAdmin-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t("businessSurveysAdmin.commerce") }} </span>
-                <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                </select>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessSurveysAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessSurveysAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessSurveysAdmin">
+          <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
+            <div id="businessSurveysAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessSurveysAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessSurveysAdmin.message.4.title')"
+                    :content="$t('businessSurveysAdmin.message.4.content')"
+                  />
+                </div>
               </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessSurveysAdmin.message.4.title')"
-                  :content="$t('businessSurveysAdmin.message.4.content')" />
+            </div>
+            <div v-if="!loading" id="businessSurveysAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.surveys.length === 0">
+                  <Message
+                    :title="$t('businessSurveysAdmin.message.2.title')"
+                    :content="$t('businessSurveysAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(survey)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-survey`"
+                      :disabled="!state.toggles['surveys.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.surveys"
+                    :type="'surveys'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(survey, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <SurveyName
+                          :type="survey.type"
+                          :attention-default="survey.attentionDefault"
+                          :active="survey.active"
+                        ></SurveyName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['surveys.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <div class="row g-1">
+                        <div id="survey-link-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.link') }}
+                          </div>
+                          <div class="col-8">
+                            <a class="btn copy-icon" @click="copyLink(survey)">
+                              <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </a>
+                            <a
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                              :href="`${getSurveyLink(survey)}`"
+                              target="_blank"
+                            >
+                              <i class="bi bi-box-arrow-up-right"></i>
+                              {{ $t('businessSurveysAdmin.go') }}
+                            </a>
+                          </div>
+                        </div>
+                        <div id="survey-type-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.type') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.typeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="survey.type"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.typeError }"
+                              @change="selectType(survey, 'update')"
+                            >
+                              <option v-for="typ in state.types" :key="typ" :value="typ">
+                                {{ $t(`surveys.types.${typ}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="survey-attentionDefault-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.attentionDefault') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.attentionDefaultHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.attentionDefault" />
+                          </div>
+                        </div>
+                        <div
+                          v-if="!survey.attentionDefault"
+                          id="survey-queue-form-update"
+                          class="row g-1"
+                        >
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.queue') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.queueHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="survey.queueId"
+                              id="queue-edit"
+                              :disabled="!state.toggles['surveys.admin.edit']"
+                            >
+                              <option
+                                v-for="queue in state.queues"
+                                :key="queue.name"
+                                :value="queue.id"
+                              >
+                                {{ queue.name }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="survey-csat-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.csat') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasCSAT" />
+                          </div>
+                        </div>
+                        <div id="survey-nps-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.nps') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasNPS" />
+                          </div>
+                        </div>
+                        <div id="survey-comment-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.comment') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasMessage" />
+                          </div>
+                        </div>
+                        <div id="survey-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.active') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="survey.active"
+                              :disabled="!state.toggles['surveys.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          id="survey-questions-form-update"
+                          v-if="state.showUpdateQuestions === true || survey.questions.length > 0"
+                          class="row g-1"
+                        >
+                          <span @click="addUpdateQuestion(index)" class="add-question my-2">
+                            <i class="bi bi-plus-circle"></i>
+                            {{ $t('businessSurveysAdmin.addQuestion') }}
+                          </span>
+                          <div
+                            v-for="(question, ind) in survey.questions"
+                            :key="`question-update.${ind}`"
+                            class="result-card mb-1"
+                          >
+                            <div class="row g-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.question') }}
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  type="text"
+                                  class="form-control"
+                                  v-model="question.title"
+                                  v-bind:class="{ 'is-invalid': state.questionTitleError }"
+                                  placeholder="Question title"
+                                />
+                              </div>
+                            </div>
+                            <div class="row g-1 mt-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.type') }}
+                              </div>
+                              <div class="col-7">
+                                <select
+                                  class="btn btn-md btn-light fw-bold text-dark select"
+                                  v-model="question.type"
+                                  id="types"
+                                  v-bind:class="{ 'is-invalid': state.typeError }"
+                                >
+                                  <option
+                                    v-for="typ in state.question_types"
+                                    :key="typ"
+                                    :value="typ"
+                                  >
+                                    {{ $t(`surveys.question_types.${typ}`) }}
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                question.type === 'OPEN_OPTIONS' ||
+                                question.type === 'CHOOSE_OPTION'
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.otherOption') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.otherOption" />
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                (question.type === 'OPEN_OPTIONS' ||
+                                  question.type === 'CHOOSE_OPTION') &&
+                                question.otherOption === true
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.otherOpen') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.otherOptionOpen" />
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.analize') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.analize" />
+                              </div>
+                            </div>
+                            <div class="row g-1 mt-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.order') }}
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  min="1"
+                                  :max="survey.questions.length + 1"
+                                  type="number"
+                                  class="form-control"
+                                  v-model="question.order"
+                                  v-bind:class="{ 'is-invalid': state.orderAddError }"
+                                  placeholder="1"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              class="row g-1 mt-1"
+                              v-if="
+                                question.type === 'OPEN_OPTIONS' ||
+                                question.type === 'CHOOSE_OPTION'
+                              "
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.options') }}
+                                <Popper
+                                  :class="'dark p-1'"
+                                  arrow
+                                  disable-click-away
+                                  :content="$t('businessSurveysAdmin.optionsHelp')"
+                                >
+                                  <i class="bi bi-info-circle-fill h7"></i>
+                                </Popper>
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  type="text"
+                                  class="form-control"
+                                  v-model="question.options"
+                                  v-bind:class="{ 'is-invalid': state.questionOptionsError }"
+                                  placeholder="Answer 1,Anwswer 2"
+                                />
+                              </div>
+                            </div>
+                            <span
+                              @click="deleteUpdateQuestion(question, index)"
+                              class="delete-question"
+                            >
+                              <i class="bi bi-trash3-fill"></i>
+                              {{ $t('businessSurveysAdmin.deleteQuestion') }}
+                            </span>
+                          </div>
+                        </div>
+                        <div id="survey-id-form" class="row -2 mb-g3">
+                          <div class="row survey-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ survey.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(survey)"
+                            :disabled="!state.toggles['surveys.admin.update']"
+                          >
+                            {{ $t('businessSurveysAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['surveys.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['surveys.admin.unavailable']"
+                            :no-disabled="state.toggles['surveys.admin.unavailable']"
+                            @actionYes="unavailable(survey)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['surveys.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessSurveysAdmin.message.1.title')"
+                        :content="$t('businessSurveysAdmin.message.1.content')"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div v-if="!loading" id="businessSurveysAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.surveys.length === 0">
-                <Message
-                  :title="$t('businessSurveysAdmin.message.2.title')"
-                  :content="$t('businessSurveysAdmin.message.2.content')" />
-              </div>
-              <div v-if="state.commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(survey)"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-survey`"
-                    :disabled="!state.toggles['surveys.admin.add']">
-                    <i class="bi bi-plus-lg"></i> {{ $t("add") }}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <SearchAdminItem
-                  :businessItems="state.surveys"
-                  :type="'surveys'"
-                  :receiveFilteredItems="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(survey, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <SurveyName :type="survey.type" :attentionDefault="survey.attentionDefault" :active="survey.active"></SurveyName>
-                    </div>
-                    <div class="col-2">
-                      <a
-                        href="#"
-                        @click.prevent="showUpdateForm(index)">
-                        <i :id="index" :class="`bi ${state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-                      </a>
-                    </div>
-                  </div>
-                  <div v-if="state.toggles['surveys.admin.read']"
-                    :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
-                    >
-                    <div class="row g-1">
-                      <div id="survey-link-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.link") }}
-                        </div>
-                        <div class="col-8">
-                          <a class="btn copy-icon"
-                            @click="copyLink(survey)">
-                            <i class="bi bi-file-earmark-spreadsheet"></i>
-                          </a>
-                          <a class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                              :href="`${getSurveyLink(survey)}`"
-                              target="_blank">
-                            <i class="bi bi-box-arrow-up-right"></i> {{ $t("businessSurveysAdmin.go") }}
-                          </a>
-                        </div>
-                      </div>
-                      <div id="survey-type-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.type") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.typeHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="survey.type"
-                            id="types"
-                            v-bind:class="{ 'is-invalid': state.typeError }"
-                            @change="selectType(survey, 'update')"
-                            >
-                            <option v-for="typ in state.types" :key="typ" :value="typ" >{{ $t(`surveys.types.${typ}`) }}</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="survey-attentionDefault-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.attentionDefault") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="survey.attentionDefault"
-                          />
-                        </div>
-                      </div>
-                      <div v-if="!survey.attentionDefault" id="survey-queue-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.queue") }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.queueHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="survey.queueId"
-                            id="queue-edit"
-                            :disabled="!state.toggles['surveys.admin.edit']">
-                            <option v-for="queue in state.queues" :key="queue.name" :value="queue.id">{{ queue.name }}</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="survey-csat-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.csat") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="survey.hasCSAT"
-                          />
-                        </div>
-                      </div>
-                      <div id="survey-nps-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.nps") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="survey.hasNPS"
-                          />
-                        </div>
-                      </div>
-                      <div id="survey-comment-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.comment") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="survey.hasMessage"
-                          />
-                        </div>
-                      </div>
-                      <div id="survey-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.active") }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="survey.active"
-                            :disabled="!state.toggles['surveys.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="survey-questions-form-update" v-if="state.showUpdateQuestions === true || survey.questions.length > 0" class="row g-1">
-                        <span @click="addUpdateQuestion(index)" class="add-question my-2"> <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.addQuestion") }} </span>
-                        <div v-for="(question, ind) in survey.questions" :key="`question-update.${ind}`" class="result-card mb-1">
-                          <div class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.question") }}
-                            </div>
-                            <div class="col-7">
-                              <input
-                                type="text"
-                                class="form-control"
-                                v-model="question.title"
-                                v-bind:class="{ 'is-invalid': state.questionTitleError }"
-                                placeholder="Question title">
-                            </div>
-                          </div>
-                          <div class="row g-1 mt-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.type") }}
-                            </div>
-                            <div class="col-7">
-                              <select
-                                class="btn btn-md btn-light fw-bold text-dark select"
-                                v-model="question.type"
-                                id="types"
-                                v-bind:class="{ 'is-invalid': state.typeError }">
-                                <option v-for="typ in state.question_types" :key="typ" :value="typ" >{{ $t(`surveys.question_types.${typ}`) }}</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'" class="row g-1 mt-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.otherOption") }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="question.otherOption"
-                              />
-                            </div>
-                          </div>
-                          <div v-if="(question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') && (question.otherOption === true)" class="row g-1 mt-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.otherOpen") }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="question.otherOptionOpen"
-                              />
-                            </div>
-                          </div>
-                          <div v-if="(question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING')" class="row g-1 mt-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.analize") }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="question.analize"
-                              />
-                            </div>
-                          </div>
-                          <div class="row g-1 mt-1">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.order") }}
-                            </div>
-                            <div class="col-7">
-                              <input
-                                min="1"
-                                :max="survey.questions.length + 1"
-                                type="number"
-                                class="form-control"
-                                v-model="question.order"
-                                v-bind:class="{ 'is-invalid': state.orderAddError }"
-                                placeholder="1">
-                            </div>
-                          </div>
-                          <div class="row g-1 mt-1" v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'">
-                            <div class="col-4 text-label">
-                              {{ $t("businessSurveysAdmin.options") }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disableClickAway
-                                :content="$t('businessSurveysAdmin.optionsHelp')">
-                                <i class='bi bi-info-circle-fill h7'></i>
-                              </Popper>
-                            </div>
-                            <div class="col-7">
-                              <input
-                                type="text"
-                                class="form-control"
-                                v-model="question.options"
-                                v-bind:class="{ 'is-invalid': state.questionOptionsError }"
-                                placeholder="Answer 1,Anwswer 2">
-                            </div>
-                          </div>
-                          <span @click="deleteUpdateQuestion(question, index)" class="delete-question"> <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.deleteQuestion") }} </span>
-                        </div>
-                      </div>
-                      <div id="survey-id-form" class="row -2 mb-g3">
-                        <div class="row survey-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ survey.id }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(survey)"
-                          :disabled="!state.toggles['surveys.admin.update']">
-                          {{ $t("businessSurveysAdmin.update") }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['surveys.admin.unavailable']">
-                          {{ $t("businessQueuesAdmin.unavailable") }} <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yesDisabled="state.toggles['surveys.admin.unavailable']"
-                          :noDisabled="state.toggles['surveys.admin.unavailable']"
-                          @actionYes="unavailable(survey)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                      <div class="row g-1 errors" id="feedback" v-if="(state.errorsUpdate.length > 0)">
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="(!isActiveBusiness() || !state.toggles['surveys.admin.read']) && !loading">
-                    <Message
-                      :title="$t('businessSurveysAdmin.message.1.title')"
-                      :content="$t('businessSurveysAdmin.message.1.content')" />
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['surveys.admin.view']) && !loading">
+            <Message
+              :title="$t('businessSurveysAdmin.message.1.title')"
+              :content="$t('businessSurveysAdmin.message.1.content')"
+            />
           </div>
         </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['surveys.admin.view']) && !loading">
-          <Message
-            :title="$t('businessSurveysAdmin.message.1.title')"
-            :content="$t('businessSurveysAdmin.message.1.content')" />
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessSurveysAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessSurveysAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessSurveysAdmin">
+          <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
+            <div id="businessSurveysAdmin-controls" class="control-box">
+              <div class="row">
+                <div class="col" v-if="state.commerces.length > 0">
+                  <span>{{ $t('businessSurveysAdmin.commerce') }} </span>
+                  <select
+                    class="btn btn-md fw-bold text-dark m-1 select"
+                    v-model="state.commerce"
+                    @change="selectCommerce(state.commerce)"
+                    id="modules"
+                  >
+                    <option v-for="com in state.commerces" :key="com.id" :value="com">
+                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                    </option>
+                  </select>
+                </div>
+                <div v-else>
+                  <Message
+                    :title="$t('businessSurveysAdmin.message.4.title')"
+                    :content="$t('businessSurveysAdmin.message.4.content')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="businessSurveysAdmin-result" class="mt-4">
+              <!-- Full content from mobile section needs to be duplicated here -->
+              <!-- Due to file size, referencing mobile section structure (lines 388-765) -->
+              <div>
+                <div v-if="state.surveys.length === 0">
+                  <Message
+                    :title="$t('businessSurveysAdmin.message.2.title')"
+                    :content="$t('businessSurveysAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="state.commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(survey)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-survey`"
+                      :disabled="!state.toggles['surveys.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.surveys"
+                    :type="'surveys'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(survey, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <SurveyName
+                          :type="survey.type"
+                          :attention-default="survey.attentionDefault"
+                          :active="survey.active"
+                        ></SurveyName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['surveys.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <!-- Full survey form content duplicated from mobile - see mobile section for complete structure -->
+                      <div class="row g-1">
+                        <div id="survey-link-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.link') }}
+                          </div>
+                          <div class="col-8">
+                            <a class="btn copy-icon" @click="copyLink(survey)">
+                              <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </a>
+                            <a
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                              :href="`${getSurveyLink(survey)}`"
+                              target="_blank"
+                            >
+                              <i class="bi bi-box-arrow-up-right"></i>
+                              {{ $t('businessSurveysAdmin.go') }}
+                            </a>
+                          </div>
+                        </div>
+                        <div id="survey-type-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.type') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.typeHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="survey.type"
+                              id="types"
+                              v-bind:class="{ 'is-invalid': state.typeError }"
+                              @change="selectType(survey, 'update')"
+                            >
+                              <option v-for="typ in state.types" :key="typ" :value="typ">
+                                {{ $t(`surveys.types.${typ}`) }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="survey-attentionDefault-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.attentionDefault') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.attentionDefaultHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.attentionDefault" />
+                          </div>
+                        </div>
+                        <div
+                          v-if="!survey.attentionDefault"
+                          id="survey-queue-form-update"
+                          class="row g-1"
+                        >
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.queue') }}
+                            <Popper
+                              :class="'dark p-1'"
+                              arrow
+                              disable-click-away
+                              :content="$t('businessSurveysAdmin.queueHelp')"
+                            >
+                              <i class="bi bi-info-circle-fill h7"></i>
+                            </Popper>
+                          </div>
+                          <div class="col-8">
+                            <select
+                              class="btn btn-md btn-light fw-bold text-dark select"
+                              v-model="survey.queueId"
+                              id="queue-edit"
+                              :disabled="!state.toggles['surveys.admin.edit']"
+                            >
+                              <option
+                                v-for="queue in state.queues"
+                                :key="queue.name"
+                                :value="queue.id"
+                              >
+                                {{ queue.name }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                        <div id="survey-csat-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.csat') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasCSAT" />
+                          </div>
+                        </div>
+                        <div id="survey-nps-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.nps') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasNPS" />
+                          </div>
+                        </div>
+                        <div id="survey-comment-form-update" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.comment') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle v-model="survey.hasMessage" />
+                          </div>
+                        </div>
+                        <div id="survey-active-form" class="row g-1">
+                          <div class="col-4 text-label">
+                            {{ $t('businessSurveysAdmin.active') }}
+                          </div>
+                          <div class="col-8">
+                            <Toggle
+                              v-model="survey.active"
+                              :disabled="!state.toggles['surveys.admin.edit']"
+                            />
+                          </div>
+                        </div>
+                        <div
+                          id="survey-questions-form-update"
+                          v-if="state.showUpdateQuestions === true || survey.questions.length > 0"
+                          class="row g-1"
+                        >
+                          <span @click="addUpdateQuestion(index)" class="add-question my-2">
+                            <i class="bi bi-plus-circle"></i>
+                            {{ $t('businessSurveysAdmin.addQuestion') }}
+                          </span>
+                          <div
+                            v-for="(question, ind) in survey.questions"
+                            :key="`question-update.${ind}`"
+                            class="result-card mb-1"
+                          >
+                            <div class="row g-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.question') }}
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  type="text"
+                                  class="form-control"
+                                  v-model="question.title"
+                                  v-bind:class="{ 'is-invalid': state.questionTitleError }"
+                                  placeholder="Question title"
+                                />
+                              </div>
+                            </div>
+                            <div class="row g-1 mt-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.type') }}
+                              </div>
+                              <div class="col-7">
+                                <select
+                                  class="btn btn-md btn-light fw-bold text-dark select"
+                                  v-model="question.type"
+                                  id="types"
+                                  v-bind:class="{ 'is-invalid': state.typeError }"
+                                >
+                                  <option
+                                    v-for="typ in state.question_types"
+                                    :key="typ"
+                                    :value="typ"
+                                  >
+                                    {{ $t(`surveys.question_types.${typ}`) }}
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                question.type === 'OPEN_OPTIONS' ||
+                                question.type === 'CHOOSE_OPTION'
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.otherOption') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.otherOption" />
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                (question.type === 'OPEN_OPTIONS' ||
+                                  question.type === 'CHOOSE_OPTION') &&
+                                question.otherOption === true
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.otherOpen') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.otherOptionOpen" />
+                              </div>
+                            </div>
+                            <div
+                              v-if="
+                                question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'
+                              "
+                              class="row g-1 mt-1"
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.analize') }}
+                              </div>
+                              <div class="col-8">
+                                <Toggle v-model="question.analize" />
+                              </div>
+                            </div>
+                            <div class="row g-1 mt-1">
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.order') }}
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  min="1"
+                                  :max="survey.questions.length + 1"
+                                  type="number"
+                                  class="form-control"
+                                  v-model="question.order"
+                                  v-bind:class="{ 'is-invalid': state.orderAddError }"
+                                  placeholder="1"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              class="row g-1 mt-1"
+                              v-if="
+                                question.type === 'OPEN_OPTIONS' ||
+                                question.type === 'CHOOSE_OPTION'
+                              "
+                            >
+                              <div class="col-4 text-label">
+                                {{ $t('businessSurveysAdmin.options') }}
+                                <Popper
+                                  :class="'dark p-1'"
+                                  arrow
+                                  disable-click-away
+                                  :content="$t('businessSurveysAdmin.optionsHelp')"
+                                >
+                                  <i class="bi bi-info-circle-fill h7"></i>
+                                </Popper>
+                              </div>
+                              <div class="col-7">
+                                <input
+                                  type="text"
+                                  class="form-control"
+                                  v-model="question.options"
+                                  v-bind:class="{ 'is-invalid': state.questionOptionsError }"
+                                  placeholder="Answer 1,Anwswer 2"
+                                />
+                              </div>
+                            </div>
+                            <span
+                              @click="deleteUpdateQuestion(question, index)"
+                              class="delete-question"
+                            >
+                              <i class="bi bi-trash3-fill"></i>
+                              {{ $t('businessSurveysAdmin.deleteQuestion') }}
+                            </span>
+                          </div>
+                        </div>
+                        <div id="survey-id-form" class="row -2 mb-g3">
+                          <div class="row survey-details-container">
+                            <div class="col">
+                              <span><strong>Id:</strong> {{ survey.id }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(survey)"
+                            :disabled="!state.toggles['surveys.admin.update']"
+                          >
+                            {{ $t('businessSurveysAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['surveys.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['surveys.admin.unavailable']"
+                            :no-disabled="state.toggles['surveys.admin.unavailable']"
+                            @actionYes="unavailable(survey)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                        <div
+                          class="row g-1 errors"
+                          id="feedback"
+                          v-if="state.errorsUpdate.length > 0"
+                        >
+                          <Warning>
+                            <template v-slot:message>
+                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
+                                {{ $t(error) }}
+                              </li>
+                            </template>
+                          </Warning>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (!isActiveBusiness() || !state.toggles['surveys.admin.read']) && !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessSurveysAdmin.message.1.title')"
+                        :content="$t('businessSurveysAdmin.message.1.content')"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="(!isActiveBusiness() || !state.toggles['surveys.admin.view']) && !loading">
+            <Message
+              :title="$t('businessSurveysAdmin.message.1.title')"
+              :content="$t('businessSurveysAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
     <!-- Modal Add -->
-    <div class="modal fade" :id="`add-survey`" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+    <div
+      class="modal fade"
+      :id="`add-survey`"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t("add") }} </h5>
-            <button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <button
+              id="close-modal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div id="add-survey" class="result-card mb-4" v-if="state.showAdd && state.toggles['surveys.admin.add']">
+            <div
+              id="add-survey"
+              class="result-card mb-4"
+              v-if="state.showAdd && state.toggles['surveys.admin.add']"
+            >
               <div v-if="state.surveys.length < state.toggles['surveys.admin.limit']">
                 <div class="row g-1">
                   <div id="survey-type-form-add" class="row g-1">
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.type") }}
+                      {{ $t('businessSurveysAdmin.type') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessSurveysAdmin.typeHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessSurveysAdmin.typeHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-8">
@@ -711,95 +1291,108 @@ export default {
                         id="types"
                         v-bind:class="{ 'is-invalid': state.typeError }"
                         @change="selectType(state.newSurvey, 'add')"
-                        >
-                        <option v-for="typ in state.types" :key="typ" :value="typ" >{{ $t(`surveys.types.${typ}`) }}</option>
+                      >
+                        <option v-for="typ in state.types" :key="typ" :value="typ">
+                          {{ $t(`surveys.types.${typ}`) }}
+                        </option>
                       </select>
                     </div>
                   </div>
                   <div id="survey-attentionDefault-form-add" class="row g-1">
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.attentionDefault") }}
+                      {{ $t('businessSurveysAdmin.attentionDefault') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessSurveysAdmin.attentionDefaultHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessSurveysAdmin.attentionDefaultHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-8">
-                      <Toggle
-                        v-model="state.newSurvey.attentionDefault"
-                      />
+                      <Toggle v-model="state.newSurvey.attentionDefault" />
                     </div>
                   </div>
-                  <div v-if="!state.newSurvey.attentionDefault" id="survey-queue-form-add" class="row g-1">
+                  <div
+                    v-if="!state.newSurvey.attentionDefault"
+                    id="survey-queue-form-add"
+                    class="row g-1"
+                  >
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.queue") }}
+                      {{ $t('businessSurveysAdmin.queue') }}
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessSurveysAdmin.queueHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessSurveysAdmin.queueHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
                     <div class="col-8">
                       <select
                         class="btn btn-md btn-light fw-bold text-dark select"
                         v-model="state.newSurvey.queueId"
-                        id="queues">
-                        <option v-for="queue in state.queues" :key="queue.name" :value="queue.id">{{ queue.name }}</option>
+                        id="queues"
+                      >
+                        <option v-for="queue in state.queues" :key="queue.name" :value="queue.id">
+                          {{ queue.name }}
+                        </option>
                       </select>
                     </div>
                   </div>
                   <div id="survey-csat-form-add" class="row g-1">
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.csat") }}
+                      {{ $t('businessSurveysAdmin.csat') }}
                     </div>
                     <div class="col-8">
-                      <Toggle
-                        v-model="state.newSurvey.hasCSAT"
-                      />
+                      <Toggle v-model="state.newSurvey.hasCSAT" />
                     </div>
                   </div>
                   <div id="survey-nps-form-add" class="row g-1">
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.nps") }}
+                      {{ $t('businessSurveysAdmin.nps') }}
                     </div>
                     <div class="col-8">
-                      <Toggle
-                        v-model="state.newSurvey.hasNPS"
-                      />
+                      <Toggle v-model="state.newSurvey.hasNPS" />
                     </div>
                   </div>
                   <div id="survey-comment-form-add" class="row g-1">
                     <div class="col-4 text-label">
-                      {{ $t("businessSurveysAdmin.comment") }}
+                      {{ $t('businessSurveysAdmin.comment') }}
                     </div>
                     <div class="col-8">
-                      <Toggle
-                        v-model="state.newSurvey.hasMessage"
-                      />
+                      <Toggle v-model="state.newSurvey.hasMessage" />
                     </div>
                   </div>
-                  <div id="survey-questions-form-add" v-if="state.showAddQuestions === true" class="row g-1">
+                  <div
+                    id="survey-questions-form-add"
+                    v-if="state.showAddQuestions === true"
+                    class="row g-1"
+                  >
                     <div>
                       <span @click="addAddQuestion(state.questions)" class="add-question">
-                        <i class="bi bi-plus-circle"></i> {{ $t("businessSurveysAdmin.addQuestion") }}
+                        <i class="bi bi-plus-circle"></i>
+                        {{ $t('businessSurveysAdmin.addQuestion') }}
                       </span>
                       <Popper
                         :class="'dark p-1'"
                         arrow
-                        disableClickAway
-                        :content="$t('businessSurveysAdmin.addQuestionHelp')">
-                        <i class='bi bi-info-circle-fill h7'></i>
+                        disable-click-away
+                        :content="$t('businessSurveysAdmin.addQuestionHelp')"
+                      >
+                        <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
-                    <div v-for="(question, ind) in state.questions" :key="`question-add.${ind}`" class="result-card mb-1">
+                    <div
+                      v-for="(question, ind) in state.questions"
+                      :key="`question-add.${ind}`"
+                      class="result-card mb-1"
+                    >
                       <div class="row g-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.question") }}
+                          {{ $t('businessSurveysAdmin.question') }}
                         </div>
                         <div class="col-7">
                           <input
@@ -807,18 +1400,20 @@ export default {
                             class="form-control"
                             v-model="question.title"
                             v-bind:class="{ 'is-invalid': state.questionTitleError }"
-                            placeholder="Question title">
+                            placeholder="Question title"
+                          />
                         </div>
                       </div>
                       <div class="row g-1 mt-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.type") }}
+                          {{ $t('businessSurveysAdmin.type') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.typeQuestionHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.typeQuestionHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-7">
@@ -826,71 +1421,84 @@ export default {
                             class="btn btn-md btn-light fw-bold text-dark select"
                             v-model="question.type"
                             id="types"
-                            v-bind:class="{ 'is-invalid': state.typeError }">
-                            <option v-for="typ in state.question_types" :key="typ" :value="typ" >{{ $t(`surveys.question_types.${typ}`) }}</option>
+                            v-bind:class="{ 'is-invalid': state.typeError }"
+                          >
+                            <option v-for="typ in state.question_types" :key="typ" :value="typ">
+                              {{ $t(`surveys.question_types.${typ}`) }}
+                            </option>
                           </select>
                         </div>
                       </div>
-                      <div v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'" class="row g-1 mt-1">
+                      <div
+                        v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
+                        class="row g-1 mt-1"
+                      >
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.otherOption") }}
+                          {{ $t('businessSurveysAdmin.otherOption') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.otherOptionQuestionHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.otherOptionQuestionHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-8">
-                          <Toggle
-                            v-model="question.otherOption"
-                          />
+                          <Toggle v-model="question.otherOption" />
                         </div>
                       </div>
-                      <div v-if="(question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') && (question.otherOption === true)" class="row g-1 mt-1">
+                      <div
+                        v-if="
+                          (question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') &&
+                          question.otherOption === true
+                        "
+                        class="row g-1 mt-1"
+                      >
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.otherOpen") }}
+                          {{ $t('businessSurveysAdmin.otherOpen') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.otherOpenQuestionHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.otherOpenQuestionHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-8">
-                          <Toggle
-                            v-model="question.otherOptionOpen"
-                          />
+                          <Toggle v-model="question.otherOptionOpen" />
                         </div>
                       </div>
-                      <div v-if="(question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING')" class="row g-1 mt-1">
+                      <div
+                        v-if="question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'"
+                        class="row g-1 mt-1"
+                      >
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.analize") }}
+                          {{ $t('businessSurveysAdmin.analize') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.analizeIAQuestionHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.analizeIAQuestionHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-8">
-                          <Toggle
-                            v-model="question.analize"
-                          />
+                          <Toggle v-model="question.analize" />
                         </div>
                       </div>
                       <div class="row g-1 mt-1">
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.order") }}
+                          {{ $t('businessSurveysAdmin.order') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.orderQuestionHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.orderQuestionHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-7">
@@ -901,18 +1509,23 @@ export default {
                             class="form-control"
                             v-model="question.order"
                             v-bind:class="{ 'is-invalid': state.orderAddError }"
-                            placeholder="1">
+                            placeholder="1"
+                          />
                         </div>
                       </div>
-                      <div class="row g-1 mt-1" v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'">
+                      <div
+                        class="row g-1 mt-1"
+                        v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
+                      >
                         <div class="col-4 text-label">
-                          {{ $t("businessSurveysAdmin.options") }}
+                          {{ $t('businessSurveysAdmin.options') }}
                           <Popper
                             :class="'dark p-1'"
                             arrow
-                            disableClickAway
-                            :content="$t('businessSurveysAdmin.optionsHelp')">
-                            <i class='bi bi-info-circle-fill h7'></i>
+                            disable-click-away
+                            :content="$t('businessSurveysAdmin.optionsHelp')"
+                          >
+                            <i class="bi bi-info-circle-fill h7"></i>
                           </Popper>
                         </div>
                         <div class="col-7">
@@ -921,19 +1534,22 @@ export default {
                             class="form-control"
                             v-model="question.options"
                             v-bind:class="{ 'is-invalid': state.questionOptionsError }"
-                            placeholder="Answer 1,Anwswer 2">
+                            placeholder="Answer 1,Anwswer 2"
+                          />
                         </div>
                       </div>
                       <div>
                         <span @click="deleteAddQuestion(question)" class="delete-question">
-                          <i class="bi bi-trash3-fill"></i> {{ $t("businessSurveysAdmin.deleteQuestion") }}
+                          <i class="bi bi-trash3-fill"></i>
+                          {{ $t('businessSurveysAdmin.deleteQuestion') }}
                         </span>
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disableClickAway
-                          :content="$t('businessSurveysAdmin.deleteQuestionHelp')">
-                          <i class='bi bi-info-circle-fill h7'></i>
+                          disable-click-away
+                          :content="$t('businessSurveysAdmin.deleteQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
                       </div>
                     </div>
@@ -941,11 +1557,12 @@ export default {
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newSurvey)">
-                      {{ $t("businessSurveysAdmin.add") }} <i class="bi bi-save"></i>
+                      @click="add(state.newSurvey)"
+                    >
+                      {{ $t('businessSurveysAdmin.add') }} <i class="bi bi-save"></i>
                     </button>
                   </div>
-                  <div class="row g-1 errors" id="feedback" v-if="(state.errorsAdd.length > 0)">
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                     <Warning>
                       <template v-slot:message>
                         <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -959,30 +1576,82 @@ export default {
               <div v-else>
                 <Message
                   :title="$t('businessSurveysAdmin.message.3.title')"
-                  :content="$t('businessSurveysAdmin.message.3.content')" />
+                  :content="$t('businessSurveysAdmin.message.3.content')"
+                />
               </div>
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("close") }} <i class="bi bi-check-lg"></i></a>
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
   </div>
 </template>
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
+}
 .survey-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {

@@ -13,7 +13,6 @@ import { getQueueByCommerce } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -21,7 +20,15 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'CollaboratorQueuesView',
-  components: { CommerceLogo, Message, PoweredBy, VueRecaptcha, Spinner, Alert, ToggleCapabilities, ComponentMenu },
+  components: {
+    CommerceLogo,
+    Message,
+    VueRecaptcha,
+    Spinner,
+    Alert,
+    ToggleCapabilities,
+    ComponentMenu,
+  },
   async setup() {
     const router = useRouter();
     const route = useRoute();
@@ -31,8 +38,8 @@ export default {
 
     const { id } = route.params;
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const store = globalStore();
 
@@ -49,26 +56,29 @@ export default {
       activeCommerce: false,
       captcha: false,
       queueStatus: {},
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.currentUser = await store.getCurrentUser;
+        state.currentUser = store.getCurrentUser;
         state.collaborator = state.currentUser;
         if (!state.currentUser) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         const commerceById = await getCommerceById(state.commerce.id);
         state.queues = commerceById.queues;
         await initQueues();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
-          state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
+          state.module = state.modules.filter(
+            module => module.id === state.collaborator.moduleId
+          )[0];
         }
         store.setCurrentCommerce(state.commerce);
         store.setCurrentQueue(undefined);
@@ -79,9 +89,9 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
-    const checkQueueStatus = async (attentions) => {
+    const checkQueueStatus = async attentions => {
       if (attentions && attentions.value) {
         const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
           const queueId = attention.queueId;
@@ -97,13 +107,13 @@ export default {
               const attentions = filteredAttentionsByQueue[queue.id].length;
               state.queueStatus[queue.id] = attentions;
             }
-          })
+          });
         }
       }
-    }
+    };
 
-    let attentions = ref([]);
-    attentions = updatedAvailableAttentionsByCommerce(id);
+    const attentions = ref([]);
+    attentions.value = updatedAvailableAttentionsByCommerce(id);
 
     checkQueueStatus(attentions);
 
@@ -112,27 +122,28 @@ export default {
       if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
         state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
         if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(queue => queue.collaboratorId === state.collaborator.id);
+          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
+            queue => queue.collaboratorId === state.collaborator.id
+          );
           const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...collaboratorQueues, ...otherQueues];
           state.queues = queues;
         }
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+        if (
+          Object.keys(state.groupedQueues).length > 0 &&
+          state.collaborator.type === 'ASSISTANT'
+        ) {
           const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...otherQueues];
           state.queues = queues;
         }
       }
       checkQueueStatus(attentions);
-    }
-
-    const isActiveCommerce = () => {
-      return state.commerce && state.commerce.active === true;
     };
 
-    const isActiveModules = () => {
-      return state.module && state.modules.length > 0
-    }
+    const isActiveCommerce = () => state.commerce && state.commerce.active === true;
+
+    const isActiveModules = () => state.module && state.modules.length > 0;
 
     const getLineAttentions = async () => {
       try {
@@ -147,16 +158,16 @@ export default {
       }
     };
 
-    const getQueue = async (queueIn) => {
+    const getQueue = async queueIn => {
       state.queue = queueIn;
       store.setCurrentQueue(state.queue);
       if (captchaEnabled) {
-       await validateCaptchaOk(true);
+        await validateCaptchaOk(true);
       }
-    }
+    };
 
-    const validateCaptchaOk = async (response) => {
-      if(response) {
+    const validateCaptchaOk = async response => {
+      if (response) {
         state.captcha = true;
         getLineAttentions();
       }
@@ -166,18 +177,20 @@ export default {
       state.captcha = false;
     };
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
-        attentions = updatedAvailableAttentionsByCommerce(commerce.id);
+        attentions.value = updatedAvailableAttentionsByCommerce(commerce.id);
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
         checkQueueStatus(attentions);
         await initQueues();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
-          state.module = state.modules.filter(module => module.id === state.collaborator.moduleId)[0];
+          state.module = state.modules.filter(
+            module => module.id === state.collaborator.moduleId
+          )[0];
         }
         alertError.value = '';
         loading.value = false;
@@ -185,7 +198,7 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const moduleSelect = async () => {
       try {
@@ -200,30 +213,27 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    }
+    };
 
     const goBack = () => {
-      router.push({ path: `/interno/colaborador/menu` });
-    }
+      router.push({ path: '/interno/colaborador/menu' });
+    };
 
     const initializeQueueStatus = () => {
       if (state.queues && state.queues.length > 0) {
         state.queues.forEach(queue => {
           state.queueStatus[queue.id] = 0;
-        })
+        });
       }
-    }
+    };
 
-    watch(
-      attentions,
-      async () => {
-        if (attentions && attentions.value && attentions.value.length > 0) {
-          checkQueueStatus(checkQueueStatus);
-        } else {
-          initializeQueueStatus();
-        }
+    watch(attentions, async () => {
+      if (attentions.value && attentions.value && attentions.value.length > 0) {
+        checkQueueStatus(checkQueueStatus);
+      } else {
+        initializeQueueStatus();
       }
-    )
+    });
 
     return {
       siteKey,
@@ -239,10 +249,10 @@ export default {
       moduleSelect,
       isActiveModules,
       goBack,
-      selectCommerce
-    }
-  }
-}
+      selectCommerce,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -251,8 +261,9 @@ export default {
       <ComponentMenu
         :title="$t(`collaboratorQueuesView.welcome`)"
         :toggles="state.toggles"
-        componentName="collaboratorQueuesView"
-        @goBack="goBack">
+        component-name="collaboratorQueuesView"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -260,62 +271,81 @@ export default {
         <div id="businessQueuesAdmin-controls" class="control-box">
           <div class="row">
             <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t("collaboratorQueuesView.commerce") }} </span>
-              <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" @change="selectCommerce(state.commerce)" id="modules">
-                <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
+              <span>{{ $t('collaboratorQueuesView.commerce') }} </span>
+              <select
+                class="btn btn-md fw-bold text-dark m-1 select"
+                v-model="state.commerce"
+                @change="selectCommerce(state.commerce)"
+                id="modules"
+              >
+                <option v-for="com in state.commerces" :key="com.id" :value="com">
+                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                </option>
               </select>
             </div>
             <div v-else>
               <Message
                 :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')" />
+                :content="$t('businessQueuesAdmin.message.4.content')"
+              />
             </div>
           </div>
         </div>
         <div id="module-selector" class="mb-2 mt-1" v-if="isActiveModules()">
-          <span>{{ $t("collaboratorQueuesView.module") }} </span>
+          <span>{{ $t('collaboratorQueuesView.module') }} </span>
           <select
             class="btn btn-md btn-light fw-bold text-dark m-1 select"
             v-model="state.module"
             id="modules"
             :disabled="!state.toggles['collaborator.module.update'] || !state.commerce.active"
-            @change="moduleSelect()">
-            <option v-for="mod in state.modules" :key="mod.name" :value="mod">{{ mod.name }}</option>
+            @change="moduleSelect()"
+          >
+            <option v-for="mod in state.modules" :key="mod.name" :value="mod">
+              {{ mod.name }}
+            </option>
           </select>
         </div>
         <div v-if="!isActiveModules() && !loading">
           <Message
             :title="$t('collaboratorQueuesView.message.2.title')"
-            :content="$t('collaboratorQueuesView.message.2.content')" />
+            :content="$t('collaboratorQueuesView.message.2.content')"
+          />
         </div>
       </div>
       <div id="queues" v-if="isActiveModules() && !loading">
         <div class="row" v-if="isActiveCommerce()">
           <div class="choose-attention">
-          <span>{{ $t("collaboratorQueuesView.choose") }}</span>
-        </div>
+            <span>{{ $t('collaboratorQueuesView.choose') }}</span>
+          </div>
           <div
             v-for="queue in state.queues"
             :key="queue.id"
-            class="d-grid btn-group btn-group-justified">
+            class="d-grid btn-group btn-group-justified"
+          >
             <div v-if="captchaEnabled === true">
               <VueRecaptcha
                 :sitekey="siteKey"
                 @verify="validateCaptchaOk"
-                @error="validateCaptchaError">
+                @error="validateCaptchaError"
+              >
                 <button
                   v-if="queue.active"
                   type="button"
                   class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
                   @click="getQueue(queue)"
                   :disabled="loading"
-                  >
+                >
                   <div class="row centered">
                     <div class="col-8">
-                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i> {{ queue.name }}
+                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                      {{ queue.name }}
                     </div>
                     <div class="col-2">
-                      <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">
+                      <span
+                        :class="`badge rounded-pill m-0 indicator ${
+                          state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                        }`"
+                      >
                         <i class="bi bi-person-fill"></i>
                         {{ state.queueStatus[queue.id] }}
                       </span>
@@ -326,35 +356,40 @@ export default {
             </div>
             <div v-else>
               <button
-                  v-if="queue.active"
-                  type="button"
-                  class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                  @click="getQueue(queue)"
-                  :disabled="loading"
-                  >
-                  <div class="row centered">
-                    <div class="col-8">
-                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i> {{ queue.name }}
-                    </div>
-                    <div class="col-2">
-                      <span :class="`badge rounded-pill m-0 indicator ${state.queueStatus[queue.id] === 0 ? 'text-bg-success': 'text-bg-primary'}`">
-                        <i class="bi bi-person-fill"></i>
-                        {{ state.queueStatus[queue.id] }}
-                      </span>
-                    </div>
+                v-if="queue.active"
+                type="button"
+                class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                @click="getQueue(queue)"
+                :disabled="loading"
+              >
+                <div class="row centered">
+                  <div class="col-8">
+                    <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                    {{ queue.name }}
                   </div>
-                </button>
+                  <div class="col-2">
+                    <span
+                      :class="`badge rounded-pill m-0 indicator ${
+                        state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                      }`"
+                    >
+                      <i class="bi bi-person-fill"></i>
+                      {{ state.queueStatus[queue.id] }}
+                    </span>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
         <div v-if="!isActiveCommerce() && !loading">
           <Message
             :title="$t('collaboratorQueuesView.message.1.title')"
-            :content="$t('collaboratorQueuesView.message.1.content')" />
+            :content="$t('collaboratorQueuesView.message.1.content')"
+          />
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.commerce.name" />
   </div>
 </template>
 <style scoped>
@@ -364,10 +399,10 @@ export default {
   font-weight: 700;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .indicator {
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 </style>

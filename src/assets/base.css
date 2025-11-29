@@ -3,7 +3,7 @@
   --verde-tu: #00c2cb;
   --azul-turno: #004aad;
   --color-text: #000000;
-  --color-background: #FFFFFF;
+  --color-background: #ffffff;
   --gris-default: #a9a9a9;
   --azul-qr: #00008b;
   --rojo-warning: #a52a2a;
@@ -12,11 +12,16 @@
   --orange-no-device: #de6425;
   --gris-clear: #edeef0;
   --whatsapp: #25d366;
-  --facebook: 	#3b5998;
-  --instagram: 	#cd486b;
+  --facebook: #3b5998;
+  --instagram: #cd486b;
   --twitter: #1dcaff;
   --amarillo-light: #f8f1db;
   --rojo-ligth: #fdf0ee;
+  --azul-hub: #1f3f92;
+  --azul-select: #EFF5F9;
+  --gris-elite-1: #405366;
+  --gris-elite-2: #9fb0c2;
+  --gris-elite-3: #dae7f5;
 }
 *,
 *::before,
@@ -34,5 +39,5 @@ body {
 }
 
 hr {
-  margin: .5rem !important;
+  margin: 0.5rem !important;
 }

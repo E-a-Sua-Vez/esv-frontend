@@ -2,56 +2,51 @@
 import { onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import Message from '../../components/common/Message.vue';
 import Login from '../../components/domain/Login.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
 export default {
   name: 'BusinessLogin',
-  components: { CommerceLogo, PoweredBy, Message, Login },
+  components: { Login, CommerceLogo, Message },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
     onBeforeMount(async () => {
-      await store.resetSession;
-    })
+      await store.resetSession();
+    });
 
     const goSite = () => {
       router.push('/');
-    }
+    };
 
-    const bussinesUrl = `/interno/negocio/menu`;
+    const bussinesUrl = '/interno/negocio/menu';
 
     return {
       bussinesUrl,
-      goSite
-    }
-  }
-}
+      goSite,
+    };
+  },
+};
 </script>
 
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo @click="goSite()"></CommerceLogo>
+      <CommerceLogo :src="$t('logo')" @click="goSite()"></CommerceLogo>
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
-          <span>{{ $t("businessLogin.welcome") }}</span>
+          <span>{{ $t('businessLogin.welcome') }}</span>
         </div>
         <div class="login-message">
-          <span>{{ $t("businessLogin.login") }}</span>
+          <span>{{ $t('businessLogin.login') }}</span>
         </div>
       </div>
       <div>
-        <Login
-          :userType="'business'"
-          :urlOkRedirect="bussinesUrl"
-        ></Login>
+        <Login :user-type="'business'" :url-ok-redirect="bussinesUrl"></Login>
       </div>
     </div>
-    <PoweredBy />
   </div>
 </template>
 

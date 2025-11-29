@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -17,13 +16,24 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 
 export default {
   name: 'BusinessPermissionsAdmin',
-  components: { CommerceLogo, Message, PoweredBy, Spinner, Alert, Warning, SimplePermissionCard, RolPermissionsAdmin, PlanPermissionsAdmin, CollaboratorPermissionsAdmin, ComponentMenu },
+  components: {
+    CommerceLogo,
+    Message,
+    Spinner,
+    Alert,
+    Warning,
+    SimplePermissionCard,
+    RolPermissionsAdmin,
+    PlanPermissionsAdmin,
+    CollaboratorPermissionsAdmin,
+    ComponentMenu,
+  },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -34,7 +44,7 @@ export default {
       toggles: {},
       showRoles: true,
       showPlans: false,
-      showUsers: false
+      showUsers: false,
     });
 
     onBeforeMount(async () => {
@@ -48,20 +58,20 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
-    })
+    });
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     return {
       state,
       loading,
       alertError,
       goBack,
-    }
-  }
-}
+    };
+  },
+};
 </script>
 
 <template>
@@ -71,8 +81,9 @@ export default {
       <ComponentMenu
         :title="$t(`businessPermissionsAdmin.title`)"
         :toggles="state.toggles"
-        componentName="businessPermissionsAdmin"
-        @goBack="goBack">
+        component-name="businessPermissionsAdmin"
+        @goBack="goBack"
+      >
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
@@ -84,28 +95,27 @@ export default {
         </div>
       </div>
     </div>
-    <PoweredBy :name="''" />
   </div>
 </template>
 
 <style scoped>
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 .module-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .module-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 .is-disabled {
@@ -118,10 +128,10 @@ export default {
 }
 .roles-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 </style>

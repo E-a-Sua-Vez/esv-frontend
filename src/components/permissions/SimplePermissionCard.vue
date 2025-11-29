@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import Toggle from '@vueform/toggle';
 
 export default {
@@ -11,23 +11,23 @@ export default {
     permission: { type: Object, default: {} },
     showTooltip: { type: Boolean, default: false },
     icon: { type: String, default: '' },
-    iconStyleClass: { type: String, default: '' }
+    iconStyleClass: { type: String, default: '' },
   },
   data() {
-    return { }
+    return {};
   },
   methods: {
-    async update () {
+    async update() {
       await this.$emit('update', this.permission);
     },
-    getModule (name) {
+    getModule(name) {
       if (name) {
-        const [ module ] = name.split('.');
+        const [module] = name.split('.');
         return module;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -38,17 +38,13 @@ export default {
       </div>
       <div class="metric-card-title col-8 p-0 lefted">
         <div class="lefted">
-          <i :class="`bi ${icon} ${iconStyleClass} centered p-1`" ></i>
+          <i :class="`bi ${icon} ${iconStyleClass} centered p-1`"></i>
           <span class="m-1"> {{ $t(`permissions.${permission.name}`) }} </span>
         </div>
       </div>
       <div class="col-3 centered justify-content-end p-0">
         <div v-if="permission.value === true || permission.value === false">
-          <Toggle
-            v-model="permission.value"
-            :disabled="!canUpdate"
-            @click="update(permission)"
-          />
+          <Toggle v-model="permission.value" :disabled="!canUpdate" @click="update(permission)" />
         </div>
         <div class="row g-2" v-else>
           <div class="col-12 col-md-9">
@@ -57,12 +53,14 @@ export default {
               type="number"
               class="form-control"
               v-model="permission.value"
-              placeholder="Ex.: 10">
+              placeholder="Ex.: 10"
+            />
           </div>
           <div class="col-12 col-md-2">
             <button
               class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
-              @click="update(permission)">
+              @click="update(permission)"
+            >
               <i class="bi bi-check-lg"></i>
             </button>
           </div>
@@ -78,22 +76,22 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .metric-card-title {
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  line-height: .9rem;
+  line-height: 0.9rem;
   text-align: left;
 }
 .configuration-details-container {
-  font-size: .8rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
-  margin-top: .5rem;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 0;
 }
 </style>

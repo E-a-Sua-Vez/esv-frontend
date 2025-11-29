@@ -1,8 +1,10 @@
 # build stage
-FROM node:lts-alpine as build-stage
+FROM node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+# Use BuildKit cache mount for faster npm installs
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --legacy-peer-deps
 # Copy all project files to this container and build
 # To ignore files like node_modules, dist, use .dockerignore file
 COPY . .

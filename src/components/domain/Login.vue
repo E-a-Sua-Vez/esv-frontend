@@ -26,7 +26,7 @@ export default {
       accept: false,
       captcha: false,
       passwordError: false,
-			emailError: false,
+      emailError: false,
       errors: [],
       modalVisible: false,
       loading: false,
@@ -35,12 +35,12 @@ export default {
       siteKey,
       keyName,
       store,
-      visible: false
-    }
+      visible: false,
+    };
   },
   methods: {
     async login() {
-      if(this.validate()) {
+      if (this.validate()) {
         try {
           this.loading = true;
           this.alertError = '';
@@ -53,9 +53,8 @@ export default {
             let path = this.urlOkRedirect;
             if (this.userType === 'collaborator') {
               path = path.replace(':id', this.user.commerceId);
-
             }
-            this.$router.push({ path })
+            this.$router.push({ path });
           }
           this.loading = false;
         } catch (error) {
@@ -66,29 +65,29 @@ export default {
     },
     validate() {
       this.errors = [];
-      if(this.password.length === 0) {
+      if (this.password.length === 0) {
         this.passwordError = true;
         this.errors.push('loginData.validate.password.1');
       }
-      if(this.email.length > 0) {
-        if(this.email.length < 10) {
+      if (this.email.length > 0) {
+        if (this.email.length < 10) {
           this.emailError = true;
           this.errors.push('loginData.validate.email.1');
         }
       }
-      if(this.password.length === 0 && this.email.length === 0) {
+      if (this.password.length === 0 && this.email.length === 0) {
         this.errors.push('loginData.validate.common.1');
       }
-      if(!this.captcha) {
+      if (!this.captcha) {
         this.errors.push('loginData.validate.common.2');
       }
-      if(this.errors.length === 0) {
+      if (this.errors.length === 0) {
         return true;
       }
       return false;
-	  },
+    },
     validateCaptchaOk(response) {
-      if(response) {
+      if (response) {
         this.captcha = true;
       }
     },
@@ -114,56 +113,56 @@ export default {
         const modalCloseButton = document.getElementById('close-modal');
         modalCloseButton.click();
       }
-    }
+    },
   },
   watch: {
-    modalVisible: function(newVal) {
+    modalVisible(newVal) {
       this.modalVisible = newVal;
-    }
+    },
   },
   async beforeMount() {
     const currentUser = await this.store.getCurrentUser;
     const currentUserType = await this.store.getCurrentUserType;
-    if(currentUser && currentUserType) {
+    if (currentUser && currentUserType) {
       await signOut(currentUser.email, currentUserType);
       await this.store.resetSession();
     }
-  }
-}
+  },
+};
 </script>
 <template>
-  <div>
+  <div class="login-container">
     <form @submit.prevent="login">
-      <div class="client-data-card text-center mx-4">
-        <div>
-          <div id="email-form" class="row g-2 mb-3">
-            <div class="col-2 icon">
-              <i class="bi bi-person-fill"></i>
-            </div>
-            <div class="col-10">
+      <div class="modern-login-card text-center">
+        <div class="login-card-content">
+          <div class="form-group">
+            <label for="email" class="form-label"> Usuario </label>
+            <div class="input-wrapper">
+              <i class="bi bi-person-fill input-icon"></i>
               <input
-              type="email"
-              class="form-control"
-              id="email"
-              v-model="email"
-              autocomplete="username"
-              v-bind:class="{ 'is-invalid': emailError }"
-              placeholder="tunombre@tumail.com">
+                type="email"
+                class="form-control modern-input"
+                id="email"
+                v-model="email"
+                autocomplete="username"
+                v-bind:class="{ 'is-invalid': emailError }"
+                :placeholder="$t('loginData.email.placeholder')"
+              />
             </div>
           </div>
-          <div id="password-form" class="row g-2 mb-3">
-            <div class="col-2 icon">
-              <i class="bi bi-key-fill"></i>
-            </div>
-            <div class="col-10">
+          <div class="form-group">
+            <label for="password" class="form-label"> Senha </label>
+            <div class="input-wrapper">
+              <i class="bi bi-key-fill input-icon"></i>
               <input
-              type="password"
-              class="form-control"
-              id="password"
-              v-model="password"
-              autocomplete="current-password"
-              v-bind:class="{ 'is-invalid': passwordError }"
-              :placeholder="$t('loginData.password.placeholder')">
+                type="password"
+                class="form-control modern-input"
+                id="password"
+                v-model="password"
+                autocomplete="current-password"
+                v-bind:class="{ 'is-invalid': passwordError }"
+                :placeholder="$t('loginData.password.placeholder')"
+              />
             </div>
           </div>
           <div class="recaptcha-area">
@@ -174,18 +173,26 @@ export default {
               @error="validateCaptchaError"
             ></VueRecaptcha>
           </div>
-          <div class="btn-area d-grid gap-2">
+          <div class="btn-area">
             <button
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-              type="submit">
-              {{ $t("loginData.actions.1.action") }}
-              <i class="bi bi-check-lg"></i>
+              class="btn btn-lg fw-bold btn-dark text-white rounded-pill modern-submit-btn"
+              type="submit"
+              :disabled="loading"
+            >
+              <span v-if="!loading">{{ $t('loginData.actions.1.action') }}</span>
+              <span
+                v-else
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              <i v-if="!loading" class="bi bi-check-lg ms-2"></i>
             </button>
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
           </div>
         </div>
-        <div class="errors" id="feedback" v-if="(errors.length > 0)">
+        <div class="errors" id="feedback" v-if="errors.length > 0">
           <Warning>
             <template v-slot:message>
               <li v-for="(error, index) in errors" :key="index">
@@ -194,33 +201,46 @@ export default {
             </template>
           </Warning>
         </div>
-        <div class="actions mt-4" v-if="userType !== 'master'">
-          <span>{{ $t("loginData.actions.2.title.1") }}</span>
-          <div class="d-grid gap-2">
-            <a
-              class="mb-3 link"
-              data-bs-toggle="modal"
-              data-bs-target="#modalPassword"
-              @click="$event => closeMenu()">
-              {{ $t("loginData.actions.2.action") }}
-            </a>
-          </div>
+        <div class="actions" v-if="userType !== 'master'">
+          <p class="actions-text">{{ $t('loginData.actions.2.title.1') }}</p>
+          <a
+            class="actions-link"
+            data-bs-toggle="modal"
+            data-bs-target="#modalPassword"
+            @click="$event => closeMenu()"
+          >
+            {{ $t('loginData.actions.2.action') }}
+            <i class="bi bi-arrow-right ms-1"></i>
+          </a>
         </div>
         <!-- Modal Password -->
-        <div class="modal fade" id="modalPassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-          <div class=" modal-dialog modal-xl">
-            <div class="modal-content">
-              <div class="modal-header border-0"><button id="close-modal" class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                <div class="modal-body text-center pb-5">
-                  <Suspense>
-                    <template #default>
-                      <AccessAdmin
-                        :userType="userType"
-                        @closeModal="closeMenu()">
-                      </AccessAdmin>
-                    </template>
-                  </Suspense>
-                </div>
+        <div
+          class="modal fade"
+          id="modalPassword"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="staticBackdropLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content modern-modal-content">
+              <div class="modal-header border-0">
+                <button
+                  id="close-modal"
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body text-center modern-modal-body">
+                <Suspense>
+                  <template #default>
+                    <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
+                  </template>
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
@@ -229,30 +249,228 @@ export default {
   </div>
 </template>
 <style scoped>
-.client-data-card {
-  margin-top: .2rem;
-  margin-bottom: 1rem;
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
   padding: 1rem;
+  min-height: calc(100vh - 200px);
+}
+
+.modern-login-card {
+  width: 100%;
+  max-width: 580px;
+  background: var(--color-background);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 0.5px solid var(--gris-default);
+  overflow: hidden;
+}
+
+.login-card-content {
+  padding: 1rem;
+}
+
+.form-group {
+  margin-bottom: 0.75rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gris-elite-1);
+  text-align: left;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1.25rem;
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  z-index: 2;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3.5rem;
+  border: 1.75px solid #ced4da;
+  border-radius: 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
   background-color: var(--color-background);
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
-  font-weight: 400;
-  line-height: 2.5rem;
+  transition: all 0.3s ease;
+  text-align: left;
 }
-.icon {
-  font-size: 1.5rem;
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 0.2rem rgba(0, 74, 173, 0.15);
+  background-color: var(--color-background);
 }
-.errors {
-  font-size: small;
+
+.modern-input:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+  color: var(--verde-tu);
+  transform: scale(1.1);
+}
+
+.modern-input.is-invalid {
+  border-color: var(--rojo-warning);
+  background-color: var(--rojo-ligth);
+}
+
+.modern-input.is-invalid + .input-icon {
   color: var(--rojo-warning);
 }
-.btn-area {
-  z-index: 99;
-  position: relative;
-  top: 0;
-  right: 0;
+
+.modern-input::placeholder {
+  color: var(--gris-default);
+  opacity: 0.7;
 }
-.link {
+
+.recaptcha-area {
+  display: flex;
+  justify-content: center;
+  margin: 0.75rem 0;
+  padding: 0.25rem 0;
+}
+
+.btn-area {
+  margin-top: 0.75rem;
+  position: relative;
+}
+
+.modern-submit-btn {
+  width: 100%;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.modern-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 74, 173, 0.4);
+}
+
+.modern-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.modern-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.errors {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--rojo-warning);
+  padding: 0 0.5rem;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.actions-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--gris-elite-1);
+  line-height: 1.5;
+}
+
+.actions-link {
+  color: var(--azul-turno);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.actions-link:hover {
+  color: var(--verde-tu);
+  transform: translateX(4px);
+}
+
+.actions-link i {
+  transition: transform 0.3s ease;
+}
+
+.actions-link:hover i {
+  transform: translateX(4px);
+}
+
+.modern-modal-content {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
+.modern-modal-body {
+  padding: 1rem;
+  overflow: visible;
+  word-wrap: break-word;
+}
+
+@media (min-width: 768px) {
+  .login-container {
+    padding: 1.5rem;
+  }
+
+  .login-card-content {
+    padding: 1.25rem;
+  }
+
+  .modern-login-card {
+    max-width: 600px;
+  }
+
+  .modern-modal-body {
+    padding: 1.5rem 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-card-content {
+    padding: 0.875rem;
+  }
+
+  .modern-input {
+    padding: 0.75rem 0.875rem 0.75rem 3rem;
+    font-size: 0.95rem;
+  }
+
+  .input-icon {
+    left: 1rem;
+    font-size: 1.1rem;
+  }
 }
 </style>

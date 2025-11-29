@@ -22,8 +22,8 @@ export default {
       errors: [],
       store,
       queue: undefined,
-      router
-    }
+      router,
+    };
   },
   methods: {
     async attend() {
@@ -31,13 +31,27 @@ export default {
         this.loading = true;
         this.alertError = '';
         this.errors = [];
-        if (this.attentionNumber !== undefined || this.attentionNumber.length > 0) {
+        if (
+          this.attentionNumber !== undefined &&
+          this.attentionNumber !== null &&
+          this.attentionNumber.toString().length > 0
+        ) {
           let attention;
           try {
-            attention = await reactivate(this.attentionNumber, { queueId: this.queue.id, collaboratorId: this.currentUser.id});
+            if (!this.queue || !this.queue.id) {
+              throw new Error('Queue not available');
+            }
+            attention = await reactivate(this.attentionNumber, {
+              queueId: this.queue.id,
+              collaboratorId: this.currentUser.id,
+            });
             this.attentionNumber = undefined;
             this.closeModal();
-            this.$router.push({ path: `/interno/colaborador/atencion/${attention.id}/validar` }).then(() => { this.$router.go() });
+            this.$router
+              .push({ path: `/interno/colaborador/atencion/${attention.id}/validar` })
+              .then(() => {
+                this.$router.go();
+              });
           } catch (error) {
             this.errors.push('resumeAttention.validate.resume');
           }
@@ -50,48 +64,60 @@ export default {
         this.alertError = error.message;
       }
     },
-    async getQueue() {
-      this.queue = await this.store.getCurrentQueue;
+    getQueue() {
+      this.queue = this.store.getCurrentQueue;
     },
-    async getUserType() {
-      this.userType = await this.store.getCurrentUserType;
+    getUserType() {
+      this.userType = this.store.getCurrentUserType;
     },
-    async getCurrentUser() {
-      this.currentUser = await this.store.getCurrentUser;
+    getCurrentUser() {
+      this.currentUser = this.store.getCurrentUser;
     },
     isCollabotator() {
-      return this.userType === 'collaborator'
+      return this.userType === 'collaborator';
     },
     isQueueSelected() {
-      return this.store.currentQueue !== undefined
+      return this.store.currentQueue !== undefined;
     },
     closeModal() {
       this.$emit('close-modal');
-    }
+    },
   },
-  async beforeMount() {
-    await this.getUserType();
-    await this.getCurrentUser();
-    await this.getQueue();
+  beforeMount() {
+    this.getUserType();
+    this.getCurrentUser();
+    this.getQueue();
   },
   watch: {
-    store: {
+    'store.currentQueue': {
       immediate: true,
-      deep: true,
-      async handler() {
-        await this.getUserType();
-        await this.getQueue();
-      }
-    }
+      handler() {
+        this.getQueue();
+      },
+    },
+    'store.currentUserType': {
+      immediate: true,
+      handler() {
+        this.getUserType();
+      },
+    },
+    'store.currentUser': {
+      immediate: true,
+      handler() {
+        this.getCurrentUser();
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="isCollabotator() && isQueueSelected()" id="resumeAttention" class="card mb-4">
-    <p class="mb-2 details"><span class="fw-bold">{{ $t("resumeAttention.subtitle.1.1") }}</span></p>
-    <QueueName :queue="queue"></QueueName>
-    <p class="details-subtitle mt-2">{{ $t("resumeAttention.subtitle.1.2") }}</p>
+    <p class="mb-2 details">
+      <span class="fw-bold">{{ $t('resumeAttention.subtitle.1.1') }}</span>
+    </p>
+    <QueueName v-if="queue" :queue="queue"></QueueName>
+    <p class="details-subtitle mt-2">{{ $t('resumeAttention.subtitle.1.2') }}</p>
     <div class="mb-2">
       <div class="col-12">
         <input
@@ -99,16 +125,18 @@ export default {
           class="form-control mb-2"
           id="attention-number"
           placeholder="Ej: 24"
-          v-model="attentionNumber">
-          <button
-            class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-            @click="attend()"
-            :disabled="!attentionNumber">
-            {{ $t("resumeAttention.actions.1") }} <i class="bi bi-qr-code-scan"></i>
-          </button>
+          v-model="attentionNumber"
+        />
+        <button
+          class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+          @click="attend()"
+          :disabled="!attentionNumber"
+        >
+          {{ $t('resumeAttention.actions.1') }} <i class="bi bi-qr-code-scan"></i>
+        </button>
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
-        <div class="errors" id="feedback" v-if="(errors.length > 0)">
+        <div class="errors" id="feedback" v-if="errors.length > 0">
           <Warning>
             <template v-slot:message>
               <li v-for="(error, index) in errors" :key="index">
@@ -128,17 +156,17 @@ export default {
   line-height: 1rem;
 }
 .details-subtitle {
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 .card {
   background-color: var(--color-background);
   margin-top: 1rem;
   margin-bottom: 1rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 1rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 </style>

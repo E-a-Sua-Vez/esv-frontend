@@ -21,20 +21,20 @@ export default {
       types: [
         {
           name: 'SOMETHING-WRONG',
-          description: this.$t("suggestions.types.1")
+          description: this.$t('suggestions.types.1'),
         },
         {
           name: 'SOMETHING-NEW',
-          description: this.$t("suggestions.types.2")
+          description: this.$t('suggestions.types.2'),
         },
         {
           name: 'SOMETHING-BETTER',
-          description: this.$t("suggestions.types.3")
+          description: this.$t('suggestions.types.3'),
         },
         {
           name: 'COMMENT',
-          description: this.$t("suggestions.types.4")
-        }
+          description: this.$t('suggestions.types.4'),
+        },
       ],
       type: 'COMMENT',
       comment: undefined,
@@ -44,8 +44,8 @@ export default {
       errors: [],
       store,
       siteKey,
-      suggestion: undefined
-    }
+      suggestion: undefined,
+    };
   },
   methods: {
     closeModal() {
@@ -59,7 +59,7 @@ export default {
       this.currentUser = await this.store.getCurrentUser;
     },
     validateCaptchaOk(response) {
-      if(response) {
+      if (response) {
         this.captcha = true;
       }
     },
@@ -68,16 +68,16 @@ export default {
     },
     validate() {
       this.errors = [];
-      if(this.type === undefined || this.type.length === 0) {
+      if (this.type === undefined || this.type.length === 0) {
         this.errors.push('suggestions.validate.type');
       }
-      if(this.comment === undefined || this.comment.length < 10) {
+      if (this.comment === undefined || this.comment.length < 10) {
         this.errors.push('suggestions.validate.comment');
       }
-      if(!this.captcha) {
+      if (!this.captcha) {
         this.errors.push('suggestions.validate.captcha');
       }
-      if(this.errors.length === 0) {
+      if (this.errors.length === 0) {
         return true;
       }
       return false;
@@ -86,8 +86,13 @@ export default {
       try {
         this.loading = true;
         this.alertError = '';
-        if(this.validate()) {
-          const body = { type: this.type, comment: this.comment, userId: this.currentUser.id || 'invitado', userType: this.userType };
+        if (this.validate()) {
+          const body = {
+            type: this.type,
+            comment: this.comment,
+            userId: this.currentUser.id || 'invitado',
+            userType: this.userType,
+          };
           this.suggestion = await createSuggestion(body);
         }
         this.alertError = '';
@@ -96,7 +101,7 @@ export default {
         this.alertError = error.response;
         this.loading = false;
       }
-    }
+    },
   },
   async beforeMount() {
     await this.getUserType();
@@ -109,10 +114,10 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getCurrentUser();
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
@@ -120,26 +125,35 @@ export default {
     <Message
       :title="$t('suggestions.message.title')"
       :content="$t('suggestions.message.content')"
-      :icon="'bi bi-check-circle'">
+      :icon="'bi bi-check-circle'"
+    >
     </Message>
   </div>
   <div id="suggestions" class="card mb-4" v-else>
-    <p class="mb-2 details"><span class="fw-bold">{{ $t("suggestions.subtitle.1.1") }}</span></p>
-    <p class="details-subtitle mt-2">{{ $t("suggestions.subtitle.1.2") }}</p>
+    <p class="mb-2 details">
+      <span class="fw-bold">{{ $t('suggestions.subtitle.1.1') }}</span>
+    </p>
+    <p class="details-subtitle mt-2">{{ $t('suggestions.subtitle.1.2') }}</p>
     <div class="mb-2">
       <div class="row mb-2">
         <div id="type-selector" class="col-4 text-label">
-          <span>{{ $t("suggestions.type") }}</span>
+          <span>{{ $t('suggestions.type') }}</span>
         </div>
         <div class="col-8">
-          <select class="form-control btn-md btn-light text-dark px-1" v-model="this.type" id="types">
-            <option v-for="typ in this.types" :key="typ.name" :value="typ.name">{{ typ.description }}</option>
+          <select
+            class="form-control btn-md btn-light text-dark px-1"
+            v-model="this.type"
+            id="types"
+          >
+            <option v-for="typ in this.types" :key="typ.name" :value="typ.name">
+              {{ typ.description }}
+            </option>
           </select>
         </div>
       </div>
       <div class="row mb-2">
         <div id="comment" class="col-4 text-label">
-          <span>{{ $t("suggestions.comment.label") }} </span>
+          <span>{{ $t('suggestions.comment.label') }} </span>
         </div>
         <div class="col-8">
           <textarea
@@ -148,7 +162,8 @@ export default {
             rows="3"
             maxlength="500"
             v-model="comment"
-            :placeholder="$t('suggestions.comment.placeholder')">
+            :placeholder="$t('suggestions.comment.placeholder')"
+          >
           </textarea>
         </div>
       </div>
@@ -160,15 +175,17 @@ export default {
           @error="validateCaptchaError"
         ></VueRecaptcha>
       </div>
-      <a class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-        @click="sentSuggestion()">
-        {{ $t("suggestions.actions.1") }}
+      <a
+        class="btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+        @click="sentSuggestion()"
+      >
+        {{ $t('suggestions.actions.1') }}
         <i class="bi bi-check2-all"></i>
       </a>
       <div class="row">
         <Spinner :show="loading"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
-        <div class="errors" id="feedback" v-if="(errors.length > 0)">
+        <div class="errors" id="feedback" v-if="errors.length > 0">
           <Warning>
             <template v-slot:message>
               <li v-for="(error, index) in errors" :key="index">
@@ -188,21 +205,21 @@ export default {
   line-height: 1rem;
 }
 .details-subtitle {
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 .card {
   background-color: var(--color-background);
   margin-top: 1rem;
   margin-bottom: 1rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 1rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
 }
 </style>

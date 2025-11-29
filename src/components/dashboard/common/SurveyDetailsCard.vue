@@ -1,5 +1,5 @@
 <script>
-import Popper from "vue3-popper";
+import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { contactSurvey } from '../../../application/services/survey';
 import { getDate } from '../../../shared/utils/date';
@@ -18,8 +18,8 @@ export default {
     return {
       loading: false,
       extendedEntity: false,
-      checked: false
-    }
+      checked: false,
+    };
   },
   methods: {
     showDetails() {
@@ -57,7 +57,7 @@ export default {
         return 'bi-star-fill green-icon';
       }
     },
-    clasifyNpsComment(score){
+    clasifyNpsComment(score) {
       if (!score) {
         return 'bi-emoji-expressionless-fill blue-icon';
       } else if (score <= 5) {
@@ -78,7 +78,7 @@ export default {
       } else {
         return 'bi-heart-fill green-icon';
       }
-    }
+    },
   },
   watch: {
     detailsOpened: {
@@ -86,57 +86,66 @@ export default {
       deep: true,
       async handler() {
         this.extendedEntity = this.detailsOpened;
-      }
+      },
     },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div v-if="show">
     <div class="row metric-card fw-bold">
       <div v-if="survey.servicesDetails" class="idNumber-title lefted">
-        <span v-for="serv in survey.servicesDetails" :key="serv.id" class="badge service-badge bg-primary p-1"> {{ serv.name }} </span>
+        <span
+          v-for="serv in survey.servicesDetails"
+          :key="serv.id"
+          class="badge service-badge bg-primary p-1"
+        >
+          {{ serv.name }}
+        </span>
       </div>
       <div class="col-5 lefted card-client-title mt-1" v-if="survey && survey.name">
-        {{ survey.name?.trim().toUpperCase() || '' }} {{ survey.lastName?.trim().toUpperCase() || '' }}
-        <i v-if="survey.contacted === true || checked === true" class="bi bi-patch-check-fill mx-1 checked-icon"> </i>
+        {{ survey.name?.trim().toUpperCase() || '' }}
+        {{ survey.lastName?.trim().toUpperCase() || '' }}
+        <i
+          v-if="survey.contacted === true || checked === true"
+          class="bi bi-patch-check-fill mx-1 checked-icon"
+        >
+        </i>
       </div>
       <div class="col-2 centered card-client-title">
-        <i :class="`bi ${clasifyRatedComment(survey.rating)} mx-1`"></i> {{ survey.rating || 'N/I' }}
+        <i :class="`bi ${clasifyRatedComment(survey.rating)} mx-1`"></i>
+        {{ survey.rating || 'N/I' }}
       </div>
       <div class="col-2 centered card-client-title">
         <i :class="`bi ${clasifyNpsComment(survey.nps)} mx-1`"> </i> {{ survey.nps || 'N/I' }}
       </div>
       <div class="col-2 centered card-client-title">
-        <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i> {{ survey && survey.messageScore ? survey.messageScore : 0 }}
+        <i :class="`bi ${clasifyScoredComment(survey.messageScore)} mx-1`"> </i>
+        {{ survey && survey.messageScore ? survey.messageScore : 0 }}
       </div>
     </div>
     <div class="details-arrow">
       <div class="centered">
-        <span
-          href="#"
-          @click.prevent="showDetails()">
-          <span class="details-title">{{ $t("dashboard.details") }}</span>
+        <span href="#" @click.prevent="showDetails()">
+          <span class="details-title">{{ $t('dashboard.details') }}</span>
           <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
         </span>
       </div>
-      <div
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow">
+      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
         <div class="row m-0">
           <div class="d-block col-12 col-md-6">
             <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ survey.name || 'N/I' }} {{ survey.lastName || '' }}
-              <a class="btn copy-icon"
-                @click="copySurvey()">
+              <i class="bi bi-person-circle mx-1"></i> {{ survey.name || 'N/I' }}
+              {{ survey.lastName || '' }}
+              <a class="btn copy-icon" @click="copySurvey()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </a>
             </div>
@@ -146,16 +155,14 @@ export default {
             <div class="centered">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+survey.phone"
-                target="_blank">
+                :href="'https://wa.me/' + survey.phone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ survey.phone || 'N/I' }}
               </a>
             </div>
             <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:'+survey.email"
-                target="_blank">
+              <a class="btn-block whatsapp-link" :href="'mailto:' + survey.email" target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ survey.email || 'N/I' }}
               </a>
             </div>
@@ -167,16 +174,14 @@ export default {
             <div class="lefted">
               <a
                 class="btn-block whatsapp-link"
-                :href="'https://wa.me/'+survey.phone"
-                target="_blank">
+                :href="'https://wa.me/' + survey.phone"
+                target="_blank"
+              >
                 <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ survey.phone || 'N/I' }}
               </a>
             </div>
             <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:'+survey.email"
-                target="_blank">
+              <a class="btn-block whatsapp-link" :href="'mailto:' + survey.email" target="_blank">
                 <i class="bi bi-envelope mx-1"></i> {{ survey.email || 'N/I' }}
               </a>
             </div>
@@ -191,80 +196,124 @@ export default {
               <button
                 class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
                 data-bs-toggle="modal"
-                :data-bs-target="`#surveyModal-${survey.surveyid}`">
-                {{ $t('dashboard.answers')}} <br> <i class="bi bi-question-circle-fill"></i>
+                :data-bs-target="`#surveyModal-${survey.surveyid}`"
+              >
+                {{ $t('dashboard.answers') }} <br />
+                <i class="bi bi-question-circle-fill"></i>
               </button>
             </div>
             <div class="col-6">
-              <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action"
                 @click="check()"
                 :disabled="survey.contacted || checked"
-                >
-                {{ $t('dashboard.contact')}} <br> <i class="bi bi-person-check-fill"></i>
+              >
+                {{ $t('dashboard.contact') }} <br />
+                <i class="bi bi-person-check-fill"></i>
               </button>
             </div>
           </div>
-          <hr>
+          <hr />
           <div class="col-4 mx-2 fw-bold">
-            <i class="bi bi-pencil"> </i> <span>{{ $t("dashboard.comment") }}</span>
+            <i class="bi bi-pencil"> </i> <span>{{ $t('dashboard.comment') }}</span>
           </div>
-          <div class="col-8"> {{ survey.message || 'N/I' }}</div>
+          <div class="col-8">{{ survey.message || 'N/I' }}</div>
         </div>
-        <div class="row m-0 my-2 centered" v-if="survey.messageEntities && survey.messageEntities.length > 0">
-          <hr>
+        <div
+          class="row m-0 my-2 centered"
+          v-if="survey.messageEntities && survey.messageEntities.length > 0"
+        >
+          <hr />
           <div class="col-6 mx-2 fw-bold">
-            <i class="bi bi-heart"> </i> <span>{{ $t("dashboard.entities") }}</span>
+            <i class="bi bi-heart"> </i> <span>{{ $t('dashboard.entities') }}</span>
           </div>
           <div class="col-6">
-            <span class="m-1" v-for="(entity, ind) in survey.messageEntities" :key="`entity-${ind}`">
+            <span
+              class="m-1"
+              v-for="(entity, ind) in survey.messageEntities"
+              :key="`entity-${ind}`"
+            >
               {{ entity.name.toUpperCase() }}
-              <i :class="`bi ${clasifyScoredComment(entity.score)}`"> </i> {{ entity && entity.score ? entity.score : 0 }}
-              <br>
+              <i :class="`bi ${clasifyScoredComment(entity.score)}`"> </i>
+              {{ entity && entity.score ? entity.score : 0 }}
+              <br />
             </span>
           </div>
         </div>
-        <hr>
+        <hr />
         <div class="row m-0 mt-3 centered">
           <div class="col">
             <div class="mb-2">
-              <i class="bi bi-qr-code mx-1"> </i> <span class="mb-1">{{ $t("dashboard.attData") }}</span>
+              <i class="bi bi-qr-code mx-1"> </i>
+              <span class="mb-1">{{ $t('dashboard.attData') }}</span>
             </div>
             <span class="badge mx-1 detail-data-badge">
               <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.queueData') }} </span>
               {{ survey.queueName }}
             </span>
-            <span v-if="survey.commerceName && survey.commerceTag" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title"> {{ $t('dashboard.commerceData') }} </span>
-                {{ survey.commerceName }} - {{ survey.commerceTag }}</span>
+            <span
+              v-if="survey.commerceName && survey.commerceTag"
+              class="badge mx-1 detail-data-badge"
+            >
+              <span class="fw-bold detail-data-badge-title">
+                {{ $t('dashboard.commerceData') }}
+              </span>
+              {{ survey.commerceName }} - {{ survey.commerceTag }}</span
+            >
             <span v-if="survey.servicesDetails" class="badge mx-1 detail-data-badge">
               <span class="fw-bold detail-data-badge-title"> {{ $t('paymentData.service') }} </span>
-              <span v-for="serv in survey.servicesDetails" :key="serv.id" class="badge bg-primary mx-1"> {{ serv.name }}</span>
+              <span
+                v-for="serv in survey.servicesDetails"
+                :key="serv.id"
+                class="badge bg-primary mx-1"
+              >
+                {{ serv.name }}</span
+              >
             </span>
-            <br><br>
+            <br /><br />
             <span class="metric-card-details mx-1"><strong>Id:</strong> {{ survey.surveyid }}</span>
-            <span class="metric-card-details"><strong>Date:</strong> {{ getDate(survey.createdDate) }}</span>
+            <span class="metric-card-details"
+              ><strong>Date:</strong> {{ getDate(survey.createdDate) }}</span
+            >
           </div>
         </div>
       </div>
     </div>
     <!-- Modal Survey Answers -->
-    <div class="modal fade" :id="`surveyModal-${survey.surveyid}`" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-10" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class=" modal-dialog modal-xl">
+    <div
+      class="modal fade"
+      :id="`surveyModal-${survey.surveyid}`"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-10"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> {{ $t("dashboard.surveyOf") }} {{ survey.name?.split(' ')[0] || 'N/I' }} </h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-qr-code"></i> {{ $t('dashboard.surveyOf') }}
+              {{ survey.name?.split(' ')[0] || 'N/I' }}
+            </h5>
+            <button
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <Spinner :show="loading"></Spinner>
           <div class="modal-body text-center mb-0">
-            <SurveyDetails
-              :show="true"
-              :surveyIn="survey"
-            >
-            </SurveyDetails>
+            <SurveyDetails :show="true" :survey-in="survey"> </SurveyDetails>
           </div>
           <div class="mx-2 mb-4 text-center">
-            <a class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4" data-bs-dismiss="modal" aria-label="Close">{{ $t("notificationConditions.action") }} <i class="bi bi-check-lg"></i></a>
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>
@@ -275,10 +324,10 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .1rem;
-  margin: .5rem;
+  padding: 0.1rem;
+  margin: 0.5rem;
   margin-bottom: 0;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -292,12 +341,12 @@ export default {
 }
 .details-title {
   text-decoration: underline;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--color-text);
 }
 .metric-card-title {
-  margin: .2rem;
-  font-size: .8rem;
+  margin: 0.2rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 .metric-card-detail-title {
@@ -309,7 +358,7 @@ export default {
   color: var(--azul-turno);
 }
 .metric-card-details {
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 400;
 }
 </style>

@@ -3,12 +3,12 @@ export default {
   name: 'PlanName',
   props: {
     name: { type: String, default: '' },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>
@@ -19,5 +19,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -19,11 +19,10 @@ export default {
     toggles: { type: Object, default: {} },
     errorsAdd: { type: Array, default: [] },
     patientHistoryItems: { type: Array, default: [] },
-    receiveData: { type: Function, default: () => {} }
+    receiveData: { type: Function, default: () => {} },
   },
   async setup(props) {
-
-    let loading = ref(false);
+    const loading = ref(false);
 
     const {
       commerce,
@@ -32,7 +31,7 @@ export default {
       patientHistoryData,
       toggles,
       errorsAdd,
-      patientHistoryItems
+      patientHistoryItems,
     } = toRefs(props);
 
     const { receiveData } = props;
@@ -46,14 +45,16 @@ export default {
       habitsList: [],
       captcha: false,
       habitsError: false,
-      asc: true
-    })
+      asc: true,
+    });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
-          state.habitsList = patientHistoryItems.value.filter(habit => ['PERSONAL_HISTORY'].includes(habit.type));
+          state.habitsList = patientHistoryItems.value.filter(habit =>
+            ['PERSONAL_HISTORY'].includes(habit.type)
+          );
           state.habitsList = state.habitsList.sort((a, b) => a.order - b.order);
         }
         state.patientHistoryItemFrequenciesTypes = getPatientHistoryItemFrequenciesTypes();
@@ -62,14 +63,21 @@ export default {
           state.habitsAux = state.oldPatientAnamnese.habitsDetails;
           state.newPatientAnamnese = patientHistoryData.value.patientAnamnese;
         } else if (patientForms.value && patientForms.value.length > 0) {
-          const patientFormFirstAttentions = patientForms.value.filter(form => form.type === 'FIRST_ATTENTION');
-          state.patientFormFirstAttention = patientFormFirstAttentions && patientFormFirstAttentions.length > 0 ? patientFormFirstAttentions[0] : undefined;
+          const patientFormFirstAttentions = patientForms.value.filter(
+            form => form.type === 'FIRST_ATTENTION'
+          );
+          state.patientFormFirstAttention =
+            patientFormFirstAttentions && patientFormFirstAttentions.length > 0
+              ? patientFormFirstAttentions[0]
+              : undefined;
           if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
-            const answers = state.patientFormFirstAttention.answers.filter(ans => ans.type === 'PERSONAL_HISTORY');
+            const answers = state.patientFormFirstAttention.answers.filter(
+              ans => ans.type === 'PERSONAL_HISTORY'
+            );
             if (answers && answers.length > 0) {
               answers.forEach(element => {
                 if (element.id) {
-                  state.habitsAux[element.id] = {...element.answer, ...element };
+                  state.habitsAux[element.id] = { ...element.answer, ...element };
                 }
               });
             }
@@ -83,13 +91,13 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
     const sendData = () => {
       receiveData(state.newPatientAnamnese);
-    }
+    };
 
-    const checkAsc = (event) => {
+    const checkAsc = event => {
       if (event.target.checked) {
         state.asc = true;
       } else {
@@ -99,13 +107,17 @@ export default {
         let elementsSorted = [];
         const elements = state.oldPatientAnamnese;
         if (state.asc) {
-          elementsSorted = elements.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
         } else {
-          elementsSorted = elements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          elementsSorted = elements.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         }
         state.oldPatientAnamnese = elementsSorted;
       }
-    }
+    };
 
     const checkItem = (item, event) => {
       if (item && item.id) {
@@ -114,8 +126,8 @@ export default {
             state.habitsAux[item.id] = {
               id: item.id,
               name: item.name,
-              check: true
-            }
+              check: true,
+            };
           } else {
             state.habitsAux[item.id].check = true;
             state.habitsAux[item.id].actual = true;
@@ -128,7 +140,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const checkActual = (item, event) => {
       if (item && item.id) {
@@ -145,7 +157,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendAgeFrom = (item, event) => {
       if (item && item.id) {
@@ -162,14 +174,14 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendAgeTo = (item, event) => {
       if (item && item.id) {
         if (event.target.value) {
           const age = event.target.value;
           if (state.habitsAux[item.id]) {
-            state.habitsAux[item.id].ageTo= age;
+            state.habitsAux[item.id].ageTo = age;
           }
         } else {
           if (state.habitsAux[item.id]) {
@@ -179,7 +191,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendComment = (item, event) => {
       if (item && item.id) {
@@ -188,7 +200,7 @@ export default {
           if (state.habitsAux[item.id]) {
             state.habitsAux[item.id].comment = comment;
           } else {
-            state.habitsAux[item.id] = { comment: comment };
+            state.habitsAux[item.id] = { comment };
           }
         } else {
           if (state.habitsAux[item.id]) {
@@ -198,7 +210,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendFrequency = (item, event) => {
       if (item && item.id) {
@@ -215,7 +227,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendSelectedOption = (item, event, option) => {
       if (item && item.id) {
@@ -228,12 +240,14 @@ export default {
           }
         } else {
           const values = state.habitsAux[item.id];
-          state.habitsAux[item.id].answer = values.answer ? values.answer.filter(el => el !== option) : values.answer;
+          state.habitsAux[item.id].answer = values.answer
+            ? values.answer.filter(el => el !== option)
+            : values.answer;
         }
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendOtherOption = (item, event) => {
       if (item && item.id) {
@@ -245,18 +259,24 @@ export default {
         let option;
         if (event.target.value !== undefined && event.target.value.length > 0) {
           const options = event.target.value.toUpperCase().split(',');
-          option = options.filter(opt => opt && opt.length > 0).map(opt => opt.trim().toUpperCase());
+          option = options
+            .filter(opt => opt && opt.length > 0)
+            .map(opt => opt.trim().toUpperCase());
           if (!state.habitsAux[item.id].answer.includes(option)) {
-            const filtered = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans) && ans.length > 0);
+            const filtered = state.habitsAux[item.id].answer.filter(
+              ans => item.characteristics.options.includes(ans) && ans.length > 0
+            );
             state.habitsAux[item.id].answer = Array.from(new Set([...filtered, ...option]));
           }
         } else {
-          state.habitsAux[item.id].answer = state.habitsAux[item.id].answer.filter(ans => item.characteristics.options.includes(ans));
+          state.habitsAux[item.id].answer = state.habitsAux[item.id].answer.filter(ans =>
+            item.characteristics.options.includes(ans)
+          );
         }
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendCheckOption = (item, event, option) => {
       if (item && item.id) {
@@ -271,7 +291,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendCheckOtherOption = (item, event, option) => {
       if (item && item.id) {
@@ -289,7 +309,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendOptionYesNo = (item, event) => {
       if (item && item.id) {
@@ -309,7 +329,7 @@ export default {
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
     const sendResult = (item, event) => {
       if (item && item.id) {
@@ -320,59 +340,66 @@ export default {
         if (event.target.value !== undefined && event.target.value.length > 0) {
           option = event.target.value.toUpperCase().split(',');
           if (!state.habitsAux[item.id].result.includes(option)) {
-            state.habitsAux[item.id].result = Array.from(new Set([...state.habitsAux[item.id].result, ...option]));
+            state.habitsAux[item.id].result = Array.from(
+              new Set([...state.habitsAux[item.id].result, ...option])
+            );
           }
         } else {
-          state.habitsAux[item.id].result = state.habitsAux[item.id].result.filter(ans => item.characteristics.options.includes(ans));
+          state.habitsAux[item.id].result = state.habitsAux[item.id].result.filter(ans =>
+            item.characteristics.options.includes(ans)
+          );
         }
         state.newPatientAnamnese.habitsDetails = state.habitsAux;
         sendData();
       }
-    }
+    };
 
-    watch (
-      patientHistoryData,
-      async () => {
-        loading.value = true;
-        if (patientHistoryData.value && patientHistoryData.value.id) {
-          if (patientHistoryData.value.patientAnamnese &&
-            patientHistoryData.value.patientAnamnese.length > 0 &&
-            patientHistoryData.value.patientAnamnese[0]
-          )
+    watch(patientHistoryData, async () => {
+      loading.value = true;
+      if (patientHistoryData.value && patientHistoryData.value.id) {
+        if (
+          patientHistoryData.value.patientAnamnese &&
+          patientHistoryData.value.patientAnamnese.length > 0 &&
+          patientHistoryData.value.patientAnamnese[0]
+        )
           state.oldPatientAnamnese = patientHistoryData.value.patientAnamnese;
+      }
+      loading.value = false;
+    });
+
+    watch(patientForms, async () => {
+      loading.value = true;
+      if (patientHistoryData.value && patientHistoryData.value.id) {
+        if (
+          patientHistoryData.value.patientAnamnese &&
+          patientHistoryData.value.patientAnamnese.length > 0 &&
+          patientHistoryData.value.patientAnamnese[0]
+        )
+          state.oldPatientAnamnese = patientHistoryData.value.patientAnamnese;
+        state.newPatientAnamnese = patientHistoryData.value.patientAnamnese;
+      } else if (patientForms.value && patientForms.value.length > 0) {
+        const patientFormFirstAttentions = patientForms.value.filter(
+          form => form.type === 'FIRST_ATTENTION'
+        );
+        state.patientFormFirstAttention =
+          patientFormFirstAttentions && patientFormFirstAttentions.length > 0
+            ? patientFormFirstAttentions[0]
+            : undefined;
+        if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
+          const answers = state.patientFormFirstAttention.answers.filter(
+            ans => ans.type === 'PERSONAL_HISTORY'
+          );
+          if (answers && answers.length > 0) {
+            answers.forEach(element => {
+              if (element.id) {
+                state.habitsAux[element.id] = { ...element.answer, ...element };
+              }
+            });
+          }
         }
-        loading.value = false;
       }
-    )
-
-    watch (
-      patientForms,
-      async () => {
-        loading.value = true;
-        if (patientHistoryData.value && patientHistoryData.value.id) {
-          if (patientHistoryData.value.patientAnamnese &&
-            patientHistoryData.value.patientAnamnese.length > 0 &&
-            patientHistoryData.value.patientAnamnese[0]
-          )
-          state.oldPatientAnamnese = patientHistoryData.value.patientAnamnese;
-          state.newPatientAnamnese = patientHistoryData.value.patientAnamnese;
-        } else if (patientForms.value && patientForms.value.length > 0) {
-          const patientFormFirstAttentions = patientForms.value.filter(form => form.type === 'FIRST_ATTENTION');
-          state.patientFormFirstAttention = patientFormFirstAttentions && patientFormFirstAttentions.length > 0 ? patientFormFirstAttentions[0] : undefined;
-          if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
-            const answers = state.patientFormFirstAttention.answers.filter(ans => ans.type === 'PERSONAL_HISTORY');
-            if (answers && answers.length > 0) {
-              answers.forEach(element => {
-                if (element.id) {
-                  state.habitsAux[element.id] = { ...element.answer, ...element };
-                }
-              });
-            }
-          }
-          }
-        loading.value = false;
-      }
-    )
+      loading.value = false;
+    });
 
     return {
       state,
@@ -393,10 +420,10 @@ export default {
       sendOtherOption,
       sendResult,
       sendCheckOption,
-      sendCheckOtherOption
-    }
-  }
-}
+      sendCheckOtherOption,
+    };
+  },
+};
 </script>
 <template>
   <div>
@@ -405,13 +432,16 @@ export default {
         <div class="col-12">
           <div id="patient-name-form-add" class="row m-1">
             <div class="col-12 text-label">
-              {{ $t("patientHistoryView.patientAnamnese") }} <i class="bi bi-capsule-pill mx-1"></i>
+              {{ $t('patientHistoryView.patientAnamnese') }} <i class="bi bi-capsule-pill mx-1"></i>
             </div>
             <div class="col-12">
               <div v-for="item in state.habitsList" :key="item.id">
                 <div v-if="item.active === true && item.online === true">
                   <!-- SELECT 1 -->
-                  <div class="row item-card" v-if="item.characteristics && item.characteristics.select1">
+                  <div
+                    class="row item-card"
+                    v-if="item.characteristics && item.characteristics.select1"
+                  >
                     <div class="col m-1">
                       <div class="lefted">
                         <span class="badge bg-primary"> {{ item.tag }} </span>
@@ -421,15 +451,21 @@ export default {
                       </div>
                     </div>
                     <div :id="`details-${item.id}`">
-                      <div class="form-check form-switch check-option lefted" v-for="(option, index) in item.characteristics.options.split(',')" :key="`option-${index}`">
+                      <div
+                        class="form-check form-switch check-option lefted"
+                        v-for="(option, index) in item.characteristics.options.split(',')"
+                        :key="`option-${index}`"
+                      >
                         <input
                           class="form-check-input"
                           type="radio"
                           :name="`check-${option.title}-${index}`"
                           :checked="state.habitsAux[item.id]?.answer.includes(option.toUpperCase())"
                           @click="sendCheckOption(item, $event, option)"
-                          >
-                        <label class="form-check-label mx-2" for="option">{{ option.toUpperCase().trim() }}</label>
+                        />
+                        <label class="form-check-label mx-2" for="option">{{
+                          option.toUpperCase().trim()
+                        }}</label>
                       </div>
                       <div class="col mb-1">
                         <input
@@ -437,12 +473,26 @@ export default {
                           type="text"
                           class="form-control form-control-sm"
                           placeholder="Other"
-                          :value="state.habitsAux[item.id]?.answer.filter(ans => !item.characteristics.options.toUpperCase().split(',').includes(ans.toUpperCase()))"
-                          @blur="sendCheckOtherOption(item, $event)">
+                          :value="
+                            state.habitsAux[item.id]?.answer.filter(
+                              ans =>
+                                !item.characteristics.options
+                                  .toUpperCase()
+                                  .split(',')
+                                  .includes(ans.toUpperCase())
+                            )
+                          "
+                          @blur="sendCheckOtherOption(item, $event)"
+                        />
                       </div>
-                      <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
+                      <div
+                        class="row centered"
+                        v-if="item.characteristics.comment && item.characteristics.comment === true"
+                      >
                         <div class="row mt-1">
-                          <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+                          <label class="form-check-label metric-card-subtitle">{{
+                            $t('businessPatientHistoryItemAdmin.comment')
+                          }}</label>
                           <textarea
                             :disabled="!toggles['patient.history.edit']"
                             class="form-control form-control-sm"
@@ -450,34 +500,46 @@ export default {
                             :max="200"
                             :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                             :value="state.habitsAux[item.id]?.comment"
-                            @keyup="sendComment(item, $event)">
+                            @keyup="sendComment(item, $event)"
+                          >
                           </textarea>
                         </div>
                       </div>
                     </div>
                   </div>
                   <!-- SELECT N -->
-                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.selectN">
+                  <div
+                    class="row item-card"
+                    v-else-if="item.characteristics && item.characteristics.selectN"
+                  >
                     <div class="col-12">
                       <div class="col m-1">
-                      <div class="lefted">
-                        <span class="badge bg-primary"> {{ item.tag }} </span>
+                        <div class="lefted">
+                          <span class="badge bg-primary"> {{ item.tag }} </span>
+                        </div>
+                        <div class="lefted">
+                          <label class="fw-bold">{{ item.name }}</label>
+                        </div>
                       </div>
-                      <div class="lefted">
-                        <label class="fw-bold">{{ item.name }}</label>
-                      </div>
-                    </div>
                     </div>
                     <div :id="`details-${item.id}`">
-                      <div class="form-check form-switch check-option lefted" v-for="(option, index) in item.characteristics.options.split(',')" :key="`option-${index}`">
+                      <div
+                        class="form-check form-switch check-option lefted"
+                        v-for="(option, index) in item.characteristics.options.split(',')"
+                        :key="`option-${index}`"
+                      >
                         <input
                           class="form-check-input"
                           type="checkbox"
                           :name="`option-${option.title}`"
-                          :checked="state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())"
+                          :checked="
+                            state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())
+                          "
                           @click="sendSelectedOption(item, $event, option)"
-                          >
-                        <label class="form-check-label mx-2" for="option">{{ option.toUpperCase().trim() }}</label>
+                        />
+                        <label class="form-check-label mx-2" for="option">{{
+                          option.toUpperCase().trim()
+                        }}</label>
                       </div>
                       <div class="col mb-1">
                         <input
@@ -485,12 +547,26 @@ export default {
                           type="text"
                           class="form-control form-control-sm"
                           placeholder="Other"
-                          :value="state.habitsAux[item.id]?.answer.filter(ans => !item.characteristics.options.toUpperCase().split(',').includes(ans.toUpperCase()))"
-                          @blur="sendOtherOption(item, $event)">
+                          :value="
+                            state.habitsAux[item.id]?.answer.filter(
+                              ans =>
+                                !item.characteristics.options
+                                  .toUpperCase()
+                                  .split(',')
+                                  .includes(ans.toUpperCase())
+                            )
+                          "
+                          @blur="sendOtherOption(item, $event)"
+                        />
                       </div>
-                      <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
+                      <div
+                        class="row centered"
+                        v-if="item.characteristics.comment && item.characteristics.comment === true"
+                      >
                         <div class="row mt-1">
-                          <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+                          <label class="form-check-label metric-card-subtitle">{{
+                            $t('businessPatientHistoryItemAdmin.comment')
+                          }}</label>
                           <textarea
                             :disabled="!toggles['patient.history.edit']"
                             class="form-control form-control-sm"
@@ -498,14 +574,18 @@ export default {
                             :max="200"
                             :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                             :value="state.habitsAux[item.id]?.comment"
-                            @keyup="sendComment(item, $event)">
+                            @keyup="sendComment(item, $event)"
+                          >
                           </textarea>
                         </div>
                       </div>
                     </div>
                   </div>
                   <!-- SELECT YES NO -->
-                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.yesNo">
+                  <div
+                    class="row item-card"
+                    v-else-if="item.characteristics && item.characteristics.yesNo"
+                  >
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -521,33 +601,48 @@ export default {
                         <input
                           class="form-check-input"
                           type="checkbox"
-                          :checked="state.habitsAux[item.id]?.answer.answer === 'YES' ? true : false"
+                          :checked="
+                            state.habitsAux[item.id]?.answer.answer === 'YES' ? true : false
+                          "
                           @click="sendOptionYesNo(item, $event)"
-                          >
-                        <label class="form-check-label mx-2" for="option">{{ state.habitsAux[item.id]?.answer.answer === 'YES' ? '✅' : '🚫' }}</label>
+                        />
+                        <label class="form-check-label mx-2" for="option">{{
+                          state.habitsAux[item.id]?.answer.answer === 'YES' ? '✅' : '🚫'
+                        }}</label>
                       </div>
-                      <div class="col mb-1" v-if="item.characteristics && item.characteristics.result">
+                      <div
+                        class="col mb-1"
+                        v-if="item.characteristics && item.characteristics.result"
+                      >
                         <input
                           maxlength="50"
                           type="text"
                           class="form-control form-control-sm"
                           placeholder="Other"
                           :value="state.habitsAux[item.id]?.result"
-                          @blur="sendResult(item, $event)">
+                          @blur="sendResult(item, $event)"
+                        />
                       </div>
-                      <div class="col mb-1" v-if="item.characteristics && item.characteristics.comment">
+                      <div
+                        class="col mb-1"
+                        v-if="item.characteristics && item.characteristics.comment"
+                      >
                         <input
                           maxlength="50"
                           type="text"
                           class="form-control form-control-sm"
                           :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                           :value="state.habitsAux[item.id]?.comment"
-                          @blur="sendComment(item, $event)">
+                          @blur="sendComment(item, $event)"
+                        />
                       </div>
                     </div>
                   </div>
                   <!-- SELECT CHECK -->
-                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.check">
+                  <div
+                    class="row item-card"
+                    v-else-if="item.characteristics && item.characteristics.check"
+                  >
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -555,17 +650,36 @@ export default {
                         </div>
                         <div class="lefted">
                           <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" :name="item.name" id="item.id" :checked="state.habitsAux[item.id] && state.habitsAux[item.id].check" @click="checkItem(item, $event)">
-                            <label class="form-check-label metric-card-subtitle fw-bold">{{ item.name }}</label>
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :name="item.name"
+                              id="item.id"
+                              :checked="state.habitsAux[item.id] && state.habitsAux[item.id].check"
+                              @click="checkItem(item, $event)"
+                            />
+                            <label class="form-check-label metric-card-subtitle fw-bold">{{
+                              item.name
+                            }}</label>
                           </div>
                         </div>
                       </div>
                     </div>
                     <div :id="`details-${item.id}`">
-                      <div v-if="item.characteristics.actual && item.characteristics.actual === true">
+                      <div
+                        v-if="item.characteristics.actual && item.characteristics.actual === true"
+                      >
                         <div class="form-check form-switch centered">
-                          <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.actual") }}</label>
-                          <input class="form-check-input m-1" type="checkbox" :id="`actual-${item.id}`" @click="checkActual(item, $event)" :checked="state.habitsAux[item.id] && state.habitsAux[item.id].actual">
+                          <label class="form-check-label metric-card-subtitle">{{
+                            $t('businessPatientHistoryItemAdmin.actual')
+                          }}</label>
+                          <input
+                            class="form-check-input m-1"
+                            type="checkbox"
+                            :id="`actual-${item.id}`"
+                            @click="checkActual(item, $event)"
+                            :checked="state.habitsAux[item.id] && state.habitsAux[item.id].actual"
+                          />
                         </div>
                       </div>
                       <div>
@@ -573,7 +687,9 @@ export default {
                           <div class="col-6">
                             <div class="row">
                               <div class="col">
-                                <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageFrom") }}</label>
+                                <label class="form-check-label metric-card-subtitle">{{
+                                  $t('businessPatientHistoryItemAdmin.ageFrom')
+                                }}</label>
                               </div>
                               <div class="col">
                                 <input
@@ -583,14 +699,24 @@ export default {
                                   type="number"
                                   :value="state.habitsAux[item.id]?.ageFrom"
                                   @keyup="sendAgeFrom(item, $event)"
-                                  class="form-control form-control-sm">
+                                  class="form-control form-control-sm"
+                                />
                               </div>
                             </div>
                           </div>
-                          <div class="col-6" v-if="item.characteristics.ageFrom && item.characteristics.ageFrom === true && !state.habitsAux[item.id]?.actual">
+                          <div
+                            class="col-6"
+                            v-if="
+                              item.characteristics.ageFrom &&
+                              item.characteristics.ageFrom === true &&
+                              !state.habitsAux[item.id]?.actual
+                            "
+                          >
                             <div class="row">
                               <div class="col">
-                                <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.ageTo") }}</label>
+                                <label class="form-check-label metric-card-subtitle">{{
+                                  $t('businessPatientHistoryItemAdmin.ageTo')
+                                }}</label>
                               </div>
                               <div class="col">
                                 <input
@@ -600,26 +726,53 @@ export default {
                                   type="number"
                                   :value="state.habitsAux[item.id]?.ageTo"
                                   @keyup="sendAgeTo(item, $event)"
-                                  class="form-control form-control-sm">
+                                  class="form-control form-control-sm"
+                                />
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div class="row centered" v-if="item.characteristics.frequency && item.characteristics.frequency === true">
+                        <div
+                          class="row centered"
+                          v-if="
+                            item.characteristics.frequency &&
+                            item.characteristics.frequency === true
+                          "
+                        >
                           <div class="row mt-1">
                             <div class="col">
-                              <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.frequency") }}</label>
+                              <label class="form-check-label metric-card-subtitle">{{
+                                $t('businessPatientHistoryItemAdmin.frequency')
+                              }}</label>
                             </div>
                             <div class="col">
-                              <select class="btn btn-sm btn-light fw-bold text-dark select" @change="sendFrequency(item, $event)">
-                                <option v-for="value in state.patientHistoryItemFrequenciesTypes" :key="value.id" :value="value.id" id="select-block" :selected="state.habitsAux[item.id]?.frequency === value.id">{{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}</option>
+                              <select
+                                class="btn btn-sm btn-light fw-bold text-dark select"
+                                @change="sendFrequency(item, $event)"
+                              >
+                                <option
+                                  v-for="value in state.patientHistoryItemFrequenciesTypes"
+                                  :key="value.id"
+                                  :value="value.id"
+                                  id="select-block"
+                                  :selected="state.habitsAux[item.id]?.frequency === value.id"
+                                >
+                                  {{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}
+                                </option>
                               </select>
                             </div>
                           </div>
                         </div>
-                        <div class="row centered" v-if="item.characteristics.comment && item.characteristics.comment === true">
+                        <div
+                          class="row centered"
+                          v-if="
+                            item.characteristics.comment && item.characteristics.comment === true
+                          "
+                        >
                           <div class="row mt-1">
-                            <label class="form-check-label metric-card-subtitle">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+                            <label class="form-check-label metric-card-subtitle">{{
+                              $t('businessPatientHistoryItemAdmin.comment')
+                            }}</label>
                             <textarea
                               :disabled="!toggles['patient.history.edit']"
                               class="form-control form-control-sm"
@@ -627,7 +780,8 @@ export default {
                               :max="200"
                               :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                               :value="state.habitsAux[item.id]?.comment"
-                              @keyup="sendComment(item, $event)">
+                              @keyup="sendComment(item, $event)"
+                            >
                             </textarea>
                           </div>
                         </div>
@@ -635,7 +789,10 @@ export default {
                     </div>
                   </div>
                   <!-- SELECT COMMENT -->
-                  <div class="row item-card" v-else-if="item.characteristics && item.characteristics.comment">
+                  <div
+                    class="row item-card"
+                    v-else-if="item.characteristics && item.characteristics.comment"
+                  >
                     <div class="col-12">
                       <div class="col m-1">
                         <div class="lefted">
@@ -646,7 +803,10 @@ export default {
                         </div>
                       </div>
                     </div>
-                    <div class="col mb-1" v-if="item.characteristics && item.characteristics.comment">
+                    <div
+                      class="col mb-1"
+                      v-if="item.characteristics && item.characteristics.comment"
+                    >
                       <textarea
                         :disabled="!toggles['patient.history.edit']"
                         class="form-control form-control-sm"
@@ -654,7 +814,8 @@ export default {
                         :max="200"
                         :placeholder="$t('businessPatientHistoryItemAdmin.write')"
                         :value="state.habitsAux[item.id]?.comment"
-                        @keyup="sendComment(item, $event)">
+                        @keyup="sendComment(item, $event)"
+                      >
                       </textarea>
                     </div>
                   </div>
@@ -665,7 +826,9 @@ export default {
         </div>
         <div class="col-12">
           <div class="row mt-2 mx-3">
-            <label class="form-check-label metric-card-subtitle mt-2">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+            <label class="form-check-label metric-card-subtitle mt-2">{{
+              $t('businessPatientHistoryItemAdmin.comment')
+            }}</label>
             <textarea
               :disabled="!toggles['patient.history.edit']"
               class="form-control form-control-sm"
@@ -674,7 +837,8 @@ export default {
               @keyup="sendData"
               v-bind:class="{ 'is-invalid': state.habitsError }"
               :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-              v-model="state.newPatientAnamnese.habits">
+              v-model="state.newPatientAnamnese.habits"
+            >
             </textarea>
           </div>
           <div class="row g-1 errors" id="feedback" v-if="errorsAdd && errorsAdd.length > 0">
@@ -697,9 +861,9 @@ export default {
   max-height: 800px;
   font-size: small;
   margin-bottom: 2rem;
-  padding: .5rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   background-color: var(--color-habits);
 }
 .show {

@@ -4,12 +4,12 @@ export default {
   props: {
     name: { type: String, default: '' },
     email: { type: String, default: '' },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
   },
   data() {
-    return {}
-  }
-}
+    return {};
+  },
+};
 </script>
 
 <template>
@@ -19,9 +19,7 @@ export default {
     </span>
   </div>
   <div class="email">
-    <span class="email-name">
-      <i class="bi bi-at"></i> {{ email }}
-    </span>
+    <span class="email-name"> <i class="bi bi-at"></i> {{ email }} </span>
   </div>
 </template>
 
@@ -35,6 +33,6 @@ export default {
 .email-name {
   background-color: var(--gris-clear);
   font-weight: 900;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 </style>

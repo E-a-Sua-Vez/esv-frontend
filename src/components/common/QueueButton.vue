@@ -9,23 +9,19 @@ export default {
     queue: { type: Object, default: {} },
     selectedQueue: { type: Object, default: {} },
     accept: { type: Boolean, default: false },
-    getQueue: { type: Function, default: () => {} }
+    getQueue: { type: Function, default: () => {} },
   },
   async setup(props) {
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
-    const {
-      queue,
-      selectedQueue,
-      accept
-    } = toRefs(props);
+    const { queue, selectedQueue, accept } = toRefs(props);
 
     const { getQueue } = props;
 
-    const clickAction = async (queueIn) => {
+    const clickAction = async queueIn => {
       getQueue(queueIn);
-    }
+    };
 
-    const queueIcon = (type) => {
+    const queueIcon = type => {
       if (type) {
         if (type === 'COLLABORATOR') {
           return 'bi-person-circle';
@@ -42,17 +38,17 @@ export default {
         return 'bi-clipboard2-check-fill';
       }
       return 'bi-clipboard2-check-fill';
-    }
+    };
 
-    const queueStyle = (type) => {
+    const queueStyle = type => {
       if (type) {
         if (type === 'COLLABORATOR') {
-          return 'btn-light'
+          return 'btn-light';
         }
-        return 'btn-secondary'
+        return 'btn-secondary';
       }
-      return 'btn-secondary'
-    }
+      return 'btn-secondary';
+    };
 
     return {
       captchaEnabled,
@@ -61,37 +57,54 @@ export default {
       accept,
       clickAction,
       queueIcon,
-      queueStyle
-    }
-  }
-}
+      queueStyle,
+    };
+  },
+};
 </script>
 <template>
   <div>
     <div v-if="captchaEnabled === true" class="my-2">
-      <VueRecaptcha
-        :sitekey="siteKey"
-        @verify="validateCaptchaOk"
-        @error="validateCaptchaError">
+      <VueRecaptcha :sitekey="siteKey" @verify="validateCaptchaOk" @error="validateCaptchaError">
         <button
           v-if="queue.active"
           class="btn-size btn-sm btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
-          :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
+          :class="queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
           @click="clickAction(queue)"
-          :disabled="!accept">
+          :disabled="!accept"
+        >
           <div class="row mt-1">
             <div class="col-2 text-right centered">
-            <h4> <i :class="`bi ${queueIcon(queue.type)}`"></i> </h4>
+              <h4><i :class="`bi ${queueIcon(queue.type)}`"></i></h4>
             </div>
             <div class="col-10 text-right">
               <div class="row queue-title">
                 <span>{{ queue.name }}</span>
               </div>
-              <div v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
-                <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
+              <div
+                v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)"
+                class="row queue-time-title"
+              >
+                <span
+                  ><i class="bi bi-tag-fill"></i>
+                  {{
+                    queue.services && queue.services.length > 0
+                      ? queue.services.map(serv => serv.name).join(', ')
+                      : queue.name
+                  }}</span
+                >
               </div>
-              <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
-                <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
+              <div
+                class="row queue-time-title"
+                v-if="
+                  !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
+                  (queue.blockTime || queue.estimatedTime)
+                "
+              >
+                <span
+                  ><i class="bi bi-stopwatch-fill"></i> {{ $t('commerceQueuesView.duration') }}
+                  {{ queue.blockTime || queue.estimatedTime }}'</span
+                >
               </div>
             </div>
           </div>
@@ -102,29 +115,55 @@ export default {
       <button
         v-if="queue.active"
         type="button"
-        class=" btn-size btn btn-sm btn-block col-12 fw-bold rounded-pill mt-2 queue-btn"
-        :class="queue.id === selectedQueue.id ? 'btn-primary': `${queueStyle(queue.type)}`"
+        class="btn-size btn btn-sm btn-block col-12 fw-bold rounded-pill mt-2 queue-btn"
+        :class="queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
         @click="clickAction(queue)"
-        :disabled="!accept">
+        :disabled="!accept"
+      >
         <div class="row mt-1">
           <div class="col-2 text-right centered">
-            <h4> <i :class="`bi ${queueIcon(queue.type)}`"></i> </h4>
+            <h4><i :class="`bi ${queueIcon(queue.type)}`"></i></h4>
           </div>
           <div class="col-10 text-right">
             <div class="row queue-title">
               <span>{{ queue.name }}</span>
             </div>
             <div v-if="['COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
-              <span><i class="bi bi-tag-fill"></i> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
+              <span
+                ><i class="bi bi-tag-fill"></i>
+                {{
+                  queue.services && queue.services.length > 0
+                    ? queue.services.map(serv => serv.name).join(', ')
+                    : queue.name
+                }}</span
+              >
             </div>
-            <div v-if="['SERVICE', 'MULTI_SERVICE'].includes(queue.type)" class="row queue-time-title">
-              <span> {{ queue.services && queue.services.length > 0 ? queue.services.map(serv => serv.name).join(', ') : queue.name }}</span>
+            <div
+              v-if="['SERVICE', 'MULTI_SERVICE'].includes(queue.type)"
+              class="row queue-time-title"
+            >
+              <span>
+                {{
+                  queue.services && queue.services.length > 0
+                    ? queue.services.map(serv => serv.name).join(', ')
+                    : queue.name
+                }}</span
+              >
             </div>
             <div v-if="['SELECT_SERVICE'].includes(queue.type)" class="row queue-time-title">
-              <span> {{ $t("commerceQueuesView.selectTheService") }} </span>
+              <span> {{ $t('commerceQueuesView.selectTheService') }} </span>
             </div>
-            <div class="row queue-time-title" v-if="!['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) && (queue.blockTime || queue.estimatedTime)">
-              <span><i class="bi bi-stopwatch-fill"></i> {{ $t("commerceQueuesView.duration") }} {{ queue.blockTime || queue.estimatedTime }}'</span>
+            <div
+              class="row queue-time-title"
+              v-if="
+                !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
+                (queue.blockTime || queue.estimatedTime)
+              "
+            >
+              <span
+                ><i class="bi bi-stopwatch-fill"></i> {{ $t('commerceQueuesView.duration') }}
+                {{ queue.blockTime || queue.estimatedTime }}'</span
+              >
             </div>
           </div>
         </div>
@@ -135,7 +174,7 @@ export default {
 <style scoped>
 .choose-attention {
   padding-bottom: 1rem;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1rem;
 }
@@ -143,7 +182,7 @@ export default {
   text-align: center !important;
   transform-origin: center center !important;
   font-weight: 700;
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 .form-control {
   border: 1.75px solid #ced4da !important;
@@ -153,29 +192,54 @@ export default {
 }
 .data-card {
   background-color: var(--color-background);
-  padding: .5rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
-  border-radius: .5rem;
-  border: .5px solid var(--gris-default);
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
   align-items: left;
 }
 .examples {
-  font-size: .8rem;
+  font-size: 0.8rem;
   line-height: 1rem;
-  color: .5px solid var(--gris-default);
+  color: 0.5px solid var(--gris-default);
 }
 .queue-btn {
-  border: .5px solid var(--gris-default);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 0.75rem;
 }
+
+.queue-btn:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.queue-btn.btn-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
+  border-color: var(--azul-turno) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+}
+
+.queue-btn.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.4);
+  transform: translateY(-4px);
+}
+
 .queue-title {
   font-size: 1rem;
-  line-height: 1rem;
+  line-height: 1.2rem;
   text-align: left;
+  font-weight: 600;
 }
+
 .queue-time-title {
-  font-size: .7rem;
-  line-height: .8rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
   font-weight: 500;
   text-align: left;
+  color: var(--gris-elite-1);
 }
 </style>

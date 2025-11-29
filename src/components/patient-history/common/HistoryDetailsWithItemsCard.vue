@@ -7,17 +7,17 @@ export default {
     show: { type: Boolean, default: false },
     content: { type: String, default: undefined },
     details: { type: Object, default: {} },
-    date: { type: String, default: '' }
+    date: { type: String, default: '' },
   },
   data() {
-    return {}
+    return {};
   },
   methods: {
     getDate(date) {
       return getDate(date);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -27,12 +27,16 @@ export default {
     </div>
     <div v-if="Object.keys(details).length > 0">
       <div class="mt-2">
-        <span v-for="(item, index) in Object.keys(details)" :key="index" class="badge detail-data-badge mx-1">
+        <span
+          v-for="(item, index) in Object.keys(details)"
+          :key="index"
+          class="badge detail-data-badge mx-1"
+        >
           <span class="fw-bold detail-data-badge-title"> {{ details[item].name }}</span>
           <span> {{ details[item].value }}</span>
         </span>
       </div>
-      <hr>
+      <hr />
     </div>
     <div class="lefted paragraph" v-if="content">
       <span class="mx-2">
@@ -45,13 +49,13 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .paragraph {
-  font-size: .8rem;
-  line-height: .9rem;
+  font-size: 0.8rem;
+  line-height: 0.9rem;
 }
 </style>

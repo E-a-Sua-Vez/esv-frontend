@@ -20,62 +20,60 @@ export default {
       alertError: '',
       store,
       router,
-      queue: undefined
-    }
+      queue: undefined,
+    };
   },
   methods: {
     closeModal() {
       this.$emit('close-modal');
     },
     isCollabotator() {
-      return this.userType === 'collaborator'
+      return this.userType === 'collaborator';
     },
     isQueueSelected() {
-      return this.store.currentQueue !== undefined
+      return this.store.currentQueue !== undefined;
     },
-    async getUserType() {
-      this.userType = await this.store.getCurrentUserType;
+    getUserType() {
+      this.userType = this.store.getCurrentUserType;
     },
-    async getQueue() {
-      this.queue = await this.store.getCurrentQueue;
+    getQueue() {
+      this.queue = this.store.getCurrentQueue;
     },
   },
-  async beforeMount() {
-    await this.getUserType();
-    await this.getQueue();
+  beforeMount() {
+    this.getUserType();
+    this.getQueue();
   },
   watch: {
-    store: {
+    'store.currentQueue': {
       immediate: true,
-      deep: true,
-      async handler() {
-        await this.getUserType();
-        await this.getQueue();
-      }
-    }
+      handler() {
+        this.getQueue();
+      },
+    },
+    'store.currentUserType': {
+      immediate: true,
+      handler() {
+        this.getUserType();
+      },
+    },
   },
-}
+};
 </script>
 
 <template>
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <h2 class="portfolio-modal-title mb-0">{{ $t("actions.title") }}</h2>
+        <h2 class="portfolio-modal-title mb-0">{{ $t('actions.title') }}</h2>
         <div class="divider-custom">
           <div class="divider-custom-line"></div>
           <div class="divider-custom-icon"><i class="bi bi-question-circle-fill"></i></div>
           <div class="divider-custom-line"></div>
         </div>
-        <ResumeAttention
-          @closeModal="closeModal()">
-        </ResumeAttention>
-        <NoDeviceAttention
-          @closeModal="closeModal()">
-        </NoDeviceAttention>
-        <Suggestions
-          @closeModal="closeModal()">
-        </Suggestions>
+        <ResumeAttention @closeModal="closeModal()"> </ResumeAttention>
+        <NoDeviceAttention @closeModal="closeModal()"> </NoDeviceAttention>
+        <Suggestions @closeModal="closeModal()"> </Suggestions>
         <!--<div id="suggestions" class="card">
           <p class="mb-2 details"><span class="fw-bold">{{ $t("actions.subtitle.1.1") }}</span></p>
           <p class="details-subtitle">{{ $t("actions.subtitle.1.2") }}</p>
@@ -92,17 +90,17 @@ export default {
   line-height: 1rem;
 }
 .details-subtitle {
-  font-size: .9rem;
+  font-size: 0.9rem;
   line-height: 1rem;
 }
 .card {
   background-color: var(--color-background);
   margin-top: 1rem;
   margin-bottom: 1rem;
-  margin-left: .5rem;
-  margin-right: .5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   padding: 1rem;
   border-radius: 1rem;
-  border: .5px solid var(--gris-default);
+  border: 0.5px solid var(--gris-default);
 }
 </style>

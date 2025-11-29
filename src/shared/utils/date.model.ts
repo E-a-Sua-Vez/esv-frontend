@@ -1,9 +1,8 @@
-import dayjs from "dayjs"
+import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 export class DateModel {
-
   private dayjsObj: any;
 
   private readonly DATE_SEPARATOR = '-';
@@ -35,6 +34,11 @@ export class DateModel {
     return new DateModel(newDayjsObj.toString());
   }
 
+  public startOfMonth(): DateModel {
+    const newDayjsObj = this.dayjsObj.startOf('month');
+    return new DateModel(newDayjsObj.toString());
+  }
+
   public endOfMonth(): DateModel {
     const newDayjsObj = this.dayjsObj.endOf('month');
     return new DateModel(newDayjsObj.toString());
@@ -58,9 +62,12 @@ export class DateModel {
     return this.dayjsObj.isSameOrAfter(dayjsObj);
   }
 
-  public daysDiff = (dateBefore: DateModel): number => this.dayjsObj.diff(dateBefore.dayjsObj, 'days');
-  public monthsDiff = (dateBefore: DateModel): number => this.dayjsObj.diff(dateBefore.dayjsObj, 'months');
-  public yearsDiff = (dateBefore: DateModel): number => this.dayjsObj.diff(dateBefore.dayjsObj, 'years');
+  public daysDiff = (dateBefore: DateModel): number =>
+    this.dayjsObj.diff(dateBefore.dayjsObj, 'days');
+  public monthsDiff = (dateBefore: DateModel): number =>
+    this.dayjsObj.diff(dateBefore.dayjsObj, 'months');
+  public yearsDiff = (dateBefore: DateModel): number =>
+    this.dayjsObj.diff(dateBefore.dayjsObj, 'years');
 
   public setDateOfMonth(dayOfMonth: number): DateModel {
     const dateAsString = this.dayjsObj.date(dayOfMonth);
@@ -94,5 +101,4 @@ export class DateModel {
     }
     return day;
   }
-
 }

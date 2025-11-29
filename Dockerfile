@@ -1,15 +1,22 @@
 # build stage
-FROM node:lts-alpine as build-stage
+FROM node:20-alpine AS build-stage
+ARG APP_ENV=br
 WORKDIR /app
 COPY package*.json ./
-RUN echo $APP_ENV
-RUN npm install
+RUN echo "Building for environment: $APP_ENV"
+# Use BuildKit cache mount for faster npm installs
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --legacy-peer-deps
 # Copy all project files to this container and build
 # To ignore files like node_modules, dist, use .dockerignore file
 COPY . .
-RUN npm run build:$APP_ENV
+# Build with the specified environment
+# Use ENV to make ARG available in RUN commands
+ARG APP_ENV
+ENV APP_ENV=${APP_ENV}
+RUN npm run build:${APP_ENV}
 # production stage
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine AS production-stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 # Alter Nginx to receive traffic on 8080 instead. Refer below explaination
 # App Engine only support port 8080

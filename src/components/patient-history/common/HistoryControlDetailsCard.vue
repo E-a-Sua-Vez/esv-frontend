@@ -14,7 +14,7 @@ export default {
     index: { type: Number, default: undefined },
     commerce: { type: Object, default: {} },
     clientId: { type: String, default: undefined },
-    toggles: { type: Object, default: {} }
+    toggles: { type: Object, default: {} },
   },
   data() {
     const store = globalStore();
@@ -26,7 +26,7 @@ export default {
       statuses: [],
       store,
       userType: undefined,
-    }
+    };
   },
   beforeMount() {
     this.statuses = getControlStatusTypes();
@@ -46,7 +46,7 @@ export default {
       } else if (status === 'CANCELLED') {
         return 'bi-x-circle-fill red-icon';
       } else {
-        'bi-clock-fill blue-icon';
+        ('bi-clock-fill blue-icon');
       }
     },
     update() {
@@ -59,7 +59,7 @@ export default {
         url = `/interno/commerce/${commerceKeyName}/filas`;
       }
       let resolvedRoute;
-      let query = {};
+      const query = {};
       if (this.clientId) {
         query['client'] = this.clientId;
       }
@@ -70,9 +70,9 @@ export default {
       }
       window.open(resolvedRoute.href, '_blank');
     },
-    showUpdate(){
+    showUpdate() {
       this.extendedControlEntity = !this.extendedControlEntity;
-    }
+    },
   },
   watch: {
     store: {
@@ -80,10 +80,10 @@ export default {
       deep: true,
       async handler() {
         await this.getUserType();
-      }
+      },
     },
-  }
-}
+  },
+};
 </script>
 
 <template>
@@ -93,23 +93,31 @@ export default {
     </div>
     <div class="fw-bold">
       <div class="col">
-      <i :class="`bi ${getStatusIcon(status)} mx-1`"></i> {{ $t(`controlReasonTypes.${reason}`) }}
+        <i :class="`bi ${getStatusIcon(status)} mx-1`"></i> {{ $t(`controlReasonTypes.${reason}`) }}
       </div>
       <div class="row">
         <div class="col">
-          <a class="confirm-payment details-title"
+          <a
+            class="confirm-payment details-title"
             href="#"
             v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
-            @click.prevent="showUpdate()">
-            <i class="bi bi-pencil-fill"></i> <span class="step-title fw-bold">{{ $t("patientHistoryView.attendControl") }}</span>
-            <i class="dark" :class="`bi ${extendedControlEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+            @click.prevent="showUpdate()"
+          >
+            <i class="bi bi-pencil-fill"></i>
+            <span class="step-title fw-bold">{{ $t('patientHistoryView.attendControl') }}</span>
+            <i
+              class="dark"
+              :class="`bi ${extendedControlEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+            ></i>
           </a>
         </div>
         <div class="col">
-          <a class="confirm-payment details-title"
+          <a
+            class="confirm-payment details-title"
             v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
-            @click.prevent="getAttention()">
-            <i class="bi bi-box-arrow-up-right"></i> {{ $t("collaboratorBookingsView.create") }}
+            @click.prevent="getAttention()"
+          >
+            <i class="bi bi-box-arrow-up-right"></i> {{ $t('collaboratorBookingsView.create') }}
           </a>
         </div>
       </div>
@@ -119,18 +127,27 @@ export default {
         {{ content }}
       </span>
     </div>
-    <div
-      :class="{ show: extendedControlEntity }"
-      class="detailed-data transition-slow">
+    <div :class="{ show: extendedControlEntity }" class="detailed-data transition-slow">
       <div class="row">
         <div class="col-12 my-1">
-          <label class="metric-card-subtitle mx-2 habit-title" for="select-status"> {{ $t("patientHistoryView.controlStatus") }} </label>
+          <label class="metric-card-subtitle mx-2 habit-title" for="select-status">
+            {{ $t('patientHistoryView.controlStatus') }}
+          </label>
           <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="newStatus">
-            <option v-for="status in statuses" :key="status.name" :value="status.id" id="select-queue">{{ $t(`controlStatusTypes.${status.id}`) }}</option>
+            <option
+              v-for="status in statuses"
+              :key="status.name"
+              :value="status.id"
+              id="select-queue"
+            >
+              {{ $t(`controlStatusTypes.${status.id}`) }}
+            </option>
           </select>
         </div>
         <div class="col-12 my-1">
-          <label class="form-check-label metric-card-subtitle mt-2">{{  $t("businessPatientHistoryItemAdmin.comment") }}</label>
+          <label class="form-check-label metric-card-subtitle mt-2">{{
+            $t('businessPatientHistoryItemAdmin.comment')
+          }}</label>
           <textarea
             :disabled="!toggles['patient.history.control-edit']"
             class="form-control form-control-sm"
@@ -138,14 +155,17 @@ export default {
             rows="5"
             :max="500"
             :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-            :value="newResult">
+            :value="newResult"
+          >
           </textarea>
         </div>
         <div class="col-12">
-          <button class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
+          <button
+            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
             @click="update()"
-            :disabled="!toggles['patient.history.control-update']">
-            <i class="bi bi-check-fill"> </i> {{ $t("patientHistoryView.update") }}
+            :disabled="!toggles['patient.history.control-update']"
+          >
+            <i class="bi bi-check-fill"> </i> {{ $t('patientHistoryView.update') }}
           </button>
         </div>
       </div>
@@ -156,14 +176,14 @@ export default {
 <style scoped>
 .metric-card {
   background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
 }
 .paragraph {
-  font-size: .8rem;
-  line-height: .9rem;
+  font-size: 0.8rem;
+  line-height: 0.9rem;
 }
 .show {
   padding: 5px;
@@ -172,11 +192,11 @@ export default {
 }
 .confirm-payment {
   cursor: pointer;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 .details-title {
   text-decoration: underline;
-  font-size: .8rem;
+  font-size: 0.8rem;
   color: var(--color-text);
   cursor: pointer;
 }

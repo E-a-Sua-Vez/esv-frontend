@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div  class="content">
+    <div class="content">
       <div id="logo" class="content-image img-fluid mx-auto"></div>
     </div>
   </div>

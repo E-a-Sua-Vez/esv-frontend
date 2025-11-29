@@ -1,11 +1,10 @@
 <script>
-import { ref, reactive, onBeforeMount, } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { statusWhatsappConnectionById } from '../../application/services/business';
 import Message from '../../components/common/Message.vue';
-import PoweredBy from '../../components/common/PoweredBy.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
@@ -19,20 +18,19 @@ export default {
   components: {
     CommerceLogo,
     Message,
-    PoweredBy,
     Spinner,
     Alert,
     ToggleCapabilities,
     ComponentMenu,
     ConfigurationFeaturesManagement,
-    ConfigurationWhatsappManagement
+    ConfigurationWhatsappManagement,
   },
   async setup() {
     const router = useRouter();
     const store = globalStore();
 
-    let loading = ref(false);
-    let alertError = ref('');
+    const loading = ref(false);
+    const alertError = ref('');
 
     const state = reactive({
       currentUser: {},
@@ -43,7 +41,7 @@ export default {
       showConfigurations: true,
       showWhatsapp: false,
       whatsappStatus: undefined,
-      toggles: {}
+      toggles: {},
     });
 
     onBeforeMount(async () => {
@@ -52,19 +50,18 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+        state.commerce =
+          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.toggles = await getPermissions('configuration', 'admin');
         loading.value = false;
       } catch (error) {
         loading.value = false;
       }
-    })
+    });
 
-    const isActiveBusiness = () => {
-      return state.business && state.business.active === true;
-    };
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async (commerce) => {
+    const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
@@ -72,22 +69,22 @@ export default {
       } catch (error) {
         loading.value = false;
       }
-    }
+    };
 
     const goBack = () => {
       router.back();
-    }
+    };
 
     const showConfigurations = () => {
       state.showConfigurations = true;
       state.showWhatsapp = false;
-    }
+    };
 
     const showWhatsapp = async () => {
       state.showConfigurations = false;
       state.showWhatsapp = true;
       await getWhatsappStatus();
-    }
+    };
 
     const getWhatsappStatus = async () => {
       try {
@@ -101,7 +98,7 @@ export default {
         state.whatsappStatus = undefined;
         loading.value = false;
       }
-    }
+    };
 
     return {
       state,
@@ -112,93 +109,245 @@ export default {
       selectCommerce,
       showConfigurations,
       showWhatsapp,
-      getWhatsappStatus
-    }
-  }
-}
+      getWhatsappStatus,
+    };
+  },
+};
 </script>
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessConfiguration.title`)"
-        :toggles="state.toggles"
-        componentName="businessConfiguration"
-        @goBack="goBack">
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="dashboard">
-        <div v-if="isActiveBusiness()">
-          <div v-if="state.commerces.length === 0" class="control-box">
-            <Message
-              :title="$t('businessConfiguration.message.3.title')"
-              :content="$t('businessConfiguration.message.3.content')" />
-          </div>
-          <div v-else class="control-box">
-            <div id="dashboard-controls">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t("dashboard.commerce") }} </span>
-                  <select class="btn btn-md fw-bold text-dark m-1 select" v-model="state.commerce" id="modules" @change="selectCommerce(state.commerce)">
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">{{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}</option>
-                  </select>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessConfiguration.title`)"
+          :toggles="state.toggles"
+          component-name="businessConfiguration"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="dashboard">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('businessConfiguration.message.3.title')"
+                :content="$t('businessConfiguration.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="dashboard-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('dashboard.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="!loading" id="dashboard-result" class="mt-2">
-            <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showConfigurations ? 'btn-selected' : ''"
-                  @click="showConfigurations()"
-                  :disabled="!state.toggles['configuration.admin.features']">
-                  {{ $t("businessConfiguration.features") }} <br> <i class="bi bi-toggles"></i>
-                </button>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showConfigurations ? 'btn-selected' : ''"
+                    @click="showConfigurations()"
+                    :disabled="!state.toggles['configuration.admin.features']"
+                  >
+                    {{ $t('businessConfiguration.features') }} <br />
+                    <i class="bi bi-toggles"></i>
+                  </button>
+                </div>
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showWhatsapp ? 'btn-selected' : ''"
+                    @click="showWhatsapp()"
+                    :disabled="!state.toggles['configuration.admin.whatsapps']"
+                  >
+                    {{ $t('businessConfiguration.whatsapps') }} <br />
+                    <i class="bi bi-whatsapp"></i>
+                  </button>
+                </div>
               </div>
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showWhatsapp ? 'btn-selected' : ''"
-                  @click="showWhatsapp()"
-                  :disabled="!state.toggles['configuration.admin.whatsapps']">
-                  {{ $t("businessConfiguration.whatsapps") }} <br> <i class="bi bi-whatsapp"></i>
-                </button>
+              <div>
+                <ConfigurationFeaturesManagement
+                  :show-configurations="state.showConfigurations"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :business="state.business"
+                >
+                </ConfigurationFeaturesManagement>
+                <ConfigurationWhatsappManagement
+                  :show-configurations="state.showWhatsapp"
+                  :toggles="state.toggles"
+                  :business="state.business"
+                  :whatsapp-status="state.whatsappStatus"
+                  :get-whatsapp-status-from-container="getWhatsappStatus"
+                >
+                </ConfigurationWhatsappManagement>
               </div>
             </div>
-            <div>
-              <ConfigurationFeaturesManagement
-                :showConfigurations="state.showConfigurations"
-                :toggles="state.toggles"
-                :commerce="state.commerce"
-                :business="state.business"
-              >
-              </ConfigurationFeaturesManagement>
-              <ConfigurationWhatsappManagement
-                :showConfigurations="state.showWhatsapp"
-                :toggles="state.toggles"
-                :business="state.business"
-                :whatsappStatus="state.whatsappStatus"
-                :getWhatsappStatusFromContainer="getWhatsappStatus"
-              >
-              </ConfigurationWhatsappManagement>
-            </div>
           </div>
-        </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')" />
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
-    <PoweredBy :name="state.business.name" />
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessConfiguration.title`)"
+              :toggles="state.toggles"
+              component-name="businessConfiguration"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="dashboard">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('businessConfiguration.message.3.title')"
+                :content="$t('businessConfiguration.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="dashboard-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('dashboard.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showConfigurations ? 'btn-selected' : ''"
+                    @click="showConfigurations()"
+                    :disabled="!state.toggles['configuration.admin.features']"
+                  >
+                    {{ $t('businessConfiguration.features') }} <br />
+                    <i class="bi bi-toggles"></i>
+                  </button>
+                </div>
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showWhatsapp ? 'btn-selected' : ''"
+                    @click="showWhatsapp()"
+                    :disabled="!state.toggles['configuration.admin.whatsapps']"
+                  >
+                    {{ $t('businessConfiguration.whatsapps') }} <br />
+                    <i class="bi bi-whatsapp"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <ConfigurationFeaturesManagement
+                  :show-configurations="state.showConfigurations"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :business="state.business"
+                >
+                </ConfigurationFeaturesManagement>
+                <ConfigurationWhatsappManagement
+                  :show-configurations="state.showWhatsapp"
+                  :toggles="state.toggles"
+                  :business="state.business"
+                  :whatsapp-status="state.whatsappStatus"
+                  :get-whatsapp-status-from-container="getWhatsappStatus"
+                >
+                </ConfigurationWhatsappManagement>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Render WhatsApp component once outside responsive sections for the modal -->
+    <!-- This ensures single modal ID - buttons in both mobile and desktop will target this modal -->
+    <!-- Bootstrap modals are appended to body when opened, so this hidden instance will work -->
+    <div
+      v-if="state.showWhatsapp && state.toggles['configuration.admin.whatsapps']"
+      style="
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        visibility: hidden;
+        pointer-events: none;
+      "
+    >
+      <ConfigurationWhatsappManagement
+        :show-configurations="true"
+        :toggles="state.toggles"
+        :business="state.business"
+        :whatsapp-status="state.whatsappStatus"
+        :get-whatsapp-status-from-container="getWhatsappStatus"
+      >
+      </ConfigurationWhatsappManagement>
+    </div>
   </div>
 </template>
 
@@ -210,26 +359,12 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 .select {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.metric-card {
-  background-color: var(--color-background);
-  padding: .5rem;
-  margin: .5rem;
-  border-radius: .5rem;
-  border: 1px solid var(--gris-default);
-}
-.metric-card-title {
-  font-size: .8rem;
-  line-height: .8rem;
-  align-items: center;
-  justify-content: center;
-  display: flex;
 }
 .green-icon {
   color: var(--verde-tu);
@@ -240,8 +375,51 @@ export default {
 .yellow-icon {
   color: var(--amarillo-star);
 }
-.metric-card-subtitle {
-  font-size: .6rem;
-  font-weight: 500;
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

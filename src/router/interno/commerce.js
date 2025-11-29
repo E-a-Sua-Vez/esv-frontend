@@ -1,150 +1,151 @@
-const BusinessDashboard = () => import('../../views/business/BusinessDashboard.vue');
-const BusinessMenu = () => import('../../views/business/BusinessMenu.vue');
-const BusinessSectionAtWorkView = () => import('../../views/business/BusinessSectionAtWorkView.vue');
-const BusinessQueuesAdmin = () => import('../../views/business/BusinessQueuesAdmin.vue');
-const BusinessModulesAdmin = () => import('../../views/business/BusinessModulesAdmin.vue');
-const BusinessCollaboratorsAdmin = () => import('../../views/business/BusinessCollaboratorAdmin.vue');
-const BusinessCommerceAdmin = () => import('../../views/business/BusinessCommerceAdmin.vue');
-const BusinessReports = () => import('../../views/business/BusinessReports.vue');
-const BusinessExecutiveReport = () => import('../../views/business/BusinessExecutiveReport.vue');
-const BusinessConfiguration = () => import('../../views/business/BusinessConfiguration.vue');
-const BusinessPlan = () => import('../../views/business/BusinessPlan.vue');
-const BusinessSurveysAdmin = () => import('../../views/business/BusinessSurveyAdmin.vue');
-const BusinessServicesAdmin = () => import('../../views/business/BusinessServicesAdmin.vue');
-const BusinessProductsAdmin = () => import('../../views/business/BusinessProductsAdmin.vue');
-const BusinessTracing = () => import('../../views/business/BusinessTracing.vue');
-const BusinessPermissionsAdmin = () => import('../../views/business/BusinessPermissionsAdmin.vue');
-const CommerceQueuesView = () => import('../../views/CommerceQueuesView.vue');
-const BusinessProductStockAdmin = () => import('../../views/business/BusinessProductStockAdmin.vue');
-const BusinessDocuments = () => import('../../views/business/BusinessDocuments.vue');
-const BusinessOutcomeTypesAdmin = () => import('../../views/business/BusinessOutcomeTypesAdmin.vue');
-const BusinessFinancial = () => import('../../views/business/BusinessFinancial.vue');
-const BusinessQueueBookings = () => import('../../views/business/BusinessQueueBookings.vue');
-const BusinessCompaniesAdmin = () => import('../../views/business/BusinessCompaniesAdmin.vue');
-const BusinessPatientHistoryItemAdmin = () => import('../../views/business/BusinessPatientHistoryItemAdmin.vue');
-const BusinessFormAdmin = () => import('../../views/business/BusinessFormAdmin.vue');
+const BusinessDashboard = () => import('@/views/business/BusinessDashboard.vue');
+const BusinessMenu = () => import('@/views/business/BusinessMenu.vue');
+const BusinessSectionAtWorkView = () => import('@/views/business/BusinessSectionAtWorkView.vue');
+const BusinessQueuesAdmin = () => import('@/views/business/BusinessQueuesAdmin.vue');
+const BusinessModulesAdmin = () => import('@/views/business/BusinessModulesAdmin.vue');
+const BusinessCollaboratorsAdmin = () => import('@/views/business/BusinessCollaboratorAdmin.vue');
+const BusinessCommerceAdmin = () => import('@/views/business/BusinessCommerceAdmin.vue');
+const BusinessReports = () => import('@/views/business/BusinessReports.vue');
+const BusinessExecutiveReport = () => import('@/views/business/BusinessExecutiveReport.vue');
+const BusinessConfiguration = () => import('@/views/business/BusinessConfiguration.vue');
+const BusinessPlan = () => import('@/views/business/BusinessPlan.vue');
+const BusinessSurveysAdmin = () => import('@/views/business/BusinessSurveyAdmin.vue');
+const BusinessServicesAdmin = () => import('@/views/business/BusinessServicesAdmin.vue');
+const BusinessProductsAdmin = () => import('@/views/business/BusinessProductsAdmin.vue');
+const BusinessTracing = () => import('@/views/business/BusinessTracing.vue');
+const BusinessPermissionsAdmin = () => import('@/views/business/BusinessPermissionsAdmin.vue');
+const CommerceQueuesView = () => import('@/views/CommerceQueuesView.vue');
+const BusinessProductStockAdmin = () => import('@/views/business/BusinessProductStockAdmin.vue');
+const BusinessDocuments = () => import('@/views/business/BusinessDocuments.vue');
+const BusinessOutcomeTypesAdmin = () => import('@/views/business/BusinessOutcomeTypesAdmin.vue');
+const BusinessFinancial = () => import('@/views/business/BusinessFinancial.vue');
+const BusinessQueueBookings = () => import('@/views/business/BusinessQueueBookings.vue');
+const BusinessCompaniesAdmin = () => import('@/views/business/BusinessCompaniesAdmin.vue');
+const BusinessPatientHistoryItemAdmin = () =>
+  import('@/views/business/BusinessPatientHistoryItemAdmin.vue');
+const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {
     path: '/interno/negocio/menu',
     name: 'business-menu',
-    component: BusinessMenu
+    component: BusinessMenu,
   },
   {
     path: '/interno/negocio/dashboard',
     name: 'business-dashboard',
-    component: BusinessDashboard
+    component: BusinessDashboard,
   },
   {
     path: '/interno/negocio/tracing',
     name: 'business-tracing',
-    component: BusinessTracing
+    component: BusinessTracing,
   },
   {
     path: '/interno/negocio/financial',
     name: 'business-financial',
-    component: BusinessFinancial
+    component: BusinessFinancial,
   },
   {
     path: '/interno/negocio/product-stock',
     name: 'business-product-stock',
-    component: BusinessProductStockAdmin
+    component: BusinessProductStockAdmin,
   },
   {
     path: '/interno/negocio/commerce-admin',
     name: 'business-commerce-admin',
-    component: BusinessCommerceAdmin
+    component: BusinessCommerceAdmin,
   },
   {
     path: '/interno/negocio/service-admin',
     name: 'business-service-admin',
-    component: BusinessServicesAdmin
+    component: BusinessServicesAdmin,
   },
   {
     path: '/interno/negocio/product-admin',
     name: 'business-product-admin',
-    component: BusinessProductsAdmin
+    component: BusinessProductsAdmin,
   },
   {
     path: '/interno/negocio/queues-admin',
     name: 'business-queues-admin',
-    component: BusinessQueuesAdmin
+    component: BusinessQueuesAdmin,
   },
   {
     path: '/interno/negocio/configuration',
     name: 'business-configuration',
-    component: BusinessConfiguration
+    component: BusinessConfiguration,
   },
   {
     path: '/interno/negocio/documents',
     name: 'business-documents',
-    component: BusinessDocuments
+    component: BusinessDocuments,
   },
   {
     path: '/interno/negocio/reports',
     name: 'business-reports',
-    component: BusinessReports
+    component: BusinessReports,
   },
   {
     path: '/interno/negocio/your-plan',
     name: 'business-your-plan',
-    component: BusinessPlan
+    component: BusinessPlan,
   },
   {
     path: '/interno/negocio/collaborators-admin',
     name: 'business-collaborators-admin',
-    component: BusinessCollaboratorsAdmin
+    component: BusinessCollaboratorsAdmin,
   },
   {
     path: '/interno/negocio/modules-admin',
     name: 'business-modules-admin',
-    component: BusinessModulesAdmin
+    component: BusinessModulesAdmin,
   },
   {
     path: '/interno/negocio/outcome-types-admin',
     name: 'business-outcome-types-admin',
-    component: BusinessOutcomeTypesAdmin
+    component: BusinessOutcomeTypesAdmin,
   },
   {
     path: '/interno/negocio/business-resume',
     name: 'business-resume',
-    component: BusinessExecutiveReport
+    component: BusinessExecutiveReport,
   },
   {
     path: '/interno/negocio/surveys-admin',
     name: 'surveys-admin',
-    component: BusinessSurveysAdmin
+    component: BusinessSurveysAdmin,
   },
   {
     path: '/interno/negocio/permissions-admin',
     name: 'permissions-admin',
-    component: BusinessPermissionsAdmin
+    component: BusinessPermissionsAdmin,
   },
   {
     path: '/interno/negocio/commerce/:keyName/filas',
     name: 'commerce-business-queues',
-    component: CommerceQueuesView
+    component: CommerceQueuesView,
   },
   {
     path: '/interno/negocio/booking-manage',
     name: 'commerce-bookings',
-    component: BusinessQueueBookings
+    component: BusinessQueueBookings,
   },
   {
     path: '/interno/negocio/company-admin',
     name: 'business-company-admin',
-    component: BusinessCompaniesAdmin
+    component: BusinessCompaniesAdmin,
   },
   {
     path: '/interno/negocio/patient-history-item-admin',
     name: 'business-patient-history-item-admin',
-    component: BusinessPatientHistoryItemAdmin
+    component: BusinessPatientHistoryItemAdmin,
   },
   {
     path: '/interno/negocio/forms-admin',
     name: 'forms-admin',
-    component: BusinessFormAdmin
-  }
-]
+    component: BusinessFormAdmin,
+  },
+];
 
 export default PrivateCommerceRoutes;
