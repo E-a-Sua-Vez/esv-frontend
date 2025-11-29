@@ -91,9 +91,10 @@ export default defineConfig(({ command, mode }) =>
         include: [/html2pdf\.js/, /node_modules/],
       },
     },
-    // Optimize dependencies (merged from both versions)
+    // Optimize dependencies
     optimizeDeps: {
-      include: ['vue', 'vue-router', 'pinia', 'vue-i18n', 'html2pdf.js'],
+      include: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+      exclude: ['html2pdf.js'], // Exclude from pre-bundling to avoid circular dependency issues
     },
   }),
 );

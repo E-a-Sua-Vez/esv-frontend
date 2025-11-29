@@ -1,10 +1,10 @@
 import { fileURLToPath, URL } from 'node:url';
 import { resolve, dirname } from 'node:path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
-export default defineConfig(({ command, mode }) =>
+export default defineConfig(({ mode }) =>
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   ({
@@ -83,6 +83,7 @@ export default defineConfig(({ command, mode }) =>
       // CommonJS options for html2pdf.js
       commonjsOptions: {
         include: [/html2pdf\.js/, /node_modules/],
+        transformMixedEsModules: true, // Handle mixed ES/CommonJS modules
       },
       // Source maps for production (can disable for smaller builds)
       sourcemap: false,
@@ -93,7 +94,8 @@ export default defineConfig(({ command, mode }) =>
     },
     // Optimize dependencies
     optimizeDeps: {
-      include: ['vue', 'vue-router', 'pinia', 'vue-i18n', 'html2pdf.js'],
+      include: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+      exclude: ['html2pdf.js'], // Exclude from pre-bundling to avoid circular dependency issues
     },
-  }),
+  })
 );

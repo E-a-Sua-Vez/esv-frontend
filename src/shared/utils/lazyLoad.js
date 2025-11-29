@@ -14,9 +14,22 @@
  * html2pdf().from(element).save();
  */
 export async function lazyLoadHtml2Pdf() {
-  const html2pdfModule = await import('html2pdf.js');
-  // html2pdf.js may not have a default export, try both
-  return html2pdfModule.default || html2pdfModule;
+  try {
+    const html2pdfModule = await import('html2pdf.js');
+    // html2pdf.js exports vary by version, try multiple patterns
+    if (html2pdfModule.default) {
+      return html2pdfModule.default;
+    }
+    // Some versions export as named export
+    if (html2pdfModule.html2pdf) {
+      return html2pdfModule.html2pdf;
+    }
+    // Fallback to module itself
+    return html2pdfModule;
+  } catch (error) {
+    console.error('Error loading html2pdf.js:', error);
+    throw error;
+  }
 }
 
 /**
