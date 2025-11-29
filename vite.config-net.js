@@ -88,13 +88,12 @@ export default defineConfig(({ command, mode }) =>
       assetsInlineLimit: 4096, // Inline assets < 4KB
       // CommonJS options (from HEAD)
       commonjsOptions: {
-        include: [/html2pdf\.js/, /node_modules/]
-      }
+        include: [/html2pdf\.js/, /node_modules/],
+      },
     },
     // Optimize dependencies (merged from both versions)
     optimizeDeps: {
       include: ['vue', 'vue-router', 'pinia', 'vue-i18n', 'html2pdf.js'],
-      exclude: [],
     },
   }),
 );
