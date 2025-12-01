@@ -1537,6 +1537,7 @@
     "aditionalFilters": "Search Data",
     "contacted": "Contacted",
     "contactable": "Contactable",
+    "firstAttentionForm": "First Attention Form",
     "asc": "To minor",
     "desc": "To mayor",
     "keyWord": "Key Words",
@@ -1580,6 +1581,8 @@
     "commerceData": "Commerce:",
     "userData": "User:",
     "queueData": "Queue/Service:",
+    "contactInfo": "Contact Information",
+    "date": "Date",
     "contactMethod": "Contact Method:",
     "outcomes": "Outcomes",
     "paymentStatus": "Payment Status",
@@ -1591,6 +1594,20 @@
     "edit": "Edit",
     "dataOf": "Data of",
     "addClient": "Add Client",
+    "productCard": {
+      "stockLevel": "Stock Level",
+      "levels": "Levels",
+      "code": "Code",
+      "tooltip": {
+        "status": "Product status based on stock level",
+        "copy": "Copy product data",
+        "expired": "Days since expiration. Green: >30 days, Yellow: 0-30 days, Red: expired",
+        "replacement": "Days until next replacement. Green: >30 days, Yellow: 0-30 days, Red: requires replacement",
+        "stockLevel": "Current stock level as percentage of maximum",
+        "viewConsumptions": "View consumption history",
+        "viewReplacements": "View replacement history"
+      }
+    },
     "dates": {
       "from": "From",
       "to": "to"
@@ -1637,6 +1654,71 @@
         "contact": "Contact",
         "contactResult": "Contact Result"
       }
+    },
+    "clientCard": {
+      "tooltip": {
+        "status": "Client status based on days since last attention",
+        "copy": "Copy client data",
+        "attentions": "Total number of attentions",
+        "survey": "Client has completed satisfaction survey",
+        "form": "Client has first attention form",
+        "daysSinceAttention": "Days elapsed since last attention. Green: ≤90 days, Yellow: 91-180 days, Red: >180 days",
+        "daysSinceContact": "Days elapsed since last contact. Green: ≤90 days, Yellow: 91-180 days, Red: >180 days",
+        "viewAttentions": "View client attention history",
+        "viewBookings": "View client bookings and appointments",
+        "viewHistory": "View patient medical history and controls",
+        "editClient": "Edit client information",
+        "viewContacts": "View contact history",
+        "schedule": "Create new booking or appointment for client",
+        "whatsapp": "Open WhatsApp conversation",
+        "email": "Open email client",
+        "idNumber": "Client identification number",
+        "contactResult": "Result of last contact made",
+        "paid": "Attention/Booking paid",
+        "products": "Attention has products",
+        "terms": "Terms and conditions accepted",
+        "contacted": "Client has been contacted",
+        "rating": "CSAT Rating",
+        "nps": "NPS - Net Promoter Score",
+        "sentiment": "Sentiment analysis",
+        "viewAnswers": "View survey answers",
+        "contact": "Contact client",
+        "commerceActive": "Commerce active",
+        "commerceInactive": "Commerce inactive",
+        "commerceTag": "Commerce tag",
+        "moduleActive": "Module active",
+        "moduleInactive": "Module inactive",
+        "queueActive": "Queue active",
+        "queueInactive": "Queue inactive",
+        "queueTag": "Queue tag",
+        "openWebsite": "Open commerce website",
+        "serviceActive": "Service active",
+        "serviceInactive": "Service inactive",
+        "serviceTag": "Service tag"
+      },
+      "label": {
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "id": "ID",
+        "birthday": "Birthday",
+        "healthAgreement": "Health Agreement",
+        "origin": "Origin",
+        "address": "Address",
+        "addressCode": "Postal Code",
+        "addressComplement": "Complement",
+        "code1": "Code 1",
+        "code2": "Code 2",
+        "code3": "Code 3",
+        "noCommerce": "No commerce",
+        "noService": "N/A",
+        "noQueue": "N/A"
+      },
+      "address": "Address",
+      "daysSinceAttention": "Days Attention",
+      "daysSinceContact": "Days Contact",
+      "contactInfo": "Contact Information",
+      "actions": "Actions",
+      "date": "Date"
     },
     "surveysFilters": {
       "filters": {
@@ -1843,6 +1925,10 @@
         "description": "Download repor file with the results of the clients carried out in the selected date range"
       },
       "client-contacts-management": {
+        "title": "Client Contacts Report (Details)",
+        "description": "Download report file with the results of the clients carried out in the selected date range"
+      },
+      "contacts-management": {
         "title": "Client Contacts Report (Details)",
         "description": "Download report file with the results of the clients carried out in the selected date range"
       },
@@ -2150,6 +2236,8 @@
     "tracing": "Clients Management",
     "product-stock": "Stock Control",
     "go-minisite": "Minisite",
+    "seeSpy": "See Spy",
+    "seeMenu": "See Menu",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2165,6 +2253,33 @@
           "booking-manage": "Bookings 360° Vision",
           "product-stock": "Stock Control"
         }
+      }
+    }
+  },
+  "collaboratorSpySection": {
+    "attentions": "Attentions",
+    "bookings": "Bookings",
+    "today": "Today",
+    "todayAttentions": "Today's Attentions",
+    "goToQueue": "Go to Queue",
+    "weekBookings": "Week Bookings",
+    "monthBookings": "Month Bookings",
+    "pendingToAttend": "Pending to attend",
+    "selectCommerce": "Select Commerce",
+    "attendQueue": "Attend Queue",
+    "attendQueues": "Attend Queues",
+    "calendar": "Calendar",
+    "calendarTitle": "Attentions and Bookings Calendar",
+    "both": "Both",
+    "number": "Number",
+    "message": {
+      "noQueue": {
+        "title": "No dedicated queue",
+        "content": "You don't have a dedicated queue assigned. Spy is only available for collaborators with dedicated queues."
+      },
+      "noData": {
+        "title": "No data",
+        "content": "There are no attentions or bookings for this date."
       }
     }
   },

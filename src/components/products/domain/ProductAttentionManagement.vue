@@ -295,6 +295,13 @@ export default {
       };
     },
   },
+  mounted() {
+    // Set default dates: endDate = today, startDate = one month ago
+    const today = new Date().toISOString().slice(0, 10);
+    this.endDate = today;
+    const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
+    this.startDate = oneMonthAgo;
+  },
   watch: {
     changeData: {
       immediate: true,
@@ -477,39 +484,29 @@ export default {
               </div>
             </div>
             <div>
-              <SimpleDownloadCard
-                v-if="showSearchFilters"
-                :download="toggles['products-stock.reports.consumption-details']"
-                :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-                :show-tooltip="true"
-                :description="
-                  $t('businessProductStockAdmin.reports.consumption-details.description')
-                "
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="exportToCSV"
-                :can-download="toggles['products-stock.reports.consumption-details'] === true"
-              ></SimpleDownloadCard>
-              <div class="my-2 row metric-card">
+              <div class="my-1 row metric-card compact-filters-card">
                 <div class="col-12">
-                  <span class="metric-card-subtitle">
-                    <span
-                      class="form-check-label metric-keyword-subtitle mx-1"
-                      @click="showFilters()"
-                    >
-                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                      <i
-                        :class="`bi ${
-                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
-                      ></i>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="metric-card-subtitle">
+                      <span
+                        class="form-check-label metric-keyword-subtitle"
+                        @click="showFilters()"
+                      >
+                        <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                        <i
+                          :class="`bi ${
+                            showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </span>
                     </span>
-                  </span>
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                    @click="clear()"
-                  >
-                    <span><i class="bi bi-eraser-fill"></i></span>
-                  </button>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 py-1"
+                      @click="clear()"
+                    >
+                      <i class="bi bi-eraser-fill"></i>
+                    </button>
+                  </div>
                 </div>
                 <div v-if="showFilterOptions">
                   <div class="row my-1" v-if="showSearchFilters">
@@ -599,14 +596,14 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
-              <span class="badge bg-secondary px-3 py-2 m-1"
+            <div class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info">
+              <span class="badge bg-secondary px-2 py-1 compact-badge"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>
-              <span class="badge bg-secondary px-3 py-2 m-1">
+              <span class="badge bg-secondary px-2 py-1 compact-badge">
                 {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
               </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+              <select class="btn btn-sm btn-light fw-bold text-dark select compact-select" v-model="limit">
                 <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
                   {{ lim }}
                 </option>
@@ -709,65 +706,262 @@ export default {
 </template>
 
 <style scoped>
+/* Modern Metric Card - Compact and beautiful */
 .metric-card {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin: 0.5rem;
-  margin-bottom: 0;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
 }
+
+.metric-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Compact Filters Card - Even more compact */
+.compact-filters-card {
+  padding: 0.5rem 0.75rem !important;
+  margin: 0.375rem 0 !important;
+}
+
+/* Modern Filter Card - Compact */
 .filter-card {
-  background-color: var(--color-background);
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-  margin: 0.2rem;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 0.5rem 0.75rem;
+  margin: 0.375rem 0;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
 }
+
+.filter-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Modern Typography */
 .metric-card-title {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  line-height: 0.8rem;
+  line-height: 1.2rem;
   align-items: center;
   justify-content: center;
   display: flex;
+  color: rgba(0, 0, 0, 0.75);
+  letter-spacing: -0.01em;
 }
+
 .metric-card-comment {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  line-height: 0.9rem;
+  line-height: 1.2rem;
+  color: rgba(0, 0, 0, 0.65);
 }
+
 .metric-card-number {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
-.metric-keyword-tag {
-  font-size: 0.6rem;
-  font-weight: 400;
-  cursor: pointer;
+
+.metric-card-subtitle {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2rem;
+  color: rgba(0, 0, 0, 0.7);
 }
-.metric-keyword-tag-selected {
-  font-size: 0.6rem;
-  font-weight: 400;
-  background-color: var(--azul-es) !important;
-}
-.metric-keyword-tag:hover {
-  font-size: 0.6rem;
-  font-weight: 400;
-  cursor: pointer;
-  background-color: var(--azul-es) !important;
-}
+
+/* Modern Keyword Subtitle - Interactive */
 .metric-keyword-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--azul-turno);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.metric-keyword-subtitle:hover {
+  background: rgba(0, 74, 173, 0.08);
+  color: var(--azul-turno);
+}
+
+.metric-keyword-subtitle i {
+  font-size: 0.875rem;
+}
+
+/* Modern Keyword Tags */
+.metric-keyword-tag {
+  font-size: 0.6875rem;
   font-weight: 500;
   cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.7);
 }
+
+.metric-keyword-tag-selected {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background-color: var(--azul-turno) !important;
+  color: #ffffff !important;
+}
+
+.metric-keyword-tag:hover {
+  background-color: rgba(0, 74, 173, 0.1);
+  color: var(--azul-turno);
+}
+
+/* Modern Select - Compact and beautiful */
 .select {
   border-radius: 0.5rem;
-  border: 1.5px solid var(--gris-clear);
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  transition: all 0.2s ease;
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
+
+.select:hover {
+  border-color: rgba(0, 74, 173, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 74, 173, 0.1);
+}
+
+.select:focus {
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
+  outline: none;
+}
+
+/* Modern Form Controls */
+.metric-controls {
+  border-radius: 0.5rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.metric-controls:hover {
+  border-color: rgba(0, 74, 173, 0.3);
+}
+
+.metric-controls:focus {
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
+  outline: none;
+}
+
 .form-control {
   font-size: 0.9rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.form-control:hover {
+  border-color: rgba(0, 74, 173, 0.3);
+}
+
+.form-control:focus {
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
+  outline: none;
+}
+
+/* Modern Filter Buttons */
+.metric-filters {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.metric-filters:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric-filters:active {
+  transform: translateY(0);
+}
+
+/* Modern Badges */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* Compact Pagination Info - Centered */
+.compact-pagination-info {
+  gap: 0.5rem;
+}
+
+.compact-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  letter-spacing: -0.01em;
+}
+
+.compact-select {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Modern Buttons - Ensure consistency */
+.btn {
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metric-card {
+    padding: 0.625rem;
+    margin: 0.375rem 0;
+  }
+
+  .filter-card {
+    padding: 0.375rem 0.625rem;
+    margin: 0.25rem 0;
+  }
+
+  .metric-card-title {
+    font-size: 0.8125rem;
+  }
+
+  .metric-card-number {
+    font-size: 1.125rem;
+  }
+
+  .metric-keyword-subtitle {
+    font-size: 0.75rem;
+  }
 }
 </style>

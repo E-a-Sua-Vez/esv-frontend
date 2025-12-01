@@ -9,6 +9,7 @@ import ProductDetailsCard from './common/ProductDetailsCard.vue';
 import { getPermissions } from '../../application/services/permissions';
 import { globalStore } from '../../stores';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
+import { DateModel } from '../../shared/utils/date.model';
 
 export default {
   name: 'ProductsStockManagement',
@@ -27,14 +28,18 @@ export default {
     queues: { type: Object, default: undefined },
     commerces: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
+    services: { type: Array, default: undefined },
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     const store = globalStore();
+    // Set default dates: 1 month before today to today
+    const today = new Date().toISOString().slice(0, 10);
+    const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
     return {
       loading: false,
       counter: 0,
-      products: undefined,
+      products: [],
       totalPages: 0,
       productStatus: undefined,
       replacement: undefined,
@@ -47,6 +52,11 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
+      _skipWatch: false, // Flag to skip watch during manual sync
+      startDate: oneMonthAgo,
+      endDate: today,
+      queueId: undefined,
+      serviceId: undefined,
     };
   },
   async beforeMount() {
@@ -56,33 +66,87 @@ export default {
     async refresh() {
       try {
         this.loading = true;
+        // Clear previous products IMMEDIATELY to avoid showing stale data
+        this.products = [];
+        this.counter = 0;
+        this.totalPages = 0;
+
         const commerceIds = [this.commerce.id];
-        this.products = await getProductsDetails(
+
+        // Log filter values for debugging
+        console.log('ProductsStockManagement refresh with filters:', {
+          expired: this.expired,
+          replacement: this.replacement,
+          productStatus: this.productStatus,
+          searchText: this.searchText,
+          searchTextType: typeof this.searchText,
+          searchTextValue: this.searchText,
+          asc: this.asc,
+          page: this.page,
+          limit: this.limit,
+          showProductStockManagement: this.showProductStockManagement,
+        });
+
+        // Ensure searchText is passed correctly (even if empty string)
+        const searchTextParam = this.searchText !== null && this.searchText !== undefined
+          ? this.searchText
+          : undefined;
+
+        // Ensure dates are properly formatted (YYYY-MM-DD) or undefined
+        const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
+        const endDateParam = this.endDate && this.endDate !== '' ? this.endDate : undefined;
+
+        console.log('ProductsStockManagement - Calling getProductsDetails with filters:', {
+          searchText: searchTextParam,
+          startDate: startDateParam,
+          endDate: endDateParam,
+          queueId: this.queueId,
+          serviceId: this.serviceId,
+          expired: this.expired,
+          replacement: this.replacement,
+          productStatus: this.productStatus,
+        });
+
+        const result = await getProductsDetails(
           this.business.id,
           this.commerce.id,
-          undefined,
-          undefined,
+          startDateParam,
+          endDateParam,
           commerceIds,
           this.page,
           this.limit,
           this.expired,
           this.replacement,
           this.productStatus,
-          this.searchText,
-          this.asc
+          searchTextParam,
+          this.asc,
+          this.queueId,
+          this.serviceId
         );
-        if (this.products && this.products.length > 0) {
+
+        console.log('ProductsStockManagement refresh result:', result?.length || 0, 'products', 'showProductStockManagement:', this.showProductStockManagement);
+
+        // Always set products to the result (even if empty array)
+        // This ensures the UI updates correctly
+        if (result && Array.isArray(result) && result.length > 0) {
+          this.products = result;
           const { counter } = this.products[0];
           this.counter = counter;
           const total = counter / this.limit;
           const totalB = Math.trunc(total);
           this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
         } else {
+          // No products or empty array - explicitly set to empty array
+          this.products = [];
           this.counter = 0;
           this.totalPages = 0;
         }
         this.loading = false;
       } catch (error) {
+        console.error('ProductsStockManagement refresh error:', error);
+        this.products = [];
+        this.counter = 0;
+        this.totalPages = 0;
         this.loading = false;
       }
     },
@@ -118,6 +182,40 @@ export default {
       } else {
         this.asc = false;
       }
+    },
+    setProductStatus(status) {
+      this.productStatus = status;
+    },
+    setSearchText(text) {
+      this.searchText = text;
+    },
+    setStartDate(date) {
+      this.startDate = date;
+    },
+    setEndDate(date) {
+      this.endDate = date;
+    },
+    async getToday() {
+      const date = new Date().toISOString().slice(0, 10);
+      const [year, month, day] = date.split('-');
+      this.startDate = `${year}-${month}-${day}`;
+      this.endDate = `${year}-${month}-${day}`;
+    },
+    async getCurrentMonth() {
+      const date = new Date().toISOString().slice(0, 10);
+      const [year, month, day] = date.split('-');
+      this.startDate = `${year}-${month}-01`;
+      this.endDate = `${year}-${month}-${day}`;
+    },
+    async getLastMonth() {
+      const date = new Date().toISOString().slice(0, 10);
+      this.startDate = new DateModel(date).substractMonths(1).toString();
+      this.endDate = new DateModel(this.startDate).endOfMonth().toString();
+    },
+    async getLastThreeMonths() {
+      const date = new Date().toISOString().slice(0, 10);
+      this.startDate = new DateModel(date).substractMonths(3).toString();
+      this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
     },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
@@ -169,7 +267,7 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, commerce, expired, replacement, productStatus, asc, limit } = this;
+      const { page, commerce, expired, replacement, productStatus, asc, limit, searchText, startDate, endDate, queueId, serviceId } = this;
       return {
         page,
         expired,
@@ -178,6 +276,11 @@ export default {
         productStatus,
         asc,
         limit,
+        searchText,
+        startDate,
+        endDate,
+        queueId,
+        serviceId,
       };
     },
   },
@@ -186,6 +289,22 @@ export default {
       immediate: true,
       deep: true,
       async handler(oldData, newData) {
+        // Skip if this is a manual sync (indicated by _skipWatch flag)
+        if (this._skipWatch) {
+          this._skipWatch = false;
+          return;
+        }
+
+        // Only refresh if this component is actually showing content (not just filters)
+        // The filter instance has showProductStockManagement=false, so it shouldn't refresh
+        // But we still allow the watch to run so values can update in the filter instance
+        if (!this.showProductStockManagement) {
+          // Filter instance - values update but don't refresh
+          // The parent will handle syncing and refreshing the content instance
+          return;
+        }
+
+        // Content instance - handle page reset and refresh
         if (
           oldData &&
           newData &&
@@ -193,11 +312,19 @@ export default {
             oldData.productStatus !== newData.productStatus ||
             oldData.replacement !== newData.replacement ||
             oldData.asc !== newData.asc ||
-            oldData.limit !== newData.limit)
+            oldData.limit !== newData.limit ||
+            oldData.searchText !== newData.searchText ||
+            oldData.startDate !== newData.startDate ||
+            oldData.endDate !== newData.endDate ||
+            oldData.queueId !== newData.queueId ||
+            oldData.serviceId !== newData.serviceId)
         ) {
           this.page = 1;
         }
-        this.refresh();
+        // Only refresh if this is not the initial mount (oldData exists)
+        if (oldData) {
+          this.refresh();
+        }
       },
     },
   },
@@ -220,6 +347,20 @@ export default {
     :check-expired="checkExpired"
     :check-replacement="checkReplacement"
     :check-asc="checkAsc"
+    :set-product-status="setProductStatus"
+    :set-search-text="setSearchText"
+    :set-start-date="setStartDate"
+    :set-end-date="setEndDate"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :queues="queues"
+    :services="services"
+    :queue-id="queueId"
+    :service-id="serviceId"
+    :start-date="startDate"
+    :end-date="endDate"
   ></slot>
   <div
     id="products-management"
@@ -398,7 +539,7 @@ export default {
               </div>
             </div>
 
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>

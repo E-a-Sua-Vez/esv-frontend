@@ -894,7 +894,8 @@ export default {
         </div>
       </div>
     </div>
-    <!-- Modal User -->
+    <!-- Modal User - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
     <div
       class="modal fade"
       id="userModal"
@@ -924,6 +925,7 @@ export default {
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 

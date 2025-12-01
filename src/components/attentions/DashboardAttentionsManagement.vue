@@ -54,6 +54,7 @@ export default {
       limit: 10,
       startDate: undefined,
       endDate: undefined,
+      _skipWatch: false, // Flag to skip watch during manual sync
     };
   },
   methods: {
@@ -149,6 +150,27 @@ export default {
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
     },
+    setSearchText(text) {
+      this.searchText = text;
+    },
+    setQueueId(id) {
+      this.queueId = id;
+    },
+    setServiceId(id) {
+      this.serviceId = id;
+    },
+    setStartDate(date) {
+      this.startDate = date;
+    },
+    setEndDate(date) {
+      this.endDate = date;
+    },
+    setDaysSinceType(value) {
+      this.daysSinceType = value;
+    },
+    setContactResultType(value) {
+      this.contactResultType = value;
+    },
     async exportToCSV() {
       try {
         this.loading = true;
@@ -196,26 +218,38 @@ export default {
       const [year, month, day] = date.split('-');
       this.startDate = `${year}-${month}-${day}`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh(1);
+      // Don't call refresh here when filtersLocation is 'slot' - let the parent handle it
+      if (this.filtersLocation !== 'slot') {
+        await this.refresh(1);
+      }
     },
     async getCurrentMonth() {
       const date = new Date().toISOString().slice(0, 10);
       const [year, month, day] = date.split('-');
       this.startDate = `${year}-${month}-01`;
       this.endDate = `${year}-${month}-${day}`;
-      await this.refresh(1);
+      // Don't call refresh here when filtersLocation is 'slot' - let the parent handle it
+      if (this.filtersLocation !== 'slot') {
+        await this.refresh(1);
+      }
     },
     async getLastMonth() {
       const date = new Date().toISOString().slice(0, 10);
       this.startDate = new DateModel(date).substractMonths(1).toString();
       this.endDate = new DateModel(this.startDate).endOfMonth().toString();
-      await this.refresh(1);
+      // Don't call refresh here when filtersLocation is 'slot' - let the parent handle it
+      if (this.filtersLocation !== 'slot') {
+        await this.refresh(1);
+      }
     },
     async getLastThreeMonths() {
       const date = new Date().toISOString().slice(0, 10);
       this.startDate = new DateModel(date).substractMonths(3).toString();
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
-      await this.refresh(1);
+      // Don't call refresh here when filtersLocation is 'slot' - let the parent handle it
+      if (this.filtersLocation !== 'slot') {
+        await this.refresh(1);
+      }
     },
   },
   computed: {
@@ -259,6 +293,10 @@ export default {
       immediate: true,
       deep: true,
       async handler(oldData, newData) {
+        // Skip watch if flag is set (manual sync in progress)
+        if (this._skipWatch) {
+          return;
+        }
         if (
           oldData &&
           newData &&
@@ -322,6 +360,13 @@ export default {
     :check-contacted="checkContacted"
     :check-survey="checkSurvey"
     :check-asc="checkAsc"
+    :set-search-text="setSearchText"
+    :set-queue-id="setQueueId"
+    :set-service-id="setServiceId"
+    :set-start-date="setStartDate"
+    :set-end-date="setEndDate"
+    :set-days-since-type="setDaysSinceType"
+    :set-contact-result-type="setContactResultType"
   ></slot>
   <div
     id="attentions-management"
@@ -650,7 +695,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>

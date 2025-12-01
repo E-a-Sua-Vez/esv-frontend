@@ -175,82 +175,185 @@ export default {
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="`${$t(`collaboratorQueueAttentions.hello-user`)}, ${
-          state.currentUser.alias || state.currentUser.name
-        }!`"
-        :toggles="state.toggles"
-        component-name="collaboratorQueueAttentions"
-        @goBack="collaboratorQueues"
-      >
-      </ComponentMenu>
-      <QueueName
-        :queue="state.queue"
-        :queue-pending-details="state.queuePendingDetails"
-        :queue-processing-details="state.queueProcessingDetails"
-        :details="true"
-      >
-      </QueueName>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div v-if="state.pendingAttentions.length === 0" class="mt-2">
-        <Message
-          :title="$t('collaboratorQueueAttentions.message.1.title')"
-          :content="$t('collaboratorQueueAttentions.message.1.content')"
-          :icon="'bi bi-emoji-smile'"
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="`${$t(`collaboratorQueueAttentions.hello-user`)}, ${
+            state.currentUser.alias || state.currentUser.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorQueueAttentions"
+          @goBack="collaboratorQueues"
         >
-        </Message>
-      </div>
-      <div v-else id="attention">
-        <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
-          <div class="your-attention mt-2">
-            <span>{{ $t('collaboratorQueueAttentions.numberCancelled') }}</span>
+        </ComponentMenu>
+        <QueueName
+          :queue="state.queue"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :details="true"
+        >
+        </QueueName>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div v-if="state.pendingAttentions.length === 0" class="mt-2">
+          <Message
+            :title="$t('collaboratorQueueAttentions.message.1.title')"
+            :content="$t('collaboratorQueueAttentions.message.1.content')"
+            :icon="'bi bi-emoji-smile'"
+          >
+          </Message>
+        </div>
+        <div v-else id="attention">
+          <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorQueueAttentions.numberCancelled') }}</span>
+            </div>
+            <AttentionNumber
+              :type="'secondary'"
+              :number="state.attention.number"
+              :data="state.user"
+            ></AttentionNumber>
+            <div class="d-grid gap-2 mt-3">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+                :disabled="!state.toggles['collaborator.attention.finish'] || loading"
+                @click="finishCurrentCancelledAttention()"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.4.action') }}
+                <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
           </div>
-          <AttentionNumber
-            :type="'secondary'"
-            :number="state.attention.number"
-            :data="state.user"
-          ></AttentionNumber>
-          <div class="d-grid gap-2 mt-3">
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
-              :disabled="!state.toggles['collaborator.attention.finish'] || loading"
-              @click="finishCurrentCancelledAttention()"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.4.action') }}
-              <i class="bi bi-arrow-right"></i>
-            </button>
+          <div v-else>
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorQueueAttentions.yourNumber') }}</span>
+            </div>
+            <AttentionNumber
+              :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+              :number="state.attention.number"
+              :data="state.user"
+            ></AttentionNumber>
+            <div class="to-goal">
+              <span
+                >{{ $t('collaboratorQueueAttentions.toGoal.1') }}
+                <strong>{{ state.pendingAttentions.length }}</strong>
+                {{ $t('collaboratorQueueAttentions.toGoal.2') }}</span
+              >
+            </div>
+            <div class="d-grid gap-2 my-2">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                @click="attendAttention()"
+                :disabled="!state.toggles['collaborator.attention.attend'] || loading"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.1.action') }}
+                <i class="bi bi-qr-code-scan"></i>
+              </button>
+            </div>
           </div>
         </div>
-        <div v-else>
-          <div class="your-attention mt-2">
-            <span>{{ $t('collaboratorQueueAttentions.yourNumber') }}</span>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.commerce.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
-          <AttentionNumber
-            :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-            :number="state.attention.number"
-            :data="state.user"
-          ></AttentionNumber>
-          <div class="to-goal">
-            <span
-              >{{ $t('collaboratorQueueAttentions.toGoal.1') }}
-              <strong>{{ state.pendingAttentions.length }}</strong>
-              {{ $t('collaboratorQueueAttentions.toGoal.2') }}</span
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="`${$t(`collaboratorQueueAttentions.hello-user`)}, ${
+                state.currentUser.alias || state.currentUser.name
+              }!`"
+              :toggles="state.toggles"
+              component-name="collaboratorQueueAttentions"
+              @goBack="collaboratorQueues"
             >
+            </ComponentMenu>
           </div>
-          <div class="d-grid gap-2 my-2">
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              @click="attendAttention()"
-              :disabled="!state.toggles['collaborator.attention.attend'] || loading"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.1.action') }}
-              <i class="bi bi-qr-code-scan"></i>
-            </button>
+        </div>
+        <QueueName
+          :queue="state.queue"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :details="true"
+        >
+        </QueueName>
+        <div v-if="state.pendingAttentions.length === 0" class="mt-2">
+          <Message
+            :title="$t('collaboratorQueueAttentions.message.1.title')"
+            :content="$t('collaboratorQueueAttentions.message.1.content')"
+            :icon="'bi bi-emoji-smile'"
+          >
+          </Message>
+        </div>
+        <div v-else id="attention">
+          <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorQueueAttentions.numberCancelled') }}</span>
+            </div>
+            <AttentionNumber
+              :type="'secondary'"
+              :number="state.attention.number"
+              :data="state.user"
+            ></AttentionNumber>
+            <div class="d-grid gap-2 mt-3">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+                :disabled="!state.toggles['collaborator.attention.finish'] || loading"
+                @click="finishCurrentCancelledAttention()"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.4.action') }}
+                <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+          <div v-else>
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorQueueAttentions.yourNumber') }}</span>
+            </div>
+            <AttentionNumber
+              :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+              :number="state.attention.number"
+              :data="state.user"
+            ></AttentionNumber>
+            <div class="to-goal">
+              <span
+                >{{ $t('collaboratorQueueAttentions.toGoal.1') }}
+                <strong>{{ state.pendingAttentions.length }}</strong>
+                {{ $t('collaboratorQueueAttentions.toGoal.2') }}</span
+              >
+            </div>
+            <div class="d-grid gap-2 my-2">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                @click="attendAttention()"
+                :disabled="!state.toggles['collaborator.attention.attend'] || loading"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.1.action') }}
+                <i class="bi bi-qr-code-scan"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -258,4 +361,51 @@ export default {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
+}
+</style>

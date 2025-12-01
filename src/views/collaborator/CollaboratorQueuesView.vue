@@ -91,31 +91,55 @@ export default {
       }
     });
 
-    const checkQueueStatus = async attentions => {
-      if (attentions && attentions.value) {
-        const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
-          const queueId = attention.queueId;
-          if (!acc[queueId]) {
-            acc[queueId] = [];
+    const checkQueueStatus = async attentionsRef => {
+      // Ensure we have a valid ref with a value
+      if (!attentionsRef) {
+        initializeQueueStatus();
+        return;
+      }
+
+      // Get the value from ref, ensuring it's an array
+      const attentionsArray = attentionsRef.value && Array.isArray(attentionsRef.value)
+        ? attentionsRef.value
+        : [];
+
+      if (attentionsArray.length === 0) {
+        initializeQueueStatus();
+        return;
+      }
+
+      try {
+        const filteredAttentionsByQueue = attentionsArray.reduce((acc, attention) => {
+          if (attention && attention.queueId) {
+            const queueId = attention.queueId;
+            if (!acc[queueId]) {
+              acc[queueId] = [];
+            }
+            acc[queueId].push(attention);
           }
-          acc[queueId].push(attention);
           return acc;
         }, {});
+
         if (state.queues && state.queues.length > 0) {
           state.queues.forEach(queue => {
-            if (filteredAttentionsByQueue[queue.id]) {
-              const attentions = filteredAttentionsByQueue[queue.id].length;
-              state.queueStatus[queue.id] = attentions;
+            if (queue && queue.id && filteredAttentionsByQueue[queue.id]) {
+              const attentionsCount = filteredAttentionsByQueue[queue.id].length;
+              state.queueStatus[queue.id] = attentionsCount;
             }
           });
         }
+      } catch (error) {
+        console.error('Error in checkQueueStatus:', error);
+        initializeQueueStatus();
       }
     };
 
-    const attentions = ref([]);
-    attentions.value = updatedAvailableAttentionsByCommerce(id);
-
-    checkQueueStatus(attentions);
+    // Get attentions ref - this is a reactive ref that Firebase will update
+    // It always starts as an empty array and gets populated by Firebase snapshot
+    // Use a wrapper ref so we can update it when commerce changes
+    const attentionsWrapper = ref(null);
+    let attentions = updatedAvailableAttentionsByCommerce(id);
+    attentionsWrapper.value = attentions;
 
     const initQueues = async () => {
       initializeQueueStatus();
@@ -138,7 +162,7 @@ export default {
           state.queues = queues;
         }
       }
-      checkQueueStatus(attentions);
+      // Queue status will be updated by the watch
     };
 
     const isActiveCommerce = () => state.commerce && state.commerce.active === true;
@@ -181,10 +205,11 @@ export default {
       try {
         loading.value = true;
         state.commerce = commerce;
-        attentions.value = updatedAvailableAttentionsByCommerce(commerce.id);
+        // Create new ref for new commerce - Firebase will handle cleanup of old subscription
+        attentions = updatedAvailableAttentionsByCommerce(commerce.id);
+        attentionsWrapper.value = attentions; // Update wrapper so watch sees the new ref
         const selectedCommerce = await getQueueByCommerce(state.commerce.id);
         state.queues = selectedCommerce.queues;
-        checkQueueStatus(attentions);
         await initQueues();
         state.modules = await getActiveModulesByCommerceId(state.commerce.id);
         if (state.modules && state.modules.length > 0) {
@@ -227,13 +252,38 @@ export default {
       }
     };
 
-    watch(attentions, async () => {
-      if (attentions.value && attentions.value && attentions.value.length > 0) {
-        checkQueueStatus(checkQueueStatus);
+    // Watch attentions ref value for changes
+    // Watch the wrapper so we can track when the ref itself changes
+    watch(() => {
+      // Safely access the current attentions ref via wrapper
+      try {
+        const currentAttentionsRef = attentionsWrapper.value;
+        if (currentAttentionsRef && currentAttentionsRef.value !== undefined && currentAttentionsRef.value !== null) {
+          // Ensure it's always an array
+          return Array.isArray(currentAttentionsRef.value) ? currentAttentionsRef.value : [];
+        }
+      } catch (error) {
+        console.error('Error accessing attentions.value:', error);
+      }
+      return [];
+    }, async (newValue) => {
+      // Always check if it's an array before processing
+      if (newValue && Array.isArray(newValue)) {
+        if (newValue.length > 0) {
+          // Pass the ref so checkQueueStatus can safely access the value
+          const currentAttentionsRef = attentionsWrapper.value;
+          if (currentAttentionsRef) {
+            checkQueueStatus(currentAttentionsRef);
+          }
+        } else {
+          // Array is empty, initialize queue status
+          initializeQueueStatus();
+        }
       } else {
+        // Not an array, initialize queue status
         initializeQueueStatus();
       }
-    });
+    }, { immediate: true, deep: true });
 
     return {
       siteKey,
@@ -256,18 +306,175 @@ export default {
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`collaboratorQueuesView.welcome`)"
-        :toggles="state.toggles"
-        component-name="collaboratorQueuesView"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`collaboratorQueuesView.welcome`)"
+          :toggles="state.toggles"
+          component-name="collaboratorQueuesView"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+          <div id="businessQueuesAdmin-controls" class="control-box">
+            <div class="row">
+              <div class="col" v-if="state.commerces.length > 0">
+                <span>{{ $t('collaboratorQueuesView.commerce') }} </span>
+                <select
+                  class="btn btn-md fw-bold text-dark m-1 select"
+                  v-model="state.commerce"
+                  @change="selectCommerce(state.commerce)"
+                  id="modules"
+                >
+                  <option v-for="com in state.commerces" :key="com.id" :value="com">
+                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                  </option>
+                </select>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessQueuesAdmin.message.4.title')"
+                  :content="$t('businessQueuesAdmin.message.4.content')"
+                />
+              </div>
+            </div>
+          </div>
+          <div id="module-selector" class="mb-2 mt-1" v-if="isActiveModules()">
+            <span>{{ $t('collaboratorQueuesView.module') }} </span>
+            <select
+              class="btn btn-md btn-light fw-bold text-dark m-1 select"
+              v-model="state.module"
+              id="modules"
+              :disabled="!state.toggles['collaborator.module.update'] || !state.commerce.active"
+              @change="moduleSelect()"
+            >
+              <option v-for="mod in state.modules" :key="mod.name" :value="mod">
+                {{ mod.name }}
+              </option>
+            </select>
+          </div>
+          <div v-if="!isActiveModules() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.2.title')"
+              :content="$t('collaboratorQueuesView.message.2.content')"
+            />
+          </div>
+        </div>
+        <div id="queues" v-if="isActiveModules() && !loading">
+          <div class="row" v-if="isActiveCommerce()">
+            <div class="choose-attention">
+              <span>{{ $t('collaboratorQueuesView.choose') }}</span>
+            </div>
+            <div
+              v-for="queue in state.queues"
+              :key="queue.id"
+              class="d-grid btn-group btn-group-justified"
+            >
+              <div v-if="captchaEnabled === true">
+                <VueRecaptcha
+                  :sitekey="siteKey"
+                  @verify="validateCaptchaOk"
+                  @error="validateCaptchaError"
+                >
+                  <button
+                    v-if="queue.active"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    @click="getQueue(queue)"
+                    :disabled="loading"
+                  >
+                    <div class="row centered">
+                      <div class="col-8">
+                        <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                        {{ queue.name }}
+                      </div>
+                      <div class="col-2">
+                        <span
+                          :class="`badge rounded-pill m-0 indicator ${
+                            state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                          }`"
+                        >
+                          <i class="bi bi-person-fill"></i>
+                          {{ state.queueStatus[queue.id] }}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </VueRecaptcha>
+              </div>
+              <div v-else>
+                <button
+                  v-if="queue.active"
+                  type="button"
+                  class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                  @click="getQueue(queue)"
+                  :disabled="loading"
+                >
+                  <div class="row centered">
+                    <div class="col-8">
+                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                      {{ queue.name }}
+                    </div>
+                    <div class="col-2">
+                      <span
+                        :class="`badge rounded-pill m-0 indicator ${
+                          state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                        }`"
+                      >
+                        <i class="bi bi-person-fill"></i>
+                        {{ state.queueStatus[queue.id] }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveCommerce() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.1.title')"
+              :content="$t('collaboratorQueuesView.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.commerce.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`collaboratorQueuesView.welcome`)"
+              :toggles="state.toggles"
+              component-name="collaboratorQueuesView"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
         <div id="businessQueuesAdmin-controls" class="control-box">
           <div class="row">
             <div class="col" v-if="state.commerces.length > 0">
@@ -311,23 +518,49 @@ export default {
             :content="$t('collaboratorQueuesView.message.2.content')"
           />
         </div>
-      </div>
-      <div id="queues" v-if="isActiveModules() && !loading">
-        <div class="row" v-if="isActiveCommerce()">
-          <div class="choose-attention">
-            <span>{{ $t('collaboratorQueuesView.choose') }}</span>
-          </div>
-          <div
-            v-for="queue in state.queues"
-            :key="queue.id"
-            class="d-grid btn-group btn-group-justified"
-          >
-            <div v-if="captchaEnabled === true">
-              <VueRecaptcha
-                :sitekey="siteKey"
-                @verify="validateCaptchaOk"
-                @error="validateCaptchaError"
-              >
+        <div id="queues" v-if="isActiveModules() && !loading">
+          <div class="row" v-if="isActiveCommerce()">
+            <div class="choose-attention">
+              <span>{{ $t('collaboratorQueuesView.choose') }}</span>
+            </div>
+            <div
+              v-for="queue in state.queues"
+              :key="queue.id"
+              class="d-grid btn-group btn-group-justified"
+            >
+              <div v-if="captchaEnabled === true">
+                <VueRecaptcha
+                  :sitekey="siteKey"
+                  @verify="validateCaptchaOk"
+                  @error="validateCaptchaError"
+                >
+                  <button
+                    v-if="queue.active"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    @click="getQueue(queue)"
+                    :disabled="loading"
+                  >
+                    <div class="row centered">
+                      <div class="col-8">
+                        <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                        {{ queue.name }}
+                      </div>
+                      <div class="col-2">
+                        <span
+                          :class="`badge rounded-pill m-0 indicator ${
+                            state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                          }`"
+                        >
+                          <i class="bi bi-person-fill"></i>
+                          {{ state.queueStatus[queue.id] }}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </VueRecaptcha>
+              </div>
+              <div v-else>
                 <button
                   v-if="queue.active"
                   type="button"
@@ -352,41 +585,15 @@ export default {
                     </div>
                   </div>
                 </button>
-              </VueRecaptcha>
-            </div>
-            <div v-else>
-              <button
-                v-if="queue.active"
-                type="button"
-                class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                @click="getQueue(queue)"
-                :disabled="loading"
-              >
-                <div class="row centered">
-                  <div class="col-8">
-                    <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
-                    {{ queue.name }}
-                  </div>
-                  <div class="col-2">
-                    <span
-                      :class="`badge rounded-pill m-0 indicator ${
-                        state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
-                      }`"
-                    >
-                      <i class="bi bi-person-fill"></i>
-                      {{ state.queueStatus[queue.id] }}
-                    </span>
-                  </div>
-                </div>
-              </button>
+              </div>
             </div>
           </div>
-        </div>
-        <div v-if="!isActiveCommerce() && !loading">
-          <Message
-            :title="$t('collaboratorQueuesView.message.1.title')"
-            :content="$t('collaboratorQueuesView.message.1.content')"
-          />
+          <div v-if="!isActiveCommerce() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.1.title')"
+              :content="$t('collaboratorQueuesView.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -404,5 +611,52 @@ export default {
 }
 .indicator {
   font-size: 0.7rem;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

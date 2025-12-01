@@ -207,7 +207,7 @@ export default {
           </select>
         </div>
       </div>
-      <div class="mt-3">
+      <div class="mt-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
         <span class="badge bg-secondary px-2 py-2 m-1"
           >{{ $t('businessAdmin.listResult') }} {{ state.counter }}
         </span>

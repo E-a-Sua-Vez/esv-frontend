@@ -217,22 +217,24 @@ export default {
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
-          state.currentUser.alias || state.currentUser.name
-        }!`"
-        :toggles="state.toggles"
-        component-name="collaboratorAttentionValidate"
-        @goBack="queueAttentions"
-      >
-      </ComponentMenu>
-      <QueueName :queue="state.queue"> </QueueName>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
+            state.currentUser.alias || state.currentUser.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionValidate"
+          @goBack="queueAttentions"
+        >
+        </ComponentMenu>
+        <QueueName :queue="state.queue"> </QueueName>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
       <div
         id="attention-processing"
         v-if="
@@ -402,6 +404,211 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.commerce.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
+                state.currentUser.alias || state.currentUser.name
+              }!`"
+              :toggles="state.toggles"
+              component-name="collaboratorAttentionValidate"
+              @goBack="queueAttentions"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <QueueName :queue="state.queue"> </QueueName>
+        <div
+          id="attention-processing"
+          v-if="
+            state.attention.status === 'PENDING' ||
+            state.attention.status === 'PROCESSING' ||
+            state.attention.status === 'REACTIVATED'
+          "
+        >
+          <div id="page-header" class="text-center">
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
+            </div>
+          </div>
+          <AttentionDetailsNumber
+            :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
+            :attention="state.attentionDetails"
+            :number="state.attention.number"
+            :data="state.user"
+            :show-data="true"
+          ></AttentionDetailsNumber>
+          <div
+            v-if="state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'"
+            class="d-grid gap-2 my-2 mx-2"
+          >
+            <div class="mb-2">
+              <label for="comment" class="form-label mt-2 comment-title">{{
+                $t('collaboratorAttentionValidate.comment.label')
+              }}</label>
+              <textarea
+                class="form-control"
+                id="comment"
+                rows="3"
+                v-model="comment"
+                :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+              >
+              </textarea>
+            </div>
+            <div class="actions">
+              <span
+                ><strong>{{ $t('collaboratorQueueAttentions.actions.1.title.1') }}</strong></span
+              >
+            </div>
+            <div
+              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+              class="row mx-1"
+            >
+              <button
+                class="col btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
+                :disabled="!state.toggles['collaborator.attention.products'] || loading"
+                @click="getAttentionProducts()"
+                data-bs-toggle="modal"
+                :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+              >
+                {{ $t('collaboratorAttentionValidate.actions.3.action') }}
+                <i class="bi bi-eyedropper"></i>
+              </button>
+              <button
+                class="col btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
+                :disabled="!state.toggles['collaborator.attention.patient-history'] || loading"
+                @click="getPatientHistory()"
+                data-bs-toggle="modal"
+                :data-bs-target="`#patientHistoryModal-${state.attention.clientId}`"
+              >
+                {{ $t('dashboard.patientHistory') }} <i class="bi bi-file-medical-fill"></i>
+              </button>
+            </div>
+            <div class="row mx-1">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+                :disabled="!state.toggles['collaborator.attention.finish'] || loading"
+                @click="finishCurrentAttention()"
+              >
+                {{ $t('collaboratorAttentionValidate.actions.1.action') }}
+                <i class="bi bi-check-all"></i>
+              </button>
+            </div>
+            <div class="actions">
+              <span
+                ><strong>{{ $t('collaboratorQueueAttentions.actions.2.title.1') }}</strong></span
+              >
+            </div>
+            <button
+              class="btn btn-lg btn-block btn-size fw-bold btn-danger rounded-pill mb-1"
+              :disabled="!state.toggles['collaborator.attention.skip'] || isReactivated() || loading"
+              @click="skipAttention()"
+            >
+              {{ $t('collaboratorQueueAttentions.actions.2.action') }}
+              <i class="bi bi-skip-forward"></i>
+            </button>
+            <div class="d-grid gap-2 my-1">
+              <button
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                @click="queueAttentions()"
+                :disabled="loading"
+              >
+                {{ $t('collaboratorAttentionValidate.actions.2.action') }}
+                <i class="bi bi-arrow-left-circle"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div v-else id="attention-terminated">
+          <div v-if="state.attention.status === 'TERMINATED' || state.attention.status === 'RATED'">
+            <Message
+              :title="$t('collaboratorAttentionValidate.message.2.title')"
+              :content="$t('collaboratorAttentionValidate.message.2.content')"
+              :icon="'bi bi-emoji-sunglasses'"
+            >
+            </Message>
+          </div>
+          <div v-if="state.attention.status === 'SKIPED'">
+            <Message
+              :title="$t('collaboratorAttentionValidate.message.3.title')"
+              :content="$t('collaboratorAttentionValidate.message.3.content')"
+              :icon="'bi bi-emoji-sunglasses'"
+            >
+            </Message>
+          </div>
+          <div
+            v-if="
+              state.attention.status === 'USER_CANCELLED' ||
+              state.attention.status === 'TERMINATED_RESERVE_CANCELLED'
+            "
+          >
+            <div class="your-attention mt-2">
+              <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
+            </div>
+            <AttentionNumber
+              :type="'secondary'"
+              :number="state.attention.number"
+              :data="state.user"
+            ></AttentionNumber>
+            <Message
+              :title="$t('collaboratorAttentionValidate.message.5.title')"
+              :content="$t('collaboratorAttentionValidate.message.5.content')"
+              :icon="'bi bi-emoji-expressionless'"
+            >
+            </Message>
+          </div>
+          <div class="d-grid gap-2 my-2">
+            <button
+              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+              @click="queueAttentions()"
+              :disabled="loading"
+            >
+              {{ $t('collaboratorAttentionValidate.actions.2.action') }}
+              <i class="bi bi-arrow-left-circle"></i>
+            </button>
+          </div>
+        </div>
+        <div v-if="state.attention.status === 'PENDING'">
+          <Message
+            :title="$t('collaboratorAttentionValidate.message.4.title')"
+            :content="$t('collaboratorAttentionValidate.message.4.content')"
+            :icon="'bi bi-emoji-expressionless'"
+          >
+          </Message>
+          <div class="d-grid gap-2 my-2">
+            <button
+              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+              @click="queueAttentions()"
+              :disabled="loading"
+            >
+              {{ $t('collaboratorAttentionValidate.actions.2.action') }}
+              <i class="bi bi-arrow-left-circle"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Modal Products -->
     <div
       class="modal fade"
@@ -506,5 +713,52 @@ export default {
 .comment-title {
   font-size: 0.9rem;
   line-height: 1rem;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

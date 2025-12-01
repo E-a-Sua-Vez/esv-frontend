@@ -27,6 +27,7 @@ export default {
     queues: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
     bookingsIn: { type: Array, default: undefined },
+    filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
     return {
@@ -178,6 +179,31 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh(1);
     },
+    setSearchText(text) {
+      this.searchText = text;
+    },
+    setQueueId(id) {
+      this.queueId = id;
+    },
+    setServiceId(id) {
+      this.serviceId = id;
+    },
+    setStartDate(date) {
+      this.startDate = date;
+    },
+    setEndDate(date) {
+      this.endDate = date;
+    },
+    setStatus(value) {
+      this.status = value;
+    },
+    async checkSurvey(event) {
+      if (event.target.checked) {
+        this.survey = true;
+      } else {
+        this.survey = false;
+      }
+    },
   },
   computed: {
     changeData() {
@@ -251,6 +277,36 @@ export default {
 </script>
 
 <template>
+  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+  <slot
+    v-if="filtersLocation === 'slot'"
+    name="filters-exposed"
+    :clear="clear"
+    :get-today="getToday"
+    :get-current-month="getCurrentMonth"
+    :get-last-month="getLastMonth"
+    :get-last-three-months="getLastThreeMonths"
+    :refresh="refresh"
+    :start-date="startDate"
+    :end-date="endDate"
+    :search-text="searchText"
+    :queue-id="queueId"
+    :service-id="serviceId"
+    :queues="queues"
+    :services="services"
+    :loading="loading"
+    :status="status"
+    :survey="survey"
+    :asc="asc"
+    :set-search-text="setSearchText"
+    :set-queue-id="setQueueId"
+    :set-service-id="setServiceId"
+    :set-start-date="setStartDate"
+    :set-end-date="setEndDate"
+    :set-status="setStatus"
+    :check-survey="checkSurvey"
+    :check-asc="checkAsc"
+  ></slot>
   <div
     id="bookings-management"
     class="row"
@@ -273,7 +329,8 @@ export default {
                 ></SimpleDownloadButton>
               </div>
             </div>
-            <div class="my-2 row metric-card">
+            <!-- Filters Section - Only show when filtersLocation === 'component' (mobile) -->
+            <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
                   <span
@@ -493,7 +550,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>

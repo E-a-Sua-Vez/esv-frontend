@@ -35,10 +35,13 @@ export default {
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
   data() {
+    // Set default dates: 1 month before today to today
+    const today = new Date().toISOString().slice(0, 10);
+    const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
     return {
       loading: false,
       counter: 0,
-      clients: undefined,
+      clients: [],
       totalPages: 0,
       daysSinceType: undefined,
       daysSinceContacted: undefined,
@@ -46,6 +49,9 @@ export default {
       contacted: undefined,
       contactable: undefined,
       survey: undefined,
+      firstAttentionForm: undefined,
+      ratingType: undefined,
+      npsType: undefined,
       asc: true,
       pendingControls: undefined,
       pendingBookings: undefined,
@@ -57,25 +63,64 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
-      startDate: undefined,
-      endDate: undefined,
+      startDate: oneMonthAgo,
+      endDate: today,
       togglesClient: {},
+      _skipWatch: false, // Flag to skip watch during manual sync
     };
   },
   methods: {
     async refresh(page) {
       try {
         this.loading = true;
+        // Clear previous clients IMMEDIATELY to avoid showing stale data
+        this.clients = [];
+        this.counter = 0;
+        this.totalPages = 0;
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
+        // Ensure searchText is passed correctly (even if empty string)
+        const searchTextParam = this.searchText !== null && this.searchText !== undefined
+          ? this.searchText
+          : undefined;
+
+        // Ensure dates are properly formatted (YYYY-MM-DD) or undefined
+        const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
+        const endDateParam = this.endDate && this.endDate !== '' ? this.endDate : undefined;
+
+        console.log('DashboardClientsManagement - Calling getClientsDetails with filters:', {
+          businessId: this.business.id,
+          commerceId: this.commerce.id,
+          from: startDateParam,
+          to: endDateParam,
+          commerceIds: commerceIds,
+          page: this.page,
+          limit: this.limit,
+          daysSinceType: this.daysSinceType,
+          daysSinceContacted: this.daysSinceContacted,
+          contactable: this.contactable,
+          contacted: this.contacted,
+          searchText: searchTextParam,
+          queueId: this.queueId,
+          serviceId: this.serviceId,
+          survey: this.survey,
+          asc: this.asc,
+          contactResultType: this.contactResultType,
+          pendingControls: this.pendingControls,
+          pendingBookings: this.pendingBookings,
+          firstAttentionForm: this.firstAttentionForm,
+          ratingType: this.ratingType,
+          npsType: this.npsType,
+        });
+
         this.clients = await getClientsDetails(
           this.business.id,
           this.commerce.id,
-          this.startDate,
-          this.endDate,
+          startDateParam,
+          endDateParam,
           commerceIds,
           this.page,
           this.limit,
@@ -83,7 +128,7 @@ export default {
           this.daysSinceContacted,
           this.contactable,
           this.contacted,
-          this.searchText,
+          searchTextParam,
           this.queueId,
           this.survey,
           this.asc,
@@ -91,7 +136,10 @@ export default {
           undefined,
           this.serviceId,
           this.pendingControls,
-          this.pendingBookings
+          this.pendingBookings,
+          this.firstAttentionForm,
+          this.ratingType,
+          this.npsType
         );
         if (this.clients && this.clients.length > 0) {
           const { counter } = this.clients[0];
@@ -100,6 +148,7 @@ export default {
           const totalB = Math.trunc(total);
           this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
         } else {
+          this.clients = [];
           this.counter = 0;
           this.totalPages = 0;
         }
@@ -117,6 +166,9 @@ export default {
       this.daysSinceContacted = undefined;
       this.contactResultType = undefined;
       this.survey = undefined;
+      this.firstAttentionForm = undefined;
+      this.ratingType = undefined;
+      this.npsType = undefined;
       this.page = 1;
       this.asc = true;
       this.contactable = undefined;
@@ -151,12 +203,49 @@ export default {
         this.survey = false;
       }
     },
+    async checkFirstAttentionForm(event) {
+      if (event.target.checked) {
+        this.firstAttentionForm = true;
+      } else {
+        this.firstAttentionForm = false;
+      }
+    },
     async checkAsc(event) {
       if (event.target.checked) {
         this.asc = true;
       } else {
         this.asc = false;
       }
+    },
+    setSearchText(text) {
+      this.searchText = text;
+    },
+    setQueueId(id) {
+      this.queueId = id;
+    },
+    setServiceId(id) {
+      this.serviceId = id;
+    },
+    setStartDate(date) {
+      this.startDate = date;
+    },
+    setEndDate(date) {
+      this.endDate = date;
+    },
+    setDaysSinceType(value) {
+      this.daysSinceType = value;
+    },
+    setDaysSinceContacted(value) {
+      this.daysSinceContacted = value;
+    },
+    setContactResultType(value) {
+      this.contactResultType = value;
+    },
+    setRatingType(value) {
+      this.ratingType = value;
+    },
+    setNpsType(value) {
+      this.npsType = value;
     },
     async checkPendingControls(event) {
       if (event.target.checked) {
@@ -202,7 +291,10 @@ export default {
           this.contactResultType,
           this.serviceId,
           this.pendingControls,
-          this.pendingBookings
+          this.pendingBookings,
+          this.firstAttentionForm,
+          this.ratingType,
+          this.npsType
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -264,12 +356,18 @@ export default {
         contactable,
         contacted,
         survey,
+        firstAttentionForm,
+        ratingType,
+        npsType,
         asc,
         queueId,
         limit,
         serviceId,
         pendingControls,
         pendingBookings,
+        searchText,
+        startDate,
+        endDate,
       } = this;
       return {
         page,
@@ -279,12 +377,18 @@ export default {
         contactable,
         contacted,
         survey,
+        firstAttentionForm,
+        ratingType,
+        npsType,
         asc,
         queueId,
         limit,
         serviceId,
         pendingControls,
         pendingBookings,
+        searchText,
+        startDate,
+        endDate,
       };
     },
     visible() {
@@ -299,6 +403,18 @@ export default {
       immediate: true,
       deep: true,
       async handler(oldData, newData) {
+        // Skip if this is a manual sync (indicated by _skipWatch flag)
+        if (this._skipWatch) {
+          this._skipWatch = false;
+          return;
+        }
+
+        // Only refresh if this component is actually showing content (not just filters)
+        // The filter instance has showClientManagement=false, so it shouldn't refresh
+        if (!this.showClientManagement) {
+          return;
+        }
+
         if (
           oldData &&
           newData &&
@@ -308,14 +424,23 @@ export default {
             oldData.contactResultType !== newData.contactResultType ||
             oldData.contacted !== newData.contacted ||
             oldData.survey !== newData.survey ||
+            oldData.firstAttentionForm !== newData.firstAttentionForm ||
+            oldData.ratingType !== newData.ratingType ||
+            oldData.npsType !== newData.npsType ||
             oldData.asc !== newData.asc ||
             oldData.pendingControls !== newData.pendingControls ||
             oldData.pendingBookings !== newData.pendingBookings ||
             oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
-            oldData.serviceId !== newData.serviceId)
+            oldData.serviceId !== newData.serviceId ||
+            oldData.searchText !== newData.searchText ||
+            oldData.startDate !== newData.startDate ||
+            oldData.endDate !== newData.endDate)
         ) {
           this.page = 1;
+        }
+        // Only refresh if this is not the initial mount (oldData exists)
+        if (oldData) {
           this.refresh();
         }
       },
@@ -323,16 +448,29 @@ export default {
     visible: {
       immediate: true,
       deep: true,
-      async handler() {
+      async handler(newVal, oldVal) {
         // Load toggles even when filtersLocation is 'slot' to enable modal functionality
         if (this.showClientManagement === true || this.filtersLocation === 'slot') {
           if (!this.togglesClient || Object.keys(this.togglesClient).length === 0) {
             this.togglesClient = await getPermissions('client', 'admin');
           }
           if (this.showClientManagement === true) {
+            // Auto-expand filters when component becomes visible for the first time
+            if (!oldVal || (oldVal && !oldVal.showClientManagement && newVal.showClientManagement)) {
+              this.showFilterOptions = true;
+            }
             this.page = 1;
             this.refresh();
           }
+        }
+      },
+    },
+    showClientManagement: {
+      immediate: false,
+      handler(newVal) {
+        // Auto-expand filters when component becomes visible
+        if (newVal === true && this.filtersLocation === 'component') {
+          this.showFilterOptions = true;
         }
       },
     },
@@ -374,6 +512,20 @@ export default {
     :check-asc="checkAsc"
     :check-pending-controls="checkPendingControls"
     :check-pending-bookings="checkPendingBookings"
+    :check-first-attention-form="checkFirstAttentionForm"
+    :set-search-text="setSearchText"
+    :set-queue-id="setQueueId"
+    :set-service-id="setServiceId"
+    :set-start-date="setStartDate"
+    :set-end-date="setEndDate"
+    :set-days-since-type="setDaysSinceType"
+    :set-days-since-contacted="setDaysSinceContacted"
+    :set-contact-result-type="setContactResultType"
+    :set-rating-type="setRatingType"
+    :set-nps-type="setNpsType"
+    :first-attention-form="firstAttentionForm"
+    :rating-type="ratingType"
+    :nps-type="npsType"
   ></slot>
   <div
     id="clients-management"
@@ -555,6 +707,7 @@ export default {
                       </option>
                     </select>
                   </div>
+                  <!-- Atendimentos Filters (matching exact order from DashboardAttentionsManagement) -->
                   <div class="col-12 col-md my-1 filter-card">
                     <input
                       type="radio"
@@ -596,7 +749,7 @@ export default {
                       v-if="true"
                       :class="'dark'"
                       arrow
-                      disable-click-away
+                      hover
                       :content="$t(`dashboard.tracing.filters.attention`)"
                     >
                       <i class="bi bi-info-circle-fill h7 m-2"></i>
@@ -643,7 +796,7 @@ export default {
                       v-if="true"
                       :class="'dark'"
                       arrow
-                      disable-click-away
+                      hover
                       :content="$t(`dashboard.tracing.filters.contact`)"
                     >
                       <i class="bi bi-info-circle-fill h7 m-2"></i>
@@ -690,7 +843,7 @@ export default {
                       v-if="true"
                       :class="'dark'"
                       arrow
-                      disable-click-away
+                      hover
                       :content="$t(`dashboard.tracing.filters.contactResult`)"
                     >
                       <i class="bi bi-info-circle-fill h7 m-2"></i>
@@ -764,7 +917,24 @@ export default {
                       </div>
                     </div>
                   </div>
+                  <!-- Clientes-specific filters -->
                   <div class="row">
+                    <div class="col-12 col-md-6">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="firstAttentionForm === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="firstAttentionForm"
+                          id="firstAttentionForm"
+                          v-model="firstAttentionForm"
+                          @click="checkFirstAttentionForm($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="firstAttentionForm">{{
+                          $t('dashboard.firstAttentionForm')
+                        }}</label>
+                      </div>
+                    </div>
                     <div class="col-12 col-md-6">
                       <div class="form-check form-switch centered">
                         <input
@@ -783,6 +953,8 @@ export default {
                         >
                       </div>
                     </div>
+                  </div>
+                  <div class="row">
                     <div class="col-12 col-md-6">
                       <div class="form-check form-switch centered">
                         <input
@@ -802,10 +974,105 @@ export default {
                       </div>
                     </div>
                   </div>
+                  <!-- Pesquisas Filters (from DashboardSurveysManagement) -->
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="ratingType"
+                      value="DETRACTOR"
+                      name="rating-type"
+                      id="detractor-rating"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="detractor-rating">
+                      <i :class="`bi bi-star-fill red-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="ratingType"
+                      value="NEUTRO"
+                      name="rating-type"
+                      id="neutro-rating"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="neutro-rating">
+                      <i :class="`bi bi-star-half yellow-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="ratingType"
+                      value="PROMOTOR"
+                      name="rating-type"
+                      id="promotor-rating"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="promotor-rating">
+                      <i :class="`bi bi-star-fill green-icon`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      hover
+                      :content="$t(`dashboard.surveysFilters.filters.rating`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="npsType"
+                      value="DETRACTOR"
+                      name="nps-type"
+                      id="detractor-nps"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="detractor-nps">
+                      <i :class="`bi bi-emoji-frown-fill red-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="npsType"
+                      value="NEUTRO"
+                      name="nps-type"
+                      id="neutro-nps"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="neutro-nps">
+                      <i :class="`bi bi-emoji-neutral-fill yellow-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="npsType"
+                      value="PROMOTOR"
+                      name="nps-type"
+                      id="promotor-nps"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="promotor-nps">
+                      <i :class="`bi bi-emoji-smile-fill green-icon`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      hover
+                      :content="$t(`dashboard.surveysFilters.filters.nps`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
                 </slot>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>

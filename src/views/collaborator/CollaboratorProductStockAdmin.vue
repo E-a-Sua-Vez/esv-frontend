@@ -119,97 +119,214 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessProductStockAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessProductStockAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="product-stock">
-        <div v-if="isActiveBusiness()">
-          <div v-if="state.commerces.length === 0" class="control-box">
-            <Message
-              :title="$t('businessProductStockAdmin.message.3.title')"
-              :content="$t('businessProductStockAdmin.message.3.content')"
-            />
-          </div>
-          <div v-else class="control-box">
-            <div id="product-stock-controls">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t('businessProductStockAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    id="modules"
-                    @change="selectCommerce(state.commerce)"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessProductStockAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessProductStockAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="product-stock">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('businessProductStockAdmin.message.3.title')"
+                :content="$t('businessProductStockAdmin.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="product-stock-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('businessProductStockAdmin.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
+            <div v-if="!loading" id="product-stock-result" class="mt-2">
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showProducts ? 'btn-selected' : ''"
+                    @click="showProducts()"
+                    :disabled="!state.toggles['products-stock.products.view']"
+                  >
+                    {{ $t('businessProductStockAdmin.products') }} <br />
+                    <i class="bi bi-eyedropper"></i>
+                  </button>
+                </div>
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showAttentions ? 'btn-selected' : ''"
+                    @click="showAttentions()"
+                    :disabled="!state.toggles['products-stock.attentions.view']"
+                  >
+                    {{ $t('businessProductStockAdmin.attentions') }} <br />
+                    <i class="bi bi-qr-code"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <ProductsStockManagement
+                  :show-product-stock-management="state.showProducts"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                  :commerces="state.selectedCommerces"
+                  :business="state.business"
+                >
+                </ProductsStockManagement>
+                <ProductAttentionManagement
+                  :show-product-stock-management="state.showAttentions"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                  :commerces="state.selectedCommerces"
+                >
+                </ProductAttentionManagement>
+              </div>
+            </div>
           </div>
-          <div v-if="!loading" id="product-stock-result" class="mt-2">
-            <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showProducts ? 'btn-selected' : ''"
-                  @click="showProducts()"
-                  :disabled="!state.toggles['products-stock.products.view']"
-                >
-                  {{ $t('businessProductStockAdmin.products') }} <br />
-                  <i class="bi bi-eyedropper"></i>
-                </button>
-              </div>
-              <div class="col-6 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showAttentions ? 'btn-selected' : ''"
-                  @click="showAttentions()"
-                  :disabled="!state.toggles['products-stock.attentions.view']"
-                >
-                  {{ $t('businessProductStockAdmin.attentions') }} <br />
-                  <i class="bi bi-qr-code"></i>
-                </button>
-              </div>
-            </div>
-            <div>
-              <ProductsStockManagement
-                :show-product-stock-management="state.showProducts"
-                :toggles="state.toggles"
-                :commerce="state.commerce"
-                :queues="state.queues"
-                :commerces="state.selectedCommerces"
-                :business="state.business"
-              >
-              </ProductsStockManagement>
-              <ProductAttentionManagement
-                :show-product-stock-management="state.showAttentions"
-                :toggles="state.toggles"
-                :commerce="state.commerce"
-                :queues="state.queues"
-                :commerces="state.selectedCommerces"
-              >
-              </ProductAttentionManagement>
-            </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('businessProductStockAdmin.message.1.title')"
+              :content="$t('businessProductStockAdmin.message.1.content')"
+            />
           </div>
         </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('businessProductStockAdmin.message.1.title')"
-            :content="$t('businessProductStockAdmin.message.1.content')"
-          />
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.business.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessProductStockAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessProductStockAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="product-stock">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('businessProductStockAdmin.message.3.title')"
+                :content="$t('businessProductStockAdmin.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="product-stock-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('businessProductStockAdmin.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="product-stock-result" class="mt-2">
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showProducts ? 'btn-selected' : ''"
+                    @click="showProducts()"
+                    :disabled="!state.toggles['products-stock.products.view']"
+                  >
+                    {{ $t('businessProductStockAdmin.products') }} <br />
+                    <i class="bi bi-eyedropper"></i>
+                  </button>
+                </div>
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showAttentions ? 'btn-selected' : ''"
+                    @click="showAttentions()"
+                    :disabled="!state.toggles['products-stock.attentions.view']"
+                  >
+                    {{ $t('businessProductStockAdmin.attentions') }} <br />
+                    <i class="bi bi-qr-code"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <ProductsStockManagement
+                  :show-product-stock-management="state.showProducts"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                  :commerces="state.selectedCommerces"
+                  :business="state.business"
+                >
+                </ProductsStockManagement>
+                <ProductAttentionManagement
+                  :show-product-stock-management="state.showAttentions"
+                  :toggles="state.toggles"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                  :commerces="state.selectedCommerces"
+                >
+                </ProductAttentionManagement>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('businessProductStockAdmin.message.1.title')"
+              :content="$t('businessProductStockAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -257,5 +374,52 @@ export default {
 .metric-card-subtitle {
   font-size: 0.6rem;
   font-weight: 500;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

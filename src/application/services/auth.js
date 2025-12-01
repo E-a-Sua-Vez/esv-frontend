@@ -48,26 +48,57 @@ export const signIn = async (email, password, userType) => {
 };
 
 export const signOut = async (email, userType) => {
-  if (userType === USER_TYPES.COLLABORATOR) {
-    if (email) {
-      const user = await getCollaboratorByEmail(email);
-      await registerCollaboratorToken(user.id, { token: '' });
+  try {
+    if (userType === USER_TYPES.COLLABORATOR) {
+      if (email) {
+        try {
+          const user = await getCollaboratorByEmail(email);
+          if (user && user.id) {
+            await registerCollaboratorToken(user.id, { token: '' });
+          }
+        } catch (error) {
+          // Log error but continue with logout
+          console.error('Error clearing collaborator token during signOut:', error);
+        }
+      }
+      await logout();
+    } else if (userType === USER_TYPES.BUSINESS) {
+      if (email) {
+        try {
+          const user = await getAdministratorByEmail(email);
+          if (user && user.id) {
+            await registerAdministratorToken(user.id, { token: '' });
+          }
+        } catch (error) {
+          // Log error but continue with logout
+          console.error('Error clearing administrator token during signOut:', error);
+        }
+      }
+      await logout();
+    } else if (userType === USER_TYPES.MASTER) {
+      if (email) {
+        try {
+          const user = await getMasterAdministratorByEmail(email);
+          if (user && user.id) {
+            await registerAdministratorToken(user.id, { token: '' });
+          }
+        } catch (error) {
+          // Log error but continue with logout
+          console.error('Error clearing master administrator token during signOut:', error);
+        }
+      }
+      await logout();
+    } else if (userType === USER_TYPES.INVITED) {
+      await logout();
     }
-    await logout();
-  } else if (userType === USER_TYPES.BUSINESS) {
-    if (email) {
-      const user = await getAdministratorByEmail(email);
-      await registerAdministratorToken(user.id, { token: '' });
+  } catch (error) {
+    // Log error but still proceed with logout to ensure user can sign out
+    console.error('Error during signOut:', error);
+    try {
+      await logout();
+    } catch (logoutError) {
+      console.error('Error during logout:', logoutError);
     }
-    await logout();
-  } else if (userType === USER_TYPES.MASTER) {
-    if (email) {
-      const user = await getMasterAdministratorByEmail(email);
-      await registerAdministratorToken(user.id, { token: '' });
-    }
-    await logout();
-  } else if (userType === USER_TYPES.INVITED) {
-    await logout();
   }
 };
 

@@ -82,6 +82,9 @@ export default {
       fileServiceConditions: undefined,
       clientSearched: {},
       errorsSearch: [],
+      showOriginModal: false,
+      showHealthAgreementModal: false,
+      showPhoneCodeModal: false,
     });
 
     onBeforeMount(async () => {
@@ -140,9 +143,7 @@ export default {
           if (birthday.value) {
             state.newUser.birthday = birthday.value != 'undefined' ? birthday.value : '';
           } else {
-            state.newUser.birthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18))
-              .toISOString()
-              .slice(0, 10);
+            state.newUser.birthday = '';
           }
           if (addressText.value) {
             state.newUser.addressText = addressText.value != 'undefined' ? addressText.value : '';
@@ -201,6 +202,320 @@ export default {
         state.newUser.addressCode = addressCode;
       }
       receiveData(state.newUser);
+    };
+
+    // Date formatting utilities
+    const formatDateForDisplay = (dateString) => {
+      if (!dateString) return '';
+      // If already in YYYY-MM-DD format, convert to DD/MM/YYYY
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      return dateString;
+    };
+
+    const formatDateForModel = (dateString) => {
+      if (!dateString) return '';
+      // If in DD/MM/YYYY format, convert to YYYY-MM-DD
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split('/');
+        return `${year}-${month}-${day}`;
+      }
+      // If already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      return dateString;
+    };
+
+    const formatDateInput = (value) => {
+      // Remove all non-numeric characters
+      const numbers = value.replace(/\D/g, '');
+
+      // Format as DD/MM/YYYY automatically as user types
+      let formatted = numbers;
+      if (numbers.length > 0) {
+        formatted = numbers.slice(0, 2);
+      }
+      if (numbers.length > 2) {
+        formatted = `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}`;
+      }
+      if (numbers.length > 4) {
+        formatted = `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+      }
+
+      // Limit to 10 characters (DD/MM/YYYY)
+      return formatted;
+    };
+
+    const handleDateInput = (event) => {
+      const input = event.target;
+      const oldValue = input.value;
+      const cursorPosition = input.selectionStart;
+      const formatted = formatDateInput(input.value);
+
+      // Update the input value
+      input.value = formatted;
+
+      // Calculate new cursor position after formatting
+      // Count how many digits were before the cursor
+      const digitsBeforeCursor = oldValue.slice(0, cursorPosition).replace(/\D/g, '').length;
+
+      // Find the position in the new formatted string that corresponds to the same number of digits
+      let newCursorPosition = 0;
+      let digitCount = 0;
+
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) {
+          digitCount++;
+          if (digitCount === digitsBeforeCursor) {
+            newCursorPosition = i + 1;
+            break;
+          }
+        }
+        if (digitCount < digitsBeforeCursor) {
+          newCursorPosition = i + 1;
+        }
+      }
+
+      // If we're at the end, place cursor at the end
+      if (digitsBeforeCursor >= formatted.replace(/\D/g, '').length) {
+        newCursorPosition = formatted.length;
+      }
+
+      // Set cursor position after a brief delay to ensure the value is updated
+      setTimeout(() => {
+        input.setSelectionRange(newCursorPosition, newCursorPosition);
+      }, 0);
+
+      // Convert to YYYY-MM-DD format for model only when we have a complete date
+      if (formatted.length === 10) {
+        const modelDate = formatDateForModel(formatted);
+        if (modelDate && /^\d{4}-\d{2}-\d{2}$/.test(modelDate)) {
+          // Validate the date
+          const date = new Date(modelDate + 'T00:00:00');
+          if (!isNaN(date.getTime())) {
+            // Check if the date components match (to catch invalid dates like 31/02/2024)
+            const [year, month, day] = modelDate.split('-');
+            if (
+              date.getFullYear() == year &&
+              date.getMonth() + 1 == month &&
+              date.getDate() == day
+            ) {
+              state.newUser.birthday = modelDate;
+              sendData();
+            } else {
+              // Invalid date (e.g., 31/02/2024), clear it
+              state.newUser.birthday = '';
+            }
+          } else {
+            state.newUser.birthday = '';
+          }
+        }
+      } else if (formatted.length < 10) {
+        // Partial date, clear model value
+        state.newUser.birthday = '';
+      }
+    };
+
+    const openDatePicker = () => {
+      if (typeof document === 'undefined') return;
+
+      const hiddenDateInput = document.getElementById('attention-birthday-input-hidden');
+      const textInput = document.getElementById('attention-birthday-input-add');
+
+      if (hiddenDateInput && textInput) {
+        // Enable pointer events and position it over the text input
+        hiddenDateInput.style.pointerEvents = 'auto';
+        hiddenDateInput.style.cursor = 'pointer';
+
+        // Ensure it's positioned correctly (already positioned absolutely in the same container)
+        // Scroll the input into view if needed
+        textInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Small delay to ensure positioning is correct
+        setTimeout(() => {
+          // Try modern showPicker API first (if available)
+          if (typeof hiddenDateInput.showPicker === 'function') {
+            try {
+              const pickerPromise = hiddenDateInput.showPicker();
+              // Check if it returns a Promise
+              if (pickerPromise && typeof pickerPromise.catch === 'function') {
+                pickerPromise.catch(() => {
+                  // Fallback to click if showPicker fails
+                  hiddenDateInput.focus();
+                  hiddenDateInput.click();
+                });
+              } else {
+                // If showPicker doesn't return a Promise, just use click
+                hiddenDateInput.focus();
+                hiddenDateInput.click();
+              }
+            } catch (error) {
+              // Fallback to click if showPicker throws an error
+              hiddenDateInput.focus();
+              hiddenDateInput.click();
+            }
+          } else {
+            // Fallback for browsers without showPicker
+            hiddenDateInput.focus();
+            hiddenDateInput.click();
+          }
+
+          // Reset pointer events after interaction
+          setTimeout(() => {
+            if (hiddenDateInput) {
+              hiddenDateInput.style.pointerEvents = 'none';
+            }
+          }, 500);
+        }, 10);
+      }
+    };
+
+    const handleDatePickerChange = (event) => {
+      const dateValue = event.target.value;
+      const hiddenDateInput = event.target;
+
+      // Reset pointer events after date selection
+      if (hiddenDateInput) {
+        hiddenDateInput.style.pointerEvents = 'none';
+      }
+
+      if (dateValue) {
+        state.newUser.birthday = dateValue;
+        // Update the text input display
+        if (typeof document !== 'undefined') {
+          const textInput = document.getElementById('attention-birthday-input-add');
+          if (textInput) {
+            textInput.value = formatDateForDisplay(dateValue);
+          }
+        }
+        sendData();
+      }
+    };
+
+    const handleDatePickerBlur = () => {
+      if (typeof document === 'undefined') return;
+      const el = document.getElementById('attention-birthday-input-hidden');
+      if (el) {
+        el.style.pointerEvents = 'none';
+      }
+    };
+
+    const handleDatePaste = (event) => {
+      event.preventDefault();
+      const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+      // Try to parse various date formats
+      let parsedDate = '';
+
+      // Try YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(pastedText)) {
+        parsedDate = formatDateForDisplay(pastedText);
+      }
+      // Try DD/MM/YYYY format
+      else if (/^\d{2}\/\d{2}\/\d{4}$/.test(pastedText)) {
+        parsedDate = pastedText;
+      }
+      // Try DD-MM-YYYY format
+      else if (/^\d{2}-\d{2}-\d{4}$/.test(pastedText)) {
+        parsedDate = pastedText.replace(/-/g, '/');
+      }
+      // Try to extract date from text
+      else {
+        const numbers = pastedText.replace(/\D/g, '');
+        if (numbers.length >= 8) {
+          // Assume DDMMYYYY format
+          const day = numbers.slice(0, 2);
+          const month = numbers.slice(2, 4);
+          const year = numbers.slice(4, 8);
+          parsedDate = `${day}/${month}/${year}`;
+        }
+      }
+
+      if (parsedDate) {
+        const input = event.target;
+        input.value = parsedDate;
+        handleDateInput({ target: input });
+      }
+    };
+
+    const isMobileDevice = () => {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) || window.innerWidth <= 768;
+    };
+
+    const openOriginModal = () => {
+      state.showOriginModal = true;
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeOriginModal = () => {
+      state.showOriginModal = false;
+      // Restore body scroll
+      document.body.style.overflow = '';
+    };
+
+    const selectOrigin = (code) => {
+      state.newUser.origin = code;
+      sendData();
+      closeOriginModal();
+    };
+
+    const getSelectedOriginLabel = () => {
+      if (!state.newUser.origin) return '';
+      const selected = state.originCodes.find(code => code.code === state.newUser.origin);
+      return selected ? selected.id : '';
+    };
+
+    // Health Agreement modal functions
+    const openHealthAgreementModal = () => {
+      state.showHealthAgreementModal = true;
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeHealthAgreementModal = () => {
+      state.showHealthAgreementModal = false;
+      document.body.style.overflow = '';
+    };
+
+    const selectHealthAgreement = (id) => {
+      state.newUser.healthAgreementId = id;
+      sendData();
+      closeHealthAgreementModal();
+    };
+
+    const getSelectedHealthAgreementLabel = () => {
+      if (!state.newUser.healthAgreementId) return '';
+      const selected = state.healthAgreementCompanies.find(
+        company => company.id === state.newUser.healthAgreementId
+      );
+      return selected ? selected.tag : '';
+    };
+
+    // Phone Code modal functions
+    const openPhoneCodeModal = () => {
+      state.showPhoneCodeModal = true;
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closePhoneCodeModal = () => {
+      state.showPhoneCodeModal = false;
+      document.body.style.overflow = '';
+    };
+
+    const selectPhoneCode = (code) => {
+      state.newUser.phoneCode = code;
+      sendData();
+      closePhoneCodeModal();
+    };
+
+    const getSelectedPhoneCodeLabel = () => {
+      if (!state.newUser.phoneCode) return '';
+      const selected = state.phoneCodes.find(code => code.code === state.newUser.phoneCode);
+      return selected ? selected.label : '';
     };
 
     const replaceOnlyNumber = () => {
@@ -453,6 +768,25 @@ export default {
       getDocumentServiceConditions,
       sendDataOnlyNumber,
       replaceOnlyNumber,
+      formatDateForDisplay,
+      handleDateInput,
+      openDatePicker,
+      handleDatePickerChange,
+      handleDatePickerBlur,
+      handleDatePaste,
+      isMobileDevice,
+      openOriginModal,
+      closeOriginModal,
+      selectOrigin,
+      getSelectedOriginLabel,
+      openHealthAgreementModal,
+      closeHealthAgreementModal,
+      selectHealthAgreement,
+      getSelectedHealthAgreementLabel,
+      openPhoneCodeModal,
+      closePhoneCodeModal,
+      selectPhoneCode,
+      getSelectedPhoneCodeLabel,
     };
   },
 };
@@ -692,9 +1026,26 @@ export default {
             class="row g-1"
             v-if="showFormInput(commerce, 'attention-user-phone', 'USER')"
           >
-            <div class="col-3 form-floating">
+            <div class="col-3 form-floating position-relative">
+              <!-- Mobile: Custom button that opens modal -->
+              <button
+                v-if="isMobileDevice()"
+                type="button"
+                class="form-control form-control-solid phone-code-select-button"
+                @click="openPhoneCodeModal"
+              >
+                <span v-if="state.newUser.phoneCode" class="phone-code-selected-text">
+                  {{ getSelectedPhoneCodeLabel() }}
+                </span>
+                <span v-else class="text-muted">
+                  {{ $t('commerceQueuesView.phoneCode') }}
+                </span>
+                <i class="bi bi-chevron-down phone-code-chevron"></i>
+              </button>
+              <!-- Desktop: Native select -->
               <select
-                class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
+                v-else
+                class="form-control form-control-solid form-select phone-code-select-desktop"
                 v-model.trim="state.newUser.phoneCode"
                 @change="sendData"
                 id="attention-phoneCode-input-add"
@@ -703,9 +1054,53 @@ export default {
                   {{ code.label }}
                 </option>
               </select>
-              <label for="attention-phoneCode-input-add">
-                {{ $t('commerceQueuesView.phoneCode') }}</label
-              >
+              <label for="attention-phoneCode-input-add" class="label-form">
+                {{ $t('commerceQueuesView.phoneCode') }}
+              </label>
+              <!-- Mobile Modal -->
+              <teleport to="body">
+                <div
+                  v-if="isMobileDevice() && state.showPhoneCodeModal"
+                  class="modal fade show d-block phone-code-modal"
+                  tabindex="-1"
+                  role="dialog"
+                  @click.self="closePhoneCodeModal"
+                >
+                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable phone-code-modal-dialog" role="document" @click.stop>
+                    <div class="modal-content phone-code-modal-content">
+                      <div class="modal-header phone-code-modal-header">
+                        <h5 class="modal-title fw-bold">
+                          <i class="bi bi-telephone me-2"></i>{{ $t('commerceQueuesView.phoneCode') }}
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          @click="closePhoneCodeModal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <div class="modal-body phone-code-modal-body">
+                        <div class="phone-code-options-list">
+                          <button
+                            v-for="code in state.phoneCodes"
+                            :key="code.id"
+                            type="button"
+                            class="phone-code-option-button"
+                            :class="{ 'phone-code-option-selected': state.newUser.phoneCode === code.code }"
+                            @click="selectPhoneCode(code.code)"
+                          >
+                            <span>{{ code.label }}</span>
+                            <i
+                              v-if="state.newUser.phoneCode === code.code"
+                              class="bi bi-check-circle-fill phone-code-check-icon"
+                            ></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </teleport>
             </div>
             <div class="col-9 form-floating">
               <input
@@ -734,17 +1129,40 @@ export default {
             class="row g-1"
             v-if="showFormInput(commerce, 'attention-user-birthday', 'USER')"
           >
-            <div class="col form-floating">
+            <div class="col form-floating position-relative">
               <input
                 id="attention-birthday-input-add"
                 class="form-control form-control-solid"
-                type="date"
-                v-model.trim="state.newUser.birthday"
-                @keyup="sendData"
+                type="text"
+                :value="formatDateForDisplay(state.newUser.birthday)"
+                @input="handleDateInput"
+                @paste="handleDatePaste"
+                @blur="sendData"
+                placeholder="DD/MM/YYYY"
+                maxlength="10"
+                inputmode="numeric"
               />
               <label for="attention-birthday-input-add" class="label-form"
                 >{{ $t('commerceQueuesView.birthday') }} <i class="bi bi-calendar"></i
               ></label>
+              <button
+                type="button"
+                class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2 p-0"
+                style="z-index: 10; border: none; background: none; color: #6c757d;"
+                @click="openDatePicker"
+                :aria-label="$t('commerceQueuesView.birthday')"
+              >
+                <i class="bi bi-calendar3 fs-5"></i>
+              </button>
+              <input
+                id="attention-birthday-input-hidden"
+                type="date"
+                class="position-absolute"
+                :value="state.newUser.birthday"
+                @change="handleDatePickerChange"
+                @blur="handleDatePickerBlur"
+                style="opacity: 0; width: 100%; height: 100%; top: 0; left: 0; z-index: 5; pointer-events: none; cursor: pointer;"
+              />
             </div>
           </div>
           <div
@@ -869,20 +1287,82 @@ export default {
             class="row g-1"
             v-if="showFormInput(commerce, 'attention-user-origin', 'USER')"
           >
-            <div class="col form-floating">
+            <div class="col form-floating position-relative">
+              <!-- Mobile: Custom button that opens modal -->
+              <button
+                v-if="isMobileDevice()"
+                type="button"
+                class="form-control form-control-solid origin-select-button"
+                @click="openOriginModal"
+              >
+                <span v-if="state.newUser.origin" class="origin-selected-text">
+                  {{ $t(`origin.${getSelectedOriginLabel()}`) }}
+                </span>
+                <span v-else class="text-muted">
+                  {{ $t('commerceQueuesView.originText') }}
+                </span>
+                <i class="bi bi-chevron-down origin-chevron"></i>
+              </button>
+              <!-- Desktop: Native select -->
               <select
-                class="form-control form-select btn btn-light select"
+                v-else
+                class="form-control form-control-solid form-select origin-select-desktop"
                 v-model="state.newUser.origin"
                 id="attention-origin-input-add"
                 @change="sendData"
               >
+                <option value=""></option>
                 <option v-for="code in state.originCodes" :key="code.id" :value="code.code">
                   {{ $t(`origin.${code.id}`) }}
                 </option>
               </select>
-              <label for="attention-origin-input-add">
-                {{ $t('commerceQueuesView.originText') }}</label
-              >
+              <label for="attention-origin-input-add" class="label-form">
+                {{ $t('commerceQueuesView.originText') }} <i class="bi bi-compass"></i>
+              </label>
+              <!-- Mobile Modal -->
+              <teleport to="body">
+                <div
+                  v-if="isMobileDevice() && state.showOriginModal"
+                  class="modal fade show d-block origin-modal"
+                  tabindex="-1"
+                  role="dialog"
+                  @click.self="closeOriginModal"
+                >
+                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable origin-modal-dialog" role="document" @click.stop>
+                    <div class="modal-content origin-modal-content">
+                      <div class="modal-header origin-modal-header">
+                        <h5 class="modal-title fw-bold">
+                          <i class="bi bi-compass me-2"></i>{{ $t('commerceQueuesView.originText') }}
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          @click="closeOriginModal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <div class="modal-body origin-modal-body">
+                        <div class="origin-options-list">
+                          <button
+                            v-for="code in state.originCodes"
+                            :key="code.id"
+                            type="button"
+                            class="origin-option-button"
+                            :class="{ 'origin-option-selected': state.newUser.origin === code.code }"
+                            @click="selectOrigin(code.code)"
+                          >
+                            <span>{{ $t(`origin.${code.id}`) }}</span>
+                            <i
+                              v-if="state.newUser.origin === code.code"
+                              class="bi bi-check-circle-fill origin-check-icon"
+                            ></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </teleport>
             </div>
           </div>
           <div
@@ -894,9 +1374,26 @@ export default {
               state.healthAgreementCompanies.length > 0
             "
           >
-            <div class="col form-floating">
+            <div class="col form-floating position-relative">
+              <!-- Mobile: Custom button that opens modal -->
+              <button
+                v-if="isMobileDevice()"
+                type="button"
+                class="form-control form-control-solid health-agreement-select-button"
+                @click="openHealthAgreementModal"
+              >
+                <span v-if="state.newUser.healthAgreementId" class="health-agreement-selected-text">
+                  {{ getSelectedHealthAgreementLabel() }}
+                </span>
+                <span v-else class="text-muted">
+                  {{ $t('commerceQueuesView.healthAgreementText') }}
+                </span>
+                <i class="bi bi-chevron-down health-agreement-chevron"></i>
+              </button>
+              <!-- Desktop: Native select -->
               <select
-                class="form-control form-select btn btn-light select"
+                v-else
+                class="form-control form-control-solid form-select health-agreement-select-desktop"
                 v-model="state.newUser.healthAgreementId"
                 id="attention-healthAgreementId-input-add"
                 @change="sendData"
@@ -909,9 +1406,53 @@ export default {
                   {{ company.tag }}
                 </option>
               </select>
-              <label for="attention-origin-input-add">
-                {{ $t('commerceQueuesView.healthAgreementText') }}</label
-              >
+              <label for="attention-healthAgreementId-input-add" class="label-form">
+                {{ $t('commerceQueuesView.healthAgreementText') }} <i class="bi bi-heart-pulse"></i>
+              </label>
+              <!-- Mobile Modal -->
+              <teleport to="body">
+                <div
+                  v-if="isMobileDevice() && state.showHealthAgreementModal"
+                  class="modal fade show d-block health-agreement-modal"
+                  tabindex="-1"
+                  role="dialog"
+                  @click.self="closeHealthAgreementModal"
+                >
+                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable health-agreement-modal-dialog" role="document" @click.stop>
+                    <div class="modal-content health-agreement-modal-content">
+                      <div class="modal-header health-agreement-modal-header">
+                        <h5 class="modal-title fw-bold">
+                          <i class="bi bi-heart-pulse me-2"></i>{{ $t('commerceQueuesView.healthAgreementText') }}
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          @click="closeHealthAgreementModal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <div class="modal-body health-agreement-modal-body">
+                        <div class="health-agreement-options-list">
+                          <button
+                            v-for="company in state.healthAgreementCompanies"
+                            :key="company.id"
+                            type="button"
+                            class="health-agreement-option-button"
+                            :class="{ 'health-agreement-option-selected': state.newUser.healthAgreementId === company.id }"
+                            @click="selectHealthAgreement(company.id)"
+                          >
+                            <span>{{ company.tag }}</span>
+                            <i
+                              v-if="state.newUser.healthAgreementId === company.id"
+                              class="bi bi-check-circle-fill health-agreement-check-icon"
+                            ></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </teleport>
             </div>
           </div>
           <div
@@ -1014,5 +1555,405 @@ export default {
   font-size: 1rem;
   line-height: 1rem;
   margin-left: 0.3rem;
+}
+/* Origin select component styles */
+.origin-select-button {
+  text-align: center !important;
+  cursor: pointer;
+  position: relative;
+  padding-right: 2.5rem !important;
+}
+
+.origin-selected-text {
+  color: inherit;
+}
+
+.origin-chevron {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+/* Mobile origin modal styles */
+.origin-modal {
+  z-index: 1050;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.origin-modal-dialog {
+  max-width: 90%;
+  margin: 1rem auto;
+}
+
+.origin-modal-content {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.origin-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.origin-modal-header .btn-close {
+  filter: invert(1);
+  opacity: 0.9;
+}
+
+.origin-modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.origin-modal-body {
+  padding: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.origin-options-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.origin-option-button {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: white;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #212529;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.origin-option-button:last-child {
+  border-bottom: none;
+}
+
+.origin-option-button:hover {
+  background-color: #f8f9fa;
+  padding-left: 1.5rem;
+}
+
+.origin-option-button:active {
+  background-color: #e9ecef;
+}
+
+.origin-option-selected {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: 600;
+  border-left: 3px solid #667eea;
+}
+
+.origin-option-selected:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  padding-left: 1.5rem;
+}
+
+.origin-check-icon {
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.origin-select-desktop {
+  text-align: center !important;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem !important;
+}
+
+/* Phone Code select component styles */
+.phone-code-select-button {
+  text-align: center !important;
+  cursor: pointer;
+  position: relative;
+  padding-right: 2.5rem !important;
+}
+
+.phone-code-selected-text {
+  color: inherit;
+}
+
+.phone-code-chevron {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.phone-code-modal {
+  z-index: 1050;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.phone-code-modal-dialog {
+  max-width: 90%;
+  margin: 1rem auto;
+}
+
+.phone-code-modal-content {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.phone-code-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.phone-code-modal-header .btn-close {
+  filter: invert(1);
+  opacity: 0.9;
+}
+
+.phone-code-modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.phone-code-modal-body {
+  padding: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.phone-code-options-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-code-option-button {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: white;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #212529;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.phone-code-option-button:last-child {
+  border-bottom: none;
+}
+
+.phone-code-option-button:hover {
+  background-color: #f8f9fa;
+  padding-left: 1.5rem;
+}
+
+.phone-code-option-button:active {
+  background-color: #e9ecef;
+}
+
+.phone-code-option-selected {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: 600;
+  border-left: 3px solid #667eea;
+}
+
+.phone-code-option-selected:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  padding-left: 1.5rem;
+}
+
+.phone-code-check-icon {
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.phone-code-select-desktop {
+  text-align: center !important;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem !important;
+}
+
+/* Health Agreement select component styles */
+.health-agreement-select-button {
+  text-align: center !important;
+  cursor: pointer;
+  position: relative;
+  padding-right: 2.5rem !important;
+}
+
+.health-agreement-selected-text {
+  color: inherit;
+}
+
+.health-agreement-chevron {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.health-agreement-modal {
+  z-index: 1050;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.health-agreement-modal-dialog {
+  max-width: 90%;
+  margin: 1rem auto;
+}
+
+.health-agreement-modal-content {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.health-agreement-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem 1rem 0 0;
+}
+
+.health-agreement-modal-header .btn-close {
+  filter: invert(1);
+  opacity: 0.9;
+}
+
+.health-agreement-modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.health-agreement-modal-body {
+  padding: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.health-agreement-options-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.health-agreement-option-button {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: white;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #212529;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.health-agreement-option-button:last-child {
+  border-bottom: none;
+}
+
+.health-agreement-option-button:hover {
+  background-color: #f8f9fa;
+  padding-left: 1.5rem;
+}
+
+.health-agreement-option-button:active {
+  background-color: #e9ecef;
+}
+
+.health-agreement-option-selected {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: 600;
+  border-left: 3px solid #667eea;
+}
+
+.health-agreement-option-selected:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  padding-left: 1.5rem;
+}
+
+.health-agreement-check-icon {
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.health-agreement-select-desktop {
+  text-align: center !important;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem !important;
+}
+.position-relative .btn-link {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.position-relative .btn-link:hover {
+  color: #495057 !important;
+}
+.position-relative .btn-link:active {
+  color: #212529 !important;
+}
+.d-none {
+  display: none !important;
 }
 </style>

@@ -20,6 +20,20 @@ export default {
       extendedEntity: false,
     };
   },
+  computed: {
+    bookingFullName() {
+      if (!this.booking) return '';
+      const name = this.booking.userName?.trim() || '';
+      const lastName = this.booking.userLastName?.trim() || '';
+      return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
+    },
+    timeSlot() {
+      if (this.booking?.hourFrom && this.booking?.hourTo) {
+        return `${this.booking.hourFrom} - ${this.booking.hourTo}`;
+      }
+      return '';
+    },
+  },
   methods: {
     showDetails() {
       this.extendedEntity = !this.extendedEntity;
@@ -44,8 +58,20 @@ export default {
         return 'bi-calendar-fill red-icon';
       }
     },
-    formatIdNumber(commerce, idNumber) {
-      return formatIdNumber(commerce, idNumber);
+    getCardTypeClass() {
+      const status = this.booking?.status;
+      if (status === 'CONFIRMED' || status === 'PROCESSED') return 'client-card-success';
+      if (status === 'PENDING') return 'client-card-warning';
+      return 'client-card-error';
+    },
+    getStatusIconClass() {
+      const status = this.booking?.status;
+      if (status === 'CONFIRMED' || status === 'PROCESSED') return 'icon-success';
+      if (status === 'PENDING') return 'icon-warning';
+      return 'icon-error';
+    },
+    formatIdNumber(idNumber) {
+      return formatIdNumber(this.commerce, idNumber);
     },
   },
   watch: {
@@ -68,257 +94,883 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
-    <div class="row metric-card centered">
-      <div v-if="booking.servicesDetails" class="idNumber-title lefted">
-        <span
-          v-for="serv in booking.servicesDetails"
-          :key="serv.id"
-          class="badge service-badge bg-primary p-1"
-        >
-          {{ serv.name }}
-        </span>
-        <span v-if="booking.packageId" class="badge bg-secondary service-badge">
-          <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span>
-        </span>
-      </div>
-      <div class="col-4 card-client-title lefted fw-bold mt-1" v-if="booking && booking.userName">
-        {{ booking.userName?.trim().toUpperCase() || '' }}
-        {{ booking.userLastName?.trim().toUpperCase() || '' }}
-        <span v-if="booking.termsConditionsAcceptedCode">
-          <i class="bi bi-person-fill-check mx-1"></i>
-        </span>
-        <i v-if="booking.paid" class="bi bi-coin mx-1 blue-icon"> </i>
-      </div>
-      <div class="col-5">
-        <i :class="`bi ${clasifyStatus(booking.status)} mx-1 h6`"></i>
-        <span class="date-title"> {{ booking.hourFrom }} - {{ booking.hourTo }} </span>
-      </div>
-      <div class="col-3 centered date-title">
-        {{ getDate(booking.date) }}
-      </div>
-    </div>
-    <div class="details-arrow">
-      <div class="centered">
-        <span href="#" @click.prevent="showDetails()">
-          <span class="details-title">{{ $t('dashboard.details') }}</span>
-          <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-        </span>
-      </div>
-      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
-        <div class="row m-0">
-          <div class="d-block col-12 col-md-6">
-            <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ booking.userName || 'N/I' }}
-              {{ booking.userLastName || '' }}
-              <a class="btn copy-icon" @click="copyBooking()">
+  <div v-if="show && booking">
+    <!-- Ultra Compact Booking Row - Clickable -->
+    <div class="client-row-card" :class="getCardTypeClass()" @click="showDetails()">
+      <div class="client-row-content">
+        <!-- Status Icon -->
+        <Popper :class="'dark'" arrow hover>
+          <template #content>
+            <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}</div>
+          </template>
+          <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
+            <i :class="`bi ${clasifyStatus(booking.status)}`"></i>
+          </div>
+        </Popper>
+
+        <!-- Service Badge -->
+        <div v-if="booking.servicesDetails || booking.packageId" class="service-badges-inline">
+          <span
+            v-for="serv in booking.servicesDetails"
+            :key="serv.id"
+            class="badge-mini service-tag-mini"
+          >
+            {{ serv.name }}
+          </span>
+          <span v-if="booking.packageId" class="badge-mini service-tag-mini bg-secondary">
+            <i class="bi bi-box-fill"></i> {{ booking.packageProcedureNumber }}
+          </span>
+        </div>
+
+        <!-- Client Info - Horizontal -->
+        <div class="client-info-inline">
+          <div class="client-name-inline">
+            <span class="client-name-text">{{ bookingFullName }}</span>
+            <Popper :class="'dark'" arrow hover>
+              <template #content>
+                <div>{{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do agendamento' }}</div>
+              </template>
+              <button class="btn-copy-mini" @click.stop="copyBooking()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
-              </a>
-            </div>
-            <Spinner :show="loading"></Spinner>
+              </button>
+            </Popper>
           </div>
-          <div class="d-block d-md-none col-12 col-md-6">
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + booking.userPhone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.userPhone || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + booking.userEmail"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ booking.userEmail || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.userIdNumber || 'N/I' }}
-            </div>
-          </div>
-          <div class="d-none d-md-block col-12 col-md-6">
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + booking.userPhone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.userPhone || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + booking.userEmail"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ booking.userEmail || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i>
-              {{ formatIdNumber(commerce, booking.userIdNumber) || 'N/I' }}
-            </div>
+          <div class="client-meta-inline">
+            <span class="client-id-inline">{{ formatIdNumber(booking.userIdNumber) || 'N/I' }}</span>
+            <Popper v-if="booking.termsConditionsAcceptedCode" :class="'dark'" arrow hover>
+              <template #content>
+                <div>{{ $t('dashboard.clientCard.tooltip.terms') || 'Termos e condições aceitos' }}</div>
+              </template>
+              <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
+            </Popper>
+            <Popper v-if="booking.paid" :class="'dark'" arrow hover>
+              <template #content>
+                <div>{{ $t('dashboard.clientCard.tooltip.paid') || 'Agendamento pago' }}</div>
+              </template>
+              <i class="bi bi-coin icon-mini-separated blue-icon" @click.stop></i>
+            </Popper>
           </div>
         </div>
-        <div class="row m-1 centered">
-          <div class="col">
-            <div class="" v-if="booking.paid">
-              <div class="mb-2">
-                <i class="bi bi-check-circle-fill mx-1"> </i>
-                <span class="mb-1">{{ $t('collaboratorBookingsView.paymentData') }}</span>
-              </div>
-              <div v-if="booking.paid">
-                <span v-if="booking.paymentType" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentType') }}
-                  </span>
-                  {{ $t(`paymentTypes.${booking.paymentType}`) }}</span
-                >
-                <span v-if="booking.paymentMethod" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentMethod') }}
-                  </span>
-                  {{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}
-                </span>
-                <span
-                  v-if="
-                    booking.paymentMethod &&
-                    booking.paymentMethod === 'HEALTH_AGREEMENT' &&
-                    booking.healthAgreementId &&
-                    booking.healthAgreementName
-                  "
-                  class="badge mx-1 detail-data-badge"
-                >
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('commerceQueuesView.healthAgreementText') }}
-                  </span>
-                  {{ booking.healthAgreementName }}
-                </span>
-                <span v-if="booking.paymentAmount" class="badge mx-1 detail-data-badge bg-warning">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentAmount') }}
-                  </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentAmount }}</span
-                >
-                <span v-if="booking.paymentCommission" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentCommission') }}
-                  </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ booking.paymentCommission }}</span
-                >
-                <span
-                  v-if="booking.packageId && booking.packageName"
-                  class="badge mx-1 detail-data-badge"
-                >
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.package') }}
-                  </span>
-                  {{ booking.packageName }}
-                  <span class="badge mx-1 bg-secondary"
-                    >{{ booking.packageProcedureNumber }} /
-                    {{ booking.packageProceduresTotalNumber }}</span
-                  >
-                  <i class="bi bi-check-circle-fill green-icon" v-if="booking.packagePaid"> </i>
-                </span>
-              </div>
-              <hr />
+
+        <!-- Status Indicators - Inline -->
+        <div class="status-inline">
+          <div class="status-badge-inline time-badge" @click.stop>
+            <i :class="`bi ${clasifyStatus(booking.status)}`"></i>
+            <span v-if="timeSlot">{{ timeSlot }}</span>
+          </div>
+          <div class="status-badge-inline date-badge" @click.stop>
+            <i class="bi bi-calendar-fill"></i>
+            <span>{{ getDate(booking.date) }}</span>
+          </div>
+        </div>
+
+        <!-- Collapse Icon -->
+        <div class="collapse-icon-wrapper">
+          <i
+            class="bi collapse-icon"
+            :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
+          ></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expandable Details Section -->
+    <div class="details-expandable-section">
+      <Spinner :show="loading"></Spinner>
+      <Transition name="details-expand">
+          <div v-if="extendedEntity" class="detailed-data">
+          <!-- Contact Information Section - Standardized -->
+          <div class="info-section compact-section">
+            <div class="info-section-header-compact">
+              <i class="bi bi-telephone-fill"></i>
+              <span class="info-section-title-compact">{{ $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto' }}</span>
             </div>
-            <div class="mt-2">
-              <div class="mb-2">
-                <i class="bi bi-qr-code mx-1"> </i>
-                <span class="mb-1">{{ $t('dashboard.attData') }}</span>
-              </div>
-              <span v-if="booking.queueName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('dashboard.queueData') }}
-                </span>
-                {{ booking.queueName }}</span
-              >
+            <div class="contact-data-grid">
+              <Popper :class="'dark'" arrow hover>
+                <template #content>
+                  <div>{{ $t('dashboard.clientCard.tooltip.whatsapp') || 'WhatsApp' }}</div>
+                </template>
+                <a
+                  class="data-item-compact whatsapp"
+                  :href="'https://wa.me/' + booking.userPhone"
+                  target="_blank"
+                  @click.stop
+                >
+                  <span class="data-label">{{ $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp' }}</span>
+                  <div class="data-value">
+                    <i class="bi bi-whatsapp"></i>
+                    <span>{{ booking.userPhone || 'N/I' }}</span>
+                  </div>
+                </a>
+              </Popper>
+              <Popper :class="'dark'" arrow hover>
+                <template #content>
+                  <div>{{ $t('dashboard.clientCard.tooltip.email') || 'Email' }}</div>
+                </template>
+                <a
+                  class="data-item-compact email"
+                  :href="'mailto:' + booking.userEmail"
+                  target="_blank"
+                  @click.stop
+                >
+                  <span class="data-label">{{ $t('dashboard.clientCard.label.email') || 'Email' }}</span>
+                  <div class="data-value">
+                    <i class="bi bi-envelope"></i>
+                    <span>{{ booking.userEmail || 'N/I' }}</span>
+                  </div>
+                </a>
+              </Popper>
+              <Popper :class="'dark'" arrow hover>
+                <template #content>
+                  <div>{{ $t('dashboard.clientCard.tooltip.idNumber') || 'ID' }}</div>
+                </template>
+                <div class="data-item-compact" @click.stop>
+                  <span class="data-label">{{ $t('dashboard.clientCard.label.id') || 'ID' }}</span>
+                  <div class="data-value">
+                    <i class="bi bi-person-vcard"></i>
+                    <span>{{ formatIdNumber(booking.userIdNumber) || 'N/I' }}</span>
+                  </div>
+                </div>
+              </Popper>
+            </div>
+          </div>
+
+          <!-- Payment Data Section -->
+          <div v-if="booking.paid" class="info-section">
+            <div class="info-section-header">
+              <i class="bi bi-check-circle-fill"></i>
+              <span class="info-section-title">{{ $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento' }}</span>
+            </div>
+            <div class="info-badges">
+              <span v-if="booking.paymentType" class="info-badge">
+                <span class="badge-label">{{ $t('paymentData.paymentType') }}</span>
+                <span class="badge-value">{{ $t(`paymentTypes.${booking.paymentType}`) }}</span>
+              </span>
+              <span v-if="booking.paymentMethod" class="info-badge">
+                <span class="badge-label">{{ $t('paymentData.paymentMethod') }}</span>
+                <span class="badge-value">{{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}</span>
+              </span>
               <span
-                v-if="booking.commerceName && booking.commerceTag"
-                class="badge mx-1 detail-data-badge"
+                v-if="
+                  booking.paymentMethod &&
+                  booking.paymentMethod === 'HEALTH_AGREEMENT' &&
+                  booking.healthAgreementId &&
+                  booking.healthAgreementName
+                "
+                class="info-badge"
               >
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('dashboard.commerceData') }}
-                </span>
-                {{ booking.commerceName }} - {{ booking.commerceTag }}</span
-              >
-              <span v-if="booking.servicesDetails" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('paymentData.service') }}
-                </span>
+                <span class="badge-label">{{ $t('commerceQueuesView.healthAgreementText') }}</span>
+                <span class="badge-value">{{ booking.healthAgreementName }}</span>
+              </span>
+              <span v-if="booking.paymentAmount" class="info-badge">
+                <i class="bi bi-coin"></i>
+                <span class="badge-label">{{ $t('paymentData.paymentAmount') }}</span>
+                <span class="badge-value">{{ booking.paymentAmount }}</span>
+              </span>
+              <span v-if="booking.paymentCommission" class="info-badge">
+                <i class="bi bi-coin"></i>
+                <span class="badge-label">{{ $t('paymentData.paymentCommission') }}</span>
+                <span class="badge-value">{{ booking.paymentCommission }}</span>
+              </span>
+              <span v-if="booking.packageId && booking.packageName" class="info-badge">
+                <span class="badge-label">{{ $t('paymentData.package') }}</span>
+                <span class="badge-value">{{ booking.packageName }}</span>
+                <span class="badge-subvalue">{{ booking.packageProcedureNumber }} / {{ booking.packageProceduresTotalNumber }}</span>
+                <i v-if="booking.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Booking Data Section -->
+          <div
+            v-if="
+              booking.queueName ||
+              (booking.commerceName && booking.commerceTag) ||
+              booking.servicesDetails ||
+              booking.termsConditionsToAcceptedAt
+            "
+            class="info-section"
+          >
+            <div class="info-section-header">
+              <i class="bi bi-calendar-fill"></i>
+              <span class="info-section-title">{{ $t('dashboard.attData') || 'Dados do Agendamento' }}</span>
+            </div>
+            <div class="info-badges">
+              <span v-if="booking.queueName" class="info-badge">
+                <span class="badge-label">{{ $t('dashboard.queueData') }}</span>
+                <span class="badge-value">{{ booking.queueName }}</span>
+              </span>
+              <span v-if="booking.commerceName && booking.commerceTag" class="info-badge">
+                <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
+                <span class="badge-value">{{ booking.commerceName }} - {{ booking.commerceTag }}</span>
+              </span>
+              <span v-if="booking.servicesDetails" class="info-badge services-badge">
+                <span class="badge-label">{{ $t('paymentData.service') }}</span>
                 <span
                   v-for="serv in booking.servicesDetails"
                   :key="serv.id"
-                  class="badge bg-primary mx-1"
+                  class="service-tag"
                 >
                   {{ serv.name }}
                 </span>
               </span>
-              <span v-if="booking.termsConditionsToAcceptedAt" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('paymentData.termsAccepted') }}
-                </span>
-                <span> {{ getDate(booking.termsConditionsToAcceptedAt) }} </span>
+              <span v-if="booking.termsConditionsToAcceptedAt" class="info-badge">
+                <i class="bi bi-calendar-fill"></i>
+                <span class="badge-label">{{ $t('paymentData.termsAccepted') }}</span>
+                <span class="badge-value">{{ getDate(booking.termsConditionsToAcceptedAt) }}</span>
               </span>
-              <br /><br />
-              <span class="metric-card-details mx-1"
-                ><strong>Id:</strong> {{ booking.bookingId }}</span
-              >
-              <span class="metric-card-details"
-                ><strong>Date:</strong> {{ getDate(booking.createdDate) }}</span
-              >
+            </div>
+          </div>
+
+          <!-- Metadata Section - Compact, Same Line -->
+          <div class="info-section metadata-section">
+            <div class="metadata-item-compact">
+              <span class="metadata-label">ID:</span>
+              <span class="metadata-value">{{ booking.bookingId }}</span>
+              <span class="metadata-separator">•</span>
+              <span class="metadata-label">{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span>
+              <span class="metadata-value">{{ getDate(booking.createdDate) }}</span>
             </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </div>
   </div>
 </template>
 
 <style scoped>
-.metric-card {
-  background-color: var(--color-background);
-  padding: 0.1rem;
-  margin: 0.5rem;
+/* Ultra Compact Booking Row */
+.client-row-card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem 0.625rem;
+  margin: 0.25rem 0.375rem;
   margin-bottom: 0;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
+  border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  border-bottom: 0;
-  line-height: 1.6rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+  z-index: 1;
 }
-.show {
-  padding: 10px;
-  max-height: 400px !important;
-  overflow-y: auto;
+
+.client-row-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 1);
 }
-.details-title {
-  text-decoration: underline;
-  font-size: 0.7rem;
-  color: var(--color-text);
+
+/* Card Type Variations - Ultra Compact */
+.client-row-card.client-card-success {
+  border-left: 2px solid #00c2cb;
 }
-.metric-card-title {
-  margin: 0.2rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+
+.client-row-card.client-card-success:hover {
+  background: rgba(0, 194, 203, 0.03);
 }
-.metric-card-detail-title {
-  font-size: 1rem;
+
+.client-row-card.client-card-warning {
+  border-left: 2px solid #f9c322;
+}
+
+.client-row-card.client-card-warning:hover {
+  background: rgba(249, 195, 34, 0.03);
+}
+
+.client-row-card.client-card-error {
+  border-left: 2px solid #a52a2a;
+}
+
+.client-row-card.client-card-error:hover {
+  background: rgba(165, 42, 42, 0.03);
+}
+
+/* Client Row Content - Ultra Compact Horizontal Layout */
+.client-row-content {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.client-icon-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  cursor: help;
+}
+
+.client-icon-mini i {
+  font-size: 0.9375rem;
+}
+
+.client-row-card:hover .client-icon-mini {
+  transform: scale(1.05);
+}
+
+.icon-success {
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+}
+
+.icon-warning {
+  background: rgba(249, 195, 34, 0.12);
+  color: #f9c322;
+}
+
+.icon-error {
+  background: rgba(165, 42, 42, 0.12);
+  color: #a52a2a;
+}
+
+.service-badges-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.service-tag-mini {
+  background: rgba(0, 74, 173, 0.1);
+  color: #004aad;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
   font-weight: 600;
-  line-height: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  line-height: 1.2;
 }
-.checked-icon {
+
+.service-tag-mini i {
+  font-size: 0.625rem;
+}
+
+.client-info-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.client-name-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.client-name-text {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.btn-copy-mini {
+  background: transparent;
+  border: none;
+  padding: 0.1875rem;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-copy-mini:hover {
+  background: rgba(169, 169, 169, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.btn-copy-mini i {
+  font-size: 0.75rem;
+}
+
+.client-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.client-id-inline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.icon-mini-separated {
+  font-size: 0.6875rem;
+  cursor: help;
+  line-height: 1;
+  margin-left: 0.25rem;
+}
+
+.collapse-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.collapse-icon {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.client-row-card:hover .collapse-icon {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.client-row-card[class*='extended'] .collapse-icon,
+.client-row-card:hover .collapse-icon {
+  transform: scale(1.1);
+}
+
+/* Status Inline - Ultra Compact */
+.status-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.status-badge-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.4375rem;
+  background: rgba(169, 169, 169, 0.08);
+  border-radius: 9999px;
+  cursor: help;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(169, 169, 169, 0.1);
+}
+
+.status-badge-inline:hover {
+  background: rgba(169, 169, 169, 0.15);
+  border-color: rgba(169, 169, 169, 0.2);
+}
+
+.status-badge-inline i {
+  font-size: 0.75rem;
+}
+
+.status-badge-inline span {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1;
+}
+
+.time-badge,
+.date-badge {
+  cursor: default;
+}
+
+/* Details Expandable Section */
+.details-expandable-section {
+  margin: 0.25rem 0.375rem;
+  margin-top: 0;
+  border-radius: 0 0 8px 8px;
+  overflow: visible;
+  background: rgba(245, 246, 247, 0.4);
+  border: 1px solid rgba(169, 169, 169, 0.1);
+  border-top: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1;
+}
+
+.detailed-data {
+  padding: 0.625rem;
+  max-height: 800px;
+  overflow-y: auto;
+  overflow-x: visible;
+  background: rgba(250, 251, 252, 0.4);
+  position: relative;
+}
+
+/* Info Sections - Ultra Compact */
+.info-section {
+  margin-bottom: 0.75rem;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.15);
+}
+
+.info-section-header i {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.info-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Compact Section Styles */
+.compact-section {
+  margin-bottom: 0.75rem;
+}
+
+.info-section-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.12);
+}
+
+.info-section-header-compact i {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.info-section-title-compact {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Standardized Data Items - Compact */
+.contact-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.data-item-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4375rem 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 5px;
+  border: 1px solid rgba(169, 169, 169, 0.1);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.data-item-compact:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(169, 169, 169, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.data-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+}
+
+.data-value {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1.2;
+}
+
+.data-value i {
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.data-item-compact.whatsapp:hover {
+  border-color: rgba(37, 211, 102, 0.3);
+}
+
+.data-item-compact.whatsapp:hover .data-value {
+  color: #25d366;
+}
+
+.data-item-compact.whatsapp:hover .data-value i {
+  color: #25d366;
+}
+
+.data-item-compact.email:hover {
+  border-color: rgba(0, 74, 173, 0.3);
+}
+
+.data-item-compact.email:hover .data-value {
+  color: #004aad;
+}
+
+.data-item-compact.email:hover .data-value i {
+  color: #004aad;
+}
+
+/* Info Badges */
+.info-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.info-badge:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(169, 169, 169, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.info-badge i {
+  font-size: 0.875rem;
+}
+
+.badge-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-value {
+  font-weight: 600;
+  color: #000000;
+}
+
+.badge-subvalue {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(169, 169, 169, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  margin-left: 0.25rem;
+}
+
+.services-badge {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.service-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 74, 173, 0.1);
+  color: #004aad;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Metadata Section */
+.metadata-section {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.15);
+  margin-top: 0.5rem;
+}
+
+.metadata-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0;
+  font-size: 0.6875rem;
+  flex-wrap: wrap;
+}
+
+.metadata-separator {
+  color: rgba(0, 0, 0, 0.3);
+  font-weight: 300;
+  margin: 0 0.125rem;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.metadata-value {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Icon Colors */
+.green-icon {
+  color: var(--verde-tu);
+}
+
+.yellow-icon {
+  color: var(--amarillo-star);
+}
+
+.red-icon {
+  color: var(--rojo-warning);
+}
+
+.blue-icon {
   color: var(--azul-turno);
 }
-.metric-card-details {
-  font-size: 0.7rem;
-  font-weight: 400;
+
+.gray-icon {
+  color: #a9a9a9;
+}
+
+/* Transition */
+.details-expand-enter-active,
+.details-expand-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.details-expand-enter-from,
+.details-expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.details-expand-enter-to,
+.details-expand-leave-from {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Responsive - Ultra Compact */
+@media (max-width: 768px) {
+  .client-row-card {
+    padding: 0.4375rem 0.5rem;
+  }
+
+  .client-icon-mini {
+    width: 24px;
+    height: 24px;
+  }
+
+  .client-icon-mini i {
+    font-size: 0.8125rem;
+  }
+
+  .client-name-text {
+    font-size: 0.75rem;
+  }
+
+  .status-inline {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .client-row-card {
+    padding: 0.375rem 0.4375rem;
+    margin: 0.1875rem 0.25rem;
+    margin-bottom: 0;
+  }
+
+  .client-name-text {
+    font-size: 0.6875rem;
+  }
+
+  .info-badges {
+    flex-direction: column;
+  }
+
+  .info-badge {
+    width: 100%;
+  }
+
+  .client-row-content {
+    gap: 0.4375rem;
+  }
+}
+
+/* Tooltip z-index improvements - Ensure tooltips appear above all content */
+:deep(.popper),
+:deep(.popper-dark),
+:deep([data-popper-placement]),
+:deep([data-popper-placement] > div) {
+  z-index: 10000 !important;
+}
+
+:deep(.popper__arrow),
+:deep(.popper__arrow::before) {
+  z-index: 10001 !important;
+}
+
+/* Allow tooltips to overflow parent containers */
+.client-row-card {
+  overflow: visible;
+}
+
+.details-expandable-section {
+  overflow: visible;
+}
+
+/* Keep scroll for content but allow tooltips to show */
+.detailed-data {
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+/* Ensure tooltip containers don't clip */
+.info-section,
+.contact-data-grid {
+  position: relative;
+  overflow: visible;
 }
 </style>

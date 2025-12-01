@@ -544,7 +544,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>

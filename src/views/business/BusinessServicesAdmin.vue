@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -20,6 +20,8 @@ import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import { getServiceTypes } from '../../shared/utils/data';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import ServiceFormEdit from '../../components/service/ServiceFormEdit.vue';
+import ServiceFormAdd from '../../components/service/ServiceFormAdd.vue';
 
 export default {
   name: 'BusinessServicesAdmin',
@@ -35,6 +37,8 @@ export default {
     Popper,
     ComponentMenu,
     SearchAdminItem,
+    ServiceFormEdit,
+    ServiceFormAdd,
   },
   async setup() {
     const router = useRouter();
@@ -248,6 +252,76 @@ export default {
       modalCloseButton.click();
     };
 
+    const resetAddForm = () => {
+      state.newService = {
+        order: state.services.length + 1,
+        online: true,
+        serviceInfo: {},
+      };
+      state.errorsAdd = [];
+      state.nameError = false;
+      state.tagError = false;
+      state.orderAddError = false;
+      state.estimatedTimeAddError = false;
+      state.shortDescriptionAddError = false;
+    };
+
+    const handleCloseButtonMousedown = (e) => {
+      // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
+      if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
+        const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
+        if (button) {
+          button.blur();
+          // Also blur any active element to ensure no focus remains
+          if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+          }
+        }
+      }
+    };
+
+    const handleModalBackdropClick = (e) => {
+      // Remove focus when clicking backdrop to close modal
+      if (e.target === e.currentTarget && document.activeElement) {
+        document.activeElement.blur();
+      }
+    };
+
+    onMounted(() => {
+      const addModal = document.getElementById('add-service');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', resetAddForm);
+        // Remove focus when clicking backdrop
+        addModal.addEventListener('click', handleModalBackdropClick);
+      }
+
+      // Use mousedown (fires before click) to remove focus early
+      if (closeButton) {
+        closeButton.addEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      // Also listen on the document for any close button clicks
+      document.addEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
+    onUnmounted(() => {
+      const addModal = document.getElementById('add-service');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.removeEventListener('hidden.bs.modal', resetAddForm);
+        addModal.removeEventListener('click', handleModalBackdropClick);
+      }
+
+      if (closeButton) {
+        closeButton.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      document.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
     return {
       state,
       loading,
@@ -354,257 +428,22 @@ export default {
                         </a>
                       </div>
                     </div>
-                    <div
+                    <ServiceFormEdit
                       v-if="state.toggles['services.admin.read']"
+                      :service="service"
+                      :types="state.types"
+                      :toggles="state.toggles"
+                      :errors="{
+                        orderUpdateError: state.orderUpdateError,
+                        shortDescriptionUpdateError: state.shortDescriptionUpdateError,
+                        estimatedTimeUpdateError: state.estimatedTimeUpdateError,
+                        errorsUpdate: state.errorsUpdate,
+                      }"
+                      :services-length="state.services.length"
                       :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <div class="row g-1">
-                        <div id="queue-type-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessQueuesAdmin.type') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="true"
-                              type="text"
-                              class="form-control"
-                              v-model="service.type"
-                              placeholder="Type"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-order-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.order') }}
-                            <Popper
-                              :class="'dark p-1'"
-                              arrow
-                              disable-click-away
-                              :content="$t('businessServicesAdmin.orderHelp')"
-                            >
-                              <i class="bi bi-info-circle-fill h7"></i>
-                            </Popper>
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="!state.toggles['services.admin.edit']"
-                              min="1"
-                              :max="state.services.length"
-                              type="number"
-                              class="form-control"
-                              v-model="service.order"
-                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                              placeholder="1"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-online-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.online') }}
-                            <Popper
-                              :class="'dark p-1'"
-                              arrow
-                              disable-click-away
-                              :content="$t('businessServicesAdmin.onlineHelp')"
-                            >
-                              <i class="bi bi-info-circle-fill h7"></i>
-                            </Popper>
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="service.online"
-                              :disabled="!state.toggles['services.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.active') }}
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="service.active"
-                              :disabled="!state.toggles['services.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <!-- Datos de Servicio -->
-                        <div class="row g-1">
-                          <a
-                            class="nav-link subdata-title centered active"
-                            data-bs-toggle="collapse"
-                            href="#update-service"
-                          >
-                            {{ $t('businessServicesAdmin.service') }}
-                            <i class="bi bi-chevron-down"></i>
-                          </a>
-                        </div>
-                        <div id="update-service" class="collapse row m-0">
-                          <div id="service-short-description-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.shortDescription') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                max="50"
-                                type="text"
-                                class="form-control"
-                                v-model="service.serviceInfo.shortDescription"
-                                v-bind:class="{ 'is-invalid': state.shortDescriptionUpdateError }"
-                                placeholder="Service A is great"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-description-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.longDescription') }}
-                            </div>
-                            <div class="col-6">
-                              <textarea
-                                min="1"
-                                max="500"
-                                type="text"
-                                class="form-control"
-                                v-model="service.serviceInfo.longDescription"
-                                placeholder="Benefit A-Benefit B..."
-                              >
-                              </textarea>
-                            </div>
-                          </div>
-                          <div id="service-time-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.estimatedTime') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.estimatedTimeHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.estimatedTime"
-                                v-bind:class="{ 'is-invalid': state.estimatedTimeUpdateError }"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-block-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.blockTime') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.blockTimeHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.blockTime"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-block-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.procedures') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.proceduresHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.procedures"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-price-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.price') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.price"
-                                placeholder="1000"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-onlinePrice-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.onlinePrice') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.onlinePrice"
-                                placeholder="1000"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-saving-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.saving') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.saving"
-                                placeholder="25"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-onlineSaving-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.onlineSaving') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.onlineSaving"
-                                placeholder="30"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div id="service-id-form" class="row -2 mb-g3">
-                          <div class="row service-details-container">
-                            <div class="col">
-                              <span><strong>Id:</strong> {{ service.id }}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col">
+                      @update:service="service = $event"
+                    />
+                    <div class="col" v-if="state.extendedEntity === index">
                           <button
                             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                             @click="update(service)"
@@ -628,21 +467,6 @@ export default {
                             @actionNo="unavailableCancel()"
                           >
                           </AreYouSure>
-                        </div>
-                        <div
-                          class="row g-1 errors"
-                          id="feedback"
-                          v-if="state.errorsUpdate.length > 0"
-                        >
-                          <Warning>
-                            <template v-slot:message>
-                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                                {{ $t(error) }}
-                              </li>
-                            </template>
-                          </Warning>
-                        </div>
-                      </div>
                     </div>
                     <div
                       v-if="
@@ -769,257 +593,22 @@ export default {
                         </a>
                       </div>
                     </div>
-                    <div
+                    <ServiceFormEdit
                       v-if="state.toggles['services.admin.read']"
+                      :service="service"
+                      :types="state.types"
+                      :toggles="state.toggles"
+                      :errors="{
+                        orderUpdateError: state.orderUpdateError,
+                        shortDescriptionUpdateError: state.shortDescriptionUpdateError,
+                        estimatedTimeUpdateError: state.estimatedTimeUpdateError,
+                        errorsUpdate: state.errorsUpdate,
+                      }"
+                      :services-length="state.services.length"
                       :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <div class="row g-1">
-                        <div id="queue-type-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessQueuesAdmin.type') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="true"
-                              type="text"
-                              class="form-control"
-                              v-model="service.type"
-                              placeholder="Type"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-order-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.order') }}
-                            <Popper
-                              :class="'dark p-1'"
-                              arrow
-                              disable-click-away
-                              :content="$t('businessServicesAdmin.orderHelp')"
-                            >
-                              <i class="bi bi-info-circle-fill h7"></i>
-                            </Popper>
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="!state.toggles['services.admin.edit']"
-                              min="1"
-                              :max="state.services.length"
-                              type="number"
-                              class="form-control"
-                              v-model="service.order"
-                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                              placeholder="1"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-online-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.online') }}
-                            <Popper
-                              :class="'dark p-1'"
-                              arrow
-                              disable-click-away
-                              :content="$t('businessServicesAdmin.onlineHelp')"
-                            >
-                              <i class="bi bi-info-circle-fill h7"></i>
-                            </Popper>
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="service.online"
-                              :disabled="!state.toggles['services.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="service-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessServicesAdmin.active') }}
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="service.active"
-                              :disabled="!state.toggles['services.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <!-- Datos de Servicio -->
-                        <div class="row g-1">
-                          <a
-                            class="nav-link subdata-title centered active"
-                            data-bs-toggle="collapse"
-                            href="#update-service"
-                          >
-                            {{ $t('businessServicesAdmin.service') }}
-                            <i class="bi bi-chevron-down"></i>
-                          </a>
-                        </div>
-                        <div id="update-service" class="collapse row m-0">
-                          <div id="service-short-description-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.shortDescription') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                max="50"
-                                type="text"
-                                class="form-control"
-                                v-model="service.serviceInfo.shortDescription"
-                                v-bind:class="{ 'is-invalid': state.shortDescriptionUpdateError }"
-                                placeholder="Service A is great"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-description-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.longDescription') }}
-                            </div>
-                            <div class="col-6">
-                              <textarea
-                                min="1"
-                                max="500"
-                                type="text"
-                                class="form-control"
-                                v-model="service.serviceInfo.longDescription"
-                                placeholder="Benefit A-Benefit B..."
-                              >
-                              </textarea>
-                            </div>
-                          </div>
-                          <div id="service-time-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.estimatedTime') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.estimatedTimeHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.estimatedTime"
-                                v-bind:class="{ 'is-invalid': state.estimatedTimeUpdateError }"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-block-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.blockTime') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.blockTimeHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.blockTime"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-block-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.procedures') }}
-                              <Popper
-                                :class="'dark p-1'"
-                                arrow
-                                disable-click-away
-                                :content="$t('businessServicesAdmin.proceduresHelp')"
-                              >
-                                <i class="bi bi-info-circle-fill h7"></i>
-                              </Popper>
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.procedures"
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-price-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.price') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.price"
-                                placeholder="1000"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-onlinePrice-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.onlinePrice') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.onlinePrice"
-                                placeholder="1000"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-saving-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.saving') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.saving"
-                                placeholder="25"
-                              />
-                            </div>
-                          </div>
-                          <div id="service-onlineSaving-form-update" class="row g-1">
-                            <div class="col-6 text-label">
-                              {{ $t('businessServicesAdmin.onlineSaving') }}
-                            </div>
-                            <div class="col-6">
-                              <input
-                                min="0"
-                                type="number"
-                                class="form-control"
-                                v-model="service.serviceInfo.onlineSaving"
-                                placeholder="30"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div id="service-id-form" class="row -2 mb-g3">
-                          <div class="row service-details-container">
-                            <div class="col">
-                              <span><strong>Id:</strong> {{ service.id }}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col">
+                      @update:service="service = $event"
+                    />
+                    <div class="col" v-if="state.extendedEntity === index">
                           <button
                             class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                             @click="update(service)"
@@ -1043,21 +632,6 @@ export default {
                             @actionNo="unavailableCancel()"
                           >
                           </AreYouSure>
-                        </div>
-                        <div
-                          class="row g-1 errors"
-                          id="feedback"
-                          v-if="state.errorsUpdate.length > 0"
-                        >
-                          <Warning>
-                            <template v-slot:message>
-                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                                {{ $t(error) }}
-                              </li>
-                            </template>
-                          </Warning>
-                        </div>
-                      </div>
                     </div>
                     <div
                       v-if="
@@ -1107,288 +681,21 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div
-              id="add-service"
-              class="result-card mb-4"
-              v-if="state.showAdd && state.toggles['services.admin.add']"
-            >
               <div v-if="state.services.length < state.toggles['services.admin.limit']">
-                <div class="row g-1">
-                  <div id="service-name-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessServicesAdmin.name') }}
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newService.name"
-                        v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="Service A"
-                      />
-                    </div>
-                  </div>
-                  <div id="service-tag-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessServicesAdmin.tag') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessServicesAdmin.tagHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newService.tag"
-                        v-bind:class="{ 'is-invalid': state.tagError }"
-                        placeholder="Serv-A"
-                      />
-                    </div>
-                  </div>
-                  <div id="service-type-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessServicesAdmin.type') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessServicesAdmin.typeHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select"
-                        v-model="state.newService.type"
-                        id="types"
-                        v-bind:class="{ 'is-invalid': state.typeError }"
-                      >
-                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
-                          {{ $t(`services.types.${typ.id}`) }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div id="service-order-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessServicesAdmin.order') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessServicesAdmin.orderHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        :max="state.services.length + 1"
-                        type="number"
-                        class="form-control"
-                        v-model="state.newService.order"
-                        v-bind:class="{ 'is-invalid': state.orderAddError }"
-                        placeholder="1"
-                      />
-                    </div>
-                  </div>
-                  <div id="add-service-online-form" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessServicesAdmin.online') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessServicesAdmin.onlineHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <Toggle
-                        v-model="state.newService.online"
-                        :disabled="!state.toggles['services.admin.edit']"
-                      />
-                    </div>
-                  </div>
-                  <!-- Datos de Servicio -->
-                  <div class="row g-1">
-                    <a
-                      class="nav-link subdata-title centered active"
-                      data-bs-toggle="collapse"
-                      href="#add-service-info"
-                    >
-                      {{ $t('businessCommercesAdmin.service') }} <i class="bi bi-chevron-down"></i>
-                    </a>
-                  </div>
-                  <div id="add-service-info" class="collapse row m-0">
-                    <div id="service-short-description-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.shortDescription') }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="1"
-                          max="50"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.shortDescription"
-                          v-bind:class="{ 'is-invalid': state.shortDescriptionAddError }"
-                          placeholder="Service A is great"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-description-form-update" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.longDescription') }}
-                      </div>
-                      <div class="col-6">
-                        <textarea
-                          min="1"
-                          max="500"
-                          type="text"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.longDescription"
-                          placeholder="Benefit A-Benefit B..."
-                        >
-                        </textarea>
-                      </div>
-                    </div>
-                    <div id="service-time-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.estimatedTime') }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disable-click-away
-                          :content="$t('businessServicesAdmin.estimatedTimeHelp')"
-                        >
-                          <i class="bi bi-info-circle-fill h7"></i>
-                        </Popper>
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.estimatedTime"
-                          v-bind:class="{ 'is-invalid': state.estimatedTimeAddError }"
-                          placeholder="1"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-block-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.blockTime') }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disable-click-away
-                          :content="$t('businessServicesAdmin.blockTimeHelp')"
-                        >
-                          <i class="bi bi-info-circle-fill h7"></i>
-                        </Popper>
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.blockTime"
-                          placeholder="1"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-block-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.procedures') }}
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disable-click-away
-                          :content="$t('businessServicesAdmin.proceduresHelp')"
-                        >
-                          <i class="bi bi-info-circle-fill h7"></i>
-                        </Popper>
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="1"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.procedures"
-                          placeholder="1"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-price-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.price') }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="0"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.price"
-                          placeholder="1000"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-onlinePrice-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.onlinePrice') }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="0"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.onlinePrice"
-                          placeholder="1000"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-saving-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.saving') }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="0"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.saving"
-                          placeholder="25"
-                        />
-                      </div>
-                    </div>
-                    <div id="service-onlineSaving-form-add" class="row g-1">
-                      <div class="col-6 text-label">
-                        {{ $t('businessServicesAdmin.onlineSaving') }}
-                      </div>
-                      <div class="col-6">
-                        <input
-                          min="0"
-                          type="number"
-                          class="form-control"
-                          v-model="state.newService.serviceInfo.onlineSaving"
-                          placeholder="30"
-                        />
-                      </div>
-                    </div>
-                  </div>
+              <ServiceFormAdd
+                v-model="state.newService"
+                :types="state.types"
+                :toggles="state.toggles"
+                :errors="{
+                  nameError: state.nameError,
+                  tagError: state.tagError,
+                  typeError: state.typeError,
+                  orderAddError: state.orderAddError,
+                  shortDescriptionAddError: state.shortDescriptionAddError,
+                  estimatedTimeAddError: state.estimatedTimeAddError,
+                  errorsAdd: state.errorsAdd,
+                }"
+              />
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -1396,16 +703,6 @@ export default {
                     >
                       {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>
                     </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
                 </div>
               </div>
               <div v-else>
@@ -1413,7 +710,6 @@ export default {
                   :title="$t('businessServicesAdmin.message.3.title')"
                   :content="$t('businessServicesAdmin.message.3.content')"
                 />
-              </div>
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
@@ -1434,13 +730,6 @@ export default {
 .select {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
-}
-.service-details-container {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
 }
 .is-disabled {
   opacity: 0.5;

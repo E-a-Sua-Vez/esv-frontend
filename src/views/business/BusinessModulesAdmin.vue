@@ -1,11 +1,13 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getModulesByCommerceId, updateModule, addModule } from '../../application/services/module';
 import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ModuleName from '../../components/common/ModuleName.vue';
+import ModuleFormEdit from '../../components/module/ModuleFormEdit.vue';
+import ModuleFormAdd from '../../components/module/ModuleFormAdd.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -24,6 +26,8 @@ export default {
     Spinner,
     Alert,
     ModuleName,
+    ModuleFormEdit,
+    ModuleFormAdd,
     Toggle,
     ToggleCapabilities,
     Warning,
@@ -109,6 +113,7 @@ export default {
       state.showAdd = true;
       state.newQueue = {
         order: state.modules.length + 1,
+        active: true,
       };
     };
 
@@ -202,6 +207,72 @@ export default {
       modalCloseButton.click();
     };
 
+    const resetAddForm = () => {
+      state.newQueue = {
+        order: state.modules.length + 1,
+        active: true,
+      };
+      state.errorsAdd = [];
+      state.nameError = false;
+      state.showAdd = false;
+    };
+
+    const handleCloseButtonMousedown = (e) => {
+      // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
+      if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
+        const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
+        if (button) {
+          button.blur();
+          // Also blur any active element to ensure no focus remains
+          if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+          }
+        }
+      }
+    };
+
+    const handleModalBackdropClick = (e) => {
+      // Remove focus when clicking backdrop to close modal
+      if (e.target === e.currentTarget && document.activeElement) {
+        document.activeElement.blur();
+      }
+    };
+
+    onMounted(() => {
+      const addModal = document.getElementById('add-module');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', resetAddForm);
+        // Remove focus when clicking backdrop
+        addModal.addEventListener('click', handleModalBackdropClick);
+      }
+
+      // Use mousedown (fires before click) to remove focus early
+      if (closeButton) {
+        closeButton.addEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      // Also listen on the document for any close button clicks
+      document.addEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
+    onUnmounted(() => {
+      const addModal = document.getElementById('add-module');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.removeEventListener('hidden.bs.modal', resetAddForm);
+        addModal.removeEventListener('click', handleModalBackdropClick);
+      }
+
+      if (closeButton) {
+        closeButton.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      document.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
     return {
       state,
       loading,
@@ -238,7 +309,7 @@ export default {
         <Alert :show="loading" :stack="alertError"></Alert>
       </div>
       <div id="businessModulesAdmin">
-        <div v-if="isActiveBusiness && state.toggles['modules.admin.view']">
+        <div v-if="isActiveBusiness() && state.toggles['modules.admin.view']">
           <div id="businessModulesAdmin-controls" class="control-box">
             <div class="row">
               <div class="col" v-if="state.commerces.length > 0">
@@ -310,50 +381,35 @@ export default {
                     :class="{ show: state.extendedEntity === index }"
                     class="detailed-data transition-slow"
                   >
-                    <div class="row g-1">
-                      <div id="module-active-form" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t('businessModulesAdmin.active') }}
-                        </div>
-                        <div class="col-6">
-                          <Toggle
-                            v-model="module.active"
-                            :disabled="!state.toggles['modules.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="module-id-form" class="row -2 mb-g3">
-                        <div class="row module-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ module.id }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(module)"
-                          v-if="state.toggles['modules.admin.update']"
-                        >
-                          {{ $t('businessModulesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['modules.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['modules.admin.unavailable']"
-                          :no-disabled="state.toggles['modules.admin.unavailable']"
-                          @actionYes="unavailable(module)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
+                    <ModuleFormEdit
+                      :module="module"
+                      :toggles="state.toggles"
+                      :errors="{}"
+                    />
+                    <div class="col">
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="update(module)"
+                        v-if="state.toggles['modules.admin.update']"
+                      >
+                        {{ $t('businessModulesAdmin.update') }} <i class="bi bi-save"></i>
+                      </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['modules.admin.unavailable']"
+                      >
+                        {{ $t('businessQueuesAdmin.unavailable') }}
+                        <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yes-disabled="state.toggles['modules.admin.unavailable']"
+                        :no-disabled="state.toggles['modules.admin.unavailable']"
+                        @actionYes="unavailable(module)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                   </div>
                   <div
@@ -377,7 +433,8 @@ export default {
         </div>
       </div>
     </div>
-    <!-- Modal Add -->
+    <!-- Modal Add - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
     <div
       class="modal fade"
       :id="`add-module`"
@@ -401,46 +458,23 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="loading" :stack="alertError"></Alert>
-            <div
-              id="add-module"
-              class="result-card mb-4"
-              v-if="state.showAdd && state.toggles['modules.admin.add']"
-            >
+            <div v-if="state.showAdd && state.toggles['modules.admin.add']">
               <div v-if="state.modules.length < state.toggles['modules.admin.limit']">
-                <div class="row g-1">
-                  <div id="module-name-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessModulesAdmin.name') }}
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newQueue.name"
-                        v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="Module A"
-                      />
-                    </div>
-                  </div>
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newQueue)"
-                    >
-                      {{ $t('businessModulesAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
+                <ModuleFormAdd
+                  v-model="state.newQueue"
+                  :toggles="state.toggles"
+                  :errors="{
+                    nameError: state.nameError,
+                    errorsAdd: state.errorsAdd,
+                  }"
+                />
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newQueue)"
+                  >
+                    {{ $t('businessModulesAdmin.add') }} <i class="bi bi-save"></i>
+                  </button>
                 </div>
               </div>
               <div v-else>
@@ -462,6 +496,7 @@ export default {
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 

@@ -814,20 +814,22 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`dashboard.title`)"
-        :toggles="state.toggles"
-        component-name="dashboard"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="dashboard">
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`dashboard.title`)"
+          :toggles="state.toggles"
+          component-name="dashboard"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="dashboard">
         <div v-if="isActiveBusiness()">
           <div v-if="state.commerces.length === 0" class="control-box">
             <Message
@@ -1018,6 +1020,233 @@ export default {
             :content="$t('dashboard.message.1.content')"
           />
         </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.commerce.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`dashboard.title`)"
+              :toggles="state.toggles"
+              component-name="dashboard"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="dashboard">
+          <div v-if="isActiveBusiness()">
+            <div v-if="state.commerces.length === 0" class="control-box">
+              <Message
+                :title="$t('dashboard.message.3.title')"
+                :content="$t('dashboard.message.3.content')"
+              />
+            </div>
+            <div v-else class="control-box">
+              <div id="dashboard-controls">
+                <div class="row">
+                  <div class="col" v-if="state.commerces">
+                    <span>{{ $t('dashboard.commerce') }} </span>
+                    <select
+                      class="btn btn-md fw-bold text-dark m-1 select"
+                      v-model="state.commerce"
+                      id="modules"
+                      @change="selectCommerce(state.commerce)"
+                    >
+                      <option v-for="com in state.commerces" :key="com.id" :value="com">
+                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getToday()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.today') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getCurrentMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.thisMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastThreeMonths()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastThreeMonths') }}
+                    </button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6">
+                    <input
+                      id="startDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.startDate"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      id="endDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.endDate"
+                    />
+                  </div>
+                </div>
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="refresh()"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div id="title" class="metric-title">
+                <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+                <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+                <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+              </div>
+              <div id="sub-title" class="metric-subtitle">
+                ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+                {{ $t('dashboard.dates.to') }} {{ state.endDate }})
+              </div>
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showIndicators ? 'btn-selected' : ''"
+                    @click="showIndicators()"
+                    :disabled="!state.toggles['dashboard.indicators.view']"
+                    :title="$t('dashboard.consolidated')"
+                  >
+                    {{ $t('dashboard.indicators') }} <br />
+                    <i class="bi bi-stoplights-fill"></i>
+                  </button>
+                </div>
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showGraphs ? 'btn-selected' : ''"
+                    @click="showGraphs()"
+                    :disabled="!state.toggles['dashboard.graphs.view']"
+                  >
+                    {{ $t('dashboard.graph') }} <br />
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                  </button>
+                </div>
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showSurveyResults ? 'btn-selected' : ''"
+                    @click="showSurvey()"
+                    :disabled="!state.toggles['dashboard.surveys.view']"
+                  >
+                    {{ $t('dashboard.surveys') }} <br />
+                    <i class="bi bi-patch-question-fill"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <DashboardIndicators
+                  :show-indicators="state.showIndicators"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
+                >
+                </DashboardIndicators>
+                <DashboardGraphs
+                  :show-graphs="state.showGraphs"
+                  :calculated-metrics="{
+                    attentionNumberEvolutionProps,
+                    attentionDurationEvolutionProps,
+                    attentionHourDistributionProps,
+                    attentionQueuesProps,
+                    attentionFlowProps,
+                    attentionRateDurationEvolutionProps,
+                    surveyFlowProps,
+                    bookingFlowProps,
+                    bookingNumberEvolutionProps,
+                    attentionDayDistributionProps,
+                    bookingDayDistributionProps,
+                    bookingHourDistributionProps,
+                    ...state.calculatedMetrics,
+                  }"
+                  :toggles="state.toggles"
+                  :graphs="state.graphs"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
+                >
+                </DashboardGraphs>
+                <DashboardSurveys
+                  :show-survey="state.showSurveyResults"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="state.commerce"
+                  :queues="state.queues"
+                >
+                </DashboardSurveys>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1064,5 +1293,52 @@ export default {
 .metric-card-subtitle {
   font-size: 0.6rem;
   font-weight: 500;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

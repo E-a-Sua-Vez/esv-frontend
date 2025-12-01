@@ -272,6 +272,27 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh(1);
     },
+    setSearchText(text) {
+      this.searchText = text;
+    },
+    setQueueId(id) {
+      this.queueId = id;
+    },
+    setServiceId(id) {
+      this.serviceId = id;
+    },
+    setStartDate(date) {
+      this.startDate = date;
+    },
+    setEndDate(date) {
+      this.endDate = date;
+    },
+    setRatingType(value) {
+      this.ratingType = value;
+    },
+    setNpsType(value) {
+      this.npsType = value;
+    },
   },
   computed: {
     changeData() {
@@ -368,6 +389,13 @@ export default {
     :set-key-word="setKeyWord"
     :check-contactable="checkContactable"
     :check-contacted="checkContacted"
+    :set-search-text="setSearchText"
+    :set-queue-id="setQueueId"
+    :set-service-id="setServiceId"
+    :set-start-date="setStartDate"
+    :set-end-date="setEndDate"
+    :set-rating-type="setRatingType"
+    :set-nps-type="setNpsType"
   ></slot>
   <div
     id="surveys-management"
@@ -697,7 +725,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>
@@ -769,7 +797,7 @@ export default {
             </div>
             <div v-if="surveys && surveys.length > 0">
               <div class="row" v-for="(survey, index) in surveys" :key="`survey-${index}`">
-                <SurveyDetailsCard :show="true" :survey="survey"> </SurveyDetailsCard>
+                <SurveyDetailsCard :show="true" :survey="survey" :commerce="commerce"> </SurveyDetailsCard>
               </div>
               <div class="centered mt-2">
                 <nav>

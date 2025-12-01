@@ -1538,6 +1538,7 @@
     "contacted": "Contactado",
     "contactable": "Contactable",
     "survey": "Encuesta",
+    "firstAttentionForm": "Formulario Primera Atención",
     "asc": "A menor",
     "desc": "A mayor",
     "keyWord": "Palabras Clave",
@@ -1582,6 +1583,8 @@
     "commerceData": "Comercio:",
     "userData": "Usuario:",
     "queueData": "Fila/Servicio:",
+    "contactInfo": "Información de Contacto",
+    "date": "Fecha",
     "contactMethod": "Medio de Contacto",
     "outcomes": "Egresos",
     "patientHistory": "Historia",
@@ -1592,6 +1595,20 @@
     "edit": "Editar",
     "dataOf": "Datos de",
     "addClient": "Agregar Cliente",
+    "productCard": {
+      "stockLevel": "Nivel de Stock",
+      "levels": "Niveles",
+      "code": "Código",
+      "tooltip": {
+        "status": "Estado del producto basado en nivel de stock",
+        "copy": "Copiar datos del producto",
+        "expired": "Días desde expiración. Verde: >30 días, Amarillo: 0-30 días, Rojo: expirado",
+        "replacement": "Días hasta próxima reposición. Verde: >30 días, Amarillo: 0-30 días, Rojo: requiere reposición",
+        "stockLevel": "Nivel de stock actual como porcentaje del máximo",
+        "viewConsumptions": "Ver historial de consumos",
+        "viewReplacements": "Ver historial de reposiciones"
+      }
+    },
     "dates": {
       "from": "Del",
       "to": "al"
@@ -1638,6 +1655,71 @@
         "contact": "Contactos",
         "contactResult": "Resultado de Contacto"
       }
+    },
+    "clientCard": {
+      "tooltip": {
+        "status": "Estado del cliente basado en días desde última atención",
+        "copy": "Copiar datos del cliente",
+        "attentions": "Número total de atenciones",
+        "survey": "Cliente ha completado encuesta de satisfacción",
+        "form": "Cliente tiene formulario de primera atención",
+        "daysSinceAttention": "Días transcurridos desde la última atención. Verde: ≤90 días, Amarillo: 91-180 días, Rojo: >180 días",
+        "daysSinceContact": "Días transcurridos desde el último contacto. Verde: ≤90 días, Amarillo: 91-180 días, Rojo: >180 días",
+        "viewAttentions": "Ver historial de atenciones del cliente",
+        "viewBookings": "Ver reservas y citas del cliente",
+        "viewHistory": "Ver historial médico y controles del paciente",
+        "editClient": "Editar información del cliente",
+        "viewContacts": "Ver historial de contactos realizados",
+        "schedule": "Crear nueva reserva o cita para el cliente",
+        "whatsapp": "Abrir conversación de WhatsApp",
+        "email": "Abrir cliente de correo electrónico",
+        "idNumber": "Número de identificación del cliente",
+        "contactResult": "Resultado del último contacto realizado",
+        "paid": "Atención/Reserva pagada",
+        "products": "Atención tiene productos",
+        "terms": "Términos y condiciones aceptados",
+        "contacted": "Cliente ha sido contactado",
+        "rating": "Calificación CSAT",
+        "nps": "NPS - Net Promoter Score",
+        "sentiment": "Análisis de sentimiento",
+        "viewAnswers": "Ver respuestas de la encuesta",
+        "contact": "Contactar cliente",
+        "commerceActive": "Comercio activo",
+        "commerceInactive": "Comercio inactivo",
+        "commerceTag": "Tag del comercio",
+        "moduleActive": "Módulo activo",
+        "moduleInactive": "Módulo inactivo",
+        "queueActive": "Fila activa",
+        "queueInactive": "Fila inactiva",
+        "queueTag": "Tag de la fila",
+        "openWebsite": "Abrir sitio del comercio",
+        "serviceActive": "Servicio activo",
+        "serviceInactive": "Servicio inactivo",
+        "serviceTag": "Tag del servicio"
+      },
+      "label": {
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "id": "ID",
+        "birthday": "Cumpleaños",
+        "healthAgreement": "Convenio",
+        "origin": "Origen",
+        "address": "Dirección",
+        "addressCode": "Código Postal",
+        "addressComplement": "Complemento",
+        "code1": "Código 1",
+        "code2": "Código 2",
+        "code3": "Código 3",
+        "noCommerce": "Sin comercio",
+        "noService": "N/I",
+        "noQueue": "N/I"
+      },
+      "address": "Dirección",
+      "daysSinceAttention": "Días Atención",
+      "daysSinceContact": "Días Contacto",
+      "contactInfo": "Información de Contacto",
+      "actions": "Acciones",
+      "date": "Fecha"
     },
     "surveysFilters": {
       "filters": {
@@ -1848,6 +1930,10 @@
         "description": "Descarga archivo report con el resultado de las clientes realizadas en el rango de fechas seleccionado"
       },
       "client-contacts-management": {
+        "title": "Reporte de Contactos (Detalles)",
+        "description": "Descarga archivo report con el resultado de los contactos realizadas en el rango de fechas seleccionado"
+      },
+      "contacts-management": {
         "title": "Reporte de Contactos (Detalles)",
         "description": "Descarga archivo report con el resultado de los contactos realizadas en el rango de fechas seleccionado"
       },
@@ -2197,6 +2283,8 @@
     "queue-manage": "Atender Filas del Día",
     "booking-manage": "Reservas Visión 360°",
     "go-minisite": "Minisite",
+    "seeSpy": "Ver Spy",
+    "seeMenu": "Ver Menú",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2212,6 +2300,33 @@
           "booking-manage": "Reservas Visión 360°",
           "product-stock": "Control de Stock"
         }
+      }
+    }
+  },
+  "collaboratorSpySection": {
+    "attentions": "Atenciones",
+    "bookings": "Reservas",
+    "today": "Hoy",
+    "todayAttentions": "Atenciones de Hoy",
+    "goToQueue": "Ir a Fila",
+    "weekBookings": "Reservas de la Semana",
+    "monthBookings": "Reservas del Mes",
+    "pendingToAttend": "Pendientes por atender",
+    "selectCommerce": "Seleccionar Comercio",
+    "attendQueue": "Atender Fila",
+    "attendQueues": "Atender Filas",
+    "calendar": "Calendario",
+    "calendarTitle": "Calendario de Atenciones y Reservas",
+    "both": "Ambos",
+    "number": "Número",
+    "message": {
+      "noQueue": {
+        "title": "Sin fila dedicada",
+        "content": "No tienes una fila dedicada asignada. El Spy solo está disponible para colaboradores con filas dedicadas."
+      },
+      "noData": {
+        "title": "Sin datos",
+        "content": "No hay atenciones ni reservas para esta fecha."
       }
     }
   },
