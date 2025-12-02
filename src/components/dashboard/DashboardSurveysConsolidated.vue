@@ -442,6 +442,7 @@ export default {
       npsScorePercentage,
       clasifyNpsScore,
       clear,
+      refresh,
       showFilters,
       exportToPDF,
       getMaxAvgCSAT,

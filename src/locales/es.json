@@ -1152,6 +1152,15 @@
     "schedules": "Agendas y Calendarios",
     "searchClient": "Buscar Cliente",
     "cancel": "Cancelar",
+    "today": "Hoy",
+    "pending": "Pendientes",
+    "upcomingWeek": "Próxima Semana",
+    "totalActive": "Total Activas",
+    "recentBookings": "Reservas Recientes",
+    "noBookings": {
+      "title": "No se Encontraron Reservas",
+      "content": "No hay reservas para mostrar en este momento."
+    },
     "confirm": "Confirmar",
     "paymentConfirm": "Confirmar/ Pago",
     "confirmData": "Datos de Confirmación",
@@ -1695,7 +1704,15 @@
         "openWebsite": "Abrir sitio del comercio",
         "serviceActive": "Servicio activo",
         "serviceInactive": "Servicio inactivo",
-        "serviceTag": "Tag del servicio"
+        "serviceTag": "Tag del servicio",
+        "collaboratorActive": "Colaborador activo",
+        "collaboratorInactive": "Colaborador inactivo",
+        "collaboratorEmail": "Email del colaborador",
+        "surveyActive": "Encuesta activa",
+        "surveyInactive": "Encuesta inactiva",
+        "itemActive": "Item activo",
+        "itemInactive": "Item inactivo",
+        "itemTag": "Tag del item"
       },
       "label": {
         "whatsapp": "WhatsApp",
@@ -1712,7 +1729,9 @@
         "code3": "Código 3",
         "noCommerce": "Sin comercio",
         "noService": "N/I",
-        "noQueue": "N/I"
+        "noQueue": "N/I",
+        "noCollaborator": "N/I",
+        "noSurvey": "N/I"
       },
       "address": "Dirección",
       "daysSinceAttention": "Días Atención",
@@ -3047,6 +3066,10 @@
     "add": "Agregar",
     "aliasHelp": "Identificador del colaborador usado en el producto digital.",
     "listResult": "Registros:",
+    "selectType": "Seleccionar tipo",
+    "selectModule": "Seleccionar módulo",
+    "selectCommerce": "Seleccionar comercio",
+    "selectService": "Seleccionar servicio",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3859,6 +3882,7 @@
     "link": "URL Web:",
     "go": "Ir",
     "other": "Otro",
+    "otherHelp": "Otra encuesta",
     "otherOption": "Opción 'Otro':",
     "otherOpen": "'Otro' Abierto:",
     "optionsHelp": "Lista las opciones de respuesta separados por coma, sin espacios.",

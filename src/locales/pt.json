@@ -1164,6 +1164,15 @@
     "searchClient": "Pesquisar Cliente",
     "schedules": "Agendas e Calendários",
     "cancel": "Cancelar",
+    "today": "Hoje",
+    "pending": "Pendentes",
+    "upcomingWeek": "Próxima Semana",
+    "totalActive": "Total Ativas",
+    "recentBookings": "Reservas Recentes",
+    "noBookings": {
+      "title": "Nenhuma Reserva Encontrada",
+      "content": "Não há reservas para exibir no momento."
+    },
     "confirm": "Confirmar",
     "paymentData": "Dados de Pagamento",
     "paymentConfirm": "Confirmar/ Pagamento",
@@ -1697,7 +1706,15 @@
         "openWebsite": "Abrir site do comércio",
         "serviceActive": "Serviço ativo",
         "serviceInactive": "Serviço inativo",
-        "serviceTag": "Tag do serviço"
+        "serviceTag": "Tag do serviço",
+        "collaboratorActive": "Colaborador ativo",
+        "collaboratorInactive": "Colaborador inativo",
+        "collaboratorEmail": "Email do colaborador",
+        "surveyActive": "Pesquisa ativa",
+        "surveyInactive": "Pesquisa inativa",
+        "itemActive": "Item ativo",
+        "itemInactive": "Item inativo",
+        "itemTag": "Tag do item"
       },
       "label": {
         "whatsapp": "WhatsApp",
@@ -1714,7 +1731,9 @@
         "code3": "Código 3",
         "noCommerce": "Sem comércio",
         "noService": "N/I",
-        "noQueue": "N/I"
+        "noQueue": "N/I",
+        "noCollaborator": "N/I",
+        "noSurvey": "N/I"
       },
       "address": "Endereço",
       "daysSinceAttention": "Dias Atenção",
@@ -2937,7 +2956,7 @@
     "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "tag": "Tag:",
-    "Type": "Tipo:",
+    "type": "Tipo:",
     "return": "Voltar",
     "active": "Ativo:",
     "update": "Atualizar",
@@ -3052,6 +3071,10 @@
     "commerces": "Comércios:",
     "aliasHelp": "Identificador abreviado do colaborador utilizado no produto digital.",
     "listResult": "Registros:",
+    "selectType": "Selecionar tipo",
+    "selectModule": "Selecionar módulo",
+    "selectCommerce": "Selecionar comércio",
+    "selectService": "Selecionar serviço",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -3853,6 +3876,7 @@
     "link": "URL Web:",
     "go": "Ir",
     "other": "Outro",
+    "otherHelp": "Outra encuesta",
     "otherOption": "Opção 'Outro':",
     "otherOpen": "'Outro' Aberto:",
     "optionsHelp": "Lista de opções de reposta separados por vírgula, sem espaços.",

@@ -9,7 +9,9 @@ import {
 } from '../../application/services/patient-history-item';
 import { getPermissions } from '../../application/services/permissions';
 import Popper from 'vue3-popper';
-import ServiceSimpleName from '../../components/common/ServiceSimpleName.vue';
+import PatientHistoryItemName from '../../components/common/PatientHistoryItemName.vue';
+import PatientHistoryItemFormEdit from '../../components/patient-history-item/PatientHistoryItemFormEdit.vue';
+import PatientHistoryItemFormAdd from '../../components/patient-history-item/PatientHistoryItemFormAdd.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -28,7 +30,9 @@ export default {
     Message,
     Spinner,
     Alert,
-    ServiceSimpleName,
+    PatientHistoryItemName,
+    PatientHistoryItemFormEdit,
+    PatientHistoryItemFormAdd,
     Toggle,
     Warning,
     AreYouSure,
@@ -85,7 +89,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     });
@@ -186,7 +190,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -202,7 +206,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -221,7 +225,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -242,7 +246,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -302,7 +306,7 @@ export default {
               <div class="col" v-if="state.commerces.length > 0">
                 <span>{{ $t('businessPatientHistoryItemAdmin.commerce') }} </span>
                 <select
-                  class="btn btn-md fw-bold text-dark m-1 select"
+                  class="form-control-modern form-select-modern"
                   v-model="state.commerce"
                   @change="selectCommerce(state.commerce)"
                   id="modules"
@@ -351,7 +355,7 @@ export default {
                 <div v-for="(item, index) in state.filtered" :key="index" class="result-card">
                   <div class="row">
                     <div class="col-10">
-                      <ServiceSimpleName :service="item"></ServiceSimpleName>
+                      <PatientHistoryItemName :item="item"></PatientHistoryItemName>
                     </div>
                     <div class="col-2">
                       <a href="#" @click.prevent="showUpdateForm(index)">
@@ -369,100 +373,20 @@ export default {
                     :class="{ show: state.extendedEntity === index }"
                     class="detailed-data transition-slow"
                   >
+                    <PatientHistoryItemFormEdit
+                      :item="item"
+                      :types="state.types"
+                      :toggles="state.toggles"
+                      :errors="{
+                        nameError: state.nameError,
+                        tagError: state.tagError,
+                        typeError: state.typeError,
+                        orderUpdateError: state.orderUpdateError,
+                        errorsUpdate: state.errorsUpdate,
+                      }"
+                      @update:item="item = $event"
+                    />
                     <div class="row g-1">
-                      <div id="item-type-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessQueuesAdmin.type') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            :disabled="true"
-                            type="text"
-                            class="form-control"
-                            v-model="item.type"
-                            placeholder="Type"
-                          />
-                        </div>
-                      </div>
-                      <div id="item-tag-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessPatientHistoryItemAdmin.tag') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessPatientHistoryItemAdmin.tagHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="item.tag"
-                            v-bind:class="{ 'is-invalid': state.tagError }"
-                            placeholder="Habit"
-                          />
-                        </div>
-                      </div>
-                      <div id="item-order-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessPatientHistoryItemAdmin.order') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessPatientHistoryItemAdmin.orderHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <input
-                            :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            min="1"
-                            :max="state.items.length"
-                            type="number"
-                            class="form-control"
-                            v-model="item.order"
-                            v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                            placeholder="1"
-                          />
-                        </div>
-                      </div>
-                      <div id="item-online-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessPatientHistoryItemAdmin.online') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessPatientHistoryItemAdmin.onlineHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="item.online"
-                            :disabled="!state.toggles['patient-history-item.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="item-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessPatientHistoryItemAdmin.active') }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="item.active"
-                            :disabled="!state.toggles['patient-history-item.admin.edit']"
-                          />
-                        </div>
-                      </div>
                       <!-- Datos de Caracteristicas -->
                       <div class="row g-1">
                         <a
@@ -610,13 +534,6 @@ export default {
                           </div>
                         </div>
                       </div>
-                      <div id="item-id-form" class="row -2 mb-g3">
-                        <div class="row item-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ item.id }}</span>
-                          </div>
-                        </div>
-                      </div>
                       <div class="col">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -642,19 +559,6 @@ export default {
                           @actionNo="unavailableCancel()"
                         >
                         </AreYouSure>
-                      </div>
-                      <div
-                        class="row g-1 errors"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
                       </div>
                     </div>
                   </div>
@@ -716,115 +620,19 @@ export default {
               v-if="state.showAdd && state.toggles['patient-history-item.admin.add']"
             >
               <div v-if="state.items.length < state.toggles['patient-history-item.admin.limit']">
+                <PatientHistoryItemFormAdd
+                  v-model="state.newPatientHistoryItem"
+                  :types="state.types"
+                  :toggles="state.toggles"
+                  :errors="{
+                    nameError: state.nameError,
+                    tagError: state.tagError,
+                    typeError: state.typeError,
+                    orderAddError: state.orderAddError,
+                    errorsAdd: state.errorsAdd,
+                  }"
+                />
                 <div class="row g-1">
-                  <div id="item-name-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessPatientHistoryItemAdmin.name') }}
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newPatientHistoryItem.name"
-                        v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="PatientHistoryItem A"
-                      />
-                    </div>
-                  </div>
-                  <div id="item-tag-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessPatientHistoryItemAdmin.tag') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessPatientHistoryItemAdmin.tagHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newPatientHistoryItem.tag"
-                        v-bind:class="{ 'is-invalid': state.tagError }"
-                        placeholder="Habit"
-                      />
-                    </div>
-                  </div>
-                  <div id="item-type-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessPatientHistoryItemAdmin.type') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessPatientHistoryItemAdmin.typeHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select"
-                        v-model="state.newPatientHistoryItem.type"
-                        id="types"
-                        v-bind:class="{ 'is-invalid': state.typeError }"
-                      >
-                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
-                          {{ $t(`items.types.${typ.id}`) }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div id="item-order-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessPatientHistoryItemAdmin.order') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessPatientHistoryItemAdmin.orderHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        :max="state.items.length + 1"
-                        type="number"
-                        class="form-control"
-                        v-model="state.newPatientHistoryItem.order"
-                        v-bind:class="{ 'is-invalid': state.orderAddError }"
-                        placeholder="1"
-                      />
-                    </div>
-                  </div>
-                  <div id="add-item-online-form" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessPatientHistoryItemAdmin.online') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessPatientHistoryItemAdmin.onlineHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </div>
-                    <div class="col-6">
-                      <Toggle
-                        v-model="state.newPatientHistoryItem.online"
-                        :disabled="!state.toggles['patient-history-item.admin.edit']"
-                      />
-                    </div>
-                  </div>
                   <!-- Datos de Caracteristicas -->
                   <div class="row g-1">
                     <a
@@ -972,15 +780,6 @@ export default {
                       </div>
                     </div>
                   </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -988,15 +787,6 @@ export default {
                     >
                       {{ $t('businessPatientHistoryItemAdmin.add') }} <i class="bi bi-save"></i>
                     </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
                   </div>
                 </div>
               </div>
@@ -1023,23 +813,154 @@ export default {
 </template>
 
 <style scoped>
-.select {
+/* Modern Form Styles */
+.select,
+.form-select-modern {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
-.service-details-container {
+
+.select:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+}
+
+.form-control-modern,
+.form-select-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled),
+.form-select-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-select-modern {
+  flex: 1;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+/* Result Card */
+.result-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  padding: 0.2rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.result-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.detailed-data {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0;
+}
+
+.detailed-data.show {
+  max-height: 1500px;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+.item-details-container {
   font-size: 0.8rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
   margin-top: 0.5rem;
   margin-bottom: 0;
 }
+
 .is-disabled {
   opacity: 0.5;
 }
-.show {
-  padding: 10px;
-  max-height: 1500px !important;
-  overflow-y: auto;
+
+/* Characteristics Section */
+.subdata-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+  padding: 0.5rem;
+  background: rgba(0, 194, 203, 0.05);
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.subdata-title:hover {
+  background: rgba(0, 194, 203, 0.1);
+}
+
+.collapse {
+  padding: 0.5rem;
+  background: rgba(245, 246, 247, 0.5);
+  border-radius: 5px;
+  margin-top: 0.25rem;
+}
+
+.collapse .row {
+  margin-bottom: 0.5rem;
+}
+
+.collapse .row:last-child {
+  margin-bottom: 0;
+}
+
+.collapse .text-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #000000;
+}
+
+.collapse .form-control {
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.625rem;
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+
+.collapse .form-control:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
 }
 </style>

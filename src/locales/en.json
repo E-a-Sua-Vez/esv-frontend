@@ -1157,6 +1157,15 @@
     "schedules": "Schedules and Canlendars",
     "searchClient": "Search Client",
     "cancel": "Cancel",
+    "today": "Today",
+    "pending": "Pending",
+    "upcomingWeek": "Upcoming Week",
+    "totalActive": "Total Active",
+    "recentBookings": "Recent Bookings",
+    "noBookings": {
+      "title": "No Bookings Found",
+      "content": "There are no bookings to display at this time."
+    },
     "confirm": "Confirm",
     "paymentConfirm": "Confirm/ Payment",
     "paymentData": "Payment Data",
@@ -1694,7 +1703,15 @@
         "openWebsite": "Open commerce website",
         "serviceActive": "Service active",
         "serviceInactive": "Service inactive",
-        "serviceTag": "Service tag"
+        "serviceTag": "Service tag",
+        "collaboratorActive": "Collaborator active",
+        "collaboratorInactive": "Collaborator inactive",
+        "collaboratorEmail": "Collaborator email",
+        "surveyActive": "Survey active",
+        "surveyInactive": "Survey inactive",
+        "itemActive": "Item active",
+        "itemInactive": "Item inactive",
+        "itemTag": "Item tag"
       },
       "label": {
         "whatsapp": "WhatsApp",
@@ -1711,7 +1728,9 @@
         "code3": "Code 3",
         "noCommerce": "No commerce",
         "noService": "N/A",
-        "noQueue": "N/A"
+        "noQueue": "N/A",
+        "noCollaborator": "N/A",
+        "noSurvey": "N/A"
       },
       "address": "Address",
       "daysSinceAttention": "Days Attention",
@@ -2992,6 +3011,10 @@
     "commerces": "Commerces:",
     "aliasHelp": "Short identifier of the collaborator used in the digital product.",
     "listResult": "Results:",
+    "selectType": "Select type",
+    "selectModule": "Select module",
+    "selectCommerce": "Select commerce",
+    "selectService": "Select service",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3853,6 +3876,7 @@
     "link": "URL Web:",
     "go": "Go",
     "other": "Other",
+    "otherHelp": "Other survey",
     "otherOption": "'Other' Option:",
     "otherOpen": "'Other' Open:",
     "optionsHelp": "List of answer options splitted by comma, without spaces.",

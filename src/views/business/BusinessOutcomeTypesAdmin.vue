@@ -8,8 +8,9 @@ import {
   addOutcomeType,
 } from '../../application/services/outcome-type';
 import { getPermissions } from '../../application/services/permissions';
-import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import OutcomeTypeName from '../../components/common/OutcomeTypeName.vue';
+import OutcomeTypeFormEdit from '../../components/outcome-type/OutcomeTypeFormEdit.vue';
+import OutcomeTypeFormAdd from '../../components/outcome-type/OutcomeTypeFormAdd.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -29,8 +30,9 @@ export default {
     Spinner,
     Alert,
     OutcomeTypeName,
+    OutcomeTypeFormEdit,
+    OutcomeTypeFormAdd,
     Toggle,
-    ToggleCapabilities,
     Warning,
     AreYouSure,
     ComponentMenu,
@@ -58,7 +60,9 @@ export default {
       tadUpdateError: false,
       typeError: false,
       errorsAdd: [],
+      errorsUpdate: [],
       nameError: false,
+      tagUpdateError: false,
       toggles: {},
       filtered: [],
       types: [],
@@ -82,7 +86,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     });
@@ -123,7 +127,7 @@ export default {
       state.errorsUpdate = [];
       if (!outcomeType.tag || outcomeType.tag.length === 0) {
         state.tagUpdateError = true;
-        state.errorsAdd.push('businessOutcomeTypesAdmin.validate.tag');
+        state.errorsUpdate.push('businessOutcomeTypesAdmin.validate.tag');
       } else {
         state.tagUpdateError = false;
       }
@@ -155,7 +159,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -171,7 +175,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -190,7 +194,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -212,7 +216,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -272,7 +276,7 @@ export default {
               <div class="col" v-if="state.commerces.length > 0">
                 <span>{{ $t('businessOutcomeTypesAdmin.commerce') }} </span>
                 <select
-                  class="btn btn-md fw-bold text-dark m-1 select"
+                  class="form-control-modern form-select-modern"
                   v-model="state.commerce"
                   @change="selectCommerce(state.commerce)"
                   id="outcomeTypes"
@@ -328,6 +332,7 @@ export default {
                       <OutcomeTypeName
                         :name="outcomeType.name"
                         :active="outcomeType.active"
+                        :tag="outcomeType.tag"
                       ></OutcomeTypeName>
                     </div>
                     <div class="col-2">
@@ -341,87 +346,46 @@ export default {
                       </a>
                     </div>
                   </div>
-                  <div
+                  <OutcomeTypeFormEdit
                     v-if="state.toggles['outcome-types.admin.read']"
                     :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                    :outcome-type="outcomeType"
+                    :types="state.types"
+                    :toggles="state.toggles"
+                    :errors="{
+                      tagError: state.tagUpdateError,
+                      errorsUpdate: state.errorsUpdate || [],
+                    }"
+                    @update:outcomeType="outcomeType = $event"
+                  />
+                  <div
+                    v-if="state.toggles['outcome-types.admin.read'] && state.extendedEntity === index"
+                    class="row g-1 mt-2"
                   >
-                    <div class="row g-1">
-                      <div id="outcomeType-tag-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t('businessOutcomeTypesAdmin.tag') }}
-                        </div>
-                        <div class="col-6">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="outcomeType.type"
-                            :disabled="true"
-                            placeholder="OutcomeType A"
-                          />
-                        </div>
-                      </div>
-                      <div id="outcomeType-tag-form-update" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t('businessOutcomeTypesAdmin.tag') }}
-                        </div>
-                        <div class="col-6">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="outcomeType.tag"
-                            v-bind:class="{ 'is-invalid': state.tagUpdateError }"
-                            placeholder="OutcomeType A"
-                          />
-                        </div>
-                      </div>
-                      <div id="outcomeType-active-form" class="row g-1">
-                        <div class="col-6 text-label">
-                          {{ $t('businessOutcomeTypesAdmin.active') }}
-                        </div>
-                        <div class="col-6">
-                          <Toggle
-                            v-model="outcomeType.active"
-                            :disabled="!state.toggles['outcome-types.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="outcomeType-id-form" class="row -2 mb-g3">
-                        <div class="row outcomeType-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ outcomeType.id }}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(outcomeType)"
-                          v-if="state.toggles['outcome-types.admin.update']"
-                        >
-                          {{ $t('businessOutcomeTypesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['outcome-types.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['outcome-types.admin.unavailable']"
-                          :no-disabled="state.toggles['outcome-types.admin.unavailable']"
-                          @actionYes="unavailable(outcomeType)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
+                    <div class="col">
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="update(outcomeType)"
+                        v-if="state.toggles['outcome-types.admin.update']"
+                      >
+                        {{ $t('businessOutcomeTypesAdmin.update') }} <i class="bi bi-save"></i>
+                      </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['outcome-types.admin.unavailable']"
+                      >
+                        {{ $t('businessQueuesAdmin.unavailable') }}
+                        <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yes-disabled="state.toggles['outcome-types.admin.unavailable']"
+                        :no-disabled="state.toggles['outcome-types.admin.unavailable']"
+                        @actionYes="unavailable(outcomeType)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                   </div>
                   <div
@@ -478,73 +442,24 @@ export default {
               v-if="state.showAdd && state.toggles['outcome-types.admin.add']"
             >
               <div v-if="state.outcomeTypes.length < state.toggles['outcome-types.admin.limit']">
-                <div class="row g-1">
-                  <div id="outcomeType-name-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessOutcomeTypesAdmin.name') }}
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newOutcomeType.name"
-                        v-bind:class="{ 'is-invalid': state.nameError }"
-                        placeholder="OutcomeType A"
-                      />
-                    </div>
-                  </div>
-                  <div id="outcomeType-tag-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessOutcomeTypesAdmin.tag') }}
-                    </div>
-                    <div class="col-6">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="state.newOutcomeType.tag"
-                        v-bind:class="{ 'is-invalid': state.tagAddError }"
-                        placeholder="OutcomeType A"
-                      />
-                    </div>
-                  </div>
-                  <div id="outcomeType-type-form-add" class="row g-1">
-                    <div class="col-6 text-label">
-                      {{ $t('businessOutcomeTypesAdmin.type') }}
-                    </div>
-                    <div class="col-6">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                        v-model="state.newOutcomeType.type"
-                        id="features"
-                        v-bind:class="{ 'is-invalid': state.typeError }"
-                      >
-                        <option v-for="opt in state.types" :key="opt.name" :value="opt.id">
-                          {{ $t(`outcomes.types.${opt.name}`) }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newOutcomeType)"
-                    >
-                      {{ $t('businessOutcomeTypesAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
+                <OutcomeTypeFormAdd
+                  v-model="state.newOutcomeType"
+                  :types="state.types"
+                  :toggles="state.toggles"
+                  :errors="{
+                    nameError: state.nameError,
+                    tagError: state.tagAddError,
+                    typeError: state.typeError,
+                    errorsAdd: state.errorsAdd,
+                  }"
+                />
+                <div class="col mt-3">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newOutcomeType)"
+                  >
+                    {{ $t('businessOutcomeTypesAdmin.add') }} <i class="bi bi-save"></i>
+                  </button>
                 </div>
               </div>
               <div v-else>
@@ -570,23 +485,120 @@ export default {
 </template>
 
 <style scoped>
-.select {
+/* Modern Form Styles */
+.select,
+.form-select-modern {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
-.outcomeType-details-container {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
+
+.select:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
 }
+
+.form-control-modern,
+.form-select-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled),
+.form-select-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-select-modern {
+  flex: 1;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.form-control {
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+}
+
+.text-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+
+.result-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 0.2rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.result-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.detailed-data {
+  width: 100%;
+  max-height: 0px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px auto auto;
+  background-color: var(--color-background);
+  transition: max-height 0.3s ease;
+}
+
+.detailed-data.show {
+  padding: 0.5rem;
+  max-height: 2000px !important;
+  overflow-y: visible;
+}
+
 .is-disabled {
   opacity: 0.5;
-}
-.show {
-  padding: 10px;
-  max-height: 1500px !important;
-  overflow-y: auto;
 }
 </style>

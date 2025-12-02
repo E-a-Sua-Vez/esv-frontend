@@ -483,6 +483,9 @@ export default {
 
     const selectServiceMultiple = async (queue, service) => {
       if (service) {
+        if (!queue.servicesId) {
+          queue.servicesId = [];
+        }
         if (queue.servicesId && queue.servicesId.length >= 0) {
           if (!queue.servicesId.includes(service.id)) {
             queue.servicesId.push(service.id);
@@ -490,19 +493,23 @@ export default {
             queue.blockTime += +service.serviceInfo.blockTime;
           }
         }
+        state.service = null;
       }
     };
 
     const selectServiceIndex = async (index, service) => {
-      if (!state.queues[index].servicesId) {
-        state.queues[index].servicesId = [];
-      }
-      if (state.queues[index].servicesId && state.queues[index].servicesId.length >= 0) {
-        if (!state.queues[index].servicesId.includes(service.id)) {
-          state.queues[index].servicesId.push(service.id);
-          state.queues[index].estimatedTime += service.serviceInfo.estimatedTime;
-          state.queues[index].blockTime += service.serviceInfo.blockTime;
+      if (service) {
+        if (!state.queues[index].servicesId) {
+          state.queues[index].servicesId = [];
         }
+        if (state.queues[index].servicesId && state.queues[index].servicesId.length >= 0) {
+          if (!state.queues[index].servicesId.includes(service.id)) {
+            state.queues[index].servicesId.push(service.id);
+            state.queues[index].estimatedTime += service.serviceInfo.estimatedTime;
+            state.queues[index].blockTime += service.serviceInfo.blockTime;
+          }
+        }
+        state.service = null;
       }
     };
 
@@ -892,27 +899,29 @@ export default {
                               @change="selectServiceIndex(index, state.service)"
                               id="services"
                             >
+                              <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
                               <option v-for="com in state.services" :key="com.id" :value="com">
                                 {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
                               </option>
                             </select>
                             <div
-                              class="select p-1"
                               v-if="queue.servicesId && queue.servicesId.length > 0"
-                              style="display: flex; flex-wrap: wrap; gap: 0.25rem;"
+                              class="badges-container"
                             >
                               <span
-                                class="badge state rounded-pill bg-secondary px-1 py-1 mx-1"
-                                v-for="com in queue.servicesId"
-                                :key="com.id"
+                                class="badge-modern"
+                                v-for="comId in queue.servicesId"
+                                :key="comId"
                               >
-                                {{ showService(com) }}
+                                {{ showService(comId) }}
                                 <button
                                   type="button"
-                                  class="btn btn-sm btn-close btn-close-white"
+                                  class="badge-close"
                                   aria-label="Close"
-                                  @click="deleteService(queue, com)"
-                                ></button>
+                                  @click="deleteService(queue, comId)"
+                                >
+                                  <i class="bi bi-x"></i>
+                                </button>
                               </span>
                             </div>
                           </div>
@@ -1410,27 +1419,29 @@ export default {
                               @change="selectServiceIndex(index, state.service)"
                               id="services"
                             >
+                              <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
                               <option v-for="com in state.services" :key="com.id" :value="com">
                                 {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
                               </option>
                             </select>
                             <div
-                              class="select p-1"
                               v-if="queue.servicesId && queue.servicesId.length > 0"
-                              style="display: flex; flex-wrap: wrap; gap: 0.25rem;"
+                              class="badges-container"
                             >
                               <span
-                                class="badge state rounded-pill bg-secondary px-1 py-1 mx-1"
-                                v-for="com in queue.servicesId"
-                                :key="com.id"
+                                class="badge-modern"
+                                v-for="comId in queue.servicesId"
+                                :key="comId"
                               >
-                                {{ showService(com) }}
+                                {{ showService(comId) }}
                                 <button
                                   type="button"
-                                  class="btn btn-sm btn-close btn-close-white"
+                                  class="badge-close"
                                   aria-label="Close"
-                                  @click="deleteService(queue, com)"
-                                ></button>
+                                  @click="deleteService(queue, comId)"
+                                >
+                                  <i class="bi bi-x"></i>
+                                </button>
                               </span>
                             </div>
                           </div>
@@ -1796,9 +1807,8 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-  <!-- Modal Add - Use Teleport to render outside component to avoid overflow/position issues -->
-  <Teleport to="body">
+    <!-- Modal Add - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
       <div
         class="modal fade"
         :id="`add-queue`"
@@ -1952,27 +1962,29 @@ export default {
                         @change="selectServiceMultiple(state.newQueue, state.service)"
                         id="services"
                       >
+                        <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
                         <option v-for="com in state.services" :key="com.id" :value="com">
                           {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
                         </option>
                       </select>
                       <div
-                        class="select p-1"
                         v-if="state.newQueue.servicesId && state.newQueue.servicesId.length > 0"
-                        style="display: flex; flex-wrap: wrap; gap: 0.25rem;"
+                        class="badges-container"
                       >
                         <span
-                          class="badge state rounded-pill bg-secondary px-1 py-1 mx-1"
-                          v-for="com in state.newQueue.servicesId"
-                          :key="com.id"
+                          class="badge-modern"
+                          v-for="servId in state.newQueue.servicesId"
+                          :key="servId"
                         >
-                          {{ showService(com) }}
+                          {{ showService(servId) }}
                           <button
                             type="button"
-                            class="btn btn-sm btn-close btn-close-white"
+                            class="badge-close"
                             aria-label="Close"
-                            @click="deleteService(state.newQueue, com)"
-                          ></button>
+                            @click="deleteService(state.newQueue, servId)"
+                          >
+                            <i class="bi bi-x"></i>
+                          </button>
                         </span>
                       </div>
                     </div>
@@ -2324,7 +2336,8 @@ export default {
           </div>
         </div>
       </div>
-  </Teleport>
+    </Teleport>
+  </div>
 </template>
 
 <style scoped>
@@ -2533,5 +2546,50 @@ export default {
 
 .section-toggle-button[aria-expanded="true"] .section-toggle-icon {
   transform: rotate(180deg);
+}
+
+/* Badges Container - Modern Style */
+.badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: rgba(108, 117, 125, 0.15);
+  color: #495057;
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-close {
+  background: none;
+  border: none;
+  color: #495057;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.badge-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #212529;
+}
+
+.badge-close i {
+  font-size: 0.75rem;
 }
 </style>

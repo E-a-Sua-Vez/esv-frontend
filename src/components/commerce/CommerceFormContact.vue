@@ -55,7 +55,7 @@ export default {
             placeholder="Ex.: contact@commerce.com"
           />
         </div>
-        <div class="form-group-modern">
+        <div class="form-group-modern" v-if="isAdd">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.url') }}
           </label>

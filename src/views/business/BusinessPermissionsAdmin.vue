@@ -51,11 +51,12 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
+        state.business = await store.getActualBusiness();
         state.toggles = await getPermissions('permissions', 'collaborators');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     });
@@ -76,22 +77,64 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessPermissionsAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessPermissionsAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessPermissionsAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessPermissionsAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div id="businessPermissionsAdmin" class="">
+          <div id="users" class="row" v-if="state.toggles['permissions.collaborators.view']">
+            <CollaboratorPermissionsAdmin></CollaboratorPermissionsAdmin>
+          </div>
+        </div>
       </div>
-      <div id="businessPermissionsAdmin" class="">
-        <div id="users" class="row" v-if="state.toggles['permissions.collaborators.view']">
-          <CollaboratorPermissionsAdmin></CollaboratorPermissionsAdmin>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="(state.business && state.business.logo && state.business.logo.trim() !== '') ? state.business.logo : $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessPermissionsAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessPermissionsAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessPermissionsAdmin" class="">
+          <div id="users" class="row" v-if="state.toggles['permissions.collaborators.view']">
+            <CollaboratorPermissionsAdmin></CollaboratorPermissionsAdmin>
+          </div>
         </div>
       </div>
     </div>
@@ -133,5 +176,52 @@ export default {
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
   align-items: left;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>
