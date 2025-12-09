@@ -176,7 +176,7 @@ export default {
       <!-- Loading and Error States -->
       <div id="page-header" class="text-center mb-2">
         <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+        <Alert :show="false" :stack="alertError"></Alert>
       </div>
 
       <!-- Business Logo -->

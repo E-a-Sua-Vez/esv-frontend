@@ -316,183 +316,212 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <QueueName :queue="state.queue"></QueueName>
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="!loading">
-        <div id="page-header" class="text-center mt-4">
-          <div>
-            <div class="welcome">
-              <span>{{ $t('userQueueBooking.hello') }}</span>
-            </div>
-          </div>
-        </div>
-        <div id="booking">
-          <div id="booking-cancelled" v-if="bookingCancelled()">
-            <div class="your-booking mt-2">
-              <span
-                >{{ $t('userQueueBooking.cancelledTitle') }}
-                <strong>{{ $t('userQueueBooking.cancelled') }}</strong></span
-              >
-            </div>
-            <AttentionNumber :number="state.booking.number" :type="'secondary'" :show-data="false">
-            </AttentionNumber>
-            <Message
-              :title="$t('userQueueBooking.message.1.title')"
-              :content="$t('userQueueBooking.message.1.content')"
-              :icon="'bi bi-emoji-dizzy'"
-            >
-            </Message>
-            <div class="to-goal">
-              <div class="mt-2">
-                <div class="mt-2">
-                  <button
-                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                    @click="backToCommerceQueues()"
-                  >
-                    {{ $t('userQueueBooking.actions.5.action') }} <i class="bi bi-arrow-left"></i>
-                  </button>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+          <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+          <QueueName :queue="state.queue"></QueueName>
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div id="page-header" class="text-center mt-4">
+              <div>
+                <div class="welcome">
+                  <span>{{ $t('userQueueBooking.hello') }}</span>
                 </div>
               </div>
             </div>
-          </div>
-          <div id="booking active" v-else>
-            <div class="your-booking mt-2">
-              <span class="fw-bold">{{ $t('userQueueBooking.yourNumber') }}</span>
-            </div>
-            <AttentionNumber :number="state.booking.number" :show-data="false"></AttentionNumber>
-            <div id="booking-data" class="to-goal">
-              <div class="booking-details-container">
-                <div v-if="state.booking.date" class="col-6 booking-details-card">
-                  <span class="booking-details-title"> {{ $t('userQueueBooking.shouldCome') }}</span
-                  ><br />
-                  <strong>{{ getDate(state.booking.date) }}</strong>
+            <div id="booking">
+              <div id="booking-cancelled" v-if="bookingCancelled()">
+                <div class="your-booking mt-2">
+                  <span
+                    >{{ $t('userQueueBooking.cancelledTitle') }}
+                    <strong>{{ $t('userQueueBooking.cancelled') }}</strong></span
+                  >
                 </div>
-                <div
-                  v-if="state.booking.block && state.booking.block.hourFrom"
-                  class="col-6 booking-details-card"
+                <AttentionNumber
+                  :number="state.booking.number"
+                  :type="'secondary'"
+                  :show-data="false"
                 >
-                  <span class="booking-details-title"> {{ $t('userQueueBooking.blockInfo') }}</span
-                  ><br />
-                  <strong
-                    >{{ state.booking.block.hourFrom }} - {{ state.booking.block.hourTo }}</strong
-                  >
-                </div>
-                <div v-else-if="state.beforeYou >= 0" class="col-12 booking-details-card">
-                  <span class="booking-details-title">
-                    {{ $t('userQueueBooking.estimatedTime') }}* </span
-                  ><br />
-                  <span class="booking-details-content">
-                    <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
-                  </span>
-                  <br />
+                </AttentionNumber>
+                <Message
+                  :title="$t('userQueueBooking.message.1.title')"
+                  :content="$t('userQueueBooking.message.1.content')"
+                  :icon="'bi bi-emoji-dizzy'"
+                >
+                </Message>
+                <div class="to-goal">
+                  <div class="mt-2">
+                    <div class="mt-2">
+                      <button
+                        class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                        @click="backToCommerceQueues()"
+                      >
+                        {{ $t('userQueueBooking.actions.5.action') }}
+                        <i class="bi bi-arrow-left"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div id="booking-important" class="to-goal">
-              <div class="booking-details-sound mt-2">
-                <div class="">
-                  <div class="booking-notification-content">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <span class="fw-bold"> {{ $t('userQueueBooking.important') }} </span>
-                  </div>
-                  <div class="booking-notification-title" hidden>
-                    {{ $t('userQueueBooking.shouldCome') }}
-                    <h6>
-                      <span class="badge rounded-pill bg-secondary py-2 px-2 fw-bold m-1"
-                        >{{ getDate(state.booking.date) }}
-                      </span>
-                    </h6>
-                  </div>
-                  <div
-                    v-if="
-                      state.commerce.serviceInfo && state.commerce.serviceInfo.attentionHourFrom
-                    "
-                    class="booking-notification-title"
-                  >
-                    {{ $t('userQueueBooking.operationStart') }}
-                    <strong>{{ state.commerce.serviceInfo.attentionHourFrom }}:00</strong>
-                  </div>
-                  <div class="booking-notification-title mt-2">
-                    {{ $t('userQueueBooking.advice') }}
-                  </div>
-                  <hr />
-                  <div
-                    id="form-process"
-                    class="to-goal"
-                    v-if="
-                      state.showFormButton &&
-                      state.form &&
-                      (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') ||
-                        getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))
-                    "
-                  >
-                    <div class="booking-notification-title">
-                      <span>{{ $t('userQueueBooking.fillPreAttention') }}</span>
+              <div id="booking active" v-else>
+                <div class="your-booking mt-2">
+                  <span class="fw-bold">{{ $t('userQueueBooking.yourNumber') }}</span>
+                </div>
+                <AttentionNumber
+                  :number="state.booking.number"
+                  :show-data="false"
+                ></AttentionNumber>
+                <div id="booking-data" class="to-goal">
+                  <div class="row g-2 booking-details-container">
+                    <div v-if="state.booking.date" class="col-6 booking-details-card">
+                      <div class="booking-card-content">
+                        <span class="booking-details-title">
+                          {{ $t('userQueueBooking.shouldCome') }}</span
+                        >
+                        <strong>{{ getDate(state.booking.date) }}</strong>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
-                      v-if="state.showFormButton"
-                      @click="goToForm()"
+                    <div
+                      v-if="state.booking.block && state.booking.block.hourFrom"
+                      class="col-6 booking-details-card"
                     >
-                      {{ $t('userQueueBooking.preAttention') }} <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <hr />
-                  </div>
-                  <div
-                    v-if="state.commerce.serviceInfo || state.commerce.contactInfo"
-                    class="booking-notification-title mb-2"
-                  >
-                    {{ $t('userQueueBooking.commerceDetails') }}
-                  </div>
-                  <div class="container-commerce centered">
-                    <div class="col-10 mb-2">
-                      <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
+                      <div class="booking-card-content">
+                        <span class="booking-details-title">
+                          {{ $t('userQueueBooking.blockInfo') }}</span
+                        >
+                        <strong
+                          >{{ state.booking.block.hourFrom }} -
+                          {{ state.booking.block.hourTo }}</strong
+                        >
+                      </div>
+                    </div>
+                    <div
+                      v-else-if="state.beforeYou >= 0 && state.booking.date"
+                      class="col-6 booking-details-card"
+                    >
+                      <div class="booking-card-content">
+                        <span class="booking-details-title">
+                          {{ $t('userQueueBooking.estimatedTime') }}*
+                        </span>
+                        <span class="booking-details-content">
+                          <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      v-else-if="state.beforeYou >= 0 && !state.booking.date"
+                      class="col-12 booking-details-card"
+                    >
+                      <span class="booking-details-title">
+                        {{ $t('userQueueBooking.estimatedTime') }}* </span
+                      ><br />
+                      <span class="booking-details-content">
+                        <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
+                      </span>
                     </div>
                   </div>
                 </div>
+                <div id="booking-important" class="to-goal">
+                  <div class="booking-details-sound mt-2">
+                    <div class="">
+                      <div class="booking-notification-content">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span class="fw-bold"> {{ $t('userQueueBooking.important') }} </span>
+                      </div>
+                      <div class="booking-notification-title" hidden>
+                        {{ $t('userQueueBooking.shouldCome') }}
+                        <h6>
+                          <span class="badge rounded-pill bg-secondary py-2 px-2 fw-bold m-1"
+                            >{{ getDate(state.booking.date) }}
+                          </span>
+                        </h6>
+                      </div>
+                      <div
+                        v-if="
+                          state.commerce.serviceInfo && state.commerce.serviceInfo.attentionHourFrom
+                        "
+                        class="booking-notification-title"
+                      >
+                        {{ $t('userQueueBooking.operationStart') }}
+                        <strong>{{ state.commerce.serviceInfo.attentionHourFrom }}:00</strong>
+                      </div>
+                      <div class="booking-notification-title mt-2">
+                        {{ $t('userQueueBooking.advice') }}
+                      </div>
+                      <hr />
+                      <div
+                        id="form-process"
+                        class="to-goal"
+                        v-if="
+                          state.showFormButton &&
+                          state.form &&
+                          (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') ||
+                            getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))
+                        "
+                      >
+                        <div class="booking-notification-title">
+                          <span>{{ $t('userQueueBooking.fillPreAttention') }}</span>
+                        </div>
+                        <button
+                          type="button"
+                          class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
+                          v-if="state.showFormButton"
+                          @click="goToForm()"
+                        >
+                          {{ $t('userQueueBooking.preAttention') }}
+                          <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <hr />
+                      </div>
+                      <div class="container-commerce centered">
+                        <div class="col-10 mb-2">
+                          <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="cancel-process" class="to-goal">
+                  <button
+                    type="button"
+                    class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mt-2 mb-1"
+                    @click="goToCancel()"
+                    :disabled="bookingCancelled() || !state.toggles['user.bookings.cancel']"
+                  >
+                    {{ $t('userQueueBooking.cancel') }} <i class="bi bi-x-circle-fill"></i>
+                  </button>
+                  <AreYouSure
+                    :show="state.goToCancel"
+                    :yes-disabled="!bookingCancelled()"
+                    :no-disabled="!bookingCancelled()"
+                    @actionYes="cancellingBooking()"
+                    @actionNo="cancelCancel()"
+                  >
+                  </AreYouSure>
+                </div>
+                <Message
+                  :title="$t('userQueueBooking.actions.2.action')"
+                  :content="$t('userQueueBooking.actions.2.title.1')"
+                  :icon="'bi bi-camera-fill'"
+                >
+                </Message>
               </div>
-            </div>
-            <div id="cancel-process" class="to-goal">
-              <button
-                type="button"
-                class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mt-2 mb-1"
-                @click="goToCancel()"
-                :disabled="bookingCancelled() || !state.toggles['user.bookings.cancel']"
-              >
-                {{ $t('userQueueBooking.cancel') }} <i class="bi bi-x-circle-fill"></i>
-              </button>
-              <AreYouSure
-                :show="state.goToCancel"
-                :yes-disabled="!bookingCancelled()"
-                :no-disabled="!bookingCancelled()"
-                @actionYes="cancellingBooking()"
-                @actionNo="cancelCancel()"
-              >
-              </AreYouSure>
-            </div>
-            <Message
-              :title="$t('userQueueBooking.actions.2.action')"
-              :content="$t('userQueueBooking.actions.2.title.1')"
-              :icon="'bi bi-camera-fill'"
-            >
-            </Message>
-          </div>
-          <div class="row booking-details-container">
-            <div class="booking-details-date booking-details-data">
-              <span
-                ><strong>{{
-                  getCreatedAt(
-                    state.booking.createdAt,
-                    state.commerce.localeInfo
-                      ? state.commerce.localeInfo.timezone
-                      : 'America/Santiago'
-                  )
-                }}</strong></span
-              ><br />
-              <span><strong>Id:</strong> {{ state.booking.id }}</span>
+              <div class="row booking-details-container">
+                <div class="booking-details-date booking-details-data">
+                  <span
+                    ><strong>{{
+                      getCreatedAt(
+                        state.booking.createdAt,
+                        state.commerce.localeInfo
+                          ? state.commerce.localeInfo.timezone
+                          : 'America/Santiago'
+                      )
+                    }}</strong></span
+                  ><br />
+                  <span><strong>Id:</strong> {{ state.booking.id }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -505,13 +534,24 @@ export default {
 <style scoped>
 .booking-details-card {
   background-color: var(--color-background);
-  padding: 0.5rem;
-  margin-left: 0.1rem;
-  margin-right: 0.1rem;
+  padding: 0.75rem 0.5rem;
   margin-bottom: 0.2rem;
   border-radius: 1rem;
   border: 0.5px solid var(--gris-default);
-  height: 4.6rem;
+  min-height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.booking-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
 }
 .booking-shortly-details-card {
   background-color: var(--color-background);
@@ -539,21 +579,24 @@ export default {
   margin-bottom: 0.5rem;
 }
 .booking-details-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 0.4rem;
-  margin-right: 0.4rem;
   margin-top: 0.5rem;
   margin-bottom: 0rem;
+  margin-left: 0;
+  margin-right: 0;
 }
 .booking-details-title {
-  font-size: 0.7rem;
-  line-height: 0.8rem !important;
+  font-size: 0.75rem;
+  line-height: 1rem !important;
+  margin-bottom: 0;
 }
 .booking-details-content {
-  font-size: 1.1rem;
-  line-height: 1rem;
+  font-size: 1.5rem;
+  line-height: 1.4rem;
+  font-weight: 700;
+}
+.booking-details-card strong {
+  font-size: 1.5rem;
+  line-height: 1.4rem;
   font-weight: 700;
 }
 .booking-details-message {
@@ -570,10 +613,32 @@ export default {
   line-height: 1.1rem;
 }
 .booking-notification-title {
-  font-size: 0.8rem;
-  line-height: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
   padding: 0.2rem;
 }
+
+.booking-notification-title.mb-2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4rem;
+}
+
+.booking-notification-content {
+  font-size: 1.1rem;
+  line-height: 1.4rem;
+  padding: 0.4rem 0.2rem;
+  text-align: center;
+  color: var(--rojo-warning);
+}
+
+/* Style for CommerceContactInfo component text */
+:deep(.whatsapp-question) {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4rem;
+}
+
 .parpadea {
   animation-name: parpadeo;
   animation-duration: 1s;

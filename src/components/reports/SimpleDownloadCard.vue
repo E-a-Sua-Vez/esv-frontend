@@ -18,7 +18,11 @@ export default {
   },
   methods: {
     executeDownload() {
-      this.$emit('download');
+      try {
+        this.$emit('download');
+      } catch (error) {
+        console.error('Error in executeDownload:', error);
+      }
     },
   },
 };
@@ -49,29 +53,30 @@ export default {
 
 <style scoped>
 .metric-card {
-  background: #ffffff;
-  padding: 1.5rem;
-  margin: 0.75rem 0.5rem;
-  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 0.625rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
 .metric-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .metric-card-title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   align-self: center;
   color: rgba(0, 0, 0, 0.75);
+  letter-spacing: -0.01em;
 }
 
 .download {

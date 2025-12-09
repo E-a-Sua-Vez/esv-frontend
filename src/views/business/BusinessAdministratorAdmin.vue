@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -54,6 +54,9 @@ export default {
       emailError: false,
       toggles: {},
     });
+
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
 
     onBeforeMount(async () => {
       try {
@@ -217,6 +220,7 @@ export default {
       showCommerce,
       deleteCommerce,
       selectCommerceIndex,
+      commerce,
     };
   },
 };
@@ -227,7 +231,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessAdministratorAdmin.title`)"
           :toggles="state.toggles"
@@ -237,7 +244,7 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessAdministratorAdmin">
           <div v-if="isActiveBusiness && state.toggles['administrators.admin.view']">
@@ -538,17 +545,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>

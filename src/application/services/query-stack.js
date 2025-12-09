@@ -227,6 +227,12 @@ export const getSurveysDetails = async (
   serviceId = undefined
 ) => {
   const options = {};
+  // Convert boolean values to strings for API compatibility
+  const convertBool = val => {
+    if (val === true) return 'true';
+    if (val === false) return 'false';
+    return val;
+  };
   options.params = {
     from,
     to,
@@ -236,12 +242,14 @@ export const getSurveysDetails = async (
     limit,
     ratingType,
     npsType,
-    contactable,
-    contacted,
+    contactable: convertBool(contactable),
+    contacted: convertBool(contacted),
     keyWord,
     searchText,
     queueId,
     serviceId,
+    // Add timestamp to prevent 304 cache responses
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -331,6 +339,12 @@ export const getAttentionsDetails = async (
   id = undefined
 ) => {
   const options = {};
+  // Convert boolean values to strings for API compatibility
+  const convertBool = val => {
+    if (val === true) return 'true';
+    if (val === false) return 'false';
+    return val;
+  };
   options.params = {
     from,
     to,
@@ -340,16 +354,18 @@ export const getAttentionsDetails = async (
     limit,
     daysSinceType,
     daysSinceContacted,
-    contactable,
-    contacted,
+    contactable: convertBool(contactable),
+    contacted: convertBool(contacted),
     searchText,
     queueId,
-    survey,
-    asc,
+    survey: convertBool(survey),
+    asc: convertBool(asc),
     contactResultType,
     serviceId,
-    stock,
+    stock: convertBool(stock),
     id,
+    // Add timestamp to prevent 304 cache responses
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -418,6 +434,12 @@ export const getBookingsDetails = async (
   status = undefined
 ) => {
   const options = {};
+  // Convert boolean values to strings for API compatibility
+  const convertBool = val => {
+    if (val === true) return 'true';
+    if (val === false) return 'false';
+    return val;
+  };
   options.params = {
     from,
     to,
@@ -427,9 +449,11 @@ export const getBookingsDetails = async (
     limit,
     searchText,
     queueId,
-    asc,
+    asc: convertBool(asc),
     serviceId,
     status,
+    // Add timestamp to prevent 304 cache responses
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -468,9 +492,18 @@ export const getClientsDetails = async (
   idNumber = undefined,
   serviceId = undefined,
   pendingControls = undefined,
-  pendingBookings = undefined
+  pendingBookings = undefined,
+  firstAttentionForm = undefined,
+  ratingType = undefined,
+  npsType = undefined
 ) => {
   const options = {};
+  // Convert boolean values to strings for API compatibility
+  const convertBool = val => {
+    if (val === true) return 'true';
+    if (val === false) return 'false';
+    return val;
+  };
   options.params = {
     from,
     to,
@@ -480,18 +513,23 @@ export const getClientsDetails = async (
     limit,
     daysSinceType,
     daysSinceContacted,
-    contactable,
-    contacted,
+    contactable: convertBool(contactable),
+    contacted: convertBool(contacted),
     searchText,
     queueId,
-    survey,
-    asc,
+    survey: convertBool(survey),
+    asc: convertBool(asc),
     contactResultType,
     businessId,
     idNumber,
     serviceId,
-    pendingControls,
-    pendingBookings,
+    pendingControls: convertBool(pendingControls),
+    pendingBookings: convertBool(pendingBookings),
+    firstAttentionForm: convertBool(firstAttentionForm),
+    ratingType,
+    npsType,
+    // Add timestamp to prevent 304 cache responses
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -577,7 +615,9 @@ export const getProductsDetails = async (
   replacement = undefined,
   productStatus = undefined,
   searchText = undefined,
-  asc = true
+  asc = true,
+  queueId = undefined,
+  serviceId = undefined
 ) => {
   const options = {};
   options.params = {
@@ -593,6 +633,10 @@ export const getProductsDetails = async (
     searchText,
     asc,
     businessId,
+    queueId,
+    serviceId,
+    // Add timestamp to prevent 304 cache responses
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();

@@ -120,10 +120,17 @@ export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
 
 export function updatedAvailableAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
   const attentionQuery = query(
     attentionCollection,
     where('commerceId', '==', commerceId),
     where('status', 'in', ['PENDING']),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
@@ -133,7 +140,10 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
       createdAt: doc.data().createdAt.toDate().toString(),
     }));
   });
+  // Register cleanup on unmount, but also return unsubscribe for manual cleanup
   onUnmounted(unsubscribe);
+  // Return both the ref and the unsubscribe function
+  attentions.value._unsubscribe = unsubscribe;
   return attentions;
 }
 

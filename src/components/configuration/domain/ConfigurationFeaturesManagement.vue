@@ -229,33 +229,40 @@ export default {
                     </span>
                   </div>
                   <div
-                    class="mb-4"
+                    class="config-tree-container"
                     v-if="
                       state.configurations.length > 0 && state.toggles['configuration.admin.edit']
                     "
                   >
-                    <div class="my-2">
+                    <div class="config-tree-section">
                       <a
-                        class="nav-link configuration-title centered active"
+                        class="config-tree-header"
                         data-bs-toggle="collapse"
                         href="#email"
+                        aria-expanded="false"
                       >
-                        {{ $t('configuration.types.email') }}
-                        <span class="badge bg-secondary px-2 py-1 mx-1"
-                          >{{
-                            state.groupedConfigurations['EMAIL']
-                              ? state.groupedConfigurations['EMAIL'].length
-                              : 0
-                          }}
-                        </span>
-                        <i class="bi bi-chevron-down mx-2"></i>
+                        <div class="config-tree-header-content">
+                          <i class="bi bi-envelope-fill config-tree-icon"></i>
+                          <span class="config-tree-title">{{
+                            $t('configuration.types.email')
+                          }}</span>
+                          <span class="config-tree-badge"
+                            >{{
+                              state.groupedConfigurations['EMAIL']
+                                ? state.groupedConfigurations['EMAIL'].length
+                                : 0
+                            }}
+                          </span>
+                        </div>
+                        <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
-                      <div id="email" class="collapse">
+                      <div id="email" class="collapse config-tree-content">
                         <div
                           v-if="
                             state.groupedConfigurations['EMAIL'] &&
                             state.groupedConfigurations['EMAIL'].length > 0
                           "
+                          class="config-tree-items"
                         >
                           <div
                             v-for="(configuration, index) in state.groupedConfigurations['EMAIL']"
@@ -272,7 +279,7 @@ export default {
                             </SimpleConfigurationCard>
                           </div>
                         </div>
-                        <div v-else>
+                        <div v-else class="config-tree-empty">
                           <Message
                             :title="$t('businessConfiguration.message.1.title')"
                             :content="$t('businessConfiguration.message.1.content')"
@@ -280,26 +287,33 @@ export default {
                         </div>
                       </div>
                     </div>
-                    <div class="my-2">
+                    <div class="config-tree-section">
                       <a
-                        class="nav-link configuration-title centered"
+                        class="config-tree-header"
                         data-bs-toggle="collapse"
                         href="#product"
+                        aria-expanded="false"
                       >
-                        {{ $t('configuration.types.product') }}
-                        <span class="badge bg-secondary px-2 py-1 mx-1">{{
-                          state.groupedConfigurations['PRODUCT']
-                            ? state.groupedConfigurations['PRODUCT'].length
-                            : 0
-                        }}</span>
-                        <i class="bi bi-chevron-down mx-2"></i>
+                        <div class="config-tree-header-content">
+                          <i class="bi bi-box-seam-fill config-tree-icon"></i>
+                          <span class="config-tree-title">{{
+                            $t('configuration.types.product')
+                          }}</span>
+                          <span class="config-tree-badge">{{
+                            state.groupedConfigurations['PRODUCT']
+                              ? state.groupedConfigurations['PRODUCT'].length
+                              : 0
+                          }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
-                      <div id="product" class="collapse">
+                      <div id="product" class="collapse config-tree-content">
                         <div
                           v-if="
                             state.groupedConfigurations['PRODUCT'] &&
                             state.groupedConfigurations['PRODUCT'].length > 0
                           "
+                          class="config-tree-items"
                         >
                           <div
                             v-for="(configuration, index) in state.groupedConfigurations['PRODUCT']"
@@ -316,7 +330,7 @@ export default {
                             </SimpleConfigurationCard>
                           </div>
                         </div>
-                        <div v-else>
+                        <div v-else class="config-tree-empty">
                           <Message
                             :title="$t('businessConfiguration.message.1.title')"
                             :content="$t('businessConfiguration.message.1.content')"
@@ -324,28 +338,35 @@ export default {
                         </div>
                       </div>
                     </div>
-                    <div class="my-2">
+                    <div class="config-tree-section">
                       <a
-                        class="nav-link configuration-title centered"
+                        class="config-tree-header"
                         data-bs-toggle="collapse"
                         href="#user"
+                        aria-expanded="false"
                       >
-                        {{ $t('configuration.types.user') }}
-                        <span class="badge bg-secondary px-2 py-1 mx-1"
-                          >{{
-                            state.groupedConfigurations['USER']
-                              ? state.groupedConfigurations['USER'].length
-                              : 0
-                          }}
-                        </span>
-                        <i class="bi bi-chevron-down mx-2"></i>
+                        <div class="config-tree-header-content">
+                          <i class="bi bi-person-fill config-tree-icon"></i>
+                          <span class="config-tree-title">{{
+                            $t('configuration.types.user')
+                          }}</span>
+                          <span class="config-tree-badge"
+                            >{{
+                              state.groupedConfigurations['USER']
+                                ? state.groupedConfigurations['USER'].length
+                                : 0
+                            }}
+                          </span>
+                        </div>
+                        <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
-                      <div id="user" class="collapse">
+                      <div id="user" class="collapse config-tree-content">
                         <div
                           v-if="
                             state.groupedConfigurations['USER'] &&
                             state.groupedConfigurations['USER'].length > 0
                           "
+                          class="config-tree-items"
                         >
                           <div
                             v-for="(configuration, index) in state.groupedConfigurations['USER']"
@@ -362,7 +383,7 @@ export default {
                             </SimpleConfigurationCard>
                           </div>
                         </div>
-                        <div v-else>
+                        <div v-else class="config-tree-empty">
                           <Message
                             :title="$t('businessConfiguration.message.1.title')"
                             :content="$t('businessConfiguration.message.1.content')"
@@ -370,28 +391,35 @@ export default {
                         </div>
                       </div>
                     </div>
-                    <div class="my-2">
+                    <div class="config-tree-section">
                       <a
-                        class="nav-link configuration-title centered"
+                        class="config-tree-header"
                         data-bs-toggle="collapse"
                         href="#whatsapp"
+                        aria-expanded="false"
                       >
-                        {{ $t('configuration.types.whatsapp') }}
-                        <span class="badge bg-secondary px-2 py-1 mx-1"
-                          >{{
-                            state.groupedConfigurations['WHATSAPP']
-                              ? state.groupedConfigurations['WHATSAPP'].length
-                              : 0
-                          }}
-                        </span>
-                        <i class="bi bi-chevron-down mx-2"></i>
+                        <div class="config-tree-header-content">
+                          <i class="bi bi-whatsapp config-tree-icon"></i>
+                          <span class="config-tree-title">{{
+                            $t('configuration.types.whatsapp')
+                          }}</span>
+                          <span class="config-tree-badge"
+                            >{{
+                              state.groupedConfigurations['WHATSAPP']
+                                ? state.groupedConfigurations['WHATSAPP'].length
+                                : 0
+                            }}
+                          </span>
+                        </div>
+                        <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
-                      <div id="whatsapp" class="collapse">
+                      <div id="whatsapp" class="collapse config-tree-content">
                         <div
                           v-if="
                             state.groupedConfigurations['WHATSAPP'] &&
                             state.groupedConfigurations['WHATSAPP'].length > 0
                           "
+                          class="config-tree-items"
                         >
                           <div
                             v-for="(configuration, index) in state.groupedConfigurations[
@@ -410,7 +438,7 @@ export default {
                             </SimpleConfigurationCard>
                           </div>
                         </div>
-                        <div v-else>
+                        <div v-else class="config-tree-empty">
                           <Message
                             :title="$t('businessConfiguration.message.1.title')"
                             :content="$t('businessConfiguration.message.1.content')"
@@ -418,28 +446,35 @@ export default {
                         </div>
                       </div>
                     </div>
-                    <div class="my-2">
+                    <div class="config-tree-section">
                       <a
-                        class="nav-link configuration-title centered"
+                        class="config-tree-header"
                         data-bs-toggle="collapse"
                         href="#message"
+                        aria-expanded="false"
                       >
-                        {{ $t('configuration.types.message') }}
-                        <span class="badge bg-secondary px-2 py-1 mx-1"
-                          >{{
-                            state.groupedConfigurations['MESSAGE']
-                              ? state.groupedConfigurations['MESSAGE'].length
-                              : 0
-                          }}
-                        </span>
-                        <i class="bi bi-chevron-down mx-2"></i>
+                        <div class="config-tree-header-content">
+                          <i class="bi bi-chat-dots-fill config-tree-icon"></i>
+                          <span class="config-tree-title">{{
+                            $t('configuration.types.message')
+                          }}</span>
+                          <span class="config-tree-badge"
+                            >{{
+                              state.groupedConfigurations['MESSAGE']
+                                ? state.groupedConfigurations['MESSAGE'].length
+                                : 0
+                            }}
+                          </span>
+                        </div>
+                        <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
-                      <div id="message" class="collapse">
+                      <div id="message" class="collapse config-tree-content">
                         <div
                           v-if="
                             state.groupedConfigurations['MESSAGE'] &&
                             state.groupedConfigurations['MESSAGE'].length > 0
                           "
+                          class="config-tree-items"
                         >
                           <div
                             v-for="(configuration, index) in state.groupedConfigurations['MESSAGE']"
@@ -456,7 +491,7 @@ export default {
                             </SimpleConfigurationCard>
                           </div>
                         </div>
-                        <div v-else>
+                        <div v-else class="config-tree-empty">
                           <Message
                             :title="$t('businessConfiguration.message.1.title')"
                             :content="$t('businessConfiguration.message.1.content')"
@@ -614,17 +649,108 @@ export default {
   border: 0.5px solid var(--gris-default);
   align-items: left;
 }
-.configuration-title {
-  line-height: 1.2rem;
-  font-size: 0.9rem;
+
+/* Modern Tree Structure */
+.config-tree-container {
+  margin-top: 1rem;
+}
+
+.config-tree-section {
+  margin-bottom: 0.5rem;
+}
+
+.config-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.9rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.config-tree-header:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateX(2px);
+}
+
+.config-tree-header[aria-expanded='true'] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.config-tree-header[aria-expanded='true'] .config-tree-chevron {
+  transform: rotate(180deg);
+}
+
+.config-tree-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.config-tree-icon {
+  font-size: 1rem;
+  color: rgba(59, 130, 246, 0.8);
+  flex-shrink: 0;
+}
+
+.config-tree-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.config-tree-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: rgba(37, 99, 235, 0.9);
+  font-size: 0.7rem;
   font-weight: 700;
-  text-align: left;
-  background-color: var(--azul-turno);
-  margin: 0.1rem;
-  border-radius: 1rem;
-  line-height: 1rem;
-  border: 1.5px solid var(--azul-turno);
-  color: var(--color-background);
-  padding: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.config-tree-chevron {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.config-tree-content {
+  margin-top: 0.5rem;
+  margin-left: 1.2rem;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(59, 130, 246, 0.15);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.config-tree-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.config-tree-empty {
+  padding: 0.5rem 0;
 }
 </style>

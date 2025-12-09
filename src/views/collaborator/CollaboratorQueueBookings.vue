@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
@@ -8,12 +8,15 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
+import { getBookingsDetails } from '../../application/services/query-stack';
+import { DateModel } from '../../shared/utils/date.model';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
@@ -25,6 +28,7 @@ export default {
     Alert,
     BookingCalendar,
     ComponentMenu,
+    BookingDetailsCard,
   },
   async setup() {
     const router = useRouter();
@@ -34,15 +38,16 @@ export default {
 
     const store = globalStore();
 
+    // Use global commerce and module from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const module = computed(() => store.getCurrentModule);
+
     const state = reactive({
       currentUser: {},
-      commerces: ref([]),
       queue: {},
       queues: [],
       groupedQueues: [],
-      commerce: {},
       collaborator: {},
-      module: {},
       activeCommerce: false,
       captcha: false,
       locale: 'es',
@@ -58,42 +63,164 @@ export default {
       showBooking: true,
       showWaitlist: false,
       toggles: {},
+      // Dashboard stats
+      stats: {
+        todayCount: 0,
+        pendingCount: 0,
+        upcomingWeekCount: 0,
+        totalActiveCount: 0,
+      },
+      recentBookings: [],
+      loadingStats: false,
+      collaboratorQueues: [], // Queues specific to this collaborator
     });
+
+    const loadCommerceData = async () => {
+      if (!commerce.value || !commerce.value.id) {
+        state.queues = [];
+        return;
+      }
+      try {
+        const queues = await getQueuesByCommerceId(commerce.value.id);
+        state.queues = queues || [];
+        await initQueues();
+        if (commerce.value.localeInfo && commerce.value.localeInfo.language) {
+          state.locale = commerce.value.localeInfo.language;
+        }
+      } catch (error) {
+        console.error('Error loading commerce data:', error);
+      }
+    };
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.collaborator = state.currentUser;
-        if (!state.currentUser) {
+        if (!state.collaborator || !state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        const queues = await getQueuesByCommerceId(state.commerce.id);
-        state.queues = queues;
-        await initQueues();
-        store.setCurrentCommerce(state.commerce);
+        // Set initial commerce if not set - check both commerceId and commercesId
+        if (!commerce.value || !commerce.value.id) {
+          // First try commerceId (single commerce)
+          if (state.collaborator.commerceId) {
+            const { getCommerceById } = await import('../../application/services/commerce');
+            const initialCommerce = await getCommerceById(state.collaborator.commerceId);
+            if (initialCommerce && initialCommerce.id) {
+              await store.setCurrentCommerce(initialCommerce);
+            }
+          }
+          // If still no commerce, try commercesId (multiple commerces)
+          if (
+            (!commerce.value || !commerce.value.id) &&
+            state.collaborator.commercesId &&
+            state.collaborator.commercesId.length > 0
+          ) {
+            const { getCommerceById } = await import('../../application/services/commerce');
+            const firstCommerceId = state.collaborator.commercesId[0];
+            if (firstCommerceId) {
+              const initialCommerce = await getCommerceById(firstCommerceId);
+              if (initialCommerce && initialCommerce.id) {
+                await store.setCurrentCommerce(initialCommerce);
+              }
+            }
+          }
+        }
+        await loadCommerceData();
         store.setCurrentQueue(undefined);
-        state.locale = state.commerce.localeInfo.language;
         state.toggles = await getPermissions('collaborator');
+        // Load dashboard stats after queues are loaded
+        if (commerce.value && commerce.value.id && state.collaborator && state.collaborator.id) {
+          await loadDashboardStats();
+        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
 
+    // Watch for commerce changes
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (!newCommerce || !newCommerce.id) return;
+        if (oldCommerce && oldCommerce.id === newCommerce.id) return;
+        try {
+          loading.value = true;
+          // Clear data
+          state.queues = [];
+          state.queue = {};
+          state.bookings = [];
+          state.waitlists = [];
+          state.availableBlocks = [];
+          state.blocksByDay = [];
+          state.blocks = [];
+          state.availableAttentionBlocks = [];
+          state.recentBookings = [];
+          state.stats = {
+            todayCount: 0,
+            pendingCount: 0,
+            upcomingWeekCount: 0,
+            totalActiveCount: 0,
+          };
+          await loadCommerceData();
+          // Reload dashboard stats after queues are loaded
+          if (newCommerce && newCommerce.id && state.collaborator && state.collaborator.id) {
+            await loadDashboardStats();
+          }
+          alertError.value = '';
+          loading.value = false;
+        } catch (error) {
+          alertError.value = error.response?.status || 500;
+          loading.value = false;
+        }
+      },
+      { deep: true }
+    );
+
+    // Watch for module changes
+    watch(
+      module,
+      async (newModule, oldModule) => {
+        if (oldModule && oldModule.id === newModule?.id) return;
+        // Module change might affect queue filtering, reload if needed
+        if (newModule && newModule.id && commerce.value && commerce.value.id) {
+          try {
+            loading.value = true;
+            await initQueues();
+            // Reload dashboard stats after queues are reloaded
+            if (
+              commerce.value &&
+              commerce.value.id &&
+              state.collaborator &&
+              state.collaborator.id
+            ) {
+              await loadDashboardStats();
+            }
+            loading.value = false;
+          } catch (error) {
+            console.error('Error handling module change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { deep: true }
+    );
+
     const initQueues = async () => {
-      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+      if (
+        commerce.value &&
+        getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')
+      ) {
+        state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
         if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
           const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
             queue => queue.collaboratorId === state.collaborator.id
           );
+          state.collaboratorQueues = collaboratorQueues;
           const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...collaboratorQueues, ...otherQueues];
           state.queues = queues;
@@ -105,28 +232,240 @@ export default {
           const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...otherQueues];
           state.queues = queues;
+          state.collaboratorQueues = [];
         }
+      } else {
+        // If not using grouped queues, filter collaborator queues from all queues
+        state.collaboratorQueues = state.queues.filter(
+          queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
+        );
       }
     };
 
-    const isActiveCommerce = () => state.commerce && state.commerce.active === true;
+    // Get collaborator queue IDs for filtering bookings
+    const getCollaboratorQueueIds = () => {
+      if (state.collaboratorQueues && state.collaboratorQueues.length > 0) {
+        return state.collaboratorQueues.map(queue => queue.id);
+      }
+      return [];
+    };
+
+    const isActiveCommerce = () => commerce.value && commerce.value.active === true;
 
     const goBack = () => {
       router.push({ path: '/interno/colaborador/menu' });
     };
 
-    const selectCommerce = async commerce => {
+    // Load dashboard stats filtered by collaborator queues
+    const loadDashboardStats = async () => {
+      if (!commerce.value || !commerce.value.id) return;
+      if (!state.collaborator || !state.collaborator.id) return;
+
+      const collaboratorQueueIds = getCollaboratorQueueIds();
+      if (collaboratorQueueIds.length === 0) {
+        // If no collaborator queues, reset stats
+        state.stats = {
+          todayCount: 0,
+          pendingCount: 0,
+          upcomingWeekCount: 0,
+          totalActiveCount: 0,
+        };
+        state.recentBookings = [];
+        return;
+      }
+
+      try {
+        state.loadingStats = true;
+        const today = new DateModel().toString();
+        const endOfWeek = new DateModel().addDays(7).toString();
+        const endOfMonth = new DateModel().endOfMonth().toString();
+
+        // Fetch stats for all collaborator queues - combine all queue IDs in a single query
+        // Since getBookingsDetails accepts only one queueId, we need to query each queue separately
+        // But we can parallelize the queries
+
+        // Get today's bookings for all collaborator queues
+        const todayBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            today,
+            [commerce.value.id],
+            1,
+            100,
+            undefined,
+            queueId
+          )
+        );
+        const todayBookingsArrays = await Promise.all(todayBookingsPromises);
+        const allTodayBookings = todayBookingsArrays.flat().filter(Boolean);
+        state.stats.todayCount = allTodayBookings.length;
+
+        // Get pending bookings for all collaborator queues
+        const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            endOfMonth,
+            [commerce.value.id],
+            1,
+            100,
+            undefined,
+            queueId,
+            true,
+            undefined,
+            'PENDING'
+          )
+        );
+        const pendingBookingsArrays = await Promise.all(pendingBookingsPromises);
+        const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
+        state.stats.pendingCount = allPendingBookings.length;
+
+        // Get upcoming week bookings for all collaborator queues
+        const upcomingBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            endOfWeek,
+            [commerce.value.id],
+            1,
+            100,
+            undefined,
+            queueId,
+            true
+          )
+        );
+        const upcomingBookingsArrays = await Promise.all(upcomingBookingsPromises);
+        const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
+        state.stats.upcomingWeekCount = allUpcomingBookings.length;
+
+        // Get confirmed bookings for all collaborator queues
+        const confirmedBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            endOfMonth,
+            [commerce.value.id],
+            1,
+            100,
+            undefined,
+            queueId,
+            true,
+            undefined,
+            'CONFIRMED'
+          )
+        );
+        const confirmedBookingsArrays = await Promise.all(confirmedBookingsPromises);
+        const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
+        state.stats.totalActiveCount = allPendingBookings.length + allConfirmedBookings.length;
+
+        // Get recent bookings (last 5) from all collaborator queues
+        const recentBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            new DateModel().substractDays(7).toString(),
+            endOfMonth,
+            [commerce.value.id],
+            1,
+            5,
+            undefined,
+            queueId,
+            false
+          )
+        );
+        const recentBookingsArrays = await Promise.all(recentBookingsPromises);
+        // Combine and sort by date, then take first 5
+        const allRecentBookings = recentBookingsArrays.flat().filter(Boolean);
+        allRecentBookings.sort((a, b) => {
+          const dateA = new Date(a.date || a.createdDate);
+          const dateB = new Date(b.date || b.createdDate);
+          return dateB - dateA;
+        });
+        state.recentBookings = allRecentBookings.slice(0, 5);
+
+        state.loadingStats = false;
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        state.loadingStats = false;
+      }
+    };
+
+    const viewTodayBookings = async () => {
+      if (!commerce.value || !commerce.value.id) return;
+      const collaboratorQueueIds = getCollaboratorQueueIds();
+      if (collaboratorQueueIds.length === 0) return;
+
       try {
         loading.value = true;
-        state.commerce = commerce;
-        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = selectedCommerce.queues;
-        await initQueues();
-        state.queue = {};
-        alertError.value = '';
+        const today = new DateModel().toString();
+        const allTodayBookings = [];
+
+        // Get bookings for all collaborator queues
+        const todayBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            today,
+            [commerce.value.id],
+            1,
+            50,
+            undefined,
+            queueId
+          )
+        );
+        const bookingsArrays = await Promise.all(todayBookingsPromises);
+        const allBookings = bookingsArrays.flat().filter(Boolean);
+        allBookings.sort((a, b) => {
+          const dateA = new Date(a.date || a.createdDate);
+          const dateB = new Date(b.date || b.createdDate);
+          return dateA - dateB;
+        });
+        state.recentBookings = allBookings.slice(0, 50);
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
+        loading.value = false;
+      }
+    };
+
+    const viewPendingBookings = async () => {
+      if (!commerce.value || !commerce.value.id) return;
+      const collaboratorQueueIds = getCollaboratorQueueIds();
+      if (collaboratorQueueIds.length === 0) return;
+
+      try {
+        loading.value = true;
+        const today = new DateModel().toString();
+        const endOfMonth = new DateModel().endOfMonth().toString();
+        const allPendingBookings = [];
+
+        // Get pending bookings for all collaborator queues
+        const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
+          getBookingsDetails(
+            commerce.value.id,
+            today,
+            endOfMonth,
+            [commerce.value.id],
+            1,
+            50,
+            undefined,
+            queueId,
+            true,
+            undefined,
+            'PENDING'
+          )
+        );
+        const bookingsArrays = await Promise.all(pendingBookingsPromises);
+        const allBookings = bookingsArrays.flat().filter(Boolean);
+        allBookings.sort((a, b) => {
+          const dateA = new Date(a.date || a.createdDate);
+          const dateB = new Date(b.date || b.createdDate);
+          return dateA - dateB;
+        });
+        state.recentBookings = allBookings.slice(0, 50);
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -135,103 +474,346 @@ export default {
       state,
       loading,
       alertError,
-      selectCommerce,
+      commerce,
+      module,
       isActiveCommerce,
       goBack,
+      loadDashboardStats,
+      viewTodayBookings,
+      viewPendingBookings,
     };
   },
 };
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`collaboratorBookingsView.welcome`)"
-        :toggles="state.toggles"
-        component-name="collaboratorBookingsView"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div id="businessQueuesAdmin-controls" class="control-box">
-          <div class="row">
-            <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t('collaboratorBookingsView.commerce') }} </span>
-              <select
-                class="btn btn-md fw-bold text-dark m-1 select"
-                v-model="state.commerce"
-                @change="selectCommerce(state.commerce)"
-                id="commerces"
-              >
-                <option v-for="com in state.commerces" :key="com.id" :value="com">
-                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="mb-1 mt-2">
-          <div class="choose-attention">
-            <span> {{ $t('collaboratorBookingsView.manageAll') }} </span>
-          </div>
-          <button
-            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
-            data-bs-toggle="modal"
-            data-bs-target="#modalAgenda"
-            :disabled="!state.toggles['collaborator.bookings.manage'] || state.queues.length === 0"
-          >
-            <i class="bi bi-calendar-check-fill"></i> {{ $t('collaboratorBookingsView.schedules') }}
-          </button>
-        </div>
-      </div>
-    </div>
-    <!-- Modal Agenda -->
-    <div
-      class="modal fade"
-      id="modalAgenda"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-calendar-check-fill"></i> Agenda {{ state.commerce.name }} -
-              {{ state.commerce.tag }}
-            </h5>
-            <button
-              id="close-modal"
-              class="btn-close btn-light"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="commerce?.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`collaboratorBookingsView.welcome`)"
+          :toggles="state.toggles"
+          component-name="collaboratorBookingsView"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <BookingCalendar
-              :show="true"
-              :commerce="state.commerce"
-              :queues="state.queues"
-              :toggles="state.toggles"
-            >
-            </BookingCalendar>
+          <Alert :show="false" :stack="alertError"></Alert>
+          <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+            <Message
+              :title="$t('businessQueuesAdmin.message.4.title')"
+              :content="$t('businessQueuesAdmin.message.4.content')"
+            />
+          </div>
+          <!-- Dashboard Stats Cards -->
+          <div class="dashboard-stats-container mt-3" v-if="!loading && commerce && commerce.id">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="stat-card stat-card-today">
+                  <div class="stat-icon">
+                    <i class="bi bi-calendar-day"></i>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ state.stats.todayCount }}</div>
+                    <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-card stat-card-pending">
+                  <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ state.stats.pendingCount }}</div>
+                    <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-card stat-card-upcoming">
+                  <div class="stat-icon">
+                    <i class="bi bi-calendar-week"></i>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
+                    <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="stat-card stat-card-active">
+                  <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
+                    <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Quick Actions -->
+          <div class="quick-actions-container mt-3">
+            <div class="row g-2 justify-content-center">
+              <div class="col-auto">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalAgenda"
+                  :disabled="
+                    !state.toggles['collaborator.bookings.manage'] || state.queues.length === 0
+                  "
+                >
+                  <i class="bi bi-calendar-check-fill"></i>
+                  {{ $t('collaboratorBookingsView.schedules') }}
+                </button>
+              </div>
+              <div class="col-auto">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  @click="viewTodayBookings"
+                  :disabled="!state.toggles['collaborator.bookings.manage'] || state.loadingStats"
+                >
+                  <i class="bi bi-calendar-day"></i>
+                  {{ $t('collaboratorBookingsView.today') }}
+                </button>
+              </div>
+              <div class="col-auto">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  @click="viewPendingBookings"
+                  :disabled="!state.toggles['collaborator.bookings.manage'] || state.loadingStats"
+                >
+                  <i class="bi bi-clock-history"></i>
+                  {{ $t('collaboratorBookingsView.pending') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Recent Bookings -->
+          <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.recentBookings') }}
+              </h5>
+            </div>
+            <div class="recent-bookings-list">
+              <div
+                class="booking-item-wrapper"
+                v-for="(booking, index) in state.recentBookings"
+                :key="`booking-${index}`"
+              >
+                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
+          <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats" class="mt-4">
+            <Message
+              :icon="'bi-calendar-x'"
+              :title="$t('collaboratorBookingsView.noBookings.title')"
+              :content="$t('collaboratorBookingsView.noBookings.content')"
+            />
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || commerce?.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="commerce?.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`collaboratorBookingsView.welcome`)"
+              :toggles="state.toggles"
+              component-name="collaboratorBookingsView"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+          <Message
+            :title="$t('businessQueuesAdmin.message.4.title')"
+            :content="$t('businessQueuesAdmin.message.4.content')"
+          />
+        </div>
+        <!-- Dashboard Stats Cards -->
+        <div class="dashboard-stats-container mt-3" v-if="!loading && commerce && commerce.id">
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <div class="stat-card stat-card-today">
+                <div class="stat-icon">
+                  <i class="bi bi-calendar-day"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ state.stats.todayCount }}</div>
+                  <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card stat-card-pending">
+                <div class="stat-icon">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ state.stats.pendingCount }}</div>
+                  <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card stat-card-upcoming">
+                <div class="stat-icon">
+                  <i class="bi bi-calendar-week"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
+                  <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-card stat-card-active">
+                <div class="stat-icon">
+                  <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
+                  <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions-container mt-3">
+          <div class="row g-2 justify-content-center">
+            <div class="col-auto">
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#modalAgenda"
+                :disabled="
+                  !state.toggles['collaborator.bookings.manage'] || state.queues.length === 0
+                "
+              >
+                <i class="bi bi-calendar-check-fill"></i>
+                {{ $t('collaboratorBookingsView.schedules') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                @click="viewTodayBookings"
+                :disabled="!state.toggles['collaborator.bookings.manage'] || state.loadingStats"
+              >
+                <i class="bi bi-calendar-day"></i>
+                {{ $t('collaboratorBookingsView.today') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                @click="viewPendingBookings"
+                :disabled="!state.toggles['collaborator.bookings.manage'] || state.loadingStats"
+              >
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.pending') }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Recent Bookings -->
+        <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.recentBookings') }}
+            </h5>
+          </div>
+          <div class="recent-bookings-list">
+            <div
+              class="booking-item-wrapper"
+              v-for="(booking, index) in state.recentBookings"
+              :key="`booking-${index}`"
+            >
+              <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
+            </div>
+          </div>
+        </div>
+        <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats" class="mt-4">
+          <Message
+            :icon="'bi-calendar-x'"
+            :title="$t('collaboratorBookingsView.noBookings.title')"
+            :content="$t('collaboratorBookingsView.noBookings.content')"
+          />
+        </div>
+      </div>
+    </div>
+    <!-- Modal Agenda - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        id="modalAgenda"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-calendar-check-fill"></i> Agenda {{ commerce?.name || '' }} -
+                {{ commerce?.tag || '' }}
+              </h5>
+              <button
+                id="close-modal"
+                class="btn-close btn-light"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <BookingCalendar
+                :show="true"
+                :commerce="commerce"
+                :queues="state.queues"
+                :toggles="state.toggles"
+              >
+              </BookingCalendar>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 <style scoped>
@@ -265,5 +847,200 @@ export default {
   padding: 1rem;
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
+}
+
+/* Dashboard Stats Cards */
+.dashboard-stats-container {
+  margin: 1.5rem 0.5rem;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 90px;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.stat-card-today {
+  border-left: 4px solid #00c2cb;
+}
+
+.stat-card-pending {
+  border-left: 4px solid #ffc107;
+}
+
+.stat-card-upcoming {
+  border-left: 4px solid #004aad;
+}
+
+.stat-card-active {
+  border-left: 4px solid #28a745;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.5rem;
+}
+
+.stat-card-today .stat-icon {
+  background: rgba(0, 194, 203, 0.15);
+  color: #00c2cb;
+}
+
+.stat-card-pending .stat-icon {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.stat-card-upcoming .stat-icon {
+  background: rgba(0, 74, 173, 0.15);
+  color: #004aad;
+}
+
+.stat-card-active .stat-icon {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.3;
+}
+
+/* Quick Actions */
+.quick-actions-container {
+  margin: 1.5rem 0.5rem;
+}
+
+/* Recent Bookings */
+.recent-bookings-container {
+  margin: 1.5rem 0.5rem;
+}
+
+.section-header {
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.recent-bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.booking-item-wrapper {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.booking-item-wrapper:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Desktop Layout Styles */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
+
+  .dashboard-stats-container {
+    margin: 1.5rem 0;
+  }
+
+  .quick-actions-container {
+    margin: 1.5rem 0;
+  }
+
+  .recent-bookings-container {
+    margin: 1.5rem 0;
+  }
 }
 </style>

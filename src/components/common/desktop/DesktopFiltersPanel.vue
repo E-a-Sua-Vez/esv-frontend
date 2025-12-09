@@ -46,7 +46,7 @@ export default {
       () => props.collapsed,
       newVal => {
         filtersCollapsed.value = newVal;
-      },
+      }
     );
 
     // Normalize commerces to always be an array

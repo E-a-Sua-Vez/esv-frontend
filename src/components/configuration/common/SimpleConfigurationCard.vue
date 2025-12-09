@@ -28,14 +28,13 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
-    <div class="row metric-card h4">
-      <div class="metric-card-title col-8">
-        <div class="col-10">
-          <i :class="`bi ${icon} ${iconStyleClass} centered p-1`"></i>
-          <span class="p-1"> {{ $t(`configuration.${configuration.name}.title`) }} </span>
-        </div>
-        <div class="col-2 centered">
+  <div v-if="show" class="config-card-wrapper">
+    <div class="config-card">
+      <div class="config-card-header">
+        <div class="config-card-title-section">
+          <span class="config-card-title">{{
+            $t(`configuration.${configuration.name}.title`)
+          }}</span>
           <Popper
             v-if="showTooltip"
             :class="'dark'"
@@ -43,65 +42,112 @@ export default {
             disable-click-away
             :content="$t(`configuration.${configuration.name}.description`)"
           >
-            <i class="bi bi-info-circle-fill h7 m-2"></i>
+            <i class="bi bi-info-circle-fill config-info-icon"></i>
           </Popper>
         </div>
-      </div>
-      <div class="col d-flex justify-content-end centered">
-        <Toggle
-          v-model="configuration.active"
-          :disabled="!canUpdate"
-          @click="update(configuration)"
-        />
-      </div>
-      <div id="conf-id-form" class="row -2 mb-g3">
-        <div class="row configuration-details-container">
-          <div class="col">
-            <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-              >{{ configuration.type }}
-            </span>
-            <span class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-              >{{ configuration.id }}
-            </span>
-          </div>
+        <div class="config-card-toggle">
+          <Toggle
+            v-model="configuration.active"
+            :disabled="!canUpdate"
+            @click="update(configuration)"
+          />
         </div>
+      </div>
+      <div class="config-card-details">
+        <span class="config-badge config-badge-type">{{ configuration.type }}</span>
+        <span class="config-badge config-badge-id">{{ configuration.id }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.metric-card {
+.config-card-wrapper {
+  margin: 0.4rem 0;
+}
+
+.config-card {
   background: #ffffff;
-  padding: 1.5rem;
-  margin: 0.75rem 0.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
-.metric-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
+.config-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
-.metric-card-title {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
+.config-card-header {
   display: flex;
   align-items: center;
-  align-self: center;
-  color: rgba(0, 0, 0, 0.75);
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  gap: 0.75rem;
 }
 
-.configuration-details-container {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0;
+.config-card-title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.config-card-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-info-icon {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: help;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.config-info-icon:hover {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.config-card-toggle {
+  flex-shrink: 0;
+}
+
+.config-card-details {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.config-badge {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.config-badge-type {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+.config-badge-id {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+  font-family: 'Courier New', monospace;
 }
 </style>

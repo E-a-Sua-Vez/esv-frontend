@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -43,8 +43,6 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      commerce: ref({}),
       roles: {},
       rolSelected: {
         permissions: [],
@@ -63,22 +61,72 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load collaborators for current commerce
+    const loadCollaborators = async commerceId => {
+      if (!commerceId) {
+        state.collaborators = [];
+        clear();
+        return;
+      }
+      try {
+        state.collaborators = await getCollaboratorsByCommerceId(commerceId);
+        clear();
+      } catch (error) {
+        console.error('Error loading collaborators:', error);
+        state.collaborators = [];
+        clear();
+      }
+    };
+
+    // Watch for commerce changes and reload collaborators
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            await loadCollaborators(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading collaborators on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.roles = await getRoles();
-        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         await selectRol('collaborator');
         state.toggles = await getPermissions('permissions', 'collaborators');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load collaborators for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCollaborators(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     });
@@ -94,7 +142,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.statuss || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -104,20 +152,6 @@ export default {
       state.newPermission = {
         type: 'boolean',
       };
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-        clear();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
     };
 
     const validateAdd = permission => {
@@ -172,7 +206,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -187,7 +221,7 @@ export default {
         state.newPermission = {};
         alertError.value = '';
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || 500;
         loading.value = false;
       }
     };
@@ -195,7 +229,11 @@ export default {
     const refresh = async () => {
       if (state.rolSelected) {
         if (state.rolSelected.name === 'collaborator') {
-          state.user = await getCollaboratorByCommerceIdEmail(state.commerce.id, state.email);
+          const currentCommerce = store.getCurrentCommerce;
+          if (!currentCommerce || !currentCommerce.id) {
+            return;
+          }
+          state.user = await getCollaboratorByCommerceIdEmail(currentCommerce.id, state.email);
         } else {
           throw new Error('cant manipulate this type of user');
         }
@@ -238,7 +276,7 @@ export default {
         }
       } catch (error) {
         loading.value = false;
-        alertError.value = error.response ? error.response.status : 500;
+        alertError.value = error.response?.status || error.status || 500;
       }
     };
 
@@ -291,8 +329,8 @@ export default {
       clear,
       search,
       getDate,
-      selectCommerce,
       receiveFilteredItems,
+      commerce,
     };
   },
 };
@@ -307,27 +345,6 @@ export default {
     <div id="businessPermissionsAdmin">
       <div>
         <div id="businessQueuesAdmin-controls" class="control-box">
-          <div class="row">
-            <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t('businessQueuesAdmin.commerce') }} </span>
-              <select
-                class="btn btn-md fw-bold text-dark m-1 select"
-                v-model="state.commerce"
-                @change="selectCommerce(state.commerce)"
-                id="modules"
-              >
-                <option v-for="com in state.commerces" :key="com.id" :value="com">
-                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')"
-              />
-            </div>
-          </div>
           <div class="row mb-1 centered">
             <div class="col-10" v-if="state.collaborators && state.collaborators.length > 0">
               <SearchBar
@@ -336,6 +353,12 @@ export default {
                 @selectItem="search"
               >
               </SearchBar>
+            </div>
+            <div v-else-if="commerce && commerce.id && !loading" class="col-12">
+              <Message
+                :title="$t('businessPermissionsAdmin.message.3.title')"
+                :content="$t('businessPermissionsAdmin.message.3.content')"
+              />
             </div>
           </div>
           <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
@@ -349,23 +372,30 @@ export default {
           </div>
           <div class="col mb-2"></div>
         </div>
-        <div id="businessPermissionsAdmin-controls" class="control-box mt-2" v-if="state.user">
-          <div class="col">
-            <div class="my-1">
-              <span class="fw-bold h5">
-                <i class="bi bi-person-fill"></i> {{ state.user ? state.user.name : '' }}
-                {{ state.user ? (state.user.active ? '🟢' : '🔴') : '' }}</span
-              ><br />
-              <span class="badge bg-secondary m-1">
-                <i class="bi bi-envelope-fill"></i> {{ state.user ? state.user.email : '' }}</span
-              >
-              <span class="badge bg-primary m-1">
-                <i class="bi bi-person-fill"></i> {{ state.user ? state.user.type : '' }}</span
-              >
-              <span class="badge bg-secondary m-1">
-                <i class="bi bi-hand-index-thumb-fill"></i> Last Sign In:
-                {{ state.user ? getDate(state.user.lastSignIn) : 'N/I' }} </span
-              ><br />
+        <div class="user-info-card mt-3" v-if="state.user">
+          <div class="user-info-header">
+            <div class="user-info-icon" :class="state.user.active ? 'icon-success' : 'icon-error'">
+              <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="user-info-content">
+              <div class="user-info-name">
+                {{ state.user ? state.user.name : '' }}
+                <span class="user-status-indicator">
+                  {{ state.user.active ? '🟢' : '🔴' }}
+                </span>
+              </div>
+              <div class="user-info-badges">
+                <span class="badge-item">
+                  <i class="bi bi-envelope-fill"></i> {{ state.user ? state.user.email : '' }}
+                </span>
+                <span class="badge-item">
+                  <i class="bi bi-person-fill"></i> {{ state.user ? state.user.type : '' }}
+                </span>
+                <span class="badge-item">
+                  <i class="bi bi-hand-index-thumb-fill"></i> Last Sign In:
+                  {{ state.user ? getDate(state.user.lastSignIn) : 'N/I' }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -526,10 +556,181 @@ export default {
 </template>
 
 <style scoped>
-.select {
+/* Modern Form Styles */
+.select,
+.form-select-modern {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
+
+.select:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+}
+
+.form-control-modern,
+.form-select-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus,
+.form-select-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled),
+.form-select-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-select-modern {
+  flex: 1;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+/* User Info Card */
+.user-info-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.user-info-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.user-info-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.user-info-icon i {
+  font-size: 1.5rem;
+}
+
+.user-info-icon.icon-success {
+  background: transparent;
+  color: #00c2cb;
+  border-color: rgba(0, 194, 203, 0.2);
+}
+
+.user-info-icon.icon-success:hover {
+  border-color: rgba(0, 194, 203, 0.4);
+  transform: scale(1.05);
+}
+
+.user-info-icon.icon-error {
+  background: transparent;
+  color: #a52a2a;
+  border-color: rgba(165, 42, 42, 0.2);
+}
+
+.user-info-icon.icon-error:hover {
+  border-color: rgba(165, 42, 42, 0.4);
+  transform: scale(1.05);
+}
+
+.user-info-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-info-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.user-status-indicator {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.user-info-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #004aad;
+  background-color: rgba(0, 74, 173, 0.1);
+  border: 1px solid rgba(0, 74, 173, 0.2);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.badge-item:hover {
+  background-color: rgba(0, 74, 173, 0.15);
+  border-color: rgba(0, 74, 173, 0.3);
+  transform: translateY(-1px);
+}
+
+.badge-item i {
+  font-size: 0.75rem;
+  color: #004aad;
+}
+
 .module-card {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -538,6 +739,7 @@ export default {
   border: 0.5px solid var(--gris-default);
   align-items: left;
 }
+
 .module-details-container {
   font-size: 0.8rem;
   margin-left: 0.5rem;
@@ -545,14 +747,17 @@ export default {
   margin-top: 0.5rem;
   margin-bottom: 0;
 }
+
 .is-disabled {
   opacity: 0.5;
 }
+
 .show {
   padding: 10px;
   max-height: 400px !important;
   overflow-y: auto;
 }
+
 .roles-card {
   background-color: var(--color-background);
   padding: 0.5rem;

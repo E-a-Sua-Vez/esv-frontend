@@ -159,6 +159,36 @@ export default {
       }
     });
 
+    // Watch for businessItems changes (when commerce changes) and reset everything
+    watch(
+      businessItems,
+      (newItems, oldItems) => {
+        // Reset search and filters
+        state.searchText = '';
+        state.selectedType = undefined;
+        state.page = 1;
+        state.filtered = newItems || [];
+
+        // Update types based on new items
+        if (newItems && newItems.length > 0) {
+          const types = newItems
+            .filter(item => item.type)
+            .map(item => (item.type ? item.type : undefined));
+          if (types && types.length > 0) {
+            state.types = Array.from(new Set(types));
+          } else {
+            state.types = [];
+          }
+        } else {
+          state.types = [];
+        }
+
+        // Refresh with new items
+        refresh(newItems || []);
+      },
+      { deep: true }
+    );
+
     return {
       state,
       clearSearch,
@@ -207,7 +237,7 @@ export default {
           </select>
         </div>
       </div>
-      <div class="mt-3">
+      <div class="mt-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
         <span class="badge bg-secondary px-2 py-2 m-1"
           >{{ $t('businessAdmin.listResult') }} {{ state.counter }}
         </span>

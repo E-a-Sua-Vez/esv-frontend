@@ -31,6 +31,17 @@
   "close": "Fechar",
   "language": "Idioma",
   "menu": "Menu",
+  "commerceSelector": {
+    "commerce": "Comércio",
+    "select": "Selecionar Comércio"
+  },
+  "moduleSelector": {
+    "module": "Módulo",
+    "select": "Selecionar Módulo"
+  },
+  "welcomeMenu": {
+    "youAreIn": "Você está em:"
+  },
   "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
   "refresh": "Reload",
   "yes": "Sim",
@@ -1164,6 +1175,15 @@
     "searchClient": "Pesquisar Cliente",
     "schedules": "Agendas e Calendários",
     "cancel": "Cancelar",
+    "today": "Hoje",
+    "pending": "Pendentes",
+    "upcomingWeek": "Próxima Semana",
+    "totalActive": "Total Ativas",
+    "recentBookings": "Reservas Recentes",
+    "noBookings": {
+      "title": "Nenhuma Reserva Encontrada",
+      "content": "Não há reservas para exibir no momento."
+    },
     "confirm": "Confirmar",
     "paymentData": "Dados de Pagamento",
     "paymentConfirm": "Confirmar/ Pagamento",
@@ -1542,6 +1562,7 @@
     "contacted": "Contatado",
     "contactable": "Contactável",
     "survey": "Pesquisa",
+    "firstAttentionForm": "Formulário Primeira Atenção",
     "keyWord": "Palavras Chave",
     "search": "🔎 Nome, CPF ou Email",
     "search2": "🔎 CPF, Telefone ou Email",
@@ -1582,6 +1603,8 @@
     "commerceData": "Comércio:",
     "userData": "Usuário:",
     "queueData": "Fila/Serviço:",
+    "contactInfo": "Informações de Contato",
+    "date": "Data",
     "contactMethod": "Meio de Contato",
     "outcomes": "Despesas",
     "paymentStatus": "Status de Pagamento",
@@ -1594,6 +1617,20 @@
     "edit": "Editar",
     "dataOf": "Dados de",
     "addClient": "Adicionar Cliente",
+    "productCard": {
+      "stockLevel": "Nível de Estoque",
+      "levels": "Níveis",
+      "code": "Código",
+      "tooltip": {
+        "status": "Estado do produto baseado em nível de estoque",
+        "copy": "Copiar dados do produto",
+        "expired": "Dias desde expiração. Verde: >30 dias, Amarelo: 0-30 dias, Vermelho: expirado",
+        "replacement": "Dias até próxima reposição. Verde: >30 dias, Amarelo: 0-30 dias, Vermelho: requer reposição",
+        "stockLevel": "Nível de estoque atual como porcentagem do máximo",
+        "viewConsumptions": "Ver histórico de consumos",
+        "viewReplacements": "Ver histórico de reposições"
+      }
+    },
     "dates": {
       "from": "Do",
       "to": "a"
@@ -1633,6 +1670,35 @@
     "comment": "Comentário:",
     "entities": "Palavras chave:",
     "typeFilter": "Filtrar por Tipo:",
+    "healthScore": {
+      "title": "Health Score do Negócio",
+      "subtitle": "Indicador geral de saúde operativa, cliente e financeira",
+      "operational": "Operacional",
+      "customer": "Cliente",
+      "financial": "Financiero",
+      "tooltip": "O Health Score é um indicador composto que avalia a saúde geral do seu negócio em três dimensões: operacional (eficiência e produtividade), cliente (satisfação e lealdade) e financeira (rentabilidade e crescimento). Um score alto indica um negócio saudável e sustentável.",
+      "tooltips": {
+        "operational": "Avalia a eficiência operacional: tempo médio de atendimento, produtividade da equipe e capacidade de resposta do negócio.",
+        "customer": "Mede a satisfação e lealdade do cliente: CSAT, NPS, taxa de retorno e qualidade da experiência do cliente.",
+        "financial": "Analisa a saúde financeira: receitas, rentabilidade, crescimento e sustentabilidade econômica do negócio."
+      }
+    },
+    "gauge": {
+      "title": "KPIs Principais",
+      "conversion": "Tasa de Conversión",
+      "csat": "Satisfacción (CSAT)",
+      "nps": "NPS Score",
+      "tooltip": {
+        "conversion": "A taxa de conversão mede a porcentagem de reservas que são confirmadas com sucesso. Um valor alto indica que os clientes estão cumprindo com seus compromissos.",
+        "csat": "CSAT (Customer Satisfaction) mede a satisfação do cliente em uma escala de 1 a 5. Este indicador mostra a porcentagem equivalente de satisfação.",
+        "nps": "NPS (Net Promoter Score) mede a lealdade do cliente. Vai de -100 a +100. Valores positivos indicam mais promotores que detratores."
+      }
+    },
+    "smartRecommendations": {
+      "title": "Recomendaciones Inteligentes",
+      "items": "sugerencias",
+      "tooltip": "Recomendações inteligentes baseadas em análise de dados e métricas-chave. Essas sugestões são geradas automaticamente analisando padrões, tendências e oportunidades de melhoria no seu negócio."
+    },
     "tracing": {
       "title": "Gestão de Clientes",
       "filters": {
@@ -1640,6 +1706,84 @@
         "contact": "Contato",
         "contactResult": "Retorno de Contato"
       }
+    },
+    "clientCard": {
+      "tooltip": {
+        "status": "Estado do cliente baseado em dias desde última atenção",
+        "copy": "Copiar dados do cliente",
+        "attentions": "Número total de atendimentos",
+        "survey": "Cliente completou pesquisa de satisfação",
+        "form": "Cliente possui formulário de primeira atenção",
+        "daysSinceAttention": "Dias decorridos desde a última atenção. Verde: ≤90 dias, Amarelo: 91-180 dias, Vermelho: >180 dias",
+        "daysSinceContact": "Dias decorridos desde o último contato. Verde: ≤90 dias, Amarelo: 91-180 dias, Vermelho: >180 dias",
+        "viewAttentions": "Ver histórico de atendimentos do cliente",
+        "viewBookings": "Ver reservas e agendamentos do cliente",
+        "viewHistory": "Ver histórico médico e controles do paciente",
+        "editClient": "Editar informações do cliente",
+        "viewContacts": "Ver histórico de contatos realizados",
+        "schedule": "Criar nova reserva ou agendamento para o cliente",
+        "whatsapp": "Abrir conversa do WhatsApp",
+        "email": "Abrir cliente de e-mail",
+        "idNumber": "Número de identificação do cliente",
+        "contactResult": "Resultado do último contato realizado",
+        "paid": "Atendimento/Agendamento pago",
+        "products": "Atendimento possui produtos",
+        "terms": "Termos e condições aceitos",
+        "contacted": "Cliente foi contactado",
+        "rating": "Avaliação CSAT",
+        "nps": "NPS - Net Promoter Score",
+        "sentiment": "Análise de sentimento",
+        "viewAnswers": "Ver respostas da pesquisa",
+        "contact": "Contactar cliente",
+        "commerceActive": "Comércio ativo",
+        "commerceInactive": "Comércio inativo",
+        "commerceTag": "Tag do comércio",
+        "moduleActive": "Módulo ativo",
+        "moduleInactive": "Módulo inativo",
+        "queueActive": "Fila ativa",
+        "queueInactive": "Fila inativa",
+        "queueTag": "Tag da fila",
+        "productActive": "Produto ativo",
+        "productInactive": "Produto inativo",
+        "productTag": "Tag do produto",
+        "openWebsite": "Abrir site do comércio",
+        "serviceActive": "Serviço ativo",
+        "serviceInactive": "Serviço inativo",
+        "serviceTag": "Tag do serviço",
+        "collaboratorActive": "Colaborador ativo",
+        "collaboratorInactive": "Colaborador inativo",
+        "collaboratorEmail": "Email do colaborador",
+        "surveyActive": "Pesquisa ativa",
+        "surveyInactive": "Pesquisa inativa",
+        "itemActive": "Item ativo",
+        "itemInactive": "Item inativo",
+        "itemTag": "Tag do item"
+      },
+      "label": {
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "id": "ID",
+        "birthday": "Aniversário",
+        "healthAgreement": "Convênio",
+        "origin": "Origem",
+        "address": "Endereço",
+        "addressCode": "CEP",
+        "addressComplement": "Complemento",
+        "code1": "Código 1",
+        "code2": "Código 2",
+        "code3": "Código 3",
+        "noCommerce": "Sem comércio",
+        "noService": "N/I",
+        "noQueue": "N/I",
+        "noCollaborator": "N/I",
+        "noSurvey": "N/I"
+      },
+      "address": "Endereço",
+      "daysSinceAttention": "Dias Atenção",
+      "daysSinceContact": "Dias Contato",
+      "contactInfo": "Informações de Contato",
+      "actions": "Ações",
+      "date": "Data"
     },
     "surveysFilters": {
       "filters": {
@@ -1846,6 +1990,10 @@
         "description": "Baixar arquivo relatório com os resultados dos clientes no intervalo de datas selecionado"
       },
       "client-contacts-management": {
+        "title": "Relatório de Contatos (Detalhes)",
+        "description": "Baixar arquivo relatório com os resultados dos contatos no intervalo de datas selecionado"
+      },
+      "contacts-management": {
         "title": "Relatório de Contatos (Detalhes)",
         "description": "Baixar arquivo relatório com os resultados dos contatos no intervalo de datas selecionado"
       },
@@ -2198,6 +2346,8 @@
         "content": "No momento, não há opções para gerenciar. Verifique se o seu plano está ativo ou entre em contato conosco."
       }
     },
+    "seeSpy": "Ver Spy",
+    "seeMenu": "Ver Menu",
     "capacitiesList": {
       "collaborator": {
         "main-menu": {
@@ -2207,6 +2357,33 @@
           "booking-manage": "Reservas Visão 360°",
           "product-stock": "Controle de Estoque"
         }
+      }
+    }
+  },
+  "collaboratorSpySection": {
+    "attentions": "Atendimentos",
+    "bookings": "Reservas",
+    "today": "Hoje",
+    "todayAttentions": "Atendimentos de Hoje",
+    "goToQueue": "Ir para Fila",
+    "weekBookings": "Reservas da Semana",
+    "monthBookings": "Reservas do Mês",
+    "pendingToAttend": "Pendentes para atender",
+    "selectCommerce": "Selecionar Comércio",
+    "attendQueue": "Atender Fila",
+    "attendQueues": "Atender Filas",
+    "calendar": "Calendário",
+    "calendarTitle": "Calendário de Atendimentos e Reservas",
+    "both": "Ambos",
+    "number": "Número",
+    "message": {
+      "noQueue": {
+        "title": "Sem fila dedicada",
+        "content": "Você não tem uma fila dedicada atribuída. O Spy está disponível apenas para colaboradores com filas dedicadas."
+      },
+      "noData": {
+        "title": "Sem dados",
+        "content": "Não há atendimentos ou reservas para esta data."
       }
     }
   },
@@ -2312,7 +2489,7 @@
     "title": "Serviços",
     "commerce": "Selecione uma unidade:",
     "name": "Nome:",
-    "tag": "Tag:",
+    "tag": "Tipo de serviço:",
     "shortDescription": "Descrição curta:",
     "longDescription": "Descrição longa:",
     "return": "Voltar",
@@ -2332,7 +2509,7 @@
     "procedures": "Procedimientos:",
     "proceduresHelp": "Quantidade de Procedimientos necesários para completar o Serviço",
     "estimatedTime": "Tempo estimado:",
-    "tagHelp": "Identificador curto do serviço",
+    "tagHelp": "Tipo de serviço",
     "onlineHelp": "Serviço pode ser mostrado para ser selecionado pelo usuário.",
     "blockTimeHelp": "Duração do bloque de atendimento ao usuário para esse serviço em minutos.",
     "estimatedTimeHelp": "Tempo estimado da duração do serviço.",
@@ -2376,7 +2553,7 @@
     },
     "validate": {
       "name": "Você deve digitar o nome",
-      "tag": "Você deve digitar o lítagmite",
+      "tag": "Você deve digitar o tipo de serviço",
       "order": "Você deve digitar o ordem",
       "estimatedTime": "Você deve digitar o tempo estimado",
       "shortDescription": "Você deve digitar a descrição curta"
@@ -2604,7 +2781,7 @@
     "outcomeExpireDate": "Validade:",
     "outcomeDate": "Data:",
     "outcomeCode": "Código:",
-    "incomeTitle": "Conceto:",
+    "incomeTitle": "Conceito:",
     "incomeType": "Tipo:",
     "incomeAmount": "Quantidade:",
     "incomeProduct": "Produto:",
@@ -2822,7 +2999,7 @@
     "commerce": "Selecione uma unidade:",
     "name": "Nome:",
     "tag": "Tag:",
-    "Type": "Tipo:",
+    "type": "Tipo:",
     "return": "Voltar",
     "active": "Ativo:",
     "update": "Atualizar",
@@ -2937,6 +3114,10 @@
     "commerces": "Comércios:",
     "aliasHelp": "Identificador abreviado do colaborador utilizado no produto digital.",
     "listResult": "Registros:",
+    "selectType": "Selecionar tipo",
+    "selectModule": "Selecionar módulo",
+    "selectCommerce": "Selecionar comércio",
+    "selectService": "Selecionar serviço",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -3484,6 +3665,10 @@
       "2": {
         "title": "Oh não!",
         "content": "Neste momento não há permissões."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Não há colaboradores neste comércio. Verifique se você tem colaboradores criados ou entre em contato conosco."
       }
     },
     "capacitiesList": {
@@ -3738,6 +3923,7 @@
     "link": "URL Web:",
     "go": "Ir",
     "other": "Outro",
+    "otherHelp": "Outra encuesta",
     "otherOption": "Opção 'Outro':",
     "otherOpen": "'Outro' Aberto:",
     "optionsHelp": "Lista de opções de reposta separados por vírgula, sem espaços.",

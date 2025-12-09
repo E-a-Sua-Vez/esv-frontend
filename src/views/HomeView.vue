@@ -59,7 +59,6 @@ export default {
               <i class="bi bi-person-badge-fill"></i>
             </div>
             <h3 class="action-card-title">{{ $t('enterCommerce') }}</h3>
-            <p class="action-card-description">{{ $t('enterCommerce') }}</p>
             <button class="action-card-btn">
               {{ $t('continue') }}
               <i class="bi bi-arrow-right"></i>
@@ -71,7 +70,6 @@ export default {
               <i class="bi bi-people-fill"></i>
             </div>
             <h3 class="action-card-title">{{ $t('enterCollaborator') }}</h3>
-            <p class="action-card-description">{{ $t('enterCollaborator') }}</p>
             <button class="action-card-btn">
               {{ $t('continue') }}
               <i class="bi bi-arrow-right"></i>

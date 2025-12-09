@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -55,16 +55,25 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      selectedCommerces: ref([]),
       startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().slice(0, 10),
       endDate: new Date().toISOString().slice(0, 10),
       reports: ref({}),
-      commerce: {},
       toggles: {},
       format: 'csv',
       // Filter state for desktop layout
       filtersCollapsed: false,
+      allCommerces: ref([]),
+    });
+
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Compute selectedCommerces as array of IDs for reports
+    const selectedCommerces = computed(() => {
+      if (commerce.value && commerce.value.id) {
+        return [commerce.value.id];
+      }
+      return [];
     });
 
     onBeforeMount(async () => {
@@ -72,15 +81,21 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        state.selectedCommerces = state.commerce ? [state.commerce.id] : [];
+        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
         state.toggles = await getPermissions('reports', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (state.allCommerces && state.allCommerces.length > 0) {
+            await store.setCurrentCommerce(state.allCommerces[0]);
+          }
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -91,24 +106,10 @@ export default {
       router.back();
     };
 
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        if (commerce.id === 'ALL') {
-          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
-            state.selectedCommerces = state.currentUser.commercesId;
-          } else {
-            state.selectedCommerces = state.commerces.map(com => com.id);
-          }
-        } else {
-          state.commerce = commerce;
-          state.selectedCommerces = [state.commerce.id];
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
+    const handleCommerceChanged = async commerce => {
+      // Commerce is now managed globally
+      if (commerce && commerce.id && commerce.id !== 'ALL') {
+        await store.setCurrentCommerce(commerce);
       }
     };
 
@@ -128,7 +129,7 @@ export default {
         const blobURL = URL.createObjectURL(new Blob([dataAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
-        a.download = `${prefix}-${state.commerce.tag}-${state.startDate}-${state.endDate}.${state.format}`;
+        a.download = `${prefix}-${commerce.value.tag}-${state.startDate}-${state.endDate}.${state.format}`;
         a.href = blobURL;
         document.body.appendChild(a);
         a.click();
@@ -136,7 +137,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -144,8 +145,9 @@ export default {
     const downloadAttentionsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getAttentionsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -153,7 +155,7 @@ export default {
         downloadReport(result, 'attentions');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -161,8 +163,9 @@ export default {
     const downloadNotificationsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getNotificationsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -170,7 +173,7 @@ export default {
         downloadReport(result, 'notifications');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -178,8 +181,9 @@ export default {
     const downloadSurveysReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getSurveysReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -187,7 +191,7 @@ export default {
         downloadReport(result, 'surveys');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -195,8 +199,9 @@ export default {
     const downloadBookingsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getBookingsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -204,7 +209,7 @@ export default {
         downloadReport(result, 'bookings');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -212,8 +217,9 @@ export default {
     const downloadWaitlistsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getWaitlistsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -221,7 +227,7 @@ export default {
         downloadReport(result, 'waitlist');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -229,8 +235,9 @@ export default {
     const downloadClientsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getClientsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -238,7 +245,7 @@ export default {
         downloadReport(result, 'clients');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -246,8 +253,9 @@ export default {
     const downloadClientContactsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getClientContactsReport(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -255,7 +263,7 @@ export default {
         downloadReport(result, 'client-contacts');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -263,8 +271,9 @@ export default {
     const downloadBookingPaymentsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getBookingPaymentsResume(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -272,7 +281,7 @@ export default {
         downloadReport(result, 'booking-payments');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -280,8 +289,9 @@ export default {
     const downloadAttentionPaymentsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getAttentionPaymentsResume(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -289,7 +299,7 @@ export default {
         downloadReport(result, 'attention-payments');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -297,8 +307,9 @@ export default {
     const downloadAttentionProductsReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getAttentionProductsResume(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -306,7 +317,7 @@ export default {
         downloadReport(result, 'attention-products');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -314,8 +325,9 @@ export default {
     const downloadIncomesReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getIncomesResume(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -323,7 +335,7 @@ export default {
         downloadReport(result, 'incomes');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -331,8 +343,9 @@ export default {
     const downloadOutcomesReport = async () => {
       try {
         loading.value = true;
+        alertError.value = '';
         const result = await getOutcomesResume(
-          state.commerce.id,
+          commerce.value.id,
           state.selectedCommerces,
           state.startDate,
           state.endDate
@@ -340,7 +353,7 @@ export default {
         downloadReport(result, 'outcomes');
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || error.status || error.message || 500;
         loading.value = false;
       }
     };
@@ -375,10 +388,6 @@ export default {
       state.filtersCollapsed = collapsed;
     };
 
-    const handleCommerceChanged = commerce => {
-      selectCommerce(commerce);
-    };
-
     return {
       state,
       loading,
@@ -389,7 +398,9 @@ export default {
       getToday,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
+      selectedCommerces,
+      handleCommerceChanged,
       downloadAttentionsReport,
       downloadNotificationsReport,
       downloadSurveysReport,
@@ -403,7 +414,6 @@ export default {
       downloadIncomesReport,
       downloadOutcomesReport,
       handleFiltersToggle,
-      handleCommerceChanged,
     };
   },
 };
@@ -414,7 +424,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessReports.title`)"
           :toggles="state.toggles"
@@ -424,35 +437,18 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessReports">
           <div v-if="isActiveBusiness() && state.toggles['reports.admin.view']">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('businessReports.message.3.title')"
                 :content="$t('businessReports.message.3.content')"
               />
             </div>
             <div v-else id="businessReports-controls" class="control-box">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t('businessReports.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="reports"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                    <option key="ALL" :value="{ id: 'ALL', tag: 'all', active: true }">
-                      {{ $t('dashboard.all') }}
-                    </option>
-                  </select>
-                </div>
-              </div>
+              <div class="row"></div>
               <div class="row my-2">
                 <div class="col-3">
                   <button
@@ -670,17 +666,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -698,7 +694,7 @@ export default {
         </div>
         <div id="businessReports">
           <div v-if="isActiveBusiness() && state.toggles['reports.admin.view']">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('businessReports.message.3.title')"
                 :content="$t('businessReports.message.3.content')"
@@ -712,10 +708,10 @@ export default {
             >
               <template #filters="{ onToggle, collapsed }">
                 <DesktopFiltersPanel
-                  :model-value="{ commerce: state.commerce }"
+                  :model-value="{ commerce: commerce }"
                   :loading="loading"
-                  :commerces="Array.isArray(state.commerces) ? state.commerces : []"
-                  :show-commerce-selector="true"
+                  :commerces="[]"
+                  :show-commerce-selector="false"
                   :show-date-filters="false"
                   :show-quick-date-buttons="false"
                   :show-refresh-button="false"

@@ -108,7 +108,7 @@ export default {
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+        <Alert :show="false" :stack="alertError"></Alert>
       </div>
       <div id="businessPermissionsAdmin" class="">
         <div class="row m-3">

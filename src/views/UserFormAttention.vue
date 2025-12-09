@@ -139,7 +139,7 @@ export default {
       <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
       <QueueName :queue="state.queue"></QueueName>
       <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
+      <Alert :show="false" :stack="alertError"></Alert>
       <div v-if="!loading">
         <div id="page-header" class="text-center mt-4">
           <div>

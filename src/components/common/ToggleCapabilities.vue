@@ -25,7 +25,7 @@ export default {
         list.push(
           `${toggle[1] === true ? '✅ ' : toggle[1] === false ? '❌ ' : toggle[1] + ': '} ${this.$t(
             `${this.componentName}.capacitiesList.${toggle[0]}`
-          )}`,
+          )}`
         );
         if ((toggle[1] === false || this.amountUsed >= toggle[1]) && this.upgrade === false) {
           this.upgrade = true;
@@ -42,7 +42,7 @@ export default {
 
 <template>
   <div class="toggle-capabilities-wrapper">
-    <Popper class="dark" arrow>
+    <Popper class="dark" arrow disable-click-away>
       <span class="what-do-title">{{ $t('capacities') }}</span>
       <template #content>
         <div>

@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -36,23 +36,31 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref({}),
-      commerce: {},
       showConfigurations: true,
       showWhatsapp: false,
       whatsappStatus: undefined,
       toggles: {},
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.toggles = await getPermissions('configuration', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -60,16 +68,6 @@ export default {
     });
 
     const isActiveBusiness = () => state.business && state.business.active === true;
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        loading.value = false;
-      } catch (error) {
-        loading.value = false;
-      }
-    };
 
     const goBack = () => {
       router.back();
@@ -106,7 +104,7 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       showConfigurations,
       showWhatsapp,
       getWhatsappStatus,
@@ -120,7 +118,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessConfiguration.title`)"
           :toggles="state.toggles"
@@ -130,37 +131,18 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="dashboard">
           <div v-if="isActiveBusiness()">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('businessConfiguration.message.3.title')"
                 :content="$t('businessConfiguration.message.3.content')"
               />
             </div>
-            <div v-else class="control-box">
-              <div id="dashboard-controls">
-                <div class="row">
-                  <div class="col" v-if="state.commerces">
-                    <span>{{ $t('dashboard.commerce') }} </span>
-                    <select
-                      class="btn btn-md fw-bold text-dark m-1 select"
-                      v-model="state.commerce"
-                      id="modules"
-                      @change="selectCommerce(state.commerce)"
-                    >
-                      <option v-for="com in state.commerces" :key="com.id" :value="com">
-                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
             <div v-if="!loading" id="dashboard-result" class="mt-2">
-              <div class="row col mx-1 mt-3 mb-1">
+              <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
                 <div class="col-6 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
@@ -188,7 +170,7 @@ export default {
                 <ConfigurationFeaturesManagement
                   :show-configurations="state.showConfigurations"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :business="state.business"
                 >
                 </ConfigurationFeaturesManagement>
@@ -218,17 +200,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -246,33 +228,14 @@ export default {
         </div>
         <div id="dashboard">
           <div v-if="isActiveBusiness()">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('businessConfiguration.message.3.title')"
                 :content="$t('businessConfiguration.message.3.content')"
               />
             </div>
-            <div v-else class="control-box">
-              <div id="dashboard-controls">
-                <div class="row">
-                  <div class="col" v-if="state.commerces">
-                    <span>{{ $t('dashboard.commerce') }} </span>
-                    <select
-                      class="btn btn-md fw-bold text-dark m-1 select"
-                      v-model="state.commerce"
-                      id="modules"
-                      @change="selectCommerce(state.commerce)"
-                    >
-                      <option v-for="com in state.commerces" :key="com.id" :value="com">
-                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
             <div v-if="!loading" id="dashboard-result" class="mt-2">
-              <div class="row col mx-1 mt-3 mb-1">
+              <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
                 <div class="col-6 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
@@ -300,7 +263,7 @@ export default {
                 <ConfigurationFeaturesManagement
                   :show-configurations="state.showConfigurations"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :business="state.business"
                 >
                 </ConfigurationFeaturesManagement>
@@ -356,6 +319,11 @@ export default {
   text-align: left;
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+.tabs-header-divider {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 0.75rem;
 }
 .metric-subtitle {
   text-align: left;

@@ -114,6 +114,17 @@ export default {
         modalCloseButton.click();
       }
     },
+    handleModalOpen(event) {
+      // Remove aria-hidden immediately when modal link is clicked
+      // This prevents the accessibility warning about aria-hidden on focused elements
+      const modalElement = document.getElementById('modalPassword');
+      if (modalElement) {
+        // Remove aria-hidden before Bootstrap processes the modal opening
+        modalElement.removeAttribute('aria-hidden');
+      }
+      // Call closeMenu as before
+      this.closeMenu();
+    },
   },
   watch: {
     modalVisible(newVal) {
@@ -126,6 +137,22 @@ export default {
     if (currentUser && currentUserType) {
       await signOut(currentUser.email, currentUserType);
       await this.store.resetSession();
+    }
+  },
+  mounted() {
+    // Fix accessibility issue: ensure aria-hidden is properly managed
+    const modalElement = document.getElementById('modalPassword');
+
+    if (modalElement) {
+      // Ensure aria-hidden is removed early when modal starts opening
+      modalElement.addEventListener('show.bs.modal', () => {
+        modalElement.removeAttribute('aria-hidden');
+      });
+
+      // When modal is hidden, ensure aria-hidden is restored
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        modalElement.setAttribute('aria-hidden', 'true');
+      });
     }
   },
 };
@@ -207,43 +234,48 @@ export default {
             class="actions-link"
             data-bs-toggle="modal"
             data-bs-target="#modalPassword"
-            @click="$event => closeMenu()"
+            @click="handleModalOpen"
           >
             {{ $t('loginData.actions.2.action') }}
             <i class="bi bi-arrow-right ms-1"></i>
           </a>
         </div>
-        <!-- Modal Password -->
-        <div
-          class="modal fade"
-          id="modalPassword"
-          data-bs-backdrop="static"
-          data-bs-keyboard="false"
-          tabindex="-1"
-          aria-labelledby="staticBackdropLabel"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog modal-xl">
-            <div class="modal-content modern-modal-content">
-              <div class="modal-header border-0">
-                <button
-                  id="close-modal"
-                  class="btn-close"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body text-center modern-modal-body">
-                <Suspense>
-                  <template #default>
-                    <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
-                  </template>
-                </Suspense>
+        <!-- Modal Password - Use Teleport to render outside component to avoid overflow/position issues -->
+        <Teleport to="body">
+          <div
+            class="modal fade"
+            id="modalPassword"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1"
+            aria-labelledby="modalPasswordLabel"
+            role="dialog"
+            aria-modal="true"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content modern-modal-content">
+                <div class="modal-header border-0">
+                  <button
+                    id="close-modal"
+                    class="btn-close"
+                    type="button"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                    tabindex="0"
+                  ></button>
+                </div>
+                <div class="modal-body text-center modern-modal-body">
+                  <Suspense>
+                    <template #default>
+                      <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
+                    </template>
+                  </Suspense>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Teleport>
       </div>
     </form>
   </div>

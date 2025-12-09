@@ -242,319 +242,327 @@ export default {
 </script>
 
 <template>
-  <div
-    id="bookings-management"
-    class="row"
-    v-if="showClientBookingsManagement === true && toggles['dashboard.bookings-management.view']"
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <div v-if="!loading">
-          <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.bookings-management']"
-              :title="$t('dashboard.reports.bookings-management.title')"
-              :show-tooltip="true"
-              :description="$t('dashboard.reports.bookings-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :can-download="toggles['dashboard.reports.bookings-management'] === true"
-            ></SimpleDownloadCard>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span
-                    class="form-check-label metric-keyword-subtitle mx-1"
-                    @click="showFilters()"
-                  >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                    <i
-                      :class="`bi ${
-                        showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
+  <div>
+    <div
+      id="bookings-management"
+      class="row"
+      v-if="showClientBookingsManagement === true && toggles['dashboard.bookings-management.view']"
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <div v-if="!loading">
+            <div>
+              <SimpleDownloadCard
+                :download="toggles['dashboard.reports.bookings-management']"
+                :title="$t('dashboard.reports.bookings-management.title')"
+                :show-tooltip="true"
+                :description="$t('dashboard.reports.bookings-management.description')"
+                :icon="'bi-file-earmark-spreadsheet'"
+                @download="exportToCSV"
+                :can-download="toggles['dashboard.reports.bookings-management'] === true"
+              ></SimpleDownloadCard>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span
+                      class="form-check-label metric-keyword-subtitle mx-1"
+                      @click="showFilters()"
+                    >
+                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                      <i
+                        :class="`bi ${
+                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </span>
                   </span>
-                </span>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                  @click="clear()"
-                >
-                  <span><i class="bi bi-eraser-fill"></i></span>
-                </button>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getToday()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                    @click="clear()"
+                  >
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
                 </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-5">
-                      <input
-                        id="startDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="startDate"
-                      />
-                    </div>
-                    <div class="col-5">
-                      <input
-                        id="endDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="endDate"
-                      />
-                    </div>
-                    <div class="col-2">
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()"
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getToday()"
+                        :disabled="loading"
                       >
-                        <span><i class="bi bi-search"></i></span>
+                        {{ $t('dashboard.today') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getCurrentMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.thisMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastThreeMonths()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastThreeMonths') }}
                       </button>
                     </div>
                   </div>
-                </div>
-                <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue">
-                    {{ $t('dashboard.queue') }}
-                  </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
-                    <option
-                      v-for="queue in queues"
-                      :key="queue.name"
-                      :value="queue.id"
-                      id="select-queue"
-                    >
-                      {{ queue.name }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-12 col-md my-1 filter-card" v-if="services && services.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue">
-                    {{ $t('dashboard.service') }}
-                  </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="serviceId">
-                    <option
-                      v-for="service in services"
-                      :key="service.name"
-                      :value="service.id"
-                      id="select-queue"
-                    >
-                      {{ service.name }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="status"
-                    value="CONFIRMED"
-                    name="status-type"
-                    id="confirmed-since"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="confirmed-since">
-                    <i :class="`bi bi-check-circle-fill green-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="status"
-                    value="PENDING"
-                    name="status-type"
-                    id="pending-since"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="pending-since">
-                    <i :class="`bi bi-clock-fill yellow-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="status"
-                    value="PROCESSED"
-                    name="processed-type"
-                    id="processed-since"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="processed-since">
-                    <i :class="`bi bi-qr-code green-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="status"
-                    value="USER_CANCELLED"
-                    name="userCancelled-type"
-                    id="userCancelled-since"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="userCancelled-since">
-                    <i :class="`bi bi-calendar-fill red-icon`"></i>
-                  </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disable-click-away
-                    :content="$t(`dashboard.tracing.filters.attention`)"
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-5">
+                        <input
+                          id="startDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="startDate"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          id="endDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="endDate"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
+                    <label class="metric-card-subtitle mx-2" for="select-queue">
+                      {{ $t('dashboard.queue') }}
+                    </label>
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
+                      <option
+                        v-for="queue in queues"
+                        :key="queue.name"
+                        :value="queue.id"
+                        id="select-queue"
+                      >
+                        {{ queue.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div
+                    class="col-12 col-md my-1 filter-card"
+                    v-if="services && services.length > 1"
                   >
-                    <i class="bi bi-info-circle-fill h7 m-2"></i>
-                  </Popper>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
+                    <label class="metric-card-subtitle mx-2" for="select-queue">
+                      {{ $t('dashboard.service') }}
+                    </label>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select"
+                      v-model="serviceId"
+                    >
+                      <option
+                        v-for="service in services"
+                        :key="service.name"
+                        :value="service.id"
+                        id="select-queue"
+                      >
+                        {{ service.name }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="status"
+                      value="CONFIRMED"
+                      name="status-type"
+                      id="confirmed-since"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="confirmed-since">
+                      <i :class="`bi bi-check-circle-fill green-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="status"
+                      value="PENDING"
+                      name="status-type"
+                      id="pending-since"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="pending-since">
+                      <i :class="`bi bi-clock-fill yellow-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="status"
+                      value="PROCESSED"
+                      name="processed-type"
+                      id="processed-since"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="processed-since">
+                      <i :class="`bi bi-qr-code green-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="status"
+                      value="USER_CANCELLED"
+                      name="userCancelled-type"
+                      id="userCancelled-since"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="userCancelled-since">
+                      <i :class="`bi bi-calendar-fill red-icon`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      disable-click-away
+                      :content="$t(`dashboard.tracing.filters.attention`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="my-3">
-              <span class="badge bg-secondary px-3 py-2 m-1"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-3 py-2 m-1">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
-                      </option>
-                    </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="bookings && bookings.length > 0">
-              <div class="row" v-for="(booking, index) in bookings" :key="`bookings-${index}`">
-                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce">
-                </BookingDetailsCard>
+              <div class="my-3">
+                <span class="badge bg-secondary px-3 py-2 m-1"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-3 py-2 m-1">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                        v-model="page"
+                        :disabled="totalPages === 0"
+                      >
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
+                          {{ pag }}
+                        </option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-if="bookings && bookings.length > 0">
+                <div class="row" v-for="(booking, index) in bookings" :key="`bookings-${index}`">
+                  <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce">
+                  </BookingDetailsCard>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div
-    v-if="showClientBookingsManagement === true && !toggles['dashboard.bookings-management.view']"
-  >
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div
+      v-if="showClientBookingsManagement === true && !toggles['dashboard.bookings-management.view']"
+    >
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

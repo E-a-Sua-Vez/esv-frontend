@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, watch } from 'vue';
+import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getActiveModulesByCommerceId } from '../../application/services/module';
@@ -43,84 +43,275 @@ export default {
 
     const store = globalStore();
 
+    // Use global commerce and module from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const module = computed(() => store.getCurrentModule);
+
     const state = reactive({
       currentUser: {},
-      commerces: ref([]),
       queue: {},
       queues: [],
       groupedQueues: [],
-      commerce: {},
       collaborator: {},
       modules: ref({}),
-      module: {},
       activeCommerce: false,
       captcha: false,
       queueStatus: {},
       toggles: {},
     });
 
+    const loadCommerceData = async () => {
+      if (!commerce.value || !commerce.value.id) {
+        state.queues = [];
+        state.modules = [];
+        return;
+      }
+      try {
+        // Use commerce from store if it already has queues, otherwise fetch
+        if (commerce.value.queues && commerce.value.queues.length > 0) {
+          state.queues = commerce.value.queues;
+        } else {
+          const commerceById = await getCommerceById(commerce.value.id);
+          state.queues = commerceById.queues || [];
+          // Update store with full commerce data if we fetched it
+          if (commerceById && commerceById.id) {
+            await store.setCurrentCommerce(commerceById);
+          }
+        }
+        await initQueues();
+        state.modules = await getActiveModulesByCommerceId(commerce.value.id);
+        // Set module if not already set
+        if (!module.value && state.modules && state.modules.length > 0) {
+          const collaboratorModule = state.modules.find(m => m.id === state.collaborator.moduleId);
+          if (collaboratorModule) {
+            await store.setCurrentModule(collaboratorModule);
+          } else if (state.modules.length > 0) {
+            // Auto-select first module if collaborator's module not found
+            await store.setCurrentModule(state.modules[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading commerce data:', error);
+      }
+    };
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = store.getCurrentUser;
         state.collaborator = state.currentUser;
-        if (!state.currentUser) {
+        if (!state.collaborator || !state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        const commerceById = await getCommerceById(state.commerce.id);
-        state.queues = commerceById.queues;
-        await initQueues();
-        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
-        if (state.modules && state.modules.length > 0) {
-          state.module = state.modules.filter(
-            module => module.id === state.collaborator.moduleId
-          )[0];
+        // Set initial commerce if not set - check both commerceId and commercesId
+        if (!commerce.value || !commerce.value.id) {
+          // First try commerceId (single commerce)
+          if (state.collaborator.commerceId) {
+            const initialCommerce = await getCommerceById(state.collaborator.commerceId);
+            if (initialCommerce && initialCommerce.id) {
+              await store.setCurrentCommerce(initialCommerce);
+            }
+          }
+          // If still no commerce, try commercesId (multiple commerces)
+          if (
+            (!commerce.value || !commerce.value.id) &&
+            state.collaborator.commercesId &&
+            state.collaborator.commercesId.length > 0
+          ) {
+            const firstCommerceId = state.collaborator.commercesId[0];
+            if (firstCommerceId) {
+              const initialCommerce = await getCommerceById(firstCommerceId);
+              if (initialCommerce && initialCommerce.id) {
+                await store.setCurrentCommerce(initialCommerce);
+              }
+            }
+          }
         }
-        store.setCurrentCommerce(state.commerce);
+        await loadCommerceData();
+
+        // Initialize attentions listener with current commerce AFTER queues are loaded
+        // This ensures queues exist before we try to update their status
+        if (commerce.value && commerce.value.id && state.queues && state.queues.length > 0) {
+          initializeAttentionsListener(commerce.value.id);
+        }
+
         store.setCurrentQueue(undefined);
         state.toggles = await getPermissions('collaborator');
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
 
-    const checkQueueStatus = async attentions => {
-      if (attentions && attentions.value) {
-        const filteredAttentionsByQueue = attentions.value.reduce((acc, attention) => {
-          const queueId = attention.queueId;
-          if (!acc[queueId]) {
-            acc[queueId] = [];
+    // Watch for commerce changes
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (!newCommerce || !newCommerce.id) return;
+        if (oldCommerce && oldCommerce.id === newCommerce.id) return;
+        try {
+          loading.value = true;
+          // Clear data
+          state.queues = [];
+          state.modules = [];
+          state.queue = {};
+          state.queueStatus = {};
+
+          await loadCommerceData();
+
+          // Reinitialize attentions listener with new commerce AFTER queues are loaded
+          if (state.queues && state.queues.length > 0) {
+            initializeAttentionsListener(newCommerce.id);
           }
-          acc[queueId].push(attention);
+          alertError.value = '';
+          loading.value = false;
+        } catch (error) {
+          alertError.value = error.response?.status || 500;
+          loading.value = false;
+        }
+      },
+      { deep: true }
+    );
+
+    // Watch for module changes
+    watch(
+      module,
+      async (newModule, oldModule) => {
+        if (oldModule && oldModule.id === newModule?.id) return;
+        // Module change might affect queue filtering, reload if needed
+        if (newModule && newModule.id && commerce.value && commerce.value.id) {
+          try {
+            loading.value = true;
+            await initQueues();
+            // Re-check queue status after queues are reloaded
+            if (attentionsWrapper.value && attentionsWrapper.value.value) {
+              await checkQueueStatus(attentionsWrapper.value);
+            }
+            loading.value = false;
+          } catch (error) {
+            console.error('Error handling module change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { deep: true }
+    );
+
+    // Watch for queues changes to ensure status is updated
+    watch(
+      () => state.queues?.length,
+      async (newLength, oldLength) => {
+        // When queues are loaded or change, update status
+        if (newLength > 0 && newLength !== oldLength) {
+          initializeQueueStatus();
+          // If listener is already initialized, check status
+          if (attentionsWrapper.value && attentionsWrapper.value.value) {
+            await checkQueueStatus(attentionsWrapper.value);
+          }
+        }
+      }
+    );
+
+    const checkQueueStatus = async attentionsRef => {
+      // Ensure we have queues loaded first
+      if (!state.queues || state.queues.length === 0) {
+        return;
+      }
+
+      // Ensure we have a valid ref with a value
+      if (!attentionsRef) {
+        initializeQueueStatus();
+        return;
+      }
+
+      // Get the value from ref, ensuring it's an array
+      const attentionsArray =
+        attentionsRef.value && Array.isArray(attentionsRef.value) ? attentionsRef.value : [];
+
+      // Always initialize all queues to 0 first
+      initializeQueueStatus();
+
+      // If no attentions, all queues are already set to 0
+      if (attentionsArray.length === 0) {
+        return;
+      }
+
+      try {
+        const filteredAttentionsByQueue = attentionsArray.reduce((acc, attention) => {
+          if (attention && attention.queueId) {
+            const queueId = attention.queueId;
+            if (!acc[queueId]) {
+              acc[queueId] = [];
+            }
+            acc[queueId].push(attention);
+          }
           return acc;
         }, {});
-        if (state.queues && state.queues.length > 0) {
-          state.queues.forEach(queue => {
+
+        // Update only queues that have attentions
+        state.queues.forEach(queue => {
+          if (queue && queue.id) {
             if (filteredAttentionsByQueue[queue.id]) {
-              const attentions = filteredAttentionsByQueue[queue.id].length;
-              state.queueStatus[queue.id] = attentions;
+              const attentionsCount = filteredAttentionsByQueue[queue.id].length;
+              state.queueStatus[queue.id] = attentionsCount;
+            } else {
+              // Explicitly set to 0 if no attentions for this queue
+              state.queueStatus[queue.id] = 0;
             }
-          });
-        }
+          }
+        });
+      } catch (error) {
+        console.error('Error in checkQueueStatus:', error);
+        initializeQueueStatus();
       }
     };
 
-    const attentions = ref([]);
-    attentions.value = updatedAvailableAttentionsByCommerce(id);
+    // Get attentions ref - this is a reactive ref that Firebase will update
+    // It always starts as an empty array and gets populated by Firebase snapshot
+    // Use a wrapper ref so we can update it when commerce changes
+    const attentionsWrapper = ref(null);
+    let attentions = null;
+    const attentionsUnsubscribe = null;
 
-    checkQueueStatus(attentions);
+    // Initialize attentions listener with commerce from store or route
+    const initializeAttentionsListener = commerceId => {
+      if (!commerceId) {
+        // If no commerce, clear attentions and reset status
+        attentionsWrapper.value = null;
+        initializeQueueStatus();
+        return;
+      }
+
+      // Clean up previous listener if exists
+      if (attentions && attentions._unsubscribe) {
+        attentions._unsubscribe();
+        attentions = null;
+      }
+
+      // Reset queue status before creating new listener
+      initializeQueueStatus();
+
+      // Create new listener
+      attentions = updatedAvailableAttentionsByCommerce(commerceId);
+      attentionsWrapper.value = attentions;
+
+      // Force initial check after a brief moment to allow Firebase to initialize
+      // The watch will handle updates, but we ensure initial state is correct
+      setTimeout(() => {
+        if (attentionsWrapper.value && attentionsWrapper.value.value) {
+          checkQueueStatus(attentionsWrapper.value);
+        }
+      }, 100);
+    };
 
     const initQueues = async () => {
-      initializeQueueStatus();
-      if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-        state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+      if (
+        commerce.value &&
+        getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')
+      ) {
+        state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
         if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
           const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
             queue => queue.collaboratorId === state.collaborator.id
@@ -138,12 +329,17 @@ export default {
           state.queues = queues;
         }
       }
-      checkQueueStatus(attentions);
+      // Initialize queue status after queues are loaded
+      initializeQueueStatus();
+      // Trigger checkQueueStatus if listener is already initialized
+      if (attentionsWrapper.value && attentionsWrapper.value.value) {
+        await checkQueueStatus(attentionsWrapper.value);
+      }
     };
 
-    const isActiveCommerce = () => state.commerce && state.commerce.active === true;
+    const isActiveCommerce = () => commerce.value && commerce.value.active === true;
 
-    const isActiveModules = () => state.module && state.modules.length > 0;
+    const isActiveModules = () => module.value && state.modules.length > 0;
 
     const getLineAttentions = async () => {
       try {
@@ -177,40 +373,24 @@ export default {
       state.captcha = false;
     };
 
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        attentions.value = updatedAvailableAttentionsByCommerce(commerce.id);
-        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = selectedCommerce.queues;
-        checkQueueStatus(attentions);
-        await initQueues();
-        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
-        if (state.modules && state.modules.length > 0) {
-          state.module = state.modules.filter(
-            module => module.id === state.collaborator.moduleId
-          )[0];
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    };
-
     const moduleSelect = async () => {
       try {
         loading.value = true;
         alertError.value = '';
         const id = state.collaborator.id;
-        const body = { module: state.module.id };
+        if (!module.value || !module.value.id) {
+          alertError.value = 'No module selected';
+          loading.value = false;
+          return;
+        }
+        const body = { module: module.value.id };
         await updateModule(id, body);
+        // Update the collaborator's moduleId after successful update
+        state.collaborator.moduleId = module.value.id;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
@@ -222,16 +402,60 @@ export default {
     const initializeQueueStatus = () => {
       if (state.queues && state.queues.length > 0) {
         state.queues.forEach(queue => {
-          state.queueStatus[queue.id] = 0;
+          if (queue && queue.id) {
+            state.queueStatus[queue.id] = 0;
+          }
         });
       }
     };
 
-    watch(attentions, async () => {
-      if (attentions.value && attentions.value && attentions.value.length > 0) {
-        checkQueueStatus(checkQueueStatus);
-      } else {
-        initializeQueueStatus();
+    // Watch attentions ref value for changes
+    // Watch the wrapper so we can track when the ref itself changes
+    watch(
+      () => {
+        // Safely access the current attentions ref via wrapper
+        try {
+          const currentAttentionsRef = attentionsWrapper.value;
+          if (
+            currentAttentionsRef &&
+            currentAttentionsRef.value !== undefined &&
+            currentAttentionsRef.value !== null
+          ) {
+            // Ensure it's always an array and return a serializable value for comparison
+            const array = Array.isArray(currentAttentionsRef.value)
+              ? currentAttentionsRef.value
+              : [];
+            // Return a string representation for deep comparison
+            return JSON.stringify(array.map(a => ({ id: a.id, queueId: a.queueId })));
+          }
+        } catch (error) {
+          console.error('Error accessing attentions.value:', error);
+        }
+        return '[]';
+      },
+      async (newValue, oldValue) => {
+        // Only process if value actually changed
+        if (newValue === oldValue && oldValue !== undefined) {
+          return;
+        }
+
+        // Get the actual array from the ref
+        const currentAttentionsRef = attentionsWrapper.value;
+        if (!currentAttentionsRef) {
+          initializeQueueStatus();
+          return;
+        }
+
+        // Always call checkQueueStatus - it will handle empty arrays correctly
+        await checkQueueStatus(currentAttentionsRef);
+      },
+      { immediate: true }
+    );
+
+    // Cleanup listener on component unmount
+    onUnmounted(() => {
+      if (attentions && attentions._unsubscribe) {
+        attentions._unsubscribe();
       }
     });
 
@@ -241,6 +465,8 @@ export default {
       captchaEnabled,
       loading,
       alertError,
+      commerce,
+      module,
       getQueue,
       isActiveCommerce,
       getLineAttentions,
@@ -249,85 +475,84 @@ export default {
       moduleSelect,
       isActiveModules,
       goBack,
-      selectCommerce,
     };
   },
 };
 </script>
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`collaboratorQueuesView.welcome`)"
-        :toggles="state.toggles"
-        component-name="collaboratorQueuesView"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div id="businessQueuesAdmin-controls" class="control-box">
-          <div class="row">
-            <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t('collaboratorQueuesView.commerce') }} </span>
-              <select
-                class="btn btn-md fw-bold text-dark m-1 select"
-                v-model="state.commerce"
-                @change="selectCommerce(state.commerce)"
-                id="modules"
-              >
-                <option v-for="com in state.commerces" :key="com.id" :value="com">
-                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')"
-              />
-            </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="commerce?.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`collaboratorQueuesView.welcome`)"
+          :toggles="state.toggles"
+          component-name="collaboratorQueuesView"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+          <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+            <Message
+              :title="$t('businessQueuesAdmin.message.4.title')"
+              :content="$t('businessQueuesAdmin.message.4.content')"
+            />
+          </div>
+          <div v-if="!isActiveModules() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.2.title')"
+              :content="$t('collaboratorQueuesView.message.2.content')"
+            />
           </div>
         </div>
-        <div id="module-selector" class="mb-2 mt-1" v-if="isActiveModules()">
-          <span>{{ $t('collaboratorQueuesView.module') }} </span>
-          <select
-            class="btn btn-md btn-light fw-bold text-dark m-1 select"
-            v-model="state.module"
-            id="modules"
-            :disabled="!state.toggles['collaborator.module.update'] || !state.commerce.active"
-            @change="moduleSelect()"
-          >
-            <option v-for="mod in state.modules" :key="mod.name" :value="mod">
-              {{ mod.name }}
-            </option>
-          </select>
-        </div>
-        <div v-if="!isActiveModules() && !loading">
-          <Message
-            :title="$t('collaboratorQueuesView.message.2.title')"
-            :content="$t('collaboratorQueuesView.message.2.content')"
-          />
-        </div>
-      </div>
-      <div id="queues" v-if="isActiveModules() && !loading">
-        <div class="row" v-if="isActiveCommerce()">
-          <div class="choose-attention">
-            <span>{{ $t('collaboratorQueuesView.choose') }}</span>
-          </div>
-          <div
-            v-for="queue in state.queues"
-            :key="queue.id"
-            class="d-grid btn-group btn-group-justified"
-          >
-            <div v-if="captchaEnabled === true">
-              <VueRecaptcha
-                :sitekey="siteKey"
-                @verify="validateCaptchaOk"
-                @error="validateCaptchaError"
-              >
+        <div id="queues" v-if="isActiveModules() && !loading">
+          <div class="row" v-if="isActiveCommerce()">
+            <div class="choose-attention">
+              <span>{{ $t('collaboratorQueuesView.choose') }}</span>
+            </div>
+            <div
+              v-for="queue in state.queues"
+              :key="queue.id"
+              class="d-grid btn-group btn-group-justified"
+            >
+              <div v-if="captchaEnabled === true">
+                <VueRecaptcha
+                  :sitekey="siteKey"
+                  @verify="validateCaptchaOk"
+                  @error="validateCaptchaError"
+                >
+                  <button
+                    v-if="queue.active"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    @click="getQueue(queue)"
+                    :disabled="loading"
+                  >
+                    <div class="row centered">
+                      <div class="col-8">
+                        <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                        {{ queue.name }}
+                      </div>
+                      <div class="col-2">
+                        <span
+                          :class="`badge rounded-pill m-0 indicator ${
+                            state.queueStatus[queue.id] === 0
+                              ? 'text-bg-success'
+                              : 'text-bg-primary'
+                          }`"
+                        >
+                          <i class="bi bi-person-fill"></i>
+                          {{ state.queueStatus[queue.id] }}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </VueRecaptcha>
+              </div>
+              <div v-else>
                 <button
                   v-if="queue.active"
                   type="button"
@@ -352,41 +577,140 @@ export default {
                     </div>
                   </div>
                 </button>
-              </VueRecaptcha>
-            </div>
-            <div v-else>
-              <button
-                v-if="queue.active"
-                type="button"
-                class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                @click="getQueue(queue)"
-                :disabled="loading"
-              >
-                <div class="row centered">
-                  <div class="col-8">
-                    <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
-                    {{ queue.name }}
-                  </div>
-                  <div class="col-2">
-                    <span
-                      :class="`badge rounded-pill m-0 indicator ${
-                        state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
-                      }`"
-                    >
-                      <i class="bi bi-person-fill"></i>
-                      {{ state.queueStatus[queue.id] }}
-                    </span>
-                  </div>
-                </div>
-              </button>
+              </div>
             </div>
           </div>
+          <div v-if="!isActiveCommerce() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.1.title')"
+              :content="$t('collaboratorQueuesView.message.1.content')"
+            />
+          </div>
         </div>
-        <div v-if="!isActiveCommerce() && !loading">
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || commerce?.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="commerce?.logo || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`collaboratorQueuesView.welcome`)"
+              :toggles="state.toggles"
+              component-name="collaboratorQueuesView"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
           <Message
-            :title="$t('collaboratorQueuesView.message.1.title')"
-            :content="$t('collaboratorQueuesView.message.1.content')"
+            :title="$t('businessQueuesAdmin.message.4.title')"
+            :content="$t('businessQueuesAdmin.message.4.content')"
           />
+        </div>
+        <div v-if="!isActiveModules() && !loading">
+          <Message
+            :title="$t('collaboratorQueuesView.message.2.title')"
+            :content="$t('collaboratorQueuesView.message.2.content')"
+          />
+        </div>
+        <div id="queues" v-if="isActiveModules() && !loading">
+          <div class="row" v-if="isActiveCommerce()">
+            <div class="choose-attention">
+              <span>{{ $t('collaboratorQueuesView.choose') }}</span>
+            </div>
+            <div
+              v-for="queue in state.queues"
+              :key="queue.id"
+              class="d-grid btn-group btn-group-justified"
+            >
+              <div v-if="captchaEnabled === true">
+                <VueRecaptcha
+                  :sitekey="siteKey"
+                  @verify="validateCaptchaOk"
+                  @error="validateCaptchaError"
+                >
+                  <button
+                    v-if="queue.active"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                    @click="getQueue(queue)"
+                    :disabled="loading"
+                  >
+                    <div class="row centered">
+                      <div class="col-8">
+                        <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                        {{ queue.name }}
+                      </div>
+                      <div class="col-2">
+                        <span
+                          :class="`badge rounded-pill m-0 indicator ${
+                            state.queueStatus[queue.id] === 0
+                              ? 'text-bg-success'
+                              : 'text-bg-primary'
+                          }`"
+                        >
+                          <i class="bi bi-person-fill"></i>
+                          {{ state.queueStatus[queue.id] }}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                </VueRecaptcha>
+              </div>
+              <div v-else>
+                <button
+                  v-if="queue.active"
+                  type="button"
+                  class="btn btn-lg btn-block btn-size col-9 fw-bold btn-dark rounded-pill mt-2 mb-2"
+                  @click="getQueue(queue)"
+                  :disabled="loading"
+                >
+                  <div class="row centered">
+                    <div class="col-8">
+                      <i v-if="queue.type === 'COLLABORATOR'" class="bi bi-person-fill"></i>
+                      {{ queue.name }}
+                    </div>
+                    <div class="col-2">
+                      <span
+                        :class="`badge rounded-pill m-0 indicator ${
+                          state.queueStatus[queue.id] === 0 ? 'text-bg-success' : 'text-bg-primary'
+                        }`"
+                      >
+                        <i class="bi bi-person-fill"></i>
+                        {{ state.queueStatus[queue.id] }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveCommerce() && !loading">
+            <Message
+              :title="$t('collaboratorQueuesView.message.1.title')"
+              :content="$t('collaboratorQueuesView.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -404,5 +728,52 @@ export default {
 }
 .indicator {
   font-size: 0.7rem;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

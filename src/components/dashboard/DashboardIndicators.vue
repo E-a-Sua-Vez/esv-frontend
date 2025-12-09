@@ -17,6 +17,9 @@ import AttentionClientContactDetails from './domain/AttentionClientContactDetail
 import AttentionDaysSinceDetails from './domain/AttentionDaysSinceDetails.vue';
 import CollectionDetails from './domain/CollectionDetails.vue';
 import DetailItem from './common/DetailItem.vue';
+import SmartRecommendationsPanel from './domain/SmartRecommendationsPanel.vue';
+import GaugeChart from './domain/GaugeChart.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'DashboardIndicators',
@@ -38,6 +41,9 @@ export default {
     AttentionDaysSinceDetails,
     CollectionDetails,
     DetailItem,
+    SmartRecommendationsPanel,
+    GaugeChart,
+    Popper,
   },
   props: {
     showIndicators: { type: Boolean, default: false },
@@ -46,6 +52,7 @@ export default {
     startDate: { type: String, default: undefined },
     endDate: { type: String, default: undefined },
     commerce: { type: Object, default: undefined },
+    hideSummary: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -132,6 +139,124 @@ export default {
         },
       };
     },
+    healthScore() {
+      if (!this.calculatedMetrics) return { total: 0, operational: 0, customer: 0, financial: 0 };
+
+      const metrics = this.calculatedMetrics;
+      const attention = metrics['attention.created'] || {};
+      const booking = metrics['booking.created'] || {};
+      const survey = metrics['survey.created'] || {};
+
+      // Operational Health (40%)
+      let operationalScore = 50; // Base score
+
+      // Booking conversion rate
+      if (booking.bookingNumber > 0 && booking.bookingFlow?.datasets?.[1] !== undefined) {
+        const conversionRate = (booking.bookingFlow.datasets[1] / booking.bookingNumber) * 100;
+        operationalScore += (conversionRate / 100) * 30; // Max 30 points
+      }
+
+      // Attention efficiency (time-based)
+      if (attention.avgDuration) {
+        const avgMinutes = attention.avgDuration / 60;
+        if (avgMinutes <= 20) operationalScore += 20;
+        else if (avgMinutes <= 30) operationalScore += 10;
+      }
+
+      operationalScore = Math.min(100, Math.max(0, operationalScore));
+
+      // Customer Health (35%)
+      let customerScore = 50; // Base score
+
+      // CSAT Score (0-5 scale, target: 4+)
+      if (survey.avgRating) {
+        customerScore += (survey.avgRating / 5) * 25; // Max 25 points
+      }
+
+      // NPS Score (-100 to 100, target: 50+)
+      if (survey.nps !== undefined) {
+        const npsNormalized = ((survey.nps + 100) / 200) * 100; // Normalize to 0-100
+        customerScore = customerScore * 0.6 + npsNormalized * 0.4; // Weighted
+      }
+
+      customerScore = Math.min(100, Math.max(0, customerScore));
+
+      // Financial Health (25%)
+      let financialScore = 50; // Base score
+
+      // Growth trend
+      if (attention.attentionNumber && attention.pastPeriodAttentionNumber?.number) {
+        const growth =
+          ((attention.attentionNumber - attention.pastPeriodAttentionNumber.number) /
+            (attention.pastPeriodAttentionNumber.number || 1)) *
+          100;
+        if (growth > 0) financialScore += Math.min(25, growth);
+        else financialScore += Math.max(-25, growth);
+      }
+
+      financialScore = Math.min(100, Math.max(0, financialScore));
+
+      // Total Health Score (weighted average)
+      const totalScore = operationalScore * 0.4 + customerScore * 0.35 + financialScore * 0.25;
+
+      return {
+        total: Math.round(totalScore),
+        operational: Math.round(operationalScore),
+        customer: Math.round(customerScore),
+        financial: Math.round(financialScore),
+      };
+    },
+    gaugeMetrics() {
+      if (!this.calculatedMetrics) return [];
+
+      const metrics = this.calculatedMetrics;
+      const attention = metrics['attention.created'] || {};
+      const booking = metrics['booking.created'] || {};
+      const survey = metrics['survey.created'] || {};
+
+      const gauges = [];
+
+      // Conversion Rate Gauge
+      if (booking.bookingNumber > 0 && booking.bookingFlow?.datasets?.[1] !== undefined) {
+        const conversionRate = (booking.bookingFlow.datasets[1] / booking.bookingNumber) * 100;
+        gauges.push({
+          key: 'conversion',
+          value: conversionRate,
+          label: this.$t('dashboard.gauge.conversion') || 'Tasa de Conversión',
+          unit: '%',
+          threshold: 70,
+          color: 'success',
+        });
+      }
+
+      // CSAT Gauge
+      if (survey.avgRating) {
+        const csatPercentage = (survey.avgRating / 5) * 100;
+        gauges.push({
+          key: 'csat',
+          value: csatPercentage,
+          label: this.$t('dashboard.gauge.csat') || 'Satisfacción (CSAT)',
+          unit: '%',
+          threshold: 80,
+          color: 'warning',
+        });
+      }
+
+      // NPS Gauge (normalized to 0-100)
+      if (survey.nps !== undefined) {
+        const npsNormalized = ((survey.nps + 100) / 200) * 100;
+        gauges.push({
+          key: 'nps',
+          value: npsNormalized,
+          label: this.$t('dashboard.gauge.nps') || 'NPS Score',
+          unit: '%',
+          threshold: 75,
+          color: 'primary',
+        });
+      }
+
+      return gauges;
+    },
   },
   methods: {
     calculateTrend(current, previous) {
@@ -140,6 +265,20 @@ export default {
       if (change > 5) return { value: Math.abs(change), type: 'up' };
       if (change < -5) return { value: Math.abs(change), type: 'down' };
       return { value: Math.abs(change), type: 'neutral' };
+    },
+    getGaugeTooltip(key) {
+      const tooltips = {
+        conversion:
+          this.$t('dashboard.gauge.tooltip.conversion') ||
+          'La tasa de conversión mide el porcentaje de reservas que se confirman exitosamente. Un valor alto indica que los clientes están cumpliendo con sus citas.',
+        csat:
+          this.$t('dashboard.gauge.tooltip.csat') ||
+          'CSAT (Customer Satisfaction) mide la satisfacción del cliente en una escala de 1 a 5. Este indicador muestra el porcentaje equivalente de satisfacción.',
+        nps:
+          this.$t('dashboard.gauge.tooltip.nps') ||
+          'NPS (Net Promoter Score) mide la lealtad del cliente. Va de -100 a +100. Valores positivos indican más promotores que detractores.',
+      };
+      return tooltips[key] || '';
     },
     getDaysInPeriod() {
       if (!this.startDate || !this.endDate) return 0;
@@ -189,634 +328,855 @@ export default {
       if (value >= 0) return 'bi-info-circle-fill';
       return 'bi-exclamation-triangle-fill';
     },
+    getHealthScoreClass(score) {
+      if (score >= 80) return 'health-excellent';
+      if (score >= 60) return 'health-good';
+      if (score >= 40) return 'health-warning';
+      return 'health-poor';
+    },
+    async handleDownload() {
+      try {
+        await this.exportToPDF();
+      } catch (error) {
+        console.error('Error handling download:', error);
+        this.loading = false;
+        this.detailsOpened = false;
+      }
+    },
     async exportToPDF() {
-      this.loading = true;
-      this.detailsOpened = true;
-      const filename = `indicators-${this.commerce.name}-${this.commerce.tag}-${this.startDate}-${this.endDate}.pdf`;
-      const options = {
-        margin: 0.5,
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      };
-      let doc = document.getElementById('indicators-component');
-      document.getElementById('pdf-header').style.display = 'block';
-      document.getElementById('pdf-footer').style.display = 'block';
-      setTimeout(async () => {
-        try {
-          const html2pdf = await lazyLoadHtml2Pdf();
-          html2pdf()
-            .set(options)
-            .from(doc)
-            .save()
-            .then(() => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              doc = undefined;
-              this.detailsOpened = false;
-              this.loading = false;
-            })
-            .catch(error => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              this.detailsOpened = false;
-              doc = undefined;
-              this.loading = false;
-            });
-        } catch (error) {
-          document.getElementById('pdf-header').style.display = 'none';
-          document.getElementById('pdf-footer').style.display = 'none';
-          this.detailsOpened = false;
-          doc = undefined;
+      try {
+        this.loading = true;
+        this.detailsOpened = true;
+
+        // Validate commerce exists
+        if (!this.commerce || !this.commerce.id) {
+          console.error('Commerce is not available for PDF export');
           this.loading = false;
+          this.detailsOpened = false;
+          return;
         }
-      }, 1000);
+
+        const commerceName = this.commerce.name || 'commerce';
+        const commerceTag = this.commerce.tag || 'tag';
+        const filename = `indicators-${commerceName}-${commerceTag}-${this.startDate || 'start'}-${
+          this.endDate || 'end'
+        }.pdf`;
+        const options = {
+          margin: 0.5,
+          filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        };
+
+        let doc = document.getElementById('indicators-component');
+        const pdfHeader = document.getElementById('pdf-header');
+        const pdfFooter = document.getElementById('pdf-footer');
+
+        if (!doc) {
+          console.error('indicators-component element not found');
+          this.loading = false;
+          this.detailsOpened = false;
+          return;
+        }
+
+        if (pdfHeader) pdfHeader.style.display = 'block';
+        if (pdfFooter) pdfFooter.style.display = 'block';
+
+        setTimeout(async () => {
+          try {
+            const html2pdf = await lazyLoadHtml2Pdf();
+            html2pdf()
+              .set(options)
+              .from(doc)
+              .save()
+              .then(() => {
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                if (pdfFooter) pdfFooter.style.display = 'none';
+                doc = undefined;
+                this.detailsOpened = false;
+                this.loading = false;
+              })
+              .catch(error => {
+                console.error('Error generating PDF:', error);
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                if (pdfFooter) pdfFooter.style.display = 'none';
+                this.detailsOpened = false;
+                doc = undefined;
+                this.loading = false;
+              });
+          } catch (error) {
+            console.error('Error loading html2pdf:', error);
+            if (pdfHeader) pdfHeader.style.display = 'none';
+            if (pdfFooter) pdfFooter.style.display = 'none';
+            this.detailsOpened = false;
+            doc = undefined;
+            this.loading = false;
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('Error in exportToPDF:', error);
+        this.loading = false;
+        this.detailsOpened = false;
+      }
     },
   },
 };
 </script>
 
 <template>
-  <div
-    id="indicators"
-    class="row"
-    v-if="showIndicators === true && toggles['dashboard.indicators.view']"
-  >
-    <SimpleDownloadCard
-      :download="toggles['dashboard.reports.indicators']"
-      :title="$t('dashboard.reports.indicators.title')"
-      :show-tooltip="true"
-      :description="$t('dashboard.reports.indicators.description')"
-      :icon="'bi-file-earmark-pdf'"
-      @download="exportToPDF"
-      :can-download="toggles['dashboard.reports.indicators'] === true"
-    ></SimpleDownloadCard>
-    <Spinner :show="loading"></Spinner>
-    <div id="indicators-component">
-      <PDFHeader
-        :show="toggles['dashboard.reports.indicators']"
+  <div>
+    <div
+      id="indicators"
+      class="row"
+      v-if="showIndicators === true && toggles['dashboard.indicators.view']"
+    >
+      <SimpleDownloadCard
+        v-if="!hideSummary"
+        :download="toggles['dashboard.reports.indicators']"
         :title="$t('dashboard.reports.indicators.title')"
-        :start-date="startDate"
-        :end-date="endDate"
-        :commerce="commerce"
-      >
-      </PDFHeader>
-
-      <!-- Enhanced Summary Section -->
-      <div class="dashboard-summary-section" v-if="!detailsOpened">
-        <div class="summary-header">
-          <h3 class="summary-title">
-            <i class="bi bi-speedometer2"></i>
-            {{ $t('dashboard.summary.title') || 'Resumen Ejecutivo' }}
-          </h3>
-          <p class="summary-subtitle">
-            {{ $t('dashboard.summary.subtitle') || 'Métricas clave y proyecciones' }}
-          </p>
+        :show-tooltip="true"
+        :description="$t('dashboard.reports.indicators.description')"
+        :icon="'bi-file-earmark-pdf'"
+        @download="handleDownload"
+        :can-download="toggles['dashboard.reports.indicators'] === true"
+      ></SimpleDownloadCard>
+      <Spinner :show="loading"></Spinner>
+      <div id="indicators-component">
+        <!-- Health Score Card -->
+        <div class="health-score-section" v-if="!detailsOpened && !hideSummary">
+          <div class="health-score-card">
+            <div class="health-score-header">
+              <div class="health-score-icon">
+                <i class="bi bi-heart-pulse-fill"></i>
+              </div>
+              <div class="health-score-title-section">
+                <div class="health-score-title-wrapper">
+                  <h3 class="health-score-title">
+                    {{ $t('dashboard.healthScore.title') || 'Health Score del Negocio' }}
+                  </h3>
+                  <Popper
+                    :class="'dark'"
+                    arrow
+                    disable-click-away
+                    :content="
+                      $t('dashboard.healthScore.tooltip') ||
+                      'El Health Score es un indicador compuesto que evalúa la salud general de tu negocio en tres dimensiones: operacional (eficiencia y productividad), cliente (satisfacción y lealtad) y financiera (rentabilidad y crecimiento). Un score alto indica un negocio saludable y sostenible.'
+                    "
+                  >
+                    <i class="bi bi-info-circle-fill health-score-info-icon"></i>
+                  </Popper>
+                </div>
+                <p class="health-score-subtitle">
+                  {{
+                    $t('dashboard.healthScore.subtitle') ||
+                    'Indicador general de salud operativa, cliente y financiera'
+                  }}
+                </p>
+              </div>
+            </div>
+            <div class="health-score-main">
+              <div class="health-score-value" :class="getHealthScoreClass(healthScore.total)">
+                <span class="health-score-number">{{ healthScore.total }}</span>
+                <span class="health-score-max">/100</span>
+              </div>
+              <div class="health-score-bar">
+                <div
+                  class="health-score-progress"
+                  :class="getHealthScoreClass(healthScore.total)"
+                  :style="`width: ${healthScore.total}%`"
+                ></div>
+              </div>
+            </div>
+            <div class="health-score-breakdown">
+              <div class="health-score-item">
+                <div class="health-score-item-label">
+                  <i class="bi bi-gear-fill"></i>
+                  <span>{{ $t('dashboard.healthScore.operational') || 'Operacional' }}</span>
+                  <Popper
+                    :class="'dark'"
+                    arrow
+                    disable-click-away
+                    :content="
+                      $t('dashboard.healthScore.tooltips.operational') ||
+                      'Evalúa la eficiencia operativa: tiempo promedio de atención, productividad del personal, y capacidad de respuesta del negocio.'
+                    "
+                  >
+                    <i class="bi bi-info-circle health-score-item-info"></i>
+                  </Popper>
+                </div>
+                <div
+                  class="health-score-item-value"
+                  :class="getHealthScoreClass(healthScore.operational)"
+                >
+                  {{ healthScore.operational }}/100
+                </div>
+                <div class="health-score-item-bar">
+                  <div
+                    class="health-score-item-progress"
+                    :class="getHealthScoreClass(healthScore.operational)"
+                    :style="`width: ${healthScore.operational}%`"
+                  ></div>
+                </div>
+              </div>
+              <div class="health-score-item">
+                <div class="health-score-item-label">
+                  <i class="bi bi-people-fill"></i>
+                  <span>{{ $t('dashboard.healthScore.customer') || 'Cliente' }}</span>
+                  <Popper
+                    :class="'dark'"
+                    arrow
+                    disable-click-away
+                    :content="
+                      $t('dashboard.healthScore.tooltips.customer') ||
+                      'Mide la satisfacción y lealtad del cliente: CSAT, NPS, tasa de retorno y calidad de la experiencia del cliente.'
+                    "
+                  >
+                    <i class="bi bi-info-circle health-score-item-info"></i>
+                  </Popper>
+                </div>
+                <div
+                  class="health-score-item-value"
+                  :class="getHealthScoreClass(healthScore.customer)"
+                >
+                  {{ healthScore.customer }}/100
+                </div>
+                <div class="health-score-item-bar">
+                  <div
+                    class="health-score-item-progress"
+                    :class="getHealthScoreClass(healthScore.customer)"
+                    :style="`width: ${healthScore.customer}%`"
+                  ></div>
+                </div>
+              </div>
+              <div class="health-score-item">
+                <div class="health-score-item-label">
+                  <i class="bi bi-cash-coin"></i>
+                  <span>{{ $t('dashboard.healthScore.financial') || 'Financiero' }}</span>
+                  <Popper
+                    :class="'dark'"
+                    arrow
+                    disable-click-away
+                    :content="
+                      $t('dashboard.healthScore.tooltips.financial') ||
+                      'Analiza la salud financiera: ingresos, rentabilidad, crecimiento y sostenibilidad económica del negocio.'
+                    "
+                  >
+                    <i class="bi bi-info-circle health-score-item-info"></i>
+                  </Popper>
+                </div>
+                <div
+                  class="health-score-item-value"
+                  :class="getHealthScoreClass(healthScore.financial)"
+                >
+                  {{ healthScore.financial }}/100
+                </div>
+                <div class="health-score-item-bar">
+                  <div
+                    class="health-score-item-progress"
+                    :class="getHealthScoreClass(healthScore.financial)"
+                    :style="`width: ${healthScore.financial}%`"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="summary-cards-grid">
-          <!-- Attention Summary Card -->
-          <div
-            class="summary-card summary-card-primary"
-            v-if="toggles['dashboard.attention-number.view']"
-          >
-            <div class="summary-card-header">
-              <div class="summary-icon-wrapper summary-icon-primary">
-                <i class="bi bi-qr-code"></i>
-              </div>
-              <div class="summary-card-title">
-                <span class="summary-label">{{
-                  $t('dashboard.items.attentions.1') || 'Atenciones'
-                }}</span>
-                <span class="summary-period"
-                  >{{ getDaysInPeriod() }} {{ $t('dashboard.days') || 'días' }}</span
+        <!-- Gauge Charts Section -->
+        <div
+          class="gauge-charts-section"
+          v-if="!detailsOpened && !hideSummary && gaugeMetrics.length > 0"
+        >
+          <div class="section-header">
+            <h4 class="section-title">
+              <i class="bi bi-speedometer2"></i>
+              {{ $t('dashboard.gauge.title') || 'KPIs Principales' }}
+            </h4>
+          </div>
+          <div class="gauge-charts-grid">
+            <div v-for="gauge in gaugeMetrics" :key="gauge.key" class="gauge-chart-card">
+              <div class="gauge-card-header">
+                <h5 class="gauge-card-title">{{ gauge.label }}</h5>
+                <GaugeChart
+                  :value="gauge.value"
+                  :min="0"
+                  :max="100"
+                  :label="gauge.label"
+                  :unit="gauge.unit"
+                  :threshold="gauge.threshold"
+                  :color="gauge.color"
+                  :size="280"
+                />
+                <Popper
+                  :class="'dark'"
+                  arrow
+                  disable-click-away
+                  :content="getGaugeTooltip(gauge.key)"
                 >
-              </div>
-            </div>
-            <div class="summary-value-section">
-              <div class="summary-main-value">
-                {{ summaryMetrics.attention.value.toLocaleString() }}
-              </div>
-              <div class="summary-trend" :class="getTrendClass(summaryMetrics.attention.trend)">
-                <i :class="getTrendIcon(summaryMetrics.attention.trend)"></i>
-                <span>{{ summaryMetrics.attention.trend.value.toFixed(1) }}%</span>
-              </div>
-            </div>
-            <div class="summary-insights">
-              <div class="insight-item">
-                <i class="bi bi-clock-history"></i>
-                <span
-                  >{{ $t('dashboard.avgDuration') || 'Promedio' }}:
-                  {{ Math.round(summaryMetrics.attention.avgDuration) }}s</span
-                >
-              </div>
-              <div class="insight-item insight-projection">
-                <i class="bi bi-graph-up-arrow"></i>
-                <span
-                  >{{ $t('dashboard.projection') || 'Proyección mensual' }}: ~{{
-                    summaryMetrics.attention.projection.toLocaleString()
-                  }}</span
-                >
+                  <i class="bi bi-info-circle-fill gauge-info-icon"></i>
+                </Popper>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Booking Summary Card -->
-          <div
-            class="summary-card summary-card-success"
-            v-if="toggles['dashboard.booking-number.view']"
-          >
-            <div class="summary-card-header">
-              <div class="summary-icon-wrapper summary-icon-success">
-                <i class="bi bi-calendar2-check-fill"></i>
-              </div>
-              <div class="summary-card-title">
-                <span class="summary-label">{{
-                  $t('dashboard.items.attentions.27') || 'Reservas'
-                }}</span>
-                <span class="summary-period"
-                  >{{ getDaysInPeriod() }} {{ $t('dashboard.days') || 'días' }}</span
-                >
-              </div>
-            </div>
-            <div class="summary-value-section">
-              <div class="summary-main-value">
-                {{ summaryMetrics.booking.value.toLocaleString() }}
-              </div>
-              <div class="summary-trend" :class="getTrendClass(summaryMetrics.booking.trend)">
-                <i :class="getTrendIcon(summaryMetrics.booking.trend)"></i>
-                <span>{{ summaryMetrics.booking.trend.value.toFixed(1) }}%</span>
-              </div>
-            </div>
-            <div class="summary-insights">
-              <div class="insight-item">
-                <i class="bi bi-hourglass-split"></i>
-                <span
-                  >{{ $t('dashboard.pending') || 'Pendientes' }}:
-                  {{ summaryMetrics.booking.pending }}</span
-                >
-              </div>
-              <div class="insight-item insight-projection">
-                <i class="bi bi-graph-up-arrow"></i>
-                <span
-                  >{{ $t('dashboard.projection') || 'Proyección mensual' }}: ~{{
-                    summaryMetrics.booking.projection.toLocaleString()
-                  }}</span
-                >
-              </div>
-            </div>
-          </div>
+        <!-- Smart Recommendations Panel -->
+        <SmartRecommendationsPanel
+          v-if="!detailsOpened && !hideSummary"
+          :calculated-metrics="calculatedMetrics"
+          :commerce="commerce"
+        />
 
-          <!-- Rating Summary Card (CSAT) -->
-          <div
-            class="summary-card summary-card-warning"
-            v-if="toggles['dashboard.attention-rating-avg.view']"
-          >
-            <div class="summary-card-header">
-              <div class="summary-icon-wrapper summary-icon-warning">
-                <i class="bi bi-star-fill"></i>
-              </div>
-              <div class="summary-card-title">
-                <span class="summary-label">{{
-                  $t('dashboard.items.attentions.3') || 'Calificación'
-                }}</span>
-                <span class="summary-period"
-                  >{{ summaryMetrics.rating.count }}
-                  {{ $t('dashboard.ratings') || 'evaluaciones' }}</span
-                >
-              </div>
-            </div>
-            <div class="summary-value-section">
-              <div class="summary-main-value">{{ summaryMetrics.rating.value.toFixed(1) }}</div>
-              <div class="summary-rating-stars">
-                <i
-                  v-for="n in 5"
-                  :key="n"
-                  class="bi"
-                  :class="n <= Math.round(summaryMetrics.rating.value) ? 'bi-star-fill' : 'bi-star'"
-                ></i>
-              </div>
-            </div>
+        <!-- Enhanced Summary Section -->
+        <div class="dashboard-summary-section" v-if="!detailsOpened && !hideSummary">
+          <div class="summary-cards-grid">
+            <!-- Attention Summary Card -->
             <div
-              class="summary-status-badge"
-              :class="getCSATStatus(summaryMetrics.rating.value).class"
+              class="summary-card summary-card-primary"
+              v-if="toggles['dashboard.attention-number.view']"
             >
-              <i :class="getCSATIcon(summaryMetrics.rating.value)"></i>
-              <span>{{ getCSATStatus(summaryMetrics.rating.value).label }}</span>
-            </div>
-            <div class="summary-insights">
-              <div class="insight-item">
-                <i class="bi bi-people-fill"></i>
-                <span
-                  >{{ summaryMetrics.rating.count }}
-                  {{ $t('dashboard.responses') || 'respuestas' }}</span
-                >
+              <div class="summary-card-header">
+                <div class="summary-icon-wrapper summary-icon-primary">
+                  <i class="bi bi-qr-code"></i>
+                </div>
+                <div class="summary-card-title">
+                  <span class="summary-label">{{
+                    $t('dashboard.items.attentions.1') || 'Atenciones'
+                  }}</span>
+                  <span class="summary-period"
+                    >{{ getDaysInPeriod() }} {{ $t('dashboard.days') || 'días' }}</span
+                  >
+                </div>
               </div>
-              <div class="insight-item" :class="getTrendClass(summaryMetrics.rating.trend)">
-                <i :class="getTrendIcon(summaryMetrics.rating.trend)"></i>
-                <span
-                  >{{ summaryMetrics.rating.trend.value.toFixed(1) }}%
-                  {{ $t('dashboard.vsPrevious') || 'vs período anterior' }}</span
-                >
+              <div class="summary-value-section">
+                <div class="summary-main-value">
+                  {{ summaryMetrics.attention.value.toLocaleString() }}
+                </div>
+                <div class="summary-trend" :class="getTrendClass(summaryMetrics.attention.trend)">
+                  <i :class="getTrendIcon(summaryMetrics.attention.trend)"></i>
+                  <span>{{ summaryMetrics.attention.trend.value.toFixed(1) }}%</span>
+                </div>
+              </div>
+              <div class="summary-insights">
+                <div class="insight-item">
+                  <i class="bi bi-clock-history"></i>
+                  <span
+                    >{{ $t('dashboard.avgDuration') || 'Promedio' }}:
+                    {{ Math.round(summaryMetrics.attention.avgDuration) }}s</span
+                  >
+                </div>
+                <div class="insight-item insight-projection">
+                  <i class="bi bi-graph-up-arrow"></i>
+                  <span
+                    >{{ $t('dashboard.projection') || 'Proyección mensual' }}: ~{{
+                      summaryMetrics.attention.projection.toLocaleString()
+                    }}</span
+                  >
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- NPS Summary Card -->
-          <div
-            class="summary-card summary-card-info"
-            v-if="toggles['dashboard.attention-nps-avg.view']"
-          >
-            <div class="summary-card-header">
-              <div class="summary-icon-wrapper summary-icon-info">
-                <i class="bi bi-megaphone-fill"></i>
+            <!-- Booking Summary Card -->
+            <div
+              class="summary-card summary-card-success"
+              v-if="toggles['dashboard.booking-number.view']"
+            >
+              <div class="summary-card-header">
+                <div class="summary-icon-wrapper summary-icon-success">
+                  <i class="bi bi-calendar2-check-fill"></i>
+                </div>
+                <div class="summary-card-title">
+                  <span class="summary-label">{{
+                    $t('dashboard.items.attentions.27') || 'Reservas'
+                  }}</span>
+                  <span class="summary-period"
+                    >{{ getDaysInPeriod() }} {{ $t('dashboard.days') || 'días' }}</span
+                  >
+                </div>
               </div>
-              <div class="summary-card-title">
-                <span class="summary-label">{{
-                  $t('dashboard.items.attentions.24') || 'NPS'
-                }}</span>
-                <span class="summary-period"
-                  >{{ summaryMetrics.nps.count }}
-                  {{ $t('dashboard.responses') || 'respuestas' }}</span
-                >
+              <div class="summary-value-section">
+                <div class="summary-main-value">
+                  {{ summaryMetrics.booking.value.toLocaleString() }}
+                </div>
+                <div class="summary-trend" :class="getTrendClass(summaryMetrics.booking.trend)">
+                  <i :class="getTrendIcon(summaryMetrics.booking.trend)"></i>
+                  <span>{{ summaryMetrics.booking.trend.value.toFixed(1) }}%</span>
+                </div>
+              </div>
+              <div class="summary-insights">
+                <div class="insight-item">
+                  <i class="bi bi-hourglass-split"></i>
+                  <span
+                    >{{ $t('dashboard.pending') || 'Pendientes' }}:
+                    {{ summaryMetrics.booking.pending }}</span
+                  >
+                </div>
+                <div class="insight-item insight-projection">
+                  <i class="bi bi-graph-up-arrow"></i>
+                  <span
+                    >{{ $t('dashboard.projection') || 'Proyección mensual' }}: ~{{
+                      summaryMetrics.booking.projection.toLocaleString()
+                    }}</span
+                  >
+                </div>
               </div>
             </div>
-            <div class="summary-value-section">
-              <div class="summary-main-value" :class="getNPSClass(summaryMetrics.nps.value)">
-                {{ summaryMetrics.nps.value > 0 ? '+' : '' }}{{ summaryMetrics.nps.value }}
+
+            <!-- Rating Summary Card (CSAT) -->
+            <div
+              class="summary-card summary-card-warning"
+              v-if="toggles['dashboard.attention-rating-avg.view']"
+            >
+              <div class="summary-card-header">
+                <div class="summary-icon-wrapper summary-icon-warning">
+                  <i class="bi bi-star-fill"></i>
+                </div>
+                <div class="summary-card-title">
+                  <span class="summary-label">{{
+                    $t('dashboard.items.attentions.3') || 'Calificación'
+                  }}</span>
+                  <span class="summary-period"
+                    >{{ summaryMetrics.rating.count }}
+                    {{ $t('dashboard.ratings') || 'evaluaciones' }}</span
+                  >
+                </div>
               </div>
-              <div class="summary-nps-label" :class="getNPSClass(summaryMetrics.nps.value)">
-                {{ getNPSLabel(summaryMetrics.nps.value) }}
+              <div class="summary-value-section">
+                <div class="summary-main-value">{{ summaryMetrics.rating.value.toFixed(1) }}</div>
+                <div class="summary-rating-stars">
+                  <i
+                    v-for="n in 5"
+                    :key="n"
+                    class="bi"
+                    :class="
+                      n <= Math.round(summaryMetrics.rating.value) ? 'bi-star-fill' : 'bi-star'
+                    "
+                  ></i>
+                </div>
+              </div>
+              <div
+                class="summary-status-badge"
+                :class="getCSATStatus(summaryMetrics.rating.value).class"
+              >
+                <i :class="getCSATIcon(summaryMetrics.rating.value)"></i>
+                <span>{{ getCSATStatus(summaryMetrics.rating.value).label }}</span>
+              </div>
+              <div class="summary-insights">
+                <div class="insight-item">
+                  <i class="bi bi-people-fill"></i>
+                  <span
+                    >{{ summaryMetrics.rating.count }}
+                    {{ $t('dashboard.responses') || 'respuestas' }}</span
+                  >
+                </div>
+                <div class="insight-item" :class="getTrendClass(summaryMetrics.rating.trend)">
+                  <i :class="getTrendIcon(summaryMetrics.rating.trend)"></i>
+                  <span
+                    >{{ summaryMetrics.rating.trend.value.toFixed(1) }}%
+                    {{ $t('dashboard.vsPrevious') || 'vs período anterior' }}</span
+                  >
+                </div>
               </div>
             </div>
-            <div class="summary-status-badge" :class="getNPSClass(summaryMetrics.nps.value)">
-              <i :class="getNPSStatusIcon(summaryMetrics.nps.value)"></i>
-              <span>{{ getNPSLabel(summaryMetrics.nps.value) }}</span>
-            </div>
-            <div class="summary-insights">
-              <div class="insight-item">
-                <i class="bi bi-bar-chart-fill"></i>
-                <span>{{ $t('dashboard.npsScore') || 'Puntuación NPS' }}</span>
+
+            <!-- NPS Summary Card -->
+            <div
+              class="summary-card summary-card-info"
+              v-if="toggles['dashboard.attention-nps-avg.view']"
+            >
+              <div class="summary-card-header">
+                <div class="summary-icon-wrapper summary-icon-info">
+                  <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <div class="summary-card-title">
+                  <span class="summary-label">{{
+                    $t('dashboard.items.attentions.24') || 'NPS'
+                  }}</span>
+                  <span class="summary-period"
+                    >{{ summaryMetrics.nps.count }}
+                    {{ $t('dashboard.responses') || 'respuestas' }}</span
+                  >
+                </div>
               </div>
-              <div class="insight-item">
-                <i class="bi bi-info-circle"></i>
-                <span>{{ getNPSDescription(summaryMetrics.nps.value) }}</span>
+              <div class="summary-value-section">
+                <div class="summary-main-value" :class="getNPSClass(summaryMetrics.nps.value)">
+                  {{ summaryMetrics.nps.value > 0 ? '+' : '' }}{{ summaryMetrics.nps.value }}
+                </div>
+                <div class="summary-nps-label" :class="getNPSClass(summaryMetrics.nps.value)">
+                  {{ getNPSLabel(summaryMetrics.nps.value) }}
+                </div>
+              </div>
+              <div class="summary-status-badge" :class="getNPSClass(summaryMetrics.nps.value)">
+                <i :class="getNPSStatusIcon(summaryMetrics.nps.value)"></i>
+                <span>{{ getNPSLabel(summaryMetrics.nps.value) }}</span>
+              </div>
+              <div class="summary-insights">
+                <div class="insight-item">
+                  <i class="bi bi-bar-chart-fill"></i>
+                  <span>{{ $t('dashboard.npsScore') || 'Puntuación NPS' }}</span>
+                </div>
+                <div class="insight-item">
+                  <i class="bi bi-info-circle"></i>
+                  <span>{{ getNPSDescription(summaryMetrics.nps.value) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Detailed Metrics Section -->
+        <!-- Show detailed metrics always, or when summary is hidden (hideSummary=true) -->
+        <!-- When exporting to PDF (detailsOpened=true), show detailed metrics even if hideSummary=false -->
+        <div class="dashboard-detailed-section" v-if="true">
+          <div class="section-header">
+            <h4 class="section-title">
+              <i class="bi bi-list-ul"></i>
+              {{ $t('dashboard.detailedMetrics') || 'Métricas Detalladas' }}
+            </h4>
+          </div>
+
+          <div id="attention-number">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-number.view']"
+              :data="calculatedMetrics['attention.created'].attentionNumber"
+              :subdatapastperiod="calculatedMetrics['attention.created'].pastPeriodAttentionNumber"
+              :subdatapastmonth="calculatedMetrics['attention.created'].pastMonthAttentionNumber"
+              :subdatacurrentperiod="
+                calculatedMetrics['attention.created'].currentMonthAttentionNumber
+              "
+              :title="$t('dashboard.items.attentions.1')"
+              :show-tooltip="false"
+              :icon="'bi-qr-code'"
+              :icon-style-class="'blue-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <div id="attention-number-details" class="modern-details-grid">
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.16')"
+                    :value="calculatedMetrics['attention.created'].typesFlow.STANDARD || 0"
+                    icon="bi-person-fill"
+                    icon-class="green-icon"
+                  />
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.17')"
+                    :value="calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0"
+                    icon="bi-people-fill"
+                    icon-class="red-icon"
+                  />
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.18')"
+                    :value="calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0"
+                    icon="bi-star-fill"
+                    icon-class="yellow-icon"
+                  />
+                </div>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="booking-number">
+            <DetailsCard
+              :show="!!toggles['dashboard.booking-number.view']"
+              :data="calculatedMetrics['booking.created'].bookingNumber"
+              :subdata="calculatedMetrics['booking.created'].stillPendingBookings"
+              :title="$t('dashboard.items.attentions.27')"
+              :show-tooltip="true"
+              :description="$t('dashboard.booking')"
+              :icon="'bi-calendar2-check-fill'"
+              :icon-style-class="'orange-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <div id="booking-number-details" class="modern-details-grid">
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.28')"
+                    :value="calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0"
+                    icon="bi-calendar-plus-fill"
+                    icon-class="yellow-icon"
+                  />
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.35')"
+                    :value="calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0"
+                    icon="bi-calendar2-check-fill"
+                    icon-class="blue-icon"
+                  />
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.29')"
+                    :value="calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0"
+                    icon="bi-calendar2-heart-fill"
+                    icon-class="green-icon"
+                  />
+                  <DetailItem
+                    :label="$t('dashboard.items.attentions.30')"
+                    :value="calculatedMetrics['booking.created'].bookingFlow.datasets[3] || 0"
+                    icon="bi-calendar-x-fill"
+                    icon-class="red-icon"
+                  />
+                </div>
+              </template>
+            </DetailsCard>
+          </div>
+          <div>
+            <div class="row">
+              <div id="attention-time-avg" class="col">
+                <SimpleCard
+                  :show="!!toggles['dashboard.attention-time-avg.view']"
+                  :data="calculatedMetrics['attention.created'].avgDuration"
+                  :title="$t('dashboard.items.attentions.2')"
+                  :show-tooltip="true"
+                  :description="$t('dashboard.seconds')"
+                  :icon="'bi-clock-history'"
+                  :icon-style-class="'green-icon'"
+                >
+                </SimpleCard>
+              </div>
+              <div id="attention-no-device" class="col">
+                <SimpleCard
+                  :show="!!toggles['dashboard.attention-no-device.view']"
+                  :data="calculatedMetrics['attention.created'].noDevicePer || 0 + '%'"
+                  :subdata="calculatedMetrics['attention.created'].noDevice || 0"
+                  :title="$t('dashboard.items.attentions.5')"
+                  :show-tooltip="false"
+                  :icon="'bi-people-fill'"
+                  :icon-style-class="'orange-icon'"
+                >
+                </SimpleCard>
+              </div>
+            </div>
+          </div>
+          <div id="attention-queue">
+            <SimpleCard
+              :show="!!toggles['dashboard.attention-queue.view']"
+              :data="calculatedMetrics['attention.created'].maxQueue"
+              :subdata="calculatedMetrics['attention.created'].maxQueueCount"
+              :title="$t('dashboard.items.attentions.4')"
+              :show-tooltip="false"
+              :icon="'bi-person-heart'"
+              :icon-style-class="'red-icon'"
+            >
+            </SimpleCard>
+          </div>
+          <div id="attention-rating-avg">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-rating-avg.view']"
+              :data="calculatedMetrics['survey.created'].avgRating || 0"
+              :subdata="calculatedMetrics['survey.created'].count_rating || 0"
+              :title="$t('dashboard.items.attentions.3')"
+              :show-tooltip="true"
+              :description="$t('dashboard.rating')"
+              :icon="'bi-star-fill'"
+              :icon-style-class="'yellow-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionRatingDetails
+                  :show="toggles['dashboard.attention-rating-avg.view']"
+                  :count="calculatedMetrics['survey.created'].count_rating || 0"
+                  :min="calculatedMetrics['survey.created']['min']?.rating || 0"
+                  :max="calculatedMetrics['survey.created']['max']?.rating || 0"
+                  :messages="calculatedMetrics['survey.created']['messages'] || []"
+                  :score="calculatedMetrics['survey.created']['csatScore'] || []"
+                  :limit="5"
+                >
+                </AttentionRatingDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-nps-avg">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-nps-avg.view']"
+              :data="calculatedMetrics['survey.created'].nps || 0"
+              :subdata="calculatedMetrics['survey.created'].count_nps || 0"
+              :title="$t('dashboard.items.attentions.24')"
+              :show-tooltip="true"
+              :description="$t('dashboard.nps.description')"
+              :icon="'bi-megaphone-fill'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionNPSDetails
+                  :show="!!toggles['dashboard.attention-nps-avg.view']"
+                  :min="calculatedMetrics['survey.created']['min']?.nps || 0"
+                  :max="calculatedMetrics['survey.created']['max']?.nps || 0"
+                  :score="calculatedMetrics['survey.created']['npsScore'] || []"
+                  :distribution="calculatedMetrics['survey.created']['npsDistribution']"
+                  :count="calculatedMetrics['survey.created'].count_nps || 0"
+                  :limit="10"
+                >
+                </AttentionNPSDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-comments-avg">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-comments-avg.view']"
+              :data="calculatedMetrics['survey.created']?.prom_score"
+              :subdata="calculatedMetrics['survey.created']['scoredMessages']?.length"
+              :title="$t('dashboard.items.attentions.21')"
+              :show-tooltip="true"
+              :description="$t('dashboard.sentiment')"
+              :icon="'bi-chat-heart-fill'"
+              :icon-style-class="'red-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionCommentsDetails
+                  :show="!!toggles['dashboard.attention-comments-avg.view']"
+                  :messages="calculatedMetrics['survey.created']['scoredMessages']"
+                  :min="calculatedMetrics['survey.created']['sentimentScore']['minSentiment'] || 0"
+                  :max="calculatedMetrics['survey.created']['sentimentScore']['maxSentiment'] || 0"
+                  :distribution="sentimentScore"
+                  :limit="5"
+                >
+                </AttentionCommentsDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-collaborators">
+            <DetailsCard
+              :show="
+                !!toggles['dashboard.attention-collaborators.view'] &&
+                calculatedMetrics['collaborators'].length > 0
+              "
+              :data="
+                calculatedMetrics['collaborators']
+                  ? calculatedMetrics['collaborators'][0]?.name
+                  : 'No Data'
+              "
+              :subdata="
+                calculatedMetrics['collaborators']
+                  ? calculatedMetrics['collaborators'][0]?.attention_counter
+                  : 0
+              "
+              :title="$t('dashboard.items.attentions.20')"
+              :show-tooltip="false"
+              :icon="'bi-trophy-fill'"
+              :icon-style-class="'green-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionCollaboratorsDetails
+                  :show="
+                    !!toggles['dashboard.attention-collaborators.view'] &&
+                    calculatedMetrics['collaborators'].length > 0
+                  "
+                  :collaborators="calculatedMetrics['collaborators']"
+                  :limit="5"
+                >
+                </AttentionCollaboratorsDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-origin-avg">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-origin-avg.view']"
+              :data="
+                calculatedMetrics['clients']['maxOrigin']?.name
+                  ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`)
+                  : 'No Data'
+              "
+              :subdata="
+                calculatedMetrics['clients']['maxOrigin']
+                  ? calculatedMetrics['clients']['maxOrigin']?.count
+                  : 0
+              "
+              :title="$t('dashboard.items.attentions.31')"
+              :show-tooltip="true"
+              :description="$t('dashboard.origin')"
+              :icon="'bi-emoji-heart-eyes-fill'"
+              :icon-style-class="'orange-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionOriginDetails
+                  :show="!!toggles['dashboard.attention-origin-avg.view']"
+                  :distribution="calculatedMetrics['clients']['originDistribution']"
+                  :count="calculatedMetrics['clients'].originTotal || 0"
+                  :limit="10"
+                >
+                </AttentionOriginDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-client-contact">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-client-contact.view']"
+              :data="
+                calculatedMetrics['clients']?.contactTotal
+                  ? calculatedMetrics['clients']?.contactTotal
+                  : 0
+              "
+              :subdata="undefined"
+              :title="$t('dashboard.items.attentions.32')"
+              :show-tooltip="true"
+              :description="$t('dashboard.contacts')"
+              :icon="'bi-chat-left-dots-fill'"
+              :icon-style-class="'yellow-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionClientContactDetails
+                  :show="!!toggles['dashboard.attention-client-contact.view']"
+                  :distribution-type="calculatedMetrics['clients']['typeContactDistribution']"
+                  :distribution-result="calculatedMetrics['clients']['resultContactDistribution']"
+                  :count="calculatedMetrics['clients'].contactTotal || 0"
+                >
+                </AttentionClientContactDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="attention-daysSince-clients">
+            <AttentionDaysSinceDetails
+              :show="!!toggles['dashboard.attention-days-since-clients.view']"
+              :distribution="calculatedMetrics['clients']['resultDaysSinceDistribution']"
+              :count="calculatedMetrics['clients'].daysSinceClientsTotal || 0"
+            >
+            </AttentionDaysSinceDetails>
+          </div>
+          <div id="attention-collection-clients">
+            <CollectionDetails
+              :show="!!toggles['dashboard.collection-details.view']"
+              :calculated-metrics="calculatedMetrics"
+              :details-opened="detailsOpened"
+            >
+            </CollectionDetails>
+          </div>
+          <div id="attention-notification">
+            <DetailsCard
+              :show="!!toggles['dashboard.attention-notification.view']"
+              :data="calculatedMetrics['notification.created'].notificationNumber"
+              :title="$t('dashboard.items.attentions.6')"
+              :show-tooltip="false"
+              :icon="'bi-send-check-fill'"
+              :icon-style-class="'blue-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <AttentionNotificationDetails
+                  :show="!!toggles['dashboard.attention-notification.view']"
+                  :count="calculatedMetrics['notification.created'].notifiedAttentions"
+                  :booking="calculatedMetrics['notification.created'].notifiedBookings"
+                  :waitlist="calculatedMetrics['notification.created'].notifiedWaitlists"
+                  :channels="calculatedMetrics['notification.created'].channelFlow"
+                  :types="calculatedMetrics['notification.created'].typesFlow"
+                >
+                </AttentionNotificationDetails>
+              </template>
+            </DetailsCard>
+          </div>
+        </div>
+        <PDFFooter :show="toggles['dashboard.reports.indicators']"></PDFFooter>
       </div>
-
-      <!-- Detailed Metrics Section -->
-      <div class="dashboard-detailed-section">
-        <div class="section-header">
-          <h4 class="section-title">
-            <i class="bi bi-list-ul"></i>
-            {{ $t('dashboard.detailedMetrics') || 'Métricas Detalladas' }}
-          </h4>
-        </div>
-
-        <div id="attention-number">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-number.view']"
-            :data="calculatedMetrics['attention.created'].attentionNumber"
-            :subdatapastperiod="calculatedMetrics['attention.created'].pastPeriodAttentionNumber"
-            :subdatapastmonth="calculatedMetrics['attention.created'].pastMonthAttentionNumber"
-            :subdatacurrentperiod="
-              calculatedMetrics['attention.created'].currentMonthAttentionNumber
-            "
-            :title="$t('dashboard.items.attentions.1')"
-            :show-tooltip="false"
-            :icon="'bi-qr-code'"
-            :icon-style-class="'blue-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <div id="attention-number-details" class="modern-details-grid">
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.16')"
-                  :value="calculatedMetrics['attention.created'].typesFlow.STANDARD || 0"
-                  icon="bi-person-fill"
-                  icon-class="green-icon"
-                />
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.17')"
-                  :value="calculatedMetrics['attention.created'].typesFlow.NODEVICE || 0"
-                  icon="bi-people-fill"
-                  icon-class="red-icon"
-                />
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.18')"
-                  :value="calculatedMetrics['attention.created'].typesFlow.SURVEY_ONLY || 0"
-                  icon="bi-star-fill"
-                  icon-class="yellow-icon"
-                />
-              </div>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="booking-number">
-          <DetailsCard
-            :show="!!toggles['dashboard.booking-number.view']"
-            :data="calculatedMetrics['booking.created'].bookingNumber"
-            :subdata="calculatedMetrics['booking.created'].stillPendingBookings"
-            :title="$t('dashboard.items.attentions.27')"
-            :show-tooltip="true"
-            :description="$t('dashboard.booking')"
-            :icon="'bi-calendar2-check-fill'"
-            :icon-style-class="'orange-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <div id="booking-number-details" class="modern-details-grid">
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.28')"
-                  :value="calculatedMetrics['booking.created'].bookingFlow.datasets[0] || 0"
-                  icon="bi-calendar-plus-fill"
-                  icon-class="yellow-icon"
-                />
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.35')"
-                  :value="calculatedMetrics['booking.created'].bookingFlow.datasets[2] || 0"
-                  icon="bi-calendar2-check-fill"
-                  icon-class="blue-icon"
-                />
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.29')"
-                  :value="calculatedMetrics['booking.created'].bookingFlow.datasets[1] || 0"
-                  icon="bi-calendar2-heart-fill"
-                  icon-class="green-icon"
-                />
-                <DetailItem
-                  :label="$t('dashboard.items.attentions.30')"
-                  :value="calculatedMetrics['booking.created'].bookingFlow.datasets[3] || 0"
-                  icon="bi-calendar-x-fill"
-                  icon-class="red-icon"
-                />
-              </div>
-            </template>
-          </DetailsCard>
-        </div>
-        <div>
-          <div class="row">
-            <div id="attention-time-avg" class="col">
-              <SimpleCard
-                :show="!!toggles['dashboard.attention-time-avg.view']"
-                :data="calculatedMetrics['attention.created'].avgDuration"
-                :title="$t('dashboard.items.attentions.2')"
-                :show-tooltip="true"
-                :description="$t('dashboard.seconds')"
-                :icon="'bi-clock-history'"
-                :icon-style-class="'green-icon'"
-              >
-              </SimpleCard>
-            </div>
-            <div id="attention-no-device" class="col">
-              <SimpleCard
-                :show="!!toggles['dashboard.attention-no-device.view']"
-                :data="calculatedMetrics['attention.created'].noDevicePer || 0 + '%'"
-                :subdata="calculatedMetrics['attention.created'].noDevice || 0"
-                :title="$t('dashboard.items.attentions.5')"
-                :show-tooltip="false"
-                :icon="'bi-people-fill'"
-                :icon-style-class="'orange-icon'"
-              >
-              </SimpleCard>
-            </div>
-          </div>
-        </div>
-        <div id="attention-queue">
-          <SimpleCard
-            :show="!!toggles['dashboard.attention-queue.view']"
-            :data="calculatedMetrics['attention.created'].maxQueue"
-            :subdata="calculatedMetrics['attention.created'].maxQueueCount"
-            :title="$t('dashboard.items.attentions.4')"
-            :show-tooltip="false"
-            :icon="'bi-person-heart'"
-            :icon-style-class="'red-icon'"
-          >
-          </SimpleCard>
-        </div>
-        <div id="attention-rating-avg">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-rating-avg.view']"
-            :data="calculatedMetrics['survey.created'].avgRating || 0"
-            :subdata="calculatedMetrics['survey.created'].count_rating || 0"
-            :title="$t('dashboard.items.attentions.3')"
-            :show-tooltip="true"
-            :description="$t('dashboard.rating')"
-            :icon="'bi-star-fill'"
-            :icon-style-class="'yellow-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionRatingDetails
-                :show="toggles['dashboard.attention-rating-avg.view']"
-                :count="calculatedMetrics['survey.created'].count_rating || 0"
-                :min="calculatedMetrics['survey.created']['min']?.rating || 0"
-                :max="calculatedMetrics['survey.created']['max']?.rating || 0"
-                :messages="calculatedMetrics['survey.created']['messages'] || []"
-                :score="calculatedMetrics['survey.created']['csatScore'] || []"
-                :limit="5"
-              >
-              </AttentionRatingDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-nps-avg">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-nps-avg.view']"
-            :data="calculatedMetrics['survey.created'].nps || 0"
-            :subdata="calculatedMetrics['survey.created'].count_nps || 0"
-            :title="$t('dashboard.items.attentions.24')"
-            :show-tooltip="true"
-            :description="$t('dashboard.nps.description')"
-            :icon="'bi-megaphone-fill'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionNPSDetails
-                :show="!!toggles['dashboard.attention-nps-avg.view']"
-                :min="calculatedMetrics['survey.created']['min']?.nps || 0"
-                :max="calculatedMetrics['survey.created']['max']?.nps || 0"
-                :score="calculatedMetrics['survey.created']['npsScore'] || []"
-                :distribution="calculatedMetrics['survey.created']['npsDistribution']"
-                :count="calculatedMetrics['survey.created'].count_nps || 0"
-                :limit="10"
-              >
-              </AttentionNPSDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-comments-avg">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-comments-avg.view']"
-            :data="calculatedMetrics['survey.created']?.prom_score"
-            :subdata="calculatedMetrics['survey.created']['scoredMessages']?.length"
-            :title="$t('dashboard.items.attentions.21')"
-            :show-tooltip="true"
-            :description="$t('dashboard.sentiment')"
-            :icon="'bi-chat-heart-fill'"
-            :icon-style-class="'red-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionCommentsDetails
-                :show="!!toggles['dashboard.attention-comments-avg.view']"
-                :messages="calculatedMetrics['survey.created']['scoredMessages']"
-                :min="calculatedMetrics['survey.created']['sentimentScore']['minSentiment'] || 0"
-                :max="calculatedMetrics['survey.created']['sentimentScore']['maxSentiment'] || 0"
-                :distribution="sentimentScore"
-                :limit="5"
-              >
-              </AttentionCommentsDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-collaborators">
-          <DetailsCard
-            :show="
-              !!toggles['dashboard.attention-collaborators.view'] &&
-              calculatedMetrics['collaborators'].length > 0
-            "
-            :data="
-              calculatedMetrics['collaborators']
-                ? calculatedMetrics['collaborators'][0]?.name
-                : 'No Data'
-            "
-            :subdata="
-              calculatedMetrics['collaborators']
-                ? calculatedMetrics['collaborators'][0]?.attention_counter
-                : 0
-            "
-            :title="$t('dashboard.items.attentions.20')"
-            :show-tooltip="false"
-            :icon="'bi-trophy-fill'"
-            :icon-style-class="'green-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionCollaboratorsDetails
-                :show="
-                  !!toggles['dashboard.attention-collaborators.view'] &&
-                  calculatedMetrics['collaborators'].length > 0
-                "
-                :collaborators="calculatedMetrics['collaborators']"
-                :limit="5"
-              >
-              </AttentionCollaboratorsDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-origin-avg">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-origin-avg.view']"
-            :data="
-              calculatedMetrics['clients']['maxOrigin']?.name
-                ? $t(`origin.${calculatedMetrics['clients']['maxOrigin']?.name}`)
-                : 'No Data'
-            "
-            :subdata="
-              calculatedMetrics['clients']['maxOrigin']
-                ? calculatedMetrics['clients']['maxOrigin']?.count
-                : 0
-            "
-            :title="$t('dashboard.items.attentions.31')"
-            :show-tooltip="true"
-            :description="$t('dashboard.origin')"
-            :icon="'bi-emoji-heart-eyes-fill'"
-            :icon-style-class="'orange-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionOriginDetails
-                :show="!!toggles['dashboard.attention-origin-avg.view']"
-                :distribution="calculatedMetrics['clients']['originDistribution']"
-                :count="calculatedMetrics['clients'].originTotal || 0"
-                :limit="10"
-              >
-              </AttentionOriginDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-client-contact">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-client-contact.view']"
-            :data="
-              calculatedMetrics['clients']?.contactTotal
-                ? calculatedMetrics['clients']?.contactTotal
-                : 0
-            "
-            :subdata="undefined"
-            :title="$t('dashboard.items.attentions.32')"
-            :show-tooltip="true"
-            :description="$t('dashboard.contacts')"
-            :icon="'bi-chat-left-dots-fill'"
-            :icon-style-class="'yellow-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionClientContactDetails
-                :show="!!toggles['dashboard.attention-client-contact.view']"
-                :distribution-type="calculatedMetrics['clients']['typeContactDistribution']"
-                :distribution-result="calculatedMetrics['clients']['resultContactDistribution']"
-                :count="calculatedMetrics['clients'].contactTotal || 0"
-              >
-              </AttentionClientContactDetails>
-            </template>
-          </DetailsCard>
-        </div>
-        <div id="attention-daysSince-clients">
-          <AttentionDaysSinceDetails
-            :show="!!toggles['dashboard.attention-days-since-clients.view']"
-            :distribution="calculatedMetrics['clients']['resultDaysSinceDistribution']"
-            :count="calculatedMetrics['clients'].daysSinceClientsTotal || 0"
-          >
-          </AttentionDaysSinceDetails>
-        </div>
-        <div id="attention-collection-clients">
-          <CollectionDetails
-            :show="!!toggles['dashboard.collection-details.view']"
-            :calculated-metrics="calculatedMetrics"
-            :details-opened="detailsOpened"
-          >
-          </CollectionDetails>
-        </div>
-        <div id="attention-notification">
-          <DetailsCard
-            :show="!!toggles['dashboard.attention-notification.view']"
-            :data="calculatedMetrics['notification.created'].notificationNumber"
-            :title="$t('dashboard.items.attentions.6')"
-            :show-tooltip="false"
-            :icon="'bi-send-check-fill'"
-            :icon-style-class="'blue-icon'"
-            :details-opened="detailsOpened"
-          >
-            <template v-slot:details>
-              <AttentionNotificationDetails
-                :show="!!toggles['dashboard.attention-notification.view']"
-                :count="calculatedMetrics['notification.created'].notifiedAttentions"
-                :booking="calculatedMetrics['notification.created'].notifiedBookings"
-                :waitlist="calculatedMetrics['notification.created'].notifiedWaitlists"
-                :channels="calculatedMetrics['notification.created'].channelFlow"
-                :types="calculatedMetrics['notification.created'].typesFlow"
-              >
-              </AttentionNotificationDetails>
-            </template>
-          </DetailsCard>
-        </div>
-      </div>
-      <PDFFooter :show="toggles['dashboard.reports.indicators']"></PDFFooter>
     </div>
-  </div>
-  <div v-if="showIndicators === true && !toggles['dashboard.indicators.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showIndicators === true && !toggles['dashboard.indicators.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 
@@ -859,12 +1219,15 @@ export default {
 
 /* Enhanced Dashboard Summary Section */
 .dashboard-summary-section {
-  margin: 1.5rem 0.5rem;
+  margin: 1.5rem auto;
+  max-width: 100%;
   padding: 1.5rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.06);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .summary-header {
@@ -898,6 +1261,8 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
+  justify-items: stretch;
+  align-items: stretch;
 }
 
 .summary-card {
@@ -906,9 +1271,43 @@ export default {
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+  will-change: transform, box-shadow;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.summary-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.summary-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.summary-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.summary-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .summary-card::before {
@@ -938,8 +1337,14 @@ export default {
 }
 
 .summary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 74, 173, 0.15);
+}
+
+.summary-card:hover::before {
+  opacity: 1;
+  height: 5px;
 }
 
 .summary-card-header {
@@ -957,6 +1362,32 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-icon-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.summary-card:hover .summary-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.summary-card:hover .summary-icon-wrapper::before {
+  width: 100px;
+  height: 100px;
 }
 
 .summary-icon-wrapper i {
@@ -1012,6 +1443,13 @@ export default {
   color: #000;
   line-height: 1;
   letter-spacing: -0.02em;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.summary-card:hover .summary-main-value {
+  color: var(--azul-turno);
+  transform: scale(1.05);
 }
 
 .summary-trend {
@@ -1201,16 +1639,26 @@ export default {
   .summary-main-value {
     font-size: 2rem;
   }
+
+  .gauge-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  .health-score-breakdown {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
   .dashboard-summary-section {
-    margin: 1rem 0.25rem;
+    margin: 1rem auto;
     padding: 1.25rem;
+    max-width: 100%;
   }
 
   .summary-cards-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .summary-main-value {
@@ -1219,6 +1667,26 @@ export default {
 
   .summary-card {
     padding: 1.25rem;
+  }
+
+  .health-score-section,
+  .gauge-charts-section,
+  .smart-recommendations-panel {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+  }
+
+  .gauge-charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .gauge-chart-card {
+    max-width: 100%;
+  }
+
+  .health-score-breakdown {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1239,5 +1707,468 @@ export default {
   .summary-icon-wrapper i {
     font-size: 1.25rem;
   }
+
+  .health-score-card {
+    padding: 1.5rem;
+  }
+
+  .health-score-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .health-score-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .health-score-icon i {
+    font-size: 1.75rem;
+  }
+
+  .health-score-number {
+    font-size: 3rem;
+  }
+
+  .health-score-max {
+    font-size: 1.5rem;
+  }
+}
+
+/* Health Score Section */
+.health-score-section {
+  margin: 1.5rem auto;
+  max-width: 100%;
+  padding: 0 0.5rem;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.health-score-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.health-score-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+}
+
+.health-score-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.health-score-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+}
+
+.health-score-icon i {
+  font-size: 2rem;
+  color: #fff;
+}
+
+.health-score-title-section {
+  flex: 1;
+}
+
+.health-score-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.health-score-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+/* Styles moved to global section below */
+
+.health-score-subtitle {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.health-score-main {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.health-score-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.health-score-number {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.health-score-max {
+  font-size: 2rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.health-score-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+}
+
+.health-score-progress {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s ease-out;
+  position: relative;
+  background: transparent; /* Will be overridden by color classes */
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.health-excellent {
+  color: #00c2cb;
+}
+
+.health-excellent .health-score-progress,
+.health-excellent .health-score-item-progress,
+.health-score-progress.health-excellent,
+.health-score-item-progress.health-excellent {
+  background: linear-gradient(90deg, #00c2cb 0%, #00c4cc 100%) !important;
+}
+
+.health-good {
+  color: #004aad;
+}
+
+.health-good .health-score-progress,
+.health-good .health-score-item-progress,
+.health-score-progress.health-good,
+.health-score-item-progress.health-good {
+  background: linear-gradient(90deg, #004aad 0%, #446ffc 100%) !important;
+}
+
+.health-warning {
+  color: #f9c322;
+}
+
+.health-warning .health-score-progress,
+.health-warning .health-score-item-progress,
+.health-score-progress.health-warning,
+.health-score-item-progress.health-warning {
+  background: linear-gradient(90deg, #f9c322 0%, #fac107 100%) !important;
+}
+
+.health-poor {
+  color: #a52a2a;
+}
+
+.health-poor .health-score-progress,
+.health-poor .health-score-item-progress,
+.health-score-progress.health-poor,
+.health-score-item-progress.health-poor {
+  background: linear-gradient(90deg, #a52a2a 0%, #d32f2f 100%) !important;
+}
+
+.health-score-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.health-score-item {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+  justify-content: space-between;
+}
+
+.health-score-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.health-score-item-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 0.5rem;
+}
+
+.health-score-item-label i {
+  color: var(--azul-turno);
+  font-size: 1rem;
+}
+
+.health-score-item-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.health-score-item-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.health-score-item-progress {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s ease-out;
+  position: relative;
+  background: transparent; /* Will be overridden by color classes */
+}
+
+/* Percentage removed from bars */
+
+/* Gauge Charts Section */
+.gauge-charts-section {
+  margin: 2rem auto;
+  max-width: 100%;
+  padding: 0 0.5rem;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.gauge-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+  justify-items: center;
+  align-items: stretch;
+}
+
+.gauge-chart-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 420px;
+  min-height: 360px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.gauge-card-header {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 0;
+}
+
+.gauge-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 1.25rem 0;
+  text-align: center;
+  padding: 0 1rem;
+  line-height: 1.3;
+}
+
+.gauge-info-icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  padding: 0.25rem;
+  width: 28px;
+  height: 28px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gauge-info-icon:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gauge-chart-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .health-score-card {
+    padding: 1.5rem;
+  }
+
+  .health-score-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .health-score-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .health-score-icon i {
+    font-size: 1.75rem;
+  }
+
+  .health-score-number {
+    font-size: 3rem;
+  }
+
+  .health-score-max {
+    font-size: 1.5rem;
+  }
+
+  .gauge-charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Global Popper/Tooltip Styles - Homologated for all dashboard tooltips */
+::deep(.popper),
+::deep(.popper-dark),
+::deep([data-popper-placement]),
+::deep([data-popper-placement] > div) {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(30, 30, 30, 0.98) 100%
+  ) !important;
+  color: #ffffff !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  max-width: 320px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  z-index: 9999 !important;
+  font-weight: 400 !important;
+  word-wrap: break-word !important;
+}
+
+::deep(.popper__arrow),
+::deep(.popper__arrow::before) {
+  border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent !important;
+  border-width: 8px !important;
+}
+
+::deep(.popper[data-popper-placement^='top'] .popper__arrow),
+::deep(.popper[data-popper-placement^='top'] .popper__arrow::before) {
+  border-color: transparent transparent rgba(0, 0, 0, 0.95) transparent !important;
+}
+
+::deep(.popper[data-popper-placement^='bottom'] .popper__arrow),
+::deep(.popper[data-popper-placement^='bottom'] .popper__arrow::before) {
+  border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent !important;
+}
+
+::deep(.popper[data-popper-placement^='left'] .popper__arrow),
+::deep(.popper[data-popper-placement^='left'] .popper__arrow::before) {
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.95) !important;
+}
+
+::deep(.popper[data-popper-placement^='right'] .popper__arrow),
+::deep(.popper[data-popper-placement^='right'] .popper__arrow::before) {
+  border-color: transparent rgba(0, 0, 0, 0.95) transparent transparent !important;
+}
+
+/* Unified Info Icon Styles for all dashboard tooltips */
+.health-score-info-icon,
+.health-score-item-info,
+.gauge-info-icon,
+.recommendations-info-icon,
+.metric-info-icon {
+  font-size: 1rem !important;
+  color: var(--azul-turno) !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.health-score-info-icon:hover,
+.health-score-item-info:hover,
+.gauge-info-icon:hover,
+.recommendations-info-icon:hover,
+.metric-info-icon:hover {
+  color: var(--verde-tu) !important;
+  transform: scale(1.15);
 }
 </style>

@@ -442,6 +442,7 @@ export default {
       npsScorePercentage,
       clasifyNpsScore,
       clear,
+      refresh,
       showFilters,
       exportToPDF,
       getMaxAvgCSAT,
@@ -454,320 +455,355 @@ export default {
 </script>
 
 <template>
-  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
-  <slot
-    v-if="filtersLocation === 'slot'"
-    name="filters-exposed"
-    :clear="clear"
-    :refresh="refresh"
-    :queue-id="state.queueId"
-    :queues="queues"
-    :loading="loading"
-  ></slot>
+  <div>
+    <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+    <slot
+      v-if="filtersLocation === 'slot'"
+      name="filters-exposed"
+      :clear="clear"
+      :refresh="refresh"
+      :queue-id="state.queueId"
+      :queues="queues"
+      :loading="loading"
+    ></slot>
 
-  <div
-    id="surveys-consolidated"
-    class="row"
-    v-if="showSurveyConsolidated === true && toggles['dashboard.surveys-consolidated.view']"
-  >
-    <div v-if="state.calculatedSurveyMetricsYear">
-      <SimpleDownloadCard
-        :download="toggles['dashboard.reports.surveys-consolidated']"
-        :title="$t('dashboard.reports.surveys-consolidated.title')"
-        :show-tooltip="true"
-        :description="$t('dashboard.reports.surveys-consolidated.description')"
-        :icon="'bi-file-earmark-pdf'"
-        @download="exportToPDF"
-        :can-download="toggles['dashboard.reports.surveys-consolidated'] === true"
-      ></SimpleDownloadCard>
-      <Spinner :show="loading"></Spinner>
-      <div>
-        <!-- Filters Section - Can be shown in component or exposed via slot -->
-        <div
-          class="my-2 row metric-card"
-          v-if="filtersLocation === 'component' && queues && queues.length > 1"
-        >
-          <div class="col-12">
-            <span class="metric-card-subtitle">
-              <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
-                <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                <i
-                  :class="`bi ${
-                    state.showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                  }`"
-                ></i>
-              </span>
-            </span>
-            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2" @click="clear()">
-              <span><i class="bi bi-eraser-fill"></i></span>
-            </button>
-          </div>
-          <div v-if="state.showFilterOptions">
-            <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
-              <label class="metric-card-subtitle mx-2" for="select-queue">
-                {{ $t('dashboard.queue') }}
-              </label>
-              <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="state.queueId">
-                <option
-                  v-for="queue in queues"
-                  :key="queue.name"
-                  :value="queue.id"
-                  id="select-queue"
-                >
-                  {{ queue.name }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div id="survey-consolidated-component">
-          <PDFHeader
-            :show="toggles['dashboard.reports.surveys-consolidated']"
-            :title="$t('dashboard.reports.surveys-consolidated.title')"
-            :start-date="startDate"
-            :end-date="endDate"
-            :commerce="commerce"
+    <div
+      id="surveys-consolidated"
+      class="row"
+      v-if="showSurveyConsolidated === true && toggles['dashboard.surveys-consolidated.view']"
+    >
+      <div v-if="state.calculatedSurveyMetricsYear">
+        <SimpleDownloadCard
+          :download="toggles['dashboard.reports.surveys-consolidated']"
+          :title="$t('dashboard.reports.surveys-consolidated.title')"
+          :show-tooltip="true"
+          :description="$t('dashboard.reports.surveys-consolidated.description')"
+          :icon="'bi-file-earmark-pdf'"
+          @download="exportToPDF"
+          :can-download="toggles['dashboard.reports.surveys-consolidated'] === true"
+        ></SimpleDownloadCard>
+        <Spinner :show="loading"></Spinner>
+        <div>
+          <!-- Filters Section - Can be shown in component or exposed via slot -->
+          <div
+            class="my-2 row metric-card"
+            v-if="filtersLocation === 'component' && queues && queues.length > 1"
           >
-          </PDFHeader>
-          <div class="d-block mt-3">
-            <div class="metric-card h4">
-              <div class="metric-card-title centered">
-                <span> {{ $t('dashboard.items.attentions.26') }} </span>
-              </div>
-              <div class="centered mb-2">
-                <span class="fw-bold px-2">
-                  {{ state.calculatedSurveyMetricsYear.date }}
+            <div class="col-12">
+              <span class="metric-card-subtitle">
+                <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
+                  <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                  <i
+                    :class="`bi ${
+                      state.showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                    }`"
+                  ></i>
                 </span>
-              </div>
-              <hr />
-              <div id="attention-rating-avg">
-                <DetailsCard
-                  :show="toggles['dashboard.attention-rating-avg.view']"
-                  :data="
-                    parseFloat((+state.calculatedSurveyMetricsYear.avgRating || 0).toFixed(2), 2)
-                  "
-                  :subdata="+state.calculatedSurveyMetricsYear.countRating || 0"
-                  :title="$t('dashboard.items.attentions.3')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.rating')"
-                  :icon="'bi-star-fill'"
-                  :icon-style-class="'yellow-icon'"
-                  :details-opened="state.detailsOpened"
-                >
-                  <template v-slot:details>
-                    <AttentionRatingDetails
-                      :show="toggles['dashboard.attention-rating-avg.view']"
-                      :count="+state.calculatedSurveyMetricsYear.countRating || 0"
-                      :min="+state.calculatedSurveyMetricsYear.minRating || 0"
-                      :max="+state.calculatedSurveyMetricsYear.maxRating || 0"
-                      :messages="[]"
-                      :score="state.csatScore || []"
-                      :limit="5"
-                    >
-                    </AttentionRatingDetails>
-                  </template>
-                </DetailsCard>
-              </div>
-              <div id="attention-nps-avg">
-                <DetailsCard
-                  :show="toggles['dashboard.attention-nps-avg.view']"
-                  :data="parseFloat((+state.calculatedSurveyMetricsYear.nps || 0).toFixed(2), 2)"
-                  :subdata="+state.calculatedSurveyMetricsYear.countNPS || 0"
-                  :title="$t('dashboard.items.attentions.24')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.nps.description')"
-                  :icon="'bi-megaphone-fill'"
-                  :details-opened="state.detailsOpened"
-                >
-                  <template v-slot:details>
-                    <AttentionNPSDetails
-                      :show="toggles['dashboard.attention-nps-avg.view']"
-                      :min="+state.calculatedSurveyMetricsYear.minNPS || 0"
-                      :max="+state.calculatedSurveyMetricsYear.maxNPS || 0"
-                      :score="state.npsScore || []"
-                      :distribution="state.npsDistribution"
-                      :count="+state.calculatedSurveyMetricsYear.countNPS || 0"
-                      :limit="10"
-                    >
-                    </AttentionNPSDetails>
-                  </template>
-                </DetailsCard>
-              </div>
-              <div id="attention-comments-avg">
-                <DetailsCard
-                  :show="toggles['dashboard.attention-comments-avg.view']"
-                  :data="
-                    parseFloat((+state.calculatedSurveyMetricsYear.avgSentiment || 0).toFixed(2), 2)
-                  "
-                  :subdata="+state.calculatedSurveyMetricsYear.countSentiment || 0"
-                  :title="$t('dashboard.items.attentions.21')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.sentiment')"
-                  :icon="'bi-chat-heart-fill'"
-                  :icon-style-class="'red-icon'"
-                  :details-opened="state.detailsOpened"
-                >
-                  <template v-slot:details>
-                    <AttentionCommentsDetails
-                      :show="toggles['dashboard.attention-comments-avg.view']"
-                      :messages="undefined"
-                      :min="+state.calculatedSurveyMetricsYear.minSentiment"
-                      :max="+state.calculatedSurveyMetricsYear.maxSentiment"
-                      :distribution="state.sentimentDistribution"
-                      :limit="5"
-                    >
-                    </AttentionCommentsDetails>
-                  </template>
-                </DetailsCard>
-              </div>
-            </div>
-            <!--surveys-consolidated-nps-evolution -->
-            <div
-              v-if="state.graphs['surveys-consolidated-nps-evolution']"
-              class="row row-cols-1 row-cols-md-1 g-2 mx-2"
-            >
-              <div
-                v-if="toggles['dashboard.surveys-consolidated-nps-evolution.view']"
-                class="col d-flex align-items-stretch"
+              </span>
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="clear()"
               >
-                <div class="card col metric-card-graph centered">
-                  <div class="metric-card-title">
-                    <span> {{ $t('dashboard.items.attentions.graph.8') }} </span>
-                  </div>
-                  <div class="row">
-                    <LineChart class="centered" v-bind="surveysConsolidatedNPSEvolutionProps" />
-                    <div class="metric-conclusion mt-3">
-                      <div class="row centered">
-                        <div class="col-12 col-md-2 m-1 centered">
-                          <i class="bi bi-star-fill blue-icon">
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.6') }}
-                          </i>
-                        </div>
-                        <div class="col-12 col-md-4 m-1 centered">
-                          <span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.7') }}
-                            <span class="fw-bold">
-                              {{
-                                parseFloat(
-                                  (+state.calculatedSurveyMetricsYear.nps || 0).toFixed(2),
-                                  2
-                                )
-                              }} </span
-                            >.
-                          </span>
-                        </div>
-                        <div class="col-12 col-md-4 m-1 centered">
-                          <span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3') }}
-                            <i class="bi bi-arrow-up-circle-fill green-icon">
-                              {{ state.maxNps.label }}
-                            </i>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
-                            <span class="fw-bold"> {{ state.maxNps.value }} </span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5') }}
-                            <i class="bi bi-arrow-down-circle-fill red-icon"
-                              >{{ state.minNps.label }}
-                            </i>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
-                            <span class="fw-bold"> {{ state.minNps.value }} </span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <span><i class="bi bi-eraser-fill"></i></span>
+              </button>
+            </div>
+            <div v-if="state.showFilterOptions">
+              <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length > 1">
+                <label class="metric-card-subtitle mx-2" for="select-queue">
+                  {{ $t('dashboard.queue') }}
+                </label>
+                <select
+                  class="btn btn-sm btn-light fw-bold text-dark select"
+                  v-model="state.queueId"
+                >
+                  <option
+                    v-for="queue in queues"
+                    :key="queue.name"
+                    :value="queue.id"
+                    id="select-queue"
+                  >
+                    {{ queue.name }}
+                  </option>
+                </select>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.items.attentions.graph.8')"
-                :content="$t('dashboard.message.2.content')"
-              />
-            </div>
-            <!--surveys-consolidated-csat-evolution -->
-            <div
-              v-if="state.graphs['surveys-consolidated-csat-evolution']"
-              class="row row-cols-1 row-cols-md-1 g-2 mx-2"
-            >
-              <div
-                v-if="toggles['dashboard.surveys-consolidated-csat-evolution.view']"
-                class="col d-flex align-items-stretch"
-              >
-                <div class="card col metric-card-graph centered">
-                  <div class="metric-card-title">
-                    <span> {{ $t('dashboard.items.attentions.graph.9') }} </span>
-                  </div>
-                  <div class="row">
-                    <LineChart class="centered" v-bind="surveysConsolidatedCSATEvolutionProps" />
-                    <div class="metric-conclusion mt-3">
-                      <div class="row centered">
-                        <div class="col-12 col-md-2 m-1 centered">
-                          <i class="bi bi-star-fill blue-icon">
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.1') }}
-                          </i>
-                        </div>
-                        <div class="col-12 col-md-4 m-1 centered">
-                          <span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.2') }}
-                            <span class="fw-bold">
-                              {{
-                                parseFloat(
-                                  (+state.calculatedSurveyMetricsYear.avgRating || 0).toFixed(2),
-                                  2
-                                )
-                              }} </span
-                            >.
-                          </span>
-                        </div>
-                        <div class="col-12 col-md-4 m-1 centered">
-                          <span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3') }}
-                            <i class="bi bi-arrow-up-circle-fill green-icon">
-                              {{ state.maxCsat.label }}
-                            </i>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
-                            <span class="fw-bold"> {{ state.maxCsat.value }} </span>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5') }}
-                            <i class="bi bi-arrow-down-circle-fill red-icon"
-                              >{{ state.minCsat.label }}
-                            </i>
-                            {{ $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4') }}
-                            <span class="fw-bold"> {{ state.minCsat.value }} </span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.items.attentions.graph.9')"
-                :content="$t('dashboard.message.2.content')"
-              />
             </div>
           </div>
-          <PDFFooter :show="toggles['dashboard.reports.surveys-consolidated']"></PDFFooter>
+          <div id="survey-consolidated-component">
+            <PDFHeader
+              :show="toggles['dashboard.reports.surveys-consolidated']"
+              :title="$t('dashboard.reports.surveys-consolidated.title')"
+              :start-date="startDate"
+              :end-date="endDate"
+              :commerce="commerce"
+            >
+            </PDFHeader>
+            <div class="d-block mt-3">
+              <div class="metric-card h4">
+                <div class="metric-card-title centered">
+                  <span> {{ $t('dashboard.items.attentions.26') }} </span>
+                </div>
+                <div class="centered mb-2">
+                  <span class="fw-bold px-2">
+                    {{ state.calculatedSurveyMetricsYear.date }}
+                  </span>
+                </div>
+                <hr />
+                <div id="attention-rating-avg">
+                  <DetailsCard
+                    :show="toggles['dashboard.attention-rating-avg.view']"
+                    :data="
+                      parseFloat((+state.calculatedSurveyMetricsYear.avgRating || 0).toFixed(2), 2)
+                    "
+                    :subdata="+state.calculatedSurveyMetricsYear.countRating || 0"
+                    :title="$t('dashboard.items.attentions.3')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.rating')"
+                    :icon="'bi-star-fill'"
+                    :icon-style-class="'yellow-icon'"
+                    :details-opened="state.detailsOpened"
+                  >
+                    <template v-slot:details>
+                      <AttentionRatingDetails
+                        :show="toggles['dashboard.attention-rating-avg.view']"
+                        :count="+state.calculatedSurveyMetricsYear.countRating || 0"
+                        :min="+state.calculatedSurveyMetricsYear.minRating || 0"
+                        :max="+state.calculatedSurveyMetricsYear.maxRating || 0"
+                        :messages="[]"
+                        :score="state.csatScore || []"
+                        :limit="5"
+                      >
+                      </AttentionRatingDetails>
+                    </template>
+                  </DetailsCard>
+                </div>
+                <div id="attention-nps-avg">
+                  <DetailsCard
+                    :show="toggles['dashboard.attention-nps-avg.view']"
+                    :data="parseFloat((+state.calculatedSurveyMetricsYear.nps || 0).toFixed(2), 2)"
+                    :subdata="+state.calculatedSurveyMetricsYear.countNPS || 0"
+                    :title="$t('dashboard.items.attentions.24')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.nps.description')"
+                    :icon="'bi-megaphone-fill'"
+                    :details-opened="state.detailsOpened"
+                  >
+                    <template v-slot:details>
+                      <AttentionNPSDetails
+                        :show="toggles['dashboard.attention-nps-avg.view']"
+                        :min="+state.calculatedSurveyMetricsYear.minNPS || 0"
+                        :max="+state.calculatedSurveyMetricsYear.maxNPS || 0"
+                        :score="state.npsScore || []"
+                        :distribution="state.npsDistribution"
+                        :count="+state.calculatedSurveyMetricsYear.countNPS || 0"
+                        :limit="10"
+                      >
+                      </AttentionNPSDetails>
+                    </template>
+                  </DetailsCard>
+                </div>
+                <div id="attention-comments-avg">
+                  <DetailsCard
+                    :show="toggles['dashboard.attention-comments-avg.view']"
+                    :data="
+                      parseFloat(
+                        (+state.calculatedSurveyMetricsYear.avgSentiment || 0).toFixed(2),
+                        2
+                      )
+                    "
+                    :subdata="+state.calculatedSurveyMetricsYear.countSentiment || 0"
+                    :title="$t('dashboard.items.attentions.21')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.sentiment')"
+                    :icon="'bi-chat-heart-fill'"
+                    :icon-style-class="'red-icon'"
+                    :details-opened="state.detailsOpened"
+                  >
+                    <template v-slot:details>
+                      <AttentionCommentsDetails
+                        :show="toggles['dashboard.attention-comments-avg.view']"
+                        :messages="undefined"
+                        :min="+state.calculatedSurveyMetricsYear.minSentiment"
+                        :max="+state.calculatedSurveyMetricsYear.maxSentiment"
+                        :distribution="state.sentimentDistribution"
+                        :limit="5"
+                      >
+                      </AttentionCommentsDetails>
+                    </template>
+                  </DetailsCard>
+                </div>
+              </div>
+              <!--surveys-consolidated-nps-evolution -->
+              <div
+                v-if="state.graphs['surveys-consolidated-nps-evolution']"
+                class="row row-cols-1 row-cols-md-1 g-2 mx-2"
+              >
+                <div
+                  v-if="toggles['dashboard.surveys-consolidated-nps-evolution.view']"
+                  class="col d-flex align-items-stretch"
+                >
+                  <div class="card col metric-card-graph centered">
+                    <div class="metric-card-title">
+                      <span> {{ $t('dashboard.items.attentions.graph.8') }} </span>
+                    </div>
+                    <div class="row">
+                      <LineChart class="centered" v-bind="surveysConsolidatedNPSEvolutionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-star-fill blue-icon">
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.6')
+                              }}
+                            </i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.7')
+                              }}
+                              <span class="fw-bold">
+                                {{
+                                  parseFloat(
+                                    (+state.calculatedSurveyMetricsYear.nps || 0).toFixed(2),
+                                    2
+                                  )
+                                }} </span
+                              >.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3')
+                              }}
+                              <i class="bi bi-arrow-up-circle-fill green-icon">
+                                {{ state.maxNps.label }}
+                              </i>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4')
+                              }}
+                              <span class="fw-bold"> {{ state.maxNps.value }} </span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5')
+                              }}
+                              <i class="bi bi-arrow-down-circle-fill red-icon"
+                                >{{ state.minNps.label }}
+                              </i>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4')
+                              }}
+                              <span class="fw-bold"> {{ state.minNps.value }} </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.items.attentions.graph.8')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
+              <!--surveys-consolidated-csat-evolution -->
+              <div
+                v-if="state.graphs['surveys-consolidated-csat-evolution']"
+                class="row row-cols-1 row-cols-md-1 g-2 mx-2"
+              >
+                <div
+                  v-if="toggles['dashboard.surveys-consolidated-csat-evolution.view']"
+                  class="col d-flex align-items-stretch"
+                >
+                  <div class="card col metric-card-graph centered">
+                    <div class="metric-card-title">
+                      <span> {{ $t('dashboard.items.attentions.graph.9') }} </span>
+                    </div>
+                    <div class="row">
+                      <LineChart class="centered" v-bind="surveysConsolidatedCSATEvolutionProps" />
+                      <div class="metric-conclusion mt-3">
+                        <div class="row centered">
+                          <div class="col-12 col-md-2 m-1 centered">
+                            <i class="bi bi-star-fill blue-icon">
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.1')
+                              }}
+                            </i>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.2')
+                              }}
+                              <span class="fw-bold">
+                                {{
+                                  parseFloat(
+                                    (+state.calculatedSurveyMetricsYear.avgRating || 0).toFixed(2),
+                                    2
+                                  )
+                                }} </span
+                              >.
+                            </span>
+                          </div>
+                          <div class="col-12 col-md-4 m-1 centered">
+                            <span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.3')
+                              }}
+                              <i class="bi bi-arrow-up-circle-fill green-icon">
+                                {{ state.maxCsat.label }}
+                              </i>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4')
+                              }}
+                              <span class="fw-bold"> {{ state.maxCsat.value }} </span>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.5')
+                              }}
+                              <i class="bi bi-arrow-down-circle-fill red-icon"
+                                >{{ state.minCsat.label }}
+                              </i>
+                              {{
+                                $t('dashboard.items.trends.surveys-consolidated-csat-evolution.4')
+                              }}
+                              <span class="fw-bold"> {{ state.minCsat.value }} </span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.items.attentions.graph.9')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
+            </div>
+            <PDFFooter :show="toggles['dashboard.reports.surveys-consolidated']"></PDFFooter>
+          </div>
         </div>
       </div>
+      <div v-else>
+        <Message
+          :icon="'bi-graph-up-arrow'"
+          :title="$t('dashboard.message.2.title')"
+          :content="$t('dashboard.message.2.content')"
+        />
+      </div>
     </div>
-    <div v-else>
+    <div v-if="showSurveyConsolidated === true && !toggles['dashboard.surveys-consolidated.view']">
       <Message
         :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.2.title')"
-        :content="$t('dashboard.message.2.content')"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
       />
     </div>
-  </div>
-  <div v-if="showSurveyConsolidated === true && !toggles['dashboard.surveys-consolidated.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
   </div>
 </template>
 

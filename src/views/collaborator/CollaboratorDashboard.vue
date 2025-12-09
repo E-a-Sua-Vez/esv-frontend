@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getMetrics } from '../../application/services/query-stack';
@@ -18,6 +18,12 @@ import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CollaboratorSpySection from '../../components/collaborator/CollaboratorSpySection.vue';
+import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
+import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
+import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
+import { lazyLoadHtml2Pdf } from '../../shared/utils/lazyLoad';
 import { DateModel } from '../../shared/utils/date.model';
 
 Chart.register(...registerables);
@@ -37,6 +43,11 @@ export default {
     DashboardSurveysResult,
     DashboardSurveys,
     ComponentMenu,
+    CollaboratorSpySection,
+    DesktopContentLayout,
+    DesktopFiltersPanel,
+    DateRangeFilters,
+    SimpleDownloadCard,
   },
   async setup() {
     const router = useRouter();
@@ -72,18 +83,20 @@ export default {
       typesFlow: {},
     };
 
+    // Use global commerce and module from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const module = computed(() => store.getCurrentModule);
+
     const state = reactive({
       currentUser: {},
       business: {},
       startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0, 10),
       endDate: new Date().toISOString().slice(0, 10),
       activeBusiness: false,
-      commerces: ref({}),
       queues: ref({}),
       queue: {},
       groupedQueues: [],
       dateType: 'month',
-      commerce: {},
       collaborator: {},
       showIndicators: true,
       showGraphs: false,
@@ -119,69 +132,17 @@ export default {
       toggles: {},
     });
 
-    onBeforeMount(async () => {
-      try {
-        loading.value = true;
-        state.currentUser = await store.getCurrentUser;
-        state.collaborator = state.currentUser;
-        if (!state.currentUser) {
-          state.collaborator = await getCollaboratorById(state.currentUser.id);
-        }
-        if (state.collaborator) {
-          let commercesId = [state.collaborator.commerceId];
-          if (state.collaborator.commercesId && state.collaborator.commercesId.length > 0) {
-            commercesId = state.collaborator.commercesId;
-          }
-          if (commercesId && commercesId.length > 0) {
-            state.business = await store.getActualBusiness();
-            state.commerces = await store.getAvailableCommerces(state.business.commerces);
-            state.commerce =
-              state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-            state.selectedCommerces = state.commerces;
-            if (state.commerce) {
-              const commerce = await getQueueByCommerce(state.commerce.id);
-              state.queues = commerce.queues;
-            }
-          } else if (state.collaborator.commerceId) {
-            const commerce = await getQueueByCommerce(state.currentUser.commerceId);
-            state.commerces = [commerce];
-            state.commerce =
-              state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-            state.queues = commerce.queues;
-            if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-              state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-              if (
-                Object.keys(state.groupedQueues).length > 0 &&
-                state.collaborator.type === 'STANDARD'
-              ) {
-                const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
-                  queue => queue.collaboratorId === state.collaborator.id
-                );
-                const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-                const queues = [...collaboratorQueues, ...otherQueues];
-                state.queues = queues;
-              }
-            }
-          }
-        }
-        state.toggles = await getPermissions('dashboard');
-        await refresh();
-        loading.value = false;
-      } catch (error) {
-        loading.value = false;
+    const loadQueues = async () => {
+      if (!commerce.value || !commerce.value.id) {
+        state.queues = [];
+        state.groupedQueues = [];
+        return;
       }
-    });
-
-    const isActiveBusiness = () => state.commerce && state.commerce.active === true;
-
-    const selectCommerce = async commerce => {
       try {
-        loading.value = true;
-        state.commerce = commerce;
-        const queuesByCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = queuesByCommerce.queues;
-        if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-          state.groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+        const commerceData = await getQueueByCommerce(commerce.value.id);
+        state.queues = commerceData.queues;
+        if (getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')) {
+          state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
           if (
             Object.keys(state.groupedQueues).length > 0 &&
             state.collaborator.type === 'STANDARD'
@@ -194,12 +155,126 @@ export default {
             state.queues = queues;
           }
         }
-        await refresh();
-        loading.value = false;
       } catch (error) {
-        loading.value = false;
+        console.error('Error loading queues:', error);
       }
     };
+
+    onBeforeMount(async () => {
+      try {
+        loading.value = true;
+        state.currentUser = await store.getCurrentUser;
+        state.collaborator = state.currentUser;
+        if (!state.collaborator || !state.collaborator.id) {
+          state.collaborator = await getCollaboratorById(state.currentUser.id);
+        }
+        // Set initial commerce if not set - check both commerceId and commercesId
+        if (!commerce.value || !commerce.value.id) {
+          // First try commerceId (single commerce)
+          if (state.collaborator.commerceId) {
+            const { getCommerceById } = await import('../../application/services/commerce');
+            const initialCommerce = await getCommerceById(state.collaborator.commerceId);
+            if (initialCommerce && initialCommerce.id) {
+              await store.setCurrentCommerce(initialCommerce);
+            }
+          }
+          // If still no commerce, try commercesId (multiple commerces)
+          if (
+            (!commerce.value || !commerce.value.id) &&
+            state.collaborator.commercesId &&
+            state.collaborator.commercesId.length > 0
+          ) {
+            const { getCommerceById } = await import('../../application/services/commerce');
+            const firstCommerceId = state.collaborator.commercesId[0];
+            if (firstCommerceId) {
+              const initialCommerce = await getCommerceById(firstCommerceId);
+              if (initialCommerce && initialCommerce.id) {
+                await store.setCurrentCommerce(initialCommerce);
+              }
+            }
+          }
+        }
+        state.business = await store.getActualBusiness();
+        await loadQueues();
+        state.toggles = await getPermissions('dashboard');
+        await refresh();
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response?.status || 500;
+        loading.value = false;
+      }
+    });
+
+    // Watch for commerce changes
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (!newCommerce || !newCommerce.id) return;
+        if (oldCommerce && oldCommerce.id === newCommerce.id) return;
+        try {
+          loading.value = true;
+          // Clear data
+          state.queues = [];
+          state.groupedQueues = [];
+          state.calculatedMetrics = {
+            'attention.created': attentionCreated,
+            'survey.created': surveyCreated,
+            'notification.created': notificationCreated,
+            'booking.created': {
+              bookingFlow: {
+                datasets: [],
+                labels: [],
+              },
+            },
+            collaborators: {},
+            clients: {},
+          };
+          resetGraphsVisibility();
+          await loadQueues();
+          await refresh();
+          loading.value = false;
+        } catch (error) {
+          console.error('Error handling commerce change:', error);
+          loading.value = false;
+        }
+      },
+      { deep: true }
+    );
+
+    // Watch for module changes
+    watch(
+      module,
+      async (newModule, oldModule) => {
+        if (oldModule && oldModule.id === newModule?.id) return;
+        try {
+          loading.value = true;
+          // Clear data
+          state.calculatedMetrics = {
+            'attention.created': attentionCreated,
+            'survey.created': surveyCreated,
+            'notification.created': notificationCreated,
+            'booking.created': {
+              bookingFlow: {
+                datasets: [],
+                labels: [],
+              },
+            },
+            collaborators: {},
+            clients: {},
+          };
+          resetGraphsVisibility();
+          await refresh();
+          loading.value = false;
+        } catch (error) {
+          console.error('Error handling module change:', error);
+          loading.value = false;
+        }
+      },
+      { deep: true }
+    );
+
+    const isActiveBusiness = () => commerce.value && commerce.value.active === true;
 
     const resetGraphsVisibility = () => {
       state.graphs = {
@@ -310,8 +385,9 @@ export default {
       if (state.queues && state.queues.length > 0) {
         queues = state.queues.map(queue => ({ id: queue.id, name: queue.name }));
       }
+      if (!commerce.value || !commerce.value.id) return {};
       const { calculatedMetrics } = await getMetrics(
-        state.commerce.id,
+        commerce.value.id,
         queues,
         state.startDate,
         state.endDate
@@ -366,11 +442,11 @@ export default {
     const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
-      if (state.commerce.country) {
-        if (state.commerce.country === 've') {
+      if (commerce.value && commerce.value.country) {
+        if (commerce.value.country === 've') {
           const resultHour = hourDate.getHours() - 4;
           return resultHour < 0 ? 24 + resultHour : resultHour;
-        } else if (['br', 'cl'].includes(state.commerce.country)) {
+        } else if (['br', 'cl'].includes(commerce.value.country)) {
           const resultHour = hourDate.getHours() - 3;
           return resultHour < 0 ? 24 + resultHour : resultHour;
         } else {
@@ -380,7 +456,45 @@ export default {
     };
 
     const goBack = () => {
-      router.back();
+      router.push({ path: '/interno/colaborador/menu' });
+    };
+
+    const handleCommerceChanged = async commerce => {
+      // Commerce is now managed globally, this handler is kept for DesktopFiltersPanel compatibility
+      // but the actual change is handled by the watch on commerce computed property
+      if (commerce && commerce.id) {
+        await store.setCurrentCommerce(commerce);
+      }
+    };
+
+    const handleFiltersToggle = collapsed => {
+      // Filters toggle handled by DesktopContentLayout
+    };
+
+    const handleQuickDateSelect = async ({ type, startDate, endDate }) => {
+      state.startDate = startDate;
+      state.endDate = endDate;
+      await refresh();
+    };
+
+    const handleDateRangeChange = async () => {
+      await refresh();
+    };
+
+    const handleStartDateChange = value => {
+      state.startDate = value;
+    };
+
+    const handleEndDateChange = value => {
+      state.endDate = value;
+    };
+
+    const dashboardIndicatorsRef = ref(null);
+
+    const handleExportToPDF = () => {
+      if (dashboardIndicatorsRef.value && dashboardIndicatorsRef.value.exportToPDF) {
+        dashboardIndicatorsRef.value.exportToPDF();
+      }
     };
 
     const showIndicators = () => {
@@ -783,6 +897,8 @@ export default {
       state,
       loading,
       alertError,
+      commerce,
+      module,
       attentionNumberEvolutionProps,
       attentionDurationEvolutionProps,
       attentionHourDistributionProps,
@@ -798,7 +914,6 @@ export default {
       goBack,
       isActiveBusiness,
       refresh,
-      selectCommerce,
       showIndicators,
       showSurvey,
       showGraphs,
@@ -807,6 +922,13 @@ export default {
       getLastThreeMonths,
       getLocalHour,
       getToday,
+      handleCommerceChanged,
+      handleFiltersToggle,
+      handleQuickDateSelect,
+      handleDateRangeChange,
+      handleStartDateChange,
+      handleEndDateChange,
+      handleExportToPDF,
     };
   },
 };
@@ -814,209 +936,456 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`dashboard.title`)"
-        :toggles="state.toggles"
-        component-name="dashboard"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="dashboard">
-        <div v-if="isActiveBusiness()">
-          <div v-if="state.commerces.length === 0" class="control-box">
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo
+          :src="commerce && commerce.logo ? commerce.logo : null"
+          :loading="loading"
+        ></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`dashboard.title`)"
+          :toggles="state.toggles"
+          component-name="dashboard"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="dashboard">
+          <div v-if="isActiveBusiness()">
+            <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+              <Message
+                :title="$t('dashboard.message.3.title')"
+                :content="$t('dashboard.message.3.content')"
+              />
+            </div>
+            <div v-else-if="commerce && commerce.id" class="control-box">
+              <div id="dashboard-controls">
+                <div class="row my-2">
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getToday()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.today') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getCurrentMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.thisMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastMonth()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastMonth') }}
+                    </button>
+                  </div>
+                  <div class="col-3">
+                    <button
+                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      @click="getLastThreeMonths()"
+                      :disabled="loading"
+                    >
+                      {{ $t('dashboard.lastThreeMonths') }}
+                    </button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6">
+                    <input
+                      id="startDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.startDate"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      id="endDate"
+                      class="form-control metric-controls"
+                      type="date"
+                      v-model="state.endDate"
+                    />
+                  </div>
+                </div>
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="refresh()"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div id="title" class="metric-title">
+                <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+                <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+                <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+              </div>
+              <div id="sub-title" class="metric-subtitle">
+                ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+                {{ $t('dashboard.dates.to') }} {{ state.endDate }})
+              </div>
+              <div class="row col mx-1 mt-3 mb-1">
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showIndicators ? 'btn-selected' : ''"
+                    @click="showIndicators()"
+                    :disabled="!state.toggles['dashboard.indicators.view']"
+                    :title="$t('dashboard.consolidated')"
+                  >
+                    {{ $t('dashboard.indicators') }} <br />
+                    <i class="bi bi-stoplights-fill"></i>
+                  </button>
+                </div>
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showGraphs ? 'btn-selected' : ''"
+                    @click="showGraphs()"
+                    :disabled="!state.toggles['dashboard.graphs.view']"
+                  >
+                    {{ $t('dashboard.graph') }} <br />
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                  </button>
+                </div>
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showSurveyResults ? 'btn-selected' : ''"
+                    @click="showSurvey()"
+                    :disabled="!state.toggles['dashboard.surveys.view']"
+                  >
+                    {{ $t('dashboard.surveys') }} <br />
+                    <i class="bi bi-patch-question-fill"></i>
+                  </button>
+                </div>
+              </div>
+              <hr class="dashboard-divider" />
+              <div>
+                <!-- Relatório de Indicadores -->
+                <SimpleDownloadCard
+                  v-if="state.showIndicators"
+                  :download="state.toggles['dashboard.reports.indicators']"
+                  :title="$t('dashboard.reports.indicators.title')"
+                  :show-tooltip="true"
+                  :description="$t('dashboard.reports.indicators.description')"
+                  :icon="'bi-file-earmark-pdf'"
+                  :can-download="state.toggles['dashboard.reports.indicators'] === true"
+                  class="mb-3"
+                  @download="handleExportToPDF"
+                >
+                </SimpleDownloadCard>
+                <!-- Replace executive summary with CollaboratorSpySection for collaborators -->
+                <CollaboratorSpySection
+                  v-if="state.showIndicators"
+                  :show="state.showIndicators"
+                  :commerce="commerce"
+                  :collaborator="state.collaborator"
+                >
+                </CollaboratorSpySection>
+                <!-- Show DashboardIndicators with detailed cards, hiding summary when showing CollaboratorSpySection -->
+                <DashboardIndicators
+                  v-if="state.showIndicators"
+                  ref="dashboardIndicatorsRef"
+                  :show-indicators="state.showIndicators"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="commerce"
+                  :hide-summary="true"
+                >
+                </DashboardIndicators>
+                <DashboardIndicators
+                  v-else
+                  :show-indicators="state.showIndicators"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="commerce"
+                >
+                </DashboardIndicators>
+                <DashboardGraphs
+                  :show-graphs="state.showGraphs"
+                  :calculated-metrics="{
+                    attentionNumberEvolutionProps,
+                    attentionDurationEvolutionProps,
+                    attentionHourDistributionProps,
+                    attentionQueuesProps,
+                    attentionFlowProps,
+                    attentionRateDurationEvolutionProps,
+                    surveyFlowProps,
+                    bookingFlowProps,
+                    bookingNumberEvolutionProps,
+                    attentionDayDistributionProps,
+                    bookingDayDistributionProps,
+                    bookingHourDistributionProps,
+                    ...state.calculatedMetrics,
+                  }"
+                  :toggles="state.toggles"
+                  :graphs="state.graphs"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="commerce"
+                >
+                </DashboardGraphs>
+                <DashboardSurveys
+                  :show-survey="state.showSurveyResults"
+                  :calculated-metrics="state.calculatedMetrics"
+                  :toggles="state.toggles"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                  :commerce="commerce"
+                  :queues="state.queues"
+                >
+                </DashboardSurveys>
+              </div>
+            </div>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
             <Message
-              :title="$t('dashboard.message.3.title')"
-              :content="$t('dashboard.message.3.content')"
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
             />
           </div>
-          <div v-else class="control-box">
-            <div id="dashboard-controls">
-              <div class="row">
-                <div class="col" v-if="state.commerces">
-                  <span>{{ $t('dashboard.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    id="modules"
-                    @change="selectCommerce(state.commerce)"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-              <div class="row my-2">
-                <div class="col-3">
-                  <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getToday()"
-                    :disabled="loading"
-                  >
-                    {{ $t('dashboard.today') }}
-                  </button>
-                </div>
-                <div class="col-3">
-                  <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getCurrentMonth()"
-                    :disabled="loading"
-                  >
-                    {{ $t('dashboard.thisMonth') }}
-                  </button>
-                </div>
-                <div class="col-3">
-                  <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getLastMonth()"
-                    :disabled="loading"
-                  >
-                    {{ $t('dashboard.lastMonth') }}
-                  </button>
-                </div>
-                <div class="col-3">
-                  <button
-                    class="btn btn-dark rounded-pill px-2 metric-filters"
-                    @click="getLastThreeMonths()"
-                    :disabled="loading"
-                  >
-                    {{ $t('dashboard.lastThreeMonths') }}
-                  </button>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-6">
-                  <input
-                    id="startDate"
-                    class="form-control metric-controls"
-                    type="date"
-                    v-model="state.startDate"
-                  />
-                </div>
-                <div class="col-6">
-                  <input
-                    id="endDate"
-                    class="form-control metric-controls"
-                    type="date"
-                    v-model="state.endDate"
-                  />
-                </div>
-              </div>
-              <div class="col">
-                <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                  @click="refresh()"
-                  :disabled="loading"
-                >
-                  <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
-                </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading && commerce?.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="commerce.logo"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>
-          <div v-if="!loading" id="dashboard-result" class="mt-2">
-            <div id="title" class="metric-title">
-              <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
-              <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
-              <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
-            </div>
-            <div id="sub-title" class="metric-subtitle">
-              ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
-              {{ $t('dashboard.dates.to') }} {{ state.endDate }})
-            </div>
-            <div class="row col mx-1 mt-3 mb-1">
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showIndicators ? 'btn-selected' : ''"
-                  @click="showIndicators()"
-                  :disabled="!state.toggles['dashboard.indicators.view']"
-                  :title="$t('dashboard.consolidated')"
-                >
-                  {{ $t('dashboard.indicators') }} <br />
-                  <i class="bi bi-stoplights-fill"></i>
-                </button>
-              </div>
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showGraphs ? 'btn-selected' : ''"
-                  @click="showGraphs()"
-                  :disabled="!state.toggles['dashboard.graphs.view']"
-                >
-                  {{ $t('dashboard.graph') }} <br />
-                  <i class="bi bi-bar-chart-line-fill"></i>
-                </button>
-              </div>
-              <div class="col-4 centered">
-                <button
-                  class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                  :class="state.showSurveyResults ? 'btn-selected' : ''"
-                  @click="showSurvey()"
-                  :disabled="!state.toggles['dashboard.surveys.view']"
-                >
-                  {{ $t('dashboard.surveys') }} <br />
-                  <i class="bi bi-patch-question-fill"></i>
-                </button>
-              </div>
-            </div>
-            <div>
-              <DashboardIndicators
-                :show-indicators="state.showIndicators"
-                :calculated-metrics="state.calculatedMetrics"
-                :toggles="state.toggles"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-              >
-              </DashboardIndicators>
-              <DashboardGraphs
-                :show-graphs="state.showGraphs"
-                :calculated-metrics="{
-                  attentionNumberEvolutionProps,
-                  attentionDurationEvolutionProps,
-                  attentionHourDistributionProps,
-                  attentionQueuesProps,
-                  attentionFlowProps,
-                  attentionRateDurationEvolutionProps,
-                  surveyFlowProps,
-                  bookingFlowProps,
-                  bookingNumberEvolutionProps,
-                  attentionDayDistributionProps,
-                  bookingDayDistributionProps,
-                  bookingHourDistributionProps,
-                  ...state.calculatedMetrics,
-                }"
-                :toggles="state.toggles"
-                :graphs="state.graphs"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-              >
-              </DashboardGraphs>
-              <DashboardSurveys
-                :show-survey="state.showSurveyResults"
-                :calculated-metrics="state.calculatedMetrics"
-                :toggles="state.toggles"
-                :start-date="state.startDate"
-                :end-date="state.endDate"
-                :commerce="state.commerce"
-                :queues="state.queues"
-              >
-              </DashboardSurveys>
-            </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`dashboard.title`)"
+              :toggles="state.toggles"
+              component-name="dashboard"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
           </div>
         </div>
-        <div v-if="!isActiveBusiness() && !loading">
-          <Message
-            :title="$t('dashboard.message.1.title')"
-            :content="$t('dashboard.message.1.content')"
-          />
+        <div id="dashboard" v-if="isActiveBusiness()">
+          <div v-if="!commerce || !commerce.id">
+            <div v-if="!loading" class="control-box">
+              <Message
+                :title="$t('dashboard.message.3.title')"
+                :content="$t('dashboard.message.3.content')"
+              />
+            </div>
+          </div>
+          <div v-else>
+            <DesktopContentLayout
+              :show-filters="true"
+              :filters-sticky="true"
+              @filters-toggle="handleFiltersToggle"
+            >
+              <template #filters="{ onToggle, collapsed }">
+                <DesktopFiltersPanel
+                  :model-value="{ commerce: commerce }"
+                  :loading="loading"
+                  :commerces="[]"
+                  :show-commerce-selector="false"
+                  :show-date-filters="false"
+                  :show-quick-date-buttons="false"
+                  :show-refresh-button="false"
+                  :sticky="true"
+                  :show-all-option="false"
+                  :commerce-selector-id="'dashboard-commerce-selector'"
+                  :on-toggle="onToggle"
+                  :collapsed="collapsed"
+                  @commerce-changed="handleCommerceChanged"
+                >
+                  <template #custom-filters>
+                    <DateRangeFilters
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :show-quick-buttons="true"
+                      :disabled="loading"
+                      :show-search-button="true"
+                      @update:startDate="handleStartDateChange"
+                      @update:endDate="handleEndDateChange"
+                      @quick-select="handleQuickDateSelect"
+                      @search="handleDateRangeChange"
+                    />
+                  </template>
+                </DesktopFiltersPanel>
+              </template>
+
+              <template #content>
+                <div v-if="!loading" id="dashboard-result">
+                  <div id="title" class="metric-title">
+                    <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
+                    <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
+                    <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+                  </div>
+                  <div id="sub-title" class="metric-subtitle">
+                    ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
+                    {{ $t('dashboard.dates.to') }} {{ state.endDate }})
+                  </div>
+                  <div class="row col mx-1 mt-3 mb-1">
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showIndicators ? 'btn-selected' : ''"
+                        @click="showIndicators()"
+                        :disabled="!state.toggles['dashboard.indicators.view']"
+                        :title="$t('dashboard.consolidated')"
+                      >
+                        {{ $t('dashboard.indicators') }} <br />
+                        <i class="bi bi-stoplights-fill"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showGraphs ? 'btn-selected' : ''"
+                        @click="showGraphs()"
+                        :disabled="!state.toggles['dashboard.graphs.view']"
+                      >
+                        {{ $t('dashboard.graph') }} <br />
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showSurveyResults ? 'btn-selected' : ''"
+                        @click="showSurvey()"
+                        :disabled="!state.toggles['dashboard.surveys.view']"
+                      >
+                        {{ $t('dashboard.surveys') }} <br />
+                        <i class="bi bi-patch-question-fill"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <hr class="dashboard-divider" />
+                  <div>
+                    <!-- Relatório de Indicadores -->
+                    <SimpleDownloadCard
+                      v-if="state.showIndicators"
+                      :download="state.toggles['dashboard.reports.indicators']"
+                      :title="$t('dashboard.reports.indicators.title')"
+                      :show-tooltip="true"
+                      :description="$t('dashboard.reports.indicators.description')"
+                      :icon="'bi-file-earmark-pdf'"
+                      :can-download="state.toggles['dashboard.reports.indicators'] === true"
+                      class="mb-3"
+                      @download="handleExportToPDF"
+                    >
+                    </SimpleDownloadCard>
+                    <!-- Replace executive summary with CollaboratorSpySection for collaborators -->
+                    <CollaboratorSpySection
+                      v-if="state.showIndicators"
+                      :show="state.showIndicators"
+                      :commerce="commerce"
+                      :collaborator="state.collaborator"
+                    >
+                    </CollaboratorSpySection>
+                    <!-- Show DashboardIndicators with detailed cards, hiding summary when showing CollaboratorSpySection -->
+                    <DashboardIndicators
+                      v-if="state.showIndicators"
+                      ref="dashboardIndicatorsRef"
+                      :show-indicators="state.showIndicators"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="commerce"
+                      :hide-summary="true"
+                    >
+                    </DashboardIndicators>
+                    <DashboardIndicators
+                      v-else
+                      :show-indicators="state.showIndicators"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="commerce"
+                    >
+                    </DashboardIndicators>
+                    <DashboardGraphs
+                      :show-graphs="state.showGraphs"
+                      :calculated-metrics="{
+                        attentionNumberEvolutionProps,
+                        attentionDurationEvolutionProps,
+                        attentionHourDistributionProps,
+                        attentionQueuesProps,
+                        attentionFlowProps,
+                        attentionRateDurationEvolutionProps,
+                        surveyFlowProps,
+                        bookingFlowProps,
+                        bookingNumberEvolutionProps,
+                        attentionDayDistributionProps,
+                        bookingDayDistributionProps,
+                        bookingHourDistributionProps,
+                        ...state.calculatedMetrics,
+                      }"
+                      :toggles="state.toggles"
+                      :graphs="state.graphs"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="commerce"
+                    >
+                    </DashboardGraphs>
+                    <DashboardSurveys
+                      :show-survey="state.showSurveyResults"
+                      :calculated-metrics="state.calculatedMetrics"
+                      :toggles="state.toggles"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      :commerce="commerce"
+                      :queues="state.queues"
+                    >
+                    </DashboardSurveys>
+                  </div>
+                </div>
+              </template>
+            </DesktopContentLayout>
+          </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -1033,6 +1402,12 @@ export default {
   text-align: left;
   font-size: 0.9rem;
   font-weight: 500;
+}
+.dashboard-divider {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--gris-default);
+  opacity: 0.5;
 }
 .select {
   border-radius: 0.5rem;
@@ -1064,5 +1439,52 @@ export default {
 .metric-card-subtitle {
   font-size: 0.6rem;
   font-weight: 500;
+}
+
+/* Desktop Layout Styles - Only affects the header row */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+  }
 }
 </style>

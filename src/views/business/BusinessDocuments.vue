@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -39,14 +39,23 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      selectedCommerces: ref([]),
       queues: ref({}),
       services: ref({}),
       queue: {},
       dateType: 'month',
-      commerce: {},
       toggles: {},
+      allCommerces: ref([]),
+    });
+
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Compute selectedCommerces - use all commerces for DocumentsManagement
+    const selectedCommerces = computed(() => {
+      if (state.allCommerces && state.allCommerces.length > 0) {
+        return state.allCommerces;
+      }
+      return [];
     });
 
     onBeforeMount(async () => {
@@ -54,11 +63,17 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        state.selectedCommerces = [state.commerce];
+        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
         state.toggles = await getPermissions('document-commerce', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (state.allCommerces && state.allCommerces.length > 0) {
+            await store.setCurrentCommerce(state.allCommerces[0]);
+          }
+        }
+
         await refresh();
         loading.value = false;
       } catch (error) {
@@ -66,36 +81,35 @@ export default {
       }
     });
 
-    const isActiveBusiness = () => state.business && state.business.active === true;
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.selectedCommerces = undefined;
-        if (commerce.id === 'ALL') {
-          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
-            state.selectedCommerces = state.currentUser.commercesId;
-          } else {
-            state.selectedCommerces = state.commerces;
+    // Watch for commerce changes and refresh
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data - DocumentsManagement will handle the refresh internally
+            // The component will react to commerce prop changes
+            await refresh();
+            loading.value = false;
+          } catch (error) {
+            console.error('Error refreshing documents on commerce change:', error);
+            loading.value = false;
           }
-        } else {
-          state.commerce = commerce;
-          state.selectedCommerces = state.commerces;
         }
-        await refresh();
-        loading.value = false;
-      } catch (error) {
-        loading.value = false;
-      }
-    };
+      },
+      { immediate: false }
+    );
+
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
     const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
-      if (state.commerce.country) {
-        if (state.commerce.country === 've') {
+      if (commerce.value && commerce.value.country) {
+        if (commerce.value.country === 've') {
           return hourDate.getHours() - 4;
-        } else if (['br', 'cl'].includes(state.commerce.country)) {
+        } else if (['br', 'cl'].includes(commerce.value.country)) {
           return hourDate.getHours() - 3;
         } else {
           return hourDate.getHours();
@@ -111,8 +125,16 @@ export default {
       state.filtersCollapsed = collapsed;
     };
 
-    const handleCommerceChanged = commerce => {
-      selectCommerce(commerce);
+    const handleCommerceChanged = async commerce => {
+      // Commerce is now managed globally
+      if (commerce && commerce.id && commerce.id !== 'ALL') {
+        await store.setCurrentCommerce(commerce);
+      }
+    };
+
+    const refresh = async () => {
+      // Refresh is handled by DocumentsManagement component internally
+      // This is kept for compatibility but may not be needed
     };
 
     return {
@@ -121,10 +143,12 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
+      selectedCommerces,
       getLocalHour,
       handleFiltersToggle,
       handleCommerceChanged,
+      refresh,
     };
   },
 };
@@ -150,15 +174,18 @@ export default {
       <DocumentsManagement
         :show-client-management="true"
         :toggles="state.toggles"
-        :commerce="state.commerce"
-        :commerces="state.selectedCommerces"
+        :commerce="commerce"
+        :commerces="selectedCommerces"
       >
       </DocumentsManagement>
     </div>
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessDocument.title`)"
           :toggles="state.toggles"
@@ -168,11 +195,11 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessDocument">
           <div v-if="isActiveBusiness()">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('dashboard.message.3.title')"
                 :content="$t('dashboard.message.3.content')"
@@ -180,22 +207,7 @@ export default {
             </div>
             <div v-else class="control-box">
               <div id="dashboard-controls">
-                <div class="row">
-                  <div class="col" v-if="state.commerces">
-                    <span>{{ $t('dashboard.commerce') }} </span>
-                    <select
-                      class="btn btn-md fw-bold text-dark m-1 select"
-                      v-model="state.commerce"
-                      id="modules"
-                      @change="selectCommerce(state.commerce)"
-                    >
-                      <option v-for="com in state.commerces" :key="com.id" :value="com">
-                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                      </option>
-                      <option key="ALL" :value="{ id: 'ALL' }">{{ $t('dashboard.all') }}</option>
-                    </select>
-                  </div>
-                </div>
+                <div class="row"></div>
               </div>
             </div>
             <div v-if="!loading" id="dashboard-result" class="mt-2">
@@ -203,8 +215,8 @@ export default {
                 <DocumentsManagement
                   :show-client-management="true"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
-                  :commerces="state.selectedCommerces"
+                  :commerce="commerce"
+                  :commerces="selectedCommerces"
                 >
                 </DocumentsManagement>
               </div>
@@ -225,17 +237,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -252,7 +264,7 @@ export default {
           </div>
         </div>
         <div id="businessDocument" v-if="isActiveBusiness()">
-          <div v-if="state.commerces.length === 0" class="control-box">
+          <div v-if="!commerce" class="control-box">
             <Message
               :title="$t('dashboard.message.3.title')"
               :content="$t('dashboard.message.3.content')"
@@ -266,10 +278,10 @@ export default {
           >
             <template #filters="{ onToggle, collapsed }">
               <DesktopFiltersPanel
-                :model-value="{ commerce: state.commerce }"
+                :model-value="{ commerce: commerce }"
                 :loading="loading"
-                :commerces="Array.isArray(state.commerces) ? state.commerces : []"
-                :show-commerce-selector="true"
+                :commerces="[]"
+                :show-commerce-selector="false"
                 :show-date-filters="false"
                 :show-quick-date-buttons="false"
                 :show-refresh-button="false"
@@ -287,9 +299,7 @@ export default {
                     :show-client-management="false"
                     :toggles="state.toggles"
                     :commerce="state.commerce"
-                    :commerces="
-                      Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []
-                    "
+                    :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                     filters-location="slot"
                   >
                     <template #filters-exposed="filterProps">
@@ -441,7 +451,7 @@ export default {
                 :show-client-management="true"
                 :toggles="state.toggles"
                 :commerce="state.commerce"
-                :commerces="Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []"
+                :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                 filters-location="slot"
               >
               </DocumentsManagement>

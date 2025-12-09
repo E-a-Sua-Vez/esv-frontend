@@ -32,8 +32,11 @@ export default {
     disabledDates: { type: Object, default: undefined },
     groupedQueues: { type: Object, default: undefined },
     calendarAttributes: { type: Object, default: undefined },
+    drawerMode: { type: Boolean, default: false },
+    selectedQueue: { type: Object, default: undefined },
+    selectedDate: { type: String, default: undefined },
   },
-  emits: ['getAvailableDatesByCalendarMonth'],
+  emits: ['getAvailableDatesByCalendarMonth', 'open-drawer'],
   data() {
     return {
       loading: false,
@@ -59,7 +62,7 @@ export default {
       queueToTransfer: {},
       dateMask: { modelValue: 'YYYY-MM-DD' },
       locale: 'es',
-      selectedDate: new Date().setDate(new Date().getDate() + 1),
+      internalSelectedDate: new Date().setDate(new Date().getDate() + 1),
       minDate: new Date().setDate(new Date().getDate()),
       maxDate: new Date().setDate(new Date().getDate() + 90),
       amountofBlocksNeeded: 1,
@@ -76,7 +79,11 @@ export default {
   },
   methods: {
     showDetails() {
-      this.extendedEntity = !this.extendedEntity;
+      if (this.drawerMode) {
+        this.$emit('open-drawer', this.booking);
+      } else {
+        this.extendedEntity = !this.extendedEntity;
+      }
     },
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
@@ -397,6 +404,30 @@ export default {
     formatIdNumber(commerce, idNumber) {
       return formatIdNumber(commerce, idNumber);
     },
+    getStatusIcon() {
+      if (this.booking.status === 'PENDING') return 'bi bi-clock-fill';
+      if (this.booking.status === 'CONFIRMED') return 'bi bi-check-circle-fill';
+      if (this.booking.status === 'CANCELLED') return 'bi bi-x-circle-fill';
+      return 'bi bi-calendar-check-fill';
+    },
+    getStatusIconClass() {
+      if (this.booking.status === 'CONFIRMED') return 'icon-success';
+      if (this.booking.status === 'PENDING') return 'icon-warning';
+      if (this.booking.status === 'CANCELLED') return 'icon-error';
+      return 'icon-info';
+    },
+    getStatusTooltip() {
+      if (this.booking.status === 'PENDING') return 'Reserva pendente';
+      if (this.booking.status === 'CONFIRMED') return 'Reserva confirmada';
+      if (this.booking.status === 'CANCELLED') return 'Reserva cancelada';
+      return 'Estado da reserva';
+    },
+    getCardTypeClass() {
+      if (this.booking.status === 'CONFIRMED') return 'booking-card-success';
+      if (this.booking.status === 'PENDING') return 'booking-card-warning';
+      if (this.booking.status === 'CANCELLED') return 'booking-card-error';
+      return 'booking-card-info';
+    },
   },
   watch: {
     detailsOpened: {
@@ -419,231 +450,279 @@ export default {
 
 <template>
   <div v-if="show && booking">
-    <div class="row metric-card booking-link" href="#" @click.prevent="showDetails()">
-      <div v-if="booking.servicesDetails" class="idNumber-title lefted">
-        <span
-          v-for="serv in booking.servicesDetails"
-          :key="serv.id"
-          class="badge service-badge bg-primary"
-        >
-          {{ serv.name }}
-        </span>
-        <span v-if="booking.packageId" class="badge bg-secondary service-badge">
-          <i class="bi bi-box-fill"></i> <span> {{ booking.packageProcedureNumber }} </span>
-        </span>
-      </div>
-      <div class="col lefted fw-bold" v-if="booking.user && booking.user.name">
-        {{ booking.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
-        <i v-if="booking.status === 'PENDING'" class="bi bi-clock-fill icon yellow-icon"> </i>
-        <i v-if="booking.status === 'CONFIRMED'" class="bi bi-check-circle-fill icon green-icon">
-        </i>
-        <i
-          v-if="booking.confirmationData && booking.confirmationData.paid === true"
-          class="bi bi-coin icon blue-icon"
-        >
-        </i>
-        <i v-if="booking.transfered === true" class="bi bi-arrow-left-right icon blue-icon"> </i>
-        <i v-if="booking.edited === true" class="bi bi-pencil-fill icon"> </i>
-        <i v-if="booking.termsConditionsAcceptedCode" class="bi bi-person-fill-check mx-1"></i>
-      </div>
-      <div class="col centered hour-title" v-if="booking.block && booking.block.hourFrom">
-        <span> {{ booking.block.hourFrom }} - {{ booking.block.hourTo }} </span>
-      </div>
-      <div class="col-1 centered date-title">
-        <div class="centered">
-          <span href="#" @click.prevent="showDetails()">
-            <span class="details-title"></span>
-            <i
-              class="dark"
-              :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-            ></i>
+    <div class="booking-row-card" :class="getCardTypeClass()" @click.prevent="showDetails()">
+      <div class="booking-row-content">
+        <!-- Status Icon -->
+        <Popper :class="'dark'" arrow disable-click-away hover>
+          <template #content>
+            <div>{{ getStatusTooltip() }}</div>
+          </template>
+          <div class="booking-icon-mini" :class="getStatusIconClass()" @click.stop>
+            <i :class="getStatusIcon()"></i>
+          </div>
+        </Popper>
+
+        <!-- Service Badges -->
+        <div v-if="booking.servicesDetails || booking.packageId" class="service-badges-inline">
+          <span
+            v-for="serv in booking.servicesDetails"
+            :key="serv.id"
+            class="badge-mini service-tag-mini"
+          >
+            {{ serv.name }}
           </span>
+          <span v-if="booking.packageId" class="badge-mini service-tag-mini bg-secondary">
+            <i class="bi bi-box-fill"></i> {{ booking.packageProcedureNumber }}
+          </span>
+        </div>
+
+        <!-- Client Info - Horizontal -->
+        <div class="booking-info-inline">
+          <div class="booking-name-inline">
+            <span class="booking-name-text">{{
+              booking.user?.name?.split(' ')[0].toUpperCase() || 'N/I'
+            }}</span>
+            <Popper :class="'dark'" arrow disable-click-away hover>
+              <template #content>
+                <div>Copiar dados da reserva</div>
+              </template>
+              <button class="btn-copy-mini" @click.stop="copyBooking()">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+              </button>
+            </Popper>
+          </div>
+          <div class="booking-meta-inline">
+            <span class="booking-time-inline" v-if="booking.block && booking.block.hourFrom">
+              {{ booking.block.hourFrom }} - {{ booking.block.hourTo }}
+            </span>
+            <Popper
+              v-if="booking.termsConditionsAcceptedCode"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>Termos e condições aceitos</div>
+              </template>
+              <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
+            </Popper>
+            <i
+              v-if="booking.confirmationData?.paid"
+              class="bi bi-coin icon-mini-separated blue-icon"
+              @click.stop
+            ></i>
+            <i
+              v-if="booking.transfered"
+              class="bi bi-arrow-left-right icon-mini-separated blue-icon"
+              @click.stop
+            ></i>
+            <i v-if="booking.edited" class="bi bi-pencil-fill icon-mini-separated" @click.stop></i>
+          </div>
+        </div>
+
+        <!-- Collapse Icon -->
+        <div class="collapse-icon-wrapper">
+          <i
+            class="bi collapse-icon"
+            :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
+          ></i>
         </div>
       </div>
     </div>
-    <div class="details-arrow">
-      <div class="centered mb-2"></div>
+    <div v-if="extendedEntity" class="booking-details-expanded">
       <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
-        <div class="row m-0 centered">
-          <div class="d-block col-12 col-md-4 mt-4">
-            <div class="col-12 fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ booking.user.name || 'N/I' }}
-              {{ booking.user.lastName || '' }}
-              <div class="row">
-                <a class="copy-icon" @click="copyBooking()">
+        <!-- Client Info - Modernized -->
+        <div class="booking-client-info">
+          <div class="booking-client-header">
+            <div class="booking-client-name-section">
+              <div class="booking-client-avatar">
+                <i class="bi bi-person-circle"></i>
+              </div>
+              <div class="booking-client-details">
+                <span class="booking-client-name"
+                  >{{ booking.user.name || 'N/I' }} {{ booking.user.lastName || '' }}</span
+                >
+                <button class="btn-copy-mini" @click="copyBooking()" title="Copiar dados">
                   <i class="bi bi-file-earmark-spreadsheet"></i>
-                </a>
+                </button>
               </div>
             </div>
             <Spinner :show="loading"></Spinner>
           </div>
-          <div class="d-block d-md-none col-12 col-md-8">
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + booking.user.phone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.user.phone || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + booking.user.email"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ booking.user.idNumber || 'N/I' }}
-            </div>
-          </div>
-          <div class="d-none d-md-block col-12 col-md-8">
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + booking.user.phone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ booking.user.phone || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + booking.user.email"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ booking.user.email || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i>
-              {{ formatIdNumber(commerce, booking.user.idNumber) || 'N/I' }}
+          <div class="booking-client-contact">
+            <a
+              class="booking-contact-item whatsapp-item"
+              :href="'https://wa.me/' + booking.user.phone"
+              target="_blank"
+            >
+              <div class="contact-icon-wrapper whatsapp-bg">
+                <i class="bi bi-whatsapp"></i>
+              </div>
+              <span class="contact-text">{{ booking.user.phone || 'N/I' }}</span>
+            </a>
+            <a
+              class="booking-contact-item email-item"
+              :href="'mailto:' + booking.user.email"
+              target="_blank"
+            >
+              <div class="contact-icon-wrapper email-bg">
+                <i class="bi bi-envelope"></i>
+              </div>
+              <span class="contact-text">{{ booking.user.email || 'N/I' }}</span>
+            </a>
+            <div class="booking-contact-item id-item">
+              <div class="contact-icon-wrapper id-bg">
+                <i class="bi bi-person-vcard"></i>
+              </div>
+              <span class="contact-text">{{
+                formatIdNumber(commerce, booking.user.idNumber) || 'N/I'
+              }}</span>
             </div>
           </div>
         </div>
-        <hr />
+        <!-- Booking Context Info - Reservation Details (Compact Horizontal) -->
+        <div
+          v-if="
+            selectedQueue ||
+            booking.block ||
+            (booking.services && booking.services.length > 0) ||
+            booking.date
+          "
+          class="booking-context-info-compact"
+        >
+          <div v-if="selectedQueue" class="booking-context-item-inline">
+            <i class="bi bi-person-lines-fill"></i>
+            <span class="booking-context-label-inline">Fila</span>
+            <span class="booking-context-value-inline">{{ selectedQueue.name || 'N/I' }}</span>
+          </div>
+          <div v-if="booking.block" class="booking-context-item-inline">
+            <i class="bi bi-clock-fill"></i>
+            <span class="booking-context-label-inline">Horário</span>
+            <span class="booking-context-value-inline">
+              {{ booking.block.hourFrom || 'N/I' }}
+              <span v-if="booking.block.hourTo"> - {{ booking.block.hourTo }}</span>
+            </span>
+          </div>
+          <div v-if="booking.date" class="booking-context-item-inline">
+            <i class="bi bi-calendar-event"></i>
+            <span class="booking-context-label-inline">Data</span>
+            <span class="booking-context-value-inline">{{ getDate(booking.date) }}</span>
+          </div>
+          <div
+            v-if="booking.services && booking.services.length > 0"
+            class="booking-context-item-inline"
+          >
+            <i class="bi bi-scissors"></i>
+            <span class="booking-context-label-inline">Serviço(s)</span>
+            <span class="booking-context-value-inline">
+              {{ booking.services.map(s => s.name).join(', ') }}
+            </span>
+          </div>
+        </div>
+        <div class="booking-divider"></div>
         <!-- CONFIRMATION DETAILS -->
         <div
-          class="row mx-1 centered"
+          class="booking-confirmation-badges"
           v-if="booking.confirmed === true && booking.confirmationData"
         >
-          <div class="mb-2">
-            <i class="bi bi-check-circle-fill mx-1"> </i>
-            <span class="mb-1">{{ $t('collaboratorBookingsView.confirmData') }}</span>
+          <div class="booking-confirmation-header">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>{{ $t('collaboratorBookingsView.confirmData') }}</span>
           </div>
-          <div v-if="booking.confirmationData">
+          <div class="booking-confirmation-tags" v-if="booking.confirmationData">
             <span
               v-if="
                 booking.confirmationData.proceduresTotalNumber &&
                 booking.confirmationData.procedureNumber
               "
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
+              class="badge-mini confirmation-tag"
             >
               {{ booking.confirmationData.procedureNumber }}
               {{ $t('collaboratorBookingsView.procedureNumber') }}
-              {{ booking.confirmationData.proceduresTotalNumber }}</span
-            >
+              {{ booking.confirmationData.proceduresTotalNumber }}
+            </span>
             <span
               v-if="booking.confirmationData.paymentFiscalNote"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
+              class="badge-mini confirmation-tag"
             >
-              {{ $t(`paymentFiscalNotes.${booking.confirmationData.paymentFiscalNote}`) }}</span
-            >
-            <span
-              v-if="booking.confirmationData.paymentType"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}</span
-            >
-            <span
-              v-if="booking.confirmationData.paymentMethod"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}</span
-            >
+              {{ $t(`paymentFiscalNotes.${booking.confirmationData.paymentFiscalNote}`) }}
+            </span>
+            <span v-if="booking.confirmationData.paymentType" class="badge-mini confirmation-tag">
+              {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) }}
+            </span>
+            <span v-if="booking.confirmationData.paymentMethod" class="badge-mini confirmation-tag">
+              {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) }}
+            </span>
             <span
               v-if="booking.confirmationData.paymentAmount"
-              class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
+              class="badge-mini confirmation-tag payment-amount"
             >
-              <i class="bi bi-coin mx-1"> </i> {{ booking.confirmationData.paymentAmount }}</span
-            >
+              <i class="bi bi-coin"></i>
+              {{ booking.confirmationData.paymentAmount }}
+            </span>
             <span
               v-if="booking.confirmationData.paymentCommission"
-              class="badge rounded-pill bg-warning metric-keyword-tag mx-1 fw-bold"
+              class="badge-mini confirmation-tag payment-commission"
             >
-              <i class="bi bi-coin mx-1"> </i>
-              {{ booking.confirmationData.paymentCommission }}</span
-            >
-            <span
-              v-if="booking.confirmationData.paymentDate"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ getDate(booking.confirmationData.paymentDate) }}</span
-            >
+              <i class="bi bi-coin"></i>
+              {{ booking.confirmationData.paymentCommission }}
+            </span>
+            <span v-if="booking.confirmationData.paymentDate" class="badge-mini confirmation-tag">
+              {{ getDate(booking.confirmationData.paymentDate) }}
+            </span>
           </div>
         </div>
-        <hr />
-        <div class="row mx-1 centered">
-          <!-- PAYMENT -->
-          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
-            <h6>
-              <span class="centered confirm-payment" href="#" @click.prevent="showPaymentDetails()">
-                <i class="bi bi-cash-coin icon"></i>
-                <span class="step-title fw-bold">{{
-                  $t('collaboratorBookingsView.paymentConfirm')
-                }}</span>
-                <i
-                  class="dark"
-                  :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                ></i>
-              </span>
-              <div v-if="extendedPaymentEntity" class="index"></div>
-            </h6>
-          </div>
-          <!-- TRANSFER -->
-          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')">
-            <h6>
-              <span
-                class="centered confirm-payment"
-                href="#"
-                @click.prevent="showTransferDetails()"
-              >
-                <i class="bi bi-arrow-left-right icon"></i>
-                <span class="step-title fw-bold">{{
-                  $t('collaboratorBookingsView.transferQueue')
-                }}</span>
-                <i
-                  class="dark"
-                  :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                ></i>
-              </span>
-              <div v-if="extendedTransferEntity" class="index"></div>
-            </h6>
-          </div>
-          <!-- EDIT -->
-          <div class="col-4" v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')">
-            <h6>
-              <span class="centered confirm-payment" href="#" @click.prevent="showEditDetails()">
-                <i class="bi bi-pencil-fill icon"></i>
-                <span class="step-title fw-bold">{{ $t('collaboratorBookingsView.edit') }}</span>
-                <i
-                  class="dark"
-                  :class="`bi ${extendedEditEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                ></i>
-              </span>
-              <div v-if="extendedEditEntity" class="index"></div>
-            </h6>
-          </div>
+        <div
+          v-if="booking.confirmed === true && booking.confirmationData"
+          class="booking-divider"
+        ></div>
+
+        <!-- Action Buttons -->
+        <div class="booking-actions-tabs">
+          <button
+            v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
+            class="booking-action-tab"
+            :class="{ 'booking-action-tab-active': extendedPaymentEntity }"
+            @click.prevent="showPaymentDetails()"
+          >
+            <i class="bi bi-cash-coin"></i>
+            <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
+            <i :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </button>
+          <button
+            v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')"
+            class="booking-action-tab"
+            :class="{ 'booking-action-tab-active': extendedTransferEntity }"
+            @click.prevent="showTransferDetails()"
+          >
+            <i class="bi bi-arrow-left-right"></i>
+            <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
+            <i :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </button>
+          <button
+            v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')"
+            class="booking-action-tab"
+            :class="{ 'booking-action-tab-active': extendedEditEntity }"
+            @click.prevent="showEditDetails()"
+          >
+            <i class="bi bi-pencil-fill"></i>
+            <span>{{ $t('collaboratorBookingsView.edit') }}</span>
+            <i :class="`bi ${extendedEditEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </button>
         </div>
         <!-- PAYMENT -->
-        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')">
-          <div>
-            <div :class="{ show: extendedPaymentEntity }" class="detailed-data transition-slow">
-              <div v-if="!booking.confirmed">
+        <Transition name="slide-fade">
+          <div
+            v-if="extendedPaymentEntity && getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
+            class="booking-action-section"
+          >
+            <div class="booking-action-content">
+              <div v-if="!booking.confirmed" class="booking-action-form">
+                <div class="booking-action-header">
+                  <i class="bi bi-cash-coin"></i>
+                  <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
+                </div>
                 <PaymentForm
                   :id="booking.id"
                   :commerce="commerce"
@@ -655,18 +734,20 @@ export default {
                   :receive-data="receiveData"
                 >
                 </PaymentForm>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
-                  @click="goConfirm2()"
-                  :disabled="
-                    booking.status === 'CONFIRMED' ||
-                    booking.confirmed ||
-                    !toggles['collaborator.bookings.confirm']
-                  "
-                >
-                  <i class="bi bi-person-check-fill"> </i>
-                  {{ $t('collaboratorBookingsView.confirm') }}
-                </button>
+                <div class="booking-action-buttons">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                    @click="goConfirm2()"
+                    :disabled="
+                      booking.status === 'CONFIRMED' ||
+                      booking.confirmed ||
+                      !toggles['collaborator.bookings.confirm']
+                    "
+                  >
+                    <i class="bi bi-person-check-fill"></i>
+                    {{ $t('collaboratorBookingsView.confirm') }}
+                  </button>
+                </div>
                 <AreYouSure
                   :show="goToConfirm2"
                   :yes-disabled="toggles['collaborator.bookings.confirm']"
@@ -675,9 +756,8 @@ export default {
                   @actionNo="confirmCancel2()"
                 >
                 </AreYouSure>
-                <hr />
               </div>
-              <div v-else>
+              <div v-else class="booking-action-message">
                 <Message
                   :title="$t('collaboratorBookingsView.message.7.title')"
                   :content="$t('collaboratorBookingsView.message.7.content')"
@@ -685,202 +765,193 @@ export default {
               </div>
             </div>
           </div>
-        </div>
+        </Transition>
         <!-- TRANSFER -->
-        <div
-          class="row centered"
-          v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')"
-        >
-          <div :class="{ show: extendedTransferEntity }" class="detailed-data transition-slow">
-            <div v-if="booking.transfered">
-              <div class="">
-                <i class="bi bi-pencil-fill mx-1"> </i>
-                <span class="mb-1">{{ $t('collaboratorBookingsView.transferData') }}</span>
+        <Transition name="slide-fade">
+          <div
+            v-if="
+              extendedTransferEntity &&
+              getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')
+            "
+            class="booking-action-section"
+          >
+            <div class="booking-action-content">
+              <div v-if="booking.transfered" class="booking-transfer-history">
+                <div class="booking-action-header">
+                  <i class="bi bi-arrow-left-right"></i>
+                  <span>{{ $t('collaboratorBookingsView.transferData') }}</span>
+                </div>
+                <div class="booking-transfer-badges">
+                  <span v-if="booking.transferedOrigin" class="booking-badge-modern">
+                    {{ getQueueName(booking.transferedOrigin || undefined) }}
+                  </span>
+                  <span v-if="booking.transferedCount" class="booking-badge-modern">
+                    {{ booking.transferedCount }}
+                  </span>
+                  <span
+                    v-if="booking.transferedAt"
+                    class="booking-badge-modern booking-badge-secondary"
+                  >
+                    {{ getDate(booking.transferedAt) }}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span
-                  v-if="booking.transferedOrigin"
-                  class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ getQueueName(booking.transferedOrigin || undefined) }}
-                </span>
-                <span
-                  v-if="booking.transferedCount"
-                  class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ booking.transferedCount }}</span
-                >
-                <span
-                  v-if="booking.transferedAt"
-                  class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ getDate(booking.transferedAt) }}</span
-                >
-              </div>
-              <hr />
-            </div>
-            <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
-              <div>
-                <div class="text-label mb-2">
-                  {{ $t('collaboratorBookingsView.selectQueueToTransfer') }}
+              <div
+                v-if="queuesToTransfer && queuesToTransfer.length > 0"
+                class="booking-action-form"
+              >
+                <div class="booking-action-header">
+                  <i class="bi bi-arrow-left-right"></i>
+                  <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
                 </div>
-                <div class="text-label h6">
-                  <span class="fw-bold"> {{ queue.name }}</span>
-                </div>
-                <div class="text-label">
-                  <i class="bi bi-arrow-left-right h5"></i>
-                </div>
-                <div class="text-label mb-1">
+                <div class="booking-transfer-selector">
+                  <div class="booking-queue-info">
+                    <span class="booking-queue-label">{{
+                      $t('collaboratorBookingsView.selectQueueToTransfer')
+                    }}</span>
+                    <div class="booking-queue-current">
+                      <i class="bi bi-arrow-right"></i>
+                      <span class="fw-bold">{{ queue.name }}</span>
+                    </div>
+                  </div>
                   <select
-                    class="btn btn-sm btn-light fw-bold text-dark select"
+                    class="booking-select-modern"
                     aria-label="form-select-sm"
                     v-model="queueToTransfer"
                   >
-                    <option
-                      v-for="queue in queuesToTransfer"
-                      :key="queue.id"
-                      :value="queue.id"
-                      id="select-block"
-                    >
+                    <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id">
                       {{ queue.name }}
                     </option>
                   </select>
                 </div>
+                <div class="booking-action-buttons">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                    @click="goTransfer()"
+                    :disabled="!queueToTransfer || !toggles['collaborator.bookings.transfer']"
+                  >
+                    <i class="bi bi-person-check-fill"></i>
+                    {{ $t('collaboratorBookingsView.transfer') }}
+                  </button>
+                </div>
+                <AreYouSure
+                  :show="goToTransfer"
+                  :yes-disabled="toggles['collaborator.bookings.transfer']"
+                  :no-disabled="toggles['collaborator.bookings.transfer']"
+                  @actionYes="transfer()"
+                  @actionNo="cancelTransfer()"
+                >
+                </AreYouSure>
               </div>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
-                @click="goTransfer()"
-                :disabled="!queueToTransfer || !toggles['collaborator.bookings.transfer']"
-              >
-                <i class="bi bi-person-check-fill"> </i>
-                {{ $t('collaboratorBookingsView.transfer') }}
-              </button>
+              <div v-else class="booking-action-message">
+                <Message
+                  :title="$t('collaboratorBookingsView.message.6.title')"
+                  :content="$t('collaboratorBookingsView.message.6.content')"
+                />
+              </div>
             </div>
-            <div v-else>
-              <Message
-                :title="$t('collaboratorBookingsView.message.6.title')"
-                :content="$t('collaboratorBookingsView.message.6.content')"
-              />
-            </div>
-            <AreYouSure
-              :show="goToTransfer"
-              :yes-disabled="toggles['collaborator.bookings.transfer']"
-              :no-disabled="toggles['collaborator.bookings.transfer']"
-              @actionYes="transfer()"
-              @actionNo="cancelTransfer()"
-            >
-            </AreYouSure>
-            <hr />
           </div>
-        </div>
+        </Transition>
         <!-- EDIT -->
-        <div class="row centered" v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')">
-          <div :class="{ show: extendedEditEntity }" class="detailed-data transition-slow">
-            <div v-if="booking.edited">
-              <div class="">
-                <i class="bi bi-pencil-fill mx-1"> </i>
-                <span class="mb-1">{{ $t('collaboratorBookingsView.editData') }}</span>
-              </div>
-              <div>
-                <span
-                  v-if="booking.editedDateOrigin"
-                  class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ getDate(booking.editedDateOrigin) }}</span
-                >
-                <span
-                  v-if="booking.editedBlockOrigin"
-                  class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ booking.editedBlockOrigin.hourFrom }} -
-                  {{ booking.editedBlockOrigin.hourTo }}</span
-                >
-                <span
-                  v-if="booking.editedCount"
-                  class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ booking.editedCount }}</span
-                >
-                <span
-                  v-if="booking.editedAt"
-                  class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-                >
-                  {{ getDate(booking.editedAt) }}</span
-                >
-              </div>
-              <hr />
-            </div>
-            <div>
-              <div>
-                <div class="text-label my-1">
-                  {{ $t('collaboratorBookingsView.selectDataToEdit') }}
+        <Transition name="slide-fade">
+          <div
+            v-if="extendedEditEntity && getActiveFeature(commerce, 'booking-edit', 'PRODUCT')"
+            class="booking-action-section"
+          >
+            <div class="booking-action-content">
+              <div v-if="booking.edited" class="booking-edit-history">
+                <div class="booking-action-header">
+                  <i class="bi bi-pencil-fill"></i>
+                  <span>{{ $t('collaboratorBookingsView.editData') }}</span>
+                </div>
+                <div class="booking-edit-badges">
+                  <span v-if="booking.editedDateOrigin" class="booking-badge-modern">
+                    {{ getDate(booking.editedDateOrigin) }}
+                  </span>
+                  <span v-if="booking.editedBlockOrigin" class="booking-badge-modern">
+                    {{ booking.editedBlockOrigin.hourFrom }} -
+                    {{ booking.editedBlockOrigin.hourTo }}
+                  </span>
+                  <span v-if="booking.editedCount" class="booking-badge-modern">
+                    {{ booking.editedCount }}
+                  </span>
+                  <span
+                    v-if="booking.editedAt"
+                    class="booking-badge-modern booking-badge-secondary"
+                  >
+                    {{ getDate(booking.editedAt) }}
+                  </span>
                 </div>
               </div>
-              <div class="mt-2">
-                <BookingDatePicker
-                  :show="showBookingDataPicker"
-                  :booking="booking"
-                  :queue="queue"
-                  :commerce="commerce"
-                  :view="`weekly`"
-                  :amountof-blocks-needed="amountofBlocksNeeded"
-                  :grouped-queues="groupedQueues"
-                  :receive-booking-edit="receiveBookingEdit"
+              <div class="booking-action-form">
+                <div class="booking-action-header">
+                  <i class="bi bi-pencil-fill"></i>
+                  <span>{{ $t('collaboratorBookingsView.selectDataToEdit') }}</span>
+                </div>
+                <div class="booking-edit-picker">
+                  <div class="booking-edit-picker-wrapper">
+                    <BookingDatePicker
+                      :show="showBookingDataPicker"
+                      :booking="booking"
+                      :queue="queue"
+                      :commerce="commerce"
+                      :view="`monthly`"
+                      :amountof-blocks-needed="amountofBlocksNeeded"
+                      :grouped-queues="groupedQueues"
+                      :receive-booking-edit="receiveBookingEdit"
+                    >
+                    </BookingDatePicker>
+                  </div>
+                </div>
+                <div class="booking-action-buttons">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                    @click="goEdit()"
+                    :disabled="!toggles['collaborator.bookings.edit']"
+                  >
+                    <i class="bi bi-person-check-fill"></i>
+                    {{ $t('collaboratorBookingsView.edit') }}
+                  </button>
+                </div>
+                <AreYouSure
+                  :show="goToEdit"
+                  :yes-disabled="toggles['collaborator.bookings.edit']"
+                  :no-disabled="toggles['collaborator.bookings.edit']"
+                  @actionYes="edit()"
+                  @actionNo="cancelEdit()"
                 >
-                </BookingDatePicker>
+                </AreYouSure>
               </div>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
-                @click="goEdit()"
-                :disabled="!toggles['collaborator.bookings.edit']"
-              >
-                <i class="bi bi-person-check-fill"> </i> {{ $t('collaboratorBookingsView.edit') }}
-              </button>
             </div>
-            <AreYouSure
-              :show="goToEdit"
-              :yes-disabled="toggles['collaborator.bookings.edit']"
-              :no-disabled="toggles['collaborator.bookings.edit']"
-              @actionYes="edit()"
-              @actionNo="cancelEdit()"
-            >
-            </AreYouSure>
-            <hr />
           </div>
-        </div>
-        <div class="row centered mt-2" v-if="!loading">
-          <div class="col-6">
-            <button
-              class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
-              @click="goCancel()"
-              :disabled="
-                booking.status === 'USER_CANCELED' ||
-                booking.cancelled ||
-                !toggles['collaborator.bookings.cancel']
-              "
-            >
-              <i class="bi bi-person-x-fill"> </i> {{ $t('collaboratorBookingsView.cancel') }}
-            </button>
-          </div>
-          <div
-            class="col-6"
+        </Transition>
+        <div class="booking-actions-footer" v-if="!loading">
+          <button
+            class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
+            @click="goCancel()"
+            :disabled="
+              booking.status === 'USER_CANCELED' ||
+              booking.cancelled ||
+              !toggles['collaborator.bookings.cancel']
+            "
+          >
+            <i class="bi bi-person-x-fill"> </i> {{ $t('collaboratorBookingsView.cancel') }}
+          </button>
+          <button
             v-if="
               getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
               !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
             "
+            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+            @click="goConfirm1()"
+            :disabled="
+              booking.status === 'CONFIRMED' ||
+              booking.confirmed ||
+              !toggles['collaborator.bookings.confirm']
+            "
           >
-            <button
-              class="btn btn-md btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-              @click="goConfirm1()"
-              :disabled="
-                booking.status === 'CONFIRMED' ||
-                booking.confirmed ||
-                !toggles['collaborator.bookings.confirm']
-              "
-            >
-              <i class="bi bi-person-x-fill"> </i> {{ $t('collaboratorBookingsView.confirm') }}
-            </button>
-          </div>
+            <i class="bi bi-person-check-fill"> </i> {{ $t('collaboratorBookingsView.confirm') }}
+          </button>
           <AreYouSure
             :show="goToCancel"
             :yes-disabled="toggles['collaborator.bookings.cancel']"
@@ -898,13 +969,11 @@ export default {
           >
           </AreYouSure>
         </div>
-        <div class="row m-0 my-2 centered">
-          <div class="col">
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ booking.id }}</span>
-            <span class="metric-card-details"
-              ><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span
-            >
-          </div>
+        <div class="booking-metadata-footer">
+          <span class="metric-card-details"><strong>Id:</strong> {{ booking.id }}</span>
+          <span class="metric-card-details"
+            ><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span
+          >
         </div>
       </div>
     </div>
@@ -912,29 +981,533 @@ export default {
 </template>
 
 <style scoped>
-.metric-card {
-  background-color: var(--color-background);
-  margin: 0.5rem;
-  margin-bottom: 0;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom: 0;
-  line-height: 1.2rem;
+/* Modernized Booking Row Card */
+.booking-row-card {
+  background-color: #ffffff;
+  padding: 0.15rem 0.35rem;
+  margin: 0.25rem 0;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
-.details-arrow {
-  margin-top: 0;
-  border-bottom-left-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  border-top: 0;
-  line-height: 0.8rem;
+
+.booking-row-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  border-color: rgba(0, 194, 203, 0.2);
 }
+
+.booking-card-success {
+  border-left: 3px solid #10b981;
+}
+
+.booking-card-warning {
+  border-left: 3px solid #f59e0b;
+}
+
+.booking-card-error {
+  border-left: 3px solid #ef4444;
+}
+
+.booking-card-info {
+  border-left: 3px solid var(--azul-turno);
+}
+
+.booking-row-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.booking-icon-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.booking-icon-mini.icon-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.booking-icon-mini.icon-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.booking-icon-mini.icon-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.booking-icon-mini.icon-info {
+  background: rgba(0, 194, 203, 0.1);
+  color: var(--azul-turno);
+}
+
+.service-badges-inline {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.badge-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-mini.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.service-tag-mini {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+}
+
+.booking-info-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.booking-name-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.booking-name-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.btn-copy-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.btn-copy-mini:hover {
+  background: rgba(0, 194, 203, 0.08);
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+}
+
+.booking-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.booking-time-inline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--azul-turno);
+  padding: 0.15rem 0.4rem;
+  background: rgba(0, 194, 203, 0.08);
+  border-radius: 0.3rem;
+  line-height: 1.2;
+}
+
+.icon-mini-separated {
+  font-size: 0.75rem;
+  color: #6c757d;
+  opacity: 0.8;
+}
+
+.icon-mini-separated.blue-icon {
+  color: var(--azul-turno);
+}
+
+.collapse-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.collapse-icon {
+  font-size: 0.75rem;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+.booking-details-expanded {
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
 .show {
-  padding: 1px;
-  max-height: 400px !important;
-  overflow-y: auto;
+  padding: 0;
+  max-height: none !important;
+  overflow-y: visible;
+}
+
+.detailed-data {
+  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  border-radius: 8px;
+  padding: 0.875rem;
+}
+
+.detailed-data .row {
+  margin: 0.5rem 0;
+}
+
+.detailed-data .row:first-child {
+  margin-top: 0;
+}
+
+.detailed-data .row:last-child {
+  margin-bottom: 0;
+}
+
+.card-action {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.75rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(169, 169, 169, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.card-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-action i {
+  font-size: 0.75rem;
+}
+
+/* Client Info Section - Standardized */
+.booking-client-info {
+  margin-bottom: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.booking-client-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.booking-client-name-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.booking-client-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 194, 203, 0.12);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.booking-client-avatar i {
+  font-size: 1.125rem;
+  color: #00c2cb;
+}
+
+.booking-client-details {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.booking-client-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+}
+
+.booking-client-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.booking-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.booking-contact-item:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 194, 203, 0.3);
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.85);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.1);
+}
+
+.contact-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.whatsapp-bg {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+}
+
+.email-bg {
+  background: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+}
+
+.id-bg {
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+}
+
+.contact-icon-wrapper i {
+  font-size: 0.7rem;
+}
+
+.contact-text {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.whatsapp-item:hover .whatsapp-bg {
+  background: rgba(37, 211, 102, 0.25);
+}
+
+.email-item:hover .email-bg {
+  background: rgba(0, 122, 255, 0.25);
+}
+
+.id-item:hover .id-bg {
+  background: rgba(0, 194, 203, 0.2);
+}
+
+.booking-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(169, 169, 169, 0.2), transparent);
+  margin: 0.5rem 0;
+}
+
+/* Confirmation Badges */
+.booking-confirmation-badges {
+  margin-bottom: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.booking-confirmation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+}
+
+.booking-confirmation-header i {
+  color: #00c2cb;
+  font-size: 1rem;
+}
+
+.booking-confirmation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmation-tag {
+  background: rgba(169, 169, 169, 0.15);
+  color: rgba(0, 0, 0, 0.7);
+  padding: 0.375rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.confirmation-tag.payment-amount {
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+  border-color: rgba(0, 194, 203, 0.25);
+}
+
+.confirmation-tag.payment-commission {
+  background: rgba(249, 195, 34, 0.12);
+  color: #f9c322;
+  border-color: rgba(249, 195, 34, 0.25);
+}
+
+/* Action Tabs - Compact and Modern */
+.booking-actions-tabs {
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+  padding: 0.375rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.booking-action-tab {
+  flex: 1;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #004aad;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.15) 0%, rgba(0, 194, 203, 0.08) 100%);
+  border: 1px solid rgba(0, 74, 173, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.booking-action-tab:hover {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.2) 0%, rgba(0, 194, 203, 0.1) 100%);
+  border-color: rgba(0, 74, 173, 0.4);
+  color: #004aad;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.15);
+}
+
+.booking-action-tab-active {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.25) 0%, rgba(0, 194, 203, 0.15) 100%);
+  color: #004aad;
+  border-color: rgba(0, 74, 173, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.2);
+}
+
+.booking-action-tab span {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.booking-action-tab i:first-child {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.booking-action-tab i:last-child {
+  font-size: 0.625rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Footer Info */
+.booking-footer-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.65rem;
+  color: #6c757d;
+}
+
+.booking-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.booking-footer-item strong {
+  font-weight: 600;
+  color: #495057;
 }
 .details-title {
   text-decoration: underline;
@@ -1002,5 +1575,593 @@ export default {
 }
 .booking-link {
   cursor: pointer;
+}
+
+/* Details Expandable Section */
+.details-expandable-section {
+  margin: 0.25rem 0.375rem;
+  margin-top: 0;
+  border-radius: 0 0 8px 8px;
+  overflow: visible;
+  background: transparent;
+}
+
+.details-expand-enter-active,
+.details-expand-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.details-expand-enter-from,
+.details-expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+
+.details-expand-enter-to,
+.details-expand-leave-from {
+  opacity: 1;
+  max-height: 2000px;
+  transform: translateY(0);
+}
+
+.detailed-data {
+  padding: 0.5rem 0;
+}
+
+/* Info Section */
+.info-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.info-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.compact-section {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Action Buttons Grid */
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #495057;
+  min-height: 60px;
+}
+
+.action-btn:hover {
+  background: rgba(0, 194, 203, 0.08);
+  border-color: rgba(0, 194, 203, 0.3);
+  color: var(--azul-turno);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 194, 203, 0.15);
+}
+
+.action-btn-active {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  border-color: var(--azul-turno);
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.25);
+}
+
+.action-btn i {
+  font-size: 1.125rem;
+}
+
+.action-btn span {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+
+/* Info Section Header Compact */
+.info-section-header-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.info-section-header-compact i {
+  font-size: 0.875rem;
+  color: var(--azul-turno);
+}
+
+.info-section-title-compact {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+}
+
+/* Contact Data Grid */
+.contact-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.data-item-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.625rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.data-item-compact:hover {
+  background: rgba(0, 194, 203, 0.08);
+  border-color: rgba(0, 194, 203, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.1);
+}
+
+.data-item-compact.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.1);
+  border-color: rgba(37, 211, 102, 0.3);
+}
+
+.data-item-compact.email:hover {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: rgba(0, 122, 255, 0.3);
+}
+
+.data-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-value {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.data-value i {
+  font-size: 0.875rem;
+  color: var(--azul-turno);
+}
+
+.data-item-compact.whatsapp .data-value i {
+  color: #25d366;
+}
+
+.data-item-compact.email .data-value i {
+  color: #007aff;
+}
+
+/* Info Badges */
+.info-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.info-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(0, 194, 203, 0.08);
+  border: 1px solid rgba(0, 194, 203, 0.15);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.info-badge:hover {
+  background: rgba(0, 194, 203, 0.12);
+  border-color: rgba(0, 194, 203, 0.25);
+}
+
+.info-badge i {
+  font-size: 0.875rem;
+  color: var(--azul-turno);
+}
+
+.badge-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.badge-value {
+  font-weight: 700;
+  color: #000000;
+}
+
+/* Metadata Section */
+.metadata-section {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.metadata-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.5);
+  flex-wrap: wrap;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.metadata-value {
+  font-weight: 700;
+  color: #000000;
+}
+
+.metadata-separator {
+  color: rgba(0, 0, 0, 0.3);
+  margin: 0 0.125rem;
+}
+
+/* Actions Footer */
+.booking-actions-footer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.2);
+  flex-wrap: wrap;
+}
+
+.booking-actions-footer .card-action {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Metadata Footer */
+.booking-metadata-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.2);
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.booking-metadata-footer .metric-card-details {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.booking-metadata-footer .metric-card-details strong {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Booking Context Info - Reservation Details (Compact Horizontal) */
+.booking-context-info-compact {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.booking-context-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.booking-context-item-inline i {
+  color: #00c2cb;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.booking-context-label-inline {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.booking-context-value-inline {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* Action Section Container - Completely Hidden Until Activated */
+.booking-action-section {
+  margin-bottom: 0.5rem;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-action-section:last-child {
+  margin-bottom: 0;
+}
+
+.booking-action-content {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  padding: 0.625rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-action-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+}
+
+.booking-action-header i {
+  color: #00c2cb;
+  font-size: 0.9375rem;
+}
+
+.booking-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1;
+}
+
+.booking-action-message {
+  padding: 1rem 0;
+}
+
+.booking-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.2);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Transfer Section */
+.booking-transfer-history {
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.booking-transfer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.booking-transfer-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.booking-queue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.booking-queue-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.booking-queue-current {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(0, 194, 203, 0.08);
+  border: 1px solid rgba(0, 194, 203, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #00c2cb;
+}
+
+.booking-queue-current i {
+  font-size: 0.875rem;
+}
+
+.booking-select-modern {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.booking-select-modern:hover {
+  border-color: rgba(0, 194, 203, 0.3);
+  background: rgba(255, 255, 255, 1);
+}
+
+.booking-select-modern:focus {
+  outline: none;
+  border-color: #00c2cb;
+  box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.1);
+}
+
+/* Edit Section */
+.booking-edit-history {
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.booking-edit-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.booking-edit-picker {
+  margin: 0.375rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.booking-edit-picker-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+.booking-edit-picker-wrapper > div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-edit-picker-wrapper .centered {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-edit-picker-wrapper .col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-edit-picker-wrapper .col-md-9 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Modern Badges */
+.booking-badge-modern {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.625rem;
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+  border: 1px solid rgba(0, 194, 203, 0.25);
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.booking-badge-modern.booking-badge-secondary {
+  background: rgba(169, 169, 169, 0.15);
+  color: rgba(0, 0, 0, 0.7);
+  border-color: rgba(169, 169, 169, 0.2);
+}
+
+/* Slide Fade Transition */
+.slide-fade-enter-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-fade-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+  margin-bottom: 0;
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+  margin-bottom: 0;
+}
+
+.slide-fade-enter-to,
+.slide-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 1000px;
 }
 </style>

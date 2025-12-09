@@ -11,9 +11,21 @@
   /* Card Backgrounds */
   --card-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   --card-bg-hover: rgba(255, 255, 255, 1);
-  --card-bg-success: linear-gradient(135deg, rgba(0, 194, 203, 0.05) 0%, rgba(0, 194, 203, 0.02) 100%);
-  --card-bg-warning: linear-gradient(135deg, rgba(249, 195, 34, 0.05) 0%, rgba(249, 195, 34, 0.02) 100%);
-  --card-bg-error: linear-gradient(135deg, rgba(165, 42, 42, 0.05) 0%, rgba(165, 42, 42, 0.02) 100%);
+  --card-bg-success: linear-gradient(
+    135deg,
+    rgba(0, 194, 203, 0.05) 0%,
+    rgba(0, 194, 203, 0.02) 100%
+  );
+  --card-bg-warning: linear-gradient(
+    135deg,
+    rgba(249, 195, 34, 0.05) 0%,
+    rgba(249, 195, 34, 0.02) 100%
+  );
+  --card-bg-error: linear-gradient(
+    135deg,
+    rgba(165, 42, 42, 0.05) 0%,
+    rgba(165, 42, 42, 0.02) 100%
+  );
   --card-bg-info: linear-gradient(135deg, rgba(0, 74, 173, 0.05) 0%, rgba(0, 74, 173, 0.02) 100%);
 
   /* Shadows */
@@ -59,6 +71,3 @@
   --icon-size-md: 40px;
   --icon-size-lg: 48px;
 }
-
-
-
