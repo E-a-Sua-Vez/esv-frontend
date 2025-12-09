@@ -10,35 +10,48 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 const html2pdfFixPlugin = () => ({
   name: 'html2pdf-jsPDF-fix',
   enforce: 'pre',
-  resolveId(source) {
+  resolveId(source, importer) {
     // Intercept when html2pdf.js (or any module) tries to resolve 'jspdf'
-    if (source === 'jspdf') {
+    // But skip if the importer is our own virtual module to prevent loops
+    if (source === 'jspdf' && importer !== '\0virtual:jspdf-for-html2pdf') {
       // Return a virtual module that provides jsPDF from window
       return '\0virtual:jspdf-for-html2pdf';
     }
     return null;
   },
-  load(id) {
+  async load(id) {
     // Provide jsPDF from window when html2pdf.js tries to load it
     if (id === '\0virtual:jspdf-for-html2pdf') {
-      return `
-        // Provide jsPDF from window for html2pdf.js compatibility
-        if (typeof window !== 'undefined' && window.jsPDF) {
-          const jsPDF = window.jsPDF;
-          export default jsPDF;
-          export { jsPDF };
-        } else {
-          // Fallback: try to import it
-          import('jspdf').then(module => {
-            const jsPDF = module.default || module.jsPDF || module;
-            if (typeof window !== 'undefined') {
-              window.jsPDF = jsPDF;
-            }
-            return jsPDF;
-          });
-          throw new Error('jsPDF not available. Please ensure jspdf is loaded before html2pdf.js');
-        }
-      `;
+      try {
+        // Resolve jspdf to its actual path to avoid re-interception
+        // skipSelf prevents our plugin from intercepting this resolution
+        const resolved = await this.resolve('jspdf', undefined, { skipSelf: true });
+        const jspdfPath = resolved?.id || 'jspdf';
+
+        // Use proper ES module syntax - exports must be at top level
+        // Import from the resolved path to prevent circular resolution
+        return `import jsPDFModule from ${JSON.stringify(jspdfPath)};
+const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
+
+// Make jsPDF available globally for html2pdf.js compatibility
+if (typeof window !== 'undefined') {
+  window.jsPDF = jsPDF;
+}
+
+export default jsPDF;
+export { jsPDF };`;
+      } catch (error) {
+        // Fallback: try without resolving (guard in resolveId should prevent loop)
+        return `import jsPDFModule from 'jspdf';
+const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
+
+if (typeof window !== 'undefined') {
+  window.jsPDF = jsPDF;
+}
+
+export default jsPDF;
+export { jsPDF };`;
+      }
     }
     return null;
   },
@@ -153,5 +166,5 @@ export default defineConfig(({ mode }) =>
       exclude: ['html2pdf.js'], // Exclude from pre-bundling, load on demand
     },
     envDir: 'br',
-  }),
+  })
 );
