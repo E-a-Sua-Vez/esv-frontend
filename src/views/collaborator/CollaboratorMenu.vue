@@ -62,16 +62,38 @@ export default {
         if (!state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        state.commerce = await getCommerceById(state.currentUser.commerceId);
-        store.setCurrentCommerce(state.commerce);
-        state.business = await store.renewActualBusiness();
-        state.currentPlanActivation =
-          (await getValidatedPlanActivationByBusinessId(state.commerce.id, true)) || {};
-        state.toggles = await getPermissions('collaborator', 'main-menu');
+
+        // Use commerce from store if available, otherwise fetch
+        const storeCommerce = store.getCurrentCommerce;
+        if (storeCommerce && storeCommerce.id) {
+          state.commerce = storeCommerce;
+        } else if (state.currentUser.commerceId) {
+          state.commerce = await getCommerceById(state.currentUser.commerceId);
+          store.setCurrentCommerce(state.commerce);
+        }
+
+        // Only renew business if not already loaded
+        const currentBusiness = store.getCurrentBusiness;
+        if (currentBusiness && currentBusiness.id) {
+          state.business = currentBusiness;
+        } else {
+          state.business = await store.renewActualBusiness();
+        }
+
+        // Load plan activation and permissions in parallel
+        const [planActivation, toggles] = await Promise.all([
+          state.commerce?.id
+            ? getValidatedPlanActivationByBusinessId(state.commerce.id, true)
+            : Promise.resolve({}),
+          getPermissions('collaborator', 'main-menu'),
+        ]);
+
+        state.currentPlanActivation = planActivation || {};
+        state.toggles = toggles;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -152,7 +174,8 @@ export default {
               >{{ $t('collaboratorMenu.seeSpy') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
             </span>
             <span v-else @click="onShowMobileMenuSide()"
-              >{{ $t('collaboratorMenu.seeMenu') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
+              >{{ $t('collaboratorMenu.seeMenu')
+              }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
             </span>
           </div>
           <div class="mobile-content-wrapper">
@@ -178,7 +201,8 @@ export default {
                         :href="`${getCommerceLink()}`"
                         target="_blank"
                       >
-                        {{ $t(`collaboratorMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                        {{ $t(`collaboratorMenu.${option}`) }}
+                        <i class="bi bi-box-arrow-up-right"></i>
                       </a>
                     </div>
                     <div v-else>
@@ -419,15 +443,15 @@ export default {
   will-change: transform, opacity;
 }
 
-  .sub-menu-spy {
-    text-decoration: underline;
-    margin: 1rem;
-    text-align: right;
-    font-size: 0.9rem;
-    font-weight: 500;
-    line-height: 0.8rem;
-    cursor: pointer;
-  }
+.sub-menu-spy {
+  text-decoration: underline;
+  margin: 1rem;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 0.8rem;
+  cursor: pointer;
+}
 
 /* Mobile: Center menu buttons */
 @media (max-width: 991px) {

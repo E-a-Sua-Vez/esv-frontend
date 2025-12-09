@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getQueuesByCommerceId } from '../../application/services/queue';
 import { getQueueByCommerce } from '../../application/services/queue';
@@ -38,11 +38,9 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      commerces: ref([]),
       queue: {},
       queues: [],
       groupedQueues: [],
-      commerce: {},
       module: {},
       activeCommerce: false,
       captcha: false,
@@ -59,6 +57,7 @@ export default {
       showBooking: true,
       showWaitlist: false,
       toggles: {},
+      commerce: {},
       // Dashboard stats
       stats: {
         todayCount: 0,
@@ -70,31 +69,71 @@ export default {
       loadingStats: false,
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
 
-    const isActiveCommerce = () => state.commerce && state.commerce.active === true;
+    const isActiveCommerce = () => commerce.value && commerce.value.active === true;
 
     const goBack = () => {
       router.push({ path: '/interno/business/menu' });
     };
 
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = selectedCommerce.queues;
+    // Load queues when commerce changes
+    const loadQueues = async commerceId => {
+      if (!commerceId) {
+        state.queues = [];
         state.queue = {};
-        await loadDashboardStats();
-        alertError.value = '';
-        loading.value = false;
+        return;
+      }
+      try {
+        const selectedCommerce = await getQueueByCommerce(commerceId);
+        state.queues = selectedCommerce.queues || [];
+        state.queue = {};
       } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
+        console.error('Error loading queues:', error);
+        state.queues = [];
+        state.queue = {};
       }
     };
 
+    // Watch for commerce changes from store and sync state + reload data
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id) {
+          // Sync state.commerce with store commerce
+          if (!state.commerce || state.commerce.id !== newCommerce.id) {
+            state.commerce = newCommerce;
+          }
+
+          // Reload data only if commerce actually changed
+          if (!oldCommerce || oldCommerce.id !== newCommerce.id) {
+            try {
+              loading.value = true;
+              // Immediately clear data to prevent showing old results
+              state.queues = [];
+              state.queue = {};
+              state.bookings = [];
+              state.waitlists = [];
+              state.recentBookings = [];
+              await loadQueues(newCommerce.id);
+              await loadDashboardStats();
+              loading.value = false;
+            } catch (error) {
+              console.error('Error loading data on commerce change:', error);
+              loading.value = false;
+            }
+          }
+        } else if (!newCommerce && state.commerce && state.commerce.id) {
+          // Clear state if commerce is removed from store
+          state.commerce = {};
+        }
+      },
+      { immediate: true }
+    );
+
     const loadDashboardStats = async () => {
-      if (!state.commerce || !state.commerce.id) return;
+      if (!commerce.value || !commerce.value.id) return;
 
       try {
         state.loadingStats = true;
@@ -104,10 +143,10 @@ export default {
 
         // Get today's bookings
         const todayBookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           today,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           100
         );
@@ -115,10 +154,10 @@ export default {
 
         // Get pending bookings
         const pendingBookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           endOfMonth,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           100,
           undefined,
@@ -131,10 +170,10 @@ export default {
 
         // Get upcoming week bookings
         const upcomingBookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           endOfWeek,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           100,
           undefined,
@@ -147,10 +186,10 @@ export default {
 
         // Get total active bookings (CONFIRMED + PENDING)
         const confirmedBookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           endOfMonth,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           100,
           undefined,
@@ -159,14 +198,15 @@ export default {
           undefined,
           'CONFIRMED'
         );
-        state.stats.totalActiveCount = (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
+        state.stats.totalActiveCount =
+          (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
 
         // Get recent bookings (last 5)
         const recent = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           new DateModel().substractDays(7).toString(),
           endOfMonth,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           5,
           undefined,
@@ -191,10 +231,10 @@ export default {
         loading.value = true;
         const today = new DateModel().toString();
         const bookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           today,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           50
         );
@@ -212,10 +252,10 @@ export default {
         const today = new DateModel().toString();
         const endOfMonth = new DateModel().endOfMonth().toString();
         const bookings = await getBookingsDetails(
-          state.commerce.id,
+          commerce.value.id,
           today,
           endOfMonth,
-          [state.commerce.id],
+          [commerce.value.id],
           1,
           50,
           undefined,
@@ -238,16 +278,28 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        const queues = await getQueuesByCommerceId(state.commerce.id);
-        state.queues = queues;
-        store.setCurrentCommerce(state.commerce);
-        store.setCurrentQueue(undefined);
-        state.locale = state.commerce.localeInfo.language;
         state.toggles = await getPermissions('business', 'bookings');
-        await loadDashboardStats();
+
+        // Initialize commerce in store if not set
+        const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+            // The watch with immediate: true will handle syncing state.commerce and loading data
+          }
+        } else {
+          // Ensure state.commerce is synced (watch will handle loading data)
+          state.commerce = currentCommerce;
+        }
+
+        // Set locale and clear queue
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          state.locale = commerceToUse.localeInfo?.language || 'es';
+          store.setCurrentQueue(undefined);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -260,7 +312,7 @@ export default {
       state,
       loading,
       alertError,
-      selectCommerce,
+      commerce,
       isActiveCommerce,
       goBack,
       loadDashboardStats,
@@ -276,7 +328,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorBookingsView.welcome`)"
           :toggles="state.toggles"
@@ -286,32 +341,9 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
-          <div id="businessQueuesAdmin-controls" class="control-box">
-            <div class="row g-2">
-              <div class="col" v-if="state.commerces.length > 0">
-                <label class="control-label">{{ $t('collaboratorBookingsView.commerce') }}</label>
-                <select
-                  class="form-control-modern form-select-modern"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="commerces"
-                >
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">
-                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                  </option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessQueuesAdmin.message.4.title')"
-                  :content="$t('businessQueuesAdmin.message.4.content')"
-                />
-              </div>
-            </div>
-          </div>
+          <Alert :show="false" :stack="alertError"></Alert>
           <!-- Dashboard Stats Cards -->
-          <div class="dashboard-stats-container mt-3" v-if="!loading && state.commerce.id">
+          <div class="dashboard-stats-container mt-3" v-if="!loading && commerce && commerce.id">
             <div class="row g-3">
               <div class="col-6 col-md-3">
                 <div class="stat-card stat-card-today">
@@ -364,15 +396,17 @@ export default {
           <div class="quick-actions-container mt-3">
             <div class="row g-2 justify-content-center">
               <div class="col-auto">
-            <button
+                <button
                   class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-              data-bs-toggle="modal"
-              data-bs-target="#modalAgenda"
-              :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
-            >
-              <i class="bi bi-calendar-check-fill"></i>
-              {{ $t('collaboratorBookingsView.schedules') }}
-            </button>
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalAgenda"
+                  :disabled="
+                    !state.toggles['business.bookings.manage'] || state.queues.length === 0
+                  "
+                >
+                  <i class="bi bi-calendar-check-fill"></i>
+                  {{ $t('collaboratorBookingsView.schedules') }}
+                </button>
               </div>
               <div class="col-auto">
                 <button
@@ -411,11 +445,11 @@ export default {
                 v-for="(booking, index) in state.recentBookings"
                 :key="`booking-${index}`"
               >
-                <BookingDetailsCard :show="true" :booking="booking" :commerce="state.commerce" />
+                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
               </div>
             </div>
           </div>
-          <div v-else-if="!loading && state.commerce.id" class="mt-4">
+          <div v-else-if="!loading && commerce && commerce.id" class="mt-4">
             <Message
               :icon="'bi-calendar-x'"
               :title="$t('collaboratorBookingsView.noBookings.title')"
@@ -431,17 +465,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.commerce.logo"
+                  v-if="!loading || (commerce && commerce.logo)"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.commerce.logo || $t('hubLogoBlanco')"
+                  :src="(commerce && commerce.logo) || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -457,31 +491,8 @@ export default {
             </ComponentMenu>
           </div>
         </div>
-        <div id="businessQueuesAdmin-controls" class="control-box">
-          <div class="row g-2">
-            <div class="col" v-if="state.commerces.length > 0">
-              <label class="control-label">{{ $t('collaboratorBookingsView.commerce') }}</label>
-              <select
-                class="form-control-modern form-select-modern"
-                v-model="state.commerce"
-                @change="selectCommerce(state.commerce)"
-                id="commerces"
-              >
-                <option v-for="com in state.commerces" :key="com.id" :value="com">
-                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')"
-              />
-            </div>
-          </div>
-        </div>
         <!-- Dashboard Stats Cards -->
-        <div class="dashboard-stats-container mt-3" v-if="!loading && state.commerce.id">
+        <div class="dashboard-stats-container mt-3" v-if="!loading && commerce && commerce.id">
           <div class="row g-3">
             <div class="col-6 col-md-3">
               <div class="stat-card stat-card-today">
@@ -534,12 +545,12 @@ export default {
         <div class="quick-actions-container mt-3">
           <div class="row g-2 justify-content-center">
             <div class="col-auto">
-          <button
+              <button
                 class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-            data-bs-toggle="modal"
-            data-bs-target="#modalAgenda"
-            :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
-          >
+                data-bs-toggle="modal"
+                data-bs-target="#modalAgenda"
+                :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
+              >
                 <i class="bi bi-calendar-check-fill"></i>
                 {{ $t('collaboratorBookingsView.schedules') }}
               </button>
@@ -562,7 +573,7 @@ export default {
               >
                 <i class="bi bi-clock-history"></i>
                 {{ $t('collaboratorBookingsView.pending') }}
-          </button>
+              </button>
             </div>
           </div>
         </div>
@@ -585,7 +596,7 @@ export default {
             </div>
           </div>
         </div>
-        <div v-else-if="!loading && state.commerce.id" class="mt-4">
+        <div v-else-if="!loading && commerce && commerce.id" class="mt-4">
           <Message
             :icon="'bi-calendar-x'"
             :title="$t('collaboratorBookingsView.noBookings.title')"
@@ -596,43 +607,44 @@ export default {
     </div>
     <!-- Modal Agenda - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      id="modalAgenda"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-calendar-check-fill"></i> Agenda {{ state.commerce.name }} -
-              {{ state.commerce.tag }}
-            </h5>
-            <button
-              id="close-modal"
-              class="btn-close btn-light"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <BookingCalendar
-              :show="true"
-              :commerce="state.commerce"
-              :queues="state.queues"
-              :toggles="state.toggles"
-            >
-            </BookingCalendar>
+      <div
+        class="modal fade"
+        id="modalAgenda"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-fullscreen modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-calendar-check-fill"></i> Agenda
+                {{ commerce && commerce.name ? commerce.name : '' }} -
+                {{ commerce && commerce.tag ? commerce.tag : '' }}
+              </h5>
+              <button
+                id="close-modal"
+                class="btn-close btn-light"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <BookingCalendar
+                :show="true"
+                :commerce="commerce"
+                :queues="state.queues"
+                :toggles="state.toggles"
+              >
+              </BookingCalendar>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
   </div>
 </template>

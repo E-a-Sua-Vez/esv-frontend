@@ -90,36 +90,36 @@ export default {
 
     <!-- Modal Buzon - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      id="modalBuzon"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0">
-            <button
-              id="close-modal"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body text-center pb-5">
-            <Suspense>
-              <template #default>
-                <Actions @closeModal="closeMenu()"></Actions>
-              </template>
-            </Suspense>
+      <div
+        class="modal fade"
+        id="modalBuzon"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0">
+              <button
+                id="close-modal"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center pb-5">
+              <Suspense>
+                <template #default>
+                  <Actions @closeModal="closeMenu()"></Actions>
+                </template>
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
   </footer>
 </template>

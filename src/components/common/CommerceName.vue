@@ -40,7 +40,7 @@ export default {
 <template>
   <div class="commerce-name-container" :class="statusClass">
     <!-- Commerce Icon -->
-    <Popper :class="'dark'" arrow hover>
+    <Popper :class="'dark'" arrow disable-click-away hover>
       <template #content>
         <div>{{ statusTooltip }}</div>
       </template>
@@ -78,12 +78,7 @@ export default {
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.openWebsite') || 'Abrir site do comércio' }}</div>
       </template>
-      <a
-        class="btn-link-mini"
-        :href="commerceLink"
-        target="_blank"
-        @click.stop
-      >
+      <a class="btn-link-mini" :href="commerceLink" target="_blank" @click.stop>
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
     </Popper>
@@ -160,7 +155,6 @@ export default {
 .commerce-name-container:hover .commerce-icon {
   transform: scale(1.02);
 }
-
 
 .btn-copy-mini {
   background: transparent;
@@ -339,5 +333,4 @@ export default {
 .commerce-name-container {
   overflow: visible;
 }
-
 </style>

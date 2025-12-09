@@ -1,5 +1,5 @@
 <script>
-import { ref, watch, reactive, onBeforeMount, nextTick } from 'vue';
+import { ref, watch, reactive, onBeforeMount, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   getNextAvailableAttentionDetails,
@@ -18,6 +18,7 @@ import { getPermissions } from '../../application/services/permissions';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
+import QueueAttentionDetails from '../../components/domain/QueueAttentionDetails.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import Message from '../../components/common/Message.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -30,6 +31,7 @@ export default {
     Message,
     CommerceLogo,
     QueueName,
+    QueueAttentionDetails,
     AttentionNumber,
     Spinner,
     Alert,
@@ -46,6 +48,10 @@ export default {
 
     const store = globalStore();
 
+    // Use global commerce and module from store
+    const globalCommerce = computed(() => store.getCurrentCommerce);
+    const module = computed(() => store.getCurrentModule);
+
     const state = reactive({
       currentUser: {},
       queue: {},
@@ -56,6 +62,7 @@ export default {
       pendingAttentions: [],
       queuePendingDetails: [],
       queueProcessingDetails: [],
+      drawerOpen: false,
     });
 
     onBeforeMount(async () => {
@@ -76,14 +83,67 @@ export default {
     const attentions = ref([]);
     attentions.value = updatedAttentionsByDateAndCommerceAndQueue(id);
 
+    // Filter attentions by today's date
+    const filterAttentionsByToday = attentions => {
+      if (!attentions || !Array.isArray(attentions)) return [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(today);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      return attentions.filter(attention => {
+        if (!attention.createdAt) return false;
+
+        // Handle different date formats
+        let attentionDate;
+        try {
+          if (attention.createdAt instanceof Date) {
+            attentionDate = new Date(attention.createdAt);
+          } else if (typeof attention.createdAt === 'string') {
+            attentionDate = new Date(attention.createdAt);
+          } else if (
+            attention.createdAt.toDate &&
+            typeof attention.createdAt.toDate === 'function'
+          ) {
+            // Firebase Timestamp
+            attentionDate = attention.createdAt.toDate();
+          } else if (attention.createdAt.seconds) {
+            // Firebase Timestamp as object with seconds
+            attentionDate = new Date(attention.createdAt.seconds * 1000);
+          } else {
+            return false;
+          }
+
+          // Check if date is valid
+          if (isNaN(attentionDate.getTime())) {
+            return false;
+          }
+
+          // Compare dates (only date, not time)
+          const attentionDateOnly = new Date(attentionDate);
+          attentionDateOnly.setHours(0, 0, 0, 0);
+
+          return attentionDateOnly.getTime() === today.getTime();
+        } catch (error) {
+          console.warn('Error filtering attention by date:', error, attention);
+          return false;
+        }
+      });
+    };
+
     const getQueueValues = async (queue, oldQueue) => {
       loading.value = true;
       state.queue = queue;
       store.setCurrentQueue(queue);
       if (queue !== undefined && queue.id !== undefined) {
         state.attention = await getNextAvailableAttentionDetails(queue.id);
-        state.queuePendingDetails = await getAvailableAttentiosnByQueue(queue.id);
-        state.queueProcessingDetails = await getProcessingAttentionDetailsByQueue(queue.id);
+        const allPendingDetails = await getAvailableAttentiosnByQueue(queue.id);
+        const allProcessingDetails = await getProcessingAttentionDetailsByQueue(queue.id);
+
+        // Filter by today's date
+        state.queuePendingDetails = filterAttentionsByToday(allPendingDetails);
+        state.queueProcessingDetails = filterAttentionsByToday(allProcessingDetails);
+
         if (state.attention.user) {
           state.user = state.attention.user;
         }
@@ -91,11 +151,22 @@ export default {
           state.commerce = state.attention.commerce;
         }
         // Always ensure commerce is loaded, even if not in attention
-        if (!state.commerce || !state.commerce.id) {
+        // Use global commerce if available and matches queue's commerceId, otherwise load from queue
+        if (globalCommerce.value && globalCommerce.value.id === queue.commerceId) {
+          state.commerce = globalCommerce.value;
+        } else if (!state.commerce || !state.commerce.id) {
           state.commerce = await getCommerceById(queue.commerceId);
+          // Update global commerce if it matches
+          if (state.commerce && state.commerce.id) {
+            await store.setCurrentCommerce(state.commerce);
+          }
         } else if (oldQueue && oldQueue.commerceId && queue.commerceId !== oldQueue.commerceId) {
           // Only reload if commerceId changed
           state.commerce = await getCommerceById(queue.commerceId);
+          // Update global commerce
+          if (state.commerce && state.commerce.id) {
+            await store.setCurrentCommerce(state.commerce);
+          }
         }
         loading.value = false;
       } else {
@@ -109,11 +180,11 @@ export default {
         if (newQueue && newQueue.length > 0) {
           await getQueueValues(
             newQueue[0],
-            oldQueue && oldQueue.length > 0 ? oldQueue[0] : undefined,
+            oldQueue && oldQueue.length > 0 ? oldQueue[0] : undefined
           );
         }
       },
-      { immediate: true },
+      { immediate: true }
     );
 
     const collaboratorQueues = () => {
@@ -161,6 +232,14 @@ export default {
       }
     });
 
+    const openQueueDrawer = () => {
+      state.drawerOpen = true;
+    };
+
+    const closeQueueDrawer = () => {
+      state.drawerOpen = false;
+    };
+
     return {
       id,
       state,
@@ -169,6 +248,8 @@ export default {
       collaboratorQueues,
       attendAttention,
       finishCurrentCancelledAttention,
+      openQueueDrawer,
+      closeQueueDrawer,
     };
   },
 };
@@ -193,11 +274,13 @@ export default {
           :queue-pending-details="state.queuePendingDetails"
           :queue-processing-details="state.queueProcessingDetails"
           :details="true"
+          :use-drawer="true"
+          @open-drawer="openQueueDrawer"
         >
         </QueueName>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div v-if="state.pendingAttentions.length === 0" class="mt-2">
           <Message
@@ -264,7 +347,7 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
@@ -297,6 +380,8 @@ export default {
           :queue-pending-details="state.queuePendingDetails"
           :queue-processing-details="state.queueProcessingDetails"
           :details="true"
+          :use-drawer="true"
+          @open-drawer="openQueueDrawer"
         >
         </QueueName>
         <div v-if="state.pendingAttentions.length === 0" class="mt-2">
@@ -358,6 +443,33 @@ export default {
         </div>
       </div>
     </div>
+    <!-- Queue Details Drawer - Lateral panel similar to booking 360 -->
+    <Teleport to="body">
+      <div v-if="state.drawerOpen" class="queue-drawer-overlay" @click="closeQueueDrawer">
+        <div class="queue-drawer" @click.stop>
+          <div
+            class="queue-drawer-header"
+            :class="state.queue?.active === true ? 'active-name' : 'desactived-name'"
+          >
+            <h5 class="queue-drawer-title">
+              <i class="bi bi-person-lines-fill"></i>
+              {{ state.queue?.name || '' }}
+            </h5>
+            <button class="queue-drawer-close" @click="closeQueueDrawer">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="queue-drawer-body">
+            <QueueAttentionDetails
+              :queue="state.queue"
+              :queue-pending-details="state.queuePendingDetails"
+              :queue-processing-details="state.queueProcessingDetails"
+              :on-close="closeQueueDrawer"
+            ></QueueAttentionDetails>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -406,6 +518,170 @@ export default {
     min-width: 0;
     width: auto;
     text-align: left;
+  }
+}
+
+/* Queue Drawer - Lateral panel similar to booking 360 */
+.queue-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.queue-drawer {
+  width: 100%;
+  max-width: 650px;
+  height: 100%;
+  background: #f8f9fa;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.queue-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+  background: rgba(255, 255, 255, 0.98);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.queue-drawer-header.active-name {
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+}
+
+.queue-drawer-header.desactived-name {
+  background-color: var(--gris-tooltip);
+  color: var(--color-background);
+}
+
+.queue-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.queue-drawer-title i {
+  color: inherit;
+  font-size: 1.125rem;
+}
+
+.queue-drawer-header.active-name .queue-drawer-title,
+.queue-drawer-header.active-name .queue-drawer-title i {
+  color: var(--color-background);
+}
+
+.queue-drawer-header.desactived-name .queue-drawer-title,
+.queue-drawer-header.desactived-name .queue-drawer-title i {
+  color: var(--color-background);
+}
+
+.queue-drawer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.queue-drawer-header.active-name .queue-drawer-close,
+.queue-drawer-header.desactived-name .queue-drawer-close {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.queue-drawer-close:hover {
+  background: rgba(169, 169, 169, 0.1);
+  border-color: rgba(169, 169, 169, 0.3);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.queue-drawer-header.active-name .queue-drawer-close:hover,
+.queue-drawer-header.desactived-name .queue-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 1);
+}
+
+.queue-drawer-close i {
+  font-size: 1rem;
+}
+
+.queue-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  background: #f8f9fa;
+}
+
+.queue-drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.queue-drawer-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.queue-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(169, 169, 169, 0.3);
+  border-radius: 4px;
+}
+
+.queue-drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(169, 169, 169, 0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .queue-drawer {
+    max-width: 100%;
+  }
+
+  .queue-drawer-body {
+    padding: 0.75rem;
   }
 }
 </style>

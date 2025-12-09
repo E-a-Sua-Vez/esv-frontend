@@ -172,7 +172,7 @@ export default {
       const attentionTrend = calculateTrend(attention.attentionNumber || 0, pastPeriodNumber);
       const bookingTrend = calculateTrend(
         booking.bookingNumber || 0,
-        booking.pastPeriodBookingNumber || 0,
+        booking.pastPeriodBookingNumber || 0
       );
       const ratingTrend = calculateTrend(survey.avgRating || 0, survey.pastPeriodAvgRating || 0);
 

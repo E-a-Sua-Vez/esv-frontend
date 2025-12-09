@@ -1,7 +1,19 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch, toRefs, onUnmounted } from 'vue';
+import {
+  ref,
+  reactive,
+  onBeforeMount,
+  computed,
+  watch,
+  toRefs,
+  onUnmounted,
+  getCurrentInstance,
+} from 'vue';
 import { useRouter } from 'vue-router';
-import { getPendingAttentionsDetails, getBookingsDetails } from '../../application/services/query-stack';
+import {
+  getPendingAttentionsDetails,
+  getBookingsDetails,
+} from '../../application/services/query-stack';
 import { getCommerceById } from '../../application/services/commerce';
 import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
@@ -85,7 +97,23 @@ export default {
       attentionsWrapper: null,
     });
 
+    // Cache to prevent duplicate API calls
+    const lastLoadedCommerceId = ref(null);
+    const calendarDataCache = ref(null);
+    const lastCalendarCommerceId = ref(null);
+
     let attentionsUnsubscribe = null;
+
+    // Register onUnmounted BEFORE any await statements
+    // Only register if we have an active component instance
+    const instance = getCurrentInstance();
+    if (instance) {
+      onUnmounted(() => {
+        if (attentionsUnsubscribe) {
+          attentionsUnsubscribe();
+        }
+      });
+    }
 
     onBeforeMount(async () => {
       try {
@@ -95,12 +123,6 @@ export default {
       } catch (error) {
         alertError.value = error ? (error.response ? error.response.status : 500) : 500;
         loading.value = false;
-      }
-    });
-
-    onUnmounted(() => {
-      if (attentionsUnsubscribe) {
-        attentionsUnsubscribe();
       }
     });
 
@@ -117,11 +139,19 @@ export default {
         // Get available commerces for this collaborator
         await getAvailableCommerces();
 
-        // Set default commerce (first one)
-        if (state.commerces && state.commerces.length > 0) {
-          state.commerce = commerce.value || state.commerces[0];
-        } else if (state.currentUser.commerceId) {
-          state.commerce = commerce.value || await getCommerceById(state.currentUser.commerceId);
+        // Set default commerce (first one) - prefer commerce from props or store
+        if (commerce.value && commerce.value.id) {
+          state.commerce = commerce.value;
+        } else if (state.commerces && state.commerces.length > 0) {
+          state.commerce = state.commerces[0];
+        } else {
+          // Try to use commerce from store
+          const storeCommerce = store.getCurrentCommerce;
+          if (storeCommerce && storeCommerce.id) {
+            state.commerce = storeCommerce;
+          } else if (state.currentUser.commerceId) {
+            state.commerce = await getCommerceById(state.currentUser.commerceId);
+          }
         }
 
         // Load data for selected commerce
@@ -145,15 +175,38 @@ export default {
           }
 
           if (commercesId && commercesId.length > 0) {
-            state.business = await store.getActualBusiness();
-            state.commerces = await store.getAvailableCommerces(state.business.commerces);
-            // Filter to only show commerces the collaborator has access to
-            if (state.commerces && state.commerces.length > 0) {
-              state.commerces = state.commerces.filter(com => commercesId.includes(com.id));
+            // First try to use commerce from store if available
+            const storeCommerce = store.getCurrentCommerce;
+            if (storeCommerce && storeCommerce.id && commercesId.includes(storeCommerce.id)) {
+              state.commerces = [storeCommerce];
+              // If there are more commerces, get them from store
+              if (commercesId.length > 1) {
+                state.business = await store.getActualBusiness();
+                const allCommerces = await store.getAvailableCommerces(state.business.commerces);
+                state.commerces = allCommerces.filter(com => commercesId.includes(com.id));
+                // Ensure store commerce is included
+                if (!state.commerces.find(c => c.id === storeCommerce.id)) {
+                  state.commerces.unshift(storeCommerce);
+                }
+              }
+            } else {
+              // Fallback: get from store
+              state.business = await store.getActualBusiness();
+              state.commerces = await store.getAvailableCommerces(state.business.commerces);
+              // Filter to only show commerces the collaborator has access to
+              if (state.commerces && state.commerces.length > 0) {
+                state.commerces = state.commerces.filter(com => commercesId.includes(com.id));
+              }
             }
           } else if (state.collaborator.commerceId) {
-            const singleCommerce = await getCommerceById(state.collaborator.commerceId);
-            state.commerces = [singleCommerce];
+            // Try to use commerce from store first
+            const storeCommerce = store.getCurrentCommerce;
+            if (storeCommerce && storeCommerce.id === state.collaborator.commerceId) {
+              state.commerces = [storeCommerce];
+            } else {
+              const singleCommerce = await getCommerceById(state.collaborator.commerceId);
+              state.commerces = [singleCommerce];
+            }
           }
         }
       } catch (error) {
@@ -164,6 +217,11 @@ export default {
 
     const loadCommerceData = async () => {
       if (!state.commerce || !state.commerce.id) return;
+
+      // Skip if already loaded for this commerce
+      if (state.commerce.id === lastLoadedCommerceId.value) {
+        return;
+      }
 
       // Cleanup previous subscription
       if (attentionsUnsubscribe) {
@@ -180,14 +238,13 @@ export default {
       // Subscribe to real-time attentions
       subscribeToAttentions();
 
-      // Get today's attentions
-      await getTodayAttentions();
+      // Load data in parallel where possible
+      await Promise.all([getTodayAttentions(), getWeekAndMonthBookings()]);
 
-      // Get week and month bookings
-      await getWeekAndMonthBookings();
-
-      // Initialize calendar
+      // Initialize calendar (this is heavy, so do it separately)
       await initializeCalendar();
+
+      lastLoadedCommerceId.value = state.commerce.id;
     };
 
     const initializeQueueStatus = () => {
@@ -206,29 +263,37 @@ export default {
     };
 
     // Watch attentions wrapper for changes
-    watch(() => {
-      try {
-        const currentAttentionsRef = state.attentionsWrapper;
-        if (currentAttentionsRef && currentAttentionsRef.value !== undefined && currentAttentionsRef.value !== null) {
-          return Array.isArray(currentAttentionsRef.value) ? currentAttentionsRef.value : [];
+    watch(
+      () => {
+        try {
+          const currentAttentionsRef = state.attentionsWrapper;
+          if (
+            currentAttentionsRef &&
+            currentAttentionsRef.value !== undefined &&
+            currentAttentionsRef.value !== null
+          ) {
+            return Array.isArray(currentAttentionsRef.value) ? currentAttentionsRef.value : [];
+          }
+        } catch (error) {
+          console.error('Error accessing attentions.value:', error);
         }
-      } catch (error) {
-        console.error('Error accessing attentions.value:', error);
-      }
-      return [];
-    }, (newValue) => {
-      if (newValue && Array.isArray(newValue)) {
-        if (newValue.length > 0) {
-          checkQueueStatus(newValue);
+        return [];
+      },
+      newValue => {
+        if (newValue && Array.isArray(newValue)) {
+          if (newValue.length > 0) {
+            checkQueueStatus(newValue);
+          } else {
+            initializeQueueStatus();
+          }
         } else {
           initializeQueueStatus();
         }
-      } else {
-        initializeQueueStatus();
-      }
-    }, { immediate: true, deep: true });
+      },
+      { immediate: true, deep: true }
+    );
 
-    const checkQueueStatus = (attentionsArray) => {
+    const checkQueueStatus = attentionsArray => {
       if (!attentionsArray || attentionsArray.length === 0) {
         initializeQueueStatus();
         return;
@@ -262,20 +327,25 @@ export default {
       }
     };
 
-    const getQueueAttentionsCount = (queueId) => {
-      return state.queueStatus[queueId] || 0;
-    };
+    const getQueueAttentionsCount = queueId => state.queueStatus[queueId] || 0;
 
     const getTotalAttentionsCount = () => {
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return 0;
-      return state.dedicatedQueues.reduce((total, queue) => {
-        return total + (state.queueStatus[queue.id] || 0);
-      }, 0);
+      return state.dedicatedQueues.reduce(
+        (total, queue) => total + (state.queueStatus[queue.id] || 0),
+        0
+      );
     };
 
-    const selectCommerce = async (selectedCommerce) => {
+    const selectCommerce = async selectedCommerce => {
       try {
         loading.value = true;
+        // Clear cache when commerce changes
+        if (state.commerce && state.commerce.id && state.commerce.id !== selectedCommerce.id) {
+          lastLoadedCommerceId.value = null;
+          calendarDataCache.value = null;
+          lastCalendarCommerceId.value = null;
+        }
         state.commerce = selectedCommerce;
         await loadCommerceData();
         loading.value = false;
@@ -285,7 +355,7 @@ export default {
       }
     };
 
-    const selectCommerceById = async (commerceId) => {
+    const selectCommerceById = async commerceId => {
       try {
         loading.value = true;
         const selectedCommerce = state.commerces.find(com => com.id === commerceId);
@@ -304,8 +374,18 @@ export default {
       try {
         if (!state.commerce || !state.commerce.id) return;
 
-        const commerceData = await getCommerceById(state.commerce.id);
-        let queues = commerceData.queues || [];
+        // Use queues from commerce if available, otherwise fetch
+        let queues = [];
+        if (state.commerce.queues && state.commerce.queues.length > 0) {
+          queues = state.commerce.queues;
+        } else {
+          const commerceData = await getCommerceById(state.commerce.id);
+          queues = commerceData.queues || [];
+          // Update commerce with full data
+          if (commerceData && commerceData.id) {
+            state.commerce = { ...state.commerce, ...commerceData };
+          }
+        }
 
         // Check for grouped queues if feature is active
         if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
@@ -369,15 +449,27 @@ export default {
         // Format attentions
         state.todayAttentions = todayAttentions.map(att => {
           let serviceName = att.serviceName || 'N/A';
-          if (att.servicesDetails && Array.isArray(att.servicesDetails) && att.servicesDetails.length > 0) {
+          if (
+            att.servicesDetails &&
+            Array.isArray(att.servicesDetails) &&
+            att.servicesDetails.length > 0
+          ) {
             serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
           }
 
           return {
             id: att.attentionId,
-            clientName: (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') || att.userIdNumber || 'N/A',
+            clientName:
+              (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') ||
+              att.userIdNumber ||
+              'N/A',
             clientId: att.userIdNumber || att.userId || 'N/A',
-            hour: att.createdDate ? new Date(att.createdDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            hour: att.createdDate
+              ? new Date(att.createdDate).toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : 'N/A',
             service: serviceName,
             number: att.number,
             status: att.status,
@@ -446,17 +538,23 @@ export default {
 
         // Filter by queue IDs and status (not cancelled)
         const filteredWeekBookings = (weekBookings || []).filter(
-          booking => booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+          booking =>
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
         );
 
         const filteredMonthBookings = (monthBookings || []).filter(
-          booking => booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+          booking =>
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
         );
 
         // Format bookings
         const formatBooking = booking => {
           let serviceName = 'N/A';
-          if (booking.servicesDetails && Array.isArray(booking.servicesDetails) && booking.servicesDetails.length > 0) {
+          if (
+            booking.servicesDetails &&
+            Array.isArray(booking.servicesDetails) &&
+            booking.servicesDetails.length > 0
+          ) {
             serviceName = booking.servicesDetails.map(s => s.name || s).join(', ');
           }
 
@@ -470,9 +568,12 @@ export default {
           let userName = 'N/A';
           let userIdNumber = 'N/A';
           if (booking.userName) {
-            userName = (booking.userName || '') + (booking.userLastName ? ' ' + booking.userLastName : '');
+            userName =
+              (booking.userName || '') + (booking.userLastName ? ' ' + booking.userLastName : '');
           } else if (booking.user && typeof booking.user === 'object') {
-            userName = (booking.user.name || '') + (booking.user.lastName ? ' ' + booking.user.lastName : '');
+            userName =
+              (booking.user.name || '') +
+              (booking.user.lastName ? ' ' + booking.user.lastName : '');
             userIdNumber = booking.user.idNumber || booking.userId || 'N/A';
           }
           if (!userIdNumber && booking.userIdNumber) {
@@ -483,7 +584,7 @@ export default {
             id: booking.bookingId || booking.id,
             clientName: userName || userIdNumber || 'N/A',
             clientId: userIdNumber || booking.userId || 'N/A',
-            hour: hour,
+            hour,
             service: serviceName,
             date: booking.date,
             status: booking.status,
@@ -507,6 +608,17 @@ export default {
           return;
         }
 
+        // Check cache
+        if (calendarDataCache.value && lastCalendarCommerceId.value === state.commerce.id) {
+          state.calendarDates = calendarDataCache.value.calendarDates;
+          updateCalendarAttributes(
+            calendarDataCache.value.attentionsByDate,
+            calendarDataCache.value.bookingsByDate
+          );
+          loadingCalendar.value = false;
+          return;
+        }
+
         const queueIds = state.dedicatedQueues.map(q => q.id);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 30);
@@ -516,49 +628,50 @@ export default {
         const from = startDate.toISOString().slice(0, 10);
         const to = endDate.toISOString().slice(0, 10);
 
-        // Get attentions for the period
-        const attentions = await getPendingAttentionsDetails(
-          state.commerce.id,
-          from,
-          to,
-          [state.commerce.id],
-          1,
-          10000,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
-
-        // Get bookings for the period
-        const bookings = await getBookingsDetails(
-          state.commerce.id,
-          from,
-          to,
-          [state.commerce.id],
-          1,
-          10000,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
+        // Get attentions and bookings in parallel
+        const [attentions, bookings] = await Promise.all([
+          getPendingAttentionsDetails(
+            state.commerce.id,
+            from,
+            to,
+            [state.commerce.id],
+            1,
+            10000,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+          ),
+          getBookingsDetails(
+            state.commerce.id,
+            from,
+            to,
+            [state.commerce.id],
+            1,
+            10000,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+          ),
+        ]);
 
         // Filter by queue IDs
         const filteredAttentions = (attentions || []).filter(
           att => att.queueId && queueIds.includes(att.queueId)
         );
         const filteredBookings = (bookings || []).filter(
-          booking => booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+          booking =>
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
         );
 
         // Group by date
@@ -598,6 +711,14 @@ export default {
 
         // Update calendar attributes
         updateCalendarAttributes(attentionsByDate, bookingsByDate);
+
+        // Cache the results
+        calendarDataCache.value = {
+          calendarDates: { attentionsByDate, bookingsByDate },
+          attentionsByDate,
+          bookingsByDate,
+        };
+        lastCalendarCommerceId.value = state.commerce.id;
 
         loadingCalendar.value = false;
       } catch (error) {
@@ -662,15 +783,27 @@ export default {
         state.dateDetails = {
           attentions: attentions.map(att => {
             let serviceName = att.serviceName || 'N/A';
-            if (att.servicesDetails && Array.isArray(att.servicesDetails) && att.servicesDetails.length > 0) {
+            if (
+              att.servicesDetails &&
+              Array.isArray(att.servicesDetails) &&
+              att.servicesDetails.length > 0
+            ) {
               serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
             }
 
             return {
               id: att.attentionId,
-              clientName: (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') || att.userIdNumber || 'N/A',
+              clientName:
+                (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') ||
+                att.userIdNumber ||
+                'N/A',
               clientId: att.userIdNumber || att.userId || 'N/A',
-              hour: att.createdDate ? new Date(att.createdDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+              hour: att.createdDate
+                ? new Date(att.createdDate).toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : 'N/A',
               service: serviceName,
               number: att.number,
               status: att.status,
@@ -678,7 +811,11 @@ export default {
           }),
           bookings: bookings.map(booking => {
             let serviceName = 'N/A';
-            if (booking.servicesDetails && Array.isArray(booking.servicesDetails) && booking.servicesDetails.length > 0) {
+            if (
+              booking.servicesDetails &&
+              Array.isArray(booking.servicesDetails) &&
+              booking.servicesDetails.length > 0
+            ) {
               serviceName = booking.servicesDetails.map(s => s.name || s).join(', ');
             }
 
@@ -692,9 +829,12 @@ export default {
             let userName = 'N/A';
             let userIdNumber = 'N/A';
             if (booking.userName) {
-              userName = (booking.userName || '') + (booking.userLastName ? ' ' + booking.userLastName : '');
+              userName =
+                (booking.userName || '') + (booking.userLastName ? ' ' + booking.userLastName : '');
             } else if (booking.user && typeof booking.user === 'object') {
-              userName = (booking.user.name || '') + (booking.user.lastName ? ' ' + booking.user.lastName : '');
+              userName =
+                (booking.user.name || '') +
+                (booking.user.lastName ? ' ' + booking.user.lastName : '');
               userIdNumber = booking.user.idNumber || booking.userId || 'N/A';
             }
             if (!userIdNumber && booking.userIdNumber) {
@@ -705,7 +845,7 @@ export default {
               id: booking.bookingId || booking.id,
               clientName: userName || userIdNumber || 'N/A',
               clientId: userIdNumber || booking.userId || 'N/A',
-              hour: hour,
+              hour,
               service: serviceName,
               date: booking.date,
               status: booking.status,
@@ -717,7 +857,7 @@ export default {
       }
     };
 
-    const goToAttention = (attentionId) => {
+    const goToAttention = attentionId => {
       router.push({ path: `/interno/colaborador/atencion/${attentionId}/validar` });
     };
 
@@ -737,9 +877,8 @@ export default {
       return time;
     };
 
-    const pendingBookingsCount = (bookings) => {
-      return bookings.filter(b => b.status === 'PENDING' && !b.attentionId).length;
-    };
+    const pendingBookingsCount = bookings =>
+      bookings.filter(b => b.status === 'PENDING' && !b.attentionId).length;
 
     watch(show, async () => {
       if (show.value === true) {
@@ -748,7 +887,13 @@ export default {
     });
 
     watch(commerce, async () => {
-      if (show.value === true && commerce.value) {
+      if (show.value === true && commerce.value && commerce.value.id) {
+        // Clear cache when commerce changes
+        if (state.commerce && state.commerce.id && state.commerce.id !== commerce.value.id) {
+          lastLoadedCommerceId.value = null;
+          calendarDataCache.value = null;
+          lastCalendarCommerceId.value = null;
+        }
         state.commerce = commerce.value;
         await loadCommerceData();
       }
@@ -803,7 +948,10 @@ export default {
         </div>
         <div v-else>
           <!-- Commerce Selector -->
-          <div v-if="state.commerces && state.commerces.length > 1" class="spy-commerce-selector mb-3">
+          <div
+            v-if="state.commerces && state.commerces.length > 1"
+            class="spy-commerce-selector mb-3"
+          >
             <div class="spy-selector-label">
               <i class="bi bi-shop"></i>
               <span>{{ $t('collaboratorSpySection.selectCommerce') }}</span>
@@ -813,11 +961,7 @@ export default {
               :value="state.commerce.id"
               @change="selectCommerceById($event.target.value)"
             >
-              <option
-                v-for="com in state.commerces"
-                :key="com.id"
-                :value="com.id"
-              >
+              <option v-for="com in state.commerces" :key="com.id" :value="com.id">
                 {{ com.name || com.tag || com.id }}
               </option>
             </select>
@@ -826,13 +970,21 @@ export default {
           <!-- Today's Attentions Card -->
           <div class="spy-today-attentions-card mb-3">
             <div class="spy-card-header">
-              <div class="spy-card-header-content" @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails">
+              <div
+                class="spy-card-header-content"
+                @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+              >
                 <div class="spy-card-icon">
                   <i class="bi bi-qr-code"></i>
                 </div>
                 <div class="spy-card-title-content">
-                  <div class="spy-card-title">{{ $t('collaboratorSpySection.todayAttentions') }}</div>
-                  <div v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0" class="spy-card-value-wrapper">
+                  <div class="spy-card-title">
+                    {{ $t('collaboratorSpySection.todayAttentions') }}
+                  </div>
+                  <div
+                    v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0"
+                    class="spy-card-value-wrapper"
+                  >
                     <div class="spy-card-value">
                       <span v-if="state.dedicatedQueues.length === 1">
                         {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
@@ -849,7 +1001,10 @@ export default {
               </div>
               <div class="spy-card-header-actions">
                 <!-- Queue Link Button -->
-                <div v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0" class="spy-queue-link-inline">
+                <div
+                  v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0"
+                  class="spy-queue-link-inline"
+                >
                   <div v-if="state.dedicatedQueues.length === 1">
                     <a
                       :href="`/interno/colaborador/fila/${state.dedicatedQueues[0].id}/atenciones`"
@@ -869,8 +1024,15 @@ export default {
                     </a>
                   </div>
                 </div>
-                <div class="spy-card-toggle" @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails">
-                  <i :class="state.showTodayAttentionsDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+                <div
+                  class="spy-card-toggle"
+                  @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+                >
+                  <i
+                    :class="
+                      state.showTodayAttentionsDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'
+                    "
+                  ></i>
                 </div>
               </div>
             </div>
@@ -899,7 +1061,9 @@ export default {
                         <span><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
                         <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
                         <span><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
-                        <span v-if="attention.number" class="badge bg-primary">{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span>
+                        <span v-if="attention.number" class="badge bg-primary"
+                          >{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span
+                        >
                       </div>
                     </div>
                     <div class="spy-attention-action">
@@ -920,14 +1084,17 @@ export default {
                     <i class="bi bi-calendar-week"></i>
                   </div>
                   <div class="spy-card-title-content">
-                    <div class="spy-card-title">{{ $t('collaboratorSpySection.weekBookings') }}</div>
+                    <div class="spy-card-title">
+                      {{ $t('collaboratorSpySection.weekBookings') }}
+                    </div>
                     <div class="spy-card-value">{{ state.weekBookings.length }}</div>
                   </div>
                 </div>
               </div>
               <div class="spy-card-subtitle">
                 <span class="spy-card-subtitle-text">
-                  {{ $t('collaboratorSpySection.pendingToAttend') }}: <strong>{{ pendingBookingsCount(state.weekBookings) }}</strong>
+                  {{ $t('collaboratorSpySection.pendingToAttend') }}:
+                  <strong>{{ pendingBookingsCount(state.weekBookings) }}</strong>
                 </span>
               </div>
             </div>
@@ -938,14 +1105,17 @@ export default {
                     <i class="bi bi-calendar-month"></i>
                   </div>
                   <div class="spy-card-title-content">
-                    <div class="spy-card-title">{{ $t('collaboratorSpySection.monthBookings') }}</div>
+                    <div class="spy-card-title">
+                      {{ $t('collaboratorSpySection.monthBookings') }}
+                    </div>
                     <div class="spy-card-value">{{ state.monthBookings.length }}</div>
                   </div>
                 </div>
               </div>
               <div class="spy-card-subtitle">
                 <span class="spy-card-subtitle-text">
-                  {{ $t('collaboratorSpySection.pendingToAttend') }}: <strong>{{ pendingBookingsCount(state.monthBookings) }}</strong>
+                  {{ $t('collaboratorSpySection.pendingToAttend') }}:
+                  <strong>{{ pendingBookingsCount(state.monthBookings) }}</strong>
                 </span>
               </div>
             </div>
@@ -999,7 +1169,11 @@ export default {
             <div v-if="state.dateDetails.attentions.length > 0" class="spy-details-section mb-3">
               <div class="spy-details-header">
                 <i class="bi bi-qr-code"></i>
-                <span>{{ $t('collaboratorSpySection.attentions') }} ({{ state.dateDetails.attentions.length }})</span>
+                <span
+                  >{{ $t('collaboratorSpySection.attentions') }} ({{
+                    state.dateDetails.attentions.length
+                  }})</span
+                >
               </div>
               <div class="spy-details-list">
                 <div
@@ -1015,7 +1189,9 @@ export default {
                       <span><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
                       <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
                       <span><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
-                      <span v-if="attention.number" class="badge bg-primary">{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span>
+                      <span v-if="attention.number" class="badge bg-primary"
+                        >{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -1026,7 +1202,11 @@ export default {
             <div v-if="state.dateDetails.bookings.length > 0" class="spy-details-section mb-3">
               <div class="spy-details-header">
                 <i class="bi bi-calendar-check-fill"></i>
-                <span>{{ $t('collaboratorSpySection.bookings') }} ({{ state.dateDetails.bookings.length }})</span>
+                <span
+                  >{{ $t('collaboratorSpySection.bookings') }} ({{
+                    state.dateDetails.bookings.length
+                  }})</span
+                >
               </div>
               <div class="spy-details-list">
                 <div
@@ -1049,7 +1229,12 @@ export default {
             </div>
 
             <!-- No data message -->
-            <div v-if="state.dateDetails.attentions.length === 0 && state.dateDetails.bookings.length === 0" class="text-center mt-3">
+            <div
+              v-if="
+                state.dateDetails.attentions.length === 0 && state.dateDetails.bookings.length === 0
+              "
+              class="text-center mt-3"
+            >
               <Message
                 :title="$t('collaboratorSpySection.message.noData.title')"
                 :content="$t('collaboratorSpySection.message.noData.content')"

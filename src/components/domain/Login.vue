@@ -242,39 +242,39 @@ export default {
         </div>
         <!-- Modal Password - Use Teleport to render outside component to avoid overflow/position issues -->
         <Teleport to="body">
-        <div
-          class="modal fade"
-          id="modalPassword"
-          data-bs-backdrop="static"
-          data-bs-keyboard="false"
-          tabindex="-1"
-          aria-labelledby="modalPasswordLabel"
-          role="dialog"
-          aria-modal="true"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog modal-xl">
-            <div class="modal-content modern-modal-content">
-              <div class="modal-header border-0">
-                <button
-                  id="close-modal"
-                  class="btn-close"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                  tabindex="0"
-                ></button>
-              </div>
-              <div class="modal-body text-center modern-modal-body">
-                <Suspense>
-                  <template #default>
-                    <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
-                  </template>
-                </Suspense>
+          <div
+            class="modal fade"
+            id="modalPassword"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1"
+            aria-labelledby="modalPasswordLabel"
+            role="dialog"
+            aria-modal="true"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-xl">
+              <div class="modal-content modern-modal-content">
+                <div class="modal-header border-0">
+                  <button
+                    id="close-modal"
+                    class="btn-close"
+                    type="button"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                    tabindex="0"
+                  ></button>
+                </div>
+                <div class="modal-body text-center modern-modal-body">
+                  <Suspense>
+                    <template #default>
+                      <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
+                    </template>
+                  </Suspense>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </Teleport>
       </div>
     </form>

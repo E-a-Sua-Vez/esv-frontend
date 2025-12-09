@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { getActiveCommercesByBusinessId } from '../application/services/commerce';
 import { getBusinessById } from '../application/services/business';
+import { getActiveModulesByCommerceId } from '../application/services/module';
 import { getStorageItem, setStorageItem, removeStorageItem } from '@/shared/utils/storage';
 import { STORAGE_KEYS } from '@/shared/constants';
 
@@ -9,6 +10,7 @@ export const globalStore = defineStore('globalStore', {
     currentUser: null,
     currentPermissions: null,
     currentQueue: null,
+    currentModule: null,
     currentCommerce: null,
     currentBusiness: null,
     currentUserType: null,
@@ -25,6 +27,10 @@ export const globalStore = defineStore('globalStore', {
     getCurrentQueue: state => {
       const queue = state.currentQueue || getStorageItem(STORAGE_KEYS.CURRENT_QUEUE);
       return queue || null;
+    },
+    getCurrentModule: state => {
+      const module = state.currentModule || getStorageItem(STORAGE_KEYS.CURRENT_MODULE);
+      return module || null;
     },
     getCurrentUserType: state => {
       const stored = state.currentUserType || localStorage.getItem(STORAGE_KEYS.CURRENT_USER_TYPE);
@@ -60,6 +66,10 @@ export const globalStore = defineStore('globalStore', {
       this.currentQueue = value;
       setStorageItem(STORAGE_KEYS.CURRENT_QUEUE, value);
     },
+    async setCurrentModule(value) {
+      this.currentModule = value;
+      setStorageItem(STORAGE_KEYS.CURRENT_MODULE, value);
+    },
     async setCurrentUserType(value) {
       this.currentUserType = value;
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_TYPE, value);
@@ -84,12 +94,14 @@ export const globalStore = defineStore('globalStore', {
       // Clear state
       this.currentUser = null;
       this.currentQueue = null;
+      this.currentModule = null;
       this.currentPermissions = null;
       this.currentActiveAttentions = null;
 
       // Clear storage
       removeStorageItem(STORAGE_KEYS.CURRENT_USER);
       removeStorageItem(STORAGE_KEYS.CURRENT_QUEUE);
+      removeStorageItem(STORAGE_KEYS.CURRENT_MODULE);
       removeStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS);
       removeStorageItem(STORAGE_KEYS.CURRENT_ACTIVE_ATTENTIONS);
     },
@@ -138,6 +150,22 @@ export const globalStore = defineStore('globalStore', {
         }
       }
       return commerces;
+    },
+    async getAvailableModules(commerceId) {
+      if (!commerceId) {
+        return [];
+      }
+      try {
+        const modules = await getActiveModulesByCommerceId(commerceId);
+        return modules || [];
+      } catch (error) {
+        // Silently handle 401 (Unauthorized) errors - user is not authenticated yet
+        if (error.response && error.response.status === 401) {
+          return [];
+        }
+        // Re-throw other errors
+        throw error;
+      }
     },
   },
 });

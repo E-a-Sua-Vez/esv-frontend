@@ -130,9 +130,14 @@ export default {
     <div class="client-row-card" :class="getCardTypeClass()" @click="showDetails()">
       <div class="client-row-content">
         <!-- Status Icon -->
-        <Popper :class="'dark'" arrow hover>
+        <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
-            <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado da pesquisa baseado na avaliação' }}</div>
+            <div>
+              {{
+                $t('dashboard.clientCard.tooltip.status') ||
+                'Estado da pesquisa baseado na avaliação'
+              }}
+            </div>
           </template>
           <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
             <i :class="`bi ${clasifyRatedComment(survey.rating)}`"></i>
@@ -154,9 +159,11 @@ export default {
         <div class="client-info-inline">
           <div class="client-name-inline">
             <span class="client-name-text">{{ surveyFullName }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados da pesquisa' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados da pesquisa' }}
+                </div>
               </template>
               <button class="btn-copy-mini" @click.stop="copySurvey()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -172,7 +179,9 @@ export default {
               hover
             >
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.contacted') || 'Cliente foi contactado' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.contacted') || 'Cliente foi contactado' }}
+                </div>
               </template>
               <i class="bi bi-patch-check-fill icon-mini-separated blue-icon" @click.stop></i>
             </Popper>
@@ -181,7 +190,7 @@ export default {
 
         <!-- Status Indicators - Inline -->
         <div class="status-inline">
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
               <div>{{ $t('dashboard.clientCard.tooltip.rating') || 'Avaliação CSAT' }}</div>
             </template>
@@ -190,7 +199,7 @@ export default {
               <span>{{ survey.rating || 'N/I' }}</span>
             </div>
           </Popper>
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
               <div>{{ $t('dashboard.clientCard.tooltip.nps') || 'NPS - Net Promoter Score' }}</div>
             </template>
@@ -199,9 +208,11 @@ export default {
               <span>{{ survey.nps || 'N/I' }}</span>
             </div>
           </Popper>
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
-              <div>{{ $t('dashboard.clientCard.tooltip.sentiment') || 'Análise de sentimento' }}</div>
+              <div>
+                {{ $t('dashboard.clientCard.tooltip.sentiment') || 'Análise de sentimento' }}
+              </div>
             </template>
             <div class="status-badge-inline" @click.stop>
               <i :class="`bi ${clasifyScoredComment(survey.messageScore)}`"></i>
@@ -229,10 +240,12 @@ export default {
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-telephone-fill"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto'
+              }}</span>
             </div>
             <div class="contact-data-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.whatsapp') || 'WhatsApp' }}</div>
                 </template>
@@ -242,14 +255,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-whatsapp"></i>
                     <span>{{ survey.phone || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.email') || 'Email' }}</div>
                 </template>
@@ -259,14 +274,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.email') || 'Email' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.email') || 'Email'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-envelope"></i>
                     <span>{{ survey.email || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.idNumber') || 'ID' }}</div>
                 </template>
@@ -283,9 +300,13 @@ export default {
           <!-- Action Buttons Section -->
           <div v-if="!loading" class="info-section">
             <div class="action-buttons-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
-                  <div>{{ $t('dashboard.clientCard.tooltip.viewAnswers') || 'Ver respostas da pesquisa' }}</div>
+                  <div>
+                    {{
+                      $t('dashboard.clientCard.tooltip.viewAnswers') || 'Ver respostas da pesquisa'
+                    }}
+                  </div>
                 </template>
                 <button
                   class="action-btn"
@@ -297,7 +318,7 @@ export default {
                   <span>{{ $t('dashboard.answers') }}</span>
                 </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.contact') || 'Contactar cliente' }}</div>
                 </template>
@@ -320,8 +341,13 @@ export default {
               <span class="info-section-title">{{ $t('dashboard.comment') || 'Comentário' }}</span>
             </div>
             <div class="info-badges">
-              <span class="info-badge" style="width: 100%; flex-direction: column; align-items: flex-start;">
-                <span class="badge-value" style="text-align: left; white-space: normal;">{{ survey.message || 'N/I' }}</span>
+              <span
+                class="info-badge"
+                style="width: 100%; flex-direction: column; align-items: flex-start"
+              >
+                <span class="badge-value" style="text-align: left; white-space: normal">{{
+                  survey.message || 'N/I'
+                }}</span>
               </span>
             </div>
           </div>
@@ -350,12 +376,18 @@ export default {
 
           <!-- Survey Data Section -->
           <div
-            v-if="survey.queueName || (survey.commerceName && survey.commerceTag) || survey.servicesDetails"
+            v-if="
+              survey.queueName ||
+              (survey.commerceName && survey.commerceTag) ||
+              survey.servicesDetails
+            "
             class="info-section"
           >
             <div class="info-section-header">
               <i class="bi bi-qr-code"></i>
-              <span class="info-section-title">{{ $t('dashboard.attData') || 'Dados da Pesquisa' }}</span>
+              <span class="info-section-title">{{
+                $t('dashboard.attData') || 'Dados da Pesquisa'
+              }}</span>
             </div>
             <div class="info-badges">
               <span v-if="survey.queueName" class="info-badge">
@@ -364,15 +396,13 @@ export default {
               </span>
               <span v-if="survey.commerceName && survey.commerceTag" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
-                <span class="badge-value">{{ survey.commerceName }} - {{ survey.commerceTag }}</span>
+                <span class="badge-value"
+                  >{{ survey.commerceName }} - {{ survey.commerceTag }}</span
+                >
               </span>
               <span v-if="survey.servicesDetails" class="info-badge services-badge">
                 <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span
-                  v-for="serv in survey.servicesDetails"
-                  :key="serv.id"
-                  class="service-tag"
-                >
+                <span v-for="serv in survey.servicesDetails" :key="serv.id" class="service-tag">
                   {{ serv.name }}
                 </span>
               </span>
@@ -385,7 +415,9 @@ export default {
               <span class="metadata-label">ID:</span>
               <span class="metadata-value">{{ survey.surveyid }}</span>
               <span class="metadata-separator">•</span>
-              <span class="metadata-label">{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span>
+              <span class="metadata-label"
+                >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
+              >
               <span class="metadata-value">{{ getDate(survey.createdDate) }}</span>
             </div>
           </div>
@@ -1126,4 +1158,3 @@ export default {
   overflow: visible;
 }
 </style>
-

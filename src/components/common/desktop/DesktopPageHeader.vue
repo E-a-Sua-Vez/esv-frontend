@@ -79,6 +79,3 @@ export default {
   width: auto;
 }
 </style>
-
-
-

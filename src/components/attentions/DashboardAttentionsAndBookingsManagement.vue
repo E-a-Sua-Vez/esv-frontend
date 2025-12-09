@@ -120,7 +120,9 @@ export default {
     refreshAttentionsContent() {
       // CRITICAL: If attentions is not active, don't refresh - this prevents state resets
       if (!this.showAttentionsResults) {
-        console.warn('⚠️ refreshAttentionsContent() called but showAttentionsResults is false! Skipping refresh to prevent state reset...');
+        console.warn(
+          '⚠️ refreshAttentionsContent() called but showAttentionsResults is false! Skipping refresh to prevent state reset...'
+        );
         return;
       }
 
@@ -146,16 +148,23 @@ export default {
           const filterValues = this.attentionsFilterValues;
           if (Object.keys(filterValues).length > 0) {
             contentInstance.page = 1;
-            if (filterValues.daysSinceType !== undefined) contentInstance.daysSinceType = filterValues.daysSinceType;
-            if (filterValues.contactResultType !== undefined) contentInstance.contactResultType = filterValues.contactResultType;
-            if (filterValues.contactable !== undefined) contentInstance.contactable = filterValues.contactable;
-            if (filterValues.contacted !== undefined) contentInstance.contacted = filterValues.contacted;
+            if (filterValues.daysSinceType !== undefined)
+              contentInstance.daysSinceType = filterValues.daysSinceType;
+            if (filterValues.contactResultType !== undefined)
+              contentInstance.contactResultType = filterValues.contactResultType;
+            if (filterValues.contactable !== undefined)
+              contentInstance.contactable = filterValues.contactable;
+            if (filterValues.contacted !== undefined)
+              contentInstance.contacted = filterValues.contacted;
             if (filterValues.survey !== undefined) contentInstance.survey = filterValues.survey;
             if (filterValues.asc !== undefined) contentInstance.asc = filterValues.asc;
-            if (filterValues.searchText !== undefined) contentInstance.searchText = filterValues.searchText;
+            if (filterValues.searchText !== undefined)
+              contentInstance.searchText = filterValues.searchText;
             if (filterValues.queueId !== undefined) contentInstance.queueId = filterValues.queueId;
-            if (filterValues.serviceId !== undefined) contentInstance.serviceId = filterValues.serviceId;
-            if (filterValues.startDate !== undefined) contentInstance.startDate = filterValues.startDate;
+            if (filterValues.serviceId !== undefined)
+              contentInstance.serviceId = filterValues.serviceId;
+            if (filterValues.startDate !== undefined)
+              contentInstance.startDate = filterValues.startDate;
             if (filterValues.endDate !== undefined) contentInstance.endDate = filterValues.endDate;
           }
 
@@ -171,7 +180,10 @@ export default {
 
             // CRITICAL: Double-check states after refresh
             this.$nextTick(() => {
-              if (wasAttentionsActive && (!this.showAttentionsResults || this.showBookingsResults)) {
+              if (
+                wasAttentionsActive &&
+                (!this.showAttentionsResults || this.showBookingsResults)
+              ) {
                 console.error('❌ STATES WERE RESET AFTER REFRESH! Fixing...');
                 this.showAttentionsResults = true;
                 this.showBookingsResults = false;
@@ -192,17 +204,24 @@ export default {
 
           // CRITICAL: Clear the refreshing flag even if contentInstance is null
           this._isRefreshing = false;
-          console.log('🔄 refreshAttentionsContent() - _isRefreshing flag cleared (no contentInstance)');
+          console.log(
+            '🔄 refreshAttentionsContent() - _isRefreshing flag cleared (no contentInstance)'
+          );
         }
       });
     },
     refreshBookingsContent() {
-      console.log('🔄 refreshBookingsContent() called - States:', { showAttentionsResults: this.showAttentionsResults, showBookingsResults: this.showBookingsResults });
+      console.log('🔄 refreshBookingsContent() called - States:', {
+        showAttentionsResults: this.showAttentionsResults,
+        showBookingsResults: this.showBookingsResults,
+      });
       console.trace('📍 CALL STACK for refreshBookingsContent():');
 
       // CRITICAL: If bookings is not active, don't refresh - this prevents state resets
       if (!this.showBookingsResults) {
-        console.warn('⚠️ refreshBookingsContent() called but showBookingsResults is false! Skipping refresh to prevent state reset...');
+        console.warn(
+          '⚠️ refreshBookingsContent() called but showBookingsResults is false! Skipping refresh to prevent state reset...'
+        );
         // Don't fix it here - let the caller handle it
         return;
       }
@@ -215,11 +234,18 @@ export default {
       const wasAttentionsActive = this.showAttentionsResults;
       this.$nextTick(() => {
         // CRITICAL: Restore states IMMEDIATELY after nextTick to prevent reset
-        console.log('🔄 refreshBookingsContent() - BEFORE restoring states:', { showAttentionsResults: this.showAttentionsResults, showBookingsResults: this.showBookingsResults, wasBookingsActive });
+        console.log('🔄 refreshBookingsContent() - BEFORE restoring states:', {
+          showAttentionsResults: this.showAttentionsResults,
+          showBookingsResults: this.showBookingsResults,
+          wasBookingsActive,
+        });
         if (wasBookingsActive) {
           this.showAttentionsResults = false;
           this.showBookingsResults = true;
-          console.log('🔄 refreshBookingsContent() - AFTER restoring states:', { showAttentionsResults: this.showAttentionsResults, showBookingsResults: this.showBookingsResults });
+          console.log('🔄 refreshBookingsContent() - AFTER restoring states:', {
+            showAttentionsResults: this.showAttentionsResults,
+            showBookingsResults: this.showBookingsResults,
+          });
         }
 
         // Find the content instance (not the filter instance with filtersLocation='slot')
@@ -232,9 +258,11 @@ export default {
           contentInstance = this.$children.find(child => {
             const name = child.$options?.name || child.$options?.__name;
             // Find the one that shows content, not the one that exposes filters
-            return name === 'DashboardBookingsManagement' &&
-                   child.showBookingsManagement === true &&
-                   child.filtersLocation !== 'slot';
+            return (
+              name === 'DashboardBookingsManagement' &&
+              child.showBookingsManagement === true &&
+              child.filtersLocation !== 'slot'
+            );
           });
         }
 
@@ -255,7 +283,16 @@ export default {
           }
         }
 
-        console.log('🔄 refreshBookingsContent() - contentInstance:', contentInstance, 'filtersLocation:', contentInstance?.filtersLocation, 'showBookingsManagement:', contentInstance?.showBookingsManagement, 'All refs:', Object.keys(this.$refs || {}));
+        console.log(
+          '🔄 refreshBookingsContent() - contentInstance:',
+          contentInstance,
+          'filtersLocation:',
+          contentInstance?.filtersLocation,
+          'showBookingsManagement:',
+          contentInstance?.showBookingsManagement,
+          'All refs:',
+          Object.keys(this.$refs || {})
+        );
         if (contentInstance && contentInstance.refresh) {
           contentInstance.bookings = [];
           contentInstance.counter = 0;
@@ -269,17 +306,24 @@ export default {
             if (filterValues.status !== undefined) contentInstance.status = filterValues.status;
             if (filterValues.survey !== undefined) contentInstance.survey = filterValues.survey;
             if (filterValues.asc !== undefined) contentInstance.asc = filterValues.asc;
-            if (filterValues.searchText !== undefined) contentInstance.searchText = filterValues.searchText;
+            if (filterValues.searchText !== undefined)
+              contentInstance.searchText = filterValues.searchText;
             if (filterValues.queueId !== undefined) contentInstance.queueId = filterValues.queueId;
-            if (filterValues.serviceId !== undefined) contentInstance.serviceId = filterValues.serviceId;
-            if (filterValues.startDate !== undefined) contentInstance.startDate = filterValues.startDate;
+            if (filterValues.serviceId !== undefined)
+              contentInstance.serviceId = filterValues.serviceId;
+            if (filterValues.startDate !== undefined)
+              contentInstance.startDate = filterValues.startDate;
             if (filterValues.endDate !== undefined) contentInstance.endDate = filterValues.endDate;
           }
 
           contentInstance._skipWatch = false;
           this.$nextTick(() => {
             // CRITICAL: Ensure states are still correct before calling refresh
-            console.log('🔄 refreshBookingsContent() - BEFORE refresh(1):', { showAttentionsResults: this.showAttentionsResults, showBookingsResults: this.showBookingsResults, wasBookingsActive });
+            console.log('🔄 refreshBookingsContent() - BEFORE refresh(1):', {
+              showAttentionsResults: this.showAttentionsResults,
+              showBookingsResults: this.showBookingsResults,
+              wasBookingsActive,
+            });
 
             // CRITICAL: Restore states BEFORE calling refresh
             if (wasBookingsActive) {
@@ -305,7 +349,11 @@ export default {
 
             // CRITICAL: Double-check states after refresh
             this.$nextTick(() => {
-              console.log('🔄 refreshBookingsContent() - AFTER refresh(1):', { showAttentionsResults: this.showAttentionsResults, showBookingsResults: this.showBookingsResults, wasBookingsActive });
+              console.log('🔄 refreshBookingsContent() - AFTER refresh(1):', {
+                showAttentionsResults: this.showAttentionsResults,
+                showBookingsResults: this.showBookingsResults,
+                wasBookingsActive,
+              });
               if (wasBookingsActive && (!this.showBookingsResults || this.showAttentionsResults)) {
                 console.error('❌ STATES WERE RESET AFTER REFRESH! Fixing...');
                 this.showAttentionsResults = false;
@@ -328,7 +376,9 @@ export default {
 
           // CRITICAL: Clear the refreshing flag even if contentInstance is null
           this._isRefreshing = false;
-          console.log('🔄 refreshBookingsContent() - _isRefreshing flag cleared (no contentInstance)');
+          console.log(
+            '🔄 refreshBookingsContent() - _isRefreshing flag cleared (no contentInstance)'
+          );
         }
       });
     },
@@ -346,111 +396,135 @@ export default {
   <div>
     <!-- Expose filters slot from DashboardAttentionsManagement for desktop when Atendimentos is active -->
     <template v-if="filtersLocation === 'slot'">
-    {{ console.log('🔍 FILTERS SLOT RENDER CHECK:', { showAttentionsResults, showBookingsResults, filtersLocation }) }}
-    <!-- SIMPLE: Show attentions filters when attentions tab is active -->
-    <div>
-      <KeepAlive>
-        <DashboardAttentionsManagement
-          v-if="showAttentionsResults"
-          key="attentions-filters-slot"
-          ref="attentionsManagement"
-          :show-attention-management="false"
-          :toggles="toggles"
-          :commerce="commerce"
-          :queues="queues"
-          :commerces="commerces"
-          :services="services"
-          filters-location="slot"
-        >
-          <template #filters-exposed="filterProps">
-            {{ console.log('📤 ATTENTIONS FILTERS EXPOSED:', { ...filterProps, filterType: 'attentions' }) }}
-            <slot name="filters-exposed" v-bind="{ ...filterProps, filterType: 'attentions' }"></slot>
-          </template>
-        </DashboardAttentionsManagement>
-      </KeepAlive>
-      <!-- SIMPLE: Show bookings filters when bookings tab is active -->
-      <KeepAlive>
-        <DashboardBookingsManagement
-          v-if="showBookingsResults"
-          key="bookings-filters-slot"
-          ref="bookingsManagement"
-          :show-bookings-management="false"
-          :toggles="toggles"
-          :commerce="commerce"
-          :queues="queues"
-          :commerces="commerces"
-          :services="services"
-          filters-location="slot"
-        >
-          <template #filters-exposed="filterProps">
-            {{ console.log('📤 BOOKINGS FILTERS EXPOSED:', { ...filterProps, filterType: 'bookings' }) }}
-            <slot name="filters-exposed" v-bind="{ ...filterProps, filterType: 'bookings' }"></slot>
-          </template>
-        </DashboardBookingsManagement>
-      </KeepAlive>
-    </div>
+      {{
+        console.log('🔍 FILTERS SLOT RENDER CHECK:', {
+          showAttentionsResults,
+          showBookingsResults,
+          filtersLocation,
+        })
+      }}
+      <!-- SIMPLE: Show attentions filters when attentions tab is active -->
+      <div>
+        <KeepAlive>
+          <DashboardAttentionsManagement
+            v-if="showAttentionsResults"
+            key="attentions-filters-slot"
+            ref="attentionsManagement"
+            :show-attention-management="false"
+            :toggles="toggles"
+            :commerce="commerce"
+            :queues="queues"
+            :commerces="commerces"
+            :services="services"
+            filters-location="slot"
+          >
+            <template #filters-exposed="filterProps">
+              {{
+                console.log('📤 ATTENTIONS FILTERS EXPOSED:', {
+                  ...filterProps,
+                  filterType: 'attentions',
+                })
+              }}
+              <slot
+                name="filters-exposed"
+                v-bind="{ ...filterProps, filterType: 'attentions' }"
+              ></slot>
+            </template>
+          </DashboardAttentionsManagement>
+        </KeepAlive>
+        <!-- SIMPLE: Show bookings filters when bookings tab is active -->
+        <KeepAlive>
+          <DashboardBookingsManagement
+            v-if="showBookingsResults"
+            key="bookings-filters-slot"
+            ref="bookingsManagement"
+            :show-bookings-management="false"
+            :toggles="toggles"
+            :commerce="commerce"
+            :queues="queues"
+            :commerces="commerces"
+            :services="services"
+            filters-location="slot"
+          >
+            <template #filters-exposed="filterProps">
+              {{
+                console.log('📤 BOOKINGS FILTERS EXPOSED:', {
+                  ...filterProps,
+                  filterType: 'bookings',
+                })
+              }}
+              <slot
+                name="filters-exposed"
+                v-bind="{ ...filterProps, filterType: 'bookings' }"
+              ></slot>
+            </template>
+          </DashboardBookingsManagement>
+        </KeepAlive>
+      </div>
     </template>
     <div
-    id="surveys"
-    class="row"
-    v-if="showAttentionManagement === true && toggles['dashboard.attentions-management.view']"
-  >
-    <div>
-      <hr />
-      <div class="row col m-1 mb-2">
-        <div class="col-6 centered">
-          <button
-            class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
-            :class="showAttentionsResults ? 'btn-selected' : ''"
-            @click="showAttentions()"
-            :disabled="!toggles['dashboard.attentions-management.view']"
-          >
-            {{ $t('dashboard.attentions') }}
-          </button>
-        </div>
-        <div class="col-6 centered">
-          <button
-            class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
-            :class="showBookingsResults ? 'btn-selected' : ''"
-            @click="showBookings()"
-            :disabled="!toggles['dashboard.bookings-management.view']"
-          >
-            {{ $t('dashboard.bookings') }}
-          </button>
-        </div>
-      </div>
+      id="surveys"
+      class="row"
+      v-if="showAttentionManagement === true && toggles['dashboard.attentions-management.view']"
+    >
       <div>
-        <DashboardAttentionsManagement
-          :show-attention-management="this.showAttentionsResults"
-          :toggles="this.toggles"
-          :commerce="this.commerce"
-          :queues="this.queues"
-          :commerces="this.commerces"
-          :services="this.services"
-          :filters-location="filtersLocation"
-          ref="attentionsManagement"
-        >
-        </DashboardAttentionsManagement>
-        <DashboardBookingsManagement
-          :show-bookings-management="this.showBookingsResults"
-          :toggles="this.toggles"
-          :commerce="this.commerce"
-          :queues="this.queues"
-          :commerces="this.commerces"
-          :services="this.services"
-          :filters-location="filtersLocation"
-          ref="bookingsManagement"
-        >
-        </DashboardBookingsManagement>
+        <hr />
+        <div class="row col m-1 mb-2">
+          <div class="col-6 centered">
+            <button
+              class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+              :class="showAttentionsResults ? 'btn-selected' : ''"
+              @click="showAttentions()"
+              :disabled="!toggles['dashboard.attentions-management.view']"
+            >
+              {{ $t('dashboard.attentions') }}
+            </button>
+          </div>
+          <div class="col-6 centered">
+            <button
+              class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+              :class="showBookingsResults ? 'btn-selected' : ''"
+              @click="showBookings()"
+              :disabled="!toggles['dashboard.bookings-management.view']"
+            >
+              {{ $t('dashboard.bookings') }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <DashboardAttentionsManagement
+            :show-attention-management="this.showAttentionsResults"
+            :toggles="this.toggles"
+            :commerce="this.commerce"
+            :queues="this.queues"
+            :commerces="this.commerces"
+            :services="this.services"
+            :filters-location="filtersLocation"
+            ref="attentionsManagement"
+          >
+          </DashboardAttentionsManagement>
+          <DashboardBookingsManagement
+            :show-bookings-management="this.showBookingsResults"
+            :toggles="this.toggles"
+            :commerce="this.commerce"
+            :queues="this.queues"
+            :commerces="this.commerces"
+            :services="this.services"
+            :filters-location="filtersLocation"
+            ref="bookingsManagement"
+          >
+          </DashboardBookingsManagement>
+        </div>
       </div>
     </div>
-  </div>
-  <div v-if="showAttentionManagement === true && !toggles['dashboard.attentions-management.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div
+      v-if="showAttentionManagement === true && !toggles['dashboard.attentions-management.view']"
+    >
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
     </div>
   </div>
 </template>

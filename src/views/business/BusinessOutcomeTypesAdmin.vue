@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -50,9 +50,7 @@ export default {
       business: {},
       activeBusiness: false,
       goToUnavailable: false,
-      commerces: ref([]),
       outcomeTypes: ref([]),
-      commerce: {},
       showAdd: false,
       newOutcomeType: {},
       extendedEntity: undefined,
@@ -68,21 +66,71 @@ export default {
       types: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load outcome types when commerce changes
+    const loadOutcomeTypes = async commerceId => {
+      if (!commerceId) {
+        state.outcomeTypes = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const outcomeTypes = await getOutcomeTypesByCommerceId(commerceId);
+        state.outcomeTypes = outcomeTypes || [];
+        state.filtered = state.outcomeTypes;
+      } catch (error) {
+        console.error('Error loading outcome types:', error);
+        state.outcomeTypes = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload outcome types
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear filtered data to prevent showing old results
+            state.outcomeTypes = [];
+            state.filtered = [];
+            await loadOutcomeTypes(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading outcome types on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getOutcomeTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          const outcomeTypes = await getOutcomeTypesByCommerceId(state.commerce.id);
-          state.outcomeTypes = outcomeTypes;
-        }
-        state.filtered = state.outcomeTypes;
         state.toggles = await getPermissions('outcome-types', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load outcome types for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadOutcomeTypes(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -147,10 +195,10 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
-        if (validateAdd(state.newOutcomeType)) {
-          state.newOutcomeType.commerceId = state.commerce.id;
+        if (validateAdd(state.newOutcomeType) && commerce.value && commerce.value.id) {
+          state.newOutcomeType.commerceId = commerce.value.id;
           await addOutcomeType(state.newOutcomeType);
-          state.outcomeTypes = await getOutcomeTypesByCommerceId(state.commerce.id);
+          await loadOutcomeTypes(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newOutcomeType = {};
@@ -167,9 +215,9 @@ export default {
     const update = async outcomeType => {
       try {
         loading.value = true;
-        if (validateUpdate(outcomeType)) {
+        if (validateUpdate(outcomeType) && commerce.value && commerce.value.id) {
           await updateOutcomeType(outcomeType.id, outcomeType);
-          state.outcomeTypes = await getOutcomeTypesByCommerceId(state.commerce.id);
+          await loadOutcomeTypes(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -183,11 +231,11 @@ export default {
     const unavailable = async outcomeType => {
       try {
         loading.value = true;
-        if (outcomeType && outcomeType.id) {
+        if (outcomeType && outcomeType.id && commerce.value && commerce.value.id) {
           outcomeType.available = false;
           outcomeType.active = false;
           await updateOutcomeType(outcomeType.id, outcomeType);
-          state.outcomeTypes = await getOutcomeTypesByCommerceId(state.commerce.id);
+          await loadOutcomeTypes(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -205,20 +253,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        const selectedOutcomeTypes = await getOutcomeTypesByCommerceId(state.commerce.id);
-        state.outcomeTypes = selectedOutcomeTypes;
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -244,8 +278,8 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
       unavailable,
+      commerce,
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
@@ -257,7 +291,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+      <CommerceLogo :src="commerce?.logo || state.business?.logo" :loading="loading"></CommerceLogo>
       <ComponentMenu
         :title="$t(`businessOutcomeTypesAdmin.title`)"
         :toggles="state.toggles"
@@ -267,33 +301,10 @@ export default {
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+        <Alert :show="false" :stack="alertError"></Alert>
       </div>
       <div id="businessOutcomeTypesAdmin">
         <div v-if="isActiveBusiness && state.toggles['outcome-types.admin.view']">
-          <div id="businessOutcomeTypesAdmin-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t('businessOutcomeTypesAdmin.commerce') }} </span>
-                <select
-                  class="form-control-modern form-select-modern"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="outcomeTypes"
-                >
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">
-                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                  </option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessOutcomeTypesAdmin.message.4.title')"
-                  :content="$t('businessOutcomeTypesAdmin.message.4.content')"
-                />
-              </div>
-            </div>
-          </div>
           <div v-if="!loading" id="businessOutcomeTypesAdmin-result" class="mt-4">
             <div>
               <div v-if="state.outcomeTypes.length === 0">
@@ -302,7 +313,7 @@ export default {
                   :content="$t('businessOutcomeTypesAdmin.message.2.content')"
                 />
               </div>
-              <div v-if="state.commerce" class="row mb-2">
+              <div v-if="commerce && commerce.id" class="row mb-2">
                 <div class="col lefted">
                   <button
                     class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -359,7 +370,9 @@ export default {
                     @update:outcomeType="outcomeType = $event"
                   />
                   <div
-                    v-if="state.toggles['outcome-types.admin.read'] && state.extendedEntity === index"
+                    v-if="
+                      state.toggles['outcome-types.admin.read'] && state.extendedEntity === index
+                    "
                     class="row g-1 mt-2"
                   >
                     <div class="col">
@@ -435,7 +448,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-outcomeType"
               class="result-card mb-4"

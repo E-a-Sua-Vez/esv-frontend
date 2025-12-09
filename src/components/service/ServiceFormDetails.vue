@@ -302,11 +302,11 @@ textarea.form-control-modern {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
-.section-toggle-button[aria-expanded="true"] {
+.section-toggle-button[aria-expanded='true'] {
   background: rgba(0, 0, 0, 0.85);
 }
 
-.section-toggle-button[aria-expanded="true"]:hover {
+.section-toggle-button[aria-expanded='true']:hover {
   background: rgba(0, 0, 0, 0.95);
 }
 
@@ -322,8 +322,7 @@ textarea.form-control-modern {
   margin-left: 0.5rem;
 }
 
-.section-toggle-button[aria-expanded="true"] .section-toggle-icon {
+.section-toggle-button[aria-expanded='true'] .section-toggle-icon {
   transform: rotate(180deg);
 }
 </style>
-

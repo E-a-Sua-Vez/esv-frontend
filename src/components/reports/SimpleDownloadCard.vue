@@ -18,7 +18,11 @@ export default {
   },
   methods: {
     executeDownload() {
-      this.$emit('download');
+      try {
+        this.$emit('download');
+      } catch (error) {
+        console.error('Error in executeDownload:', error);
+      }
     },
   },
 };

@@ -121,15 +121,8 @@ export default {
             {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
           </option>
         </select>
-        <div
-          class="selected-items-container"
-          v-if="form.servicesId && form.servicesId.length > 0"
-        >
-          <span
-            class="badge-item"
-            v-for="serviceId in form.servicesId"
-            :key="serviceId"
-          >
+        <div class="selected-items-container" v-if="form.servicesId && form.servicesId.length > 0">
+          <span class="badge-item" v-for="serviceId in form.servicesId" :key="serviceId">
             {{ showService(serviceId) }}
             <button
               type="button"
@@ -145,10 +138,7 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessFormsAdmin.active') }}
       </label>
-      <Toggle
-        v-model="form.active"
-        :disabled="isAdd ? false : !toggles['forms.admin.edit']"
-      />
+      <Toggle v-model="form.active" :disabled="isAdd ? false : !toggles['forms.admin.edit']" />
     </div>
   </div>
 </template>
@@ -316,4 +306,3 @@ export default {
   font-weight: 600;
 }
 </style>
-

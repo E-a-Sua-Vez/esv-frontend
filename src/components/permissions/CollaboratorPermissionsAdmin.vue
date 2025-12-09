@@ -43,8 +43,6 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      commerce: ref({}),
       roles: {},
       rolSelected: {
         permissions: [],
@@ -63,18 +61,68 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load collaborators for current commerce
+    const loadCollaborators = async commerceId => {
+      if (!commerceId) {
+        state.collaborators = [];
+        clear();
+        return;
+      }
+      try {
+        state.collaborators = await getCollaboratorsByCommerceId(commerceId);
+        clear();
+      } catch (error) {
+        console.error('Error loading collaborators:', error);
+        state.collaborators = [];
+        clear();
+      }
+    };
+
+    // Watch for commerce changes and reload collaborators
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            await loadCollaborators(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading collaborators on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
         state.roles = await getRoles();
-        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
         await selectRol('collaborator');
         state.toggles = await getPermissions('permissions', 'collaborators');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load collaborators for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCollaborators(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -104,20 +152,6 @@ export default {
       state.newPermission = {
         type: 'boolean',
       };
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-        clear();
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     const validateAdd = permission => {
@@ -195,7 +229,11 @@ export default {
     const refresh = async () => {
       if (state.rolSelected) {
         if (state.rolSelected.name === 'collaborator') {
-          state.user = await getCollaboratorByCommerceIdEmail(state.commerce.id, state.email);
+          const currentCommerce = store.getCurrentCommerce;
+          if (!currentCommerce || !currentCommerce.id) {
+            return;
+          }
+          state.user = await getCollaboratorByCommerceIdEmail(currentCommerce.id, state.email);
         } else {
           throw new Error('cant manipulate this type of user');
         }
@@ -291,8 +329,8 @@ export default {
       clear,
       search,
       getDate,
-      selectCommerce,
       receiveFilteredItems,
+      commerce,
     };
   },
 };
@@ -307,27 +345,6 @@ export default {
     <div id="businessPermissionsAdmin">
       <div>
         <div id="businessQueuesAdmin-controls" class="control-box">
-          <div class="row">
-            <div class="col" v-if="state.commerces.length > 0">
-              <span>{{ $t('businessQueuesAdmin.commerce') }} </span>
-              <select
-                class="form-control-modern form-select-modern"
-                v-model="state.commerce"
-                @change="selectCommerce(state.commerce)"
-                id="modules"
-              >
-                <option v-for="com in state.commerces" :key="com.id" :value="com">
-                  {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('businessQueuesAdmin.message.4.title')"
-                :content="$t('businessQueuesAdmin.message.4.content')"
-              />
-            </div>
-          </div>
           <div class="row mb-1 centered">
             <div class="col-10" v-if="state.collaborators && state.collaborators.length > 0">
               <SearchBar
@@ -336,6 +353,12 @@ export default {
                 @selectItem="search"
               >
               </SearchBar>
+            </div>
+            <div v-else-if="commerce && commerce.id && !loading" class="col-12">
+              <Message
+                :title="$t('businessPermissionsAdmin.message.3.title')"
+                :content="$t('businessPermissionsAdmin.message.3.content')"
+              />
             </div>
           </div>
           <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">

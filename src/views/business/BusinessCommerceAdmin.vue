@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -48,6 +48,9 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
     const dateMask = ref({
       modelValue: 'YYYY-MM-DD',
     });
@@ -520,7 +523,7 @@ export default {
       state.showAdd = false;
     };
 
-    const handleCloseButtonMousedown = (e) => {
+    const handleCloseButtonMousedown = e => {
       // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
       if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
         const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
@@ -534,7 +537,7 @@ export default {
       }
     };
 
-    const handleModalBackdropClick = (e) => {
+    const handleModalBackdropClick = e => {
       // Remove focus when clicking backdrop to close modal
       if (e.target === e.currentTarget && document.activeElement) {
         document.activeElement.blur();
@@ -602,6 +605,7 @@ export default {
       initializedSpecificCalendar,
       addSpecificDate,
       updateAddSpecificDate,
+      commerce,
       deleteSpecificDate,
       updateDeleteSpecificDate,
       timeConvert,
@@ -615,7 +619,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessCommercesAdmin.title`)"
           :toggles="state.toggles"
@@ -625,7 +632,7 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessCommercesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['commerces.admin.view']">
@@ -699,30 +706,30 @@ export default {
                       v-if="state.toggles['commerces.admin.read'] && state.extendedEntity === index"
                       class="row g-1 mt-2"
                     >
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(commerce)"
-                            :disabled="!state.toggles['commerces.admin.update']"
-                          >
-                            {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['commerces.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['commerces.admin.unavailable']"
-                            :no-disabled="state.toggles['commerces.admin.unavailable']"
-                            @actionYes="unavailable(commerce)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(commerce)"
+                          :disabled="!state.toggles['commerces.admin.update']"
+                        >
+                          {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['commerces.admin.unavailable']"
+                        >
+                          {{ $t('businessQueuesAdmin.unavailable') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yes-disabled="state.toggles['commerces.admin.unavailable']"
+                          :no-disabled="state.toggles['commerces.admin.unavailable']"
+                          @actionYes="unavailable(commerce)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
                       </div>
                     </div>
                     <div
@@ -755,17 +762,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -853,30 +860,30 @@ export default {
                       v-if="state.toggles['commerces.admin.read'] && state.extendedEntity === index"
                       class="row g-1 mt-2"
                     >
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(commerce)"
-                            :disabled="!state.toggles['commerces.admin.update']"
-                          >
-                            {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['commerces.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['commerces.admin.unavailable']"
-                            :no-disabled="state.toggles['commerces.admin.unavailable']"
-                            @actionYes="unavailable(commerce)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(commerce)"
+                          :disabled="!state.toggles['commerces.admin.update']"
+                        >
+                          {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['commerces.admin.unavailable']"
+                        >
+                          {{ $t('businessQueuesAdmin.unavailable') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yes-disabled="state.toggles['commerces.admin.unavailable']"
+                          :no-disabled="state.toggles['commerces.admin.unavailable']"
+                          @actionYes="unavailable(commerce)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
                       </div>
                     </div>
                     <div
@@ -926,7 +933,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-commerce"
               class="result-card mb-4"
@@ -948,17 +955,17 @@ export default {
                     addressAddError: state.addressAddError,
                     errorsAdd: state.errorsAdd,
                   }"
-                        :locale="state.locale"
+                  :locale="state.locale"
                   :on-initialized-specific-calendar="initializedSpecificCalendar"
                   :on-initialized-personalized-hours="initializedParsonalizedHours"
                 />
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newCommerce)"
-                    >
-                      {{ $t('businessCommercesAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
+                <div class="col">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newCommerce)"
+                  >
+                    {{ $t('businessCommercesAdmin.add') }} <i class="bi bi-save"></i>
+                  </button>
                 </div>
               </div>
               <div v-else>

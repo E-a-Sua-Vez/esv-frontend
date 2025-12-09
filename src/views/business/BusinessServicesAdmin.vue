@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -51,9 +51,7 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       services: ref([]),
-      commerce: {},
       showAdd: false,
       goToUnavailable: false,
       newService: {},
@@ -71,24 +69,75 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load services when commerce changes
+    const loadServices = async commerceId => {
+      if (!commerceId) {
+        state.services = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const services = await getServiceByCommerce(commerceId);
+        state.services = services || [];
+        state.filtered = state.services;
+      } catch (error) {
+        console.error('Error loading services:', error);
+        state.services = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload services
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear filtered data to prevent showing old results
+            state.services = [];
+            state.filtered = [];
+            await loadServices(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading services on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getServiceTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.services = await getServiceByCommerce(state.commerce.id);
-        }
-        state.filtered = state.services;
         state.toggles = await getPermissions('services', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load services for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadServices(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -167,9 +216,9 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newService)) {
-          state.newService.commerceId = state.commerce.id;
+          state.newService.commerceId = commerce.value.id;
           await addService(state.newService);
-          state.services = await getServiceByCommerce(state.commerce.id);
+          state.services = await getServiceByCommerce(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newService = {};
@@ -188,7 +237,7 @@ export default {
         loading.value = true;
         if (validateUpdate(service)) {
           await updateService(service.id, service);
-          state.services = await getServiceByCommerce(state.commerce.id);
+          state.services = await getServiceByCommerce(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -206,7 +255,7 @@ export default {
           service.available = false;
           service.active = false;
           await updateService(service.id, service);
-          state.services = await getServiceByCommerce(state.commerce.id);
+          state.services = await getServiceByCommerce(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -224,19 +273,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.services = await getServiceByCommerce(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -266,7 +302,7 @@ export default {
       state.shortDescriptionAddError = false;
     };
 
-    const handleCloseButtonMousedown = (e) => {
+    const handleCloseButtonMousedown = e => {
       // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
       if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
         const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
@@ -280,7 +316,7 @@ export default {
       }
     };
 
-    const handleModalBackdropClick = (e) => {
+    const handleModalBackdropClick = e => {
       // Remove focus when clicking backdrop to close modal
       if (e.target === e.currentTarget && document.activeElement) {
         document.activeElement.blur();
@@ -332,7 +368,7 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       unavailable,
       goToUnavailable,
       unavailableCancel,
@@ -347,7 +383,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessServicesAdmin.title`)"
           :toggles="state.toggles"
@@ -357,26 +396,13 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessServicesAdmin">
           <div v-if="isActiveBusiness && state.toggles['services.admin.view']">
             <div id="businessServicesAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessServicesAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessServicesAdmin.message.4.title')"
                     :content="$t('businessServicesAdmin.message.4.content')"
@@ -392,7 +418,7 @@ export default {
                     :content="$t('businessServicesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -444,29 +470,29 @@ export default {
                       @update:service="service = $event"
                     />
                     <div class="col" v-if="state.extendedEntity === index">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(service)"
-                            :disabled="!state.toggles['services.admin.update']"
-                          >
-                            {{ $t('businessServicesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['services.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['services.admin.unavailable']"
-                            :no-disabled="state.toggles['services.admin.unavailable']"
-                            @actionYes="unavailable(service)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="update(service)"
+                        :disabled="!state.toggles['services.admin.update']"
+                      >
+                        {{ $t('businessServicesAdmin.update') }} <i class="bi bi-save"></i>
+                      </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['services.admin.unavailable']"
+                      >
+                        {{ $t('businessQueuesAdmin.unavailable') }}
+                        <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yes-disabled="state.toggles['services.admin.unavailable']"
+                        :no-disabled="state.toggles['services.admin.unavailable']"
+                        @actionYes="unavailable(service)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div
                       v-if="
@@ -498,17 +524,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -528,20 +554,7 @@ export default {
           <div v-if="isActiveBusiness && state.toggles['services.admin.view']">
             <div id="businessServicesAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessServicesAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessServicesAdmin.message.4.title')"
                     :content="$t('businessServicesAdmin.message.4.content')"
@@ -557,7 +570,7 @@ export default {
                     :content="$t('businessServicesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -609,29 +622,29 @@ export default {
                       @update:service="service = $event"
                     />
                     <div class="col" v-if="state.extendedEntity === index">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(service)"
-                            :disabled="!state.toggles['services.admin.update']"
-                          >
-                            {{ $t('businessServicesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['services.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['services.admin.unavailable']"
-                            :no-disabled="state.toggles['services.admin.unavailable']"
-                            @actionYes="unavailable(service)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="update(service)"
+                        :disabled="!state.toggles['services.admin.update']"
+                      >
+                        {{ $t('businessServicesAdmin.update') }} <i class="bi bi-save"></i>
+                      </button>
+                      <button
+                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                        @click="goToUnavailable()"
+                        v-if="state.toggles['services.admin.unavailable']"
+                      >
+                        {{ $t('businessQueuesAdmin.unavailable') }}
+                        <i class="bi bi-trash-fill"></i>
+                      </button>
+                      <AreYouSure
+                        :show="state.goToUnavailable"
+                        :yes-disabled="state.toggles['services.admin.unavailable']"
+                        :no-disabled="state.toggles['services.admin.unavailable']"
+                        @actionYes="unavailable(service)"
+                        @actionNo="unavailableCancel()"
+                      >
+                      </AreYouSure>
                     </div>
                     <div
                       v-if="
@@ -680,8 +693,8 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-              <div v-if="state.services.length < state.toggles['services.admin.limit']">
+            <Alert :show="false" :stack="alertError"></Alert>
+            <div v-if="state.services.length < state.toggles['services.admin.limit']">
               <ServiceFormAdd
                 v-model="state.newService"
                 :types="state.types"
@@ -696,20 +709,20 @@ export default {
                   errorsAdd: state.errorsAdd,
                 }"
               />
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newService)"
-                    >
-                      {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
-                </div>
+              <div class="col">
+                <button
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  @click="add(state.newService)"
+                >
+                  {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>
+                </button>
               </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessServicesAdmin.message.3.title')"
-                  :content="$t('businessServicesAdmin.message.3.content')"
-                />
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('businessServicesAdmin.message.3.title')"
+                :content="$t('businessServicesAdmin.message.3.content')"
+              />
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">

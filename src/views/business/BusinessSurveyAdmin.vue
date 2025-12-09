@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -52,11 +52,9 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       surveys: ref([]),
       types: [],
       question_types: [],
-      commerce: {},
       queues: [],
       showAdd: false,
       goToUnavailable: false,
@@ -72,6 +70,53 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load surveys and queues when commerce changes
+    const loadCommerceData = async commerceId => {
+      if (!commerceId) {
+        state.surveys = [];
+        state.queues = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const surveys = await getSurveyPersonalizedByCommerceId(commerceId);
+        state.surveys = surveys || [];
+        const commerceData = await getQueueByCommerce(commerceId);
+        state.queues = commerceData.queues || [];
+        state.filtered = state.surveys;
+      } catch (error) {
+        console.error('Error loading commerce data:', error);
+        state.surveys = [];
+        state.queues = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload data
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.surveys = [];
+            state.filtered = [];
+            state.queues = [];
+            await loadCommerceData(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading commerce data on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -79,17 +124,23 @@ export default {
         state.types = getSurveyTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-          state.surveys = surveys;
-          const commerce = await getQueueByCommerce(state.commerce.id);
-          state.queues = commerce.queues;
-        }
-        state.filtered = state.surveys;
         state.toggles = await getPermissions('surveys', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load data for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCommerceData(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -146,13 +197,13 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newSurvey)) {
-          state.newSurvey.commerceId = state.commerce.id;
+          state.newSurvey.commerceId = commerce.value.id;
           state.newSurvey.questions = state.questions;
           if (state.newSurvey.attentionDefault === true) {
             state.newSurvey.queueId = undefined;
           }
           await createSurveyPersonalized(state.newSurvey);
-          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.surveys = await getSurveyPersonalizedByCommerceId(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newSurvey = {};
@@ -174,7 +225,7 @@ export default {
             survey.queueId = undefined;
           }
           await updateSurveyPersonalized(survey.id, survey);
-          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.surveys = await getSurveyPersonalizedByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -192,7 +243,7 @@ export default {
           survey.available = false;
           survey.active = false;
           await updateSurveyPersonalized(survey.id, survey);
-          state.surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+          state.surveys = await getSurveyPersonalizedByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -210,20 +261,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
-        state.surveys = surveys;
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
     };
 
     const selectType = (survey, operation) => {
@@ -300,7 +337,7 @@ export default {
     };
 
     const getSurveyLink = survey => {
-      const commerceKeyName = state.commerce.keyName;
+      const commerceKeyName = commerce.value?.keyName;
       const queueId = survey.queueId;
       if (queueId) {
         return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
@@ -348,8 +385,11 @@ export default {
         addModal.addEventListener('hidden.bs.modal', resetAddForm);
         addModal.addEventListener('hide.bs.modal', handleModalHide);
       }
-      document.addEventListener('mousedown', (e) => {
-        if (e.target && (e.target.classList.contains('modal-backdrop') || e.target.closest('.modal'))) {
+      document.addEventListener('mousedown', e => {
+        if (
+          e.target &&
+          (e.target.classList.contains('modal-backdrop') || e.target.closest('.modal'))
+        ) {
           handleModalHide();
         }
       });
@@ -379,7 +419,7 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       copyLink,
       getSurveyLink,
       unavailable,
@@ -398,7 +438,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessSurveysAdmin.title`)"
           :toggles="state.toggles"
@@ -408,26 +451,13 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessSurveysAdmin">
           <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
             <div id="businessSurveysAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessSurveysAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessSurveysAdmin.message.4.title')"
                     :content="$t('businessSurveysAdmin.message.4.content')"
@@ -443,7 +473,7 @@ export default {
                     :content="$t('businessSurveysAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -468,7 +498,7 @@ export default {
                       <div class="col-10">
                         <SurveyName
                           :survey="survey"
-                          :commerce-key-name="state.commerce?.keyName || ''"
+                          :commerce-key-name="commerce?.keyName || ''"
                         ></SurveyName>
                       </div>
                       <div class="col-2">
@@ -492,7 +522,7 @@ export default {
                           <label class="form-label-modern">
                             {{ $t('businessSurveysAdmin.link') }}
                           </label>
-                          <div style="flex: 1; display: flex; gap: 0.5rem; align-items: center;">
+                          <div style="flex: 1; display: flex; gap: 0.5rem; align-items: center">
                             <button class="btn-copy-mini" @click="copyLink(survey)">
                               <i class="bi bi-file-earmark-spreadsheet"></i>
                             </button>
@@ -522,8 +552,11 @@ export default {
                         :show-questions="state.showUpdateQuestions"
                         :on-select-type="(s, op) => selectType(s, op)"
                         :on-add-question="() => addUpdateQuestion(index)"
-                        :on-delete-question="(q) => deleteUpdateQuestion(q, index)"
-                        @update:survey="state.surveys[index] = $event; state.filtered[index] = $event"
+                        :on-delete-question="q => deleteUpdateQuestion(q, index)"
+                        @update:survey="
+                          state.surveys[index] = $event;
+                          state.filtered[index] = $event;
+                        "
                       />
                       <div id="survey-id-form" class="row -2 mb-g3">
                         <div class="row survey-details-container">
@@ -591,17 +624,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -621,20 +654,7 @@ export default {
           <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
             <div id="businessSurveysAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessSurveysAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessSurveysAdmin.message.4.title')"
                     :content="$t('businessSurveysAdmin.message.4.content')"
@@ -652,7 +672,7 @@ export default {
                     :content="$t('businessSurveysAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -677,7 +697,7 @@ export default {
                       <div class="col-10">
                         <SurveyName
                           :survey="survey"
-                          :commerce-key-name="state.commerce?.keyName || ''"
+                          :commerce-key-name="commerce?.keyName || ''"
                         ></SurveyName>
                       </div>
                       <div class="col-2">
@@ -701,7 +721,7 @@ export default {
                           <label class="form-label-modern">
                             {{ $t('businessSurveysAdmin.link') }}
                           </label>
-                          <div style="flex: 1; display: flex; gap: 0.5rem; align-items: center;">
+                          <div style="flex: 1; display: flex; gap: 0.5rem; align-items: center">
                             <button class="btn-copy-mini" @click="copyLink(survey)">
                               <i class="bi bi-file-earmark-spreadsheet"></i>
                             </button>
@@ -731,8 +751,11 @@ export default {
                         :show-questions="state.showUpdateQuestions"
                         :on-select-type="(s, op) => selectType(s, op)"
                         :on-add-question="() => addUpdateQuestion(index)"
-                        :on-delete-question="(q) => deleteUpdateQuestion(q, index)"
-                        @update:survey="state.surveys[index] = $event; state.filtered[index] = $event"
+                        :on-delete-question="q => deleteUpdateQuestion(q, index)"
+                        @update:survey="
+                          state.surveys[index] = $event;
+                          state.filtered[index] = $event;
+                        "
                       />
                       <div id="survey-id-form" class="row -2 mb-g3">
                         <div class="row survey-details-container">
@@ -818,7 +841,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-survey"
               class="result-card mb-4"
@@ -841,7 +864,7 @@ export default {
                   :show-questions="state.showAddQuestions"
                   :on-select-type="(s, op) => selectType(s, op)"
                   :on-add-question="() => addAddQuestion(state.questions)"
-                  :on-delete-question="(q) => deleteAddQuestion(q)"
+                  :on-delete-question="q => deleteAddQuestion(q)"
                   @update:questions="state.questions = $event"
                 />
                 <div class="col mt-3">
@@ -875,7 +898,8 @@ export default {
               class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
               data-bs-dismiss="modal"
               aria-label="Close"
-              >{{ $t('close') }} <i class="bi bi-check-lg"></i></a>
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>

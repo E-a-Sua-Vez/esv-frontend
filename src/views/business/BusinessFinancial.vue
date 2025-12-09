@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getCommerceById } from '../../application/services/commerce';
@@ -59,30 +59,84 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
-      selectedCommerces: ref([]),
       queues: ref([]),
       queue: {},
       dateType: 'month',
-      commerce: {},
       showResume: true,
       showIncomes: false,
       showOutcomes: false,
       toggles: {},
+      allCommerces: ref([]),
     });
+
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Compute selectedCommerces - use all commerces for Financial components
+    const selectedCommerces = computed(() => {
+      if (state.allCommerces && state.allCommerces.length > 0) {
+        return state.allCommerces;
+      }
+      return [];
+    });
+
+    // Load queues when commerce changes
+    const loadQueues = async commerceId => {
+      if (!commerceId) {
+        state.queues = [];
+        return;
+      }
+      try {
+        const commerceData = await getCommerceById(commerceId);
+        state.queues = commerceData.queues || [];
+      } catch (error) {
+        console.error('Error loading queues:', error);
+        state.queues = [];
+      }
+    };
+
+    // Watch for commerce changes and reload queues
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.queues = [];
+            await loadQueues(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading queues on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        state.selectedCommerces = [state.commerce];
-        const commerce = await getCommerceById(state.commerce.id);
-        state.queues = commerce.queues;
+        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
         state.toggles = await getPermissions('financial');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (state.allCommerces && state.allCommerces.length > 0) {
+            await store.setCurrentCommerce(state.allCommerces[0]);
+          }
+        }
+
+        // Load queues for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadQueues(commerceToUse.id);
+        }
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -91,35 +145,13 @@ export default {
 
     const isActiveBusiness = () => state.business && state.business.active === true;
 
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.selectedCommerces = undefined;
-        if (commerce.id === 'ALL') {
-          if (state.currentUser.commercesId && state.currentUser.commercesId.length > 0) {
-            state.selectedCommerces = state.currentUser.commercesId;
-          } else {
-            state.selectedCommerces = state.commerces;
-          }
-        } else {
-          state.commerce = commerce;
-          const queuesByCommerce = await getCommerceById(state.commerce.id);
-          state.queues = queuesByCommerce.queues;
-          state.selectedCommerces = state.commerces;
-        }
-        loading.value = false;
-      } catch (error) {
-        loading.value = false;
-      }
-    };
-
     const getLocalHour = hour => {
       const date = new Date();
       const hourDate = new Date(date.setHours(hour));
-      if (state.commerce.country) {
-        if (state.commerce.country === 've') {
+      if (commerce.value && commerce.value.country) {
+        if (commerce.value.country === 've') {
           return hourDate.getHours() - 4;
-        } else if (['br', 'cl'].includes(state.commerce.country)) {
+        } else if (['br', 'cl'].includes(commerce.value.country)) {
           return hourDate.getHours() - 3;
         } else {
           return hourDate.getHours();
@@ -150,9 +182,10 @@ export default {
       // Handle filters toggle if needed
     };
 
-    const handleCommerceChanged = commerce => {
-      if (commerce && commerce.id) {
-        selectCommerce(commerce);
+    const handleCommerceChanged = async commerce => {
+      // Commerce is now managed globally
+      if (commerce && commerce.id && commerce.id !== 'ALL') {
+        await store.setCurrentCommerce(commerce);
       }
     };
 
@@ -162,7 +195,8 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
+      selectedCommerces,
       showResume,
       showIncomes,
       showOutcomes,
@@ -179,7 +213,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessFinancial.title`)"
           :toggles="state.toggles"
@@ -189,11 +226,11 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessFinancial">
           <div v-if="isActiveBusiness()">
-            <div v-if="state.commerces.length === 0" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('businessFinancial.message.3.title')"
                 :content="$t('businessFinancial.message.3.content')"
@@ -201,28 +238,11 @@ export default {
             </div>
             <div v-else class="control-box">
               <div id="businessFinancial-controls">
-                <div class="row">
-                  <div class="col" v-if="state.commerces">
-                    <span>{{ $t('businessFinancial.commerce') }} </span>
-                    <select
-                      class="btn btn-md fw-bold text-dark m-1 select"
-                      v-model="state.commerce"
-                      id="modules"
-                      @change="selectCommerce(state.commerce)"
-                    >
-                      <option v-for="com in state.commerces" :key="com.id" :value="com">
-                        {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                      </option>
-                      <option key="ALL" :value="{ id: 'ALL' }">
-                        {{ $t('businessFinancial.all') }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
+                <div class="row"></div>
               </div>
             </div>
             <div v-if="!loading" id="businessFinancial-result" class="mt-2">
-              <div class="row col mx-1 mt-3 mb-1">
+              <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
                 <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
@@ -261,9 +281,9 @@ export default {
                 <ResumeFinancialManagement
                   :show-resume-financial-management="state.showResume"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="component"
                 >
@@ -271,9 +291,9 @@ export default {
                 <IncomesFinancialManagement
                   :show-incomes-financial-management="state.showIncomes"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="component"
                 >
@@ -281,9 +301,9 @@ export default {
                 <OutcomesFinancialManagement
                   :show-outcomes-financial-management="state.showOutcomes"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="component"
                 >
@@ -306,17 +326,17 @@ export default {
       <div class="content">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -333,7 +353,7 @@ export default {
           </div>
         </div>
         <div id="businessFinancial" v-if="isActiveBusiness()">
-          <div v-if="state.commerces.length === 0" class="control-box">
+          <div v-if="!state.allCommerces || state.allCommerces.length === 0" class="control-box">
             <Message
               :title="$t('businessFinancial.message.3.title')"
               :content="$t('businessFinancial.message.3.content')"
@@ -348,10 +368,10 @@ export default {
             >
               <template #filters="{ onToggle, collapsed }">
                 <DesktopFiltersPanel
-                  :model-value="{ commerce: state.commerce }"
+                  :model-value="{ commerce: commerce }"
                   :loading="loading"
-                  :commerces="Array.isArray(state.commerces) ? state.commerces : []"
-                  :show-commerce-selector="true"
+                  :commerces="[]"
+                  :show-commerce-selector="false"
                   :show-date-filters="false"
                   :show-quick-date-buttons="false"
                   :show-refresh-button="false"
@@ -368,11 +388,9 @@ export default {
                       v-if="state.showResume"
                       :show-resume-financial-management="false"
                       :toggles="state.toggles"
-                      :commerce="state.commerce"
+                      :commerce="commerce"
                       :queues="Array.isArray(state.queues) ? state.queues : []"
-                      :commerces="
-                        Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []
-                      "
+                      :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
                     >
@@ -457,11 +475,9 @@ export default {
                       v-if="state.showIncomes"
                       :show-incomes-financial-management="false"
                       :toggles="state.toggles"
-                      :commerce="state.commerce"
+                      :commerce="commerce"
                       :queues="Array.isArray(state.queues) ? state.queues : []"
-                      :commerces="
-                        Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []
-                      "
+                      :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
                     >
@@ -662,11 +678,9 @@ export default {
                       v-if="state.showOutcomes"
                       :show-outcomes-financial-management="false"
                       :toggles="state.toggles"
-                      :commerce="state.commerce"
+                      :commerce="commerce"
                       :queues="Array.isArray(state.queues) ? state.queues : []"
-                      :commerces="
-                        Array.isArray(state.selectedCommerces) ? state.selectedCommerces : []
-                      "
+                      :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
                     >
@@ -793,7 +807,7 @@ export default {
               </template>
               <template #content>
                 <!-- Header with tabs -->
-                <div class="row col mx-1 mt-3 mb-3">
+                <div class="row col mx-1 mt-3 mb-3 tabs-header-divider">
                   <div class="col-3 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
@@ -833,9 +847,9 @@ export default {
                 <ResumeFinancialManagement
                   :show-resume-financial-management="state.showResume"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
                 >
@@ -843,9 +857,9 @@ export default {
                 <IncomesFinancialManagement
                   :show-incomes-financial-management="state.showIncomes"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
                 >
@@ -853,9 +867,9 @@ export default {
                 <OutcomesFinancialManagement
                   :show-outcomes-financial-management="state.showOutcomes"
                   :toggles="state.toggles"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :queues="state.queues"
-                  :commerces="state.selectedCommerces"
+                  :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
                 >
@@ -880,6 +894,11 @@ export default {
   text-align: left;
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+.tabs-header-divider {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 0.75rem;
 }
 .metric-subtitle {
   text-align: left;

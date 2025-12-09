@@ -205,7 +205,7 @@ export default {
     };
 
     // Date formatting utilities
-    const formatDateForDisplay = (dateString) => {
+    const formatDateForDisplay = dateString => {
       if (!dateString) return '';
       // If already in YYYY-MM-DD format, convert to DD/MM/YYYY
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
@@ -215,7 +215,7 @@ export default {
       return dateString;
     };
 
-    const formatDateForModel = (dateString) => {
+    const formatDateForModel = dateString => {
       if (!dateString) return '';
       // If in DD/MM/YYYY format, convert to YYYY-MM-DD
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
@@ -229,7 +229,7 @@ export default {
       return dateString;
     };
 
-    const formatDateInput = (value) => {
+    const formatDateInput = value => {
       // Remove all non-numeric characters
       const numbers = value.replace(/\D/g, '');
 
@@ -249,7 +249,7 @@ export default {
       return formatted;
     };
 
-    const handleDateInput = (event) => {
+    const handleDateInput = event => {
       const input = event.target;
       const oldValue = input.value;
       const cursorPosition = input.selectionStart;
@@ -373,7 +373,7 @@ export default {
       }
     };
 
-    const handleDatePickerChange = (event) => {
+    const handleDatePickerChange = event => {
       const dateValue = event.target.value;
       const hiddenDateInput = event.target;
 
@@ -403,7 +403,7 @@ export default {
       }
     };
 
-    const handleDatePaste = (event) => {
+    const handleDatePaste = event => {
       event.preventDefault();
       const pastedText = (event.clipboardData || window.clipboardData).getData('text');
       // Try to parse various date formats
@@ -440,11 +440,9 @@ export default {
       }
     };
 
-    const isMobileDevice = () => {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) || window.innerWidth <= 768;
-    };
+    const isMobileDevice = () =>
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768;
 
     const openOriginModal = () => {
       state.showOriginModal = true;
@@ -458,7 +456,7 @@ export default {
       document.body.style.overflow = '';
     };
 
-    const selectOrigin = (code) => {
+    const selectOrigin = code => {
       state.newUser.origin = code;
       sendData();
       closeOriginModal();
@@ -481,7 +479,7 @@ export default {
       document.body.style.overflow = '';
     };
 
-    const selectHealthAgreement = (id) => {
+    const selectHealthAgreement = id => {
       state.newUser.healthAgreementId = id;
       sendData();
       closeHealthAgreementModal();
@@ -506,7 +504,7 @@ export default {
       document.body.style.overflow = '';
     };
 
-    const selectPhoneCode = (code) => {
+    const selectPhoneCode = code => {
       state.newUser.phoneCode = code;
       sendData();
       closePhoneCodeModal();
@@ -1066,11 +1064,16 @@ export default {
                   role="dialog"
                   @click.self="closePhoneCodeModal"
                 >
-                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable phone-code-modal-dialog" role="document" @click.stop>
+                  <div
+                    class="modal-dialog modal-dialog-centered modal-dialog-scrollable phone-code-modal-dialog"
+                    role="document"
+                    @click.stop
+                  >
                     <div class="modal-content phone-code-modal-content">
                       <div class="modal-header phone-code-modal-header">
                         <h5 class="modal-title fw-bold">
-                          <i class="bi bi-telephone me-2"></i>{{ $t('commerceQueuesView.phoneCode') }}
+                          <i class="bi bi-telephone me-2"></i
+                          >{{ $t('commerceQueuesView.phoneCode') }}
                         </h5>
                         <button
                           type="button"
@@ -1086,7 +1089,9 @@ export default {
                             :key="code.id"
                             type="button"
                             class="phone-code-option-button"
-                            :class="{ 'phone-code-option-selected': state.newUser.phoneCode === code.code }"
+                            :class="{
+                              'phone-code-option-selected': state.newUser.phoneCode === code.code,
+                            }"
                             @click="selectPhoneCode(code.code)"
                           >
                             <span>{{ code.label }}</span>
@@ -1148,7 +1153,7 @@ export default {
               <button
                 type="button"
                 class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2 p-0"
-                style="z-index: 10; border: none; background: none; color: #6c757d;"
+                style="z-index: 10; border: none; background: none; color: #6c757d"
                 @click="openDatePicker"
                 :aria-label="$t('commerceQueuesView.birthday')"
               >
@@ -1161,7 +1166,16 @@ export default {
                 :value="state.newUser.birthday"
                 @change="handleDatePickerChange"
                 @blur="handleDatePickerBlur"
-                style="opacity: 0; width: 100%; height: 100%; top: 0; left: 0; z-index: 5; pointer-events: none; cursor: pointer;"
+                style="
+                  opacity: 0;
+                  width: 100%;
+                  height: 100%;
+                  top: 0;
+                  left: 0;
+                  z-index: 5;
+                  pointer-events: none;
+                  cursor: pointer;
+                "
               />
             </div>
           </div>
@@ -1328,11 +1342,16 @@ export default {
                   role="dialog"
                   @click.self="closeOriginModal"
                 >
-                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable origin-modal-dialog" role="document" @click.stop>
+                  <div
+                    class="modal-dialog modal-dialog-centered modal-dialog-scrollable origin-modal-dialog"
+                    role="document"
+                    @click.stop
+                  >
                     <div class="modal-content origin-modal-content">
                       <div class="modal-header origin-modal-header">
                         <h5 class="modal-title fw-bold">
-                          <i class="bi bi-compass me-2"></i>{{ $t('commerceQueuesView.originText') }}
+                          <i class="bi bi-compass me-2"></i
+                          >{{ $t('commerceQueuesView.originText') }}
                         </h5>
                         <button
                           type="button"
@@ -1348,7 +1367,9 @@ export default {
                             :key="code.id"
                             type="button"
                             class="origin-option-button"
-                            :class="{ 'origin-option-selected': state.newUser.origin === code.code }"
+                            :class="{
+                              'origin-option-selected': state.newUser.origin === code.code,
+                            }"
                             @click="selectOrigin(code.code)"
                           >
                             <span>{{ $t(`origin.${code.id}`) }}</span>
@@ -1418,11 +1439,16 @@ export default {
                   role="dialog"
                   @click.self="closeHealthAgreementModal"
                 >
-                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable health-agreement-modal-dialog" role="document" @click.stop>
+                  <div
+                    class="modal-dialog modal-dialog-centered modal-dialog-scrollable health-agreement-modal-dialog"
+                    role="document"
+                    @click.stop
+                  >
                     <div class="modal-content health-agreement-modal-content">
                       <div class="modal-header health-agreement-modal-header">
                         <h5 class="modal-title fw-bold">
-                          <i class="bi bi-heart-pulse me-2"></i>{{ $t('commerceQueuesView.healthAgreementText') }}
+                          <i class="bi bi-heart-pulse me-2"></i
+                          >{{ $t('commerceQueuesView.healthAgreementText') }}
                         </h5>
                         <button
                           type="button"
@@ -1438,7 +1464,10 @@ export default {
                             :key="company.id"
                             type="button"
                             class="health-agreement-option-button"
-                            :class="{ 'health-agreement-option-selected': state.newUser.healthAgreementId === company.id }"
+                            :class="{
+                              'health-agreement-option-selected':
+                                state.newUser.healthAgreementId === company.id,
+                            }"
                             @click="selectHealthAgreement(company.id)"
                           >
                             <span>{{ company.tag }}</span>

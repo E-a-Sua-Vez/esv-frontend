@@ -7,7 +7,10 @@ export default {
     Popper,
   },
   props: {
-    queue: { type: Object, default: () => ({ name: '', active: false, type: '', tag: '', id: '' }) },
+    queue: {
+      type: Object,
+      default: () => ({ name: '', active: false, type: '', tag: '', id: '' }),
+    },
     details: { type: Boolean, default: false },
     commerceKeyName: { type: String, default: '' },
   },
@@ -34,7 +37,9 @@ export default {
     },
     queueLink() {
       if (!this.commerceKeyName || !this.queue.id) return '';
-      return `${import.meta.env.VITE_URL}/publico/comercio/${this.commerceKeyName}/filas/${this.queue.id}`;
+      return `${import.meta.env.VITE_URL}/publico/comercio/${this.commerceKeyName}/filas/${
+        this.queue.id
+      }`;
     },
   },
   methods: {
@@ -88,12 +93,7 @@ export default {
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.openWebsite') || 'Abrir fila' }}</div>
       </template>
-      <a
-        class="btn-link-mini"
-        :href="queueLink"
-        target="_blank"
-        @click.stop
-      >
+      <a class="btn-link-mini" :href="queueLink" target="_blank" @click.stop>
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
     </Popper>

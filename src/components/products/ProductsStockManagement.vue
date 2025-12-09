@@ -88,9 +88,8 @@ export default {
         });
 
         // Ensure searchText is passed correctly (even if empty string)
-        const searchTextParam = this.searchText !== null && this.searchText !== undefined
-          ? this.searchText
-          : undefined;
+        const searchTextParam =
+          this.searchText !== null && this.searchText !== undefined ? this.searchText : undefined;
 
         // Ensure dates are properly formatted (YYYY-MM-DD) or undefined
         const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
@@ -124,7 +123,13 @@ export default {
           this.serviceId
         );
 
-        console.log('ProductsStockManagement refresh result:', result?.length || 0, 'products', 'showProductStockManagement:', this.showProductStockManagement);
+        console.log(
+          'ProductsStockManagement refresh result:',
+          result?.length || 0,
+          'products',
+          'showProductStockManagement:',
+          this.showProductStockManagement
+        );
 
         // Always set products to the result (even if empty array)
         // This ensures the UI updates correctly
@@ -267,7 +272,20 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, commerce, expired, replacement, productStatus, asc, limit, searchText, startDate, endDate, queueId, serviceId } = this;
+      const {
+        page,
+        commerce,
+        expired,
+        replacement,
+        productStatus,
+        asc,
+        limit,
+        searchText,
+        startDate,
+        endDate,
+        queueId,
+        serviceId,
+      } = this;
       return {
         page,
         expired,
@@ -332,294 +350,226 @@ export default {
 </script>
 
 <template>
-  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
-  <slot
-    v-if="filtersLocation === 'slot'"
-    name="filters-exposed"
-    :clear="clear"
-    :refresh="refresh"
-    :search-text="searchText"
-    :product-status="productStatus"
-    :expired="expired"
-    :replacement="replacement"
-    :asc="asc"
-    :loading="loading"
-    :check-expired="checkExpired"
-    :check-replacement="checkReplacement"
-    :check-asc="checkAsc"
-    :set-product-status="setProductStatus"
-    :set-search-text="setSearchText"
-    :set-start-date="setStartDate"
-    :set-end-date="setEndDate"
-    :get-today="getToday"
-    :get-current-month="getCurrentMonth"
-    :get-last-month="getLastMonth"
-    :get-last-three-months="getLastThreeMonths"
-    :queues="queues"
-    :services="services"
-    :queue-id="queueId"
-    :service-id="serviceId"
-    :start-date="startDate"
-    :end-date="endDate"
-  ></slot>
-  <div
-    id="products-management"
-    class="row"
-    v-if="showProductStockManagement === true && toggles['products-stock.products.view']"
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <div v-if="!loading">
-          <div>
-            <div id="admin-sub-menu" v-if="commerce" class="row mt-3 mx-0">
-              <div class="col lefted">
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                  @click="goToProductsAdmin()"
-                  :hidden="!productToggles['products.admin.view']"
-                >
-                  <i class="bi bi-database-gear"></i> {{ $t('businessProductStockAdmin.admin') }}
-                </button>
-                <SimpleDownloadButton
-                  :download="toggles['products-stock.reports.details']"
-                  :show-tooltip="true"
-                  :description="$t('businessProductStockAdmin.reports.details.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="exportToCSV"
-                  :can-download="toggles['products-stock.reports.details'] === true"
-                ></SimpleDownloadButton>
-              </div>
-            </div>
-            <!-- Filters Section - Can be shown in component or exposed via slot -->
-            <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span
-                    class="form-check-label metric-keyword-subtitle mx-1"
-                    @click="showFilters()"
+  <div>
+    <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+    <slot
+      v-if="filtersLocation === 'slot'"
+      name="filters-exposed"
+      :clear="clear"
+      :refresh="refresh"
+      :search-text="searchText"
+      :product-status="productStatus"
+      :expired="expired"
+      :replacement="replacement"
+      :asc="asc"
+      :loading="loading"
+      :check-expired="checkExpired"
+      :check-replacement="checkReplacement"
+      :check-asc="checkAsc"
+      :set-product-status="setProductStatus"
+      :set-search-text="setSearchText"
+      :set-start-date="setStartDate"
+      :set-end-date="setEndDate"
+      :get-today="getToday"
+      :get-current-month="getCurrentMonth"
+      :get-last-month="getLastMonth"
+      :get-last-three-months="getLastThreeMonths"
+      :queues="queues"
+      :services="services"
+      :queue-id="queueId"
+      :service-id="serviceId"
+      :start-date="startDate"
+      :end-date="endDate"
+    ></slot>
+    <div
+      id="products-management"
+      class="row"
+      v-if="showProductStockManagement === true && toggles['products-stock.products.view']"
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <div v-if="!loading">
+            <div>
+              <div id="admin-sub-menu" v-if="commerce" class="row mt-3 mx-0">
+                <div class="col lefted">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                    @click="goToProductsAdmin()"
+                    :hidden="!productToggles['products.admin.view']"
                   >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                    <i
-                      :class="`bi ${
-                        showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
+                    <i class="bi bi-database-gear"></i> {{ $t('businessProductStockAdmin.admin') }}
+                  </button>
+                  <SimpleDownloadButton
+                    :download="toggles['products-stock.reports.details']"
+                    :show-tooltip="true"
+                    :description="$t('businessProductStockAdmin.reports.details.description')"
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="exportToCSV"
+                    :can-download="toggles['products-stock.reports.details'] === true"
+                  ></SimpleDownloadButton>
+                </div>
+              </div>
+              <!-- Filters Section - Can be shown in component or exposed via slot -->
+              <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span
+                      class="form-check-label metric-keyword-subtitle mx-1"
+                      @click="showFilters()"
+                    >
+                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                      <i
+                        :class="`bi ${
+                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </span>
                   </span>
-                </span>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                  @click="clear()"
-                >
-                  <span><i class="bi bi-eraser-fill"></i></span>
-                </button>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-10">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="searchText"
-                        :placeholder="$t('businessProductStockAdmin.search')"
-                      />
-                    </div>
-                    <div class="col-2">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()"
-                      >
-                        <span><i class="bi bi-search"></i></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="productStatus"
-                    value="GOOD"
-                    name="productStatus-type"
-                    id="good-replacement"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="good-replacement">
-                    <i :class="`bi bi-battery-full green-icon h5`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="productStatus"
-                    value="MEDIUM"
-                    name="productStatus-type"
-                    id="medium-replacement"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="medium-replacement">
-                    <i :class="`bi bi-battery-half yellow-icon h5`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="productStatus"
-                    value="LOW"
-                    name="productStatus-type"
-                    id="low-replacement"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="low-replacement">
-                    <i :class="`bi bi-battery red-icon h5`"></i>
-                  </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disable-click-away
-                    :content="$t(`dashboard.tracing.filters.contactResult`)"
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                    @click="clear()"
                   >
-                    <i class="bi bi-info-circle-fill h7 m-2"></i>
-                  </Popper>
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
                 </div>
-                <div class="row">
-                  <div class="col">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="expired === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="expired"
-                        id="expired"
-                        v-model="expired"
-                        @click="checkContactable($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="expired">{{
-                        $t('businessProductStockAdmin.expired')
-                      }}</label>
+                <div v-if="showFilterOptions">
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-10">
+                        <input
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="searchText"
+                          :placeholder="$t('businessProductStockAdmin.search')"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div class="col">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="replacement === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="replacement"
-                        id="replacement"
-                        v-model="replacement"
-                        @click="checkContacted($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="replacement">{{
-                        $t('businessProductStockAdmin.replacement')
-                      }}</label>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="productStatus"
+                      value="GOOD"
+                      name="productStatus-type"
+                      id="good-replacement"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="good-replacement">
+                      <i :class="`bi bi-battery-full green-icon h5`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="productStatus"
+                      value="MEDIUM"
+                      name="productStatus-type"
+                      id="medium-replacement"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="medium-replacement">
+                      <i :class="`bi bi-battery-half yellow-icon h5`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="productStatus"
+                      value="LOW"
+                      name="productStatus-type"
+                      id="low-replacement"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="low-replacement">
+                      <i :class="`bi bi-battery red-icon h5`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      disable-click-away
+                      :content="$t(`dashboard.tracing.filters.contactResult`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
+                  <div class="row">
+                    <div class="col">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="expired === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="expired"
+                          id="expired"
+                          v-model="expired"
+                          @click="checkContactable($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="expired">{{
+                          $t('businessProductStockAdmin.expired')
+                        }}</label>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="replacement === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="replacement"
+                          id="replacement"
+                          v-model="replacement"
+                          @click="checkContacted($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="replacement">{{
+                          $t('businessProductStockAdmin.replacement')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
-              <span class="badge bg-secondary px-3 py-2 m-1"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-3 py-2 m-1">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
-                      </option>
-                    </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="products && products.length > 0">
-              <div class="row" v-for="(product, index) in products" :key="`product-${index}`">
-                <ProductDetailsCard
-                  :show="true"
-                  :product="product"
-                  :commerce="this.commerce"
-                  :toggles="this.toggles"
-                  :queues="this.queues"
-                  :commerces="this.commerces"
-                >
-                </ProductDetailsCard>
+              <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
+                <span class="badge bg-secondary px-3 py-2 m-1"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-3 py-2 m-1">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
               </div>
               <div class="centered mt-2">
                 <nav>
@@ -678,25 +628,100 @@ export default {
                   </ul>
                 </nav>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
+              <div v-if="products && products.length > 0">
+                <div class="row" v-for="(product, index) in products" :key="`product-${index}`">
+                  <ProductDetailsCard
+                    :show="true"
+                    :product="product"
+                    :commerce="this.commerce"
+                    :toggles="this.toggles"
+                    :queues="this.queues"
+                    :commerces="this.commerces"
+                  >
+                  </ProductDetailsCard>
+                </div>
+                <div class="centered mt-2">
+                  <nav>
+                    <ul class="pagination">
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="First"
+                          @click="setPage(1)"
+                          :disabled="page === 1 || totalPages === 0"
+                        >
+                          <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                        </button>
+                      </li>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="Previous"
+                          @click="setPage(page - 1)"
+                          :disabled="page === 1 || totalPages === 0"
+                        >
+                          <span aria-hidden="true">&laquo;</span>
+                        </button>
+                      </li>
+                      <li>
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                          v-model="page"
+                          :disabled="totalPages === 0"
+                        >
+                          <option
+                            v-for="pag in totalPages"
+                            :key="pag"
+                            :value="pag"
+                            id="select-queue"
+                          >
+                            {{ pag }}
+                          </option>
+                        </select>
+                      </li>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="Next"
+                          @click="setPage(page + 1)"
+                          :disabled="page === totalPages || totalPages === 0"
+                        >
+                          <span aria-hidden="true">&raquo;</span>
+                        </button>
+                      </li>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="First"
+                          @click="setPage(totalPages)"
+                          :disabled="page === totalPages || totalPages === 0"
+                        >
+                          <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div v-if="showProductStockManagement === true && !toggles['products-stock.products.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showProductStockManagement === true && !toggles['products-stock.products.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

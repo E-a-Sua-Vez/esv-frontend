@@ -14,7 +14,13 @@ import ProductConsumptionManagement from '../domain/ProductConsumptionManagement
 
 export default {
   name: 'ProductDetailsCard',
-  components: { Popper, Spinner, SimpleDownloadCard, ProductReplacementManagement, ProductConsumptionManagement },
+  components: {
+    Popper,
+    Spinner,
+    SimpleDownloadCard,
+    ProductReplacementManagement,
+    ProductConsumptionManagement,
+  },
   props: {
     show: { type: Boolean, default: true },
     product: { type: Object, default: undefined },
@@ -290,54 +296,82 @@ export default {
     <div class="product-row-card" :class="getCardTypeClass()" @click="showDetails()">
       <div class="product-row-content">
         <!-- Status Icon -->
-        <Popper :class="'dark'" arrow hover>
+        <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
             <div>{{ $t('dashboard.productCard.tooltip.status') || 'Estado del producto' }}</div>
           </template>
           <div class="product-icon-mini" :class="getStatusIconClass()" @click.stop>
             <i :class="`bi ${clasifyProductStatus(product?.productStatus)}`"></i>
-      </div>
+          </div>
         </Popper>
 
         <!-- Product Info - Horizontal -->
         <div class="product-info-inline">
           <div class="product-name-inline">
             <span class="product-name-text">{{ product.productName || 'N/I' }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.productCard.tooltip.copy') || 'Copiar datos del producto' }}</div>
+                <div>
+                  {{ $t('dashboard.productCard.tooltip.copy') || 'Copiar datos del producto' }}
+                </div>
               </template>
               <button class="btn-copy-mini" @click.stop="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </button>
             </Popper>
-      </div>
+          </div>
           <div class="product-meta-inline">
             <span class="product-code-inline">{{ product?.productCode || 'N/I' }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.productCard.tooltip.expired') || 'Días desde expiración' }}</div>
+                <div>
+                  {{ $t('dashboard.productCard.tooltip.expired') || 'Días desde expiración' }}
+                </div>
               </template>
-              <i :class="`bi ${clasifyExpired(product?.daysSinceExpired)} icon-mini-separated`" @click.stop></i>
+              <i
+                :class="`bi ${clasifyExpired(product?.daysSinceExpired)} icon-mini-separated`"
+                @click.stop
+              ></i>
             </Popper>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.productCard.tooltip.replacement') || 'Días hasta próxima reposición' }}</div>
+                <div>
+                  {{
+                    $t('dashboard.productCard.tooltip.replacement') ||
+                    'Días hasta próxima reposición'
+                  }}
+                </div>
               </template>
-              <i :class="`bi ${clasifyReplacement(product?.daysSinceNextReplacement)} icon-mini-separated`" @click.stop></i>
+              <i
+                :class="`bi ${clasifyReplacement(
+                  product?.daysSinceNextReplacement
+                )} icon-mini-separated`"
+                @click.stop
+              ></i>
             </Popper>
           </div>
         </div>
 
         <!-- Status Indicators - Inline -->
         <div class="status-inline">
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
-              <div>{{ $t('dashboard.productCard.tooltip.stockLevel') || 'Nivel de stock actual' }}</div>
+              <div>
+                {{ $t('dashboard.productCard.tooltip.stockLevel') || 'Nivel de stock actual' }}
+              </div>
             </template>
             <div class="status-badge-inline" @click.stop>
               <i :class="`bi ${getStockIconClass()}`"></i>
-              <span>{{ product?.maximumLevel ? scorePercentage(product.maximumLevel, product.actualLevel ? product.actualLevel : 0).toFixed(0) : '0' }}%</span>
+              <span
+                >{{
+                  product?.maximumLevel
+                    ? scorePercentage(
+                        product.maximumLevel,
+                        product.actualLevel ? product.actualLevel : 0
+                      ).toFixed(0)
+                    : '0'
+                }}%</span
+              >
             </div>
           </Popper>
         </div>
@@ -345,18 +379,18 @@ export default {
         <!-- Progress Bar - Inline -->
         <div class="progress-inline" @click.stop>
           <div class="progress progress-mini">
-          <div
-            :class="`progress-bar ${productScoreBarStyle(product)}`"
-            role="progressbar"
+            <div
+              :class="`progress-bar ${productScoreBarStyle(product)}`"
+              role="progressbar"
               :style="`width: ${scorePercentage(
-              product.maximumLevel,
-              product.actualLevel ? product.actualLevel : 0
-            )}%`"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          ></div>
-      </div>
-    </div>
+                product.maximumLevel,
+                product.actualLevel ? product.actualLevel : 0
+              )}%`"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
 
         <!-- Collapse Icon -->
         <div class="collapse-icon-wrapper">
@@ -364,7 +398,7 @@ export default {
             class="bi collapse-icon"
             :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
           ></i>
-      </div>
+        </div>
       </div>
     </div>
 
@@ -376,43 +410,49 @@ export default {
           <!-- Action Buttons Section - First -->
           <div v-if="management && !loading" class="info-section">
             <div class="action-buttons-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
-                  <div>{{ $t('dashboard.productCard.tooltip.viewConsumptions') || 'Ver consumos' }}</div>
+                  <div>
+                    {{ $t('dashboard.productCard.tooltip.viewConsumptions') || 'Ver consumos' }}
+                  </div>
                 </template>
-            <button
+                <button
                   @click="getProductConsuptions()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#consumptionsModal-${this.product.productId}`"
-            >
-              <i class="bi bi-arrow-up-circle-fill"></i>
+                >
+                  <i class="bi bi-arrow-up-circle-fill"></i>
                   <span>{{ $t('businessProductStockAdmin.consuptions') }}</span>
-            </button>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
-                  <div>{{ $t('dashboard.productCard.tooltip.viewReplacements') || 'Ver reposiciones' }}</div>
+                  <div>
+                    {{ $t('dashboard.productCard.tooltip.viewReplacements') || 'Ver reposiciones' }}
+                  </div>
                 </template>
-            <button
+                <button
                   @click="getProductReplacements()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#replacementModal-${this.product.productId}`"
-            >
-              <i class="bi bi-arrow-down-circle-fill"></i>
+                >
+                  <i class="bi bi-arrow-down-circle-fill"></i>
                   <span>{{ $t('businessProductStockAdmin.replacements') }}</span>
-            </button>
+                </button>
               </Popper>
+            </div>
           </div>
-        </div>
 
           <!-- Stock Level Section -->
           <div class="info-section">
             <div class="info-section-header">
               <i class="bi bi-bar-chart-fill"></i>
-              <span class="info-section-title">{{ $t('dashboard.productCard.stockLevel') || 'Nivel de Stock' }}</span>
-              </div>
+              <span class="info-section-title">{{
+                $t('dashboard.productCard.stockLevel') || 'Nivel de Stock'
+              }}</span>
+            </div>
             <div class="stock-progress-container">
               <div class="stock-progress-labels">
                 <span class="stock-label-min">
@@ -429,53 +469,84 @@ export default {
                 <div
                   :class="`progress-bar ${productScoreBarStyle(product)}`"
                   role="progressbar"
-                  :style="`width: ${product?.maximumLevel ? scorePercentage(
-                    product.maximumLevel,
-                    product.actualLevel ? product.actualLevel : 0
-                  ) : 0}%`"
+                  :style="`width: ${
+                    product?.maximumLevel
+                      ? scorePercentage(
+                          product.maximumLevel,
+                          product.actualLevel ? product.actualLevel : 0
+                        )
+                      : 0
+                  }%`"
                   aria-valuemin="0"
                   aria-valuemax="100"
                 ></div>
               </div>
               <div class="stock-percentage">
                 <span class="fw-bold">
-                {{
-                  product?.maximumLevel ? scorePercentage(
-                    product.maximumLevel,
-                    product.actualLevel ? product.actualLevel : 0
-                  ) : 0
-                }}%
+                  {{
+                    product?.maximumLevel
+                      ? scorePercentage(
+                          product.maximumLevel,
+                          product.actualLevel ? product.actualLevel : 0
+                        )
+                      : 0
+                  }}%
                 </span>
               </div>
-          </div>
             </div>
+          </div>
 
           <!-- Stock Levels Info Section -->
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-list-ul"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.productCard.levels') || 'Niveles' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.productCard.levels') || 'Niveles'
+              }}</span>
             </div>
             <div class="stock-levels-grid">
               <div class="data-item-compact">
                 <span class="data-label">{{ $t('businessProductStockAdmin.actualLevel') }}</span>
                 <div class="data-value">
                   <i class="bi bi-thermometer-half"></i>
-                  <span>{{ product?.actualLevel || 0 }} {{ product?.productMeasureType ? $t(`productMeasuresTypesShort.${product.productMeasureType}`) : '' }}</span>
-            </div>
-          </div>
+                  <span
+                    >{{ product?.actualLevel || 0 }}
+                    {{
+                      product?.productMeasureType
+                        ? $t(`productMeasuresTypesShort.${product.productMeasureType}`)
+                        : ''
+                    }}</span
+                  >
+                </div>
+              </div>
               <div class="data-item-compact">
                 <span class="data-label">{{ $t('businessProductStockAdmin.optimumLevel') }}</span>
                 <div class="data-value">
                   <i class="bi bi-check-circle-fill"></i>
-                  <span>{{ product?.optimumLevel || 0 }} {{ product?.productMeasureType ? $t(`productMeasuresTypesShort.${product.productMeasureType}`) : '' }}</span>
-        </div>
+                  <span
+                    >{{ product?.optimumLevel || 0 }}
+                    {{
+                      product?.productMeasureType
+                        ? $t(`productMeasuresTypesShort.${product.productMeasureType}`)
+                        : ''
+                    }}</span
+                  >
+                </div>
               </div>
               <div class="data-item-compact">
-                <span class="data-label">{{ $t('businessProductStockAdmin.replacementLevel') }}</span>
+                <span class="data-label">{{
+                  $t('businessProductStockAdmin.replacementLevel')
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-exclamation-triangle-fill"></i>
-                  <span>{{ product?.replacementLevel || 0 }} {{ product?.productMeasureType ? $t(`productMeasuresTypesShort.${product.productMeasureType}`) : '' }}</span>
+                  <span
+                    >{{ product?.replacementLevel || 0 }}
+                    {{
+                      product?.productMeasureType
+                        ? $t(`productMeasuresTypesShort.${product.productMeasureType}`)
+                        : ''
+                    }}</span
+                  >
                 </div>
               </div>
             </div>
@@ -485,14 +556,23 @@ export default {
           <div v-if="product.lastReplacementAmount" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-arrow-down-circle-fill"></i>
-              <span class="info-section-title">{{ $t('businessProductStockAdmin.lastReplacement') }}</span>
-              </div>
+              <span class="info-section-title">{{
+                $t('businessProductStockAdmin.lastReplacement')
+              }}</span>
+            </div>
             <div class="info-badges">
               <span v-if="product.lastReplacementAmount" class="info-badge">
                 <i class="bi bi-eyedropper"></i>
                 <span class="badge-label">{{ $t('paymentData.productQuantity') }}</span>
-                <span class="badge-value">{{ product.lastReplacementAmount }} {{ product?.productMeasureType ? $t(`productMeasuresTypesShort.${product.productMeasureType}`) : '' }}</span>
-                </span>
+                <span class="badge-value"
+                  >{{ product.lastReplacementAmount }}
+                  {{
+                    product?.productMeasureType
+                      ? $t(`productMeasuresTypesShort.${product.productMeasureType}`)
+                      : ''
+                  }}</span
+                >
+              </span>
               <span v-if="product.lastReplacementDate" class="info-badge">
                 <i class="bi bi-calendar-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.lastReplacementDate') }}</span>
@@ -501,18 +581,20 @@ export default {
               <span v-if="product.lastReplacementExpirationDate" class="info-badge">
                 <i class="bi bi-heart-pulse-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.productExpiration') }}</span>
-                <span class="badge-value">{{ getDate(product.lastReplacementExpirationDate) }}</span>
-                </span>
+                <span class="badge-value">{{
+                  getDate(product.lastReplacementExpirationDate)
+                }}</span>
+              </span>
               <span v-if="product.nextReplacementDate" class="info-badge">
                 <i class="bi bi-calendar-check-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.productNext') }}</span>
                 <span class="badge-value">{{ getDate(product.nextReplacementDate) }}</span>
-                </span>
+              </span>
               <span v-if="product.lastReplacementBy" class="info-badge">
                 <i class="bi bi-person-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.user') }}</span>
                 <span class="badge-value">{{ product.lastReplacementBy }}</span>
-                </span>
+              </span>
             </div>
           </div>
 
@@ -522,165 +604,173 @@ export default {
               <span class="metadata-label">ID:</span>
               <span class="metadata-value">{{ product?.productId || 'N/I' }}</span>
               <span class="metadata-separator">•</span>
-              <span class="metadata-label">{{ $t('dashboard.productCard.code') || 'Código' }}:</span>
+              <span class="metadata-label"
+                >{{ $t('dashboard.productCard.code') || 'Código' }}:</span
+              >
               <span class="metadata-value">{{ product?.productCode || 'N/I' }}</span>
             </div>
           </div>
-          </div>
+        </div>
       </Transition>
     </div>
     <!-- Modal Consumos - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`consumptionsModal-${this.product.productId}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-arrow-up-circle-fill"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('businessProductStockAdmin.consuptionsOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ product.productName }}
-                </p>
-              </div>
-            </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ProductConsumptionManagement
-              ref="consumptionManagementRef"
-              :show-product-consumption-management="true"
-              :toggles="toggles"
-              :product-consumptions-in="productConsumptions"
-              :product="product"
-              :commerce="commerce"
-              :commerces="commerces"
-              @getProductConsuptions="getProductConsuptions"
-            >
-            </ProductConsumptionManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['products-stock.reports.consumption-details']"
-                  :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-                  :show-tooltip="true"
-                  :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportConsumptionCSV"
-                  :can-download="toggles['products-stock.reports.consumption-details'] === true"
-                ></SimpleDownloadCard>
+      <div
+        class="modal fade"
+        :id="`consumptionsModal-${this.product.productId}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-arrow-up-circle-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('businessProductStockAdmin.consuptionsOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ product.productName }}
+                  </p>
+                </div>
               </div>
               <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                class="btn-close modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ProductConsumptionManagement
+                ref="consumptionManagementRef"
+                :show-product-consumption-management="true"
+                :toggles="toggles"
+                :product-consumptions-in="productConsumptions"
+                :product="product"
+                :commerce="commerce"
+                :commerces="commerces"
+                @getProductConsuptions="getProductConsuptions"
+              >
+              </ProductConsumptionManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['products-stock.reports.consumption-details']"
+                    :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
+                    :show-tooltip="true"
+                    :description="
+                      $t('businessProductStockAdmin.reports.consumption-details.description')
+                    "
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportConsumptionCSV"
+                    :can-download="toggles['products-stock.reports.consumption-details'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
     <!-- Modal Reemplazos - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`replacementModal-${this.product.productId}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-arrow-down-circle-fill"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('businessProductStockAdmin.replacementsOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ this.product.productName }}
-                </p>
-              </div>
-            </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ProductReplacementManagement
-              ref="replacementManagementRef"
-              :show-product-replacement-management="true"
-              :toggles="toggles"
-              :product-replacements-in="productReplacements"
-              :product="product"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-              @getProductReplacements="getProductReplacements"
-            >
-            </ProductReplacementManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['products-stock.reports.replacement-details']"
-                  :title="$t('businessProductStockAdmin.reports.replacement-details.title')"
-                  :show-tooltip="true"
-                  :description="$t('businessProductStockAdmin.reports.replacement-details.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportReplacementCSV"
-                  :can-download="toggles['products-stock.reports.replacement-details'] === true"
-                ></SimpleDownloadCard>
+      <div
+        class="modal fade"
+        :id="`replacementModal-${this.product.productId}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-arrow-down-circle-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('businessProductStockAdmin.replacementsOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ this.product.productName }}
+                  </p>
+                </div>
               </div>
               <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                class="btn-close modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ProductReplacementManagement
+                ref="replacementManagementRef"
+                :show-product-replacement-management="true"
+                :toggles="toggles"
+                :product-replacements-in="productReplacements"
+                :product="product"
+                :commerce="commerce"
+                :commerces="commerces"
+                :queues="queues"
+                @getProductReplacements="getProductReplacements"
+              >
+              </ProductReplacementManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['products-stock.reports.replacement-details']"
+                    :title="$t('businessProductStockAdmin.reports.replacement-details.title')"
+                    :show-tooltip="true"
+                    :description="
+                      $t('businessProductStockAdmin.reports.replacement-details.description')
+                    "
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportReplacementCSV"
+                    :can-download="toggles['products-stock.reports.replacement-details'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
   </div>
 </template>
@@ -1578,4 +1668,3 @@ export default {
   }
 }
 </style>
-

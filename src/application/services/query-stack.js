@@ -228,7 +228,7 @@ export const getSurveysDetails = async (
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
-  const convertBool = (val) => {
+  const convertBool = val => {
     if (val === true) return 'true';
     if (val === false) return 'false';
     return val;
@@ -340,7 +340,7 @@ export const getAttentionsDetails = async (
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
-  const convertBool = (val) => {
+  const convertBool = val => {
     if (val === true) return 'true';
     if (val === false) return 'false';
     return val;
@@ -435,7 +435,7 @@ export const getBookingsDetails = async (
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
-  const convertBool = (val) => {
+  const convertBool = val => {
     if (val === true) return 'true';
     if (val === false) return 'false';
     return val;
@@ -499,7 +499,7 @@ export const getClientsDetails = async (
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
-  const convertBool = (val) => {
+  const convertBool = val => {
     if (val === true) return 'true';
     if (val === false) return 'false';
     return val;

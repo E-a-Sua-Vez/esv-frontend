@@ -140,6 +140,11 @@ export default {
       </a>
     </div>
 
+    <!-- Commerce Details Label -->
+    <div v-if="commerce.serviceInfo || commerce.contactInfo" class="commerce-details-label mb-2">
+      {{ $t('userQueueBooking.commerceDetails') }}
+    </div>
+
     <!-- Action Buttons Row - Clean Style -->
     <div class="action-buttons-row mb-2">
       <div class="row g-2">
@@ -473,6 +478,14 @@ export default {
   color: rgba(0, 0, 0, 0.65);
   margin-bottom: 0.5rem;
   font-weight: 500;
+}
+
+.commerce-details-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  text-align: center;
+  margin-top: 0.5rem;
 }
 
 .whatsapp-button-modern {

@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -51,9 +51,7 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       companies: ref([]),
-      commerce: {},
       showAdd: false,
       goToUnavailable: false,
       newCompany: {},
@@ -72,20 +70,71 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load companies when commerce changes
+    const loadCompanies = async commerceId => {
+      if (!commerceId) {
+        state.companies = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const companies = await getCompanyByCommerce(commerceId);
+        state.companies = companies || [];
+        state.filtered = state.companies;
+      } catch (error) {
+        console.error('Error loading companies:', error);
+        state.companies = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload companies
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear filtered data to prevent showing old results
+            state.companies = [];
+            state.filtered = [];
+            await loadCompanies(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading companies on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getCompanyTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.companies = await getCompanyByCommerce(state.commerce.id);
-        }
-        state.filtered = state.companies;
         state.toggles = await getPermissions('companies', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load companies for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCompanies(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -164,10 +213,10 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
-        if (validateAdd(state.newCompany)) {
-          state.newCompany.commerceId = state.commerce.id;
+        if (validateAdd(state.newCompany) && commerce.value && commerce.value.id) {
+          state.newCompany.commerceId = commerce.value.id;
           await addCompany(state.newCompany);
-          state.companies = await getCompanyByCommerce(state.commerce.id);
+          await loadCompanies(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newCompany = {};
@@ -184,9 +233,9 @@ export default {
     const update = async service => {
       try {
         loading.value = true;
-        if (validateUpdate(service)) {
+        if (validateUpdate(service) && commerce.value && commerce.value.id) {
           await updateCompany(service.id, service);
-          state.companies = await getCompanyByCommerce(state.commerce.id);
+          await loadCompanies(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -200,11 +249,11 @@ export default {
     const unavailable = async service => {
       try {
         loading.value = true;
-        if (service && service.id) {
+        if (service && service.id && commerce.value && commerce.value.id) {
           service.available = false;
           service.active = false;
           await updateCompany(service.id, service);
-          state.companies = await getCompanyByCommerce(state.commerce.id);
+          await loadCompanies(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -222,19 +271,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.companies = await getCompanyByCommerce(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -260,8 +296,8 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
       unavailable,
+      commerce,
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
@@ -275,7 +311,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessCompaniesAdmin.title`)"
           :toggles="state.toggles"
@@ -285,33 +324,10 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessCompaniesAdmin">
           <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
-            <div id="businessCompaniesAdmin-controls" class="control-box">
-              <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessCompaniesAdmin.commerce') }} </span>
-                  <select
-                    class="form-control-modern form-select-modern"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessCompaniesAdmin.message.4.title')"
-                    :content="$t('businessCompaniesAdmin.message.4.content')"
-                  />
-                </div>
-              </div>
-            </div>
             <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
               <div>
                 <div v-if="state.companies.length === 0">
@@ -320,7 +336,7 @@ export default {
                     :content="$t('businessCompaniesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce && commerce.id" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -430,17 +446,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -458,29 +474,6 @@ export default {
         </div>
         <div id="businessCompaniesAdmin">
           <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
-            <div id="businessCompaniesAdmin-controls" class="control-box">
-              <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessCompaniesAdmin.commerce') }} </span>
-                  <select
-                    class="form-control-modern form-select-modern"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessCompaniesAdmin.message.4.title')"
-                    :content="$t('businessCompaniesAdmin.message.4.content')"
-                  />
-                </div>
-              </div>
-            </div>
             <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
               <div>
                 <div v-if="state.companies.length === 0">
@@ -489,7 +482,7 @@ export default {
                     :content="$t('businessCompaniesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce && commerce.id" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -616,7 +609,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-service"
               class="result-card mb-4"

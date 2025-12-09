@@ -348,20 +348,20 @@ export default {
     <div class="client-row-card" :class="getCardTypeClass()" @click="showDetails()">
       <div class="client-row-content">
         <!-- Status Icon -->
-        <Popper :class="'dark'" arrow hover>
+        <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
             <div>{{ $t('dashboard.clientCard.tooltip.status') }}</div>
           </template>
           <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
-        <i class="bi bi-person-circle"></i>
-      </div>
+            <i class="bi bi-person-circle"></i>
+          </div>
         </Popper>
 
         <!-- Client Info - Horizontal -->
         <div class="client-info-inline">
           <div class="client-name-inline">
             <span class="client-name-text">{{ clientFullName }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.copy') }}</div>
               </template>
@@ -369,59 +369,78 @@ export default {
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </button>
             </Popper>
-      </div>
+          </div>
           <div class="client-meta-inline">
             <span class="client-id-inline">{{ formatIdNumber(client.userIdNumber) || 'N/I' }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.attentions') }}</div>
               </template>
               <span class="badge-mini attentions" @click.stop>
                 <i class="bi bi-qr-code"></i>{{ client.attentionsCounter || 0 }}
-        </span>
+              </span>
             </Popper>
-            <Popper v-if="client.surveyId" :class="'dark'" arrow hover>
+            <Popper v-if="client.surveyId" :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.survey') }}</div>
               </template>
               <i class="bi bi-star-fill icon-mini-separated yellow-icon" @click.stop></i>
             </Popper>
-            <Popper v-if="client.firstAttentionForm === true" :class="'dark'" arrow hover>
+            <Popper
+              v-if="client.firstAttentionForm === true"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.form') }}</div>
               </template>
               <i class="bi bi-clipboard2-pulse-fill icon-mini-separated blue-icon" @click.stop></i>
             </Popper>
-      </div>
-            </div>
+          </div>
+        </div>
 
         <!-- Status Indicators - Inline -->
         <div class="status-inline">
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
               <div>{{ $t('dashboard.clientCard.tooltip.daysSinceAttention') }}</div>
             </template>
             <div class="status-badge-inline" @click.stop>
               <i :class="`bi ${clasifyDaysSinceComment(client.daysSinceAttention || 0)}`"></i>
               <span>{{ client.daysSinceAttention || 0 }}</span>
-          </div>
+            </div>
           </Popper>
-          <Popper :class="'dark'" arrow hover>
+          <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
               <div>{{ $t('dashboard.clientCard.tooltip.daysSinceContact') }}</div>
             </template>
             <div class="status-badge-inline" @click.stop>
-              <Popper v-if="client.contacted === true || checked === true" :class="'dark'" arrow hover>
+              <Popper
+                v-if="client.contacted === true || checked === true"
+                :class="'dark'"
+                arrow
+                disable-click-away
+                hover
+              >
                 <template #content>
-                  <div>{{ $t('dashboard.clientCard.tooltip.contactResult') || 'Resultado del contacto' }}</div>
+                  <div>
+                    {{
+                      $t('dashboard.clientCard.tooltip.contactResult') || 'Resultado del contacto'
+                    }}
+                  </div>
                 </template>
-                <i :class="`bi ${clasifyContactResult(client.contactResult || undefined)}`" @click.stop></i>
+                <i
+                  :class="`bi ${clasifyContactResult(client.contactResult || undefined)}`"
+                  @click.stop
+                ></i>
               </Popper>
               <i :class="`bi ${clasifyDaysContacted(client.daysSinceContactedClient || 0)}`"></i>
               <span>{{ client.daysSinceContactedClient || 0 }}</span>
             </div>
           </Popper>
-            </div>
+        </div>
 
         <!-- Collapse Icon -->
         <div class="collapse-icon-wrapper">
@@ -429,9 +448,9 @@ export default {
             class="bi collapse-icon"
             :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
           ></i>
-            </div>
-          </div>
-            </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Expandable Details Section -->
     <div class="details-expandable-section">
@@ -441,98 +460,106 @@ export default {
           <!-- Action Buttons Section - First, No Title -->
           <div v-if="management && !loading" class="info-section">
             <div class="action-buttons-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.viewAttentions') }}</div>
                 </template>
-            <button
-              @click.stop="getAttentions()"
+                <button
+                  @click.stop="getAttentions()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#attentionsModal-${this.client.id}`"
-            >
-              <i class="bi bi-qr-code"></i>
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#attentionsModal-${this.client.id}`"
+                >
+                  <i class="bi bi-qr-code"></i>
                   <span>{{ $t('dashboard.attentions') }}</span>
-            </button>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.viewBookings') }}</div>
                 </template>
-            <button
-              @click.stop="getBookings()"
+                <button
+                  @click.stop="getBookings()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#bookingsModal-${this.client.id}`"
-            >
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#bookingsModal-${this.client.id}`"
+                >
                   <i class="bi bi-calendar-fill"></i>
                   <span>{{ $t('dashboard.bookings') }}</span>
-                  <i v-if="client.pendingBookings > 0" class="bi bi-circle-fill notification-dot green"></i>
-            </button>
+                  <i
+                    v-if="client.pendingBookings > 0"
+                    class="bi bi-circle-fill notification-dot green"
+                  ></i>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.viewHistory') }}</div>
                 </template>
-            <button
-              @click.stop="getPatientHistory()"
+                <button
+                  @click.stop="getPatientHistory()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#patientHistoryModal-${this.client.id}`"
-            >
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#patientHistoryModal-${this.client.id}`"
+                >
                   <i class="bi bi-file-medical-fill"></i>
                   <span>{{ $t('dashboard.patientHistory') }}</span>
-                  <i v-if="client.pendingControls > 0" class="bi bi-circle-fill notification-dot yellow"></i>
-            </button>
+                  <i
+                    v-if="client.pendingControls > 0"
+                    class="bi bi-circle-fill notification-dot yellow"
+                  ></i>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.editClient') }}</div>
                 </template>
-            <button
-              @click.stop="getClientData()"
+                <button
+                  @click.stop="getClientData()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#editModal-${this.client.id}`"
-            >
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#editModal-${this.client.id}`"
+                >
                   <i class="bi bi-pencil-fill"></i>
                   <span>{{ $t('dashboard.edit') }}</span>
-            </button>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.viewContacts') }}</div>
                 </template>
-            <button
-              @click.stop="getClientContacts()"
+                <button
+                  @click.stop="getClientContacts()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#contactModal-${this.client.id}`"
-            >
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#contactModal-${this.client.id}`"
+                >
                   <i class="bi bi-chat-left-dots-fill"></i>
                   <span>{{ $t('dashboard.contact') }}</span>
-            </button>
+                </button>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.schedule') }}</div>
                 </template>
                 <button class="action-btn" @click.stop="goToCreateBooking()">
                   <i class="bi bi-calendar-check-fill"></i>
                   <span>{{ $t('dashboard.schedule') }}</span>
-            </button>
+                </button>
               </Popper>
+            </div>
           </div>
-        </div>
 
           <!-- Contact Information Section - Second, Standardized -->
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-telephone-fill"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto'
+              }}</span>
             </div>
             <div class="contact-data-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.whatsapp') }}</div>
                 </template>
@@ -542,14 +569,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-whatsapp"></i>
                     <span>{{ client.userPhone || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.email') }}</div>
                 </template>
@@ -559,14 +588,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.email') || 'Email' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.email') || 'Email'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-envelope"></i>
                     <span>{{ client.userEmail || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.idNumber') }}</div>
                 </template>
@@ -586,7 +617,7 @@ export default {
             <div class="info-section-header">
               <i class="bi bi-star-fill"></i>
               <span class="info-section-title">{{ $t('dashboard.surveyData') }}</span>
-              </div>
+            </div>
             <div class="info-badges">
               <span class="info-badge">
                 <i class="bi bi-star-fill yellow-icon"></i>
@@ -602,10 +633,10 @@ export default {
           </div>
 
           <!-- Attention Data Section -->
-            <div
-              v-if="
-                client.queueName ||
-                client.collaboratorName ||
+          <div
+            v-if="
+              client.queueName ||
+              client.collaboratorName ||
               (client.commerceName && client.commerceTag) ||
               client.packageId ||
               client.servicesDetails ||
@@ -616,38 +647,37 @@ export default {
             <div class="info-section-header">
               <i class="bi bi-qr-code"></i>
               <span class="info-section-title">{{ $t('dashboard.attentionData') }}</span>
-              </div>
+            </div>
             <div class="info-badges">
               <span v-if="client.queueName" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.queueData') }}</span>
                 <span class="badge-value">{{ client.queueName }}</span>
-                </span>
+              </span>
               <span v-if="client.collaboratorName" class="info-badge">
                 <i class="bi bi-person-fill"></i>
                 <span class="badge-label">{{ $t('dashboard.userData') }}</span>
                 <span class="badge-value">{{ client.collaboratorName }}</span>
-                </span>
+              </span>
               <span v-if="client.commerceName && client.commerceTag" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
-                <span class="badge-value">{{ client.commerceName }} - {{ client.commerceTag }}</span>
-                </span>
+                <span class="badge-value"
+                  >{{ client.commerceName }} - {{ client.commerceTag }}</span
+                >
+              </span>
               <span v-if="client.packageId && client.packageName" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.package') }}</span>
                 <span class="badge-value">{{ client.packageName }}</span>
                 <span class="badge-subvalue"
-                  >{{ client.packageProcedureNumber }} / {{ client.packageProceduresTotalNumber }}</span
+                  >{{ client.packageProcedureNumber }} /
+                  {{ client.packageProceduresTotalNumber }}</span
                 >
                 <i v-if="client.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
-                </span>
+              </span>
               <span v-if="client.servicesDetails" class="info-badge services-badge">
                 <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span
-                  v-for="serv in client.servicesDetails"
-                  :key="serv.id"
-                  class="service-tag"
-                >
+                <span v-for="serv in client.servicesDetails" :key="serv.id" class="service-tag">
                   {{ serv.name }}
-              </span>
+                </span>
               </span>
               <span v-if="client.attentionCreatedDate" class="info-badge">
                 <i class="bi bi-calendar-fill"></i>
@@ -673,63 +703,97 @@ export default {
             </div>
             <div class="personal-data-grid-compact">
               <div v-if="client.userBirthday" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.birthday') || $t('commerceQueuesView.birthday') || 'Cumpleaños' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.birthday') ||
+                  $t('commerceQueuesView.birthday') ||
+                  'Cumpleaños'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-cake-fill"></i>
                   <span>{{ getDate(client.userBirthday) }}</span>
                 </div>
               </div>
               <div v-if="client.healthAgreementName" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.healthAgreement') || $t('commerceQueuesView.healthAgreementText') || 'Convenio' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.healthAgreement') ||
+                  $t('commerceQueuesView.healthAgreementText') ||
+                  'Convenio'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-heart-pulse-fill"></i>
                   <span>{{ client.healthAgreementName }}</span>
                 </div>
               </div>
               <div v-if="client.userOrigin" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.origin') || $t('commerceQueuesView.origin') || 'Origen' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.origin') ||
+                  $t('commerceQueuesView.origin') ||
+                  'Origen'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-geo-alt-fill"></i>
                   <span>{{ $t(`origin.${client.userOrigin}`) }}</span>
                 </div>
               </div>
               <div v-if="client.userAddressText" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.address') || 'Endereço' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.address') || 'Endereço'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-geo-alt-fill red-icon"></i>
                   <span>{{ client.userAddressText }}</span>
                 </div>
               </div>
               <div v-if="client.userAddressCode" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.addressCode') || $t('commerceQueuesView.addressCode') || 'Código' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.addressCode') ||
+                  $t('commerceQueuesView.addressCode') ||
+                  'Código'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-geo-alt-fill"></i>
                   <span>{{ client.userAddressCode }}</span>
                 </div>
               </div>
               <div v-if="client.userAddressComplement" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.addressComplement') || $t('commerceQueuesView.addressComplement') || 'Complemento' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.addressComplement') ||
+                  $t('commerceQueuesView.addressComplement') ||
+                  'Complemento'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-geo-alt-fill"></i>
                   <span>{{ client.userAddressComplement }}</span>
                 </div>
               </div>
               <div v-if="client.userCode1" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.code1') || $t('commerceQueuesView.code1') || 'Código 1' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.code1') ||
+                  $t('commerceQueuesView.code1') ||
+                  'Código 1'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-tag-fill"></i>
                   <span>{{ client.userCode1 }}</span>
                 </div>
               </div>
               <div v-if="client.userCode2" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.code2') || $t('commerceQueuesView.code2') || 'Código 2' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.code2') ||
+                  $t('commerceQueuesView.code2') ||
+                  'Código 2'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-tag-fill"></i>
                   <span>{{ client.userCode2 }}</span>
                 </div>
               </div>
               <div v-if="client.userCode3" class="data-item-compact">
-                <span class="data-label">{{ $t('dashboard.clientCard.label.code3') || $t('commerceQueuesView.code3') || 'Código 3' }}</span>
+                <span class="data-label">{{
+                  $t('dashboard.clientCard.label.code3') ||
+                  $t('commerceQueuesView.code3') ||
+                  'Código 3'
+                }}</span>
                 <div class="data-value">
                   <i class="bi bi-tag-fill"></i>
                   <span>{{ client.userCode3 }}</span>
@@ -744,7 +808,9 @@ export default {
               <span class="metadata-label">ID:</span>
               <span class="metadata-value">{{ client.id }}</span>
               <span class="metadata-separator">•</span>
-              <span class="metadata-label">{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span>
+              <span class="metadata-label"
+                >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
+              >
               <span class="metadata-value">{{
                 getDate(client.attentionCreatedDate || client.clientCreatedDate)
               }}</span>
@@ -756,365 +822,369 @@ export default {
 
     <!-- Modal Attentions - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`attentionsModal-${this.client.id}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-10"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-qr-code"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('dashboard.attentionsOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ client.userName || client.userIdNumber || client.userEmail }}
-                </p>
-              </div>
-            </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ClientAttentionsManagement
-              ref="attentionsManagementRef"
-              :show-client-attentions-management="true"
-              :toggles="toggles"
-              :attentions-in="attentions"
-              :client="client"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-              :services="services"
-            >
-            </ClientAttentionsManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['dashboard.reports.attentions-management']"
-                  :title="$t('dashboard.reports.attentions-management.title')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.reports.attentions-management.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportCSV"
-                  :can-download="toggles['dashboard.reports.attentions-management'] === true"
-                ></SimpleDownloadCard>
+      <div
+        class="modal fade"
+        :id="`attentionsModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-10"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-qr-code"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.attentionsOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ client.userName || client.userIdNumber || client.userEmail }}
+                  </p>
+                </div>
               </div>
               <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                class="btn-close modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ClientAttentionsManagement
+                ref="attentionsManagementRef"
+                :show-client-attentions-management="true"
+                :toggles="toggles"
+                :attentions-in="attentions"
+                :client="client"
+                :commerce="commerce"
+                :commerces="commerces"
+                :queues="queues"
+                :services="services"
+              >
+              </ClientAttentionsManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['dashboard.reports.attentions-management']"
+                    :title="$t('dashboard.reports.attentions-management.title')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.reports.attentions-management.description')"
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportCSV"
+                    :can-download="toggles['dashboard.reports.attentions-management'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
     <!-- Modal Bookings - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`bookingsModal-${this.client.id}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-10"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-calendar-fill"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('dashboard.bookingsOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ client.userName || client.userIdNumber || client.userEmail }}
-                </p>
-              </div>
-            </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ClientBookingsManagement
-              ref="bookingsManagementRef"
-              :show-client-bookings-management="true"
-              :toggles="toggles"
-              :bookings-in="bookings"
-              :client="client"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-              :services="services"
-            >
-            </ClientBookingsManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['dashboard.reports.bookings-management']"
-                  :title="$t('dashboard.reports.bookings-management.title')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.reports.bookings-management.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportBookingsCSV"
-                  :can-download="toggles['dashboard.reports.bookings-management'] === true"
-                ></SimpleDownloadCard>
+      <div
+        class="modal fade"
+        :id="`bookingsModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-10"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-calendar-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.bookingsOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ client.userName || client.userIdNumber || client.userEmail }}
+                  </p>
+                </div>
               </div>
               <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                class="btn-close modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ClientBookingsManagement
+                ref="bookingsManagementRef"
+                :show-client-bookings-management="true"
+                :toggles="toggles"
+                :bookings-in="bookings"
+                :client="client"
+                :commerce="commerce"
+                :commerces="commerces"
+                :queues="queues"
+                :services="services"
+              >
+              </ClientBookingsManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['dashboard.reports.bookings-management']"
+                    :title="$t('dashboard.reports.bookings-management.title')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.reports.bookings-management.description')"
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportBookingsCSV"
+                    :can-download="toggles['dashboard.reports.bookings-management'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
     <!-- Modal Edit - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`editModal-${this.client.id}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-pencil-fill"></i>
+      <div
+        class="modal fade"
+        :id="`editModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-pencil-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.dataOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
+                  </p>
+                </div>
               </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('dashboard.dataOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
-                </p>
-              </div>
+              <button
+                :id="`close-modal-client-edit-${this.client.id}`"
+                class="btn-close modern-modal-close-btn"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
-            <button
-              :id="`close-modal-client-edit-${this.client.id}`"
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ClientDataManagement
-              :show-client-data-management="visible"
-              :toggles="togglesClient"
-              :client="client"
-              :commerce="commerce"
-              :commerces="commerces"
-              :close-modal="closeDataModal"
-            >
-            </ClientDataManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <button
-              class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-check-lg"></i> {{ $t('close') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    </Teleport>
-    <!-- Modal Contact - Use Teleport to render outside component to avoid overflow/position issues -->
-    <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`contactModal-${this.client.id}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-chat-left-dots-fill"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('dashboard.contactsOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
-                </p>
-              </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ClientDataManagement
+                :show-client-data-management="visible"
+                :toggles="togglesClient"
+                :client="client"
+                :commerce="commerce"
+                :commerces="commerces"
+                :close-modal="closeDataModal"
+              >
+              </ClientDataManagement>
             </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ClientContactsManagement
-              ref="contactsManagementRef"
-              :show-client-attentions-management="true"
-              :toggles="toggles"
-              :client-contacts-in="clientContacts"
-              :client="client"
-              :commerce="commerce"
-              :commerces="commerces"
-              :queues="queues"
-              @getClientContacts="getClientContacts"
-            >
-            </ClientContactsManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['dashboard.reports.contacts-management']"
-                  :title="$t('dashboard.reports.contacts-management.title')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.reports.contacts-management.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportContactsCSV"
-                  :can-download="toggles['dashboard.reports.contacts-management'] === true"
-                ></SimpleDownloadCard>
-              </div>
+            <div class="modal-footer border-0 modern-modal-footer">
               <button
                 class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-check-lg"></i> {{ $t('close') }}
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
-    <!-- Modal Patient History - Use Teleport to render outside component to avoid overflow/position issues -->
+    <!-- Modal Contact - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`patientHistoryModal-${this.client.id}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-file-earmark-medical-fill"></i>
+      <div
+        class="modal fade"
+        :id="`contactModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-chat-left-dots-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.contactsOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
+                  </p>
+                </div>
               </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('dashboard.patientHistoryOf') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
-                </p>
+              <button
+                class="btn-close modern-modal-close-btn"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ClientContactsManagement
+                ref="contactsManagementRef"
+                :show-client-attentions-management="true"
+                :toggles="toggles"
+                :client-contacts-in="clientContacts"
+                :client="client"
+                :commerce="commerce"
+                :commerces="commerces"
+                :queues="queues"
+                @getClientContacts="getClientContacts"
+              >
+              </ClientContactsManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['dashboard.reports.contacts-management']"
+                    :title="$t('dashboard.reports.contacts-management.title')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.reports.contacts-management.description')"
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportContactsCSV"
+                    :can-download="toggles['dashboard.reports.contacts-management'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
               </div>
             </div>
-            <button
-              :id="`close-modal-patient-history-${this.client.id}`"
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <PatientHistoryManagement
-              :show-patient-history-management="true"
-              :client="client"
-              :commerce="commerce"
-              :patient-history-in="patientHistory"
-              :patient-history-items="patientHistoryItems"
-              :patient-forms="patientForms"
-              @getPatientHistory="getPatientHistory"
-              @closeModal="closeModal"
-            >
-            </PatientHistoryManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <button
-              class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
-            </button>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+    <!-- Modal Patient History - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        :id="`patientHistoryModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-file-earmark-medical-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.patientHistoryOf') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ this.client.userName || this.client.userIdNumber || this.client.userEmail }}
+                  </p>
+                </div>
+              </div>
+              <button
+                :id="`close-modal-patient-history-${this.client.id}`"
+                class="btn-close modern-modal-close-btn"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <PatientHistoryManagement
+                :show-patient-history-management="true"
+                :client="client"
+                :commerce="commerce"
+                :patient-history-in="patientHistory"
+                :patient-history-items="patientHistoryItems"
+                :patient-forms="patientForms"
+                @getPatientHistory="getPatientHistory"
+                @closeModal="closeModal"
+              >
+              </PatientHistoryManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <button
+                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-check-lg"></i>
+                {{ $t('notificationConditions.action') || $t('close') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </Teleport>
   </div>
 </template>
@@ -1144,7 +1214,6 @@ export default {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 1);
 }
-
 
 /* Card Type Variations - Ultra Compact */
 .client-row-card.client-card-success {
@@ -2195,5 +2264,4 @@ export default {
     padding: 0.625rem 0.875rem;
   }
 }
-
 </style>

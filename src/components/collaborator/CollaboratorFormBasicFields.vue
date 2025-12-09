@@ -106,7 +106,9 @@ export default {
         v-model="collaborator.type"
         :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
       >
-        <option value="">{{ $t('businessCollaboratorsAdmin.selectType') || 'Seleccionar tipo' }}</option>
+        <option value="">
+          {{ $t('businessCollaboratorsAdmin.selectType') || 'Seleccionar tipo' }}
+        </option>
         <option v-for="typ in types" :key="typ.name" :value="typ.type">
           {{ typ.name }}
         </option>
@@ -138,7 +140,9 @@ export default {
         v-model="collaborator.moduleId"
         :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
       >
-        <option value="">{{ $t('businessCollaboratorsAdmin.selectModule') || 'Seleccionar módulo' }}</option>
+        <option value="">
+          {{ $t('businessCollaboratorsAdmin.selectModule') || 'Seleccionar módulo' }}
+        </option>
         <option v-for="mod in modules" :key="mod.name" :value="mod.id">
           {{ mod.name }}
         </option>
@@ -276,4 +280,3 @@ export default {
   }
 }
 </style>
-

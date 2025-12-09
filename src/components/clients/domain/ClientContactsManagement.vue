@@ -342,446 +342,450 @@ export default {
 </script>
 
 <template>
-  <div
-    id="clientContacts-management"
-    class="row"
-    v-if="
-      showClientAttentionsManagement === true &&
-      toggles['dashboard.client-contacts-management.view']
-    "
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div v-if="!loading">
-          <div>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span class="form-check-label" @click="showAdd()">
-                    <i class="bi bi-chat-left-dots-fill"></i> {{ $t('dashboard.addContact') }}
-                    <i
-                      :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                    ></i>
+  <div>
+    <div
+      id="clientContacts-management"
+      class="row"
+      v-if="
+        showClientAttentionsManagement === true &&
+        toggles['dashboard.client-contacts-management.view']
+      "
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span class="form-check-label" @click="showAdd()">
+                      <i class="bi bi-chat-left-dots-fill"></i> {{ $t('dashboard.addContact') }}
+                      <i
+                        :class="`bi ${
+                          showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </span>
                   </span>
-                </span>
-              </div>
-              <div v-if="showAddOption">
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('dashboard.commerce') }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="newContact.commerceId"
-                    >
-                      <option
-                        v-for="com in commerces"
-                        :key="com.id"
-                        :value="com.id"
-                        id="select-commerce"
-                      >
-                        {{ com.tag }}
-                      </option>
-                    </select>
-                  </div>
                 </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('dashboard.type') }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="newContact.type"
-                    >
-                      <option
-                        v-for="typ in contactTypes"
-                        :key="typ.name"
-                        :value="typ.id"
-                        id="select-type"
-                      >
-                        {{ $t(`contactTypes.${typ.name}`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-4 text-label">
-                    {{ $t('dashboard.result') }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="newContact.result"
-                    >
-                      <option
-                        v-for="typ in contactResultTypes"
-                        :key="typ.name"
-                        :value="typ.id"
-                        id="select-result"
-                      >
-                        {{ $t(`contactResultTypes.${typ.name}`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <textarea
-                    class="form-control mt-2"
-                    id="commennt"
-                    rows="3"
-                    v-model="newContact.comment"
-                    :placeholder="$t('dashboard.comment')"
-                  >
-                  </textarea>
-                </div>
-                <div class="row m-1">
-                  <div class="col-8 text-label">
-                    <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(newContact)"
-                    >
-                      {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                  <div class="col-4 text-label">
-                    <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="goToCreateBooking(client)"
-                    >
-                      <i class="bi bi-calendar-check-fill"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.client-contacts-management']"
-              :title="$t('dashboard.reports.client-contacts-management.title')"
-              :show-tooltip="true"
-              :description="$t('dashboard.reports.client-contacts-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :can-download="toggles['dashboard.reports.client-contacts-management'] === true"
-            ></SimpleDownloadCard>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span
-                    class="form-check-label metric-keyword-subtitle mx-1"
-                    @click="showFilters()"
-                  >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                    <i
-                      :class="`bi ${
-                        showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </span>
-                </span>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                  @click="clear()"
-                >
-                  <span><i class="bi bi-eraser-fill"></i></span>
-                </button>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getToday()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
-                </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-5">
-                      <input
-                        id="startDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="startDate"
-                      />
+                <div v-if="showAddOption">
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('dashboard.commerce') }}
                     </div>
-                    <div class="col-5">
-                      <input
-                        id="endDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="endDate"
-                      />
+                    <div class="col-8">
+                      <select
+                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        v-model="newContact.commerceId"
+                      >
+                        <option
+                          v-for="com in commerces"
+                          :key="com.id"
+                          :value="com.id"
+                          id="select-commerce"
+                        >
+                          {{ com.tag }}
+                        </option>
+                      </select>
                     </div>
-                    <div class="col-2">
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('dashboard.type') }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        v-model="newContact.type"
+                      >
+                        <option
+                          v-for="typ in contactTypes"
+                          :key="typ.name"
+                          :value="typ.id"
+                          id="select-type"
+                        >
+                          {{ $t(`contactTypes.${typ.name}`) }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row m-1">
+                    <div class="col-4 text-label">
+                      {{ $t('dashboard.result') }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        v-model="newContact.result"
+                      >
+                        <option
+                          v-for="typ in contactResultTypes"
+                          :key="typ.name"
+                          :value="typ.id"
+                          id="select-result"
+                        >
+                          {{ $t(`contactResultTypes.${typ.name}`) }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <textarea
+                      class="form-control mt-2"
+                      id="commennt"
+                      rows="3"
+                      v-model="newContact.comment"
+                      :placeholder="$t('dashboard.comment')"
+                    >
+                    </textarea>
+                  </div>
+                  <div class="row m-1">
+                    <div class="col-8 text-label">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()"
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="add(newContact)"
                       >
-                        <span><i class="bi bi-search"></i></span>
+                        {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 text-label">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="goToCreateBooking(client)"
+                      >
+                        <i class="bi bi-calendar-check-fill"></i>
                       </button>
                     </div>
                   </div>
+                  <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
                 </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="daysSinceContacted"
-                    value="EARLY"
-                    name="daysContacted-type"
-                    id="early-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="early-contacted">
-                    <i :class="`bi bi-chat-left-dots-fill green-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="daysSinceContacted"
-                    value="MEDIUM"
-                    name="daysContacted-type"
-                    id="medium-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="medium-contacted">
-                    <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="daysSinceContacted"
-                    value="LATE"
-                    name="daysContacted-type"
-                    id="late-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="late-contacted">
-                    <i :class="`bi bi-chat-left-dots-fill red-icon`"></i>
-                  </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disable-click-away
-                    :content="$t(`dashboard.tracing.filters.contact`)"
+              </div>
+              <SimpleDownloadCard
+                :download="toggles['dashboard.reports.client-contacts-management']"
+                :title="$t('dashboard.reports.client-contacts-management.title')"
+                :show-tooltip="true"
+                :description="$t('dashboard.reports.client-contacts-management.description')"
+                :icon="'bi-file-earmark-spreadsheet'"
+                @download="exportToCSV"
+                :can-download="toggles['dashboard.reports.client-contacts-management'] === true"
+              ></SimpleDownloadCard>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span
+                      class="form-check-label metric-keyword-subtitle mx-1"
+                      @click="showFilters()"
+                    >
+                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                      <i
+                        :class="`bi ${
+                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </span>
+                  </span>
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                    @click="clear()"
                   >
-                    <i class="bi bi-info-circle-fill h7 m-2"></i>
-                  </Popper>
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
                 </div>
-                <div class="col-12 col-md my-1 filter-card">
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="contactResultType"
-                    value="INTERESTED"
-                    name="contactResultType-type"
-                    id="interested-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="interested-contacted">
-                    <i :class="`bi bi-patch-check-fill green-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="contactResultType"
-                    value="CONTACT_LATER"
-                    name="contactResultType-type"
-                    id="contact-later-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="contact-later-contacted">
-                    <i :class="`bi bi-patch-check-fill yellow-icon`"></i>
-                  </label>
-                  <input
-                    type="radio"
-                    class="btn btn-check btn-sm"
-                    v-model="contactResultType"
-                    value="REJECTED"
-                    name="contactResultType-type"
-                    id="rejected-contacted"
-                    autocomplete="off"
-                  />
-                  <label class="btn" for="rejected-contacted">
-                    <i :class="`bi bi-patch-check-fill red-icon`"></i>
-                  </label>
-                  <Popper
-                    v-if="true"
-                    :class="'dark'"
-                    arrow
-                    disable-click-away
-                    :content="$t(`dashboard.tracing.filters.contactResult`)"
-                  >
-                    <i class="bi bi-info-circle-fill h7 m-2"></i>
-                  </Popper>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getToday()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.today') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getCurrentMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.thisMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastThreeMonths()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastThreeMonths') }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-5">
+                        <input
+                          id="startDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="startDate"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          id="endDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="endDate"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="daysSinceContacted"
+                      value="EARLY"
+                      name="daysContacted-type"
+                      id="early-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="early-contacted">
+                      <i :class="`bi bi-chat-left-dots-fill green-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="daysSinceContacted"
+                      value="MEDIUM"
+                      name="daysContacted-type"
+                      id="medium-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="medium-contacted">
+                      <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="daysSinceContacted"
+                      value="LATE"
+                      name="daysContacted-type"
+                      id="late-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="late-contacted">
+                      <i :class="`bi bi-chat-left-dots-fill red-icon`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      disable-click-away
+                      :content="$t(`dashboard.tracing.filters.contact`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="contactResultType"
+                      value="INTERESTED"
+                      name="contactResultType-type"
+                      id="interested-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="interested-contacted">
+                      <i :class="`bi bi-patch-check-fill green-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="contactResultType"
+                      value="CONTACT_LATER"
+                      name="contactResultType-type"
+                      id="contact-later-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="contact-later-contacted">
+                      <i :class="`bi bi-patch-check-fill yellow-icon`"></i>
+                    </label>
+                    <input
+                      type="radio"
+                      class="btn btn-check btn-sm"
+                      v-model="contactResultType"
+                      value="REJECTED"
+                      name="contactResultType-type"
+                      id="rejected-contacted"
+                      autocomplete="off"
+                    />
+                    <label class="btn" for="rejected-contacted">
+                      <i :class="`bi bi-patch-check-fill red-icon`"></i>
+                    </label>
+                    <Popper
+                      v-if="true"
+                      :class="'dark'"
+                      arrow
+                      disable-click-away
+                      :content="$t(`dashboard.tracing.filters.contactResult`)"
+                    >
+                      <i class="bi bi-info-circle-fill h7 m-2"></i>
+                    </Popper>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="my-3">
-              <span class="badge bg-secondary px-3 py-2 m-1"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-3 py-2 m-1">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
-                      </option>
-                    </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="this.clientContacts && this.clientContacts.length > 0">
-              <div
-                class="row"
-                v-for="(contact, index) in clientContacts"
-                :key="`clientContacts-${index}`"
-              >
-                <ClientContactDetailsCard :show="true" :client="contact" :commerce="commerce">
-                </ClientContactDetailsCard>
+              <div class="my-3">
+                <span class="badge bg-secondary px-3 py-2 m-1"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-3 py-2 m-1">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                        v-model="page"
+                        :disabled="totalPages === 0"
+                      >
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
+                          {{ pag }}
+                        </option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-if="this.clientContacts && this.clientContacts.length > 0">
+                <div
+                  class="row"
+                  v-for="(contact, index) in clientContacts"
+                  :key="`clientContacts-${index}`"
+                >
+                  <ClientContactDetailsCard :show="true" :client="contact" :commerce="commerce">
+                  </ClientContactDetailsCard>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div
-    v-if="
-      showClientAttentionsManagement === true &&
-      !toggles['dashboard.client-contacts-management.view']
-    "
-  >
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div
+      v-if="
+        showClientAttentionsManagement === true &&
+        !toggles['dashboard.client-contacts-management.view']
+      "
+    >
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

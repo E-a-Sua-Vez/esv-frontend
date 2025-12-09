@@ -28,7 +28,7 @@ export default {
   <div class="survey-form-edit">
     <SurveyFormBasicFields
       :model-value="survey"
-      @update:modelValue="(value) => $emit('update:survey', value)"
+      @update:modelValue="value => $emit('update:survey', value)"
       :types="types"
       :queues="queues"
       :toggles="toggles"
@@ -40,7 +40,7 @@ export default {
     <SurveyFormQuestions
       v-if="showQuestions || (survey.questions && survey.questions.length > 0)"
       :model-value="survey.questions || []"
-      @update:modelValue="(value) => $emit('update:survey', { ...survey, questions: value })"
+      @update:modelValue="value => $emit('update:survey', { ...survey, questions: value })"
       :question-types="questionTypes"
       :toggles="toggles"
       :errors="errors"
@@ -59,4 +59,3 @@ export default {
   gap: 1rem;
 }
 </style>
-

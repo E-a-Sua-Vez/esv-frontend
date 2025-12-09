@@ -40,11 +40,7 @@ export default {
 </script>
 
 <template>
-  <div
-    id="add-commerce"
-    class="result-card mb-4"
-    v-if="toggles['commerces.admin.add']"
-  >
+  <div id="add-commerce" class="result-card mb-4" v-if="toggles['commerces.admin.add']">
     <div v-if="true">
       <CommerceFormBasicFields
         v-model="newCommerce"
@@ -109,4 +105,3 @@ export default {
   color: var(--rojo-warning);
 }
 </style>
-

@@ -30,11 +30,7 @@ export default {
 </script>
 
 <template>
-  <div
-    id="add-module"
-    class="result-card mb-4"
-    v-if="toggles['modules.admin.add']"
-  >
+  <div id="add-module" class="result-card mb-4" v-if="toggles['modules.admin.add']">
     <div v-if="true">
       <ModuleFormBasicFields
         v-model="newModule"
@@ -68,5 +64,3 @@ export default {
   color: var(--rojo-warning);
 }
 </style>
-
-

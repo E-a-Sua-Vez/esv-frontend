@@ -81,35 +81,40 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <QueueName :queue="state.queue"></QueueName>
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="!loading">
-        <div id="page-header" class="text-center mt-4">
-          <div>
-            <div class="welcome">
-              <span>{{ $t('userQueueWaitlist.hello') }}</span>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+          <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+          <QueueName :queue="state.queue"></QueueName>
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div id="page-header" class="text-center mt-4">
+              <div>
+                <div class="welcome">
+                  <span>{{ $t('userQueueWaitlist.hello') }}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div id="booking">
-          <div id="booking-cancelled" v-if="!state.bookingCreated">
-            <Message
-              :title="$t('userQueueWaitlist.message.1.title')"
-              :content="$t('userQueueWaitlist.message.1.content')"
-              :icon="'bi bi-emoji-dizzy'"
-            >
-            </Message>
-            <div class="to-goal">
-              <div class="mt-2">
-                <div class="mt-2">
-                  <button
-                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                    @click="backToCommerceQueues()"
-                  >
-                    {{ $t('userQueueWaitlist.actions.1.action') }} <i class="bi bi-arrow-left"></i>
-                  </button>
+            <div id="booking">
+              <div id="booking-cancelled" v-if="!state.bookingCreated">
+                <Message
+                  :title="$t('userQueueWaitlist.message.1.title')"
+                  :content="$t('userQueueWaitlist.message.1.content')"
+                  :icon="'bi bi-emoji-dizzy'"
+                >
+                </Message>
+                <div class="to-goal">
+                  <div class="mt-2">
+                    <div class="mt-2">
+                      <button
+                        class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                        @click="backToCommerceQueues()"
+                      >
+                        {{ $t('userQueueWaitlist.actions.1.action') }}
+                        <i class="bi bi-arrow-left"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -124,14 +129,26 @@ export default {
 <style scoped>
 .booking-details-card {
   background-color: var(--color-background);
-  padding: 0.5rem;
-  margin-left: 0.1rem;
-  margin-right: 0.1rem;
+  padding: 0.75rem 0.5rem;
   margin-bottom: 0.2rem;
   border-radius: 1rem;
   border: 0.5px solid var(--gris-default);
-  height: 4.6rem;
+  min-height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
+
+.booking-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .booking-shortly-details-card {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -142,6 +159,7 @@ export default {
   border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
+
 .booking-details-date {
   background-color: var(--color-background);
   padding: 0.2rem;
@@ -149,6 +167,7 @@ export default {
   border-radius: 1rem;
   border: 0.5px solid var(--gris-default);
 }
+
 .booking-details-sound {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -157,41 +176,58 @@ export default {
   border: 0.5px solid var(--gris-default);
   margin-bottom: 0.5rem;
 }
+
 .booking-details-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 0.4rem;
-  margin-right: 0.4rem;
   margin-top: 0.5rem;
   margin-bottom: 0rem;
+  margin-left: 0;
+  margin-right: 0;
 }
+
 .booking-details-title {
-  font-size: 0.7rem;
-  line-height: 0.8rem !important;
+  font-size: 0.75rem;
+  line-height: 1rem !important;
+  margin-bottom: 0;
 }
+
 .booking-details-content {
-  font-size: 1.1rem;
-  line-height: 1rem;
+  font-size: 1.5rem;
+  line-height: 1.4rem;
   font-weight: 700;
 }
+
+.booking-details-card strong {
+  font-size: 1.5rem;
+  line-height: 1.4rem;
+  font-weight: 700;
+}
+
 .booking-details-message {
   line-height: 1rem;
   padding-top: 1rem;
   font-weight: 700;
   margin-block-start: 0.2rem;
 }
+
 .booking-details-data {
   font-size: 0.9rem;
 }
+
 .booking-sound {
   font-size: 0.8rem;
   line-height: 1.1rem;
 }
+
 .booking-notification-title {
-  font-size: 0.8rem;
-  line-height: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
   padding: 0.2rem;
+}
+
+.booking-notification-title.mb-2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4rem;
 }
 .parpadea {
   animation-name: parpadeo;

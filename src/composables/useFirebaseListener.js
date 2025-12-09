@@ -14,7 +14,7 @@
  *
  * onMounted(() => start());
  */
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, getCurrentInstance } from 'vue';
 
 export function useFirebaseListener(queryFn) {
   const data = ref([]);
@@ -77,10 +77,13 @@ export function useFirebaseListener(queryFn) {
     isLoading.value = false;
   };
 
-  // Automatic cleanup on unmount
-  onUnmounted(() => {
-    stop();
-  });
+  // Automatic cleanup on unmount - only register if we have an active component instance
+  const instance = getCurrentInstance();
+  if (instance) {
+    onUnmounted(() => {
+      stop();
+    });
+  }
 
   return {
     data,

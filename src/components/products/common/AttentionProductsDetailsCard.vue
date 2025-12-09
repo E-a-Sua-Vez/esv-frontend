@@ -263,78 +263,81 @@ export default {
     </div>
     <!-- Modal Products - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      :id="`attentionsProductsModal-${attention.attentionId}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-    >
-      <div class="modal-dialog modal-xl modern-modal-wrapper">
-        <div class="modal-content modern-modal-container">
-          <div class="modal-header border-0 active-name modern-modal-header">
-            <div class="modern-modal-header-inner">
-              <div class="modern-modal-icon-wrapper">
-                <i class="bi bi-eyedropper"></i>
-              </div>
-              <div class="modern-modal-title-wrapper">
-                <h5 class="modal-title fw-bold modern-modal-title">
-                  {{ $t('businessProductStockAdmin.attentionProducts') }}
-                </h5>
-                <p class="modern-modal-client-name">
-                  {{ attention.attentionId }}
-                </p>
-              </div>
-            </div>
-            <button
-              class="btn-close modern-modal-close-btn"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body modern-modal-body-content">
-            <ProductAttentionManagement
-              ref="attentionManagementRef"
-              :show-product-attention-management="true"
-              :toggles="toggles"
-              :attention="attention"
-              :commerce="commerce"
-              :product-attentions-in="productConsumptions"
-              @getProductConsuptions="getAttentionProducts"
-            >
-            </ProductAttentionManagement>
-          </div>
-          <div class="modal-footer border-0 modern-modal-footer">
-            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-              <div class="flex-grow-1">
-                <SimpleDownloadCard
-                  :download="toggles['products-stock.reports.consumption-details']"
-                  :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-                  :show-tooltip="true"
-                  :description="$t('businessProductStockAdmin.reports.consumption-details.description')"
-                  :icon="'bi-file-earmark-spreadsheet'"
-                  @download="handleExportAttentionCSV"
-                  :can-download="toggles['products-stock.reports.consumption-details'] === true"
-                ></SimpleDownloadCard>
+      <div
+        class="modal fade"
+        :id="`attentionsProductsModal-${attention.attentionId}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-eyedropper"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('businessProductStockAdmin.attentionProducts') }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ attention.attentionId }}
+                  </p>
+                </div>
               </div>
               <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                class="btn-close modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
-                <i class="bi bi-check-lg"></i> {{ $t('notificationConditions.action') || $t('close') }}
+                <i class="bi bi-x-lg"></i>
               </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ProductAttentionManagement
+                ref="attentionManagementRef"
+                :show-product-attention-management="true"
+                :toggles="toggles"
+                :attention="attention"
+                :commerce="commerce"
+                :product-attentions-in="productConsumptions"
+                @getProductConsuptions="getAttentionProducts"
+              >
+              </ProductAttentionManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['products-stock.reports.consumption-details']"
+                    :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
+                    :show-tooltip="true"
+                    :description="
+                      $t('businessProductStockAdmin.reports.consumption-details.description')
+                    "
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportAttentionCSV"
+                    :can-download="toggles['products-stock.reports.consumption-details'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
   </div>
 </template>

@@ -21,7 +21,7 @@ export default {
     </p>
     <p>Esta Política de Privacidade se aplica ao nosso site, easuavez.com e seus subdomínios associados (coletivamente, nosso "Serviço") juntamente com nosso aplicativo, É a Sua Vez. Ao acessar ou usar nosso Serviço, você indica que leu, entendeu e concorda com nossa coleta, armazenamento, uso e divulgação de suas informações pessoais, conforme descrito nesta Política de Privacidade e em nossos Termos de Serviço.</p>
     <h5>Definições e termos-chave</h5>
-    <p>Para ajudar a explicar as coisas da forma mais clara possível nesta Política de Privacidade, sempre que qualquer um desses termos for mencionado, eles serão estritamente definidos como:
+    <p>Para ajudar a explicar as coisas da forma mais clara possível nesta Política de Privacidade, sempre que qualquer um desses termos for mencionado, eles serão estritamente definidos como:</p>
     <ul>
     <li>Cookie – Uma pequena quantidade de dados gerada por um site e armazenada pelo seu navegador. Ele é usado para identificar seu navegador, fornecer análises e lembrar informações sobre você, como sua preferência de idioma ou informações de login.</li>
     <li>Empresa: Quando esta política menciona "Empresa", "nós", "nos" ou "nosso", refere-se à É a Sua Vez (Guardia Vieja 202, Providencia), que é responsável pelas suas informações sob esta Política de privacidade. </li>
@@ -37,7 +37,6 @@ export default {
     <li>Site: o site É a Sua Vez, que pode ser acessado através desta URL: easuavez.com </li>
     <li>Você: uma pessoa ou entidade registrada no É a Sua Vez para usar os Serviços.</li>
     </ul>
-    </p>
     <h5>Quais informações coletamos?</h5>
     <p>Coletamos informações suas quando você visita nossa plataforma, se registra em nosso site, faz um pedido, assina nossa newsletter, responde a uma pesquisa ou preenche um formulário.</p>
     <ul><li>Nome/nome de usuário</li><li>Números de telefone</li><li>E-mails</li><li>Endereços de e-mail</li><li>Endereços de cobrança </li><li >Idade</li><li>Senha</li>

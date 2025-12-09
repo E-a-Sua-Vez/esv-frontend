@@ -100,7 +100,7 @@ export default {
 
     const validateAdd = () => {
       state.errorsAdd = [];
-      if (state.planSelected === {}) {
+      if (!state.planSelected || Object.keys(state.planSelected).length === 0) {
         state.planSelected = state.plan;
       }
       if (!state.planSelected || !state.planSelected.id) {
@@ -172,7 +172,7 @@ export default {
       </ComponentMenu>
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+        <Alert :show="false" :stack="alertError"></Alert>
       </div>
       <div id="businessPlan">
         <div v-if="state.toggles['plan.admin.view']">
@@ -306,71 +306,71 @@ export default {
       </div>
       <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
       <Teleport to="body">
-      <div
-        class="modal fade"
-        id="conditionsModal"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header border-0">
-              <button
-                class="btn-close"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body text-center pb-5">
-              <NotificationConditions></NotificationConditions>
-              <a
-                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-                data-bs-toggle="modal"
-                data-bs-target="#conditionsModal"
-                >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-              ></a>
+        <div
+          class="modal fade"
+          id="conditionsModal"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="staticBackdropLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <button
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body text-center pb-5">
+                <NotificationConditions></NotificationConditions>
+                <a
+                  class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+                  data-bs-toggle="modal"
+                  data-bs-target="#conditionsModal"
+                  >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+                ></a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </Teleport>
       <!-- Modal Use Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
       <Teleport to="body">
-      <div
-        class="modal fade"
-        id="useConditionsModal"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header border-0">
-              <button
-                class="btn-close"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body text-center pb-5">
-              <NotificationConditions></NotificationConditions>
-              <a
-                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-                data-bs-toggle="modal"
-                data-bs-target="#useConditionsModal"
-                >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-              ></a>
+        <div
+          class="modal fade"
+          id="useConditionsModal"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="staticBackdropLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <button
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body text-center pb-5">
+                <NotificationConditions></NotificationConditions>
+                <a
+                  class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+                  data-bs-toggle="modal"
+                  data-bs-target="#useConditionsModal"
+                  >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+                ></a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </Teleport>
     </div>
   </div>

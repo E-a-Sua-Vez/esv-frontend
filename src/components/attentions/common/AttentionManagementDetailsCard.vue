@@ -98,7 +98,12 @@ export default {
         <!-- Status Icon -->
         <Popper :class="'dark'" arrow hover>
           <template #content>
-            <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do atendimento baseado em dias desde última atenção' }}</div>
+            <div>
+              {{
+                $t('dashboard.clientCard.tooltip.status') ||
+                'Estado do atendimento baseado em dias desde última atenção'
+              }}
+            </div>
           </template>
           <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
             <i class="bi bi-qr-code"></i>
@@ -125,7 +130,9 @@ export default {
             <span class="client-name-text">{{ attentionFullName }}</span>
             <Popper :class="'dark'" arrow hover>
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do atendimento' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do atendimento' }}
+                </div>
               </template>
               <button class="btn-copy-mini" @click.stop="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -133,10 +140,17 @@ export default {
             </Popper>
           </div>
           <div class="client-meta-inline">
-            <span class="client-id-inline">{{ formatIdNumber(attention.userIdNumber) || 'N/I' }}</span>
+            <span class="client-id-inline">{{
+              formatIdNumber(attention.userIdNumber) || 'N/I'
+            }}</span>
             <Popper v-if="attention.surveyId" :class="'dark'" arrow hover>
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.survey') || 'Cliente possui pesquisa de satisfação' }}</div>
+                <div>
+                  {{
+                    $t('dashboard.clientCard.tooltip.survey') ||
+                    'Cliente possui pesquisa de satisfação'
+                  }}
+                </div>
               </template>
               <i class="bi bi-star-fill icon-mini-separated yellow-icon" @click.stop></i>
             </Popper>
@@ -153,18 +167,25 @@ export default {
             </Popper>
             <Popper v-if="attention.productCounter > 0" :class="'dark'" arrow hover>
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.products') || 'Atendimento possui produtos' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.products') || 'Atendimento possui produtos' }}
+                </div>
               </template>
               <i class="bi bi-eyedropper icon-mini-separated" @click.stop></i>
             </Popper>
-            </div>
-            </div>
+          </div>
+        </div>
 
         <!-- Status Indicators - Inline -->
         <div class="status-inline">
           <Popper :class="'dark'" arrow hover>
             <template #content>
-              <div>{{ $t('dashboard.clientCard.tooltip.daysSinceAttention') || 'Dias decorridos desde a última atenção' }}</div>
+              <div>
+                {{
+                  $t('dashboard.clientCard.tooltip.daysSinceAttention') ||
+                  'Dias decorridos desde a última atenção'
+                }}
+              </div>
             </template>
             <div class="status-badge-inline" @click.stop>
               <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"></i>
@@ -196,7 +217,9 @@ export default {
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-telephone-fill"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto'
+              }}</span>
             </div>
             <div class="contact-data-grid">
               <Popper :class="'dark'" arrow hover>
@@ -209,7 +232,9 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-whatsapp"></i>
                     <span>{{ attention.userPhone || 'N/I' }}</span>
@@ -226,7 +251,9 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.email') || 'Email' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.email') || 'Email'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-envelope"></i>
                     <span>{{ attention.userEmail || 'N/I' }}</span>
@@ -252,41 +279,50 @@ export default {
           <div v-if="attention.paid !== undefined && attention.paid === true" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-check-circle-fill"></i>
-              <span class="info-section-title">{{ $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento' }}</span>
+              <span class="info-section-title">{{
+                $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
+              }}</span>
             </div>
             <div class="info-badges">
               <span v-if="attention.paymentType" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.paymentType') }}</span>
                 <span class="badge-value">{{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
-                  </span>
+              </span>
               <span v-if="attention.paymentMethod" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.paymentMethod') }}</span>
-                <span class="badge-value">{{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span>
-                  </span>
+                <span class="badge-value">{{
+                  $t(`paymentClientMethods.${attention.paymentMethod}`)
+                }}</span>
+              </span>
               <span v-if="attention.paymentAmount" class="info-badge">
                 <i class="bi bi-coin"></i>
                 <span class="badge-label">{{ $t('paymentData.paymentAmount') }}</span>
                 <span class="badge-value">{{ attention.paymentAmount }}</span>
-                  </span>
+              </span>
               <span v-if="attention.paymentCommission" class="info-badge">
                 <i class="bi bi-coin"></i>
                 <span class="badge-label">{{ $t('paymentData.paymentCommission') }}</span>
                 <span class="badge-value">{{ attention.paymentCommission }}</span>
-                  </span>
+              </span>
               <span v-if="attention.packageId && attention.packageName" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.package') }}</span>
                 <span class="badge-value">{{ attention.packageName }}</span>
-                <span class="badge-subvalue">{{ attention.packageProcedureNumber }} / {{ attention.packageProceduresTotalNumber }}</span>
+                <span class="badge-subvalue"
+                  >{{ attention.packageProcedureNumber }} /
+                  {{ attention.packageProceduresTotalNumber }}</span
+                >
                 <i v-if="attention.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
               </span>
-              </div>
+            </div>
           </div>
 
           <!-- Survey Data Section -->
           <div v-if="attention.rating || attention.nps" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-star-fill"></i>
-              <span class="info-section-title">{{ $t('dashboard.surveyData') || 'Dados da Pesquisa' }}</span>
+              <span class="info-section-title">{{
+                $t('dashboard.surveyData') || 'Dados da Pesquisa'
+              }}</span>
             </div>
             <div class="info-badges">
               <span class="info-badge">
@@ -315,36 +351,38 @@ export default {
           >
             <div class="info-section-header">
               <i class="bi bi-qr-code"></i>
-              <span class="info-section-title">{{ $t('dashboard.attData') || 'Dados do Atendimento' }}</span>
+              <span class="info-section-title">{{
+                $t('dashboard.attData') || 'Dados do Atendimento'
+              }}</span>
             </div>
             <div class="info-badges">
               <span v-if="attention.queueName" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.queueData') }}</span>
                 <span class="badge-value">{{ attention.queueName }}</span>
-                </span>
+              </span>
               <span v-if="attention.collaboratorName" class="info-badge">
                 <i class="bi bi-person-fill"></i>
                 <span class="badge-label">{{ $t('dashboard.userData') }}</span>
                 <span class="badge-value">{{ attention.collaboratorName }}</span>
-                </span>
+              </span>
               <span v-if="attention.commerceName && attention.commerceTag" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
-                <span class="badge-value">{{ attention.commerceName }} - {{ attention.commerceTag }}</span>
-                </span>
+                <span class="badge-value"
+                  >{{ attention.commerceName }} - {{ attention.commerceTag }}</span
+                >
+              </span>
               <span v-if="attention.servicesDetails" class="info-badge services-badge">
                 <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span
-                  v-for="serv in attention.servicesDetails"
-                  :key="serv.id"
-                  class="service-tag"
-                >
+                <span v-for="serv in attention.servicesDetails" :key="serv.id" class="service-tag">
                   {{ serv.name }}
                 </span>
               </span>
               <span v-if="attention.termsConditionsToAcceptedAt" class="info-badge">
                 <i class="bi bi-calendar-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.termsAccepted') }}</span>
-                <span class="badge-value">{{ getDate(attention.termsConditionsToAcceptedAt) }}</span>
+                <span class="badge-value">{{
+                  getDate(attention.termsConditionsToAcceptedAt)
+                }}</span>
               </span>
             </div>
           </div>
@@ -355,7 +393,9 @@ export default {
               <span class="metadata-label">ID:</span>
               <span class="metadata-value">{{ attention.attentionId }}</span>
               <span class="metadata-separator">•</span>
-              <span class="metadata-label">{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span>
+              <span class="metadata-label"
+                >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
+              >
               <span class="metadata-value">{{ getDate(attention.createdDate) }}</span>
             </div>
           </div>

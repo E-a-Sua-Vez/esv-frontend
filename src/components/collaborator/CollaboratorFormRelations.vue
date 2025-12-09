@@ -72,14 +72,16 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.commerces') }}
       </label>
-      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
         <select
           :id="`${prefix}collaborator-commerces-form`"
           class="form-control-modern form-select-modern"
           v-model="selectedCommerce"
           @change="handleSelectCommerce(selectedCommerce)"
         >
-          <option :value="null">{{ $t('businessCollaboratorsAdmin.selectCommerce') || 'Seleccionar comercio' }}</option>
+          <option :value="null">
+            {{ $t('businessCollaboratorsAdmin.selectCommerce') || 'Seleccionar comercio' }}
+          </option>
           <option v-for="com in commerces" :key="com.id" :value="com">
             {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
           </option>
@@ -88,11 +90,7 @@ export default {
           v-if="collaborator.commercesId && collaborator.commercesId.length > 0"
           class="badges-container"
         >
-          <span
-            class="badge-modern"
-            v-for="comId in collaborator.commercesId"
-            :key="comId"
-          >
+          <span class="badge-modern" v-for="comId in collaborator.commercesId" :key="comId">
             {{ showCommerce ? showCommerce(comId) : comId }}
             <button
               type="button"
@@ -112,14 +110,16 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.services') }}
       </label>
-      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
         <select
           :id="`${prefix}collaborator-services-form`"
           class="form-control-modern form-select-modern"
           v-model="selectedService"
           @change="handleSelectService(selectedService)"
         >
-          <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
+          <option :value="null">
+            {{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}
+          </option>
           <option v-for="serv in services" :key="serv.id" :value="serv">
             {{ serv.active ? `🟢  ${serv.tag}` : `🔴  ${serv.tag}` }}
           </option>
@@ -128,11 +128,7 @@ export default {
           v-if="collaborator.servicesId && collaborator.servicesId.length > 0"
           class="badges-container"
         >
-          <span
-            class="badge-modern"
-            v-for="servId in collaborator.servicesId"
-            :key="servId"
-          >
+          <span class="badge-modern" v-for="servId in collaborator.servicesId" :key="servId">
             {{ showService ? showService(servId) : servId }}
             <button
               type="button"
@@ -270,4 +266,3 @@ export default {
   }
 }
 </style>
-

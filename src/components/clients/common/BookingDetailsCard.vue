@@ -99,7 +99,7 @@ export default {
     <div class="client-row-card" :class="getCardTypeClass()" @click="showDetails()">
       <div class="client-row-content">
         <!-- Status Icon -->
-        <Popper :class="'dark'" arrow hover>
+        <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
             <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}</div>
           </template>
@@ -126,9 +126,11 @@ export default {
         <div class="client-info-inline">
           <div class="client-name-inline">
             <span class="client-name-text">{{ bookingFullName }}</span>
-            <Popper :class="'dark'" arrow hover>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do agendamento' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do agendamento' }}
+                </div>
               </template>
               <button class="btn-copy-mini" @click.stop="copyBooking()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -136,14 +138,24 @@ export default {
             </Popper>
           </div>
           <div class="client-meta-inline">
-            <span class="client-id-inline">{{ formatIdNumber(booking.userIdNumber) || 'N/I' }}</span>
-            <Popper v-if="booking.termsConditionsAcceptedCode" :class="'dark'" arrow hover>
+            <span class="client-id-inline">{{
+              formatIdNumber(booking.userIdNumber) || 'N/I'
+            }}</span>
+            <Popper
+              v-if="booking.termsConditionsAcceptedCode"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
               <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.terms') || 'Termos e condições aceitos' }}</div>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.terms') || 'Termos e condições aceitos' }}
+                </div>
               </template>
               <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
             </Popper>
-            <Popper v-if="booking.paid" :class="'dark'" arrow hover>
+            <Popper v-if="booking.paid" :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.paid') || 'Agendamento pago' }}</div>
               </template>
@@ -178,15 +190,17 @@ export default {
     <div class="details-expandable-section">
       <Spinner :show="loading"></Spinner>
       <Transition name="details-expand">
-          <div v-if="extendedEntity" class="detailed-data">
+        <div v-if="extendedEntity" class="detailed-data">
           <!-- Contact Information Section - Standardized -->
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-telephone-fill"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto'
+              }}</span>
             </div>
             <div class="contact-data-grid">
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.whatsapp') || 'WhatsApp' }}</div>
                 </template>
@@ -196,14 +210,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-whatsapp"></i>
                     <span>{{ booking.userPhone || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.email') || 'Email' }}</div>
                 </template>
@@ -213,14 +229,16 @@ export default {
                   target="_blank"
                   @click.stop
                 >
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.email') || 'Email' }}</span>
+                  <span class="data-label">{{
+                    $t('dashboard.clientCard.label.email') || 'Email'
+                  }}</span>
                   <div class="data-value">
                     <i class="bi bi-envelope"></i>
                     <span>{{ booking.userEmail || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
-              <Popper :class="'dark'" arrow hover>
+              <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.idNumber') || 'ID' }}</div>
                 </template>
@@ -239,7 +257,9 @@ export default {
           <div v-if="booking.paid" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-check-circle-fill"></i>
-              <span class="info-section-title">{{ $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento' }}</span>
+              <span class="info-section-title">{{
+                $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
+              }}</span>
             </div>
             <div class="info-badges">
               <span v-if="booking.paymentType" class="info-badge">
@@ -248,7 +268,9 @@ export default {
               </span>
               <span v-if="booking.paymentMethod" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.paymentMethod') }}</span>
-                <span class="badge-value">{{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}</span>
+                <span class="badge-value">{{
+                  $t(`paymentClientMethods.${booking.paymentMethod}`)
+                }}</span>
               </span>
               <span
                 v-if="
@@ -275,7 +297,10 @@ export default {
               <span v-if="booking.packageId && booking.packageName" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.package') }}</span>
                 <span class="badge-value">{{ booking.packageName }}</span>
-                <span class="badge-subvalue">{{ booking.packageProcedureNumber }} / {{ booking.packageProceduresTotalNumber }}</span>
+                <span class="badge-subvalue"
+                  >{{ booking.packageProcedureNumber }} /
+                  {{ booking.packageProceduresTotalNumber }}</span
+                >
                 <i v-if="booking.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
               </span>
             </div>
@@ -293,7 +318,9 @@ export default {
           >
             <div class="info-section-header">
               <i class="bi bi-calendar-fill"></i>
-              <span class="info-section-title">{{ $t('dashboard.attData') || 'Dados do Agendamento' }}</span>
+              <span class="info-section-title">{{
+                $t('dashboard.attData') || 'Dados do Agendamento'
+              }}</span>
             </div>
             <div class="info-badges">
               <span v-if="booking.queueName" class="info-badge">
@@ -302,15 +329,13 @@ export default {
               </span>
               <span v-if="booking.commerceName && booking.commerceTag" class="info-badge">
                 <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
-                <span class="badge-value">{{ booking.commerceName }} - {{ booking.commerceTag }}</span>
+                <span class="badge-value"
+                  >{{ booking.commerceName }} - {{ booking.commerceTag }}</span
+                >
               </span>
               <span v-if="booking.servicesDetails" class="info-badge services-badge">
                 <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span
-                  v-for="serv in booking.servicesDetails"
-                  :key="serv.id"
-                  class="service-tag"
-                >
+                <span v-for="serv in booking.servicesDetails" :key="serv.id" class="service-tag">
                   {{ serv.name }}
                 </span>
               </span>
@@ -328,7 +353,9 @@ export default {
               <span class="metadata-label">ID:</span>
               <span class="metadata-value">{{ booking.bookingId }}</span>
               <span class="metadata-separator">•</span>
-              <span class="metadata-label">{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span>
+              <span class="metadata-label"
+                >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
+              >
               <span class="metadata-value">{{ getDate(booking.createdDate) }}</span>
             </div>
           </div>

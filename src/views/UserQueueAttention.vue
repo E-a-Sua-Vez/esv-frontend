@@ -452,375 +452,407 @@ export default {
       <source type="audio/mp3" src="../assets/sounds/es_tu_turno.mp3" />
     </audio>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
-      <QueueName :queue="state.queue"></QueueName>
-      <Spinner :show="loading"></Spinner>
-      <Alert :show="loading" :stack="alertError"></Alert>
-      <div v-if="!loading">
-        <div id="page-header" class="text-center mt-4">
-          <div v-if="itsYourTurn()">
-            <div class="its-your-turn parpadea">
-              <span>{{ $t('userQueueAttention.itsYourTurn') }}</span>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+          <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+          <QueueName :queue="state.queue"></QueueName>
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div id="page-header" class="text-center mt-4">
+              <div v-if="itsYourTurn()">
+                <div class="its-your-turn parpadea">
+                  <span>{{ $t('userQueueAttention.itsYourTurn') }}</span>
+                </div>
+              </div>
+              <div v-else-if="youWereAttended() || youFullfilledSurvey()">
+                <div class="welcome">
+                  <span>{{ $t('userQueueAttention.youWereAttended') }}</span>
+                </div>
+                <div class="your-attention">
+                  <span>{{ $t('userQueueAttention.thanks') }}</span>
+                </div>
+              </div>
+              <div v-else>
+                <div class="welcome">
+                  <span>{{ $t('userQueueAttention.hello') }}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div v-else-if="youWereAttended() || youFullfilledSurvey()">
-            <div class="welcome">
-              <span>{{ $t('userQueueAttention.youWereAttended') }}</span>
-            </div>
-            <div class="your-attention">
-              <span>{{ $t('userQueueAttention.thanks') }}</span>
-            </div>
-          </div>
-          <div v-else>
-            <div class="welcome">
-              <span>{{ $t('userQueueAttention.hello') }}</span>
-            </div>
-          </div>
-        </div>
-        <div id="survey" v-if="youWereAttended()">
-          <AttentionSurvey
-            :survey-personalized="state.survey"
-            :attention-id="state.attention.id"
-            :attention-type="state.attention.type"
-            :attention="state.attention"
-            :commerce="state.commerce"
-          >
-          </AttentionSurvey>
-        </div>
-        <div id="survey-fullfilled" v-else-if="youFullfilledSurvey()">
-          <div class="mt-3">
-            <Message
-              :title="$t('attentionSurvey.message.1.title')"
-              :content="$t('attentionSurvey.message.1.content')"
-              :icon="'bi bi-emoji-sunglasses'"
-            >
-            </Message>
-            <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              v-if="state.commerce.url !== undefined"
-              @click="backToCommerceQueues()"
-            >
-              {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
-            </a>
-            <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              :href="state.commerce.url"
-              target="_blank"
-            >
-              {{ $t('userQueueAttention.actions.4.action') }}
-              <i class="bi bi-hand-index-thumb-fill"></i>
-            </a>
-          </div>
-        </div>
-        <div v-else-if="youWereSkipped()">
-          <div class="your-attention">
-            <span>{{ $t('userQueueAttention.yourNumber') }}</span>
-          </div>
-          <AttentionNumber :number="state.attention.number" :type="'secondary'" :data="state.user">
-          </AttentionNumber>
-          <Message
-            :title="$t('userQueueAttention.message.1.title')"
-            :content="$t('userQueueAttention.message.1.content')"
-            :icon="'bi bi-emoji-dizzy'"
-          >
-          </Message>
-          <div class="mt-3">
-            <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              @click="backToCommerceQueues()"
-            >
-              {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
-            </a>
-          </div>
-        </div>
-        <div v-else-if="youWereAttentionCancelled() || youWereReserveCancelled()">
-          <div class="your-attention">
-            <span>{{ $t('userQueueAttention.yourNumber') }}</span>
-          </div>
-          <AttentionNumber :number="state.attention.number" :type="'secondary'" :data="state.user">
-          </AttentionNumber>
-          <Message
-            :title="$t('userQueueAttention.message.3.title')"
-            :content="$t('userQueueAttention.message.3.content')"
-            :icon="'bi bi-emoji-dizzy'"
-          >
-          </Message>
-          <div class="mt-3">
-            <a
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              @click="backToCommerceQueues()"
-            >
-              {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
-            </a>
-          </div>
-        </div>
-        <div id="attention" v-else>
-          <div class="your-attention mt-2">
-            <span>{{ $t('userQueueAttention.yourNumber') }}</span>
-          </div>
-          <AttentionNumber :number="state.attention.number" :data="state.user"></AttentionNumber>
-          <div v-if="itsYourTurn()" class="attention-details-container">
-            <div class="col-6 attention-details-card">
-              <label class="attention-details-title">
-                {{ $t('userQueueAttention.getClose') }} </label
-              ><br />
-              <span class="attention-details-content">
-                <i class="bi bi-arrow-down-right-circle"></i>
-                {{ state.module.name || $t('userQueueAttention.module') }}
-              </span>
-            </div>
-            <div class="col-6 attention-details-card">
-              <label class="attention-details-title">
-                {{ $t('userQueueAttention.attendedBy') }} </label
-              ><br />
-              <span class="attention-details-content"
-                ><i class="bi bi-person-circle"></i> {{ collaboratorName() }}
-              </span>
-            </div>
-          </div>
-          <div v-if="itsYourTurn()">
-            <Message
-              :title="$t('userQueueAttention.message.2.title')"
-              :content="$t('userQueueAttention.message.2.content')"
-              :icon="'bi bi-star'"
-            >
-              ></Message
-            >
-          </div>
-          <div v-else class="to-goal">
-            <div class="attention-details-container">
-              <div
-                v-if="
-                  (state.attention.number === 1 &&
-                    state.attention.status === ATTENTION_STATUS.PENDING) ||
-                  state.beforeYou === 0
-                "
-                class="col-12 attention-shortly-details-card attention-details-message"
+            <div id="survey" v-if="youWereAttended()">
+              <AttentionSurvey
+                :survey-personalized="state.survey"
+                :attention-id="state.attention.id"
+                :attention-type="state.attention.type"
+                :attention="state.attention"
+                :commerce="state.commerce"
               >
-                <div v-if="state.attention.block && state.attention.block.hourFrom">
-                  <p class="attention-details-title">🚨 {{ $t('userQueueAttention.blockInfo') }}</p>
-                  <span class="attention-details-content parpadea">
-                    {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }}
-                  </span>
-                </div>
-                <div v-else>
-                  <span class="attention-details-content"> 🚨 </span><br />
-                  <span class="attention-details-title">
-                    {{ $t('userQueueAttention.willBeAttendedShortly') }}
-                  </span>
-                </div>
-              </div>
-              <div v-else class="centered col-12">
-                <div class="col-6 attention-details-card">
-                  <span class="attention-details-title">
-                    {{ $t('userQueueAttention.toGoal.1') }} </span
-                  ><br />
-                  <span class="attention-details-content">
-                    <i class="bi bi-person"></i> {{ state.beforeYou }} </span
-                  ><br />
-                </div>
-                <div class="col-6 attention-details-card">
-                  <div v-if="state.attention.block && state.attention.block.hourFrom">
-                    <span class="attention-details-title">
-                      {{ $t('userQueueAttention.blockInfo') }}</span
-                    ><br />
-                    <span class="attention-details-content parpadea">
-                      {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }}
-                    </span>
-                    <br />
-                  </div>
-                  <div v-else-if="state.beforeYou">
-                    <span class="attention-details-title">
-                      {{ $t('userQueueAttention.estimatedTime') }} </span
-                    ><br />
-                    <span class="attention-details-content parpadea">
-                      <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }}
-                    </span>
-                    <br />
-                  </div>
-                </div>
+              </AttentionSurvey>
+            </div>
+            <div id="survey-fullfilled" v-else-if="youFullfilledSurvey()">
+              <div class="mt-3">
+                <Message
+                  :title="$t('attentionSurvey.message.1.title')"
+                  :content="$t('attentionSurvey.message.1.content')"
+                  :icon="'bi bi-emoji-sunglasses'"
+                >
+                </Message>
+                <a
+                  class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                  v-if="state.commerce.url !== undefined"
+                  @click="backToCommerceQueues()"
+                >
+                  {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
+                </a>
+                <a
+                  class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                  :href="state.commerce.url"
+                  target="_blank"
+                >
+                  {{ $t('userQueueAttention.actions.4.action') }}
+                  <i class="bi bi-hand-index-thumb-fill"></i>
+                </a>
               </div>
             </div>
-          </div>
-          <div id="sound-control" class="attention-details-sound" v-if="attentionActive()">
-            <div class="row centered attention-sound">
-              <div class="col-8">
-                <i class="bi bi-bell"> </i>
-                <span class="fw-bold" v-if="!state.soundEnabled">
-                  {{ $t('userQueueAttention.actions.6.title.1') }}
-                </span>
-                <span class="fw-bold" v-else>
-                  {{ $t('userQueueAttention.actions.6.title.2') }}
-                </span>
-                <span>{{ $t('userQueueAttention.actions.6.title.3') }}</span>
+            <div v-else-if="youWereSkipped()">
+              <div class="your-attention">
+                <span>{{ $t('userQueueAttention.yourNumber') }}</span>
               </div>
-              <div class="col-4">
-                <div class="d-flex justify-content-center mb-1">
-                  <button
-                    class="btn btn-md fw-bold btn-dark rounded-pill"
-                    @click="
-                      play();
-                      speak(false, true);
-                    "
-                  >
-                    <i
-                      :class="`bi ${state.soundEnabled ? 'bi-bell-fill' : 'bi-bell-slash-fill'} `"
-                    ></i>
-                  </button>
+              <AttentionNumber
+                :number="state.attention.number"
+                :type="'secondary'"
+                :data="state.user"
+              >
+              </AttentionNumber>
+              <Message
+                :title="$t('userQueueAttention.message.1.title')"
+                :content="$t('userQueueAttention.message.1.content')"
+                :icon="'bi bi-emoji-dizzy'"
+              >
+              </Message>
+              <div class="mt-3">
+                <a
+                  class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                  @click="backToCommerceQueues()"
+                >
+                  {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
+                </a>
+              </div>
+            </div>
+            <div v-else-if="youWereAttentionCancelled() || youWereReserveCancelled()">
+              <div class="your-attention">
+                <span>{{ $t('userQueueAttention.yourNumber') }}</span>
+              </div>
+              <AttentionNumber
+                :number="state.attention.number"
+                :type="'secondary'"
+                :data="state.user"
+              >
+              </AttentionNumber>
+              <Message
+                :title="$t('userQueueAttention.message.3.title')"
+                :content="$t('userQueueAttention.message.3.content')"
+                :icon="'bi bi-emoji-dizzy'"
+              >
+              </Message>
+              <div class="mt-3">
+                <a
+                  class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                  @click="backToCommerceQueues()"
+                >
+                  {{ $t('userQueueAttention.actions.5.action') }} <i class="bi bi-arrow-left"></i>
+                </a>
+              </div>
+            </div>
+            <div id="attention" v-else>
+              <div class="your-attention mt-2">
+                <span>{{ $t('userQueueAttention.yourNumber') }}</span>
+              </div>
+              <AttentionNumber
+                :number="state.attention.number"
+                :data="state.user"
+              ></AttentionNumber>
+              <div v-if="itsYourTurn()" id="attention-data" class="to-goal">
+                <div class="row g-2 attention-details-container">
+                  <div class="col-6 attention-details-card">
+                    <div class="attention-card-content">
+                      <span class="attention-details-title">
+                        {{ $t('userQueueAttention.getClose') }}
+                      </span>
+                      <span class="attention-details-content">
+                        <i class="bi bi-arrow-down-right-circle"></i>
+                        {{ state.module.name || $t('userQueueAttention.module') }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-6 attention-details-card">
+                    <div class="attention-card-content">
+                      <span class="attention-details-title">
+                        {{ $t('userQueueAttention.attendedBy') }}
+                      </span>
+                      <span class="attention-details-content">
+                        <i class="bi bi-person-circle"></i> {{ collaboratorName() }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span
-                  class="test-sound justify-content-end"
-                  @click="
-                    testSound();
-                    speak(true, false);
-                  "
-                  >{{ $t('userQueueAttention.actions.6.title.4') }}</span
+              </div>
+              <div v-if="itsYourTurn()">
+                <Message
+                  :title="$t('userQueueAttention.message.2.title')"
+                  :content="$t('userQueueAttention.message.2.content')"
+                  :icon="'bi bi-star'"
+                >
+                  ></Message
                 >
               </div>
-            </div>
-          </div>
-          <div
-            id="form-process"
-            class="to-goal"
-            v-if="
-              state.showFormButton &&
-              state.form &&
-              (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') ||
-                getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))
-            "
-          >
-            <div class="booking-notification-title">
-              <span>{{ $t('userQueueBooking.fillPreAttention') }}</span>
-            </div>
-            <button
-              type="button"
-              class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
-              v-if="state.showFormButton"
-              @click="goToForm()"
-            >
-              {{ $t('userQueueBooking.preAttention') }} <i class="bi bi-pencil-fill"></i>
-            </button>
-          </div>
-          <div
-            id="whatsapp-notification-control"
-            class="d-grid gap-2 mb-2 attention-details-sound"
-            v-if="attentionActive()"
-          >
-            <div class="attention-notification-title">
-              <i class="bi bi-whatsapp"></i>
-              <span class="fw-bold"> {{ $t('clientNotifyData.phoneTitle1') }} </span>
-              <span> {{ $t('clientNotifyData.phoneTitle2') }} </span>
-            </div>
-            <a
-              v-if="state.queue.active"
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              data-bs-toggle="collapse"
-              href="#client-whatsapp-data"
-              :disabled="!state.toggles['user.notification.add']"
-              @click="notify()"
-            >
-              <i class="bi bi-phone-vibrate-fill"></i>
-              {{ $t('userQueueAttention.actions.1.action') }} <i class="bi bi-chevron-down"></i>
-            </a>
-            <div
-              :class="`collapse ${state.user.notificationOn ? 'show' : ''}`"
-              id="client-whatsapp-data"
-            >
-              <ClientNotifyData
-                :attention-id="state.attention.id"
-                :user-id="state.user.id"
-                :commerce-id="state.commerce.id"
-                :queue-id="state.queue.id"
-                :user-in="state.user"
-                :notification-on="state.user.notificationOn || false"
-                :commerce="state.commerce"
-                @createdUser="createdUser($event)"
-              />
-            </div>
-          </div>
-          <div
-            id="email-notification-control"
-            class="d-grid gap-2 mb-4 attention-details-sound"
-            v-if="attentionActive()"
-          >
-            <div class="attention-notification-title">
-              <i class="bi bi-envelope"></i>
-              <span class="fw-bold"> {{ $t('clientNotifyData.emailTitle1') }} </span>
-              <span> {{ $t('clientNotifyData.emailTitle2') }} </span>
-            </div>
-            <a
-              v-if="state.queue.active"
-              class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-              data-bs-toggle="collapse"
-              href="#client-email-data"
-              :disabled="!state.toggles['user.notification.add']"
-              @click="notify()"
-            >
-              <i class="bi bi-envelope-fill"></i>
-              {{ $t('userQueueAttention.actions.7.action') }} <i class="bi bi-chevron-down"></i>
-            </a>
-            <div
-              :class="`collapse ${state.user.notificationEmailOn ? 'show' : ''}`"
-              id="client-email-data"
-            >
-              <ClientEmailNotifyData
-                :attention-id="state.attention.id"
-                :user-id="state.user.id"
-                :commerce-id="state.commerce.id"
-                :queue-id="state.queue.id"
-                :user-in="state.user"
-                :notification-on="state.user.notificationEmailOn || false"
-                :commerce="state.commerce"
-                @createdUser="createdUser($event)"
-              />
-            </div>
-          </div>
-          <div id="cancel-process" class="mb-3" v-if="!itsYourTurn()">
-            <button
-              type="button"
-              class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mb-1"
-              @click="goToCancel()"
-              :disabled="attentionCancelled() || !state.toggles['user.attentions.cancel']"
-            >
-              {{ $t('userQueueAttention.cancel') }} <i class="bi bi-x-circle-fill"></i>
-            </button>
-            <AreYouSure
-              :show="state.goToCancel"
-              :yes-disabled="!attentionCancelled()"
-              :no-disabled="!attentionCancelled()"
-              @actionYes="cancellingAttention()"
-              @actionNo="cancelCancel()"
-            >
-            </AreYouSure>
-          </div>
-          <div id="QR-control">
-            <div class="your-attention">
-              <span v-if="state.beforeYou === 0">
-                {{ $t('userQueueAttention.itsYourAttention') }}</span
+              <div v-else id="attention-data" class="to-goal">
+                <div class="row g-2 attention-details-container">
+                  <div
+                    v-if="
+                      (state.attention.number === 1 &&
+                        state.attention.status === ATTENTION_STATUS.PENDING) ||
+                      state.beforeYou === 0
+                    "
+                    class="col-12 attention-details-card"
+                  >
+                    <div class="attention-card-content">
+                      <div v-if="state.attention.block && state.attention.block.hourFrom">
+                        <span class="attention-details-title">
+                          🚨 {{ $t('userQueueAttention.blockInfo') }}
+                        </span>
+                        <span class="attention-details-content parpadea">
+                          {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }}
+                        </span>
+                      </div>
+                      <div v-else>
+                        <span class="attention-details-content"> 🚨 </span>
+                        <span class="attention-details-title">
+                          {{ $t('userQueueAttention.willBeAttendedShortly') }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <template v-else>
+                    <div class="col-6 attention-details-card">
+                      <div class="attention-card-content">
+                        <span class="attention-details-title">
+                          {{ $t('userQueueAttention.toGoal.1') }}
+                        </span>
+                        <span class="attention-details-content">
+                          <i class="bi bi-person"></i> {{ state.beforeYou }}
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.attention.block && state.attention.block.hourFrom"
+                      class="col-6 attention-details-card"
+                    >
+                      <div class="attention-card-content">
+                        <span class="attention-details-title">
+                          {{ $t('userQueueAttention.blockInfo') }}
+                        </span>
+                        <span class="attention-details-content parpadea">
+                          {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }}
+                        </span>
+                      </div>
+                    </div>
+                    <div v-else-if="state.beforeYou" class="col-6 attention-details-card">
+                      <div class="attention-card-content">
+                        <span class="attention-details-title">
+                          {{ $t('userQueueAttention.estimatedTime') }}*
+                        </span>
+                        <span class="attention-details-content">
+                          <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }}
+                        </span>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div id="sound-control" class="to-goal" v-if="attentionActive()">
+                <div class="attention-details-sound mt-2">
+                  <div class="row centered attention-sound">
+                    <div class="col-8">
+                      <i class="bi bi-bell"> </i>
+                      <span class="fw-bold" v-if="!state.soundEnabled">
+                        {{ $t('userQueueAttention.actions.6.title.1') }}
+                      </span>
+                      <span class="fw-bold" v-else>
+                        {{ $t('userQueueAttention.actions.6.title.2') }}
+                      </span>
+                      <span>{{ $t('userQueueAttention.actions.6.title.3') }}</span>
+                    </div>
+                    <div class="col-4">
+                      <div class="d-flex justify-content-center mb-1">
+                        <button
+                          class="btn btn-md fw-bold btn-dark rounded-pill"
+                          @click="
+                            play();
+                            speak(false, true);
+                          "
+                        >
+                          <i
+                            :class="`bi ${
+                              state.soundEnabled ? 'bi-bell-fill' : 'bi-bell-slash-fill'
+                            } `"
+                          ></i>
+                        </button>
+                      </div>
+                      <span
+                        class="test-sound justify-content-end"
+                        @click="
+                          testSound();
+                          speak(true, false);
+                        "
+                        >{{ $t('userQueueAttention.actions.6.title.4') }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="form-process"
+                class="to-goal"
+                v-if="
+                  state.showFormButton &&
+                  state.form &&
+                  (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') ||
+                    getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT'))
+                "
               >
-              <span v-else>{{ $t('userQueueAttention.yourAttention') }}</span>
-            </div>
-            <QR :value="getQRValue()" @click="getQRValue()"></QR>
-          </div>
-          <Message
-            :title="$t('userQueueAttention.actions.2.action')"
-            :content="$t('userQueueAttention.actions.2.title.1')"
-            :icon="'bi bi-camera-fill'"
-          >
-          </Message>
-          <div class="row attention-details-container">
-            <div class="attention-details-date attention-details-data">
-              <span
-                ><strong>{{
-                  getCreatedAt(
-                    state.attention.createdAt,
-                    state.commerce.localeInfo
-                      ? state.commerce.localeInfo.timezone
-                      : 'America/Santiago'
-                  )
-                }}</strong></span
-              ><br />
-              <span><strong>Id:</strong> {{ state.attention.id }}</span>
+                <div class="booking-notification-title">
+                  <span>{{ $t('userQueueBooking.fillPreAttention') }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-primary rounded-pill mt-2 mb-1"
+                  v-if="state.showFormButton"
+                  @click="goToForm()"
+                >
+                  {{ $t('userQueueBooking.preAttention') }} <i class="bi bi-pencil-fill"></i>
+                </button>
+              </div>
+              <div id="whatsapp-notification-control" class="to-goal" v-if="attentionActive()">
+                <div class="attention-details-sound mt-2">
+                  <div class="attention-notification-title">
+                    <i class="bi bi-whatsapp"></i>
+                    <span class="fw-bold"> {{ $t('clientNotifyData.phoneTitle1') }} </span>
+                    <span> {{ $t('clientNotifyData.phoneTitle2') }} </span>
+                  </div>
+                  <a
+                    v-if="state.queue.active"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                    data-bs-toggle="collapse"
+                    href="#client-whatsapp-data"
+                    :disabled="!state.toggles['user.notification.add']"
+                    @click="notify()"
+                  >
+                    <i class="bi bi-phone-vibrate-fill"></i>
+                    {{ $t('userQueueAttention.actions.1.action') }}
+                    <i class="bi bi-chevron-down"></i>
+                  </a>
+                  <div
+                    :class="`collapse ${state.user.notificationOn ? 'show' : ''}`"
+                    id="client-whatsapp-data"
+                  >
+                    <ClientNotifyData
+                      :attention-id="state.attention.id"
+                      :user-id="state.user.id"
+                      :commerce-id="state.commerce.id"
+                      :queue-id="state.queue.id"
+                      :user-in="state.user"
+                      :notification-on="state.user.notificationOn || false"
+                      :commerce="state.commerce"
+                      @createdUser="createdUser($event)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div id="email-notification-control" class="to-goal" v-if="attentionActive()">
+                <div class="attention-details-sound mt-2">
+                  <div class="attention-notification-title">
+                    <i class="bi bi-envelope"></i>
+                    <span class="fw-bold"> {{ $t('clientNotifyData.emailTitle1') }} </span>
+                    <span> {{ $t('clientNotifyData.emailTitle2') }} </span>
+                  </div>
+                  <a
+                    v-if="state.queue.active"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                    data-bs-toggle="collapse"
+                    href="#client-email-data"
+                    :disabled="!state.toggles['user.notification.add']"
+                    @click="notify()"
+                  >
+                    <i class="bi bi-envelope-fill"></i>
+                    {{ $t('userQueueAttention.actions.7.action') }}
+                    <i class="bi bi-chevron-down"></i>
+                  </a>
+                  <div
+                    :class="`collapse ${state.user.notificationEmailOn ? 'show' : ''}`"
+                    id="client-email-data"
+                  >
+                    <ClientEmailNotifyData
+                      :attention-id="state.attention.id"
+                      :user-id="state.user.id"
+                      :commerce-id="state.commerce.id"
+                      :queue-id="state.queue.id"
+                      :user-in="state.user"
+                      :notification-on="state.user.notificationEmailOn || false"
+                      :commerce="state.commerce"
+                      @createdUser="createdUser($event)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div id="cancel-process" class="mb-3" v-if="!itsYourTurn()">
+                <button
+                  type="button"
+                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mb-1"
+                  @click="goToCancel()"
+                  :disabled="attentionCancelled() || !state.toggles['user.attentions.cancel']"
+                >
+                  {{ $t('userQueueAttention.cancel') }} <i class="bi bi-x-circle-fill"></i>
+                </button>
+                <AreYouSure
+                  :show="state.goToCancel"
+                  :yes-disabled="!attentionCancelled()"
+                  :no-disabled="!attentionCancelled()"
+                  @actionYes="cancellingAttention()"
+                  @actionNo="cancelCancel()"
+                >
+                </AreYouSure>
+              </div>
+              <div id="QR-control">
+                <div class="your-attention">
+                  <span v-if="state.beforeYou === 0">
+                    {{ $t('userQueueAttention.itsYourAttention') }}</span
+                  >
+                  <span v-else>{{ $t('userQueueAttention.yourAttention') }}</span>
+                </div>
+                <QR :value="getQRValue()" @click="getQRValue()"></QR>
+              </div>
+              <Message
+                :title="$t('userQueueAttention.actions.2.action')"
+                :content="$t('userQueueAttention.actions.2.title.1')"
+                :icon="'bi bi-camera-fill'"
+              >
+              </Message>
+              <div class="row attention-details-container">
+                <div class="attention-details-date attention-details-data">
+                  <span
+                    ><strong>{{
+                      getCreatedAt(
+                        state.attention.createdAt,
+                        state.commerce.localeInfo
+                          ? state.commerce.localeInfo.timezone
+                          : 'America/Santiago'
+                      )
+                    }}</strong></span
+                  ><br />
+                  <span><strong>Id:</strong> {{ state.attention.id }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -833,14 +865,26 @@ export default {
 <style scoped>
 .attention-details-card {
   background-color: var(--color-background);
-  padding: 0.5rem;
-  margin-left: 0.1rem;
-  margin-right: 0.1rem;
+  padding: 0.75rem 0.5rem;
   margin-bottom: 0.2rem;
   border-radius: 1rem;
   border: 0.5px solid var(--gris-default);
-  height: 4.6rem;
+  min-height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
+
+.attention-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .attention-shortly-details-card {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -851,6 +895,7 @@ export default {
   border: 0.5px solid var(--gris-default);
   height: 4.6rem;
 }
+
 .attention-details-date {
   background-color: var(--color-background);
   padding: 0.2rem;
@@ -858,6 +903,7 @@ export default {
   border-radius: 1rem;
   border: 0.5px solid var(--gris-default);
 }
+
 .attention-details-sound {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -866,41 +912,58 @@ export default {
   border: 0.5px solid var(--gris-default);
   margin-bottom: 0.5rem;
 }
+
 .attention-details-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 0.4rem;
-  margin-right: 0.4rem;
   margin-top: 0.5rem;
   margin-bottom: 0rem;
+  margin-left: 0;
+  margin-right: 0;
 }
+
 .attention-details-title {
-  font-size: 0.7rem;
-  line-height: 0.8rem !important;
+  font-size: 0.75rem;
+  line-height: 1rem !important;
+  margin-bottom: 0;
 }
+
 .attention-details-content {
-  font-size: 1.1rem;
-  line-height: 1rem;
+  font-size: 1.5rem;
+  line-height: 1.4rem;
   font-weight: 700;
 }
+
+.attention-details-card strong {
+  font-size: 1.5rem;
+  line-height: 1.4rem;
+  font-weight: 700;
+}
+
 .attention-details-message {
   line-height: 1rem;
   padding-top: 1rem;
   font-weight: 700;
   margin-block-start: 0.2rem;
 }
+
 .attention-details-data {
   font-size: 0.9rem;
 }
+
 .attention-sound {
   font-size: 0.8rem;
   line-height: 1.1rem;
 }
+
 .attention-notification-title {
-  font-size: 0.8rem;
-  line-height: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
   padding: 0.2rem;
+}
+
+.attention-notification-title.mb-2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4rem;
 }
 .parpadea {
   animation-name: parpadeo;
@@ -926,9 +989,15 @@ export default {
   cursor: pointer;
 }
 .booking-notification-title {
-  font-size: 0.8rem;
-  line-height: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
   padding: 0.2rem;
+}
+
+.booking-notification-title.mb-2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.4rem;
 }
 @-moz-keyframes parpadeo {
   0% {

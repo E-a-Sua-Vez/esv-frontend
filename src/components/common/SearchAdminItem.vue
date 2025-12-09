@@ -159,6 +159,36 @@ export default {
       }
     });
 
+    // Watch for businessItems changes (when commerce changes) and reset everything
+    watch(
+      businessItems,
+      (newItems, oldItems) => {
+        // Reset search and filters
+        state.searchText = '';
+        state.selectedType = undefined;
+        state.page = 1;
+        state.filtered = newItems || [];
+
+        // Update types based on new items
+        if (newItems && newItems.length > 0) {
+          const types = newItems
+            .filter(item => item.type)
+            .map(item => (item.type ? item.type : undefined));
+          if (types && types.length > 0) {
+            state.types = Array.from(new Set(types));
+          } else {
+            state.types = [];
+          }
+        } else {
+          state.types = [];
+        }
+
+        // Refresh with new items
+        refresh(newItems || []);
+      },
+      { deep: true }
+    );
+
     return {
       state,
       clearSearch,

@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -51,9 +51,7 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       products: ref([]),
-      commerce: {},
       showAdd: false,
       goToUnavailable: false,
       newProduct: {},
@@ -80,6 +78,48 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load products when commerce changes
+    const loadProducts = async commerceId => {
+      if (!commerceId) {
+        state.products = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const products = await getProductByCommerce(commerceId);
+        state.products = products || [];
+        state.filtered = state.products;
+      } catch (error) {
+        console.error('Error loading products:', error);
+        state.products = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload products
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.products = [];
+            state.filtered = [];
+            await loadProducts(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading products on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -87,14 +127,23 @@ export default {
         state.measureTypes = getProductMeasureTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.products = await getProductByCommerce(state.commerce.id);
-        }
-        state.filtered = state.products;
         state.toggles = await getPermissions('products', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load products for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadProducts(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -250,9 +299,9 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newProduct)) {
-          state.newProduct.commerceId = state.commerce.id;
+          state.newProduct.commerceId = commerce.value.id;
           await addProduct(state.newProduct);
-          state.products = await getProductByCommerce(state.commerce.id);
+          state.products = await getProductByCommerce(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newProduct = {};
@@ -271,7 +320,7 @@ export default {
         loading.value = true;
         if (validateUpdate(product)) {
           await updateProduct(product.id, product);
-          state.products = await getProductByCommerce(state.commerce.id);
+          state.products = await getProductByCommerce(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -289,7 +338,7 @@ export default {
           product.available = false;
           product.active = false;
           await updateProduct(product.id, product);
-          state.products = await getProductByCommerce(state.commerce.id);
+          state.products = await getProductByCommerce(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -307,19 +356,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.products = await getProductByCommerce(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -345,7 +381,7 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       unavailable,
       goToUnavailable,
       unavailableCancel,
@@ -360,7 +396,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessProductsAdmin.title`)"
           :toggles="state.toggles"
@@ -370,26 +409,13 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessProductsAdmin">
           <div v-if="isActiveBusiness && state.toggles['products.admin.view']">
             <div id="businessProductsAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessProductsAdmin.commerce') }} </span>
-                <select
-                  class="form-control-modern form-select-modern"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="modules"
-                >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessProductsAdmin.message.4.title')"
                     :content="$t('businessProductsAdmin.message.4.content')"
@@ -405,7 +431,7 @@ export default {
                     :content="$t('businessProductsAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -465,30 +491,30 @@ export default {
                       v-if="state.toggles['products.admin.read'] && state.extendedEntity === index"
                       class="row g-1 mt-2"
                     >
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(product)"
-                            :disabled="!state.toggles['products.admin.update']"
-                          >
-                            {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['products.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['products.admin.unavailable']"
-                            :no-disabled="state.toggles['products.admin.unavailable']"
-                            @actionYes="unavailable(product)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(product)"
+                          :disabled="!state.toggles['products.admin.update']"
+                        >
+                          {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['products.admin.unavailable']"
+                        >
+                          {{ $t('businessQueuesAdmin.unavailable') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yes-disabled="state.toggles['products.admin.unavailable']"
+                          :no-disabled="state.toggles['products.admin.unavailable']"
+                          @actionYes="unavailable(product)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
                       </div>
                     </div>
                     <div
@@ -521,17 +547,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -551,20 +577,7 @@ export default {
           <div v-if="isActiveBusiness && state.toggles['products.admin.view']">
             <div id="businessProductsAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessProductsAdmin.commerce') }} </span>
-                <select
-                  class="form-control-modern form-select-modern"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="modules"
-                >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessProductsAdmin.message.4.title')"
                     :content="$t('businessProductsAdmin.message.4.content')"
@@ -580,7 +593,7 @@ export default {
                     :content="$t('businessProductsAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -640,30 +653,30 @@ export default {
                       v-if="state.toggles['products.admin.read'] && state.extendedEntity === index"
                       class="row g-1 mt-2"
                     >
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(product)"
-                            :disabled="!state.toggles['products.admin.update']"
-                          >
-                            {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['products.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['products.admin.unavailable']"
-                            :no-disabled="state.toggles['products.admin.unavailable']"
-                            @actionYes="unavailable(product)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(product)"
+                          :disabled="!state.toggles['products.admin.update']"
+                        >
+                          {{ $t('businessProductsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['products.admin.unavailable']"
+                        >
+                          {{ $t('businessQueuesAdmin.unavailable') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          :yes-disabled="state.toggles['products.admin.unavailable']"
+                          :no-disabled="state.toggles['products.admin.unavailable']"
+                          @actionYes="unavailable(product)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
                       </div>
                     </div>
                     <div
@@ -713,7 +726,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-product"
               class="result-card mb-4"
@@ -740,12 +753,12 @@ export default {
                   :max-order="state.products.length + 1"
                 />
                 <div class="col mt-3">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newProduct)"
-                    >
-                      {{ $t('businessProductsAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newProduct)"
+                  >
+                    {{ $t('businessProductsAdmin.add') }} <i class="bi bi-save"></i>
+                  </button>
                 </div>
               </div>
               <div v-else>
@@ -761,7 +774,8 @@ export default {
               class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
               data-bs-dismiss="modal"
               aria-label="Close"
-              >{{ $t('close') }} <i class="bi bi-check-lg"></i></a>
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>

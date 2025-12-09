@@ -40,6 +40,7 @@ export const STORAGE_KEYS = {
   CURRENT_USER: 'currentUser',
   CURRENT_PERMISSIONS: 'currentPermissions',
   CURRENT_QUEUE: 'currentQueue',
+  CURRENT_MODULE: 'currentModule',
   CURRENT_USER_TYPE: 'currentUserType',
   CURRENT_COMMERCE: 'currentCommerce',
   CURRENT_BUSINESS: 'currentBusiness',

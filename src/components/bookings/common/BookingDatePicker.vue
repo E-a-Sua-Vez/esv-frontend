@@ -729,125 +729,118 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
-    <div class="centered">
-      <div class="col col-md-9">
-        <div class="choose-attention py-1 pt-2">
-          <i class="bi bi-calendar-check"></i>
-          <span> {{ $t('commerceQueuesView.selectDay') }} </span>
+  <div v-if="show" class="booking-date-picker-container">
+    <div class="booking-date-picker-content">
+      <div class="booking-date-picker-header">
+        <i class="bi bi-calendar-check"></i>
+        <span>{{ $t('commerceQueuesView.selectDay') }}</span>
+        <div v-if="state.date" class="booking-date-selected">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>{{ formattedDate(state.date) }}</span>
         </div>
-        <Spinner :show="loadingCalendar"></Spinner>
-        <div v-if="!loadingCalendar">
-          <VDatePicker
-            :locale="state.locale"
-            :view="view"
-            v-model.string="state.date"
-            :mask="dateMask"
-            :min-date="state.minDate"
-            :max-date="state.maxDate"
-            :disabled-dates="disabledDates"
-            :attributes="calendarAttributes"
-            @did-move="getAvailableDatesByCalendarMonth"
-          />
-          <div v-if="state.date">
-            <div class="badge rounded-pill bg-secondary py-2 px-5 m-1">
-              <span> {{ formattedDate(state.date) }} </span>
+      </div>
+      <Spinner :show="loadingCalendar"></Spinner>
+      <div v-if="!loadingCalendar" class="booking-calendar-wrapper">
+        <VDatePicker
+          :locale="state.locale"
+          :view="'monthly'"
+          v-model="state.date"
+          :mask="dateMask"
+          :min-date="state.minDate"
+          :max-date="state.maxDate"
+          :disabled-dates="disabledDates"
+          :attributes="calendarAttributes"
+          @did-move="getAvailableDatesByCalendarMonth"
+        />
+      </div>
+      <div
+        v-if="getActiveFeature(commerce, 'booking-block-active', 'PRODUCT')"
+        class="booking-block-selector"
+      >
+        <Spinner :show="loadingHours"></Spinner>
+        <div v-if="!loadingHours">
+          <div v-if="amountofBlocksNeeded > 1">
+            <div
+              v-if="
+                state.availableBookingSuperBlocks &&
+                state.availableBookingSuperBlocks.length > 0 &&
+                state.date
+              "
+              class="booking-block-selector-compact"
+            >
+              <div class="booking-block-label">
+                <i class="bi bi-hourglass-split"></i>
+                <span>{{ $t('commerceQueuesView.selectBlock') }}</span>
+              </div>
+              <select
+                class="booking-block-select"
+                aria-label=".form-select-sm"
+                v-model="state.block"
+              >
+                <option
+                  v-for="block in state.availableBookingSuperBlocks"
+                  :key="block.number"
+                  :value="block"
+                >
+                  {{ block.hourFrom }} - {{ block.hourTo }}
+                </option>
+              </select>
+            </div>
+            <div
+              v-if="
+                state.availableBookingSuperBlocks &&
+                state.availableBookingSuperBlocks.length === 0 &&
+                state.date
+              "
+              class="booking-block-message"
+            >
+              <Message
+                :title="$t('commerceQueuesView.message3.title')"
+                :content="$t('commerceQueuesView.message3.content')"
+              >
+              </Message>
             </div>
           </div>
-        </div>
-        <div v-if="getActiveFeature(commerce, 'booking-block-active', 'PRODUCT')">
-          <Spinner :show="loadingHours"></Spinner>
-          <div v-if="!loadingHours">
-            <div v-if="amountofBlocksNeeded > 1">
-              <div
-                v-if="
-                  state.availableBookingSuperBlocks &&
-                  state.availableBookingSuperBlocks.length > 0 &&
-                  state.date
-                "
-                class="mb-2"
+          <div v-else>
+            <div
+              v-if="
+                state.availableBookingBlocks &&
+                state.availableBookingBlocks.length > 0 &&
+                state.date
+              "
+              class="booking-block-selector-compact"
+            >
+              <div class="booking-block-label">
+                <i class="bi bi-hourglass-split"></i>
+                <span>{{ $t('commerceQueuesView.selectBlock') }}</span>
+              </div>
+              <select
+                class="booking-block-select"
+                aria-label="form-select-sm"
+                v-model="state.block"
               >
-                <div class="choose-attention pt-1">
-                  <i class="bi bi-hourglass-split"></i>
-                  <span> {{ $t('commerceQueuesView.selectBlock') }} </span>
-                </div>
-                <select
-                  class="btn btn-md btn-light fw-bold text-dark select"
-                  aria-label=".form-select-sm"
-                  v-model="state.block"
+                <option
+                  v-for="block in state.availableBookingBlocks"
+                  :key="block.number"
+                  :value="block"
                 >
-                  <option
-                    v-for="block in state.availableBookingSuperBlocks"
-                    :key="block.number"
-                    :value="block"
-                    id="select-block"
-                  >
-                    {{ block.hourFrom }} - {{ block.hourTo }}
-                  </option>
-                </select>
-              </div>
-              <div
-                v-if="
-                  state.availableBookingSuperBlocks &&
-                  state.availableBookingSuperBlocks.length === 0 &&
-                  state.date
-                "
-                class="mb-2"
-              >
-                <div>
-                  <Message
-                    :title="$t('commerceQueuesView.message3.title')"
-                    :content="$t('commerceQueuesView.message3.content')"
-                  >
-                  </Message>
-                </div>
-              </div>
+                  {{ block.hourFrom }} - {{ block.hourTo }}
+                </option>
+              </select>
             </div>
-            <div v-else>
-              <hr />
-              <div
-                v-if="
-                  state.availableBookingBlocks &&
-                  state.availableBookingBlocks.length > 0 &&
-                  state.date
-                "
-                class="mb-2"
+            <div
+              v-if="
+                state.availableBookingBlocks &&
+                state.availableBookingBlocks.length === 0 &&
+                state.date
+              "
+              class="booking-block-message"
+            >
+              <Message
+                :title="$t('commerceQueuesView.message3.title')"
+                :content="$t('commerceQueuesView.message3.content')"
               >
-                <div class="choose-attention py-1 pt-1">
-                  <i class="bi bi-hourglass-split"></i>
-                  <span> {{ $t('commerceQueuesView.selectBlock') }} </span>
-                </div>
-                <select
-                  class="btn btn-sm btn-light fw-bold text-dark select"
-                  aria-label="form-select-sm"
-                  v-model="state.block"
-                >
-                  <option
-                    v-for="block in state.availableBookingBlocks"
-                    :key="block.number"
-                    :value="block"
-                    id="select-block"
-                  >
-                    {{ block.hourFrom }} - {{ block.hourTo }}
-                  </option>
-                </select>
-              </div>
-              <div
-                v-if="
-                  state.availableBookingBlocks &&
-                  state.availableBookingBlocks.length === 0 &&
-                  state.date
-                "
-                class="mb-1"
-              >
-                <div>
-                  <Message
-                    :title="$t('commerceQueuesView.message3.title')"
-                    :content="$t('commerceQueuesView.message3.content')"
-                  >
-                  </Message>
-                </div>
-              </div>
+              </Message>
             </div>
           </div>
         </div>
@@ -856,4 +849,133 @@ export default {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Booking Date Picker Container - Modern and Compact */
+.booking-date-picker-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.booking-date-picker-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.booking-date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.01em;
+  flex-wrap: wrap;
+}
+
+.booking-date-picker-header i:first-child {
+  color: #00c2cb;
+  font-size: 0.875rem;
+}
+
+.booking-date-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 194, 203, 0.12);
+  border: 1px solid rgba(0, 194, 203, 0.25);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #00c2cb;
+}
+
+.booking-date-selected i {
+  font-size: 0.75rem;
+}
+
+.booking-calendar-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.booking-calendar-wrapper > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Block Selector - Compact */
+.booking-block-selector {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.booking-block-selector-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.booking-block-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.booking-block-label i {
+  color: #00c2cb;
+  font-size: 0.75rem;
+}
+
+.booking-block-select {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  width: 100%;
+  cursor: pointer;
+}
+
+.booking-block-select:hover {
+  border-color: rgba(0, 194, 203, 0.3);
+  background: rgba(255, 255, 255, 1);
+}
+
+.booking-block-select:focus {
+  outline: none;
+  border-color: #00c2cb;
+  box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.1);
+}
+
+.booking-block-message {
+  margin-top: 0.5rem;
+}
+
+/* Legacy styles for compatibility */
+.choose-attention {
+  padding-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+</style>

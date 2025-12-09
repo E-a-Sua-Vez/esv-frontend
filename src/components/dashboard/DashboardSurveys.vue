@@ -48,93 +48,95 @@ export default {
 </script>
 
 <template>
-  <!-- Expose filters slot for desktop - forward from child components -->
-  <DashboardSurveysResult
-    v-if="filtersLocation === 'slot' && showSurveyResults"
-    :show-survey-results="false"
-    :calculated-metrics="calculatedMetrics"
-    :toggles="toggles"
-    :start-date="startDate"
-    :end-date="endDate"
-    :commerce="commerce"
-    :queues="queues"
-    filters-location="slot"
-  >
-    <template #filters-exposed="filterProps">
-      <slot name="filters-exposed" v-bind="filterProps"></slot>
-    </template>
-  </DashboardSurveysResult>
-  <DashboardSurveysConsolidated
-    v-if="filtersLocation === 'slot' && showSurveyConsolidated"
-    :show-survey-consolidated="false"
-    :toggles="toggles"
-    :start-date="startDate"
-    :end-date="endDate"
-    :commerce="commerce"
-    :queues="queues"
-    filters-location="slot"
-  >
-    <template #filters-exposed="filterProps">
-      <slot name="filters-exposed" v-bind="filterProps"></slot>
-    </template>
-  </DashboardSurveysConsolidated>
+  <div>
+    <!-- Expose filters slot for desktop - forward from child components -->
+    <DashboardSurveysResult
+      v-if="filtersLocation === 'slot' && showSurveyResults"
+      :show-survey-results="false"
+      :calculated-metrics="calculatedMetrics"
+      :toggles="toggles"
+      :start-date="startDate"
+      :end-date="endDate"
+      :commerce="commerce"
+      :queues="queues"
+      filters-location="slot"
+    >
+      <template #filters-exposed="filterProps">
+        <slot name="filters-exposed" v-bind="filterProps"></slot>
+      </template>
+    </DashboardSurveysResult>
+    <DashboardSurveysConsolidated
+      v-if="filtersLocation === 'slot' && showSurveyConsolidated"
+      :show-survey-consolidated="false"
+      :toggles="toggles"
+      :start-date="startDate"
+      :end-date="endDate"
+      :commerce="commerce"
+      :queues="queues"
+      filters-location="slot"
+    >
+      <template #filters-exposed="filterProps">
+        <slot name="filters-exposed" v-bind="filterProps"></slot>
+      </template>
+    </DashboardSurveysConsolidated>
 
-  <div id="surveys" class="row" v-if="showSurvey === true && toggles['dashboard.surveys.view']">
-    <div>
-      <hr />
-      <div class="row col m-1 mb-2">
-        <div class="col-6 centered">
-          <button
-            class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
-            :class="showSurveyResults ? 'btn-selected' : ''"
-            @click="showSurveysResults()"
-            :disabled="!toggles['dashboard.surveys.view']"
-          >
-            {{ $t('dashboard.resume') }}
-          </button>
-        </div>
-        <div class="col-6 centered">
-          <button
-            class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
-            :class="showSurveyConsolidated ? 'btn-selected' : ''"
-            @click="showSurveysConsolidated()"
-            :disabled="!toggles['dashboard.surveys-consolidated.view']"
-          >
-            {{ $t('dashboard.consolidated') }}
-          </button>
-        </div>
-      </div>
+    <div id="surveys" class="row" v-if="showSurvey === true && toggles['dashboard.surveys.view']">
       <div>
-        <DashboardSurveysResult
-          :show-survey-results="showSurveyResults"
-          :calculated-metrics="calculatedMetrics"
-          :toggles="toggles"
-          :start-date="startDate"
-          :end-date="endDate"
-          :commerce="commerce"
-          :queues="queues"
-          :filters-location="filtersLocation"
-        >
-        </DashboardSurveysResult>
-        <DashboardSurveysConsolidated
-          :show-survey-consolidated="showSurveyConsolidated"
-          :toggles="toggles"
-          :start-date="startDate"
-          :end-date="endDate"
-          :commerce="commerce"
-          :queues="queues"
-          :filters-location="filtersLocation"
-        >
-        </DashboardSurveysConsolidated>
+        <hr />
+        <div class="row col m-1 mb-2">
+          <div class="col-6 centered">
+            <button
+              class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+              :class="showSurveyResults ? 'btn-selected' : ''"
+              @click="showSurveysResults()"
+              :disabled="!toggles['dashboard.surveys.view']"
+            >
+              {{ $t('dashboard.resume') }}
+            </button>
+          </div>
+          <div class="col-6 centered">
+            <button
+              class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
+              :class="showSurveyConsolidated ? 'btn-selected' : ''"
+              @click="showSurveysConsolidated()"
+              :disabled="!toggles['dashboard.surveys-consolidated.view']"
+            >
+              {{ $t('dashboard.consolidated') }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <DashboardSurveysResult
+            :show-survey-results="showSurveyResults"
+            :calculated-metrics="calculatedMetrics"
+            :toggles="toggles"
+            :start-date="startDate"
+            :end-date="endDate"
+            :commerce="commerce"
+            :queues="queues"
+            :filters-location="filtersLocation"
+          >
+          </DashboardSurveysResult>
+          <DashboardSurveysConsolidated
+            :show-survey-consolidated="showSurveyConsolidated"
+            :toggles="toggles"
+            :start-date="startDate"
+            :end-date="endDate"
+            :commerce="commerce"
+            :queues="queues"
+            :filters-location="filtersLocation"
+          >
+          </DashboardSurveysConsolidated>
+        </div>
       </div>
     </div>
-  </div>
-  <div v-if="showSurvey === true && !toggles['dashboard.surveys.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showSurvey === true && !toggles['dashboard.surveys.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

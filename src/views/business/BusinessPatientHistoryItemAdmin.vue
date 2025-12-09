@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -51,10 +51,8 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       items: ref([]),
       types: ref([]),
-      commerce: {},
       showAdd: false,
       goToUnavailable: false,
       newPatientHistoryItem: {},
@@ -72,20 +70,71 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load items when commerce changes
+    const loadItems = async commerceId => {
+      if (!commerceId) {
+        state.items = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        const items = await getPatientHistoryItemByCommerce(commerceId);
+        state.items = items || [];
+        state.filtered = state.items;
+      } catch (error) {
+        console.error('Error loading patient history items:', error);
+        state.items = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload items
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear filtered data to prevent showing old results
+            state.items = [];
+            state.filtered = [];
+            await loadItems(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading patient history items on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getPatientHistoryItemTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.items = await getPatientHistoryItemByCommerce(state.commerce.id);
-        }
-        state.filtered = state.items;
         state.toggles = await getPermissions('patient-history-item', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load items for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadItems(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -178,10 +227,10 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
-        if (validateAdd(state.newPatientHistoryItem)) {
-          state.newPatientHistoryItem.commerceId = state.commerce.id;
+        if (validateAdd(state.newPatientHistoryItem) && commerce.value && commerce.value.id) {
+          state.newPatientHistoryItem.commerceId = commerce.value.id;
           await addPatientHistoryItem(state.newPatientHistoryItem);
-          state.items = await getPatientHistoryItemByCommerce(state.commerce.id);
+          await loadItems(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newPatientHistoryItem = {};
@@ -198,9 +247,9 @@ export default {
     const update = async item => {
       try {
         loading.value = true;
-        if (validateUpdate(item)) {
+        if (validateUpdate(item) && commerce.value && commerce.value.id) {
           await updatePatientHistoryItem(item.id, item);
-          state.items = await getPatientHistoryItemByCommerce(state.commerce.id);
+          await loadItems(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -214,11 +263,11 @@ export default {
     const unavailable = async item => {
       try {
         loading.value = true;
-        if (item && item.id) {
+        if (item && item.id && commerce.value && commerce.value.id) {
           item.available = false;
           item.active = false;
           await updatePatientHistoryItem(item.id, item);
-          state.items = await getPatientHistoryItemByCommerce(state.commerce.id);
+          await loadItems(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -236,19 +285,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.items = await getPatientHistoryItemByCommerce(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -274,11 +310,11 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
       unavailable,
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
+      commerce,
     };
   },
 };
@@ -286,307 +322,586 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessPatientHistoryItemAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessPatientHistoryItemAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-      </div>
-      <div id="businessPatientHistoryItemAdmin">
-        <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
-          <div id="businessPatientHistoryItemAdmin-controls" class="control-box">
-            <div class="row">
-              <div class="col" v-if="state.commerces.length > 0">
-                <span>{{ $t('businessPatientHistoryItemAdmin.commerce') }} </span>
-                <select
-                  class="form-control-modern form-select-modern"
-                  v-model="state.commerce"
-                  @change="selectCommerce(state.commerce)"
-                  id="modules"
-                >
-                  <option v-for="com in state.commerces" :key="com.id" :value="com">
-                    {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                  </option>
-                </select>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessPatientHistoryItemAdmin.message.4.title')"
-                  :content="$t('businessPatientHistoryItemAdmin.message.4.content')"
-                />
-              </div>
-            </div>
-          </div>
-          <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.items.length === 0">
-                <Message
-                  :title="$t('businessPatientHistoryItemAdmin.message.2.title')"
-                  :content="$t('businessPatientHistoryItemAdmin.message.2.content')"
-                />
-              </div>
-              <div v-if="state.commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(item)"
-                    data-bs-toggle="modal"
-                    :data-bs-target="`#add-item`"
-                    :disabled="!state.toggles['patient-history-item.admin.add']"
-                  >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
-                </div>
-              </div>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessPatientHistoryItemAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessPatientHistoryItemAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessPatientHistoryItemAdmin">
+          <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
+            <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">
               <div>
-                <SearchAdminItem
-                  :business-items="state.items"
-                  :type="'items'"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(item, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <PatientHistoryItemName :item="item"></PatientHistoryItemName>
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                          :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
+                <div v-if="state.items.length === 0">
+                  <Message
+                    :title="$t('businessPatientHistoryItemAdmin.message.2.title')"
+                    :content="$t('businessPatientHistoryItemAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="commerce && commerce.id" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(item)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-item`"
+                      :disabled="!state.toggles['patient-history-item.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
                   </div>
-                  <div
-                    v-if="state.toggles['patient-history-item.admin.read']"
-                    :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.items"
+                    :type="'items'"
+                    :receive-filtered-items="receiveFilteredItems"
                   >
-                    <PatientHistoryItemFormEdit
-                      :item="item"
-                      :types="state.types"
-                      :toggles="state.toggles"
-                      :errors="{
-                        nameError: state.nameError,
-                        tagError: state.tagError,
-                        typeError: state.typeError,
-                        orderUpdateError: state.orderUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      @update:item="item = $event"
-                    />
-                    <div class="row g-1">
-                      <!-- Datos de Caracteristicas -->
-                      <div class="row g-1">
-                        <a
-                          class="nav-link subdata-title centered active"
-                          data-bs-toggle="collapse"
-                          href="#update-items"
-                        >
-                          {{ $t('businessPatientHistoryItemAdmin.characteristics') }}
-                          <i class="bi bi-chevron-down"></i>
+                  </SearchAdminItem>
+                  <div v-for="(item, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <PatientHistoryItemName :item="item"></PatientHistoryItemName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
                         </a>
                       </div>
-                      <div id="update-items" class="collapse row m-0">
-                        <div id="item-actual-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.actual') }}
+                    </div>
+                    <div
+                      v-if="state.toggles['patient-history-item.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <PatientHistoryItemFormEdit
+                        :item="item"
+                        :types="state.types"
+                        :toggles="state.toggles"
+                        :errors="{
+                          nameError: state.nameError,
+                          tagError: state.tagError,
+                          typeError: state.typeError,
+                          orderUpdateError: state.orderUpdateError,
+                          errorsUpdate: state.errorsUpdate,
+                        }"
+                        @update:item="item = $event"
+                      />
+                      <div class="row g-1">
+                        <!-- Datos de Caracteristicas -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-items"
+                          >
+                            {{ $t('businessPatientHistoryItemAdmin.characteristics') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-items" class="collapse row m-0">
+                          <div id="item-actual-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.actual') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.actual"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
                           </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.actual"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
+                          <div id="item-frequency-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.frequency') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.frequency"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-ageFrom-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.ageFrom"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-ageTo-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.ageTo"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-comment-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.comment"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-value-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.value') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.value"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-result-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.result') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.result"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-selectN-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.selectN') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.selectN"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-select1-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.select1') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.select1"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-yesNo-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.yesNo') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.yesNo"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-document-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.document') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.document"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-options-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.options') }}
+                            </div>
+                            <div class="col-6">
+                              <input
+                                type="text"
+                                class="form-control"
+                                v-model="item.characteristics.options"
+                                placeholder="Answer 1,Anwswer 2"
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div id="item-frequency-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.frequency') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.frequency"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(item)"
+                            :disabled="!state.toggles['patient-history-item.admin.update']"
+                          >
+                            {{ $t('businessPatientHistoryItemAdmin.update') }}
+                            <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['patient-history-item.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['patient-history-item.admin.unavailable']"
+                            :no-disabled="state.toggles['patient-history-item.admin.unavailable']"
+                            @actionYes="unavailable(item)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
                         </div>
-                        <div id="item-ageFrom-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.ageFrom"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-ageTo-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.ageTo"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-comment-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.comment') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.comment"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-value-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.value') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.value"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-result-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.result') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.result"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-selectN-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.selectN') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.selectN"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-select1-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.select1') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.select1"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-yesNo-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.yesNo') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.yesNo"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-document-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.document') }}
-                          </div>
-                          <div class="col-6">
-                            <Toggle
-                              v-model="item.characteristics.document"
-                              :disabled="!state.toggles['patient-history-item.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div id="item-options-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPatientHistoryItemAdmin.options') }}
-                          </div>
-                          <div class="col-6">
-                            <input
-                              type="text"
-                              class="form-control"
-                              v-model="item.characteristics.options"
-                              placeholder="Answer 1,Anwswer 2"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(item)"
-                          :disabled="!state.toggles['patient-history-item.admin.update']"
-                        >
-                          {{ $t('businessPatientHistoryItemAdmin.update') }}
-                          <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['patient-history-item.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['patient-history-item.admin.unavailable']"
-                          :no-disabled="state.toggles['patient-history-item.admin.unavailable']"
-                          @actionYes="unavailable(item)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
                       </div>
                     </div>
-                  </div>
-                  <div
-                    v-if="
-                      (!isActiveBusiness() || !state.toggles['patient-history-item.admin.read']) &&
-                      !loading
-                    "
-                  >
-                    <Message
-                      :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
-                      :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
-                    />
+                    <div
+                      v-if="
+                        (!isActiveBusiness() ||
+                          !state.toggles['patient-history-item.admin.read']) &&
+                        !loading
+                      "
+                    >
+                      <Message
+                        :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
+                        :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <div
+            v-if="
+              (!isActiveBusiness() || !state.toggles['patient-history-item.admin.view']) && !loading
+            "
+          >
+            <Message
+              :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
+              :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
+            />
+          </div>
         </div>
-        <div
-          v-if="
-            (!isActiveBusiness() || !state.toggles['patient-history-item.admin.view']) && !loading
-          "
-        >
-          <Message
-            :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
-            :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
-          />
+      </div>
+      <!-- Desktop Layout -->
+      <div class="d-none d-lg-block">
+        <div class="container-fluid">
+          <div id="page-header" class="text-center mb-3">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="false" :stack="alertError"></Alert>
+          </div>
+          <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+            <div class="col-auto desktop-logo-wrapper">
+              <div class="desktop-commerce-logo">
+                <div id="commerce-logo-desktop">
+                  <img
+                    v-if="!loading || commerce?.logo || state.business?.logo"
+                    class="rounded img-fluid logo-desktop"
+                    :alt="$t('logoAlt')"
+                    :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+              <ComponentMenu
+                :title="$t(`businessPatientHistoryItemAdmin.title`)"
+                :toggles="state.toggles"
+                component-name="businessPatientHistoryItemAdmin"
+                @goBack="goBack"
+              >
+              </ComponentMenu>
+            </div>
+          </div>
+          <div id="businessPatientHistoryItemAdmin">
+            <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
+              <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">
+                <div>
+                  <div v-if="state.items.length === 0">
+                    <Message
+                      :title="$t('businessPatientHistoryItemAdmin.message.2.title')"
+                      :content="$t('businessPatientHistoryItemAdmin.message.2.content')"
+                    />
+                  </div>
+                  <div v-if="commerce && commerce.id" class="row mb-2">
+                    <div class="col lefted">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                        @click="showAdd(item)"
+                        data-bs-toggle="modal"
+                        :data-bs-target="`#add-item`"
+                        :disabled="!state.toggles['patient-history-item.admin.add']"
+                      >
+                        <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <SearchAdminItem
+                      :business-items="state.items"
+                      :type="'items'"
+                      :receive-filtered-items="receiveFilteredItems"
+                    >
+                    </SearchAdminItem>
+                    <div v-for="(item, index) in state.filtered" :key="index" class="result-card">
+                      <div class="row">
+                        <div class="col-10">
+                          <PatientHistoryItemName :item="item"></PatientHistoryItemName>
+                        </div>
+                        <div class="col-2">
+                          <a href="#" @click.prevent="showUpdateForm(index)">
+                            <i
+                              :id="index"
+                              :class="`bi ${
+                                state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                              }`"
+                            ></i>
+                          </a>
+                        </div>
+                      </div>
+                      <div
+                        v-if="state.toggles['patient-history-item.admin.read']"
+                        :class="{ show: state.extendedEntity === index }"
+                        class="detailed-data transition-slow"
+                      >
+                        <PatientHistoryItemFormEdit
+                          :item="item"
+                          :toggles="state.toggles"
+                          :errors="{
+                            nameError: state.nameError,
+                            errorsUpdate: state.errorsUpdate,
+                          }"
+                          @update:item="item = $event"
+                        />
+                        <!-- Datos de Caracteristicas -->
+                        <div class="row g-1">
+                          <a
+                            class="nav-link subdata-title centered active"
+                            data-bs-toggle="collapse"
+                            href="#update-items"
+                          >
+                            {{ $t('businessPatientHistoryItemAdmin.characteristics') }}
+                            <i class="bi bi-chevron-down"></i>
+                          </a>
+                        </div>
+                        <div id="update-items" class="collapse row m-0">
+                          <div id="item-actual-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.actual') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.actual"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-frequency-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.frequency') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.frequency"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-ageFrom-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.ageFrom"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-ageTo-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.ageTo"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-comment-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.comment"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-value-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.value') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.value"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-result-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.result') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.result"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-selectN-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.selectN') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.selectN"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-select1-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.select1') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.select1"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-yesNo-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.yesNo') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.yesNo"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-document-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.document') }}
+                            </div>
+                            <div class="col-6">
+                              <Toggle
+                                v-model="item.characteristics.document"
+                                :disabled="!state.toggles['patient-history-item.admin.edit']"
+                              />
+                            </div>
+                          </div>
+                          <div id="item-options-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPatientHistoryItemAdmin.options') }}
+                            </div>
+                            <div class="col-6">
+                              <input
+                                type="text"
+                                class="form-control"
+                                v-model="item.characteristics.options"
+                                placeholder="Answer 1,Anwswer 2"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(item)"
+                            :disabled="!state.toggles['patient-history-item.admin.update']"
+                          >
+                            {{ $t('businessPatientHistoryItemAdmin.update') }}
+                            <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['patient-history-item.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['patient-history-item.admin.unavailable']"
+                            :no-disabled="state.toggles['patient-history-item.admin.unavailable']"
+                            @actionYes="unavailable(item)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          (!isActiveBusiness() ||
+                            !state.toggles['patient-history-item.admin.read']) &&
+                          !loading
+                        "
+                      >
+                        <Message
+                          :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
+                          :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="
+              (!isActiveBusiness() || !state.toggles['patient-history-item.admin.view']) && !loading
+            "
+          >
+            <Message
+              :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
+              :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -613,7 +928,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-item"
               class="result-card mb-4"
@@ -962,5 +1277,47 @@ export default {
   outline: none;
   border-color: rgba(0, 194, 203, 0.5);
   box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+}
+
+/* Desktop Layout Styles */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+
+  .desktop-header-row .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 60px;
+    object-fit: contain;
+  }
+
+  .desktop-header-row #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desktop-header-row .desktop-menu-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 </style>

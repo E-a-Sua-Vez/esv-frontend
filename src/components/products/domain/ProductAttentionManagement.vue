@@ -488,10 +488,7 @@ export default {
                 <div class="col-12">
                   <div class="d-flex align-items-center justify-content-between">
                     <span class="metric-card-subtitle">
-                      <span
-                        class="form-check-label metric-keyword-subtitle"
-                        @click="showFilters()"
-                      >
+                      <span class="form-check-label metric-keyword-subtitle" @click="showFilters()">
                         <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
                         <i
                           :class="`bi ${
@@ -596,14 +593,19 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info">
+            <div
+              class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
+            >
               <span class="badge bg-secondary px-2 py-1 compact-badge"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>
               <span class="badge bg-secondary px-2 py-1 compact-badge">
                 {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
               </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select compact-select" v-model="limit">
+              <select
+                class="btn btn-sm btn-light fw-bold text-dark select compact-select"
+                v-model="limit"
+              >
                 <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
                   {{ lim }}
                 </option>

@@ -69,4 +69,3 @@ export default {
   gap: 1rem;
 }
 </style>
-

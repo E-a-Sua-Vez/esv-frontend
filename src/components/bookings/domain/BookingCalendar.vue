@@ -121,11 +121,15 @@ export default {
     const { show, commerce, queues, toggles } = toRefs(props);
 
     onMounted(() => {
-      const handleClickOutside = (event) => {
+      const handleClickOutside = event => {
         if (state.showQueueSelector && !event.target.closest('.queue-badge-clickable')) {
           state.showQueueSelector = false;
         }
-        if (state.showDateSelector && !event.target.closest('.date-badge-clickable') && !event.target.closest('.date-selector-dropdown')) {
+        if (
+          state.showDateSelector &&
+          !event.target.closest('.date-badge-clickable') &&
+          !event.target.closest('.date-selector-dropdown')
+        ) {
           state.showDateSelector = false;
           dateSelectorPositioned.value = false;
         }
@@ -203,9 +207,10 @@ export default {
 
     const getBookingBlockNumber = block => {
       const result = [];
-      if (state.bookings && state.bookings.length > 0) {
+      if (state.bookings && state.bookings.length > 0 && block) {
         state.bookings.forEach(booking => {
-          if (booking.block && booking.block.blocks && booking.block.blocks.length > 0) {
+          if (!booking || !booking.block) return;
+          if (booking.block.blocks && booking.block.blocks.length > 0) {
             const hourMap = booking.block.blocks.map(block => block.hourFrom);
             if (hourMap.flat().sort((a, b) => a - b)[0] === block.hourFrom) {
               result.push(booking);
@@ -371,12 +376,12 @@ export default {
       return null;
     };
 
-    const scrollToFirstCalendar = async (queueId) => {
+    const scrollToFirstCalendar = async queueId => {
       if (!queueId) return;
       await scrollToQueueCalendar(queueId);
     };
 
-    const scrollToQueueCalendar = async (queueId) => {
+    const scrollToQueueCalendar = async queueId => {
       if (!queueId) return;
       await nextTick();
       // Wait a bit more for the calendar to render and be visible
@@ -390,14 +395,14 @@ export default {
             calendarWrapper.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
-              inline: 'nearest'
+              inline: 'nearest',
             });
           } else {
             // Fallback: scroll to the control box
             calendarBox.scrollIntoView({
               behavior: 'smooth',
               block: 'start',
-              inline: 'nearest'
+              inline: 'nearest',
             });
           }
         }
@@ -1101,25 +1106,34 @@ export default {
       await scrollToQueueCalendar(state.selectedQueue.id);
     };
 
-    const startResize = (e) => {
+    const startResize = e => {
       e.preventDefault();
       state.isResizing = true;
 
-      const handleMouseMove = (e) => {
+      const container = document.querySelector('.resizable-container');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const initialMouseX = e.clientX;
+      const initialCalendarWidth = state.calendarWidth;
+      const containerWidth = containerRect.width;
+
+      const handleMouseMove = e => {
         if (!state.isResizing) return;
 
-        const container = document.querySelector('.resizable-container');
-        if (!container) return;
+        // Calculate the difference in mouse position
+        const deltaX = e.clientX - initialMouseX;
 
-        const containerRect = container.getBoundingClientRect();
-        const mouseX = e.clientX - containerRect.left;
-        const containerWidth = containerRect.width;
-        const percentage = (mouseX / containerWidth) * 100;
+        // Convert pixel delta to percentage
+        const deltaPercentage = (deltaX / containerWidth) * 100;
+
+        // Calculate new width based on initial width + delta
+        const newWidth = initialCalendarWidth + deltaPercentage;
 
         // Constrain between min (58.33% = col-7) and max (75% = col-9)
         const minWidth = 58.33;
         const maxWidth = 75;
-        state.calendarWidth = Math.max(minWidth, Math.min(maxWidth, percentage));
+        state.calendarWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
       };
 
       const handleMouseUp = () => {
@@ -1182,7 +1196,7 @@ export default {
 
             // Calculate position - center below badge initially
             let top = badgeRect.bottom + 4;
-            let left = badgeRect.left + (badgeRect.width / 2);
+            let left = badgeRect.left + badgeRect.width / 2;
 
             // Check if dropdown would go off bottom of screen
             if (top + dropdownHeight > viewportHeight - 10) {
@@ -1190,36 +1204,36 @@ export default {
             }
 
             // Ensure dropdown doesn't go off right side
-            const rightEdge = left + (dropdownWidth / 2);
+            const rightEdge = left + dropdownWidth / 2;
             if (rightEdge > viewportWidth - 10) {
-              left = viewportWidth - (dropdownWidth / 2) - 10;
+              left = viewportWidth - dropdownWidth / 2 - 10;
             }
 
             // Position more to the left to ensure full visibility
             // Calculate optimal position - prefer left side if badge is on the right
-            const badgeCenter = badgeRect.left + (badgeRect.width / 2);
+            const badgeCenter = badgeRect.left + badgeRect.width / 2;
             const spaceOnLeft = badgeCenter;
             const spaceOnRight = viewportWidth - badgeCenter;
 
             // If there's more space on the left, position it more to the left
             if (spaceOnLeft > spaceOnRight) {
               // Position it more to the left of the badge
-              left = Math.max((dropdownWidth / 2) + 20, badgeRect.left - 50);
+              left = Math.max(dropdownWidth / 2 + 20, badgeRect.left - 50);
             }
 
             // Ensure dropdown doesn't go off left side
-            const leftEdge = left - (dropdownWidth / 2);
+            const leftEdge = left - dropdownWidth / 2;
             if (leftEdge < 20) {
-              left = (dropdownWidth / 2) + 20; // Ensure full visibility with padding
+              left = dropdownWidth / 2 + 20; // Ensure full visibility with padding
             }
 
             // Double-check both edges are within bounds
-            const finalLeftEdge = left - (dropdownWidth / 2);
-            const finalRightEdge = left + (dropdownWidth / 2);
+            const finalLeftEdge = left - dropdownWidth / 2;
+            const finalRightEdge = left + dropdownWidth / 2;
             if (finalLeftEdge < 20) {
-              left = (dropdownWidth / 2) + 20;
+              left = dropdownWidth / 2 + 20;
             } else if (finalRightEdge > viewportWidth - 20) {
-              left = viewportWidth - (dropdownWidth / 2) - 20;
+              left = viewportWidth - dropdownWidth / 2 - 20;
             }
 
             // Set position only once
@@ -1229,7 +1243,10 @@ export default {
             dropdown.style.transform = 'translateX(-50%)';
             dropdown.style.marginLeft = '0';
             dropdown.style.marginRight = '0';
-            const maxHeightPx = Math.min(viewportHeight - Math.max(10, top) - 20, viewportHeight * 0.9);
+            const maxHeightPx = Math.min(
+              viewportHeight - Math.max(10, top) - 20,
+              viewportHeight * 0.9
+            );
             dropdown.style.maxHeight = `${maxHeightPx}px`;
 
             dateSelectorPositioned.value = true;
@@ -1262,9 +1279,9 @@ export default {
       });
     };
 
-    const hasVisibleCalendars = computed(() => {
-      return state.showQueues || state.showCollaboratorQueues || state.showAllQueues;
-    });
+    const hasVisibleCalendars = computed(
+      () => state.showQueues || state.showCollaboratorQueues || state.showAllQueues
+    );
 
     const allCalendarsExpanded = computed(() => {
       if (!queues.value || queues.value.length === 0) return false;
@@ -1282,17 +1299,18 @@ export default {
       return visibleQueues.every(queue => !state.collapsedQueues.has(queue.id));
     });
 
-    const hasActiveState = computed(() => {
-      return !!(
-        (state.client && state.client.id) ||
-        state.selectedDate ||
-        (state.selectedQueue && state.selectedQueue.id) ||
-        (state.bookings && state.bookings.length > 0) ||
-        (state.waitlists && Object.keys(state.waitlists).length > 0) ||
-        state.drawerOpen ||
-        state.searchText
-      );
-    });
+    const hasActiveState = computed(
+      () =>
+        !!(
+          (state.client && state.client.id) ||
+          state.selectedDate ||
+          (state.selectedQueue && state.selectedQueue.id) ||
+          (state.bookings && state.bookings.length > 0) ||
+          (state.waitlists && Object.keys(state.waitlists).length > 0) ||
+          state.drawerOpen ||
+          state.searchText
+        )
+    );
 
     const availableQueues = computed(() => {
       if (!queues.value || queues.value.length === 0) return [];
@@ -1374,7 +1392,12 @@ export default {
       if (booking && booking.date) {
         let dateValue = booking.date;
         // Handle Firestore Timestamp
-        if (dateValue && typeof dateValue === 'object' && dateValue.toDate && typeof dateValue.toDate === 'function') {
+        if (
+          dateValue &&
+          typeof dateValue === 'object' &&
+          dateValue.toDate &&
+          typeof dateValue.toDate === 'function'
+        ) {
           dateValue = dateValue.toDate();
         }
         // Convert Date to string
@@ -1514,10 +1537,16 @@ export default {
     });
 
     watch(queues, async () => {
+      if (!commerce.value || !commerce.value.id) {
+        loading.value = false;
+        return;
+      }
       loading.value = true;
       initQueues();
       initCalendars();
-      state.locale = commerce.value.localeInfo.language;
+      if (commerce.value.localeInfo && commerce.value.localeInfo.language) {
+        state.locale = commerce.value.localeInfo.language;
+      }
       const currentDate = new Date(
         new Date(state.date || new Date()).setDate(new Date().getDate() + 1)
       )
@@ -1604,9 +1633,7 @@ export default {
             >
               <i class="bi bi-list-ul"></i>
               {{ $t('collaboratorBookingsView.queues') }}
-              <i
-                :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
-              ></i>
+              <i :class="state.showQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
             </button>
             <button
               class="queue-selector-btn"
@@ -1617,9 +1644,7 @@ export default {
               {{ $t('collaboratorBookingsView.collaboratorQueues') }}
               <i
                 :class="
-                  state.showCollaboratorQueues === true
-                    ? 'bi bi-chevron-up'
-                    : 'bi bi-chevron-down'
+                  state.showCollaboratorQueues === true ? 'bi bi-chevron-up' : 'bi bi-chevron-down'
                 "
               ></i>
             </button>
@@ -1635,10 +1660,7 @@ export default {
               ></i>
             </button>
           </div>
-            <div
-            v-if="hasVisibleCalendars"
-            class="calendar-controls"
-          >
+          <div v-if="hasVisibleCalendars" class="calendar-controls">
             <button
               class="calendar-toggle-btn"
               @click="toggleAllCalendars"
@@ -1648,20 +1670,17 @@ export default {
               <span>{{ allCalendarsExpanded ? 'Recolher todos' : 'Expandir todos' }}</span>
             </button>
           </div>
+          <div class="row g-1 mx-0 my-0" v-if="state.showQueues && queues && queues.length > 0">
             <div
-              class="row g-1 mx-0 my-0"
-              v-if="state.showQueues && queues && queues.length > 0"
+              v-for="(queue, index) in queues.filter(queue => queue.type !== 'COLLABORATOR')"
+              :key="queue.id"
+              :data-queue-id="queue.id"
+              :ref="index === 0 ? 'firstCalendarRef' : null"
+              class="control-box col-12 col-md-6 col-lg-6"
             >
-              <div
-                v-for="(queue, index) in queues.filter(queue => queue.type !== 'COLLABORATOR')"
-                :key="queue.id"
-                :data-queue-id="queue.id"
-                :ref="index === 0 ? 'firstCalendarRef' : null"
-                class="control-box col-12 col-md-6 col-lg-6"
-              >
-                <div class="">
-                  <div class="queue-select-header">
-                    <div class="queue-select">
+              <div class="">
+                <div class="queue-select-header">
+                  <div class="queue-select">
                     <QueueName
                       :queue="queue"
                       @click="selectQueue(queue)"
@@ -1669,136 +1688,133 @@ export default {
                     >
                     </QueueName>
                   </div>
-                    <button
-                      type="button"
-                      class="collapse-toggle-btn"
-                      :class="{ 'collapsed': state.collapsedQueues.has(queue.id) }"
-                      @click.stop="toggleQueueCollapse(queue.id, $event)"
-                      :aria-expanded="!state.collapsedQueues.has(queue.id)"
-                      aria-label="Toggle calendar"
-                    >
-                      <i class="bi bi-chevron-down"></i>
-                    </button>
-                  </div>
-                  <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
-                    <VDatePicker
-                      :locale="state.locale"
-                      :view="'monthly'"
-                      v-model="state.selectedDates[queue.id]"
-                      :mask="dateMask"
-                      :min-date="state.minDate"
-                      :max-date="state.maxDate"
-                      :disabled-dates="disabledDates[queue.id]"
-                      :attributes="calendarAttributes[queue.id]"
-                      @dayclick="selectDay(queue)"
-                      @transition-start="selectQueue(queue)"
-                      @did-move="getAvailableDatesByCalendarMonth"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    class="collapse-toggle-btn"
+                    :class="{ collapsed: state.collapsedQueues.has(queue.id) }"
+                    @click.stop="toggleQueueCollapse(queue.id, $event)"
+                    :aria-expanded="!state.collapsedQueues.has(queue.id)"
+                    aria-label="Toggle calendar"
+                  >
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
                 </div>
-              </div>
-            </div>
-            <div
-              class="row g-1 mx-0 my-0"
-              v-if="state.showCollaboratorQueues && queues && queues.length > 0"
-            >
-              <div
-                v-for="(queue, index) in queues.filter(queue => queue.type === 'COLLABORATOR')"
-                :key="queue.id"
-                :data-queue-id="queue.id"
-                :ref="index === 0 ? 'firstCalendarRef' : null"
-                class="control-box col-12 col-md-6 col-lg-6"
-              >
-                <div class="">
-                  <div class="queue-select-header">
-                    <div class="queue-select">
-                    <QueueName
-                      :queue="queue"
-                      @click="selectQueue(queue)"
-                      :selected="state.selectedQueue.id === queue.id"
-                    >
-                    </QueueName>
-                  </div>
-                    <button
-                      type="button"
-                      class="collapse-toggle-btn"
-                      :class="{ 'collapsed': state.collapsedQueues.has(queue.id) }"
-                      @click.stop="toggleQueueCollapse(queue.id, $event)"
-                      :aria-expanded="!state.collapsedQueues.has(queue.id)"
-                      aria-label="Toggle calendar"
-                    >
-                      <i class="bi bi-chevron-down"></i>
-                    </button>
-                  </div>
-                  <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
-                    <VDatePicker
-                      :locale="state.locale"
-                      :view="'monthly'"
-                      v-model="state.selectedDates[queue.id]"
-                      :mask="dateMask"
-                      :min-date="state.minDate"
-                      :max-date="state.maxDate"
-                      :disabled-dates="disabledDates[queue.id]"
-                      :attributes="calendarAttributes[queue.id]"
-                      @dayclick="selectDay(queue)"
-                      @transition-start="selectQueue(queue)"
-                      @did-move="getAvailableDatesByCalendarMonth"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div
-              class="row g-1 mx-0 my-0"
-              v-if="state.showAllQueues && queues && queues.length > 0"
-            >
-              <div
-                v-for="(queue, index) in queues"
-                :key="queue.id"
-                :data-queue-id="queue.id"
-                :ref="index === 0 ? 'firstCalendarRef' : null"
-                class="control-box col-12 col-md-6 col-lg-6"
-              >
-                <div class="">
-                  <div class="queue-select-header">
-                    <div class="queue-select">
-                    <QueueName
-                      :queue="queue"
-                      @click="selectQueue(queue)"
-                      :selected="state.selectedQueue.id === queue.id"
-                    >
-                    </QueueName>
-                  </div>
-                    <button
-                      type="button"
-                      class="collapse-toggle-btn"
-                      :class="{ 'collapsed': state.collapsedQueues.has(queue.id) }"
-                      @click.stop="toggleQueueCollapse(queue.id, $event)"
-                      :aria-expanded="!state.collapsedQueues.has(queue.id)"
-                      aria-label="Toggle calendar"
-                    >
-                      <i class="bi bi-chevron-down"></i>
-                    </button>
-                  </div>
-                  <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
-                    <VDatePicker
-                      :locale="state.locale"
-                      :view="'monthly'"
-                      v-model="state.selectedDates[queue.id]"
-                      :mask="dateMask"
-                      :min-date="state.minDate"
-                      :max-date="state.maxDate"
-                      :disabled-dates="disabledDates[queue.id]"
-                      :attributes="calendarAttributes[queue.id]"
-                      @dayclick="selectDay(queue)"
-                      @transition-start="selectQueue(queue)"
-                      @did-move="getAvailableDatesByCalendarMonth"
-                    />
-                  </div>
+                <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
+                  <VDatePicker
+                    :locale="state.locale"
+                    :view="'monthly'"
+                    v-model="state.selectedDates[queue.id]"
+                    :mask="dateMask"
+                    :min-date="state.minDate"
+                    :max-date="state.maxDate"
+                    :disabled-dates="disabledDates[queue.id]"
+                    :attributes="calendarAttributes[queue.id]"
+                    @dayclick="selectDay(queue)"
+                    @transition-start="selectQueue(queue)"
+                    @did-move="getAvailableDatesByCalendarMonth"
+                  />
                 </div>
               </div>
             </div>
           </div>
+          <div
+            class="row g-1 mx-0 my-0"
+            v-if="state.showCollaboratorQueues && queues && queues.length > 0"
+          >
+            <div
+              v-for="(queue, index) in queues.filter(queue => queue.type === 'COLLABORATOR')"
+              :key="queue.id"
+              :data-queue-id="queue.id"
+              :ref="index === 0 ? 'firstCalendarRef' : null"
+              class="control-box col-12 col-md-6 col-lg-6"
+            >
+              <div class="">
+                <div class="queue-select-header">
+                  <div class="queue-select">
+                    <QueueName
+                      :queue="queue"
+                      @click="selectQueue(queue)"
+                      :selected="state.selectedQueue.id === queue.id"
+                    >
+                    </QueueName>
+                  </div>
+                  <button
+                    type="button"
+                    class="collapse-toggle-btn"
+                    :class="{ collapsed: state.collapsedQueues.has(queue.id) }"
+                    @click.stop="toggleQueueCollapse(queue.id, $event)"
+                    :aria-expanded="!state.collapsedQueues.has(queue.id)"
+                    aria-label="Toggle calendar"
+                  >
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+                <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
+                  <VDatePicker
+                    :locale="state.locale"
+                    :view="'monthly'"
+                    v-model="state.selectedDates[queue.id]"
+                    :mask="dateMask"
+                    :min-date="state.minDate"
+                    :max-date="state.maxDate"
+                    :disabled-dates="disabledDates[queue.id]"
+                    :attributes="calendarAttributes[queue.id]"
+                    @dayclick="selectDay(queue)"
+                    @transition-start="selectQueue(queue)"
+                    @did-move="getAvailableDatesByCalendarMonth"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-1 mx-0 my-0" v-if="state.showAllQueues && queues && queues.length > 0">
+            <div
+              v-for="(queue, index) in queues"
+              :key="queue.id"
+              :data-queue-id="queue.id"
+              :ref="index === 0 ? 'firstCalendarRef' : null"
+              class="control-box col-12 col-md-6 col-lg-6"
+            >
+              <div class="">
+                <div class="queue-select-header">
+                  <div class="queue-select">
+                    <QueueName
+                      :queue="queue"
+                      @click="selectQueue(queue)"
+                      :selected="state.selectedQueue.id === queue.id"
+                    >
+                    </QueueName>
+                  </div>
+                  <button
+                    type="button"
+                    class="collapse-toggle-btn"
+                    :class="{ collapsed: state.collapsedQueues.has(queue.id) }"
+                    @click.stop="toggleQueueCollapse(queue.id, $event)"
+                    :aria-expanded="!state.collapsedQueues.has(queue.id)"
+                    aria-label="Toggle calendar"
+                  >
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+                <div class="mt-1 calendar-wrapper" v-show="!state.collapsedQueues.has(queue.id)">
+                  <VDatePicker
+                    :locale="state.locale"
+                    :view="'monthly'"
+                    v-model="state.selectedDates[queue.id]"
+                    :mask="dateMask"
+                    :min-date="state.minDate"
+                    :max-date="state.maxDate"
+                    :disabled-dates="disabledDates[queue.id]"
+                    :attributes="calendarAttributes[queue.id]"
+                    @dayclick="selectDay(queue)"
+                    @transition-start="selectQueue(queue)"
+                    @did-move="getAvailableDatesByCalendarMonth"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div v-else>
           <Message
             :title="$t('collaboratorBookingsView.message.1.title')"
@@ -1807,57 +1823,53 @@ export default {
         </div>
       </div>
       <!-- RESIZER BAR -->
-      <div
-        class="resizer-bar"
-        @mousedown="startResize"
-        :class="{ 'resizing': state.isResizing }"
-      >
+      <div class="resizer-bar" @mousedown="startResize" :class="{ resizing: state.isResizing }">
         <div class="resizer-handle"></div>
       </div>
       <!-- MANAGEMENT AREA -->
       <div
         class="management-area-column d-flex flex-column h-100"
-        :style="{ width: (100 - state.calendarWidth) + '%', minWidth: '25%', maxWidth: '41.67%' }"
+        :style="{ width: 100 - state.calendarWidth + '%', minWidth: '25%', maxWidth: '41.67%' }"
       >
         <div class="blocks-section">
           <div class="management-header">
-                <button
+            <button
               class="management-tab-btn"
               :class="state.showBookings360 ? 'management-tab-btn-active' : ''"
-                  @click="showBookings360"
-                >
-                  <i class="bi bi-calendar-fill"></i>
-                  {{ $t('collaboratorBookingsView.agenda') }}
-                </button>
-                <button
+              @click="showBookings360"
+            >
+              <i class="bi bi-calendar-fill"></i>
+              {{ $t('collaboratorBookingsView.agenda') }}
+            </button>
+            <button
               class="management-tab-btn"
               :class="state.showClients360 ? 'management-tab-btn-active' : ''"
-                  @click="showClients360"
-                >
-                  <i class="bi bi-person-fill"></i>
-                  {{ $t('collaboratorBookingsView.clientes') }}
-                </button>
+              @click="showClients360"
+            >
+              <i class="bi bi-person-fill"></i>
+              {{ $t('collaboratorBookingsView.clientes') }}
+            </button>
           </div>
           <!-- AGENDA 360 -->
           <div v-if="state.showBookings360" class="agenda-content-wrapper">
             <div class="hours-section">
-            <div class="sticky-top-2">
+              <div class="sticky-top-2">
                 <div class="hours-header">
-                <i class="bi bi-hourglass-split"></i>
+                  <i class="bi bi-hourglass-split"></i>
                   <h6 class="hours-title">{{ $t('collaboratorBookingsView.hours') }}</h6>
-              </div>
+                </div>
                 <div class="selected-info-grid">
                   <div class="selected-info-item">
                     <div class="selected-info-label">
-                    {{ $t('commerceQueuesView.queueSelected') }}
-                  </div>
+                      {{ $t('commerceQueuesView.queueSelected') }}
+                    </div>
                     <div
                       class="selected-info-badge selected-queue-badge queue-badge-clickable"
                       @click="state.showQueueSelector = !state.showQueueSelector"
-                      style="cursor: pointer; position: relative;"
+                      style="cursor: pointer; position: relative"
                     >
                       {{ state.selectedQueue.name || 'N/I' }}
-                      <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem;"></i>
+                      <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i>
                       <div
                         v-if="state.showQueueSelector && availableQueues.length > 0"
                         class="queue-selector-dropdown"
@@ -1867,7 +1879,9 @@ export default {
                           v-for="queue in availableQueues"
                           :key="queue.id"
                           class="queue-selector-item"
-                          :class="{ 'queue-selector-item-active': state.selectedQueue.id === queue.id }"
+                          :class="{
+                            'queue-selector-item-active': state.selectedQueue.id === queue.id,
+                          }"
                           @click="selectQueue(queue)"
                         >
                           <i class="bi bi-person-lines-fill"></i>
@@ -1875,21 +1889,29 @@ export default {
                         </div>
                       </div>
                     </div>
-                </div>
+                  </div>
                   <div class="selected-info-item">
                     <div class="selected-info-label">
-                    {{ $t('commerceQueuesView.dataSelected') }}
-                  </div>
+                      {{ $t('commerceQueuesView.dataSelected') }}
+                    </div>
                     <div
                       class="selected-info-badge selected-date-badge date-badge-clickable"
                       @click="openDateSelector"
-                      :class="{ 'date-badge-disabled': !state.selectedQueue || !state.selectedQueue.id }"
-                      style="cursor: pointer; position: relative;"
+                      :class="{
+                        'date-badge-disabled': !state.selectedQueue || !state.selectedQueue.id,
+                      }"
+                      style="cursor: pointer; position: relative"
                     >
                       {{ formattedDate(state.selectedDate) || 'N/I' }}
-                      <i v-if="state.selectedQueue && state.selectedQueue.id" class="bi bi-chevron-down ms-1" style="font-size: 0.7rem;"></i>
+                      <i
+                        v-if="state.selectedQueue && state.selectedQueue.id"
+                        class="bi bi-chevron-down ms-1"
+                        style="font-size: 0.7rem"
+                      ></i>
                       <div
-                        v-if="state.showDateSelector && state.selectedQueue && state.selectedQueue.id"
+                        v-if="
+                          state.showDateSelector && state.selectedQueue && state.selectedQueue.id
+                        "
                         ref="dateSelectorRef"
                         class="date-selector-dropdown"
                         @click.stop
@@ -1914,50 +1936,50 @@ export default {
                         </div>
                       </div>
                     </div>
+                  </div>
                 </div>
-              </div>
                 <div class="hours-divider"></div>
               </div>
               <div id="subMenu" class="hours-tabs">
-                  <button
-                    class="hours-tab-btn"
-                    :class="state.showBooking ? 'hours-tab-btn-active' : ''"
-                    @click="showBookings()"
-                    :disabled="!state.selectedQueue || !state.selectedDate"
-                  >
-                    <i class="bi bi-calendar-check-fill"></i>
-                    <span>{{ $t('collaboratorBookingsView.bookings') }}</span>
-                  </button>
-                  <button
-                    class="hours-tab-btn"
-                    :class="state.showWaitlist ? 'hours-tab-btn-active' : ''"
-                    @click="showWaitlists()"
-                    :disabled="!state.selectedQueue.id || !state.selectedDate"
-                  >
-                    <i class="bi bi-calendar-heart-fill"></i>
-                    <span>{{ $t('collaboratorBookingsView.waitlists') }}</span>
-                  </button>
-            </div>
+                <button
+                  class="hours-tab-btn"
+                  :class="state.showBooking ? 'hours-tab-btn-active' : ''"
+                  @click="showBookings()"
+                  :disabled="!state.selectedQueue || !state.selectedDate"
+                >
+                  <i class="bi bi-calendar-check-fill"></i>
+                  <span>{{ $t('collaboratorBookingsView.bookings') }}</span>
+                </button>
+                <button
+                  class="hours-tab-btn"
+                  :class="state.showWaitlist ? 'hours-tab-btn-active' : ''"
+                  @click="showWaitlists()"
+                  :disabled="!state.selectedQueue.id || !state.selectedDate"
+                >
+                  <i class="bi bi-calendar-heart-fill"></i>
+                  <span>{{ $t('collaboratorBookingsView.waitlists') }}</span>
+                </button>
+              </div>
               <!-- ATENCIONES -->
               <div v-if="state.showAttentions">
                 <div class="hours-actions">
-                    <button
+                  <button
                     class="hours-action-btn"
-                      @click="updatedAttentions()"
-                      :disabled="!state.selectedQueue.id"
-                    >
-                      <i class="bi bi-arrow-counterclockwise"></i>
+                    @click="updatedAttentions()"
+                    :disabled="!state.selectedQueue.id"
+                  >
+                    <i class="bi bi-arrow-counterclockwise"></i>
                     <span>{{ $t('collaboratorBookingsView.update') }}</span>
-                    </button>
-                    <button
+                  </button>
+                  <button
                     class="hours-action-btn hours-action-btn-primary"
-                      @click="gotToAttendQueue()"
-                      :disabled="!state.selectedQueue.id"
-                    >
-                      <i class="bi bi-arrow-up-right-circle"></i>
+                    @click="gotToAttendQueue()"
+                    :disabled="!state.selectedQueue.id"
+                  >
+                    <i class="bi bi-arrow-up-right-circle"></i>
                     <span>{{ $t('collaboratorBookingsView.attendQueue') }}</span>
-                    </button>
-                  </div>
+                  </button>
+                </div>
                 <div class="hours-count-badge">
                   <span class="hours-count-text">
                     {{ $t('collaboratorBookingsView.listResult') }} {{ state.attentions.length }}
@@ -2006,18 +2028,22 @@ export default {
                   <div v-if="state.bookings && state.bookings.length > 0">
                     <div v-for="block in state.blocks" :key="block.number">
                       <div class="metric-card">
-                          <span
+                        <span
                           class="lefted badge hour-title"
-                            :class="
-                              state.bookingsActiveBlocks.includes(block.hourFrom)
-                                ? 'bg-primary'
-                                : 'bg-success'
-                            "
-                          >
-                            {{ block.hourFrom }}
-                          </span>
-                        <div v-for="booking in getBookingBlockNumber(block)" :key="booking.id">
+                          :class="
+                            state.bookingsActiveBlocks.includes(block.hourFrom)
+                              ? 'bg-primary'
+                              : 'bg-success'
+                          "
+                        >
+                          {{ block.hourFrom }}
+                        </span>
+                        <div
+                          v-for="booking in getBookingBlockNumber(block)"
+                          :key="booking?.id || Math.random()"
+                        >
                           <BookingDetailsCard
+                            v-if="booking && booking.id"
                             :booking="booking"
                             :show="true"
                             :details-opened="false"
@@ -2044,9 +2070,7 @@ export default {
                   >
                     <div v-for="block in state.blocks" :key="block.number">
                       <div class="metric-card">
-                        <span
-                          class="lefted badge hour-title bg-success"
-                        >
+                        <span class="lefted badge hour-title bg-success">
                           {{ block.hourFrom }}</span
                         >
                       </div>
@@ -2112,9 +2136,11 @@ export default {
           <div v-if="state.showClients360">
             <div class="client-search-section">
               <div class="client-search-header">
-              <i class="bi bi-search"></i>
-                <h6 class="client-search-title">{{ $t('collaboratorBookingsView.searchClient') }}</h6>
-            </div>
+                <i class="bi bi-search"></i>
+                <h6 class="client-search-title">
+                  {{ $t('collaboratorBookingsView.searchClient') }}
+                </h6>
+              </div>
               <div class="client-search-input-group">
                 <input
                   min="1"
@@ -2125,21 +2151,13 @@ export default {
                   v-bind:class="{ 'is-invalid': state.searchTextError }"
                   :placeholder="$t('dashboard.search2')"
                 />
-                <button
-                  class="client-search-btn"
-                  @click="searchClient()"
-                  title="Pesquisar"
-                >
+                <button class="client-search-btn" @click="searchClient()" title="Pesquisar">
                   <i class="bi bi-search"></i>
                 </button>
-                <button
-                  class="client-clear-btn"
-                  @click="clearClient()"
-                  title="Limpar"
-                >
+                <button class="client-clear-btn" @click="clearClient()" title="Limpar">
                   <i class="bi bi-eraser-fill"></i>
                 </button>
-            </div>
+              </div>
               <Spinner :show="loadingSearch"> </Spinner>
               <div class="client-search-errors" v-if="state.errorsSearch.length > 0">
                 <Warning>
@@ -2151,19 +2169,19 @@ export default {
                 </Warning>
               </div>
               <div v-if="state.client && state.client.id" class="client-details-wrapper">
-                  <ClientDetailsCard
-                    :show="true"
-                    :client="state.client"
-                    :commerce="commerce"
-                    :toggles="toggles"
-                    :start-date="undefined"
-                    :end-date="undefined"
-                    :queues="queues"
-                    :commerces="[commerce]"
-                    :management="false"
-                  >
-                  </ClientDetailsCard>
-                </div>
+                <ClientDetailsCard
+                  :show="true"
+                  :client="state.client"
+                  :commerce="commerce"
+                  :toggles="toggles"
+                  :start-date="undefined"
+                  :end-date="undefined"
+                  :queues="queues"
+                  :commerces="[commerce]"
+                  :management="false"
+                >
+                </ClientDetailsCard>
+              </div>
               <div v-if="!state.client" class="client-empty-state">
                 <Message
                   :icon="'bi-search'"
@@ -2173,72 +2191,73 @@ export default {
               </div>
             </div>
             <div class="client-actions">
-              <button class="client-action-btn client-action-btn-icon" @click="copyLink()" title="Copiar link">
+              <button
+                class="client-action-btn client-action-btn-icon"
+                @click="copyLink()"
+                title="Copiar link"
+              >
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </button>
-                  <button
+              <button class="client-action-btn" @click="goToCreateBooking()">
+                <i class="bi bi-box-arrow-up-right"></i>
+                {{ $t('collaboratorBookingsView.create') }}
+              </button>
+              <button
                 class="client-action-btn"
-                    @click="goToCreateBooking()"
-                  >
-                    <i class="bi bi-box-arrow-up-right"></i>
-                    {{ $t('collaboratorBookingsView.create') }}
-                  </button>
-                  <button
-                class="client-action-btn"
-                    @click="showMyBookings()"
-                    :disabled="!state.searchText"
-                  >
-                    <i class="bi bi-calendar-check-fill"></i>
-                    {{ $t('collaboratorBookingsView.myBookings') }}
-                    <i
-                      :class="`bi ${
-                        state.extendedBookingsEntity ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </button>
-                </div>
+                @click="showMyBookings()"
+                :disabled="!state.searchText"
+              >
+                <i class="bi bi-calendar-check-fill"></i>
+                {{ $t('collaboratorBookingsView.myBookings') }}
+                <i
+                  :class="`bi ${
+                    state.extendedBookingsEntity ? 'bi-chevron-up' : 'bi-chevron-down'
+                  }`"
+                ></i>
+              </button>
+            </div>
             <div v-if="state.extendedBookingsEntity">
-                <div v-if="state.clientBookings && state.clientBookings.length > 0">
+              <div v-if="state.clientBookings && state.clientBookings.length > 0">
                 <span class="fw-bold h6">
-                    <i class="bi bi-calendar"></i>
+                  <i class="bi bi-calendar"></i>
                   {{ $t('collaboratorBookingsView.myBookings') }}</span
                 >
                 <div class="my-2">
                   <span class="badge bg-secondary px-3 py-2 m-1 hour-title"
                     >{{ $t('collaboratorBookingsView.listResult') }}
-                      {{ state.clientBookings.length }}
-                    </span>
-                  </div>
+                    {{ state.clientBookings.length }}
+                  </span>
+                </div>
                 <div v-for="booking in state.clientBookings" :key="booking.id">
-                        <BookingDetailsCard
-                          :booking="booking"
-                          :show="true"
-                          :details-opened="false"
-                          :toggles="toggles"
-                          :commerce="commerce"
-                          :queues="queues"
-                          :disabled-dates="disabledDates"
-                          :calendar-attributes="calendarAttributes"
-                          :grouped-queues="state.groupedQueues"
-                          :drawer-mode="true"
-                          @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
-                          @open-drawer="openBookingDrawer"
-                        >
-                        </BookingDetailsCard>
-                      </div>
+                  <BookingDetailsCard
+                    :booking="booking"
+                    :show="true"
+                    :details-opened="false"
+                    :toggles="toggles"
+                    :commerce="commerce"
+                    :queues="queues"
+                    :disabled-dates="disabledDates"
+                    :calendar-attributes="calendarAttributes"
+                    :grouped-queues="state.groupedQueues"
+                    :drawer-mode="true"
+                    @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
+                    @open-drawer="openBookingDrawer"
+                  >
+                  </BookingDetailsCard>
+                </div>
                 <hr />
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('collaboratorBookingsView.message.2.title')"
-                    :content="$t('collaboratorBookingsView.message.2.content')"
-                  />
-                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :title="$t('collaboratorBookingsView.message.2.title')"
+                  :content="$t('collaboratorBookingsView.message.2.content')"
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     <div v-if="hasActiveState" class="modal-footer modal-footer-fixed">
       <div class="w-100 d-flex justify-content-center">
         <button
@@ -2393,7 +2412,6 @@ export default {
   min-height: 0;
 }
 
-
 .resizer-bar {
   width: 1px;
   background: rgba(0, 0, 0, 0.1);
@@ -2433,7 +2451,6 @@ export default {
   background: var(--azul-turno);
   width: 2px;
 }
-
 
 .blocks-section {
   display: flex;
@@ -3480,7 +3497,6 @@ export default {
   padding: 1.25rem;
   background: #f8f9fa;
 }
-
 
 .booking-drawer-body::-webkit-scrollbar {
   width: 8px;

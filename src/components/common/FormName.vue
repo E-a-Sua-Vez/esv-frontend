@@ -16,9 +16,7 @@ export default {
       return this.active === true ? 'icon-success' : 'icon-error';
     },
     statusTooltip() {
-      return this.active === true
-        ? 'Formulário ativo'
-        : 'Formulário inativo';
+      return this.active === true ? 'Formulário ativo' : 'Formulário inativo';
     },
   },
 };

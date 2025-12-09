@@ -170,197 +170,206 @@ export default {
 </script>
 
 <template>
-  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
-  <slot
-    v-if="filtersLocation === 'slot'"
-    name="filters-exposed"
-    :clear="clear"
-    :refresh="refresh"
-    :queue-id="queueId"
-    :queues="queues"
-    :loading="loading"
-  ></slot>
+  <div>
+    <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+    <slot
+      v-if="filtersLocation === 'slot'"
+      name="filters-exposed"
+      :clear="clear"
+      :refresh="refresh"
+      :queue-id="queueId"
+      :queues="queues"
+      :loading="loading"
+    ></slot>
 
-  <div
-    id="surveys-result"
-    class="row"
-    v-if="showSurveyResults === true && toggles['dashboard.surveys.view']"
-  >
-    <div>
-      <SimpleDownloadCard
-        :download="toggles['dashboard.reports.surveys'] && surveys.length > 0"
-        :title="$t('dashboard.reports.surveys.title')"
-        :show-tooltip="true"
-        :description="$t('dashboard.reports.surveys.description')"
-        :icon="'bi-file-earmark-pdf'"
-        @download="exportToPDF"
-        :can-download="toggles['dashboard.reports.surveys'] === true"
-      ></SimpleDownloadCard>
-      <Spinner :show="loading"></Spinner>
-      <!-- Filters Section - Can be shown in component or exposed via slot -->
-      <div
-        class="my-2 row metric-card"
-        v-if="filtersLocation === 'component' && queues && queues.length >= 1"
-      >
-        <div class="col-12">
-          <span class="metric-card-subtitle">
-            <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
-              <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-              <i
-                :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-              ></i>
-            </span>
-          </span>
-          <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2" @click="clear()">
-            <span><i class="bi bi-eraser-fill"></i></span>
-          </button>
-        </div>
-        <div v-if="showFilterOptions">
-          <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length >= 1">
-            <label class="metric-card-subtitle mx-2" for="select-queue">
-              {{ $t('dashboard.queue') }}
-            </label>
-            <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
-              <option v-for="queue in queues" :key="queue.name" :value="queue.id" id="select-queue">
-                {{ queue.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div id="survey-component">
-        <PDFHeader
-          :show="toggles['dashboard.reports.surveys']"
+    <div
+      id="surveys-result"
+      class="row"
+      v-if="showSurveyResults === true && toggles['dashboard.surveys.view']"
+    >
+      <div>
+        <SimpleDownloadCard
+          :download="toggles['dashboard.reports.surveys'] && surveys.length > 0"
           :title="$t('dashboard.reports.surveys.title')"
-          :start-date="startDate"
-          :end-date="endDate"
-          :commerce="commerce"
+          :show-tooltip="true"
+          :description="$t('dashboard.reports.surveys.description')"
+          :icon="'bi-file-earmark-pdf'"
+          @download="exportToPDF"
+          :can-download="toggles['dashboard.reports.surveys'] === true"
+        ></SimpleDownloadCard>
+        <Spinner :show="loading"></Spinner>
+        <!-- Filters Section - Can be shown in component or exposed via slot -->
+        <div
+          class="my-2 row metric-card"
+          v-if="filtersLocation === 'component' && queues && queues.length >= 1"
         >
-        </PDFHeader>
-        <div v-if="surveys && surveys.length > 0">
-          <div id="csat-view" class="row">
-            <div class="col">
-              <DetailsCard
-                :show="toggles['dashboard.attention-rating-avg.view']"
-                :data="metrics['survey.created'].prom_rating || 0"
-                :subdata="metrics['survey.created'].count_rating || 0"
-                :title="$t('dashboard.items.attentions.3')"
-                :show-tooltip="true"
-                :description="$t('dashboard.rating')"
-                :icon="'bi-star-fill'"
-                :icon-style-class="'yellow-icon'"
-                :details-opened="detailsOpened"
-              >
-                <template v-slot:details>
-                  <AttentionRatingDetails
-                    :show="toggles['dashboard.attention-rating-avg.view']"
-                    :count="metrics['survey.created'].count_rating || 0"
-                    :min="metrics['survey.created']['min'].rating || 0"
-                    :max="metrics['survey.created']['max'].rating || 0"
-                    :messages="metrics['survey.created']['messages']"
-                    :score="metrics['survey.created']['csatScore'] || []"
-                    :limit="5"
-                  >
-                  </AttentionRatingDetails>
-                </template>
-              </DetailsCard>
-            </div>
-          </div>
-          <div id="nps-view" class="row">
-            <div class="col">
-              <DetailsCard
-                :show="toggles['dashboard.attention-nps-avg.view']"
-                :data="metrics['survey.created'].nps"
-                :subdata="metrics['survey.created'].count_nps"
-                :title="$t('dashboard.items.attentions.24')"
-                :show-tooltip="true"
-                :description="$t('dashboard.nps.description')"
-                :icon="'bi-megaphone-fill'"
-                :icon-style-class="'orange-icon'"
-                :details-opened="detailsOpened"
-              >
-                <template v-slot:details>
-                  <AttentionNPSDetails
-                    :show="toggles['dashboard.attention-nps-avg.view']"
-                    :min="metrics['survey.created']['min'].nps"
-                    :max="metrics['survey.created']['max'].nps"
-                    :score="metrics['survey.created']['npsScore']"
-                    :distribution="metrics['survey.created']['npsDistribution']"
-                    :count="metrics['survey.created'].count_nps"
-                    :limit="10"
-                  >
-                  </AttentionNPSDetails>
-                </template>
-              </DetailsCard>
-            </div>
-          </div>
-          <div id="keywords-view" class="row">
-            <div class="col">
-              <AttentionQuestionKeyWords :calculated-metrics="metrics" :show="true">
-              </AttentionQuestionKeyWords>
-            </div>
-          </div>
-          <div
-            id="questions-view"
-            v-for="(question, index) in surveys"
-            :key="`question.${index}`"
-            class="metric-card"
-          >
-            <span class="metric-card-title">
-              {{ question.title }}
-              <span class="badge bg-dark metric-card-subtitle mx-2"> {{ question.counter }} </span>
+          <div class="col-12">
+            <span class="metric-card-subtitle">
+              <span class="form-check-label metric-keyword-subtitle mx-1" @click="showFilters()">
+                <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                <i
+                  :class="`bi ${showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                ></i>
+              </span>
             </span>
-            <div v-if="question.type === 'RATING_TO_5'">
-              <AttentionQuestionRatingTo5 :question="question" :show="true">
-              </AttentionQuestionRatingTo5>
-            </div>
-            <div v-else-if="question.type === 'RATING_TO_10'">
-              <AttentionQuestionRatingTo10 :question="question" :show="true">
-              </AttentionQuestionRatingTo10>
-            </div>
-            <div v-else-if="question.type === 'YES_OR_NOT'">
-              <AttentionQuestionYesOrNot :question="question" :show="true">
-              </AttentionQuestionYesOrNot>
-            </div>
-            <div v-else-if="question.type === 'CHOOSE_OPTION'">
-              <AttentionQuestionChooseOption :question="question" :show="true">
-              </AttentionQuestionChooseOption>
-            </div>
-            <div v-else-if="question.type === 'OPEN_OPTIONS'">
-              <AttentionQuestionOpenOptions :question="question" :show="true">
-              </AttentionQuestionOpenOptions>
-            </div>
-            <div v-else-if="question.type === 'OPEN_WRITING'">
-              <AttentionQuestionOpenWriting
-                :show="true"
-                :question="question"
-                :start-date="startDate"
-                :end-date="endDate"
-                :details-opened="detailsOpened"
-                :toggles="toggles"
-                :commerce="commerce"
-              >
-              </AttentionQuestionOpenWriting>
+            <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2" @click="clear()">
+              <span><i class="bi bi-eraser-fill"></i></span>
+            </button>
+          </div>
+          <div v-if="showFilterOptions">
+            <div class="col-12 col-md my-1 filter-card" v-if="queues && queues.length >= 1">
+              <label class="metric-card-subtitle mx-2" for="select-queue">
+                {{ $t('dashboard.queue') }}
+              </label>
+              <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="queueId">
+                <option
+                  v-for="queue in queues"
+                  :key="queue.name"
+                  :value="queue.id"
+                  id="select-queue"
+                >
+                  {{ queue.name }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
-        <div v-else>
-          <Message
-            :icon="'bi-graph-up-arrow'"
-            :title="$t('dashboard.message.2.title')"
-            :content="$t('dashboard.message.2.content')"
-          />
+        <div id="survey-component">
+          <PDFHeader
+            :show="toggles['dashboard.reports.surveys']"
+            :title="$t('dashboard.reports.surveys.title')"
+            :start-date="startDate"
+            :end-date="endDate"
+            :commerce="commerce"
+          >
+          </PDFHeader>
+          <div v-if="surveys && surveys.length > 0">
+            <div id="csat-view" class="row">
+              <div class="col">
+                <DetailsCard
+                  :show="toggles['dashboard.attention-rating-avg.view']"
+                  :data="metrics['survey.created'].prom_rating || 0"
+                  :subdata="metrics['survey.created'].count_rating || 0"
+                  :title="$t('dashboard.items.attentions.3')"
+                  :show-tooltip="true"
+                  :description="$t('dashboard.rating')"
+                  :icon="'bi-star-fill'"
+                  :icon-style-class="'yellow-icon'"
+                  :details-opened="detailsOpened"
+                >
+                  <template v-slot:details>
+                    <AttentionRatingDetails
+                      :show="toggles['dashboard.attention-rating-avg.view']"
+                      :count="metrics['survey.created'].count_rating || 0"
+                      :min="metrics['survey.created']['min'].rating || 0"
+                      :max="metrics['survey.created']['max'].rating || 0"
+                      :messages="metrics['survey.created']['messages']"
+                      :score="metrics['survey.created']['csatScore'] || []"
+                      :limit="5"
+                    >
+                    </AttentionRatingDetails>
+                  </template>
+                </DetailsCard>
+              </div>
+            </div>
+            <div id="nps-view" class="row">
+              <div class="col">
+                <DetailsCard
+                  :show="toggles['dashboard.attention-nps-avg.view']"
+                  :data="metrics['survey.created'].nps"
+                  :subdata="metrics['survey.created'].count_nps"
+                  :title="$t('dashboard.items.attentions.24')"
+                  :show-tooltip="true"
+                  :description="$t('dashboard.nps.description')"
+                  :icon="'bi-megaphone-fill'"
+                  :icon-style-class="'orange-icon'"
+                  :details-opened="detailsOpened"
+                >
+                  <template v-slot:details>
+                    <AttentionNPSDetails
+                      :show="toggles['dashboard.attention-nps-avg.view']"
+                      :min="metrics['survey.created']['min'].nps"
+                      :max="metrics['survey.created']['max'].nps"
+                      :score="metrics['survey.created']['npsScore']"
+                      :distribution="metrics['survey.created']['npsDistribution']"
+                      :count="metrics['survey.created'].count_nps"
+                      :limit="10"
+                    >
+                    </AttentionNPSDetails>
+                  </template>
+                </DetailsCard>
+              </div>
+            </div>
+            <div id="keywords-view" class="row">
+              <div class="col">
+                <AttentionQuestionKeyWords :calculated-metrics="metrics" :show="true">
+                </AttentionQuestionKeyWords>
+              </div>
+            </div>
+            <div
+              id="questions-view"
+              v-for="(question, index) in surveys"
+              :key="`question.${index}`"
+              class="metric-card"
+            >
+              <span class="metric-card-title">
+                {{ question.title }}
+                <span class="badge bg-dark metric-card-subtitle mx-2">
+                  {{ question.counter }}
+                </span>
+              </span>
+              <div v-if="question.type === 'RATING_TO_5'">
+                <AttentionQuestionRatingTo5 :question="question" :show="true">
+                </AttentionQuestionRatingTo5>
+              </div>
+              <div v-else-if="question.type === 'RATING_TO_10'">
+                <AttentionQuestionRatingTo10 :question="question" :show="true">
+                </AttentionQuestionRatingTo10>
+              </div>
+              <div v-else-if="question.type === 'YES_OR_NOT'">
+                <AttentionQuestionYesOrNot :question="question" :show="true">
+                </AttentionQuestionYesOrNot>
+              </div>
+              <div v-else-if="question.type === 'CHOOSE_OPTION'">
+                <AttentionQuestionChooseOption :question="question" :show="true">
+                </AttentionQuestionChooseOption>
+              </div>
+              <div v-else-if="question.type === 'OPEN_OPTIONS'">
+                <AttentionQuestionOpenOptions :question="question" :show="true">
+                </AttentionQuestionOpenOptions>
+              </div>
+              <div v-else-if="question.type === 'OPEN_WRITING'">
+                <AttentionQuestionOpenWriting
+                  :show="true"
+                  :question="question"
+                  :start-date="startDate"
+                  :end-date="endDate"
+                  :details-opened="detailsOpened"
+                  :toggles="toggles"
+                  :commerce="commerce"
+                >
+                </AttentionQuestionOpenWriting>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <Message
+              :icon="'bi-graph-up-arrow'"
+              :title="$t('dashboard.message.2.title')"
+              :content="$t('dashboard.message.2.content')"
+            />
+          </div>
+          <PDFFooter :show="toggles['dashboard.reports.surveys']"></PDFFooter>
         </div>
-        <PDFFooter :show="toggles['dashboard.reports.surveys']"></PDFFooter>
       </div>
     </div>
-  </div>
-  <div v-if="showSurveyResults === true && !toggles['dashboard.surveys.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showSurveyResults === true && !toggles['dashboard.surveys.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 

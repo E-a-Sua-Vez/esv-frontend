@@ -4,6 +4,46 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
+// Plugin to fix html2pdf.js jsPDF dependency issue
+// html2pdf.js is bundled with webpack and tries to require('jspdf') during initialization
+// This plugin intercepts that require and provides jsPDF from window.jsPDF
+const html2pdfFixPlugin = () => ({
+  name: 'html2pdf-jsPDF-fix',
+  enforce: 'pre',
+  resolveId(source) {
+    // Intercept when html2pdf.js (or any module) tries to resolve 'jspdf'
+    if (source === 'jspdf') {
+      // Return a virtual module that provides jsPDF from window
+      return '\0virtual:jspdf-for-html2pdf';
+    }
+    return null;
+  },
+  load(id) {
+    // Provide jsPDF from window when html2pdf.js tries to load it
+    if (id === '\0virtual:jspdf-for-html2pdf') {
+      return `
+        // Provide jsPDF from window for html2pdf.js compatibility
+        if (typeof window !== 'undefined' && window.jsPDF) {
+          const jsPDF = window.jsPDF;
+          export default jsPDF;
+          export { jsPDF };
+        } else {
+          // Fallback: try to import it
+          import('jspdf').then(module => {
+            const jsPDF = module.default || module.jsPDF || module;
+            if (typeof window !== 'undefined') {
+              window.jsPDF = jsPDF;
+            }
+            return jsPDF;
+          });
+          throw new Error('jsPDF not available. Please ensure jspdf is loaded before html2pdf.js');
+        }
+      `;
+    }
+    return null;
+  },
+});
+
 export default defineConfig(({ mode }) =>
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
@@ -14,10 +54,13 @@ export default defineConfig(({ mode }) =>
       VueI18nPlugin({
         include: resolve(dirname(fileURLToPath(import.meta.url)), './src/locales/**'),
       }),
+      html2pdfFixPlugin(),
     ],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+        // Ensure jspdf can be resolved when html2pdf.js looks for it
+        jspdf: 'jspdf',
       },
       extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     },
@@ -106,7 +149,7 @@ export default defineConfig(({ mode }) =>
     },
     // Optimize dependencies
     optimizeDeps: {
-      include: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+      include: ['vue', 'vue-router', 'pinia', 'vue-i18n', 'jspdf'],
       exclude: ['html2pdf.js'], // Exclude from pre-bundling, load on demand
     },
     envDir: 'br',

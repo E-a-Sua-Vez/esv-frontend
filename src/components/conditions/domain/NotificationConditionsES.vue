@@ -21,9 +21,9 @@ export default {
     </p>
     <p>Esta Política de privacidad se aplica a nuestro sitio web, estuturno.app y sus subdominios asociados (colectivamente, nuestro "Servicio") junto con nuestra aplicación, Es tu Turno. Al acceder o utilizar nuestro Servicio, usted indica que ha leído, comprendido y aceptado nuestra recopilación, almacenamiento, uso y divulgación de su información personal como se describe en esta Política de privacidad y en nuestros Términos de servicio.</p>
     <h5>Definiciones y Términos Clave</h5>
-    <p>Para ayudar a explicar las cosas de la manera más clara posible en esta Política de privacidad, cada vez que se hace referencia a cualquiera de estos términos, se definen estrictamente como:
+    <p>Para ayudar a explicar las cosas de la manera más clara posible en esta Política de privacidad, cada vez que se hace referencia a cualquiera de estos términos, se definen estrictamente como:</p>
     <ul>
-    <li>Cookie: pequeña cantidad de datos generados por un sitio web y guardados por su navegador web. Se utiliza para identificar su navegador, proporcionar análisis, recordar información sobre usted, como su preferencia de idioma o información de inicio de sesión.</li>
+    <li>Cookie: pequeña cantidad de datos generados por un sitio web y guardados por su navegador web. Se utiliza para identificar su navegador, proporcionar análisis, recordar información sobre usted, como su preferencia de idioma o información de inicio de sesión.</li>
     <li>Compañía: cuando esta política menciona "Compañía", "nosotros", "nos" o "nuestro", se refiere a Es tu Turno (Guardia Vieja 202, Providencia), que es responsable de su información en virtud de esta Política de privacidad.</li>
     <li>Plataforma: sitio web de Internet, aplicación web o aplicación digital de cara al público de Es tu Turno.</li>
     <li>País: donde se encuentra Es tu Turno o los propietarios / fundadores de Es tu Turno, en este caso es VE</li>
@@ -37,7 +37,6 @@ export default {
     <li>Sitio web: el sitio de Es tu Turno, al que se puede acceder a través de esta URL: estuturno.app </li>
     <li>Usted: una persona o entidad que está registrada con Es tu Turno para utilizar los Servicios.</li>
     </ul>
-    </p>
     <h5>¿Qué información recopilamos?</h5>
     <p>Recopilamos información suya cuando visita nuestra plataforma, se registra en nuestro sitio, realiza un pedido, se suscribe a nuestro boletín, responde a una encuesta o completa un formulario.</p>
     <ul><li>Nombre / nombre de usuario</li><li>Números de teléfono</li><li>Correos electrónicos</li><li>Direcciones de correo</li><li>Direcciones de facturación</li><li>Edad</li><li>Contraseña</li>

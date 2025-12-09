@@ -1,5 +1,14 @@
 <script>
-import { ref, reactive, onBeforeMount, watch, computed, onMounted, onBeforeUnmount } from 'vue';
+import {
+  ref,
+  reactive,
+  onBeforeMount,
+  watch,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+} from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
@@ -10,11 +19,13 @@ import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import LocaleSelector from './LocaleSelector.vue';
+import CommerceSelector from './CommerceSelector.vue';
+import ModuleSelector from './ModuleSelector.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import MyUser from '../domain/MyUser.vue';
 
 export default {
-  components: { LocaleSelector, Spinner, MyUser },
+  components: { LocaleSelector, CommerceSelector, ModuleSelector, Spinner, MyUser },
   name: 'Header',
   async setup() {
     const router = useRouter();
@@ -60,10 +71,158 @@ export default {
       currentUser: {},
       currentBusiness: {},
       currentCommerce: {},
+      currentModule: {},
       messages: [],
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
     });
+
+    // Computed properties to determine if selectors should be shown (based on store state)
+    // This avoids the chicken-and-egg problem of needing refs when menu is closed
+    const availableCommerces = ref([]);
+    const availableModules = ref([]);
+
+    // Flags to prevent concurrent API calls
+    const loadingCommerces = ref(false);
+    const loadingModules = ref(false);
+    const lastCommerceId = ref(null);
+    const lastBusinessId = ref(null);
+
+    // Load available commerces for business/master users
+    const loadAvailableCommerces = async () => {
+      // Prevent concurrent calls
+      if (loadingCommerces.value) return;
+
+      const businessId = state.currentBusiness?.id;
+      // Skip if same business and already loaded
+      if (businessId === lastBusinessId.value && availableCommerces.value.length > 0) {
+        return;
+      }
+
+      try {
+        loadingCommerces.value = true;
+        const userType = state.currentUserType;
+        if (userType === USER_TYPES.BUSINESS || userType === USER_TYPES.MASTER) {
+          if (state.currentBusiness && state.currentBusiness.id) {
+            availableCommerces.value = await store.getAvailableCommerces(
+              state.currentBusiness.commerces || []
+            );
+            lastBusinessId.value = state.currentBusiness.id;
+          } else {
+            availableCommerces.value = [];
+            lastBusinessId.value = null;
+          }
+        } else if (userType === USER_TYPES.COLLABORATOR) {
+          const user = state.currentUser;
+          if (user && user.commercesId && user.commercesId.length > 0) {
+            const { getCommerceById } = await import('../../application/services/commerce');
+            const commercePromises = user.commercesId.map(id => getCommerceById(id));
+            const commerceResults = await Promise.all(commercePromises);
+            availableCommerces.value = commerceResults.filter(c => c && c.id);
+            lastBusinessId.value = 'collaborator'; // Mark as loaded for collaborator
+          } else {
+            availableCommerces.value = [];
+            lastBusinessId.value = null;
+          }
+        } else {
+          availableCommerces.value = [];
+          lastBusinessId.value = null;
+        }
+      } catch (error) {
+        console.error('Error loading available commerces:', error);
+        availableCommerces.value = [];
+      } finally {
+        loadingCommerces.value = false;
+      }
+    };
+
+    // Load available modules for collaborator users
+    const loadAvailableModules = async () => {
+      // Prevent concurrent calls
+      if (loadingModules.value) return;
+
+      const commerceId = state.currentCommerce?.id;
+      // Skip if same commerce and already loaded
+      if (commerceId === lastCommerceId.value && availableModules.value.length >= 0) {
+        return;
+      }
+
+      try {
+        loadingModules.value = true;
+        const userType = state.currentUserType;
+        const currentUser = state.currentUser;
+
+        // Only load modules if user is authenticated and is a collaborator
+        if (
+          userType === USER_TYPES.COLLABORATOR &&
+          currentUser &&
+          currentUser.id &&
+          state.currentCommerce &&
+          state.currentCommerce.id
+        ) {
+          availableModules.value = await store.getAvailableModules(state.currentCommerce.id);
+          lastCommerceId.value = state.currentCommerce.id;
+        } else {
+          availableModules.value = [];
+          lastCommerceId.value = null;
+        }
+      } catch (error) {
+        // Silently handle 401 (Unauthorized) errors - user is not authenticated yet
+        if (error.response && error.response.status === 401) {
+          availableModules.value = [];
+        } else {
+          console.error('Error loading available modules:', error);
+          availableModules.value = [];
+        }
+      } finally {
+        loadingModules.value = false;
+      }
+    };
+
+    const getMessages = () => {
+      // Determine new query parameters
+      let newCollaboratorId = null;
+      let newAdministratorId = null;
+
+      if (
+        state.currentUserType === USER_TYPES.BUSINESS &&
+        state.currentUser &&
+        state.currentUser.id
+      ) {
+        newAdministratorId = state.currentUser.id;
+      } else if (
+        state.currentUserType === USER_TYPES.COLLABORATOR &&
+        state.currentUser &&
+        state.currentUser.id
+      ) {
+        newCollaboratorId = state.currentUser.id;
+      }
+
+      // Only restart listener if parameters actually changed
+      const paramsChanged =
+        messageQueryParams.value.collaboratorId !== newCollaboratorId ||
+        messageQueryParams.value.administratorId !== newAdministratorId;
+
+      if (paramsChanged) {
+        loading.value = true;
+        // Stop existing listener
+        messagesListener.stop();
+
+        // Update query parameters
+        messageQueryParams.value = {
+          collaboratorId: newCollaboratorId,
+          administratorId: newAdministratorId,
+        };
+
+        // Start listener with new parameters
+        if (newCollaboratorId || newAdministratorId) {
+          messagesListener.start();
+        } else {
+          state.messages = [];
+          loading.value = false;
+        }
+      }
+    };
 
     // Watch for changes in messages data and update state
     watch(
@@ -75,60 +234,31 @@ export default {
       { immediate: true }
     );
 
-    const getUser = store => {
+    const getUser = async store => {
       state.userName = undefined;
       state.currentUserType = undefined;
-      state.currentUser = store.getCurrentUser;
+      state.currentUser = store.getCurrentUser || null;
       if (state.currentUser !== undefined && state.currentUser !== null) {
         state.userName = state.currentUser.alias || state.currentUser.name;
       }
-      state.currentUserType = store.getCurrentUserType;
-      state.currentBusiness = store.getCurrentBusiness;
-      state.currentCommerce = store.getCurrentCommerce;
+      state.currentUserType = store.getCurrentUserType || null;
+      const business = store.getCurrentBusiness;
+      state.currentBusiness = business && business.id ? business : null;
+      const commerce = store.getCurrentCommerce;
+      state.currentCommerce = commerce && commerce.id ? commerce : null;
+      const module = store.getCurrentModule;
+      state.currentModule = module && module.id ? module : null;
       getMessages();
+      // Reload available commerces and modules when user data changes
+      await loadAvailableCommerces();
+      await loadAvailableModules();
     };
 
-    onBeforeMount(() => {
+    onBeforeMount(async () => {
       store = globalStore();
-      getUser(store);
+      // getUser already calls loadAvailableCommerces and loadAvailableModules
+      await getUser(store);
     });
-
-    const getMessages = () => {
-      loading.value = true;
-
-      // Stop existing listener
-      messagesListener.stop();
-
-      // Update query parameters based on user type
-      if (
-        state.currentUserType === USER_TYPES.BUSINESS &&
-        state.currentUser &&
-        state.currentUser.id
-      ) {
-        messageQueryParams.value = {
-          collaboratorId: null,
-          administratorId: state.currentUser.id,
-        };
-        messagesListener.start();
-      } else if (
-        state.currentUserType === USER_TYPES.COLLABORATOR &&
-        state.currentUser &&
-        state.currentUser.id
-      ) {
-        messageQueryParams.value = {
-          collaboratorId: state.currentUser.id,
-          administratorId: null,
-        };
-        messagesListener.start();
-      } else {
-        messageQueryParams.value = {
-          collaboratorId: null,
-          administratorId: null,
-        };
-        state.messages = [];
-        loading.value = false;
-      }
-    };
 
     const loginInvited = async () => {
       const environment = import.meta.env.VITE_NODE_ENV || ENVIRONMENTS.LOCAL;
@@ -296,12 +426,27 @@ export default {
       };
     });
 
+    // Watch specific store properties instead of entire store (much more efficient)
     watch(
-      () => store,
-      async (newStore, oldStore) => {
-        await getUser(newStore);
+      () => store.getCurrentUser,
+      async (newUser, oldUser) => {
+        // Only reload if user actually changed
+        if (newUser?.id !== oldUser?.id) {
+          await getUser(store);
+        }
       },
-      { immediate: true, deep: true }
+      { immediate: true }
+    );
+
+    watch(
+      () => store.getCurrentUserType,
+      async (newType, oldType) => {
+        // Only reload if user type actually changed
+        if (newType !== oldType) {
+          await getUser(store);
+        }
+      },
+      { immediate: true }
     );
 
     watch(changeData, async () => {
@@ -317,8 +462,109 @@ export default {
       }
     );
 
+    // Watch for commerce changes and update header (optimized - no deep watch)
+    watch(
+      () => store.getCurrentCommerce?.id,
+      async (newCommerceId, oldCommerceId) => {
+        const newCommerce = store.getCurrentCommerce;
+        if (newCommerce && newCommerce.id) {
+          state.currentCommerce = newCommerce;
+        } else {
+          state.currentCommerce = null;
+        }
+        // Only reload if commerce ID actually changed
+        if (newCommerceId !== oldCommerceId && newCommerceId !== lastCommerceId.value) {
+          await loadAvailableModules();
+        }
+      },
+      { immediate: true }
+    );
+
+    // Watch for business changes (optimized - no deep watch)
+    watch(
+      () => store.getCurrentBusiness?.id,
+      async (newBusinessId, oldBusinessId) => {
+        const newBusiness = store.getCurrentBusiness;
+        if (newBusiness && newBusiness.id) {
+          state.currentBusiness = newBusiness;
+        } else {
+          state.currentBusiness = null;
+        }
+        // Only reload if business ID actually changed
+        if (newBusinessId !== oldBusinessId && newBusinessId !== lastBusinessId.value) {
+          await loadAvailableCommerces();
+        }
+      },
+      { immediate: true }
+    );
+
+    // Watch for module changes (only update state, no API call needed - optimized)
+    watch(
+      () => store.getCurrentModule?.id,
+      newModuleId => {
+        const newModule = store.getCurrentModule;
+        if (newModule && newModule.id) {
+          state.currentModule = newModule;
+        } else {
+          state.currentModule = null;
+        }
+        // No need to reload modules when module changes - we already have them
+      },
+      { immediate: true }
+    );
+
     const mobileMenuOpen = ref(false);
     const desktopMenuOpen = ref(false);
+
+    // Template refs for CommerceSelector and ModuleSelector components
+    const desktopCommerceSelectorRef = ref(null);
+    const mobileCommerceSelectorRef = ref(null);
+    const desktopCollaboratorCommerceSelectorRef = ref(null);
+    const mobileCollaboratorCommerceSelectorRef = ref(null);
+    const desktopModuleSelectorRef = ref(null);
+    const mobileModuleSelectorRef = ref(null);
+
+    // Computed properties for shouldShow (same logic as CommerceSelector and ModuleSelector)
+    const shouldShowDesktopCommerceSelector = computed(() => {
+      const userType = state.currentUserType;
+      if (!userType || !availableCommerces.value || availableCommerces.value.length === 0)
+        return false;
+      // Show only when there are multiple commerces (same standard for all user types)
+      if (userType === USER_TYPES.BUSINESS) {
+        return availableCommerces.value.length > 1;
+      }
+      if (userType === USER_TYPES.MASTER) {
+        return (
+          state.currentBusiness && state.currentBusiness.id && availableCommerces.value.length > 1
+        );
+      }
+      if (userType === USER_TYPES.COLLABORATOR) {
+        return availableCommerces.value.length > 1;
+      }
+      return false;
+    });
+
+    const shouldShowMobileCommerceSelector = computed(
+      () => shouldShowDesktopCommerceSelector.value
+    );
+    const shouldShowDesktopCollaboratorCommerceSelector = computed(
+      () => shouldShowDesktopCommerceSelector.value
+    );
+    const shouldShowMobileCollaboratorCommerceSelector = computed(
+      () => shouldShowDesktopCommerceSelector.value
+    );
+
+    const shouldShowDesktopModuleSelector = computed(() => {
+      const userType = state.currentUserType;
+      if (userType !== USER_TYPES.COLLABORATOR) return false;
+      if (!availableModules.value || availableModules.value.length === 0) return false;
+      // Show module section when there's at least one module (ModuleSelector will show name or dropdown accordingly)
+      return availableModules.value.length > 0;
+    });
+
+    const shouldShowMobileModuleSelector = computed(() => shouldShowDesktopModuleSelector.value);
+
+    // Removed duplicate watchers - using store watchers above instead
 
     const toggleMobileMenu = () => {
       mobileMenuOpen.value = !mobileMenuOpen.value;
@@ -334,6 +580,24 @@ export default {
 
     const closeDesktopMenu = () => {
       desktopMenuOpen.value = false;
+    };
+
+    // Handle commerce change - close menus and refresh user data
+    const handleCommerceChanged = async () => {
+      // Close both menus
+      closeMobileMenu();
+      closeDesktopMenu();
+      // Refresh user data to reflect commerce change
+      await getUser(store);
+    };
+
+    // Handle module change - close menus and refresh user data
+    const handleModuleChanged = async () => {
+      // Close both menus
+      closeMobileMenu();
+      closeDesktopMenu();
+      // Refresh user data to reflect module change
+      await getUser(store);
     };
 
     // Get menu options based on user type - matching exact structure from BusinessMenu, CollaboratorMenu, MasterMenu
@@ -473,6 +737,20 @@ export default {
       getMenuTranslationKey,
       getManageSubMenuOptions,
       getControlSubMenuOptions,
+      handleCommerceChanged,
+      handleModuleChanged,
+      desktopCommerceSelectorRef,
+      mobileCommerceSelectorRef,
+      desktopCollaboratorCommerceSelectorRef,
+      mobileCollaboratorCommerceSelectorRef,
+      desktopModuleSelectorRef,
+      mobileModuleSelectorRef,
+      shouldShowDesktopCommerceSelector,
+      shouldShowMobileCommerceSelector,
+      shouldShowDesktopCollaboratorCommerceSelector,
+      shouldShowMobileCollaboratorCommerceSelector,
+      shouldShowDesktopModuleSelector,
+      shouldShowMobileModuleSelector,
     };
   },
 };
@@ -508,6 +786,28 @@ export default {
               <a class="user-name-link" data-bs-toggle="modal" :data-bs-target="`#userModal`">
                 <span class="fw-bold user-name-display">
                   <i class="bi bi-person-circle"></i> {{ state.userName }}
+                </span>
+                <span
+                  v-if="
+                    state.currentCommerce &&
+                    state.currentCommerce.tag &&
+                    (state.currentUserType === USER_TYPES.BUSINESS ||
+                      (state.currentUserType === USER_TYPES.MASTER && state.currentBusiness) ||
+                      state.currentUserType === USER_TYPES.COLLABORATOR)
+                  "
+                  class="commerce-name-display"
+                >
+                  | {{ state.currentCommerce.tag }}
+                </span>
+                <span
+                  v-if="
+                    state.currentModule &&
+                    state.currentModule.tag &&
+                    state.currentUserType === USER_TYPES.COLLABORATOR
+                  "
+                  class="module-name-display"
+                >
+                  | {{ state.currentModule.tag }}
                 </span>
                 <span
                   v-if="state.messages.length > 0"
@@ -567,18 +867,90 @@ export default {
           <h5 class="desktop-menu-title">
             <i class="bi bi-person-circle me-2"></i>
             {{ state.userName || $t('menu') }}
+            <span
+              v-if="state.currentCommerce && state.currentCommerce.tag"
+              class="commerce-name-in-menu"
+            >
+              | {{ state.currentCommerce.tag }}
+            </span>
+            <span
+              v-if="
+                state.currentModule &&
+                state.currentModule.tag &&
+                state.currentUserType === USER_TYPES.COLLABORATOR
+              "
+              class="module-name-in-menu"
+            >
+              | {{ state.currentModule.tag }}
+            </span>
           </h5>
           <button class="desktop-menu-close" @click="closeDesktopMenu" aria-label="Close menu">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
         <div class="desktop-menu-body">
-          <!-- Idioma Section -->
-          <div class="desktop-menu-item-wrapper">
-            <div class="desktop-menu-label">
-              <span>{{ $t('language') || 'Idioma' }}</span>
+          <!-- Commerce Section for Business/Master -->
+          <div
+            v-if="
+              (state.currentUserType === USER_TYPES.BUSINESS ||
+                (state.currentUserType === USER_TYPES.MASTER &&
+                  state.currentBusiness &&
+                  state.currentBusiness.id)) &&
+              shouldShowDesktopCommerceSelector
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <div class="desktop-menu-label-row">
+              <span class="desktop-menu-label-text">{{
+                $t('commerceSelector.commerce') || 'Commerce'
+              }}</span>
+              <CommerceSelector
+                ref="desktopCommerceSelectorRef"
+                :key="state.currentBusiness?.id || 'no-business'"
+                class="desktop-commerce-selector"
+                @commerce-changed="handleCommerceChanged"
+              ></CommerceSelector>
             </div>
-            <LocaleSelector class="desktop-locale-selector"></LocaleSelector>
+          </div>
+
+          <!-- Commerce and Module Section for Collaborators -->
+          <div
+            v-if="
+              state.currentUserType === USER_TYPES.COLLABORATOR &&
+              shouldShowDesktopCollaboratorCommerceSelector
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <div class="desktop-menu-label-row">
+              <span class="desktop-menu-label-text">{{
+                $t('commerceSelector.commerce') || 'Commerce'
+              }}</span>
+              <CommerceSelector
+                ref="desktopCollaboratorCommerceSelectorRef"
+                :key="state.currentCommerce?.id || 'no-commerce'"
+                class="desktop-commerce-selector"
+                @commerce-changed="handleCommerceChanged"
+              ></CommerceSelector>
+            </div>
+          </div>
+
+          <div
+            v-if="
+              state.currentUserType === USER_TYPES.COLLABORATOR && shouldShowDesktopModuleSelector
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <div class="desktop-menu-label-row">
+              <span class="desktop-menu-label-text">{{
+                $t('moduleSelector.module') || 'Module'
+              }}</span>
+              <ModuleSelector
+                ref="desktopModuleSelectorRef"
+                :key="state.currentCommerce?.id || 'no-commerce'"
+                class="desktop-module-selector"
+                @module-changed="handleModuleChanged"
+              ></ModuleSelector>
+            </div>
           </div>
 
           <!-- Mi Perfil Section -->
@@ -703,6 +1075,23 @@ export default {
             </div>
           </div>
 
+          <!-- Idioma Section (before logout) -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="desktop-menu-item-wrapper"
+          >
+            <div class="desktop-menu-label-row">
+              <span class="desktop-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
+              <LocaleSelector class="desktop-locale-selector"></LocaleSelector>
+            </div>
+          </div>
+
           <!-- Logout Section (at the end) -->
           <div
             v-if="
@@ -739,18 +1128,90 @@ export default {
           <h5 class="mobile-menu-title">
             <i class="bi bi-person-circle me-2"></i>
             {{ state.userName || $t('menu') }}
+            <span
+              v-if="state.currentCommerce && state.currentCommerce.tag"
+              class="commerce-name-in-menu"
+            >
+              | {{ state.currentCommerce.tag }}
+            </span>
+            <span
+              v-if="
+                state.currentModule &&
+                state.currentModule.tag &&
+                state.currentUserType === USER_TYPES.COLLABORATOR
+              "
+              class="module-name-in-menu"
+            >
+              | {{ state.currentModule.tag }}
+            </span>
           </h5>
           <button class="mobile-menu-close" @click="closeMobileMenu" aria-label="Close menu">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
         <div class="mobile-menu-body">
-          <!-- Idioma Section -->
-          <div class="mobile-menu-item-wrapper">
-            <div class="mobile-menu-label">
-              <span>{{ $t('language') || 'Idioma' }}</span>
+          <!-- Commerce Section for Business/Master -->
+          <div
+            v-if="
+              (state.currentUserType === USER_TYPES.BUSINESS ||
+                (state.currentUserType === USER_TYPES.MASTER &&
+                  state.currentBusiness &&
+                  state.currentBusiness.id)) &&
+              shouldShowMobileCommerceSelector
+            "
+            class="mobile-menu-item-wrapper"
+          >
+            <div class="mobile-menu-label-row">
+              <span class="mobile-menu-label-text">{{
+                $t('commerceSelector.commerce') || 'Commerce'
+              }}</span>
+              <CommerceSelector
+                ref="mobileCommerceSelectorRef"
+                :key="state.currentBusiness?.id || 'no-business'"
+                class="mobile-commerce-selector"
+                @commerce-changed="handleCommerceChanged"
+              ></CommerceSelector>
             </div>
-            <LocaleSelector class="mobile-locale-selector"></LocaleSelector>
+          </div>
+
+          <!-- Commerce and Module Section for Collaborators -->
+          <div
+            v-if="
+              state.currentUserType === USER_TYPES.COLLABORATOR &&
+              shouldShowMobileCollaboratorCommerceSelector
+            "
+            class="mobile-menu-item-wrapper"
+          >
+            <div class="mobile-menu-label-row">
+              <span class="mobile-menu-label-text">{{
+                $t('commerceSelector.commerce') || 'Commerce'
+              }}</span>
+              <CommerceSelector
+                ref="mobileCollaboratorCommerceSelectorRef"
+                :key="state.currentCommerce?.id || 'no-commerce'"
+                class="mobile-commerce-selector"
+                @commerce-changed="handleCommerceChanged"
+              ></CommerceSelector>
+            </div>
+          </div>
+
+          <div
+            v-if="
+              state.currentUserType === USER_TYPES.COLLABORATOR && shouldShowMobileModuleSelector
+            "
+            class="mobile-menu-item-wrapper"
+          >
+            <div class="mobile-menu-label-row">
+              <span class="mobile-menu-label-text">{{
+                $t('moduleSelector.module') || 'Module'
+              }}</span>
+              <ModuleSelector
+                ref="mobileModuleSelectorRef"
+                :key="state.currentCommerce?.id || 'no-commerce'"
+                class="mobile-module-selector"
+                @module-changed="handleModuleChanged"
+              ></ModuleSelector>
+            </div>
           </div>
 
           <!-- Mi Perfil Section -->
@@ -869,6 +1330,23 @@ export default {
             </div>
           </div>
 
+          <!-- Idioma Section (before logout) -->
+          <div
+            v-if="
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
+            class="mobile-menu-item-wrapper"
+          >
+            <div class="mobile-menu-label-row">
+              <span class="mobile-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
+              <LocaleSelector class="mobile-locale-selector"></LocaleSelector>
+            </div>
+          </div>
+
           <!-- Logout Section (at the end) -->
           <div
             v-if="
@@ -896,35 +1374,35 @@ export default {
     </div>
     <!-- Modal User - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-    <div
-      class="modal fade"
-      id="userModal"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-md">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-person-circle"></i> {{ $t('myUser.title') }}
-            </h5>
-            <button
-              id="close-modal"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body text-center pb-3">
-            <MyUser :messages="state.messages"> </MyUser>
+      <div
+        class="modal fade"
+        id="userModal"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-md">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-person-circle"></i> {{ $t('myUser.title') }}
+              </h5>
+              <button
+                id="close-modal"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center pb-3">
+              <MyUser :messages="state.messages"> </MyUser>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </Teleport>
   </div>
 </template>
@@ -1087,6 +1565,18 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.commerce-name-display {
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.module-name-display {
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 0.95rem;
 }
 
 .user-menu-icon {
@@ -1353,6 +1843,7 @@ export default {
   font-weight: 600;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .mobile-menu-close {
@@ -1432,12 +1923,58 @@ export default {
   letter-spacing: 0.5px;
 }
 
+.mobile-menu-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.mobile-menu-label-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--azul-hub, #1f3f92);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .mobile-locale-selector {
-  padding: 0 1rem 0.3rem;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .mobile-locale-selector select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-default, #e0e0e0);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+.mobile-commerce-selector {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-commerce-selector select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-default, #e0e0e0);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+.mobile-module-selector {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-module-selector select {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--gris-default, #e0e0e0);
@@ -1591,6 +2128,15 @@ export default {
   font-weight: 600;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.commerce-name-in-menu,
+.module-name-in-menu {
+  font-weight: 500;
+  opacity: 0.85;
+  font-size: 0.9rem;
+  margin-left: 0.25rem;
 }
 
 .desktop-menu-close {
@@ -1672,12 +2218,58 @@ export default {
   letter-spacing: 0.5px;
 }
 
+.desktop-menu-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.desktop-menu-label-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--azul-hub, #1f3f92);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .desktop-locale-selector {
-  padding: 0 1rem 0.3rem;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .desktop-locale-selector select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-default, #e0e0e0);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+.desktop-commerce-selector {
+  flex: 1;
+  min-width: 0;
+}
+
+.desktop-commerce-selector select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-default, #e0e0e0);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  background-color: var(--color-background);
+}
+
+.desktop-module-selector {
+  flex: 1;
+  min-width: 0;
+}
+
+.desktop-module-selector select {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--gris-default, #e0e0e0);

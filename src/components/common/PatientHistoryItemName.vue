@@ -26,7 +26,7 @@ export default {
 <template>
   <div class="item-name-container" :class="statusClass">
     <!-- Item Icon -->
-    <Popper :class="'dark'" arrow hover>
+    <Popper :class="'dark'" arrow disable-click-away>
       <template #content>
         <div>{{ statusTooltip }}</div>
       </template>
@@ -41,7 +41,7 @@ export default {
     </span>
 
     <!-- Item Tag -->
-    <Popper v-if="item.tag" :class="'dark'" arrow hover>
+    <Popper v-if="item.tag" :class="'dark'" arrow disable-click-away>
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.itemTag') || 'Tag del item' }}</div>
       </template>
@@ -190,4 +190,3 @@ export default {
   overflow: visible;
 }
 </style>
-

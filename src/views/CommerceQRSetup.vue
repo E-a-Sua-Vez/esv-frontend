@@ -162,7 +162,7 @@ export default {
       <!-- Loading and Error States -->
       <div id="page-header" class="text-center mb-2">
         <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
+        <Alert :show="false" :stack="alertError"></Alert>
       </div>
 
       <!-- Commerce Logo -->
@@ -177,10 +177,7 @@ export default {
       </div>
 
       <!-- Commerce Info Card -->
-      <div
-        class="commerce-info-card mb-3"
-        v-if="!loading && state.commerce && state.commerce.tag"
-      >
+      <div class="commerce-info-card mb-3" v-if="!loading && state.commerce && state.commerce.tag">
         <div class="commerce-info-card-content">
           <div class="commerce-info-logo" v-if="state.commerce.logo">
             <img :src="state.commerce.logo" class="commerce-logo-img" />

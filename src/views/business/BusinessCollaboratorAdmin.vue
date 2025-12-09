@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getActiveModulesByCommerceId } from '../../application/services/module';
@@ -53,12 +53,11 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
+      allCommerces: ref([]),
       services: ref([]),
       modules: ref({}),
       collaborators: ref([]),
       types: [],
-      commerce: {},
       commercesSelected: {},
       service: {},
       showAdd: false,
@@ -77,30 +76,86 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load collaborators, modules, and services when commerce changes
+    const loadCommerceData = async commerceId => {
+      if (!commerceId) {
+        state.collaborators = [];
+        state.modules = {};
+        state.services = [];
+        state.filtered = [];
+        return;
+      }
+      try {
+        state.modules = await getActiveModulesByCommerceId(commerceId);
+        const collaborators = await getCollaboratorsByCommerceId(commerceId);
+        state.collaborators = collaborators || [];
+        state.services = (await getServiceByCommerce(commerceId)) || [];
+        state.filtered = state.collaborators;
+        if (state.services.length > 0) {
+          state.service = undefined;
+        }
+      } catch (error) {
+        console.error('Error loading commerce data:', error);
+        state.collaborators = [];
+        state.modules = {};
+        state.services = [];
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload data
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.collaborators = [];
+            state.filtered = [];
+            state.modules = {};
+            state.services = [];
+            await loadCommerceData(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading commerce data on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getCollaboratorTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.modules = await getActiveModulesByCommerceId(state.commerce.id);
-          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-          state.collaborators = collaborators;
-          state.services = await getServiceByCommerce(state.commerce.id);
-          if (state.services.length > 0) {
-            state.service = undefined;
+        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
+        state.toggles = await getPermissions('collaborators', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (state.allCommerces && state.allCommerces.length > 0) {
+            await store.setCurrentCommerce(state.allCommerces[0]);
           }
         }
-        state.filtered = state.collaborators;
-        state.toggles = await getPermissions('collaborators', 'admin');
+
+        // Load data for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCommerceData(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -191,9 +246,9 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newCollaborator)) {
-          state.newCollaborator.commerceId = state.commerce.id;
+          state.newCollaborator.commerceId = commerce.value.id;
           await addCollaborator(state.newCollaborator);
-          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+          const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
           state.collaborators = collaborators;
           state.showAdd = false;
           closeAddModal();
@@ -214,7 +269,7 @@ export default {
         loading.value = true;
         if (validateUpdate(collaborator)) {
           await updateCollaborator(collaborator.id, collaborator);
-          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+          const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
           state.collaborators = collaborators;
         }
         state.extendedEntity = undefined;
@@ -234,7 +289,7 @@ export default {
           collaborator.available = false;
           collaborator.active = false;
           await updateCollaborator(collaborator.id, collaborator);
-          const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
+          const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
           state.collaborators = collaborators;
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
@@ -253,22 +308,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        state.modules = await getActiveModulesByCommerceId(state.commerce.id);
-        const collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-        state.collaborators = collaborators;
-        state.services = await getServiceByCommerce(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -344,8 +383,8 @@ export default {
     };
 
     const showCommerce = commerceId => {
-      if (state.commerces && state.commerces.length >= 1) {
-        const commerce = state.commerces.find(com => com.id === commerceId);
+      if (state.allCommerces && state.allCommerces.length >= 1) {
+        const commerce = state.allCommerces.find(com => com.id === commerceId);
         if (commerce) {
           return commerce.tag;
         }
@@ -400,7 +439,7 @@ export default {
         addModal.addEventListener('hidden.bs.modal', resetAddForm);
         addModal.addEventListener('hide.bs.modal', handleModalHide);
       }
-      document.addEventListener('mousedown', (e) => {
+      document.addEventListener('mousedown', e => {
         if (e.target && e.target.closest('.modal-backdrop')) {
           handleModalHide();
         }
@@ -425,7 +464,7 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       selectService,
       deleteService,
       showService,
@@ -448,7 +487,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessCollaboratorsAdmin.title`)"
           :toggles="state.toggles"
@@ -458,26 +500,13 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessCollaboratorsAdmin">
           <div v-if="isActiveBusiness && state.toggles['collaborators.admin.view']">
             <div id="businessCollaboratorsAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessCollaboratorsAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessCollaboratorsAdmin.message.4.title')"
                     :content="$t('businessCollaboratorsAdmin.message.4.content')"
@@ -493,7 +522,7 @@ export default {
                     :content="$t('businessCollaboratorsAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -546,7 +575,7 @@ export default {
                         :collaborator="collaborator"
                         :types="state.types"
                         :modules="state.modules"
-                        :commerces="state.commerces"
+                        :commerces="state.allCommerces"
                         :services="state.services"
                         :toggles="state.toggles"
                         :errors="{
@@ -557,9 +586,13 @@ export default {
                           phoneUpdateError: state.phoneUpdateError,
                           moduleError: false,
                         }"
-                        :on-select-commerce="(collab, commerce) => selectCommerceIndex(index, commerce)"
+                        :on-select-commerce="
+                          (collab, commerce) => selectCommerceIndex(index, commerce)
+                        "
                         :on-select-service="(collab, service) => selectServiceIndex(index, service)"
-                        :on-delete-commerce="(collab, commerceId) => deleteCommerce(collab, commerceId)"
+                        :on-delete-commerce="
+                          (collab, commerceId) => deleteCommerce(collab, commerceId)
+                        "
                         :on-delete-service="(collab, serviceId) => deleteService(collab, serviceId)"
                         :show-commerce="showCommerce"
                         :show-service="showService"
@@ -637,17 +670,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -667,20 +700,7 @@ export default {
           <div v-if="isActiveBusiness && state.toggles['collaborators.admin.view']">
             <div id="businessCollaboratorsAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessCollaboratorsAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessCollaboratorsAdmin.message.4.title')"
                     :content="$t('businessCollaboratorsAdmin.message.4.content')"
@@ -696,7 +716,7 @@ export default {
                     :content="$t('businessCollaboratorsAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -749,7 +769,7 @@ export default {
                         :collaborator="collaborator"
                         :types="state.types"
                         :modules="state.modules"
-                        :commerces="state.commerces"
+                        :commerces="state.allCommerces"
                         :services="state.services"
                         :toggles="state.toggles"
                         :errors="{
@@ -760,9 +780,13 @@ export default {
                           phoneUpdateError: state.phoneUpdateError,
                           moduleError: false,
                         }"
-                        :on-select-commerce="(collab, commerce) => selectCommerceIndex(index, commerce)"
+                        :on-select-commerce="
+                          (collab, commerce) => selectCommerceIndex(index, commerce)
+                        "
                         :on-select-service="(collab, service) => selectServiceIndex(index, service)"
-                        :on-delete-commerce="(collab, commerceId) => deleteCommerce(collab, commerceId)"
+                        :on-delete-commerce="
+                          (collab, commerceId) => deleteCommerce(collab, commerceId)
+                        "
                         :on-delete-service="(collab, serviceId) => deleteService(collab, serviceId)"
                         :show-commerce="showCommerce"
                         :show-service="showService"
@@ -858,7 +882,7 @@ export default {
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div
               id="add-collaborator"
               class="result-card mb-4"
@@ -869,7 +893,7 @@ export default {
                   v-model="state.newCollaborator"
                   :types="state.types"
                   :modules="state.modules"
-                  :commerces="state.commerces"
+                  :commerces="state.allCommerces"
                   :services="state.services"
                   :toggles="state.toggles"
                   :errors="{

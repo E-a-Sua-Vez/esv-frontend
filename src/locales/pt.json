@@ -31,6 +31,17 @@
   "close": "Fechar",
   "language": "Idioma",
   "menu": "Menu",
+  "commerceSelector": {
+    "commerce": "Comércio",
+    "select": "Selecionar Comércio"
+  },
+  "moduleSelector": {
+    "module": "Módulo",
+    "select": "Selecionar Módulo"
+  },
+  "welcomeMenu": {
+    "youAreIn": "Você está em:"
+  },
   "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
   "refresh": "Reload",
   "yes": "Sim",
@@ -1659,6 +1670,35 @@
     "comment": "Comentário:",
     "entities": "Palavras chave:",
     "typeFilter": "Filtrar por Tipo:",
+    "healthScore": {
+      "title": "Health Score do Negócio",
+      "subtitle": "Indicador geral de saúde operativa, cliente e financeira",
+      "operational": "Operacional",
+      "customer": "Cliente",
+      "financial": "Financiero",
+      "tooltip": "O Health Score é um indicador composto que avalia a saúde geral do seu negócio em três dimensões: operacional (eficiência e produtividade), cliente (satisfação e lealdade) e financeira (rentabilidade e crescimento). Um score alto indica um negócio saudável e sustentável.",
+      "tooltips": {
+        "operational": "Avalia a eficiência operacional: tempo médio de atendimento, produtividade da equipe e capacidade de resposta do negócio.",
+        "customer": "Mede a satisfação e lealdade do cliente: CSAT, NPS, taxa de retorno e qualidade da experiência do cliente.",
+        "financial": "Analisa a saúde financeira: receitas, rentabilidade, crescimento e sustentabilidade econômica do negócio."
+      }
+    },
+    "gauge": {
+      "title": "KPIs Principais",
+      "conversion": "Tasa de Conversión",
+      "csat": "Satisfacción (CSAT)",
+      "nps": "NPS Score",
+      "tooltip": {
+        "conversion": "A taxa de conversão mede a porcentagem de reservas que são confirmadas com sucesso. Um valor alto indica que os clientes estão cumprindo com seus compromissos.",
+        "csat": "CSAT (Customer Satisfaction) mede a satisfação do cliente em uma escala de 1 a 5. Este indicador mostra a porcentagem equivalente de satisfação.",
+        "nps": "NPS (Net Promoter Score) mede a lealdade do cliente. Vai de -100 a +100. Valores positivos indicam mais promotores que detratores."
+      }
+    },
+    "smartRecommendations": {
+      "title": "Recomendaciones Inteligentes",
+      "items": "sugerencias",
+      "tooltip": "Recomendações inteligentes baseadas em análise de dados e métricas-chave. Essas sugestões são geradas automaticamente analisando padrões, tendências e oportunidades de melhoria no seu negócio."
+    },
     "tracing": {
       "title": "Gestão de Clientes",
       "filters": {
@@ -1703,6 +1743,9 @@
         "queueActive": "Fila ativa",
         "queueInactive": "Fila inativa",
         "queueTag": "Tag da fila",
+        "productActive": "Produto ativo",
+        "productInactive": "Produto inativo",
+        "productTag": "Tag do produto",
         "openWebsite": "Abrir site do comércio",
         "serviceActive": "Serviço ativo",
         "serviceInactive": "Serviço inativo",
@@ -2446,7 +2489,7 @@
     "title": "Serviços",
     "commerce": "Selecione uma unidade:",
     "name": "Nome:",
-    "tag": "Tag:",
+    "tag": "Tipo de serviço:",
     "shortDescription": "Descrição curta:",
     "longDescription": "Descrição longa:",
     "return": "Voltar",
@@ -2466,7 +2509,7 @@
     "procedures": "Procedimientos:",
     "proceduresHelp": "Quantidade de Procedimientos necesários para completar o Serviço",
     "estimatedTime": "Tempo estimado:",
-    "tagHelp": "Identificador curto do serviço",
+    "tagHelp": "Tipo de serviço",
     "onlineHelp": "Serviço pode ser mostrado para ser selecionado pelo usuário.",
     "blockTimeHelp": "Duração do bloque de atendimento ao usuário para esse serviço em minutos.",
     "estimatedTimeHelp": "Tempo estimado da duração do serviço.",
@@ -2510,7 +2553,7 @@
     },
     "validate": {
       "name": "Você deve digitar o nome",
-      "tag": "Você deve digitar o lítagmite",
+      "tag": "Você deve digitar o tipo de serviço",
       "order": "Você deve digitar o ordem",
       "estimatedTime": "Você deve digitar o tempo estimado",
       "shortDescription": "Você deve digitar a descrição curta"
@@ -2738,7 +2781,7 @@
     "outcomeExpireDate": "Validade:",
     "outcomeDate": "Data:",
     "outcomeCode": "Código:",
-    "incomeTitle": "Conceto:",
+    "incomeTitle": "Conceito:",
     "incomeType": "Tipo:",
     "incomeAmount": "Quantidade:",
     "incomeProduct": "Produto:",
@@ -3622,6 +3665,10 @@
       "2": {
         "title": "Oh não!",
         "content": "Neste momento não há permissões."
+      },
+      "3": {
+        "title": "Oh não!",
+        "content": "Não há colaboradores neste comércio. Verifique se você tem colaboradores criados ou entre em contato conosco."
       }
     },
     "capacitiesList": {

@@ -41,14 +41,16 @@ export default {
       {{ service.name || $t('dashboard.clientCard.label.noService') || 'N/I' }}
     </span>
 
-    <!-- Service Tag -->
-    <Popper v-if="service.tag" :class="'dark'" arrow hover>
+    <!-- Service Tag (shows service type) -->
+    <Popper v-if="service.type" :class="'dark'" arrow hover>
       <template #content>
-        <div>{{ $t('dashboard.clientCard.tooltip.serviceTag') || 'Tag del servicio' }}</div>
+        <div>{{ $t('dashboard.clientCard.tooltip.serviceTag') || 'Tipo de servicio' }}</div>
       </template>
       <span class="service-tag">
         <i class="bi bi-tags-fill"></i>
-        <span class="service-tag-text">{{ service.tag }}</span>
+        <span class="service-tag-text">{{
+          $t(`services.types.${service.type}`) || service.type
+        }}</span>
       </span>
     </Popper>
   </div>

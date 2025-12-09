@@ -45,7 +45,9 @@ export default {
     <!-- Collaborator Email -->
     <Popper v-if="email" :class="'dark'" arrow hover>
       <template #content>
-        <div>{{ $t('dashboard.clientCard.tooltip.collaboratorEmail') || 'Email do colaborador' }}</div>
+        <div>
+          {{ $t('dashboard.clientCard.tooltip.collaboratorEmail') || 'Email do colaborador' }}
+        </div>
       </template>
       <span class="collaborator-email">
         <i class="bi bi-at"></i>

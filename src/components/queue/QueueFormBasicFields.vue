@@ -143,19 +143,13 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessQueuesAdmin.active') }}
       </label>
-      <Toggle
-        v-model="queue.active"
-        :disabled="isAdd ? false : !toggles['queues.admin.edit']"
-      />
+      <Toggle v-model="queue.active" :disabled="isAdd ? false : !toggles['queues.admin.edit']" />
     </div>
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessQueuesAdmin.online') }}
       </label>
-      <Toggle
-        v-model="queue.online"
-        :disabled="isAdd ? false : !toggles['queues.admin.edit']"
-      />
+      <Toggle v-model="queue.online" :disabled="isAdd ? false : !toggles['queues.admin.edit']" />
     </div>
   </div>
 </template>
@@ -240,5 +234,3 @@ export default {
   padding-right: 2.5rem;
 }
 </style>
-
-

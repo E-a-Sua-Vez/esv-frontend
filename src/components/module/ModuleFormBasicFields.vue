@@ -48,10 +48,7 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessModulesAdmin.active') }}
       </label>
-      <Toggle
-        v-model="module.active"
-        :disabled="isAdd ? false : !toggles['modules.admin.edit']"
-      />
+      <Toggle v-model="module.active" :disabled="isAdd ? false : !toggles['modules.admin.edit']" />
     </div>
   </div>
 </template>
@@ -121,5 +118,3 @@ export default {
   justify-content: space-between;
 }
 </style>
-
-

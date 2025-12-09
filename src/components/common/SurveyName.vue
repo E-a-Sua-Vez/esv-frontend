@@ -5,7 +5,10 @@ export default {
   name: 'SurveyName',
   components: { Popper },
   props: {
-    survey: { type: Object, default: () => ({ type: '', attentionDefault: false, active: false, id: '', queueId: '' }) },
+    survey: {
+      type: Object,
+      default: () => ({ type: '', attentionDefault: false, active: false, id: '', queueId: '' }),
+    },
     commerceKeyName: { type: String, default: '' },
   },
   computed: {
@@ -36,7 +39,9 @@ export default {
     surveyLink() {
       if (!this.commerceKeyName) return '';
       if (this.survey.queueId) {
-        return `${import.meta.env.VITE_URL}/publico/comercio/${this.commerceKeyName}/filas/${this.survey.queueId}`;
+        return `${import.meta.env.VITE_URL}/publico/comercio/${this.commerceKeyName}/filas/${
+          this.survey.queueId
+        }`;
       }
       return `${import.meta.env.VITE_URL}/publico/comercio/${this.commerceKeyName}/filas`;
     },
@@ -92,12 +97,7 @@ export default {
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.openWebsite') || 'Abrir encuesta' }}</div>
       </template>
-      <a
-        class="btn-link-mini"
-        :href="surveyLink"
-        target="_blank"
-        @click.stop
-      >
+      <a class="btn-link-mini" :href="surveyLink" target="_blank" @click.stop>
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
     </Popper>

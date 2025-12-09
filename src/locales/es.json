@@ -32,6 +32,17 @@
   "close": "Cerrar",
   "language": "Idioma",
   "menu": "Menú",
+  "commerceSelector": {
+    "commerce": "Comercio",
+    "select": "Seleccionar Comercio"
+  },
+  "moduleSelector": {
+    "module": "Módulo",
+    "select": "Seleccionar Módulo"
+  },
+  "welcomeMenu": {
+    "youAreIn": "Estás en:"
+  },
   "yes": "Sí",
   "YES": "Sí",
   "NO": "No",
@@ -1657,6 +1668,35 @@
     "comment": "Comentario:",
     "entities": "Palabras clave:",
     "typeFilter": "Filtre por tipo:",
+    "healthScore": {
+      "title": "Health Score del Negocio",
+      "subtitle": "Indicador general de salud operativa, cliente y financiera",
+      "operational": "Operacional",
+      "customer": "Cliente",
+      "financial": "Financiero",
+      "tooltip": "El Health Score es un indicador compuesto que evalúa la salud general de tu negocio en tres dimensiones: operacional (eficiencia y productividad), cliente (satisfacción y lealtad) y financiera (rentabilidad y crecimiento). Un score alto indica un negocio saludable y sostenible.",
+      "tooltips": {
+        "operational": "Evalúa la eficiencia operativa: tiempo promedio de atención, productividad del personal y capacidad de respuesta del negocio.",
+        "customer": "Mide la satisfacción y lealtad del cliente: CSAT, NPS, tasa de retorno y calidad de la experiencia del cliente.",
+        "financial": "Analiza la salud financiera: ingresos, rentabilidad, crecimiento y sostenibilidad económica del negocio."
+      }
+    },
+    "gauge": {
+      "title": "KPIs Principales",
+      "conversion": "Tasa de Conversión",
+      "csat": "Satisfacción (CSAT)",
+      "nps": "NPS Score",
+      "tooltip": {
+        "conversion": "La tasa de conversión mide el porcentaje de reservas que se confirman exitosamente. Un valor alto indica que los clientes están cumpliendo con sus citas.",
+        "csat": "CSAT (Customer Satisfaction) mide la satisfacción del cliente en una escala de 1 a 5. Este indicador muestra el porcentaje equivalente de satisfacción.",
+        "nps": "NPS (Net Promoter Score) mide la lealtad del cliente. Va de -100 a +100. Valores positivos indican más promotores que detractores."
+      }
+    },
+    "smartRecommendations": {
+      "title": "Recomendaciones Inteligentes",
+      "items": "sugerencias",
+      "tooltip": "Recomendaciones inteligentes basadas en análisis de datos y métricas clave. Estas sugerencias se generan automáticamente analizando patrones, tendencias y oportunidades de mejora en tu negocio."
+    },
     "tracing": {
       "title": "Gestión de Clientes",
       "filters": {
@@ -1701,6 +1741,9 @@
         "queueActive": "Fila activa",
         "queueInactive": "Fila inactiva",
         "queueTag": "Tag de la fila",
+        "productActive": "Producto activo",
+        "productInactive": "Producto inactivo",
+        "productTag": "Tag del producto",
         "openWebsite": "Abrir sitio del comercio",
         "serviceActive": "Servicio activo",
         "serviceInactive": "Servicio inactivo",
@@ -2452,7 +2495,7 @@
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
     "name": "Nombre:",
-    "tag": "Tag:",
+    "tag": "Tipo de servicio:",
     "shortDescription": "Descripción corta:",
     "longDescription": "Descripción larga:",
     "order": "Orden:",
@@ -2469,7 +2512,7 @@
     "blockTime": "Bloque (Min):",
     "procedures": "Procedimientos:",
     "proceduresHelp": "Cantidad de Procedimientos necesarios para completar el Servicio",
-    "tagHelp": "Identificador corto del servicio",
+    "tagHelp": "Tipo de servicio",
     "onlineHelp": "Servicio puede ser mostrado para ser seleccionado por el usuario.",
     "blockTimeHelp": "Duración del bloque de atención al usuario para este servicio en minutos.",
     "estimatedTimeHelp": "Tiempo estimado de duración del servicio.",
@@ -2511,7 +2554,7 @@
     },
     "validate": {
       "name": "Debes ingresar el nombre",
-      "tag": "Debes ingresar el tag",
+      "tag": "Debes ingresar el tipo de servicio",
       "order": "Debes ingresar el orden",
       "estimatedTime": "Debes ingresar el tiempo estimado",
       "shortDescription": "Debes ingresar la descripción corta"
@@ -3623,6 +3666,10 @@
       "2": {
         "title": "¡Ups!",
         "content": "En este momento no hay permisos."
+      },
+      "3": {
+        "title": "¡Ups!",
+        "content": "No hay colaboradores en este comercio. Verifica que tengas colaboradores creados o comunícate con nosotros."
       }
     },
     "capacitiesList": {

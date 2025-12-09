@@ -60,13 +60,7 @@ export default {
           @click="selectItem(item)"
         >
           <div class="search-result-image">
-            <img
-              v-if="item.logo"
-              :src="item.logo"
-              class="result-image"
-              loading="lazy"
-              alt="Logo"
-            />
+            <img v-if="item.logo" :src="item.logo" class="result-image" loading="lazy" alt="Logo" />
             <div v-else class="result-icon-placeholder">
               <i class="bi bi-person-circle"></i>
             </div>

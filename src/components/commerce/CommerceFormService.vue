@@ -207,15 +207,27 @@ export default {
             />
           </div>
         </div>
-        <div class="form-group-modern" style="flex-direction: column; align-items: flex-start; gap: 0.5rem">
+        <div
+          class="form-group-modern"
+          style="flex-direction: column; align-items: flex-start; gap: 0.5rem"
+        >
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.attentionDays') }}
           </label>
-          <div class="form-fields-container" style="padding: 0.375rem; gap: 0.375rem; flex-direction: row; flex-wrap: wrap">
+          <div
+            class="form-fields-container"
+            style="padding: 0.375rem; gap: 0.375rem; flex-direction: row; flex-wrap: wrap"
+          >
             <div
               v-for="day in [1, 2, 3, 4, 5, 6, 7]"
               :key="day"
-              style="display: flex; flex-direction: row; align-items: center; gap: 0.5rem; min-width: auto"
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 0.5rem;
+                min-width: auto;
+              "
             >
               <input
                 type="checkbox"
@@ -225,7 +237,11 @@ export default {
                 @click="checkDay($event, day)"
                 class="form-check-input"
               />
-              <label :for="`${prefix}day-${day}`" class="form-check-label" style="margin: 0; text-transform: capitalize">
+              <label
+                :for="`${prefix}day-${day}`"
+                class="form-check-label"
+                style="margin: 0; text-transform: capitalize"
+              >
                 {{ $t(`days.${day}`) }}
               </label>
             </div>
@@ -242,12 +258,11 @@ export default {
           />
         </div>
         <div v-if="serviceInfo.personalized && serviceInfo.attentionDays" class="form-group-modern">
-          <div class="form-fields-container" style="padding: 0.375rem; gap: 0.5rem; flex-direction: column">
-            <div
-              v-for="day in serviceInfo.attentionDays"
-              :key="day"
-              class="form-group-modern"
-            >
+          <div
+            class="form-fields-container"
+            style="padding: 0.375rem; gap: 0.5rem; flex-direction: column"
+          >
+            <div v-for="day in serviceInfo.attentionDays" :key="day" class="form-group-modern">
               <label class="form-label-modern">
                 {{ $t(`days.${day}`) }}
               </label>
@@ -407,11 +422,11 @@ export default {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
-.section-toggle-button[aria-expanded="true"] {
+.section-toggle-button[aria-expanded='true'] {
   background: rgba(0, 0, 0, 0.85);
 }
 
-.section-toggle-button[aria-expanded="true"]:hover {
+.section-toggle-button[aria-expanded='true']:hover {
   background: rgba(0, 0, 0, 0.95);
 }
 
@@ -427,8 +442,7 @@ export default {
   margin-left: 0.5rem;
 }
 
-.section-toggle-button[aria-expanded="true"] .section-toggle-icon {
+.section-toggle-button[aria-expanded='true'] .section-toggle-icon {
   transform: rotate(180deg);
 }
 </style>
-

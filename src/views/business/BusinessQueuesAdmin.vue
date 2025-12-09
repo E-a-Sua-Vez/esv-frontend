@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -80,12 +80,10 @@ export default {
       currentUser: {},
       business: {},
       activeBusiness: false,
-      commerces: ref([]),
       queues: ref([]),
       services: ref({}),
       collaborators: ref({}),
       types: [],
-      commerce: {},
       showAdd: false,
       goToUnavailable: false,
       newQueue: {},
@@ -112,26 +110,82 @@ export default {
       filtered: [],
     });
 
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Load queues, services, and collaborators when commerce changes
+    const loadCommerceData = async commerceId => {
+      if (!commerceId) {
+        state.queues = [];
+        state.services = {};
+        state.collaborators = {};
+        state.filtered = [];
+        return;
+      }
+      try {
+        state.queues = await getQueuesByCommerceId(commerceId);
+        state.services = await getActiveServicesByCommerceId(commerceId);
+        state.collaborators = await getCollaboratorsByCommerceId(commerceId);
+        state.filtered = state.queues;
+      } catch (error) {
+        console.error('Error loading commerce data:', error);
+        state.queues = [];
+        state.services = {};
+        state.collaborators = {};
+        state.filtered = [];
+      }
+    };
+
+    // Watch for commerce changes and reload data
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.queues = [];
+            state.filtered = [];
+            state.services = {};
+            state.collaborators = {};
+            await loadCommerceData(newCommerce.id);
+            loading.value = false;
+          } catch (error) {
+            console.error('Error loading commerce data on commerce change:', error);
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.types = getQueueTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        state.commerces = await store.getAvailableCommerces(state.business.commerces);
-        state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          state.queues = await getQueuesByCommerceId(state.commerce.id);
-          state.services = await getActiveServicesByCommerceId(state.commerce.id);
-          state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-        }
-        state.filtered = state.queues;
         state.toggles = await getPermissions('queues', 'admin');
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
+        // Load data for current commerce
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse && commerceToUse.id) {
+          await loadCommerceData(commerceToUse.id);
+        }
+
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -274,9 +328,9 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newQueue)) {
-          state.newQueue.commerceId = state.commerce.id;
+          state.newQueue.commerceId = commerce.value.id;
           await addQueue(state.newQueue);
-          state.queues = await getQueuesByCommerceId(state.commerce.id);
+          state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
           state.newQueue = {};
@@ -295,7 +349,7 @@ export default {
         loading.value = true;
         if (validateUpdate(queue)) {
           await updateQueue(queue.id, queue);
-          state.queues = await getQueuesByCommerceId(state.commerce.id);
+          state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -313,7 +367,7 @@ export default {
           queue.available = false;
           queue.active = false;
           await updateQueue(queue.id, queue);
-          state.queues = await getQueuesByCommerceId(state.commerce.id);
+          state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
           state.goToUnavailable = false;
         }
@@ -331,22 +385,6 @@ export default {
 
     const unavailableCancel = () => {
       state.goToUnavailable = false;
-    };
-
-    const selectCommerce = async commerce => {
-      try {
-        loading.value = true;
-        state.commerce = commerce;
-        const selectedCommerce = await getQueueByCommerce(state.commerce.id);
-        state.queues = selectedCommerce.queues;
-        state.services = await getServiceByCommerce(state.commerce.id);
-        state.collaborators = await getCollaboratorsByCommerceId(state.commerce.id);
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
     };
 
     const showUpdateForm = index => {
@@ -383,7 +421,7 @@ export default {
     };
 
     const getQueueLink = queue => {
-      const commerceKeyName = state.commerce.keyName;
+      const commerceKeyName = commerce.value?.keyName;
       const queueId = queue.id;
       if (queueId) {
         return `${import.meta.env.VITE_URL}/publico/comercio/${commerceKeyName}/filas/${queueId}`;
@@ -416,11 +454,11 @@ export default {
       if (serviceInfo.specificCalendar === true) {
         if (!serviceInfo.specificCalendarDays) {
           if (
-            state.commerce &&
-            state.commerce.serviceInfo &&
-            state.commerce.serviceInfo.specificCalendar === true
+            commerce.value &&
+            commerce.value.serviceInfo &&
+            commerce.value.serviceInfo.specificCalendar === true
           ) {
-            serviceInfo.specificCalendarDays = state.commerce.serviceInfo.specificCalendarDays;
+            serviceInfo.specificCalendarDays = commerce.value.serviceInfo.specificCalendarDays;
           } else {
             serviceInfo.specificCalendarDays = serviceInfo.specificCalendarDays || {};
           }
@@ -430,18 +468,18 @@ export default {
 
     const initializedSameCommerceHours = serviceInfo => {
       if (serviceInfo.sameCommeceHours === true) {
-        if (state.commerce.serviceInfo) {
+        if (commerce.value?.serviceInfo) {
           serviceInfo.sameCommeceHours = true;
-          serviceInfo.attentionDays = state.commerce.serviceInfo.attentionDays;
-          serviceInfo.attentionHourFrom = state.commerce.serviceInfo.attentionHourFrom;
-          serviceInfo.attentionHourTo = state.commerce.serviceInfo.attentionHourTo;
-          serviceInfo.break = state.commerce.serviceInfo.break;
-          serviceInfo.breakHourFrom = state.commerce.serviceInfo.breakHourFrom;
-          serviceInfo.breakHourTo = state.commerce.serviceInfo.breakHourTo;
-          serviceInfo.personalized = state.commerce.serviceInfo.personalized;
-          serviceInfo.personalizedHours = state.commerce.serviceInfo.personalizedHours;
-          serviceInfo.holiday = state.commerce.serviceInfo.holiday;
-          serviceInfo.holidays = state.commerce.serviceInfo.holidays;
+          serviceInfo.attentionDays = commerce.value.serviceInfo.attentionDays;
+          serviceInfo.attentionHourFrom = commerce.value.serviceInfo.attentionHourFrom;
+          serviceInfo.attentionHourTo = commerce.value.serviceInfo.attentionHourTo;
+          serviceInfo.break = commerce.value.serviceInfo.break;
+          serviceInfo.breakHourFrom = commerce.value.serviceInfo.breakHourFrom;
+          serviceInfo.breakHourTo = commerce.value.serviceInfo.breakHourTo;
+          serviceInfo.personalized = commerce.value.serviceInfo.personalized;
+          serviceInfo.personalizedHours = commerce.value.serviceInfo.personalizedHours;
+          serviceInfo.holiday = commerce.value.serviceInfo.holiday;
+          serviceInfo.holidays = commerce.value.serviceInfo.holidays;
         }
       }
     };
@@ -682,7 +720,7 @@ export default {
       state.showAdd = false;
     };
 
-    const handleCloseButtonMousedown = (e) => {
+    const handleCloseButtonMousedown = e => {
       // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
       if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
         const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
@@ -696,7 +734,7 @@ export default {
       }
     };
 
-    const handleModalBackdropClick = (e) => {
+    const handleModalBackdropClick = e => {
       // Remove focus when clicking backdrop to close modal
       if (e.target === e.currentTarget && document.activeElement) {
         document.activeElement.blur();
@@ -752,7 +790,7 @@ export default {
       add,
       goBack,
       isActiveBusiness,
-      selectCommerce,
+      commerce,
       dayChecked,
       checkDay,
       getQueueLink,
@@ -787,7 +825,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessQueuesAdmin.title`)"
           :toggles="state.toggles"
@@ -797,26 +838,13 @@ export default {
         </ComponentMenu>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessQueuesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['queues.admin.view']">
             <div id="businessQueuesAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessQueuesAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessQueuesAdmin.message.4.title')"
                     :content="$t('businessQueuesAdmin.message.4.content')"
@@ -832,7 +860,7 @@ export default {
                     :content="$t('businessQueuesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -855,7 +883,10 @@ export default {
                   <div v-for="(queue, index) in state.filtered" :key="index" class="result-card">
                     <div class="row">
                       <div class="col-10">
-                        <QueueSimpleName :queue="queue" :commerce-key-name="state.commerce?.keyName || ''"></QueueSimpleName>
+                        <QueueSimpleName
+                          :queue="queue"
+                          :commerce-key-name="commerce?.keyName || ''"
+                        ></QueueSimpleName>
                       </div>
                       <div class="col-2">
                         <a href="#" @click.prevent="showUpdateForm(index)">
@@ -892,14 +923,19 @@ export default {
                           <label class="form-label-modern">
                             {{ $t('businessCollaboratorsAdmin.services') }}
                           </label>
-                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
                             <select
                               class="form-control-modern form-select-modern"
                               v-model="state.service"
                               @change="selectServiceIndex(index, state.service)"
                               id="services"
                             >
-                              <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
+                              <option :value="null">
+                                {{
+                                  $t('businessCollaboratorsAdmin.selectService') ||
+                                  'Seleccionar servicio'
+                                }}
+                              </option>
                               <option v-for="com in state.services" :key="com.id" :value="com">
                                 {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
                               </option>
@@ -935,7 +971,9 @@ export default {
                           aria-controls="update-service"
                           data-bs-target="#update-service"
                         >
-                          <span class="section-toggle-text">{{ $t('businessCommercesAdmin.service') }}</span>
+                          <span class="section-toggle-text">{{
+                            $t('businessCommercesAdmin.service')
+                          }}</span>
                           <i class="bi bi-chevron-down section-toggle-icon"></i>
                         </button>
                         <div id="update-service" class="collapse row m-0">
@@ -1293,17 +1331,17 @@ export default {
       <div class="content text-center">
         <div id="page-header" class="text-center mb-3">
           <Spinner :show="loading"></Spinner>
-          <Alert :show="loading" :stack="alertError"></Alert>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -1323,20 +1361,7 @@ export default {
           <div v-if="isActiveBusiness() && state.toggles['queues.admin.view']">
             <div id="businessQueuesAdmin-controls" class="control-box">
               <div class="row">
-                <div class="col" v-if="state.commerces.length > 0">
-                  <span>{{ $t('businessQueuesAdmin.commerce') }} </span>
-                  <select
-                    class="btn btn-md fw-bold text-dark m-1 select"
-                    v-model="state.commerce"
-                    @change="selectCommerce(state.commerce)"
-                    id="modules"
-                  >
-                    <option v-for="com in state.commerces" :key="com.id" :value="com">
-                      {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                    </option>
-                  </select>
-                </div>
-                <div v-else>
+                <div v-if="!commerce">
                   <Message
                     :title="$t('businessQueuesAdmin.message.4.title')"
                     :content="$t('businessQueuesAdmin.message.4.content')"
@@ -1352,7 +1377,7 @@ export default {
                     :content="$t('businessQueuesAdmin.message.2.content')"
                   />
                 </div>
-                <div v-if="state.commerce" class="row mb-2">
+                <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
@@ -1375,7 +1400,10 @@ export default {
                   <div v-for="(queue, index) in state.filtered" :key="index" class="result-card">
                     <div class="row">
                       <div class="col-10">
-                        <QueueSimpleName :queue="queue" :commerce-key-name="state.commerce?.keyName || ''"></QueueSimpleName>
+                        <QueueSimpleName
+                          :queue="queue"
+                          :commerce-key-name="commerce?.keyName || ''"
+                        ></QueueSimpleName>
                       </div>
                       <div class="col-2">
                         <a href="#" @click.prevent="showUpdateForm(index)">
@@ -1412,14 +1440,19 @@ export default {
                           <label class="form-label-modern">
                             {{ $t('businessCollaboratorsAdmin.services') }}
                           </label>
-                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
                             <select
                               class="form-control-modern form-select-modern"
                               v-model="state.service"
                               @change="selectServiceIndex(index, state.service)"
                               id="services"
                             >
-                              <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
+                              <option :value="null">
+                                {{
+                                  $t('businessCollaboratorsAdmin.selectService') ||
+                                  'Seleccionar servicio'
+                                }}
+                              </option>
                               <option v-for="com in state.services" :key="com.id" :value="com">
                                 {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
                               </option>
@@ -1455,7 +1488,9 @@ export default {
                           aria-controls="update-service"
                           data-bs-target="#update-service"
                         >
-                          <span class="section-toggle-text">{{ $t('businessCommercesAdmin.service') }}</span>
+                          <span class="section-toggle-text">{{
+                            $t('businessCommercesAdmin.service')
+                          }}</span>
                           <i class="bi bi-chevron-down section-toggle-icon"></i>
                         </button>
                         <div id="update-service" class="collapse row m-0">
@@ -1817,178 +1852,183 @@ export default {
         aria-labelledby="staticBackdropLabel"
         aria-hidden="true"
       >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-            <button
-              id="close-modal"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-            <div v-if="state.showAdd && state.toggles['queues.admin.add']">
-              <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
-                <QueueFormAdd
-                  v-model="state.newQueue"
-                  :types="state.types"
-                  :toggles="state.toggles"
-                  :errors="{
-                    nameError: state.nameAddError,
-                    typeError: state.typeError,
-                    limitError: state.limitAddError,
-                    orderError: state.orderAddError,
-                    timeError: state.timeAddError,
-                    errorsAdd: state.errorsAdd,
-                  }"
-                />
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+              <button
+                id="close-modal"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <Spinner :show="loading"></Spinner>
+              <Alert :show="false" :stack="alertError"></Alert>
+              <div v-if="state.showAdd && state.toggles['queues.admin.add']">
+                <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
+                  <QueueFormAdd
+                    v-model="state.newQueue"
+                    :types="state.types"
+                    :toggles="state.toggles"
+                    :errors="{
+                      nameError: state.nameAddError,
+                      typeError: state.typeError,
+                      limitError: state.limitAddError,
+                      orderError: state.orderAddError,
+                      timeError: state.timeAddError,
+                      errorsAdd: state.errorsAdd,
+                    }"
+                  />
                   <div class="form-fields-container">
                     <div v-if="state.newQueue.type === 'COLLABORATOR'" class="form-group-modern">
-                    <label class="form-label-modern">
-                      {{ $t('businessQueuesAdmin.selectCollaborator') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessQueuesAdmin.collaboratorHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </label>
-                    <div style="flex: 1;">
-                      <div class="dropdown">
-                        <button
-                          class="form-control-modern form-select-modern dropdown-toggle"
-                          type="button"
-                          id="select-collaborator-add"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                          style="text-align: left; cursor: pointer;"
+                      <label class="form-label-modern">
+                        {{ $t('businessQueuesAdmin.selectCollaborator') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessQueuesAdmin.collaboratorHelp')"
                         >
-                          {{
-                            state.selectedCollaborator.name ||
-                            $t('businessQueuesAdmin.selectCollaborator')
-                          }}
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="select-collaborator-add">
-                          <li
-                            v-for="col in state.collaborators"
-                            :key="col.id"
-                            :value="col"
-                            class="list-item"
-                          >
-                            <div
-                              class="row d-flex m-1 searcher"
-                              @click="selectCollaborator(state.newQueue, col)"
-                            >
-                              <div class="col-12">
-                                <div>
-                                  <span class="item-title fw-bold"> {{ col.name }} </span>
-                                </div>
-                                <div v-if="col !== undefined">
-                                  <span class="item-subtitle text-break"> {{ col.email }} </span>
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="state.newQueue.type === 'SERVICE'" class="form-group-modern">
-                    <label class="form-label-modern">
-                      {{ $t('businessQueuesAdmin.selectService') }}
-                      <Popper
-                        :class="'dark p-1'"
-                        arrow
-                        disable-click-away
-                        :content="$t('businessQueuesAdmin.serviceHelp')"
-                      >
-                        <i class="bi bi-info-circle-fill h7"></i>
-                      </Popper>
-                    </label>
-                    <div style="flex: 1;">
-                      <div class="dropdown">
-                        <button
-                          class="form-control-modern form-select-modern dropdown-toggle"
-                          type="button"
-                          id="select-service-add"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                          style="text-align: left; cursor: pointer;"
-                        >
-                          {{
-                            state.selectedService.name || $t('businessQueuesAdmin.selectService')
-                          }}
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="select-service-add">
-                          <li
-                            v-for="serv in state.services"
-                            :key="serv.id"
-                            :value="serv"
-                            class="list-item"
-                          >
-                            <div
-                              class="row d-flex m-1 searcher"
-                              @click="selectService(state.newQueue, serv)"
-                            >
-                              <div class="col-12">
-                                <div>
-                                  <span class="item-title fw-bold"> {{ serv.name }} </span>
-                                </div>
-                                <div v-if="serv !== undefined">
-                                  <span class="item-subtitle text-break"> {{ serv.tag }} </span>
-                                </div>
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="state.newQueue.type === 'MULTI_SERVICE'" class="form-group-modern">
-                    <label class="form-label-modern">
-                      {{ $t('businessQueuesAdmin.services') }}
-                    </label>
-                    <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-                      <select
-                        class="form-control-modern form-select-modern"
-                        v-model="state.service"
-                        @change="selectServiceMultiple(state.newQueue, state.service)"
-                        id="services"
-                      >
-                        <option :value="null">{{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}</option>
-                        <option v-for="com in state.services" :key="com.id" :value="com">
-                          {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                        </option>
-                      </select>
-                      <div
-                        v-if="state.newQueue.servicesId && state.newQueue.servicesId.length > 0"
-                        class="badges-container"
-                      >
-                        <span
-                          class="badge-modern"
-                          v-for="servId in state.newQueue.servicesId"
-                          :key="servId"
-                        >
-                          {{ showService(servId) }}
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </label>
+                      <div style="flex: 1">
+                        <div class="dropdown">
                           <button
+                            class="form-control-modern form-select-modern dropdown-toggle"
                             type="button"
-                            class="badge-close"
-                            aria-label="Close"
-                            @click="deleteService(state.newQueue, servId)"
+                            id="select-collaborator-add"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            style="text-align: left; cursor: pointer"
                           >
-                            <i class="bi bi-x"></i>
+                            {{
+                              state.selectedCollaborator.name ||
+                              $t('businessQueuesAdmin.selectCollaborator')
+                            }}
                           </button>
-                        </span>
+                          <ul class="dropdown-menu" aria-labelledby="select-collaborator-add">
+                            <li
+                              v-for="col in state.collaborators"
+                              :key="col.id"
+                              :value="col"
+                              class="list-item"
+                            >
+                              <div
+                                class="row d-flex m-1 searcher"
+                                @click="selectCollaborator(state.newQueue, col)"
+                              >
+                                <div class="col-12">
+                                  <div>
+                                    <span class="item-title fw-bold"> {{ col.name }} </span>
+                                  </div>
+                                  <div v-if="col !== undefined">
+                                    <span class="item-subtitle text-break"> {{ col.email }} </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    <div v-if="state.newQueue.type === 'SERVICE'" class="form-group-modern">
+                      <label class="form-label-modern">
+                        {{ $t('businessQueuesAdmin.selectService') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessQueuesAdmin.serviceHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </label>
+                      <div style="flex: 1">
+                        <div class="dropdown">
+                          <button
+                            class="form-control-modern form-select-modern dropdown-toggle"
+                            type="button"
+                            id="select-service-add"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            style="text-align: left; cursor: pointer"
+                          >
+                            {{
+                              state.selectedService.name || $t('businessQueuesAdmin.selectService')
+                            }}
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="select-service-add">
+                            <li
+                              v-for="serv in state.services"
+                              :key="serv.id"
+                              :value="serv"
+                              class="list-item"
+                            >
+                              <div
+                                class="row d-flex m-1 searcher"
+                                @click="selectService(state.newQueue, serv)"
+                              >
+                                <div class="col-12">
+                                  <div>
+                                    <span class="item-title fw-bold"> {{ serv.name }} </span>
+                                  </div>
+                                  <div v-if="serv !== undefined">
+                                    <span class="item-subtitle text-break"> {{ serv.tag }} </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="state.newQueue.type === 'MULTI_SERVICE'" class="form-group-modern">
+                      <label class="form-label-modern">
+                        {{ $t('businessQueuesAdmin.services') }}
+                      </label>
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
+                        <select
+                          class="form-control-modern form-select-modern"
+                          v-model="state.service"
+                          @change="selectServiceMultiple(state.newQueue, state.service)"
+                          id="services"
+                        >
+                          <option :value="null">
+                            {{
+                              $t('businessCollaboratorsAdmin.selectService') ||
+                              'Seleccionar servicio'
+                            }}
+                          </option>
+                          <option v-for="com in state.services" :key="com.id" :value="com">
+                            {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+                          </option>
+                        </select>
+                        <div
+                          v-if="state.newQueue.servicesId && state.newQueue.servicesId.length > 0"
+                          class="badges-container"
+                        >
+                          <span
+                            class="badge-modern"
+                            v-for="servId in state.newQueue.servicesId"
+                            :key="servId"
+                          >
+                            {{ showService(servId) }}
+                            <button
+                              type="button"
+                              class="badge-close"
+                              aria-label="Close"
+                              @click="deleteService(state.newQueue, servId)"
+                            >
+                              <i class="bi bi-x"></i>
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <!-- Datos de Servicio -->
                   <button
@@ -1999,7 +2039,9 @@ export default {
                     aria-controls="add-service"
                     data-bs-target="#add-service"
                   >
-                    <span class="section-toggle-text">{{ $t('businessCommercesAdmin.service') }}</span>
+                    <span class="section-toggle-text">{{
+                      $t('businessCommercesAdmin.service')
+                    }}</span>
                     <i class="bi bi-chevron-down section-toggle-icon"></i>
                   </button>
                   <div id="add-service" class="collapse row m-0">
@@ -2524,11 +2566,11 @@ export default {
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
-.section-toggle-button[aria-expanded="true"] {
+.section-toggle-button[aria-expanded='true'] {
   background: rgba(0, 0, 0, 0.85);
 }
 
-.section-toggle-button[aria-expanded="true"]:hover {
+.section-toggle-button[aria-expanded='true']:hover {
   background: rgba(0, 0, 0, 0.95);
 }
 
@@ -2544,7 +2586,7 @@ export default {
   margin-left: 0.5rem;
 }
 
-.section-toggle-button[aria-expanded="true"] .section-toggle-icon {
+.section-toggle-button[aria-expanded='true'] .section-toggle-icon {
   transform: rotate(180deg);
 }
 

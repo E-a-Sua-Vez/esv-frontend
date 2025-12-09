@@ -102,10 +102,7 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle
-            :id="`${prefix}question-otherOption-${ind}`"
-            v-model="question.otherOption"
-          />
+          <Toggle :id="`${prefix}question-otherOption-${ind}`" v-model="question.otherOption" />
         </div>
         <div
           v-if="
@@ -123,15 +120,9 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle
-            :id="`${prefix}question-otherOpen-${ind}`"
-            v-model="question.otherOptionOpen"
-          />
+          <Toggle :id="`${prefix}question-otherOpen-${ind}`" v-model="question.otherOptionOpen" />
         </div>
-        <div
-          v-if="question.type === 'OPEN_WRITING'"
-          class="form-group-modern form-group-toggle"
-        >
+        <div v-if="question.type === 'OPEN_WRITING'" class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.analize') }}
             <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
@@ -141,10 +132,7 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle
-            :id="`${prefix}question-analize-${ind}`"
-            v-model="question.analize"
-          />
+          <Toggle :id="`${prefix}question-analize-${ind}`" v-model="question.analize" />
         </div>
         <div class="form-group-modern">
           <label class="form-label-modern">
@@ -190,11 +178,7 @@ export default {
           />
         </div>
         <div class="question-actions">
-          <button
-            type="button"
-            class="delete-question-btn"
-            @click="handleDeleteQuestion(question)"
-          >
+          <button type="button" class="delete-question-btn" @click="handleDeleteQuestion(question)">
             <i class="bi bi-trash3-fill"></i>
             {{ $t('businessSurveysAdmin.deleteQuestion') }}
           </button>
@@ -376,5 +360,3 @@ export default {
   }
 }
 </style>
-
-
