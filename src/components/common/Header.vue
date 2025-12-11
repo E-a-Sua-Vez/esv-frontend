@@ -129,7 +129,6 @@ export default {
           lastBusinessId.value = null;
         }
       } catch (error) {
-        console.error('Error loading available commerces:', error);
         availableCommerces.value = [];
       } finally {
         loadingCommerces.value = false;
@@ -171,7 +170,6 @@ export default {
         if (error.response && error.response.status === 401) {
           availableModules.value = [];
         } else {
-          console.error('Error loading available modules:', error);
           availableModules.value = [];
         }
       } finally {
@@ -700,7 +698,6 @@ export default {
           closeDesktopMenu();
         }
       } catch (error) {
-        console.error('Error navigating to menu option:', error);
       }
     };
 

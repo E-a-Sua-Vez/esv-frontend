@@ -70,7 +70,6 @@ export default {
         state.queues = commerceData?.queues || [];
         state.services = await getServiceByCommerce(commerceId);
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.queues = [];
         state.services = [];
       }
@@ -89,7 +88,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }
@@ -121,7 +119,6 @@ export default {
 
         loading.value = false;
       } catch (error) {
-        console.error('Error initializing product stock:', error);
         loading.value = false;
       }
     });

@@ -19,7 +19,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, getCurrentInstance } from 'vue';
 import { ATTENTION_STATUS } from '../shared/constants';
 
 const firebaseConfig = {
@@ -46,6 +46,14 @@ export const waitlistCollection = collection(firestore, 'waitlist');
 export const messageCollection = collection(firestore, 'message');
 export const bookingBlockNumberUsedCollection = collection(firestore, 'booking-block-number-used');
 
+// Helper function to safely register onUnmounted only if in component context
+function safeOnUnmounted(callback) {
+  const instance = getCurrentInstance();
+  if (instance) {
+    onUnmounted(callback);
+  }
+}
+
 export function updatedAttentions(attentionId) {
   const attentions = ref([]);
   const attentionQuery = query(attentionCollection, where('id', '==', attentionId));
@@ -56,7 +64,7 @@ export function updatedAttentions(attentionId) {
       createdAt: doc.data().createdAt.toDate().toString(),
     }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return attentions;
 }
 
@@ -66,7 +74,7 @@ export function updatedQueues(queueId) {
   const unsubscribe = onSnapshot(queueQuery, snapshot => {
     queues.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return queues;
 }
 
@@ -85,7 +93,7 @@ export function updatedAvailableAttentions(queueId) {
       createdAt: doc.data().createdAt.toDate().toString(),
     }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return attentions;
 }
 
@@ -114,7 +122,7 @@ export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
       createdAt: doc.data().createdAt.toDate().toString(),
     }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return attentions;
 }
 
@@ -141,7 +149,7 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
     }));
   });
   // Register cleanup on unmount, but also return unsubscribe for manual cleanup
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   // Return both the ref and the unsubscribe function
   attentions.value._unsubscribe = unsubscribe;
   return attentions;
@@ -167,7 +175,7 @@ export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
       createdAt: doc.data().createdAt.toDate().toString(),
     }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return attentions;
 }
 
@@ -181,7 +189,7 @@ export function updatedQueuesByCommerce(commerceId) {
   const unsubscribe = onSnapshot(queueQuery, snapshot => {
     queues.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
-  onUnmounted(unsubscribe);
+  safeOnUnmounted(unsubscribe);
   return queues;
 }
 
@@ -202,7 +210,7 @@ export function updatedAvailableMessages(collaboratorId, administratorId) {
         createdAt: doc.data().createdAt.toDate().toString(),
       }));
     });
-    onUnmounted(unsubscribe);
+    safeOnUnmounted(unsubscribe);
     return messages;
   } else if (administratorId) {
     const messages = ref([]);
@@ -220,7 +228,7 @@ export function updatedAvailableMessages(collaboratorId, administratorId) {
         createdAt: doc.data().createdAt.toDate().toString(),
       }));
     });
-    onUnmounted(unsubscribe);
+    safeOnUnmounted(unsubscribe);
     return messages;
   }
 }

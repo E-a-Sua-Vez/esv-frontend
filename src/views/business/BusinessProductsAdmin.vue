@@ -93,7 +93,6 @@ export default {
         state.products = products || [];
         state.filtered = state.products;
       } catch (error) {
-        console.error('Error loading products:', error);
         state.products = [];
         state.filtered = [];
       }
@@ -112,7 +111,6 @@ export default {
             await loadProducts(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading products on commerce change:', error);
             loading.value = false;
           }
         }

@@ -208,7 +208,6 @@ export default {
           }
         }
       } catch (error) {
-        console.error('Error loading commerce data:', error);
       }
     };
 
@@ -272,7 +271,6 @@ export default {
           await loadCommerceData();
           loading.value = false;
         } catch (error) {
-          console.error('Error handling commerce change:', error);
           loading.value = false;
         }
       },
@@ -294,7 +292,6 @@ export default {
           };
           loading.value = false;
         } catch (error) {
-          console.error('Error handling module change:', error);
           loading.value = false;
         }
       },

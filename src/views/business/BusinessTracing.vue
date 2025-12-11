@@ -136,7 +136,6 @@ export default {
         state.queues = commerceData.queues || [];
         state.services = await getServiceByCommerce(commerceId);
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.queues = [];
         state.services = [];
       }
@@ -157,7 +156,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }
@@ -310,7 +308,6 @@ export default {
 
     // Wrapper function to refresh content instance when filters change - following ProductsStockManagement pattern
     const refreshClientsContent = (filterPropsOverride = null) => {
-      console.log('refreshClientsContent called with filterPropsOverride:', filterPropsOverride);
       // Use nextTick to ensure filter instance values are updated
       nextTick(() => {
         nextTick(() => {
@@ -319,15 +316,8 @@ export default {
             const contentInstance = clientsContentRef.value;
 
             if (!filterInstance || !contentInstance) {
-              console.warn('refreshClientsContent: filterInstance or contentInstance is null');
               return;
             }
-
-            console.log(
-              'refreshClientsContent - filterInstance.daysSinceType:',
-              filterInstance.daysSinceType
-            );
-            console.log('refreshClientsContent - filterPropsOverride:', filterPropsOverride);
 
             // Clear previous data immediately
             contentInstance.clients = [];
@@ -349,61 +339,21 @@ export default {
                 filterPropsOverride[key] !== undefined &&
                 filterPropsOverride[key] !== null
               ) {
-                console.log(
-                  `refreshClientsContent - Using override value for ${key}:`,
-                  filterPropsOverride[key],
-                  'from override:',
-                  filterPropsOverride
-                );
                 return filterPropsOverride[key];
               }
               const instanceValue = filterInstance[key];
-              console.log(
-                `refreshClientsContent - Using instance value for ${key}:`,
-                instanceValue,
-                'from instance'
-              );
               return instanceValue;
             };
 
             // Debug: log filter values
-            console.log('refreshClientsContent - Filter values:', {
-              daysSinceType: getValue('daysSinceType'),
-              filterInstanceDaysSinceType: filterInstance.daysSinceType,
-              filterPropsOverride,
-              daysSinceContacted: filterInstance.daysSinceContacted,
-              contactResultType: filterInstance.contactResultType,
-              contactable: filterInstance.contactable,
-              contacted: filterInstance.contacted,
-              survey: filterInstance.survey,
-              searchText: filterInstance.searchText,
-              queueId: filterInstance.queueId,
-              serviceId: filterInstance.serviceId,
-              startDate: filterInstance.startDate,
-              endDate: filterInstance.endDate,
-              pendingControls: filterInstance.pendingControls,
-              pendingBookings: filterInstance.pendingBookings,
-              firstAttentionForm: filterInstance.firstAttentionForm,
-              ratingType: filterInstance.ratingType,
-              npsType: filterInstance.npsType,
-            });
 
             const daysSinceTypeValue = getValue('daysSinceType');
-            console.log('refreshClientsContent - Setting daysSinceType to:', daysSinceTypeValue);
             // Directly assign the value to ensure it's set
             if (daysSinceTypeValue !== undefined && daysSinceTypeValue !== null) {
               contentInstance.daysSinceType = daysSinceTypeValue;
-              console.log(
-                'refreshClientsContent - daysSinceType assigned, verifying:',
-                contentInstance.daysSinceType
-              );
             } else {
               // If no override value, use the instance value
               contentInstance.daysSinceType = filterInstance.daysSinceType;
-              console.log(
-                'refreshClientsContent - daysSinceType from instance:',
-                contentInstance.daysSinceType
-              );
             }
             contentInstance.daysSinceContacted = getValue('daysSinceContacted');
             contentInstance.contactResultType = getValue('contactResultType');
@@ -447,55 +397,21 @@ export default {
             contentInstance._skipWatch = false;
 
             // Verify the value was set correctly before refreshing
-            console.log(
-              'refreshClientsContent - Before refresh, contentInstance.daysSinceType:',
-              contentInstance.daysSinceType
-            );
-            console.log('refreshClientsContent - All contentInstance filter values:', {
-              daysSinceType: contentInstance.daysSinceType,
-              daysSinceContacted: contentInstance.daysSinceContacted,
-              contactResultType: contentInstance.contactResultType,
-              contactable: contentInstance.contactable,
-              contacted: contentInstance.contacted,
-              survey: contentInstance.survey,
-              asc: contentInstance.asc,
-              searchText: contentInstance.searchText,
-              queueId: contentInstance.queueId,
-              serviceId: contentInstance.serviceId,
-              startDate: contentInstance.startDate,
-              endDate: contentInstance.endDate,
-              pendingControls: contentInstance.pendingControls,
-              pendingBookings: contentInstance.pendingBookings,
-              firstAttentionForm: contentInstance.firstAttentionForm,
-              ratingType: contentInstance.ratingType,
-              npsType: contentInstance.npsType,
-            });
 
             // Force Vue to update the reactive properties
             nextTick(() => {
               nextTick(() => {
                 if (contentInstance && contentInstance.refresh) {
-                  console.log(
-                    'refreshClientsContent - Calling refresh(1) with daysSinceType:',
-                    contentInstance.daysSinceType
-                  );
                   // Double-check the value is still there
                   if (contentInstance.daysSinceType) {
-                    console.log('refreshClientsContent - daysSinceType is set, calling refresh');
                   } else {
-                    console.warn('refreshClientsContent - WARNING: daysSinceType is not set!');
                   }
                   contentInstance.refresh(1);
                 } else {
-                  console.warn('refreshClientsContent: contentInstance.refresh is not available');
                 }
               });
             });
           } else {
-            console.warn('refreshClientsContent: clientsFilterRef or clientsContentRef is null', {
-              filterRef: !!clientsFilterRef.value,
-              contentRef: !!clientsContentRef.value,
-            });
           }
         });
       });
@@ -535,7 +451,6 @@ export default {
             }
 
             if (!contentInstance) {
-              console.warn('refreshAttentionsContent: contentInstance is null');
               return;
             }
 
@@ -673,20 +588,10 @@ export default {
                 if (contentInstance && contentInstance.refresh) {
                   contentInstance.refresh(1);
                 } else {
-                  console.warn(
-                    'refreshAttentionsContent: contentInstance.refresh is not available'
-                  );
                 }
               });
             });
           } else {
-            console.warn(
-              'refreshAttentionsContent: attentionsFilterRef or attentionsContentRef is null',
-              {
-                filterRef: !!attentionsFilterRef.value,
-                contentRef: !!attentionsContentRef.value,
-              }
-            );
           }
         });
       });
@@ -708,32 +613,20 @@ export default {
             }
             // Use Vue.set or direct assignment to ensure reactivity
             contentWrapper._isRefreshing = true;
-            console.log(
-              '🔍 refreshBookingsContent (parent) - Set _isRefreshing = true IMMEDIATELY'
-            );
 
             // CRITICAL: Force update to ensure the flag is set before any template re-evaluation
             contentWrapper.$forceUpdate();
 
             // CRITICAL: Verify that bookings tab is active BEFORE doing anything
-            console.log('🔍 refreshBookingsContent (parent) - Checking states:', {
-              showBookingsResults: contentWrapper.showBookingsResults,
-              showAttentionsResults: contentWrapper.showAttentionsResults,
-              _isRefreshing: contentWrapper._isRefreshing,
-            });
 
             // CRITICAL: If bookings is not active, don't refresh - this prevents state resets
             if (!contentWrapper.showBookingsResults) {
-              console.warn(
-                '⚠️ refreshBookingsContent: showBookingsResults is false, SKIPPING refresh to prevent state reset...'
-              );
               contentWrapper._isRefreshing = false;
               return;
             }
 
             // CRITICAL: Ensure states are correct before proceeding
             if (contentWrapper.showAttentionsResults) {
-              console.warn('⚠️ refreshBookingsContent: showAttentionsResults is true, fixing...');
               contentWrapper.showAttentionsResults = false;
               contentWrapper.showBookingsResults = true;
               // Force update to ensure the change is reflected
@@ -742,7 +635,6 @@ export default {
 
             // CRITICAL: Double-check states are still correct before continuing
             if (!contentWrapper.showBookingsResults || contentWrapper.showAttentionsResults) {
-              console.error('❌ refreshBookingsContent: States are incorrect, aborting...');
               contentWrapper._isRefreshing = false;
               return;
             }
@@ -778,14 +670,6 @@ export default {
               const componentName =
                 contentInstance.$options?.name || contentInstance.$options?.__name;
               if (componentName !== 'DashboardBookingsManagement') {
-                console.error(
-                  'refreshBookingsContent: contentInstance is not DashboardBookingsManagement, it is:',
-                  componentName
-                );
-                console.error('Available refs:', Object.keys(contentWrapper.$refs || {}));
-                console.error(
-                  'Available children:',
-                  contentWrapper.$children?.map(c => c.$options?.name || c.$options?.__name)
                 );
                 return;
               }
@@ -807,9 +691,6 @@ export default {
             }
 
             if (!contentInstance) {
-              console.warn(
-                'refreshBookingsContent: contentInstance is null. Available refs:',
-                Object.keys(contentWrapper.$refs || {})
               );
               return;
             }
@@ -918,10 +799,6 @@ export default {
             const finalComponentName =
               contentInstance.$options?.name || contentInstance.$options?.__name;
             if (finalComponentName !== 'DashboardBookingsManagement') {
-              console.error(
-                'refreshBookingsContent: About to call refresh on wrong component:',
-                finalComponentName
-              );
               return;
             }
 
@@ -934,31 +811,17 @@ export default {
                   if (verifyName === 'DashboardBookingsManagement') {
                     contentInstance.refresh(1);
                   } else {
-                    console.error(
-                      'refreshBookingsContent: Component changed to:',
-                      verifyName,
-                      'aborting refresh'
-                    );
                   }
                 } else {
-                  console.warn('refreshBookingsContent: contentInstance.refresh is not available');
                 }
 
                 // CRITICAL: Clear the refreshing flag after refresh is complete
                 if (contentWrapper && contentWrapper._isRefreshing !== undefined) {
                   contentWrapper._isRefreshing = false;
-                  console.log('🔍 refreshBookingsContent (parent) - Cleared _isRefreshing flag');
                 }
               });
             });
           } else {
-            console.warn(
-              'refreshBookingsContent: attentionsFilterRef or attentionsContentRef is null',
-              {
-                filterRef: !!attentionsFilterRef.value,
-                contentRef: !!attentionsContentRef.value,
-              }
-            );
             // CRITICAL: Clear the refreshing flag even if refs are null
             if (
               attentionsContentRef.value &&
@@ -979,7 +842,6 @@ export default {
             const contentInstance = surveysContentRef.value;
 
             if (!filterInstance || !contentInstance) {
-              console.warn('refreshSurveysContent: filterInstance or contentInstance is null');
               return;
             }
 
@@ -1027,18 +889,12 @@ export default {
             nextTick(() => {
               nextTick(() => {
                 if (contentInstance && contentInstance.refresh) {
-                  console.log('refreshSurveysContent - Calling refresh(1)');
                   contentInstance.refresh(1);
                 } else {
-                  console.warn('refreshSurveysContent: contentInstance.refresh is not available');
                 }
               });
             });
           } else {
-            console.warn('refreshSurveysContent: surveysFilterRef or surveysContentRef is null', {
-              filterRef: !!surveysFilterRef.value,
-              contentRef: !!surveysContentRef.value,
-            });
           }
         });
       });
@@ -2178,20 +2034,9 @@ export default {
                   >
                     <template #filters-exposed="filterProps">
                       {{
-                        console.log(
-                          '🔍 FILTER PROPS RECEIVED:',
-                          filterProps.filterType,
-                          'Full props:',
-                          Object.keys(filterProps),
-                          filterProps
-                        )
                       }}
                       <template v-if="filterProps.filterType === 'attentions'">
                         {{
-                          console.log(
-                            '✅ RENDERING ATTENTIONS FILTERS - filterType is:',
-                            filterProps.filterType
-                          )
                         }}
                         <div class="filters-content-wrapper" key="attentions-filters">
                           <!-- Date quick buttons -->
@@ -3219,11 +3064,6 @@ export default {
                       </template>
                       <template v-else-if="filterProps.filterType === 'bookings'">
                         {{
-                          console.log(
-                            '✅ RENDERING BOOKINGS FILTERS - filterType is:',
-                            filterProps.filterType,
-                            'Full props:',
-                            Object.keys(filterProps)
                           )
                         }}
                         <div class="filters-content-wrapper" key="bookings-filters">

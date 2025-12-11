@@ -824,6 +824,7 @@
     "willBeAttendedShortly": "Serás atendido en breve.",
     "estimatedTime": "Tiempo estimado",
     "estimatedTimeInit": "00:01",
+    "intelligentEstimationTooltip": "Este tiempo fue calculado usando aprendizaje inteligente basado en datos históricos de servicios completados. El sistema aprende continuamente para proporcionar estimaciones más precisas.",
     "itsYourAttention": "Presenta este código QR al colaborador para validar tu atención:",
     "getClose": "Acércate al módulo:",
     "attendedBy": "Serás atendido por:",
@@ -893,6 +894,7 @@
     "cancel": "Cancelar Reserva",
     "estimatedTime": "Tiempo estimado",
     "estimatedTimeInit": "00:01",
+    "intelligentEstimationTooltip": "Este tiempo fue calculado usando aprendizaje inteligente basado en datos históricos de servicios completados. El sistema aprende continuamente para proporcionar estimaciones más precisas.",
     "important": "Importante:",
     "shouldCome": "Presentate el día:",
     "operationStart": "La operación del comercio comienza a las:",
@@ -1096,6 +1098,13 @@
     "attentions": "En fila",
     "attending": "Atendiendo",
     "return": "Volver",
+    "pending": "Pendientes",
+    "processing": "En Procesamiento",
+    "estimatedWait": "Tiempo Estimado",
+    "intelligentEstimationTooltip": "Este tiempo fue calculado usando aprendizaje inteligente basado en datos históricos de servicios completados. El sistema aprende continuamente para proporcionar estimaciones más precisas.",
+    "dedicated": "Dedicada",
+    "active": "Activa",
+    "inactive": "Inactiva",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1151,6 +1160,7 @@
     "create": "Crear una Reserva",
     "listResult": "Registros:",
     "attentions": "Atenciones (Hoy)",
+    "todayAttentions": "Atenciones de Hoy",
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
     "queues": "Filas Generales/Servicios",
@@ -1171,6 +1181,10 @@
     "noBookings": {
       "title": "No se Encontraron Reservas",
       "content": "No hay reservas para mostrar en este momento."
+    },
+    "noAttentions": {
+      "title": "No se Encontraron Atenciones",
+      "content": "No hay atenciones creadas hoy para mostrar en este momento."
     },
     "confirm": "Confirmar",
     "paymentConfirm": "Confirmar/ Pago",
@@ -1535,6 +1549,33 @@
     "surveys-consolidated": "Encuestas (Consolidado)",
     "details": "Detalles",
     "seconds": "En Minutos",
+    "intelligentEstimationTooltip": "Este tiempo fue calculado usando aprendizaje inteligente (mediana) basado en datos históricos de servicios completados. La mediana es más robusta que el promedio, no siendo afectada por valores extremos.",
+    "queueDetails": {
+      "title": "Detalles por Cola",
+      "subtitle": "Atenciones, reservas y tiempo medio por cola",
+      "maxQueue": "Cola con más atenciones"
+    },
+    "collaborators": {
+      "tooltip": "Métricas de productividad, eficiencia y calidad de servicio por colaborador. Incluye comparación con el promedio del equipo, ratings de satisfacción e indicadores de desempeño.",
+      "total": "Total Colaboradores",
+      "avgAttentions": "Promedio Atenciones",
+      "avgDuration": "Tiempo Promedio",
+      "avgRating": "Rating Promedio",
+      "attentions": "Atenciones",
+      "rating": "Rating",
+      "efficiency": "Eficiencia",
+      "efficiencyDesc": "atenciones/hora",
+      "surveys": "Encuestas",
+      "topPerformer": "Top",
+      "sortBy": "Ordenar por:",
+      "sort": {
+        "attentions": "Atenciones",
+        "duration": "Duración",
+        "rating": "Rating",
+        "efficiency": "Eficiencia"
+      },
+      "noData": "No hay datos de colaboradores disponibles"
+    },
     "keyWords": "Palabras clave: ¿De qué hablan tus clientes?",
     "sentiment": "Análisis de sentimientos de los comentarios de los clientes. Malo: -1 a 0.1, Regular: 0.1 a 0.5, Bueno: 0.5 a 1.",
     "rating": "Calificación de satisfacción los clientes. Malo: 0 a 2.5, Regular: 2.5 a 4, Bueno: 4 a 5.",

@@ -84,7 +84,6 @@ export default {
         state.services = services || [];
         state.filtered = state.services;
       } catch (error) {
-        console.error('Error loading services:', error);
         state.services = [];
         state.filtered = [];
       }
@@ -103,7 +102,6 @@ export default {
             await loadServices(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading services on commerce change:', error);
             loading.value = false;
           }
         }

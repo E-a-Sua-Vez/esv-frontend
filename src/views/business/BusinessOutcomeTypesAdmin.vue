@@ -81,7 +81,6 @@ export default {
         state.outcomeTypes = outcomeTypes || [];
         state.filtered = state.outcomeTypes;
       } catch (error) {
-        console.error('Error loading outcome types:', error);
         state.outcomeTypes = [];
         state.filtered = [];
       }
@@ -100,7 +99,6 @@ export default {
             await loadOutcomeTypes(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading outcome types on commerce change:', error);
             loading.value = false;
           }
         }

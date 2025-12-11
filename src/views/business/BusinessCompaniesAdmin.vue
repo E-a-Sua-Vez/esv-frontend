@@ -85,7 +85,6 @@ export default {
         state.companies = companies || [];
         state.filtered = state.companies;
       } catch (error) {
-        console.error('Error loading companies:', error);
         state.companies = [];
         state.filtered = [];
       }
@@ -104,7 +103,6 @@ export default {
             await loadCompanies(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading companies on commerce change:', error);
             loading.value = false;
           }
         }

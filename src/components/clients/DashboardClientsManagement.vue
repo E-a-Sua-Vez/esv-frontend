@@ -90,31 +90,6 @@ export default {
         const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
         const endDateParam = this.endDate && this.endDate !== '' ? this.endDate : undefined;
 
-        console.log('DashboardClientsManagement - Calling getClientsDetails with filters:', {
-          businessId: this.business.id,
-          commerceId: this.commerce.id,
-          from: startDateParam,
-          to: endDateParam,
-          commerceIds,
-          page: this.page,
-          limit: this.limit,
-          daysSinceType: this.daysSinceType,
-          daysSinceContacted: this.daysSinceContacted,
-          contactable: this.contactable,
-          contacted: this.contacted,
-          searchText: searchTextParam,
-          queueId: this.queueId,
-          serviceId: this.serviceId,
-          survey: this.survey,
-          asc: this.asc,
-          contactResultType: this.contactResultType,
-          pendingControls: this.pendingControls,
-          pendingBookings: this.pendingBookings,
-          firstAttentionForm: this.firstAttentionForm,
-          ratingType: this.ratingType,
-          npsType: this.npsType,
-        });
-
         this.clients = await getClientsDetails(
           this.business.id,
           this.commerce.id,

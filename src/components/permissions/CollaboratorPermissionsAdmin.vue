@@ -75,7 +75,6 @@ export default {
         state.collaborators = await getCollaboratorsByCommerceId(commerceId);
         clear();
       } catch (error) {
-        console.error('Error loading collaborators:', error);
         state.collaborators = [];
         clear();
       }
@@ -91,7 +90,6 @@ export default {
             await loadCollaborators(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading collaborators on commerce change:', error);
             loading.value = false;
           }
         }

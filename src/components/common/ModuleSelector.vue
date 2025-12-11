@@ -121,7 +121,6 @@ export default {
           selectedModule.value = null;
           await store.setCurrentModule(null);
         } else {
-          console.error('Error loading modules:', error);
         }
         loading.value = false;
       }
@@ -150,7 +149,6 @@ export default {
         }
         loading.value = false;
       } catch (error) {
-        console.error('Error selecting module:', error);
         loading.value = false;
       }
     };

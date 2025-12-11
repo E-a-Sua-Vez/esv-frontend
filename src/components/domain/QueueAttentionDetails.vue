@@ -209,6 +209,7 @@ export default {
               "
               :number="attention.number"
               :data="attention.user"
+              :attention="attention"
               :show-data="false"
               :to-list="true"
             >

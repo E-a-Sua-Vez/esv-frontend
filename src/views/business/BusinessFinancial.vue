@@ -90,7 +90,6 @@ export default {
         const commerceData = await getCommerceById(commerceId);
         state.queues = commerceData.queues || [];
       } catch (error) {
-        console.error('Error loading queues:', error);
         state.queues = [];
       }
     };
@@ -107,7 +106,6 @@ export default {
             await loadQueues(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading queues on commerce change:', error);
             loading.value = false;
           }
         }

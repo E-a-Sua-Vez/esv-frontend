@@ -74,19 +74,6 @@ export default {
         const commerceIds = [this.commerce.id];
 
         // Log filter values for debugging
-        console.log('ProductsStockManagement refresh with filters:', {
-          expired: this.expired,
-          replacement: this.replacement,
-          productStatus: this.productStatus,
-          searchText: this.searchText,
-          searchTextType: typeof this.searchText,
-          searchTextValue: this.searchText,
-          asc: this.asc,
-          page: this.page,
-          limit: this.limit,
-          showProductStockManagement: this.showProductStockManagement,
-        });
-
         // Ensure searchText is passed correctly (even if empty string)
         const searchTextParam =
           this.searchText !== null && this.searchText !== undefined ? this.searchText : undefined;
@@ -94,18 +81,6 @@ export default {
         // Ensure dates are properly formatted (YYYY-MM-DD) or undefined
         const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
         const endDateParam = this.endDate && this.endDate !== '' ? this.endDate : undefined;
-
-        console.log('ProductsStockManagement - Calling getProductsDetails with filters:', {
-          searchText: searchTextParam,
-          startDate: startDateParam,
-          endDate: endDateParam,
-          queueId: this.queueId,
-          serviceId: this.serviceId,
-          expired: this.expired,
-          replacement: this.replacement,
-          productStatus: this.productStatus,
-        });
-
         const result = await getProductsDetails(
           this.business.id,
           this.commerce.id,
@@ -122,15 +97,6 @@ export default {
           this.queueId,
           this.serviceId
         );
-
-        console.log(
-          'ProductsStockManagement refresh result:',
-          result?.length || 0,
-          'products',
-          'showProductStockManagement:',
-          this.showProductStockManagement
-        );
-
         // Always set products to the result (even if empty array)
         // This ensures the UI updates correctly
         if (result && Array.isArray(result) && result.length > 0) {
@@ -148,7 +114,6 @@ export default {
         }
         this.loading = false;
       } catch (error) {
-        console.error('ProductsStockManagement refresh error:', error);
         this.products = [];
         this.counter = 0;
         this.totalPages = 0;

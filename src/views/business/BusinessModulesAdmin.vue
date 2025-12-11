@@ -72,7 +72,6 @@ export default {
         state.modules = modules || [];
         state.filtered = state.modules;
       } catch (error) {
-        console.error('Error loading modules:', error);
         state.modules = [];
         state.filtered = [];
       }
@@ -91,7 +90,6 @@ export default {
             await loadModules(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading modules on commerce change:', error);
             loading.value = false;
           }
         }

@@ -93,7 +93,6 @@ export default {
             await refresh();
             loading.value = false;
           } catch (error) {
-            console.error('Error refreshing documents on commerce change:', error);
             loading.value = false;
           }
         }

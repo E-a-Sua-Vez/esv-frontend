@@ -821,6 +821,7 @@
     "willBeAttendedShortly": "You will be attended shortly.",
     "estimatedTime": "Estimated Time",
     "estimatedTimeInit": "01:00",
+    "intelligentEstimationTooltip": "This time was calculated using intelligent learning based on historical data from completed services. The system continuously learns to provide more accurate estimates.",
     "itsYourAttention": "Present this QR code to the collaborator to validate your service:",
     "getClose": "Get close to module:",
     "attendedBy": "You'll be attended by:",
@@ -890,6 +891,7 @@
     "cancel": "Cancel Booking",
     "estimatedTime": "Estimated Time",
     "estimatedTimeInit": "01:00",
+    "intelligentEstimationTooltip": "This time was calculated using intelligent learning based on historical data from completed services. The system continuously learns to provide more accurate estimates.",
     "important": "Important:",
     "shouldCome": "Should come on:",
     "operationStart": "The operation starts at:",
@@ -1101,6 +1103,13 @@
     "attentions": "In queue",
     "attending": "Attending",
     "return": "Back",
+    "pending": "Pending",
+    "processing": "Processing",
+    "estimatedWait": "Estimated Wait",
+    "intelligentEstimationTooltip": "This time was calculated using intelligent learning based on historical data from completed services. The system continuously learns to provide more accurate estimates.",
+    "dedicated": "Dedicated",
+    "active": "Active",
+    "inactive": "Inactive",
     "message": {
       "1": {
         "title": "Oh no!",
@@ -1155,6 +1164,7 @@
     "return": "Back",
     "create": "Create a Booking",
     "listResult": "Results:",
+    "todayAttentions": "Today's Attentions",
     "bookings": "Bookings",
     "waitlists": "Waitlist",
     "queues": "General Queues/Services",
@@ -1176,6 +1186,10 @@
     "noBookings": {
       "title": "No Bookings Found",
       "content": "There are no bookings to display at this time."
+    },
+    "noAttentions": {
+      "title": "No Attentions Found",
+      "content": "There are no attentions created today to display at this time."
     },
     "confirm": "Confirm",
     "paymentConfirm": "Confirm/ Payment",
@@ -1535,6 +1549,33 @@
     "surveys-management": "Surveys (Details)",
     "surveys-consolidated": "Surveys (Consolidated)",
     "seconds": "In Minutes",
+    "intelligentEstimationTooltip": "This time was calculated using intelligent learning (median) based on historical data from completed services. The median is more robust than the average, not being affected by extreme values.",
+    "queueDetails": {
+      "title": "Queue Details",
+      "subtitle": "Attentions, bookings and average time per queue",
+      "maxQueue": "Queue with most attentions"
+    },
+    "collaborators": {
+      "tooltip": "Productivity, efficiency and service quality metrics per collaborator. Includes comparison with team average, satisfaction ratings and performance indicators.",
+      "total": "Total Collaborators",
+      "avgAttentions": "Average Attentions",
+      "avgDuration": "Average Time",
+      "avgRating": "Average Rating",
+      "attentions": "Attentions",
+      "rating": "Rating",
+      "efficiency": "Efficiency",
+      "efficiencyDesc": "attentions/hour",
+      "surveys": "Surveys",
+      "topPerformer": "Top",
+      "sortBy": "Sort by:",
+      "sort": {
+        "attentions": "Attentions",
+        "duration": "Duration",
+        "rating": "Rating",
+        "efficiency": "Efficiency"
+      },
+      "noData": "No collaborator data available"
+    },
     "keyWords": "Key Words: What are your clients talking about?",
     "sentiment": "Sentiment analysis of customer feedback. Bad: -1 to 0.1, Fair: 0.1 to 0.7, Good: 0.5 to 1.",
     "rating": "Customer satisfaction rating. Bad: 0 to 2.5, Fair: 2.5 to 4, Good: 4 to 5.",

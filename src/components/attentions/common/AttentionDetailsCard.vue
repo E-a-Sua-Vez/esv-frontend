@@ -30,6 +30,7 @@ export default {
     detailsOpened: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
+    disableClick: { type: Boolean, default: false },
   },
   data() {
     const store = globalStore();
@@ -358,9 +359,10 @@ export default {
 <template>
   <div v-if="show && attention">
     <div
-      class="row metric-card attention-link"
-      :href="`#data-attention-${attention.number}`"
-      @click.prevent="showDetails()"
+      class="row metric-card"
+      :class="disableClick ? '' : 'attention-link'"
+      :href="disableClick ? undefined : `#data-attention-${attention.number}`"
+      @click.prevent="disableClick ? null : showDetails()"
     >
       <div v-if="attention.servicesDetails" class="idNumber-title lefted">
         <span
