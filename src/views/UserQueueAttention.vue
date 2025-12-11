@@ -5,7 +5,7 @@ import { getAttentionDetails, cancelAttention } from '../application/services/at
 import { getFormsByClient } from '../application/services/form';
 import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
 import { getCommerceById } from '../application/services/commerce';
-import { getQueueById } from '../application/services/queue';
+import { getQueueById, getEstimatedWaitTime } from '../application/services/queue';
 import { getUserById } from '../application/services/user';
 import { getCollaboratorById } from '../application/services/collaborator';
 import { getModuleById } from '../application/services/module';
@@ -60,6 +60,7 @@ export default {
       survey: ref({}),
       beforeYou: ref(0),
       estimatedTime: ref('00:01'),
+      usingIntelligentEstimation: ref(false),
       soundEnabled: false,
       soundPlayed: false,
       goToCancel: false,
@@ -119,11 +120,35 @@ export default {
             if (!attentionDetails.queue) {
               state.queue = await getQueueById(attention.queueId);
             }
-            const totalMinutes = state.beforeYou * state.queue.estimatedTime;
-            state.estimatedTime =
-              totalMinutes > 0
-                ? getEstimatedTime(totalMinutes)
-                : getEstimatedTime(state.queue.estimatedTime);
+            // Try to get intelligent estimation
+            try {
+              const intelligentEstimation = await getEstimatedWaitTime(
+                attention.queueId,
+                state.beforeYou,
+                'p75'
+              );
+
+              if (intelligentEstimation && intelligentEstimation.estimatedTime) {
+                state.estimatedTime = intelligentEstimation.estimatedTime;
+                state.usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
+              } else {
+                // Fallback to hardcoded calculation
+                const totalMinutes = state.beforeYou * state.queue.estimatedTime;
+                state.estimatedTime =
+                  totalMinutes > 0
+                    ? getEstimatedTime(totalMinutes)
+                    : getEstimatedTime(state.queue.estimatedTime);
+                state.usingIntelligentEstimation = false;
+              }
+            } catch (error) {
+              // Fallback to hardcoded calculation on error
+              const totalMinutes = state.beforeYou * state.queue.estimatedTime;
+              state.estimatedTime =
+                totalMinutes > 0
+                  ? getEstimatedTime(totalMinutes)
+                  : getEstimatedTime(state.queue.estimatedTime);
+              state.usingIntelligentEstimation = false;
+            }
             state.commerce = attentionDetails.commerce;
             if (!attentionDetails.commerce) {
               state.commerce = await getCommerceById(state.queue.commerceId);
@@ -565,12 +590,13 @@ export default {
               </div>
             </div>
             <div id="attention" v-else>
-              <div class="your-attention mt-2">
+              <div class="your-attention mt-4 mb-3">
                 <span>{{ $t('userQueueAttention.yourNumber') }}</span>
               </div>
               <AttentionNumber
                 :number="state.attention.number"
                 :data="state.user"
+                :attention="state.attention"
               ></AttentionNumber>
               <div v-if="itsYourTurn()" id="attention-data" class="to-goal">
                 <div class="row g-2 attention-details-container">
@@ -661,6 +687,14 @@ export default {
                       <div class="attention-card-content">
                         <span class="attention-details-title">
                           {{ $t('userQueueAttention.estimatedTime') }}*
+                          <span
+                            v-if="state.usingIntelligentEstimation"
+                            v-b-tooltip.hover
+                            :title="$t('userQueueAttention.intelligentEstimationTooltip')"
+                            class="ai-badge ms-1"
+                          >
+                            <i class="bi bi-stars"></i>
+                          </span>
                         </span>
                         <span class="attention-details-content">
                           <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }}
@@ -924,6 +958,30 @@ export default {
   font-size: 0.75rem;
   line-height: 1rem !important;
   margin-bottom: 0;
+}
+
+.ai-badge {
+  display: inline-block;
+  color: #ffc107;
+  font-size: 0.9rem;
+  cursor: help;
+  vertical-align: middle;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.ai-badge i {
+  filter: drop-shadow(0 0 2px rgba(255, 193, 7, 0.5));
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 
 .attention-details-content {

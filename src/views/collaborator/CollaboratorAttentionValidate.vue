@@ -1,5 +1,5 @@
 <script>
-import { reactive, nextTick, onBeforeMount, ref, computed, watch } from 'vue';
+import { reactive, nextTick, onBeforeMount, onMounted, onUnmounted, ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { finishAttention, skip, getAttentionDetails } from '../../application/services/attention';
 import { globalStore } from '../../stores';
@@ -26,6 +26,7 @@ import ProductAttentionManagement from '../../components/products/domain/Product
 import PatientHistoryManagement from '../../components/patient-history/domain/PatientHistoryManagement.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
 import AttentionDetailsNumber from '../../components/common/AttentionDetailsNumber.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorAttentionValidate',
@@ -43,6 +44,7 @@ export default {
     PatientHistoryManagement,
     AttentionDetailsCard,
     AttentionDetailsNumber,
+    Popper,
   },
   async setup() {
     const route = useRoute();
@@ -211,6 +213,95 @@ export default {
       }
     };
 
+    // Force update trigger for live stats
+    const statsUpdateTrigger = ref(0);
+
+    // Live update interval for stats
+    let statsInterval = null;
+
+    onMounted(() => {
+      // Update stats every minute for live updates
+      statsInterval = setInterval(() => {
+        // Force reactivity update by incrementing trigger
+        statsUpdateTrigger.value++;
+      }, 60000); // Update every minute
+    });
+
+    onUnmounted(() => {
+      if (statsInterval) {
+        clearInterval(statsInterval);
+      }
+    });
+
+    // Attention Statistics Computed
+    const attentionStats = computed(() => {
+      // Use trigger to force recomputation
+      const _ = statsUpdateTrigger.value;
+
+      if (!state.attention || !state.attention.id) {
+        return null;
+      }
+
+      const createdDate = state.attention.createdDate || state.attention.createdAt;
+      if (!createdDate) {
+        return null;
+      }
+
+      let created;
+      if (createdDate instanceof Date) {
+        created = createdDate;
+      } else if (createdDate.toDate && typeof createdDate.toDate === 'function') {
+        created = createdDate.toDate();
+      } else if (createdDate.seconds) {
+        created = new Date(createdDate.seconds * 1000);
+      } else {
+        created = new Date(createdDate);
+      }
+
+      const now = new Date();
+      const diffMs = now - created;
+      const minutes = Math.floor(diffMs / (1000 * 60));
+      const hours = Math.floor(minutes / 60);
+
+      let elapsedDisplay = '';
+      if (minutes < 60) {
+        elapsedDisplay = `${minutes} min`;
+      } else if (hours < 24) {
+        elapsedDisplay = `${hours}h ${minutes % 60}min`;
+      } else {
+        const days = Math.floor(hours / 24);
+        elapsedDisplay = `${days}d ${hours % 24}h`;
+      }
+
+      const creationTime = created.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const creationDate = created.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+      let timeStatus = 'neutral';
+      let timeColor = '#a9a9a9';
+      if (minutes < 10) {
+        timeStatus = 'excellent';
+        timeColor = '#00c2cb';
+      } else if (minutes < 60) {
+        timeStatus = 'good';
+        timeColor = '#f9c322';
+      } else if (minutes < 180) {
+        timeStatus = 'warning';
+        timeColor = '#ff9800';
+      } else {
+        timeStatus = 'poor';
+        timeColor = '#a52a2a';
+      }
+
+      return {
+        creationTime,
+        creationDate,
+        elapsedTime: elapsedDisplay,
+        elapsedMinutes: minutes,
+        timeStatus,
+        timeColor,
+      };
+    });
+
     return {
       id,
       state,
@@ -224,6 +315,8 @@ export default {
       isReactivated,
       getActiveFeature,
       getAttentionProducts,
+      attentionStats,
+      statsUpdateTrigger,
     };
   },
 };
@@ -257,17 +350,72 @@ export default {
           "
         >
           <div id="page-header" class="text-center">
-            <div class="your-attention mt-2">
+            <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
             </div>
           </div>
-          <AttentionDetailsNumber
+          <AttentionNumber
             :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-            :attention="state.attentionDetails"
             :number="state.attention.number"
             :data="state.user"
-            :show-data="true"
-          ></AttentionDetailsNumber>
+            :attention="state.attention"
+          ></AttentionNumber>
+          <!-- Attention Statistics Cards -->
+          <div v-if="attentionStats" class="attention-stats-grid mt-3">
+            <!-- Elapsed Time Card -->
+            <div class="stat-card stat-card-time" :class="`stat-card-${attentionStats.timeStatus}`">
+              <div class="stat-card-icon stat-card-icon-with-popper">
+                <i class="bi bi-hourglass-split"></i>
+                <Popper :class="'dark'" arrow hover placement="top" :z-index="10001">
+                  <template #content>
+                    <div class="popper-content">
+                      <div class="popper-title">Tempo de Espera - Indicadores de Cor</div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #00c2cb;"></span>
+                        <span><strong>Verde:</strong> Menos de 10 minutos - Excelente</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #f9c322;"></span>
+                        <span><strong>Amarelo:</strong> Menos de 1 hora - Bom</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #ff9800;"></span>
+                        <span><strong>Laranja:</strong> Menos de 3 horas - Atenção</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #a52a2a;"></span>
+                        <span><strong>Vermelho:</strong> Mais de 3 horas - Urgente</span>
+                      </div>
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle popper-trigger-icon"></i>
+                </Popper>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">
+                  Tempo de Espera
+                  <span class="spy-live-indicator" title="Actualización en tiempo real">
+                    <span class="spy-live-dot"></span>
+                  </span>
+                </div>
+                <div class="stat-card-value" :style="{ color: attentionStats.timeColor }">
+                  {{ attentionStats.elapsedTime }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Creation Time Card -->
+            <div class="stat-card stat-card-creation">
+              <div class="stat-card-icon">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Criado em</div>
+                <div class="stat-card-value">{{ attentionStats.creationTime }}</div>
+                <div class="stat-card-subvalue">{{ attentionStats.creationDate }}</div>
+              </div>
+            </div>
+          </div>
           <div
             v-if="
               state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'
@@ -376,7 +524,7 @@ export default {
               state.attention.status === 'TERMINATED_RESERVE_CANCELLED'
             "
           >
-            <div class="your-attention mt-2">
+            <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
             </div>
             <AttentionNumber
@@ -466,17 +614,72 @@ export default {
           "
         >
           <div id="page-header" class="text-center">
-            <div class="your-attention mt-2">
+            <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
             </div>
           </div>
-          <AttentionDetailsNumber
+          <AttentionNumber
             :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-            :attention="state.attentionDetails"
             :number="state.attention.number"
             :data="state.user"
-            :show-data="true"
-          ></AttentionDetailsNumber>
+            :attention="state.attention"
+          ></AttentionNumber>
+          <!-- Attention Statistics Cards -->
+          <div v-if="attentionStats" class="attention-stats-grid mt-3">
+            <!-- Elapsed Time Card -->
+            <div class="stat-card stat-card-time" :class="`stat-card-${attentionStats.timeStatus}`">
+              <div class="stat-card-icon stat-card-icon-with-popper">
+                <i class="bi bi-hourglass-split"></i>
+                <Popper :class="'dark'" arrow hover placement="top" :z-index="10001">
+                  <template #content>
+                    <div class="popper-content">
+                      <div class="popper-title">Tempo de Espera - Indicadores de Cor</div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #00c2cb;"></span>
+                        <span><strong>Verde:</strong> Menos de 10 minutos - Excelente</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #f9c322;"></span>
+                        <span><strong>Amarelo:</strong> Menos de 1 hora - Bom</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #ff9800;"></span>
+                        <span><strong>Laranja:</strong> Menos de 3 horas - Atenção</span>
+                      </div>
+                      <div class="popper-item">
+                        <span class="popper-color" style="background: #a52a2a;"></span>
+                        <span><strong>Vermelho:</strong> Mais de 3 horas - Urgente</span>
+                      </div>
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle popper-trigger-icon"></i>
+                </Popper>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">
+                  Tempo de Espera
+                  <span class="spy-live-indicator" title="Actualización en tiempo real">
+                    <span class="spy-live-dot"></span>
+                  </span>
+                </div>
+                <div class="stat-card-value" :style="{ color: attentionStats.timeColor }">
+                  {{ attentionStats.elapsedTime }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Creation Time Card -->
+            <div class="stat-card stat-card-creation">
+              <div class="stat-card-icon">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Criado em</div>
+                <div class="stat-card-value">{{ attentionStats.creationTime }}</div>
+                <div class="stat-card-subvalue">{{ attentionStats.creationDate }}</div>
+              </div>
+            </div>
+          </div>
           <div
             v-if="
               state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'
@@ -585,7 +788,7 @@ export default {
               state.attention.status === 'TERMINATED_RESERVE_CANCELLED'
             "
           >
-            <div class="your-attention mt-2">
+            <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
             </div>
             <AttentionNumber
@@ -735,6 +938,295 @@ export default {
 .comment-title {
   font-size: 0.9rem;
   line-height: 1rem;
+}
+
+/* Your Attention Section */
+.your-attention {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.01em;
+}
+
+/* Attention Statistics Cards - Dashboard Style */
+.attention-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  overflow: visible;
+  position: relative;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--stat-color, #a9a9a9);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: rgba(169, 169, 169, 0.25);
+}
+
+.stat-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.25rem;
+}
+
+.stat-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-card-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.stat-card-value {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.stat-card-subvalue {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+}
+
+/* Status-specific colors */
+.stat-card-excellent {
+  --stat-color: #00c2cb;
+}
+
+.stat-card-excellent .stat-card-icon {
+  background: rgba(0, 194, 203, 0.15);
+  color: #00c2cb;
+}
+
+.stat-card-good {
+  --stat-color: #f9c322;
+}
+
+.stat-card-good .stat-card-icon {
+  background: rgba(249, 195, 34, 0.15);
+  color: #f9c322;
+}
+
+.stat-card-warning {
+  --stat-color: #ff9800;
+}
+
+.stat-card-warning .stat-card-icon {
+  background: rgba(255, 152, 0, 0.15);
+  color: #ff9800;
+}
+
+.stat-card-poor {
+  --stat-color: #a52a2a;
+}
+
+.stat-card-poor .stat-card-icon {
+  background: rgba(165, 42, 42, 0.15);
+  color: #a52a2a;
+}
+
+.stat-card-creation .stat-card-icon {
+  background: rgba(0, 74, 173, 0.1);
+  color: #004aad;
+}
+
+/* Popper Styles */
+.stat-card-icon-with-popper {
+  position: relative;
+  overflow: visible !important;
+  z-index: 1;
+}
+
+.popper-trigger-icon {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.popper-trigger-icon:hover {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+/* Popper Styles with proper z-index - Higher than drawer */
+:deep(.vue3-popper) {
+  z-index: 10001 !important;
+  position: fixed !important;
+}
+
+:deep(.vue3-popper__inner) {
+  z-index: 10001 !important;
+  position: relative;
+}
+
+:deep(.vue3-popper__arrow) {
+  z-index: 10002 !important;
+}
+
+:deep(.vue3-popper__wrapper) {
+  z-index: 10001 !important;
+  position: fixed !important;
+}
+
+.popper-content {
+  padding: 0.5rem 0.6rem;
+  min-width: 200px;
+  position: relative;
+  z-index: 10000;
+}
+
+.popper-title {
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.popper-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+}
+
+.popper-item:last-child {
+  margin-bottom: 0;
+}
+
+.popper-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Live Indicator Styles */
+.spy-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.spy-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #28a745;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+  display: inline-block;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
+    opacity: 0.8;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .attention-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .stat-card-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .stat-card-value {
+    font-size: 1.1rem;
+  }
 }
 
 /* Desktop Layout Styles - Only affects the header row */

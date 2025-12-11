@@ -19,3 +19,29 @@ export const updateQueue = async (id, queue) =>
 
 export const addQueue = async queue =>
   (await requestBackend.post(`/${entity}`, queue, await getHeaders())).data;
+
+export const getEstimatedWaitTime = async (queueId, position, method = 'p75') => {
+  try {
+    const response = await requestBackend.get(
+      `/${entity}/${queueId}/estimated-wait-time?position=${position}&method=${method}`,
+      await getHeaders()
+    );
+    return response.data;
+  } catch (error) {
+    console.warn('Failed to get intelligent estimation, will use fallback', error);
+    return null;
+  }
+};
+
+export const getAverageAttentionDuration = async (queueId, method = 'median') => {
+  try {
+    const response = await requestBackend.get(
+      `/attention/queue/${queueId}/estimated-duration?method=${method}`,
+      await getHeaders()
+    );
+    return response.data;
+  } catch (error) {
+    console.warn('Failed to get average attention duration, will use fallback', error);
+    return null;
+  }
+};

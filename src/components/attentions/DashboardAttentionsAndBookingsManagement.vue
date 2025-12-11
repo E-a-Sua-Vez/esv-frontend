@@ -120,9 +120,6 @@ export default {
     refreshAttentionsContent() {
       // CRITICAL: If attentions is not active, don't refresh - this prevents state resets
       if (!this.showAttentionsResults) {
-        console.warn(
-          '⚠️ refreshAttentionsContent() called but showAttentionsResults is false! Skipping refresh to prevent state reset...'
-        );
         return;
       }
 
@@ -184,7 +181,6 @@ export default {
                 wasAttentionsActive &&
                 (!this.showAttentionsResults || this.showBookingsResults)
               ) {
-                console.error('❌ STATES WERE RESET AFTER REFRESH! Fixing...');
                 this.showAttentionsResults = true;
                 this.showBookingsResults = false;
                 this.$forceUpdate();
@@ -192,7 +188,6 @@ export default {
 
               // CRITICAL: Clear the refreshing flag after everything is done
               this._isRefreshing = false;
-              console.log('🔄 refreshAttentionsContent() - _isRefreshing flag cleared');
             });
           });
         } else {
@@ -204,24 +199,14 @@ export default {
 
           // CRITICAL: Clear the refreshing flag even if contentInstance is null
           this._isRefreshing = false;
-          console.log(
-            '🔄 refreshAttentionsContent() - _isRefreshing flag cleared (no contentInstance)'
-          );
         }
       });
     },
     refreshBookingsContent() {
-      console.log('🔄 refreshBookingsContent() called - States:', {
-        showAttentionsResults: this.showAttentionsResults,
-        showBookingsResults: this.showBookingsResults,
-      });
       console.trace('📍 CALL STACK for refreshBookingsContent():');
 
       // CRITICAL: If bookings is not active, don't refresh - this prevents state resets
       if (!this.showBookingsResults) {
-        console.warn(
-          '⚠️ refreshBookingsContent() called but showBookingsResults is false! Skipping refresh to prevent state reset...'
-        );
         // Don't fix it here - let the caller handle it
         return;
       }
@@ -234,18 +219,9 @@ export default {
       const wasAttentionsActive = this.showAttentionsResults;
       this.$nextTick(() => {
         // CRITICAL: Restore states IMMEDIATELY after nextTick to prevent reset
-        console.log('🔄 refreshBookingsContent() - BEFORE restoring states:', {
-          showAttentionsResults: this.showAttentionsResults,
-          showBookingsResults: this.showBookingsResults,
-          wasBookingsActive,
-        });
         if (wasBookingsActive) {
           this.showAttentionsResults = false;
           this.showBookingsResults = true;
-          console.log('🔄 refreshBookingsContent() - AFTER restoring states:', {
-            showAttentionsResults: this.showAttentionsResults,
-            showBookingsResults: this.showBookingsResults,
-          });
         }
 
         // Find the content instance (not the filter instance with filtersLocation='slot')
@@ -283,16 +259,6 @@ export default {
           }
         }
 
-        console.log(
-          '🔄 refreshBookingsContent() - contentInstance:',
-          contentInstance,
-          'filtersLocation:',
-          contentInstance?.filtersLocation,
-          'showBookingsManagement:',
-          contentInstance?.showBookingsManagement,
-          'All refs:',
-          Object.keys(this.$refs || {})
-        );
         if (contentInstance && contentInstance.refresh) {
           contentInstance.bookings = [];
           contentInstance.counter = 0;
@@ -319,11 +285,6 @@ export default {
           contentInstance._skipWatch = false;
           this.$nextTick(() => {
             // CRITICAL: Ensure states are still correct before calling refresh
-            console.log('🔄 refreshBookingsContent() - BEFORE refresh(1):', {
-              showAttentionsResults: this.showAttentionsResults,
-              showBookingsResults: this.showBookingsResults,
-              wasBookingsActive,
-            });
 
             // CRITICAL: Restore states BEFORE calling refresh
             if (wasBookingsActive) {
@@ -335,7 +296,6 @@ export default {
 
             // CRITICAL: Double-check states are still correct
             if (!this.showBookingsResults || this.showAttentionsResults) {
-              console.error('❌ STATES WERE RESET BEFORE REFRESH! Fixing...');
               this.showAttentionsResults = false;
               this.showBookingsResults = true;
               this.$forceUpdate();
@@ -349,13 +309,7 @@ export default {
 
             // CRITICAL: Double-check states after refresh
             this.$nextTick(() => {
-              console.log('🔄 refreshBookingsContent() - AFTER refresh(1):', {
-                showAttentionsResults: this.showAttentionsResults,
-                showBookingsResults: this.showBookingsResults,
-                wasBookingsActive,
-              });
               if (wasBookingsActive && (!this.showBookingsResults || this.showAttentionsResults)) {
-                console.error('❌ STATES WERE RESET AFTER REFRESH! Fixing...');
                 this.showAttentionsResults = false;
                 this.showBookingsResults = true;
                 this.$forceUpdate();
@@ -363,7 +317,6 @@ export default {
 
               // CRITICAL: Clear the refreshing flag after everything is done
               this._isRefreshing = false;
-              console.log('🔄 refreshBookingsContent() - _isRefreshing flag cleared');
             });
           });
         } else {
@@ -376,9 +329,6 @@ export default {
 
           // CRITICAL: Clear the refreshing flag even if contentInstance is null
           this._isRefreshing = false;
-          console.log(
-            '🔄 refreshBookingsContent() - _isRefreshing flag cleared (no contentInstance)'
-          );
         }
       });
     },
@@ -397,11 +347,6 @@ export default {
     <!-- Expose filters slot from DashboardAttentionsManagement for desktop when Atendimentos is active -->
     <template v-if="filtersLocation === 'slot'">
       {{
-        console.log('🔍 FILTERS SLOT RENDER CHECK:', {
-          showAttentionsResults,
-          showBookingsResults,
-          filtersLocation,
-        })
       }}
       <!-- SIMPLE: Show attentions filters when attentions tab is active -->
       <div>
@@ -420,10 +365,6 @@ export default {
           >
             <template #filters-exposed="filterProps">
               {{
-                console.log('📤 ATTENTIONS FILTERS EXPOSED:', {
-                  ...filterProps,
-                  filterType: 'attentions',
-                })
               }}
               <slot
                 name="filters-exposed"
@@ -448,10 +389,6 @@ export default {
           >
             <template #filters-exposed="filterProps">
               {{
-                console.log('📤 BOOKINGS FILTERS EXPOSED:', {
-                  ...filterProps,
-                  filterType: 'bookings',
-                })
               }}
               <slot
                 name="filters-exposed"

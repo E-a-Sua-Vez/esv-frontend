@@ -117,7 +117,6 @@ export default {
           ].includes(item.type)
         );
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.forms = [];
         state.services = [];
         state.queues = [];
@@ -142,7 +141,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }

@@ -10,6 +10,7 @@ import { getFormsByClient } from '../application/services/form';
 import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
 import { getPermissions } from '../application/services/permissions';
 import { getDate } from '../shared/utils/date';
+import { getEstimatedWaitTime } from '../application/services/queue';
 import { globalStore } from '../stores';
 import { getActiveFeature } from '../shared/features';
 import { BOOKING_STATUS, USER_TYPES } from '../shared/constants';
@@ -62,6 +63,7 @@ export default {
       form: undefined,
       beforeYou: ref(0),
       estimatedTime: ref('00:01'),
+      usingIntelligentEstimation: ref(false),
       goToCancel: false,
       toggles: {},
     });
@@ -83,13 +85,7 @@ export default {
     });
 
     const getEstimatedTime = () => {
-      const totalMinutes = state.booking.beforeYou * state.queue.estimatedTime;
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const estimatedTime = `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')}`;
-      return estimatedTime;
+      return state.estimatedTime;
     };
 
     const getBeforeYou = () => {
@@ -102,6 +98,10 @@ export default {
         state.booking = await getBookingDetails(id);
         state.queue = state.booking.queue;
         state.commerce = state.booking.commerce;
+
+        // Calculate estimated time using intelligent estimation
+        await calculateEstimatedTime();
+
         if (state.booking.status === 'PROCESSED' && state.booking.attentionId) {
           const user = store.getCurrentUserType;
           if (user && user === USER_TYPES.COLLABORATOR) {
@@ -120,6 +120,35 @@ export default {
       } catch (error) {
         loading.value = false;
       }
+    };
+
+    const calculateEstimatedTime = async () => {
+      if (state.queue && state.queue.id && state.booking.beforeYou !== undefined) {
+        try {
+          const intelligentEstimation = await getEstimatedWaitTime(
+            state.queue.id,
+            state.booking.beforeYou,
+            'p75'
+          );
+
+          if (intelligentEstimation && intelligentEstimation.estimatedTime) {
+            state.estimatedTime = intelligentEstimation.estimatedTime;
+            state.usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
+            return;
+          }
+        } catch (error) {
+          console.warn('Failed to get intelligent estimation, using fallback', error);
+        }
+      }
+
+      // Fallback to hardcoded calculation
+      state.usingIntelligentEstimation = false;
+      const totalMinutes = state.booking.beforeYou * (state.queue.estimatedTime || 5);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      state.estimatedTime = `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}`;
     };
 
     const bookingActive = () =>
@@ -403,6 +432,14 @@ export default {
                       <div class="booking-card-content">
                         <span class="booking-details-title">
                           {{ $t('userQueueBooking.estimatedTime') }}*
+                          <span
+                            v-if="state.usingIntelligentEstimation"
+                            v-b-tooltip.hover
+                            :title="$t('userQueueBooking.intelligentEstimationTooltip')"
+                            class="ai-badge ms-1"
+                          >
+                            <i class="bi bi-stars"></i>
+                          </span>
                         </span>
                         <span class="booking-details-content">
                           <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
@@ -414,8 +451,16 @@ export default {
                       class="col-12 booking-details-card"
                     >
                       <span class="booking-details-title">
-                        {{ $t('userQueueBooking.estimatedTime') }}* </span
-                      ><br />
+                        {{ $t('userQueueBooking.estimatedTime') }}*
+                        <span
+                          v-if="state.usingIntelligentEstimation"
+                          v-b-tooltip.hover
+                          :title="$t('userQueueBooking.intelligentEstimationTooltip')"
+                          class="ai-badge ms-1"
+                        >
+                          <i class="bi bi-stars"></i>
+                        </span>
+                      </span><br />
                       <span class="booking-details-content">
                         <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
                       </span>
@@ -588,6 +633,30 @@ export default {
   font-size: 0.75rem;
   line-height: 1rem !important;
   margin-bottom: 0;
+}
+
+.ai-badge {
+  display: inline-block;
+  color: #ffc107;
+  font-size: 0.9rem;
+  cursor: help;
+  vertical-align: middle;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.ai-badge i {
+  filter: drop-shadow(0 0 2px rgba(255, 193, 7, 0.5));
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 .booking-details-content {
   font-size: 1.5rem;

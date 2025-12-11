@@ -88,7 +88,6 @@ export default {
         state.queues = commerceData.queues || [];
         state.filtered = state.surveys;
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.surveys = [];
         state.queues = [];
         state.filtered = [];
@@ -109,7 +108,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }

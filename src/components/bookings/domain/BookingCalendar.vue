@@ -145,7 +145,7 @@ export default {
         unsubscribeBookings();
       }
       if (unsubscribeWaitlists) {
-        unsubscribeWaitlists;
+        unsubscribeWaitlists();
       }
     });
 
@@ -1314,14 +1314,15 @@ export default {
 
     const availableQueues = computed(() => {
       if (!queues.value || queues.value.length === 0) return [];
+      const validQueues = queues.value.filter(queue => queue && queue.type);
       if (state.showQueues) {
-        return queues.value.filter(queue => queue.type !== 'COLLABORATOR');
+        return validQueues.filter(queue => queue.type !== 'COLLABORATOR');
       } else if (state.showCollaboratorQueues) {
-        return queues.value.filter(queue => queue.type === 'COLLABORATOR');
+        return validQueues.filter(queue => queue.type === 'COLLABORATOR');
       } else if (state.showAllQueues) {
-        return queues.value;
+        return validQueues;
       }
-      return queues.value;
+      return validQueues;
     });
 
     const formattedDate = date => {
@@ -1452,6 +1453,10 @@ export default {
     });
 
     watch(changeDate, async (newData, oldData) => {
+      // Guard against null values during unmount
+      if (!newData || !oldData || !commerce.value || !state.selectedQueue) {
+        return;
+      }
       loadingBookings.value = true;
       if (unsubscribeBookings) {
         unsubscribeBookings();
@@ -1464,7 +1469,7 @@ export default {
       if (state.selectedQueue && state.selectedQueue.id) {
         if (state.selectedQueue.serviceInfo && state.selectedQueue.serviceInfo.specificCalendar) {
           state.specificCalendar = true;
-        } else if (commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar) {
+        } else if (commerce.value && commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar) {
           state.specificCalendar = true;
         } else {
           state.specificCalendar = false;
@@ -1477,10 +1482,13 @@ export default {
           ) {
             state.specificCalendarDates =
               Object.keys(state.selectedQueue.serviceInfo.specificCalendarDays) || [];
-            state.specificCalendarDays = commerce.value.serviceInfo.specificCalendarDays;
+            if (commerce.value && commerce.value.serviceInfo) {
+              state.specificCalendarDays = commerce.value.serviceInfo.specificCalendarDays;
+            }
             state.specificCalendarDates =
               Object.keys(state.selectedQueue.serviceInfo.specificCalendarDays) || [];
           } else if (
+            commerce.value &&
             commerce.value.serviceInfo &&
             commerce.value.serviceInfo.specificCalendarDays
           ) {
@@ -1490,7 +1498,7 @@ export default {
             state.specificCalendarDates =
               Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
           }
-          if (newData.selectedQueue.id !== oldData.selectedQueue.id) {
+          if (newData.selectedQueue && newData.selectedQueue.id && oldData.selectedQueue && newData.selectedQueue.id !== oldData.selectedQueue.id) {
             state.blocksBySpecificCalendarDate =
               await getQueueBlockDetailsBySpecificDayByCommerceId(
                 commerce.value.id,
@@ -1518,9 +1526,13 @@ export default {
     });
 
     watch(changeData, async (newData, oldData) => {
+      // Guard against null values during unmount
+      if (!newData || !oldData || !newData.bookings || !oldData.bookings) {
+        return;
+      }
       if (newData.bookings !== oldData.bookings) {
-        const newIds = newData.bookings.map(booking => booking.id);
-        const oldIds = oldData.bookings.map(booking => booking.id);
+        const newIds = newData.bookings.map(booking => booking && booking.id).filter(Boolean);
+        const oldIds = oldData.bookings.map(booking => booking && booking.id).filter(Boolean);
         if (!newIds.every(id => oldIds.includes(id))) {
           const currentDate = new Date(
             new Date(state.date || new Date()).setDate(new Date().getDate() + 1)
@@ -1672,7 +1684,7 @@ export default {
           </div>
           <div class="row g-1 mx-0 my-0" v-if="state.showQueues && queues && queues.length > 0">
             <div
-              v-for="(queue, index) in queues.filter(queue => queue.type !== 'COLLABORATOR')"
+              v-for="(queue, index) in queues.filter(queue => queue && queue.type && queue.type !== 'COLLABORATOR')"
               :key="queue.id"
               :data-queue-id="queue.id"
               :ref="index === 0 ? 'firstCalendarRef' : null"
@@ -1722,7 +1734,7 @@ export default {
             v-if="state.showCollaboratorQueues && queues && queues.length > 0"
           >
             <div
-              v-for="(queue, index) in queues.filter(queue => queue.type === 'COLLABORATOR')"
+              v-for="(queue, index) in queues.filter(queue => queue && queue.type && queue.type === 'COLLABORATOR')"
               :key="queue.id"
               :data-queue-id="queue.id"
               :ref="index === 0 ? 'firstCalendarRef' : null"
@@ -2001,6 +2013,7 @@ export default {
                         :toggles="toggles"
                         :commerce="commerce"
                         :queues="queues"
+                        :disable-click="attention.status === 'TERMINATED' || attention.status === 'CANCELLED' || attention.status === 'USER_CANCELLED' || attention.status === 'RATED'"
                         @updatedAttentions="updatedAttentions"
                       >
                       </AttentionDetailsCard>
@@ -2054,6 +2067,7 @@ export default {
                             :calendar-attributes="calendarAttributes"
                             :grouped-queues="state.groupedQueues"
                             :drawer-mode="true"
+                            :disable-click="booking.status === 'CANCELLED' || booking.processed === true"
                             @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
                             @open-drawer="openBookingDrawer"
                           >
@@ -2240,6 +2254,7 @@ export default {
                     :calendar-attributes="calendarAttributes"
                     :grouped-queues="state.groupedQueues"
                     :drawer-mode="true"
+                    :disable-click="booking.status === 'CANCELLED' || booking.processed === true"
                     @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
                     @open-drawer="openBookingDrawer"
                   >

@@ -98,7 +98,6 @@ export default {
           state.service = undefined;
         }
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.collaborators = [];
         state.modules = {};
         state.services = [];
@@ -121,7 +120,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }

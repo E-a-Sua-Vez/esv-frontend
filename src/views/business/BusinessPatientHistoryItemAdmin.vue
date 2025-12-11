@@ -85,7 +85,6 @@ export default {
         state.items = items || [];
         state.filtered = state.items;
       } catch (error) {
-        console.error('Error loading patient history items:', error);
         state.items = [];
         state.filtered = [];
       }
@@ -104,7 +103,6 @@ export default {
             await loadItems(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading patient history items on commerce change:', error);
             loading.value = false;
           }
         }

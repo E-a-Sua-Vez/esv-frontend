@@ -139,7 +139,6 @@ export default {
 
         loading.value = false;
       } catch (error) {
-        console.error('Error loading commerces:', error);
         loading.value = false;
       }
     };
@@ -167,7 +166,6 @@ export default {
         }
         loading.value = false;
       } catch (error) {
-        console.error('Error selecting commerce:', error);
         loading.value = false;
       }
     };

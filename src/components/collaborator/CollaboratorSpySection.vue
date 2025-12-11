@@ -14,20 +14,25 @@ import {
   getPendingAttentionsDetails,
   getBookingsDetails,
 } from '../../application/services/query-stack';
+import { attentionCollection, bookingCollection } from '../../application/firebase';
+import { query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { ATTENTION_STATUS } from '../../shared/constants';
 import { getCommerceById } from '../../application/services/commerce';
 import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
 import { globalStore } from '../../stores';
 import { getCollaboratorById } from '../../application/services/collaborator';
+import { getUserById } from '../../application/services/user';
 import { DateModel } from '../../shared/utils/date.model';
 import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
 import Message from '../common/Message.vue';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorSpySection',
-  components: { Message, Spinner, Alert },
+  components: { Message, Spinner, Alert, Popper },
   props: {
     show: { type: Boolean, default: true },
     commerce: { type: Object, default: {} },
@@ -90,28 +95,39 @@ export default {
         bookings: [],
       },
       calendarDates: {},
-      minDate: new Date().setDate(new Date().getDate() - 30),
+      minDate: new Date().setDate(new Date().getDate()),
       maxDate: new Date().setDate(new Date().getDate() + 30),
       locale: 'es',
       queueStatus: {},
-      attentionsWrapper: null,
     });
+
+    // Store wrapper outside reactive state to prevent Vue from unwrapping the ref
+    // Same pattern as CollaboratorQueuesView
+    const attentionsWrapper = ref(null);
+    let attentions = null;
 
     // Cache to prevent duplicate API calls
     const lastLoadedCommerceId = ref(null);
     const calendarDataCache = ref(null);
     const lastCalendarCommerceId = ref(null);
-
-    let attentionsUnsubscribe = null;
+    let unsubscribeCalendarAttentions = () => {};
+    let unsubscribeCalendarBookings = () => {};
 
     // Register onUnmounted BEFORE any await statements
     // Only register if we have an active component instance
     const instance = getCurrentInstance();
     if (instance) {
       onUnmounted(() => {
-        if (attentionsUnsubscribe) {
-          attentionsUnsubscribe();
+        // Cleanup listener on component unmount (same as CollaboratorQueuesView)
+        if (attentions && attentions._unsubscribe) {
+          attentions._unsubscribe();
         }
+        if (attentionsWrapper.value && attentionsWrapper.value._unsubscribe) {
+          attentionsWrapper.value._unsubscribe();
+        }
+        // Clean up calendar listeners
+        if (unsubscribeCalendarAttentions) unsubscribeCalendarAttentions();
+        if (unsubscribeCalendarBookings) unsubscribeCalendarBookings();
       });
     }
 
@@ -210,7 +226,6 @@ export default {
           }
         }
       } catch (error) {
-        console.error('Error getting available commerces:', error);
         state.commerces = [];
       }
     };
@@ -223,23 +238,21 @@ export default {
         return;
       }
 
-      // Cleanup previous subscription
-      if (attentionsUnsubscribe) {
-        attentionsUnsubscribe();
-        attentionsUnsubscribe = null;
-      }
-
       // Get dedicated queues for this collaborator
       await getDedicatedQueues();
 
       // Initialize queue status
       initializeQueueStatus();
 
-      // Subscribe to real-time attentions
-      subscribeToAttentions();
+      // Initialize attentions listener (same as CollaboratorQueuesView)
+      if (state.commerce && state.commerce.id) {
+        initializeAttentionsListener(state.commerce.id);
+      }
 
       // Load data in parallel where possible
-      await Promise.all([getTodayAttentions(), getWeekAndMonthBookings()]);
+      // Note: We don't call getTodayAttentions() here because Firebase listener handles real-time updates
+      // getTodayAttentions() is only called initially to ensure data is loaded before Firebase connects
+      await Promise.all([getWeekAndMonthBookings()]);
 
       // Initialize calendar (this is heavy, so do it separately)
       await initializeCalendar();
@@ -255,47 +268,64 @@ export default {
       }
     };
 
-    const subscribeToAttentions = () => {
-      if (!state.commerce || !state.commerce.id) return;
+    // Initialize attentions listener (same as CollaboratorQueuesView)
+    const initializeAttentionsListener = commerceId => {
+      if (!commerceId) {
+        state.attentionsWrapper = null;
+        initializeQueueStatus();
+        return;
+      }
 
-      const attentions = updatedAvailableAttentionsByCommerce(state.commerce.id);
-      state.attentionsWrapper = attentions;
+      // Clean up previous listener if exists
+      if (attentions && attentions._unsubscribe) {
+        attentions._unsubscribe();
+        attentions = null;
+      }
+      if (attentionsWrapper.value && attentionsWrapper.value._unsubscribe) {
+        attentionsWrapper.value._unsubscribe();
+      }
+
+      // Reset queue status before creating new listener
+      initializeQueueStatus();
+
+      // Create new listener (same as CollaboratorQueuesView)
+      attentions = updatedAvailableAttentionsByCommerce(commerceId);
+      attentionsWrapper.value = attentions;
+
+      // Force initial check after a brief moment to allow Firebase to initialize
+      setTimeout(async () => {
+        if (attentionsWrapper.value && attentionsWrapper.value.value) {
+          checkQueueStatus(attentionsWrapper.value);
+          // Also update today's attentions list from Firebase
+          if (Array.isArray(attentionsWrapper.value.value)) {
+            await updateTodayAttentionsFromFirebase(attentionsWrapper.value.value);
+          }
+        }
+      }, 100);
     };
 
-    // Watch attentions wrapper for changes
-    watch(
-      () => {
-        try {
-          const currentAttentionsRef = state.attentionsWrapper;
-          if (
-            currentAttentionsRef &&
-            currentAttentionsRef.value !== undefined &&
-            currentAttentionsRef.value !== null
-          ) {
-            return Array.isArray(currentAttentionsRef.value) ? currentAttentionsRef.value : [];
-          }
-        } catch (error) {
-          console.error('Error accessing attentions.value:', error);
-        }
-        return [];
-      },
-      newValue => {
-        if (newValue && Array.isArray(newValue)) {
-          if (newValue.length > 0) {
-            checkQueueStatus(newValue);
-          } else {
-            initializeQueueStatus();
-          }
-        } else {
-          initializeQueueStatus();
-        }
-      },
-      { immediate: true, deep: true }
-    );
 
-    const checkQueueStatus = attentionsArray => {
-      if (!attentionsArray || attentionsArray.length === 0) {
+    const checkQueueStatus = async attentionsRef => {
+      // Ensure we have queues loaded first (same as CollaboratorQueuesView)
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
+        return;
+      }
+
+      // Ensure we have a valid ref with a value
+      if (!attentionsRef) {
         initializeQueueStatus();
+        return;
+      }
+
+      // Get the value from ref, ensuring it's an array
+      const attentionsArray =
+        attentionsRef.value && Array.isArray(attentionsRef.value) ? attentionsRef.value : [];
+
+      // Always initialize all queues to 0 first
+      initializeQueueStatus();
+
+      // If no attentions, all queues are already set to 0
+      if (attentionsArray.length === 0) {
         return;
       }
 
@@ -311,30 +341,184 @@ export default {
           return acc;
         }, {});
 
-        if (state.dedicatedQueues && state.dedicatedQueues.length > 0) {
-          state.dedicatedQueues.forEach(queue => {
-            if (queue && queue.id && filteredAttentionsByQueue[queue.id]) {
+        // Update only queues that have attentions (same as CollaboratorQueuesView)
+        state.dedicatedQueues.forEach(queue => {
+          if (queue && queue.id) {
+            if (filteredAttentionsByQueue[queue.id]) {
               const attentionsCount = filteredAttentionsByQueue[queue.id].length;
               state.queueStatus[queue.id] = attentionsCount;
-            } else if (queue && queue.id) {
+            } else {
+              // Explicitly set to 0 if no attentions for this queue
               state.queueStatus[queue.id] = 0;
             }
-          });
-        }
+          }
+        });
       } catch (error) {
-        console.error('Error in checkQueueStatus:', error);
         initializeQueueStatus();
       }
     };
 
-    const getQueueAttentionsCount = queueId => state.queueStatus[queueId] || 0;
+    const updateTodayAttentionsFromFirebase = async (firebaseAttentions) => {
+      // Format Firebase attentions to match the same structure as getTodayAttentions
+      // Ensure we have dedicated queues before filtering
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
+        state.todayAttentions = [];
+        return;
+      }
 
-    const getTotalAttentionsCount = () => {
-      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return 0;
-      return state.dedicatedQueues.reduce(
-        (total, queue) => total + (state.queueStatus[queue.id] || 0),
-        0
+      const queueIds = state.dedicatedQueues.map(q => q.id);
+
+      // Filter by today's date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(today);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      const filteredAttentions = firebaseAttentions.filter(att => {
+          // Filter by queue
+          if (!att.queueId || !queueIds.includes(att.queueId)) {
+            return false;
+          }
+
+          // Filter by status - only PENDING attentions
+          if (att.status !== 'PENDING') {
+            return false;
+          }
+
+          // Filter by today's date
+          if (!att.createdAt) {
+            return false;
+          }
+
+          try {
+            let attentionDate;
+            if (att.createdAt instanceof Date) {
+              attentionDate = new Date(att.createdAt);
+            } else if (typeof att.createdAt === 'string') {
+              attentionDate = new Date(att.createdAt);
+            } else if (att.createdAt.toDate && typeof att.createdAt.toDate === 'function') {
+              attentionDate = att.createdAt.toDate();
+            } else if (att.createdAt.seconds) {
+              attentionDate = new Date(att.createdAt.seconds * 1000);
+            } else {
+              return false;
+            }
+
+            if (isNaN(attentionDate.getTime())) {
+              return false;
+            }
+
+            const attentionDateOnly = new Date(attentionDate);
+            attentionDateOnly.setHours(0, 0, 0, 0);
+
+            return attentionDateOnly.getTime() === today.getTime();
+          } catch (e) {
+            return false;
+          }
+        });
+
+      // Map and fetch user data in parallel
+      const formattedAttentions = await Promise.all(
+        filteredAttentions.map(async att => {
+          let serviceName = att.serviceName || 'N/A';
+          if (
+            att.servicesDetails &&
+            Array.isArray(att.servicesDetails) &&
+            att.servicesDetails.length > 0
+          ) {
+            serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
+          }
+
+          // Get user name from attention data
+          let userName = '';
+          let userLastName = '';
+          let userIdNumber = '';
+
+          // Check multiple possible locations for user data
+          if (att.user && typeof att.user === 'object') {
+            userName = att.user.name || '';
+            userLastName = att.user.lastName || '';
+            userIdNumber = att.user.idNumber || att.user.id || '';
+          } else if (att.userName) {
+            userName = att.userName;
+            userLastName = att.userLastName || '';
+            userIdNumber = att.userIdNumber || att.userId || '';
+          } else if (att.userId) {
+            // If only userId is available, use it as identifier
+            // Note: Backend now includes userName/userLastName in Firebase documents
+            // If still missing, show userId as fallback
+            userIdNumber = att.userId;
+          }
+
+          // Build client name - only use actual name, don't fallback to userId
+          let clientName = '';
+          if (userName || userLastName) {
+            const fullName = (userName || '') + (userLastName ? ' ' + userLastName : '').trim();
+            // Only use if it doesn't look like an ID (long alphanumeric string)
+            if (fullName && !fullName.match(/^[A-Za-z0-9]{20,}$/)) {
+              clientName = fullName;
+            }
+          }
+          // Don't set clientName to userId - we'll use 'N/A' if no name exists
+          if (!clientName) {
+            clientName = 'N/A';
+          }
+
+          // Parse createdAt - it comes as string from Firebase
+          let hour = 'N/A';
+          let createdAt = null;
+          if (att.createdAt) {
+            try {
+              const date = new Date(att.createdAt);
+              if (!isNaN(date.getTime())) {
+                hour = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                createdAt = att.createdAt;
+              }
+            } catch (e) {
+              // Error parsing createdAt
+            }
+          } else if (att.createdDate) {
+            createdAt = att.createdDate;
+          }
+
+          return {
+            id: att.id || att.attentionId,
+            clientName,
+            clientId: userIdNumber || att.userId || att.clientId || 'N/A',
+            hour,
+            service: serviceName,
+            number: att.number,
+            status: att.status,
+            queueId: att.queueId,
+            createdAt: createdAt || att.createdAt || att.createdDate || null,
+          };
+        })
       );
+
+          // Sort by number (ascending) to show next attention first
+      formattedAttentions.sort((a, b) => {
+          const numA = a.number || 0;
+          const numB = b.number || 0;
+          return numA - numB;
+        });
+
+      // Create a new array to ensure Vue reactivity
+      state.todayAttentions.splice(0, state.todayAttentions.length, ...formattedAttentions);
+    };
+
+    // Function to get queue count - Vue will track state.todayAttentions in template
+    // Computed property for total count - ensures reactivity
+    const getTotalAttentionsCount = computed(() => {
+      // Return the count of today's attentions (already filtered by date, status, and queues)
+      const count = state.todayAttentions ? state.todayAttentions.length : 0;
+      return count;
+    });
+
+    // Function for queue count - will be reactive because it accesses state.todayAttentions
+    const getQueueAttentionsCount = queueId => {
+      if (!state.todayAttentions || state.todayAttentions.length === 0) return 0;
+      const count = state.todayAttentions.filter(att => att.queueId === queueId).length;
+      return count;
     };
 
     const selectCommerce = async selectedCommerce => {
@@ -350,7 +534,6 @@ export default {
         await loadCommerceData();
         loading.value = false;
       } catch (error) {
-        console.error('Error selecting commerce:', error);
         loading.value = false;
       }
     };
@@ -365,7 +548,6 @@ export default {
         }
         loading.value = false;
       } catch (error) {
-        console.error('Error selecting commerce by id:', error);
         loading.value = false;
       }
     };
@@ -405,7 +587,6 @@ export default {
 
         state.dedicatedQueues = queues;
       } catch (error) {
-        console.error('Error getting dedicated queues:', error);
         state.dedicatedQueues = [];
       }
     };
@@ -442,8 +623,9 @@ export default {
           undefined
         );
 
+        // Filter by queue IDs and status PENDING (only pending attentions should be shown)
         const todayAttentions = (attentions || []).filter(
-          att => att.queueId && queueIds.includes(att.queueId)
+          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING'
         );
 
         // Format attentions
@@ -473,10 +655,10 @@ export default {
             service: serviceName,
             number: att.number,
             status: att.status,
+            queueId: att.queueId, // Include queueId for filtering
           };
         });
       } catch (error) {
-        console.error('Error getting today attentions:', error);
         state.todayAttentions = [];
       }
     };
@@ -594,7 +776,6 @@ export default {
         state.weekBookings = filteredWeekBookings.map(formatBooking);
         state.monthBookings = filteredMonthBookings.map(formatBooking);
       } catch (error) {
-        console.error('Error getting week and month bookings:', error);
         state.weekBookings = [];
         state.monthBookings = [];
       }
@@ -608,85 +789,76 @@ export default {
           return;
         }
 
-        // Check cache
-        if (calendarDataCache.value && lastCalendarCommerceId.value === state.commerce.id) {
-          state.calendarDates = calendarDataCache.value.calendarDates;
-          updateCalendarAttributes(
-            calendarDataCache.value.attentionsByDate,
-            calendarDataCache.value.bookingsByDate
-          );
-          loadingCalendar.value = false;
-          return;
-        }
+        // Unsubscribe from previous listeners
+        if (unsubscribeCalendarAttentions) unsubscribeCalendarAttentions();
+        if (unsubscribeCalendarBookings) unsubscribeCalendarBookings();
 
         const queueIds = state.dedicatedQueues.map(q => q.id);
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
 
-        const from = startDate.toISOString().slice(0, 10);
-        const to = endDate.toISOString().slice(0, 10);
-
-        // Get attentions and bookings in parallel
-        const [attentions, bookings] = await Promise.all([
-          getPendingAttentionsDetails(
-            state.commerce.id,
-            from,
-            to,
-            [state.commerce.id],
-            1,
-            10000,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined
-          ),
-          getBookingsDetails(
-            state.commerce.id,
-            from,
-            to,
-            [state.commerce.id],
-            1,
-            10000,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined
-          ),
-        ]);
-
-        // Filter by queue IDs
-        const filteredAttentions = (attentions || []).filter(
-          att => att.queueId && queueIds.includes(att.queueId)
-        );
-        const filteredBookings = (bookings || []).filter(
-          booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+        // Set up Firebase real-time listeners for attentions
+        // Simplified query to avoid composite index requirement
+        // We'll filter by queueId, status, and date range in the callback
+        const attentionsQuery = query(
+          attentionCollection,
+          where('commerceId', '==', state.commerce.id)
         );
 
-        // Group by date
+        unsubscribeCalendarAttentions = onSnapshot(attentionsQuery, snapshot => {
+          const attentions = snapshot.docs
+            .map(doc => {
+              const data = doc.data();
+              const createdAtDate = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
+              return {
+                id: doc.id,
+                ...data,
+                createdAt: createdAtDate,
+              };
+            })
+            // Filter by queueIds, status, and date range (to avoid composite index requirement)
+            .filter(att => {
+              // Check queueId
+              if (!att.queueId || !queueIds.includes(att.queueId)) return false;
+
+              // Check status (only PENDING for calendar)
+              if (att.status !== 'PENDING') return false;
+
+              // Check date range (today to next 30 days - no past dates)
+              if (!att.createdAt) return false;
+              const attDate = att.createdAt instanceof Date ? att.createdAt : new Date(att.createdAt);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const endDate = new Date();
+              endDate.setDate(endDate.getDate() + 30);
+              endDate.setHours(23, 59, 59, 999);
+
+              return attDate >= today && attDate <= endDate;
+            });
+
+          // Group by date (use local date to avoid timezone issues)
         const attentionsByDate = {};
-        const bookingsByDate = {};
-
-        filteredAttentions.forEach(att => {
+          attentions.forEach(att => {
           let date = null;
-          if (att.createdDate) {
-            if (typeof att.createdDate === 'string') {
-              date = att.createdDate.slice(0, 10);
-            } else if (att.createdDate instanceof Date) {
-              date = att.createdDate.toISOString().slice(0, 10);
-            } else if (att.createdDate.getTime) {
-              date = new Date(att.createdDate).toISOString().slice(0, 10);
+            const dateField = att.createdAt || att.createdDate || att.date;
+            if (dateField) {
+              try {
+                let dateObj;
+                if (typeof dateField === 'string') {
+                  dateObj = new Date(dateField);
+                } else if (dateField instanceof Date) {
+                  dateObj = dateField;
+                } else if (dateField.toDate && typeof dateField.toDate === 'function') {
+                  dateObj = dateField.toDate();
+                }
+
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                  // Use local date components to avoid timezone issues
+                  const year = dateObj.getFullYear();
+                  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                  const day = String(dateObj.getDate()).padStart(2, '0');
+                  date = `${year}-${month}-${day}`;
+                }
+              } catch (e) {
+                // Error parsing attention date
             }
           }
           if (date) {
@@ -697,7 +869,55 @@ export default {
           }
         });
 
-        filteredBookings.forEach(booking => {
+          state.calendarDates = { ...state.calendarDates, attentionsByDate };
+          updateCalendarAttributes(state.calendarDates.attentionsByDate || {}, state.calendarDates.bookingsByDate || {});
+        });
+
+        // Set up Firebase real-time listeners for bookings
+        // Only show today and future dates (no past dates)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().slice(0, 10);
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+        const endDateStr = endDate.toISOString().slice(0, 10);
+
+        // Set up Firebase real-time listeners for bookings
+        // Simplified query to avoid composite index requirement
+        // We'll filter by queueId, date range, and status in the callback
+        const bookingsQuery = query(
+          bookingCollection,
+          where('commerceId', '==', state.commerce.id),
+          where('status', 'in', ['PENDING', 'CONFIRMED'])
+        );
+
+        unsubscribeCalendarBookings = onSnapshot(bookingsQuery, snapshot => {
+          const bookings = snapshot.docs
+            .map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            // Filter by queueIds, date range, and status (to avoid composite index requirement)
+            .filter(booking => {
+              // Check queueId
+              if (!booking.queueId || !queueIds.includes(booking.queueId)) return false;
+
+              // Check date range (today to next 30 days - no past dates)
+              if (!booking.date) return false;
+              const bookingDate = booking.date.slice(0, 10); // YYYY-MM-DD format
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const todayStr = today.toISOString().slice(0, 10);
+              const endDate = new Date();
+              endDate.setDate(endDate.getDate() + 30);
+              const endDateStr = endDate.toISOString().slice(0, 10);
+
+              return bookingDate >= todayStr && bookingDate <= endDateStr;
+            });
+
+          // Group by date
+          const bookingsByDate = {};
+          bookings.forEach(booking => {
           const date = booking.date ? booking.date.slice(0, 10) : null;
           if (date) {
             if (!bookingsByDate[date]) {
@@ -707,22 +927,12 @@ export default {
           }
         });
 
-        state.calendarDates = { attentionsByDate, bookingsByDate };
-
-        // Update calendar attributes
-        updateCalendarAttributes(attentionsByDate, bookingsByDate);
-
-        // Cache the results
-        calendarDataCache.value = {
-          calendarDates: { attentionsByDate, bookingsByDate },
-          attentionsByDate,
-          bookingsByDate,
-        };
-        lastCalendarCommerceId.value = state.commerce.id;
+          state.calendarDates = { ...state.calendarDates, bookingsByDate };
+          updateCalendarAttributes(state.calendarDates.attentionsByDate || {}, state.calendarDates.bookingsByDate || {});
+        });
 
         loadingCalendar.value = false;
       } catch (error) {
-        console.error('Error initializing calendar:', error);
         loadingCalendar.value = false;
       }
     };
@@ -765,20 +975,68 @@ export default {
           return;
         }
 
-        // Handle both Date objects and string dates
-        let dateStr;
-        if (date instanceof Date) {
-          dateStr = date.toISOString().slice(0, 10);
+        // VDatePicker dayclick passes an object with date property: { date: Date, ... }
+        let dateObj;
+        if (date && typeof date === 'object' && date.date) {
+          dateObj = date.date instanceof Date ? date.date : new Date(date.date);
+        } else if (date instanceof Date) {
+          dateObj = date;
         } else if (typeof date === 'string') {
-          dateStr = date.slice(0, 10);
+          dateObj = new Date(date);
         } else {
           return;
         }
 
+        // Format to YYYY-MM-DD without timezone issues
+        // Use local date components instead of toISOString() which converts to UTC
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         state.selectedDate = dateStr;
 
-        const attentions = state.calendarDates.attentionsByDate[dateStr] || [];
-        const bookings = state.calendarDates.bookingsByDate[dateStr] || [];
+        // Ensure calendarDates is initialized
+        if (!state.calendarDates || !state.calendarDates.attentionsByDate) {
+          await initializeCalendar();
+          // Wait a bit for Firebase listeners to populate data
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // Double-check after initialization
+        if (!state.calendarDates) {
+          state.calendarDates = { attentionsByDate: {}, bookingsByDate: {} };
+        }
+        if (!state.calendarDates.attentionsByDate) {
+          state.calendarDates.attentionsByDate = {};
+        }
+        if (!state.calendarDates.bookingsByDate) {
+          state.calendarDates.bookingsByDate = {};
+        }
+
+        const attentions = (state.calendarDates.attentionsByDate[dateStr] || []);
+        const bookings = (state.calendarDates.bookingsByDate[dateStr] || []);
+
+        // Check if dateStr exists in the keys
+        const attentionDates = Object.keys(state.calendarDates.attentionsByDate || {});
+        const bookingDates = Object.keys(state.calendarDates.bookingsByDate || {});
+        const foundInAttentions = attentionDates.includes(dateStr);
+        const foundInBookings = bookingDates.includes(dateStr);
+
+        if (!foundInAttentions && !foundInBookings && (attentionDates.length > 0 || bookingDates.length > 0)) {
+          // Try to find the date with a different format (timezone issue)
+          const dateObj = new Date(dateStr + 'T00:00:00');
+          const altDateStr1 = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+          const altDateStr2 = dateObj.toISOString().slice(0, 10);
+
+          // Try alternative formats
+          const altAttentions = state.calendarDates.attentionsByDate[altDateStr1] || state.calendarDates.attentionsByDate[altDateStr2] || [];
+          const altBookings = state.calendarDates.bookingsByDate[altDateStr1] || state.calendarDates.bookingsByDate[altDateStr2] || [];
+
+          if (altAttentions.length > 0 || altBookings.length > 0) {
+            attentions.push(...altAttentions);
+            bookings.push(...altBookings);
+          }
+        }
 
         state.dateDetails = {
           attentions: attentions.map(att => {
@@ -792,14 +1050,14 @@ export default {
             }
 
             return {
-              id: att.attentionId,
+              id: att.attentionId || att.id,
               clientName:
                 (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') ||
                 att.userIdNumber ||
                 'N/A',
               clientId: att.userIdNumber || att.userId || 'N/A',
-              hour: att.createdDate
-                ? new Date(att.createdDate).toLocaleTimeString('es-ES', {
+              hour: (att.createdDate || att.createdAt || att.date)
+                ? new Date(att.createdDate || att.createdAt || att.date).toLocaleTimeString('es-ES', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })
@@ -853,7 +1111,7 @@ export default {
           }),
         };
       } catch (error) {
-        console.error('Error selecting date:', error);
+        // Error selecting date
       }
     };
 
@@ -863,10 +1121,22 @@ export default {
 
     const formattedDate = date => {
       if (!date) return '';
-      if (typeof date === 'string') {
-        return new Date(date).toLocaleDateString('es-ES');
+      // If date is already in YYYY-MM-DD format, parse it correctly
+      if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = date.split('-');
+        return `${day}/${month}/${year}`;
       }
+      if (typeof date === 'string') {
+        const dateObj = new Date(date);
+        if (!isNaN(dateObj.getTime())) {
+          return dateObj.toLocaleDateString('es-ES');
+      }
+        return date;
+      }
+      if (date instanceof Date) {
       return date.toLocaleDateString('es-ES');
+      }
+      return String(date);
     };
 
     const formattedTime = time => {
@@ -877,8 +1147,164 @@ export default {
       return time;
     };
 
+    // Calculate elapsed time and status for attention
+    const getAttentionElapsedTime = (attention) => {
+      if (!attention) return null;
+      const createdDate = attention.createdDate || attention.createdAt;
+      if (!createdDate) return null;
+
+      let created;
+      if (createdDate instanceof Date) {
+        created = createdDate;
+      } else if (createdDate.toDate && typeof createdDate.toDate === 'function') {
+        created = createdDate.toDate();
+      } else if (createdDate.seconds) {
+        created = new Date(createdDate.seconds * 1000);
+      } else {
+        created = new Date(createdDate);
+      }
+
+      const now = new Date();
+      const diffMs = now - created;
+      const minutes = Math.floor(diffMs / (1000 * 60));
+      const hours = Math.floor(minutes / 60);
+
+      let elapsedDisplay = '';
+      if (minutes < 60) {
+        elapsedDisplay = `${minutes} min`;
+      } else if (hours < 24) {
+        elapsedDisplay = `${hours}h ${minutes % 60}min`;
+      } else {
+        const days = Math.floor(hours / 24);
+        elapsedDisplay = `${days}d ${hours % 24}h`;
+      }
+
+      let timeStatus = 'neutral';
+      let timeColor = '#a9a9a9';
+      if (minutes < 10) {
+        timeStatus = 'excellent';
+        timeColor = '#00c2cb';
+      } else if (minutes < 60) {
+        timeStatus = 'good';
+        timeColor = '#f9c322';
+      } else if (minutes < 180) {
+        timeStatus = 'warning';
+        timeColor = '#ff9800';
+      } else {
+        timeStatus = 'poor';
+        timeColor = '#a52a2a';
+      }
+
+      return {
+        minutes,
+        elapsedDisplay,
+        timeStatus,
+        timeColor,
+      };
+    };
+
+    const getAttentionStatusMessage = (timeStatus) => {
+      const messages = {
+        excellent: 'Excelente: Menos de 10 minutos de espera',
+        good: 'Bom: Menos de 1 hora de espera',
+        warning: 'Atenção: Menos de 3 horas de espera',
+        poor: 'Urgente: Mais de 3 horas de espera',
+        neutral: 'Status não disponível',
+      };
+      return messages[timeStatus] || messages.neutral;
+    };
+
     const pendingBookingsCount = bookings =>
       bookings.filter(b => b.status === 'PENDING' && !b.attentionId).length;
+
+    // Watch attentions wrapper itself - fires when it's initialized
+    watch(
+      attentionsWrapper,
+      async (newWrapper, oldWrapper) => {
+        // When wrapper is first initialized, process it immediately
+        if (newWrapper && newWrapper !== oldWrapper) {
+          // Handle both ref and direct array cases
+          let attentionsArray = null;
+          if (Array.isArray(newWrapper)) {
+            attentionsArray = newWrapper;
+          } else if (newWrapper.value && Array.isArray(newWrapper.value)) {
+            attentionsArray = newWrapper.value;
+          }
+          if (attentionsArray) {
+            checkQueueStatus(newWrapper);
+            await updateTodayAttentionsFromFirebase(attentionsArray);
+          }
+        }
+      }
+    );
+
+    // Watch attentions wrapper value for changes (same as CollaboratorQueuesView)
+    watch(
+      () => {
+        // Watch the value inside the wrapper
+        const wrapper = attentionsWrapper.value;
+        if (!wrapper) {
+          return null; // Not initialized yet
+        }
+
+        try {
+          // Handle both ref and direct array cases
+          let array = null;
+          if (Array.isArray(wrapper)) {
+            array = wrapper;
+          } else if (wrapper.value !== undefined && wrapper.value !== null) {
+            array = Array.isArray(wrapper.value) ? wrapper.value : [];
+          }
+
+          if (array) {
+            // Return a string representation for deep comparison
+            // Include length and all IDs to better detect changes
+            return JSON.stringify({
+              length: array.length,
+              ids: array.map(a => a.id).sort(),
+            });
+          }
+        } catch (error) {
+          // Error accessing attentions.value
+        }
+        return JSON.stringify({ length: 0, ids: [] });
+      },
+      async (newValue, oldValue) => {
+        // Skip if wrapper is not initialized yet
+        if (newValue === null) {
+          initializeQueueStatus();
+          return;
+        }
+        // Get the actual array from the ref
+        const currentAttentionsRef = attentionsWrapper.value;
+        if (!currentAttentionsRef) {
+          initializeQueueStatus();
+          return;
+        }
+        // Get the actual array - handle both ref and direct array cases
+        let attentionsArray = null;
+        if (Array.isArray(currentAttentionsRef)) {
+          // Already an array (unwrapped by Vue reactivity)
+          attentionsArray = currentAttentionsRef;
+        } else if (currentAttentionsRef && currentAttentionsRef.value !== undefined) {
+          // It's a ref, get the value
+          attentionsArray = currentAttentionsRef.value;
+        }
+
+        // Always call checkQueueStatus - it will handle empty arrays correctly
+        await checkQueueStatus(currentAttentionsRef);
+
+        // Always update today's attentions list from Firebase in real-time
+        // We always update because even if the summary looks the same, the data might have changed
+        // (e.g., user details, timestamps, etc.) and we need to refresh the formatted list
+        if (attentionsArray && Array.isArray(attentionsArray)) {
+          await updateTodayAttentionsFromFirebase(attentionsArray);
+        } else {
+          // If no attentions, clear the list
+          state.todayAttentions = [];
+        }
+      }
+    );
 
     watch(show, async () => {
       if (show.value === true) {
@@ -925,6 +1351,8 @@ export default {
       selectCommerce,
       selectCommerceById,
       getQueueAttentionsCount,
+      getAttentionElapsedTime,
+      getAttentionStatusMessage,
       getTotalAttentionsCount,
     };
   },
@@ -990,7 +1418,7 @@ export default {
                         {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
                       </span>
                       <span v-else>
-                        {{ getTotalAttentionsCount() }}
+                        {{ getTotalAttentionsCount }}
                       </span>
                     </div>
                     <span class="spy-live-indicator" title="Actualización en tiempo real">
@@ -1050,23 +1478,51 @@ export default {
                   <div
                     v-for="(attention, index) in state.todayAttentions"
                     :key="`today-att-${index}`"
-                    class="spy-attention-item clickable"
-                    @click="goToAttention(attention.id)"
+                    :class="['spy-attention-item', { 'clickable': index === 0, 'reference-only': index > 0 }]"
+                    @click="index === 0 ? goToAttention(attention.id) : null"
                   >
+                    <div class="spy-attention-status-indicator">
+                      <Popper v-if="getAttentionElapsedTime(attention)" :class="'dark'" arrow hover disable-click-away placement="left" :z-index="10001">
+                        <template #content>
+                          <div class="popper-content">
+                            <div class="popper-title">Status de Espera</div>
+                            <div class="popper-item">
+                              <span class="popper-color" :style="{ background: getAttentionElapsedTime(attention).timeColor }"></span>
+                              <span>{{ getAttentionStatusMessage(getAttentionElapsedTime(attention).timeStatus) }}</span>
+                            </div>
+                            <div class="popper-item">
+                              <span><strong>Tempo:</strong> {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                            </div>
+                          </div>
+                        </template>
+                        <div
+                          class="spy-status-dot"
+                          :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
+                          :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
+                        ></div>
+                      </Popper>
+                      <div
+                        v-else
+                        class="spy-status-dot spy-status-neutral"
+                        title="Fecha de creación no disponible"
+                      ></div>
+                    </div>
                     <div class="spy-attention-info">
-                      <div class="spy-attention-name">
-                        <strong>{{ attention.clientName }}</strong>
+                      <div class="spy-attention-header">
+                        <div v-if="attention.number" class="spy-attention-number-large">
+                          {{ $t('collaboratorSpySection.number') }}: <strong>{{ attention.number }}</strong>
+                        </div>
+                        <div v-if="attention.clientName && attention.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                          {{ attention.clientName }}
+                        </div>
                       </div>
                       <div class="spy-attention-meta">
-                        <span><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                        <span v-if="attention.clientId && attention.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
                         <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                        <span><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
-                        <span v-if="attention.number" class="badge bg-primary"
-                          >{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span
-                        >
+                        <span v-if="attention.service && attention.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
                       </div>
                     </div>
-                    <div class="spy-attention-action">
+                    <div v-if="index === 0" class="spy-attention-action">
                       <i class="bi bi-arrow-right-circle"></i>
                     </div>
                   </div>
@@ -1132,7 +1588,7 @@ export default {
               <div class="spy-calendar-wrapper">
                 <VDatePicker
                   :locale="state.locale"
-                  v-model.string="state.selectedDate"
+                  v-model="state.selectedDate"
                   :mask="dateMask"
                   :min-date="state.minDate"
                   :max-date="state.maxDate"
@@ -1175,23 +1631,46 @@ export default {
                   }})</span
                 >
               </div>
-              <div class="spy-details-list">
+              <div class="spy-details-list spy-attentions-list">
                 <div
                   v-for="(attention, index) in state.dateDetails.attentions"
                   :key="`att-${index}`"
-                  class="spy-detail-item"
+                  :class="['spy-attention-item', { 'reference-only': index > 0 }]"
                 >
-                  <div class="spy-detail-info">
-                    <div class="spy-detail-name">
-                      <strong>{{ attention.clientName }}</strong>
+                  <div class="spy-attention-status-indicator" v-if="getAttentionElapsedTime(attention)">
+                    <Popper :class="'dark'" arrow hover disable-click-away placement="left" :z-index="10001">
+                      <template #content>
+                        <div class="popper-content">
+                          <div class="popper-title">Status de Espera</div>
+                          <div class="popper-item">
+                            <span class="popper-color" :style="{ background: getAttentionElapsedTime(attention).timeColor }"></span>
+                            <span>{{ getAttentionStatusMessage(getAttentionElapsedTime(attention).timeStatus) }}</span>
+                          </div>
+                          <div class="popper-item">
+                            <span><strong>Tempo:</strong> {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                          </div>
+                        </div>
+                      </template>
+                      <div
+                        class="spy-status-dot"
+                        :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
+                        :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
+                      ></div>
+                    </Popper>
+                  </div>
+                  <div class="spy-attention-info">
+                    <div class="spy-attention-header">
+                      <div v-if="attention.number" class="spy-attention-number-large">
+                        {{ $t('collaboratorSpySection.number') }}: <strong>{{ attention.number }}</strong>
+                      </div>
+                      <div v-if="attention.clientName && attention.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                        {{ attention.clientName }}
+                      </div>
                     </div>
-                    <div class="spy-detail-meta">
-                      <span><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                    <div class="spy-attention-meta">
+                      <span v-if="attention.clientId && attention.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
                       <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                      <span><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
-                      <span v-if="attention.number" class="badge bg-primary"
-                        >{{ $t('collaboratorSpySection.number') }}: {{ attention.number }}</span
-                      >
+                      <span v-if="attention.service && attention.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
                     </div>
                   </div>
                 </div>
@@ -1208,20 +1687,25 @@ export default {
                   }})</span
                 >
               </div>
-              <div class="spy-details-list">
+              <div class="spy-details-list spy-attentions-list">
                 <div
                   v-for="(booking, index) in state.dateDetails.bookings"
                   :key="`book-${index}`"
-                  class="spy-detail-item"
+                  :class="['spy-attention-item', { 'clickable': index === 0, 'reference-only': index > 0 }]"
                 >
-                  <div class="spy-detail-info">
-                    <div class="spy-detail-name">
-                      <strong>{{ booking.clientName }}</strong>
+                  <div class="spy-attention-info">
+                    <div class="spy-attention-header">
+                      <div class="spy-attention-number-large">
+                        <i class="bi bi-calendar-check-fill"></i> {{ $t('collaboratorSpySection.bookings') }}
+                      </div>
+                      <div v-if="booking.clientName && booking.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                        {{ booking.clientName }}
+                      </div>
                     </div>
-                    <div class="spy-detail-meta">
-                      <span><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span>
+                    <div class="spy-attention-meta">
+                      <span v-if="booking.clientId && booking.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span>
                       <span><i class="bi bi-clock"></i> {{ formattedTime(booking.hour) }}</span>
-                      <span><i class="bi bi-briefcase"></i> {{ booking.service }}</span>
+                      <span v-if="booking.service && booking.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ booking.service }}</span>
                     </div>
                   </div>
                 </div>
@@ -1460,11 +1944,12 @@ export default {
 .spy-attentions-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .spy-attention-item {
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  padding-left: 2rem;
   background: rgba(0, 74, 173, 0.05);
   border-radius: 8px;
   border-left: 3px solid #004aad;
@@ -1472,6 +1957,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .spy-attention-item.clickable {
@@ -1483,24 +1969,57 @@ export default {
   transform: translateX(4px);
 }
 
+.spy-attention-item.reference-only {
+  opacity: 0.65;
+  background: rgba(0, 0, 0, 0.02);
+  cursor: default;
+  border-left-color: rgba(0, 74, 173, 0.3);
+}
+
 .spy-attention-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
-.spy-attention-name {
+.spy-attention-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.spy-attention-number-large {
   font-size: 0.95rem;
-  color: #000;
+  font-weight: 600;
+  color: #004aad;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1.2;
+}
+
+.spy-attention-number-large strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #004aad;
+}
+
+.spy-attention-name-secondary {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.65);
+  font-style: italic;
+  line-height: 1.2;
 }
 
 .spy-attention-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.85rem;
+  gap: 0.75rem;
+  font-size: 0.8rem;
   color: rgba(0, 0, 0, 0.6);
+  line-height: 1.3;
 }
 
 .spy-attention-meta span {
@@ -1516,6 +2035,55 @@ export default {
 .spy-attention-action {
   font-size: 1.25rem;
   color: #004aad;
+}
+
+/* Time Status Indicator */
+.spy-attention-status-indicator {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  cursor: pointer;
+}
+
+.spy-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: help;
+  transition: transform 0.2s ease;
+  display: block;
+}
+
+.spy-status-dot:hover {
+  transform: scale(1.2);
+}
+
+.spy-attention-status-indicator:hover .spy-status-dot {
+  transform: scale(1.2);
+}
+
+.spy-status-excellent {
+  background-color: #00c2cb;
+}
+
+.spy-status-good {
+  background-color: #f9c322;
+}
+
+.spy-status-warning {
+  background-color: #ff9800;
+}
+
+.spy-status-poor {
+  background-color: #a52a2a;
+}
+
+.spy-status-neutral {
+  background-color: #a9a9a9;
 }
 
 .spy-no-data {
@@ -1671,17 +2239,30 @@ export default {
   gap: 0.75rem;
 }
 
-.spy-detail-item {
-  padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
-  border-left: 3px solid #004aad;
-}
-
-.spy-detail-info {
+/* Reuse styles from spy-attention-item for calendar details */
+.spy-details-list.spy-attentions-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Legacy styles - can be removed if not used elsewhere */
+.spy-detail-item {
+  padding: 0.6rem 0.75rem;
+  background: rgba(0, 74, 173, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #004aad;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.spy-detail-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .spy-detail-name {
@@ -1692,9 +2273,10 @@ export default {
 .spy-detail-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.85rem;
+  gap: 0.75rem;
+  font-size: 0.8rem;
   color: rgba(0, 0, 0, 0.6);
+  line-height: 1.3;
 }
 
 .spy-detail-meta span {

@@ -8,7 +8,7 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
-import { getBookingsDetails } from '../../application/services/query-stack';
+import { getBookingsDetails, getPendingAttentionsDetails, getAttentionsDetails } from '../../application/services/query-stack';
 import { DateModel } from '../../shared/utils/date.model';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -17,6 +17,7 @@ import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
+import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
 
 export default {
   name: 'CollaboratorQueueBookings',
@@ -29,6 +30,7 @@ export default {
     BookingCalendar,
     ComponentMenu,
     BookingDetailsCard,
+    AttentionDetailsCard,
   },
   async setup() {
     const router = useRouter();
@@ -88,7 +90,7 @@ export default {
           state.locale = commerce.value.localeInfo.language;
         }
       } catch (error) {
-        console.error('Error loading commerce data:', error);
+        // Error loading commerce data
       }
     };
 
@@ -160,6 +162,8 @@ export default {
           state.blocks = [];
           state.availableAttentionBlocks = [];
           state.recentBookings = [];
+          state.recentAttentions = [];
+          state.showAttentions = false;
           state.stats = {
             todayCount: 0,
             pendingCount: 0,
@@ -202,7 +206,6 @@ export default {
             }
             loading.value = false;
           } catch (error) {
-            console.error('Error handling module change:', error);
             loading.value = false;
           }
         }
@@ -271,6 +274,8 @@ export default {
           totalActiveCount: 0,
         };
         state.recentBookings = [];
+        state.recentAttentions = [];
+        state.showAttentions = false;
         return;
       }
 
@@ -385,7 +390,6 @@ export default {
 
         state.loadingStats = false;
       } catch (error) {
-        console.error('Error loading dashboard stats:', error);
         state.loadingStats = false;
       }
     };
@@ -398,29 +402,97 @@ export default {
       try {
         loading.value = true;
         const today = new DateModel().toString();
-        const allTodayBookings = [];
 
-        // Get bookings for all collaborator queues
-        const todayBookingsPromises = collaboratorQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value.id,
-            today,
-            today,
-            [commerce.value.id],
-            1,
-            50,
-            undefined,
-            queueId
-          )
-        );
-        const bookingsArrays = await Promise.all(todayBookingsPromises);
-        const allBookings = bookingsArrays.flat().filter(Boolean);
-        allBookings.sort((a, b) => {
-          const dateA = new Date(a.date || a.createdDate);
-          const dateB = new Date(b.date || b.createdDate);
+        // Get today's attentions for all collaborator queues (not bookings)
+        // Use getAttentionsDetails to get all attentions (not just pending) for today
+        const todayAttentionsPromises = collaboratorQueueIds.map(async queueId => {
+          try {
+            const attentions = await getAttentionsDetails(
+              commerce.value.id,
+              today,
+              today,
+              [commerce.value.id],
+              1,
+              100, // Increase limit to get more results
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              queueId
+            );
+            return attentions || [];
+          } catch (error) {
+            return [];
+          }
+        });
+
+        const attentionsArrays = await Promise.all(todayAttentionsPromises);
+        const allAttentions = attentionsArrays.flat().filter(Boolean);
+
+        // Filter by today's date - handle different date formats
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+
+        const filterAttentionsByToday = (attentions) => {
+          if (!attentions || !Array.isArray(attentions)) return [];
+
+          return attentions.filter(attention => {
+            if (!attention.createdDate && !attention.createdAt) return false;
+
+            // Handle different date formats
+            let attentionDate;
+            try {
+              const dateValue = attention.createdDate || attention.createdAt;
+
+              if (dateValue instanceof Date) {
+                attentionDate = new Date(dateValue);
+              } else if (typeof dateValue === 'string') {
+                attentionDate = new Date(dateValue);
+              } else if (dateValue && dateValue.toDate && typeof dateValue.toDate === 'function') {
+                // Firebase Timestamp
+                attentionDate = dateValue.toDate();
+              } else if (dateValue && dateValue.seconds) {
+                // Firebase Timestamp as object with seconds
+                attentionDate = new Date(dateValue.seconds * 1000);
+              } else {
+                return false;
+              }
+
+              // Check if date is valid
+              if (isNaN(attentionDate.getTime())) {
+                return false;
+              }
+
+              // Compare dates (only date, not time)
+              const attentionDateOnly = new Date(attentionDate);
+              attentionDateOnly.setHours(0, 0, 0, 0);
+
+              return attentionDateOnly.getTime() === todayDate.getTime();
+            } catch (error) {
+              return false;
+            }
+          });
+        };
+
+        const todayAttentions = filterAttentionsByToday(allAttentions);
+
+        // Sort by number (ascending) to show in order
+        todayAttentions.sort((a, b) => {
+          const numA = a.number || 0;
+          const numB = b.number || 0;
+          if (numA !== numB) {
+            return numA - numB;
+          }
+          // If same number, sort by date
+          const dateA = new Date(a.createdDate || a.createdAt || 0);
+          const dateB = new Date(b.createdDate || b.createdAt || 0);
           return dateA - dateB;
         });
-        state.recentBookings = allBookings.slice(0, 50);
+
+        state.recentAttentions = todayAttentions.slice(0, 50);
+        state.recentBookings = [];
+        state.showAttentions = true;
         loading.value = false;
       } catch (error) {
         alertError.value = error.response?.status || error.status || 500;
@@ -435,6 +507,9 @@ export default {
 
       try {
         loading.value = true;
+        // Reset showAttentions when viewing pending bookings
+        state.showAttentions = false;
+        state.recentAttentions = [];
         const today = new DateModel().toString();
         const endOfMonth = new DateModel().endOfMonth().toString();
         const allPendingBookings = [];
@@ -594,8 +669,34 @@ export default {
               </div>
             </div>
           </div>
+          <!-- Recent Attentions (when clicking Hoje) -->
+          <div class="recent-bookings-container mt-4" v-if="state.showAttentions && state.recentAttentions.length > 0">
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.todayAttentions') }}
+              </h5>
+            </div>
+            <div class="recent-bookings-list">
+              <div
+                class="booking-item-wrapper"
+                v-for="(attention, index) in state.recentAttentions"
+                :key="`attention-${index}`"
+              >
+                <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
+          <!-- No Attentions Message -->
+          <div v-else-if="state.showAttentions && state.recentAttentions.length === 0 && !loading && commerce && commerce.id" class="mt-4">
+            <Message
+              :icon="'bi-clock'"
+              :title="$t('collaboratorBookingsView.noAttentions.title')"
+              :content="$t('collaboratorBookingsView.noAttentions.content')"
+            />
+          </div>
           <!-- Recent Bookings -->
-          <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
+          <div class="recent-bookings-container mt-4" v-else-if="!state.showAttentions && state.recentBookings.length > 0">
             <div class="section-header">
               <h5 class="section-title">
                 <i class="bi bi-clock-history"></i>
@@ -612,7 +713,7 @@ export default {
               </div>
             </div>
           </div>
-          <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats" class="mt-4">
+          <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions" class="mt-4">
             <Message
               :icon="'bi-calendar-x'"
               :title="$t('collaboratorBookingsView.noBookings.title')"
@@ -747,8 +848,34 @@ export default {
             </div>
           </div>
         </div>
+        <!-- Recent Attentions (when clicking Hoje) -->
+        <div class="recent-bookings-container mt-4" v-if="state.showAttentions && state.recentAttentions.length > 0">
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.todayAttentions') }}
+            </h5>
+          </div>
+          <div class="recent-bookings-list">
+            <div
+              class="booking-item-wrapper"
+              v-for="(attention, index) in state.recentAttentions"
+              :key="`attention-${index}`"
+            >
+              <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
+            </div>
+          </div>
+        </div>
+        <!-- No Attentions Message -->
+        <div v-else-if="state.showAttentions && state.recentAttentions.length === 0 && !loading && commerce && commerce.id" class="mt-4">
+          <Message
+            :icon="'bi-clock'"
+            :title="$t('collaboratorBookingsView.noAttentions.title')"
+            :content="$t('collaboratorBookingsView.noAttentions.content')"
+          />
+        </div>
         <!-- Recent Bookings -->
-        <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
+        <div class="recent-bookings-container mt-4" v-else-if="!state.showAttentions && state.recentBookings.length > 0">
           <div class="section-header">
             <h5 class="section-title">
               <i class="bi bi-clock-history"></i>
@@ -765,7 +892,7 @@ export default {
             </div>
           </div>
         </div>
-        <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats" class="mt-4">
+        <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions" class="mt-4">
           <Message
             :icon="'bi-calendar-x'"
             :title="$t('collaboratorBookingsView.noBookings.title')"

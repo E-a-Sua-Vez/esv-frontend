@@ -59,6 +59,7 @@ export default {
       loading: false,
       detailsOpened: false,
       sentimentScore: {},
+      queueDetailsExpanded: false,
     };
   },
   beforeMount() {
@@ -288,6 +289,74 @@ export default {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
       return diffDays;
     },
+    getMedianDuration() {
+      // Use median if available (more robust), otherwise fallback to average
+      const attention = this.calculatedMetrics?.['attention.created'] || {};
+      if (attention.medianDuration !== null && attention.medianDuration !== undefined) {
+        return attention.medianDuration;
+      }
+      // Fallback to average
+      return attention.avgDuration || 0;
+    },
+    isUsingIntelligentEstimation() {
+      const attention = this.calculatedMetrics?.['attention.created'] || {};
+      return attention.usingIntelligentEstimation === true;
+    },
+    getQueueDetails() {
+      const attention = this.calculatedMetrics?.['attention.created'] || {};
+      return attention.queueDetails || [];
+    },
+    getMaxQueue() {
+      const details = this.getQueueDetails();
+      if (details.length === 0) return null;
+      // Find queue with most attentions
+      const maxQueue = details.reduce((max, queue) => {
+        return queue.attentionCount > max.attentionCount ? queue : max;
+      }, details[0]);
+      return maxQueue;
+    },
+    formatDuration(minutes) {
+      if (!minutes || minutes === null || minutes === 0) return 'N/A';
+      const hours = Math.floor(minutes / 60);
+      const mins = Math.round(minutes % 60);
+      if (hours > 0) {
+        return `${hours}h ${mins}min`;
+      }
+      return `${mins} min`;
+    },
+    getDurationColorClass(minutes) {
+      if (!minutes || minutes === null || minutes === 0) return 'duration-neutral';
+      // Green: < 15 min (excellent)
+      if (minutes < 15) return 'duration-excellent';
+      // Yellow: 15-30 min (good)
+      if (minutes < 30) return 'duration-good';
+      // Orange: 30-60 min (warning)
+      if (minutes < 60) return 'duration-warning';
+      // Red: >= 60 min (poor)
+      return 'duration-poor';
+    },
+    getCollaboratorsList() {
+      if (!this.calculatedMetrics) {
+        return [];
+      }
+      const collabs = this.calculatedMetrics['collaborators'];
+      if (!collabs) {
+        return [];
+      }
+      if (Array.isArray(collabs)) {
+        return collabs.filter(c => c && c.id);
+      }
+      // Convert object to array if needed
+      if (collabs && typeof collabs === 'object') {
+        const values = Object.values(collabs);
+        return values.filter(c => c && c.id);
+      }
+      return [];
+    },
+    hasCollaborators() {
+      const list = this.getCollaboratorsList();
+      return list && list.length > 0;
+    },
     getTrendIcon(trend) {
       if (trend.type === 'up') return 'bi-arrow-up-circle-fill green-icon';
       if (trend.type === 'down') return 'bi-arrow-down-circle-fill red-icon';
@@ -338,7 +407,6 @@ export default {
       try {
         await this.exportToPDF();
       } catch (error) {
-        console.error('Error handling download:', error);
         this.loading = false;
         this.detailsOpened = false;
       }
@@ -350,7 +418,6 @@ export default {
 
         // Validate commerce exists
         if (!this.commerce || !this.commerce.id) {
-          console.error('Commerce is not available for PDF export');
           this.loading = false;
           this.detailsOpened = false;
           return;
@@ -375,7 +442,6 @@ export default {
         const pdfFooter = document.getElementById('pdf-footer');
 
         if (!doc) {
-          console.error('indicators-component element not found');
           this.loading = false;
           this.detailsOpened = false;
           return;
@@ -399,7 +465,6 @@ export default {
                 this.loading = false;
               })
               .catch(error => {
-                console.error('Error generating PDF:', error);
                 if (pdfHeader) pdfHeader.style.display = 'none';
                 if (pdfFooter) pdfFooter.style.display = 'none';
                 this.detailsOpened = false;
@@ -407,7 +472,6 @@ export default {
                 this.loading = false;
               });
           } catch (error) {
-            console.error('Error loading html2pdf:', error);
             if (pdfHeader) pdfHeader.style.display = 'none';
             if (pdfFooter) pdfFooter.style.display = 'none';
             this.detailsOpened = false;
@@ -416,7 +480,6 @@ export default {
           }
         }, 1000);
       } catch (error) {
-        console.error('Error in exportToPDF:', error);
         this.loading = false;
         this.detailsOpened = false;
       }
@@ -918,12 +981,103 @@ export default {
               </template>
             </DetailsCard>
           </div>
+          <!-- Queue Details Card -->
+          <div class="queue-details-section" v-if="!detailsOpened && !hideSummary && getQueueDetails().length > 0">
+            <div class="queue-details-card">
+              <div class="queue-details-header">
+                <div class="queue-details-icon">
+                  <i class="bi bi-list-ul"></i>
+                </div>
+                <div class="queue-details-title-section">
+                  <h3 class="queue-details-title">
+                    {{ $t('dashboard.queueDetails.title') || 'Detalles por Cola' }}
+                  </h3>
+                  <p class="queue-details-subtitle">
+                    {{ $t('dashboard.queueDetails.subtitle') || 'Atenciones, reservas y tiempo medio por cola' }}
+                  </p>
+                </div>
+                <button
+                  v-if="getQueueDetails().length > 1"
+                  @click="queueDetailsExpanded = !queueDetailsExpanded"
+                  class="queue-details-toggle-btn"
+                  :class="{ expanded: queueDetailsExpanded }"
+                >
+                  <i :class="queueDetailsExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+                </button>
+              </div>
+              <!-- Front Card - Queue with most attentions -->
+              <div class="queue-details-front" v-if="getMaxQueue()">
+                <div class="queue-details-front-content">
+                  <div class="queue-details-front-label">
+                    {{ $t('dashboard.queueDetails.maxQueue') || 'Cola con más atenciones' }}
+                  </div>
+                  <div class="queue-details-front-name">{{ getMaxQueue().queueName }}</div>
+                  <div class="queue-details-front-stats">
+                    <div class="queue-details-front-stat">
+                      <span class="queue-details-front-stat-label">Atenciones:</span>
+                      <span class="queue-details-front-stat-value">{{ getMaxQueue().attentionCount }}</span>
+                    </div>
+                    <div class="queue-details-front-stat">
+                      <span class="queue-details-front-stat-label">Reservas:</span>
+                      <span class="queue-details-front-stat-value">{{ getMaxQueue().bookingCount || 0 }}</span>
+                    </div>
+                    <div class="queue-details-front-stat">
+                      <span class="queue-details-front-stat-label">Tempo Médio:</span>
+                      <span
+                        class="queue-details-front-stat-value"
+                        :class="getDurationColorClass(getMaxQueue().medianDuration)"
+                      >
+                        {{ formatDuration(getMaxQueue().medianDuration) }}
+                        <span
+                          class="duration-indicator"
+                          :class="getDurationColorClass(getMaxQueue().medianDuration)"
+                        ></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Queue List -->
+              <div class="queue-details-list" v-if="queueDetailsExpanded && getQueueDetails().length > 1">
+                <div
+                  v-for="queue in getQueueDetails()"
+                  :key="queue.queueId"
+                  class="queue-details-item"
+                >
+                  <div class="queue-details-item-name">{{ queue.queueName }}</div>
+                  <div class="queue-details-item-stats">
+                    <div class="queue-details-item-stat">
+                      <i class="bi bi-qr-code"></i>
+                      <span>{{ queue.attentionCount }}</span>
+                    </div>
+                    <div class="queue-details-item-stat">
+                      <i class="bi bi-calendar2-check"></i>
+                      <span>{{ queue.bookingCount || 0 }}</span>
+                    </div>
+                    <div class="queue-details-item-stat">
+                      <i class="bi bi-clock-history"></i>
+                      <span
+                        :class="getDurationColorClass(queue.medianDuration)"
+                      >
+                        {{ formatDuration(queue.medianDuration) }}
+                        <span
+                          class="duration-indicator-small"
+                          :class="getDurationColorClass(queue.medianDuration)"
+                        ></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div>
             <div class="row">
               <div id="attention-time-avg" class="col">
+                <div class="dashboard-metric-card-wrapper">
                 <SimpleCard
                   :show="!!toggles['dashboard.attention-time-avg.view']"
-                  :data="calculatedMetrics['attention.created'].avgDuration"
+                    :data="getMedianDuration()"
                   :title="$t('dashboard.items.attentions.2')"
                   :show-tooltip="true"
                   :description="$t('dashboard.seconds')"
@@ -931,6 +1085,19 @@ export default {
                   :icon-style-class="'green-icon'"
                 >
                 </SimpleCard>
+                  <Popper
+                    v-if="isUsingIntelligentEstimation()"
+                    :class="'dark'"
+                    arrow
+                    hover
+                    disable-click-away
+                    :content="$t('dashboard.intelligentEstimationTooltip')"
+                  >
+                    <span class="ai-badge-dashboard">
+                      <i class="bi bi-stars"></i>
+                    </span>
+                  </Popper>
+                </div>
               </div>
               <div id="attention-no-device" class="col">
                 <SimpleCard
@@ -945,18 +1112,6 @@ export default {
                 </SimpleCard>
               </div>
             </div>
-          </div>
-          <div id="attention-queue">
-            <SimpleCard
-              :show="!!toggles['dashboard.attention-queue.view']"
-              :data="calculatedMetrics['attention.created'].maxQueue"
-              :subdata="calculatedMetrics['attention.created'].maxQueueCount"
-              :title="$t('dashboard.items.attentions.4')"
-              :show-tooltip="false"
-              :icon="'bi-person-heart'"
-              :icon-style-class="'red-icon'"
-            >
-            </SimpleCard>
           </div>
           <div id="attention-rating-avg">
             <DetailsCard
@@ -1036,34 +1191,29 @@ export default {
           </div>
           <div id="attention-collaborators">
             <DetailsCard
-              :show="
-                !!toggles['dashboard.attention-collaborators.view'] &&
-                calculatedMetrics['collaborators'].length > 0
-              "
+              :show="!!toggles['dashboard.attention-collaborators.view']"
               :data="
-                calculatedMetrics['collaborators']
-                  ? calculatedMetrics['collaborators'][0]?.name
-                  : 'No Data'
-              "
-              :subdata="
-                calculatedMetrics['collaborators']
-                  ? calculatedMetrics['collaborators'][0]?.attention_counter
+                hasCollaborators() && getCollaboratorsList().length > 0
+                  ? getCollaboratorsList()[0].attention_counter || 0
                   : 0
               "
-              :title="$t('dashboard.items.attentions.20')"
-              :show-tooltip="false"
-              :icon="'bi-trophy-fill'"
-              :icon-style-class="'green-icon'"
+              :subdata="
+                hasCollaborators() && getCollaboratorsList().length > 0
+                  ? getCollaboratorsList()[0].name || getCollaboratorsList()[0].alias || 'N/A'
+                  : 'No Data'
+              "
+              :title="$t('dashboard.items.attentions.20') || 'Rendimiento de Colaboradores'"
+              :show-tooltip="true"
+              :description="$t('dashboard.collaborators.tooltip') || 'Métricas de productividad, eficiencia y calidad de servicio por colaborador'"
+              :icon="'bi-people-fill'"
+              :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
             >
               <template v-slot:details>
                 <AttentionCollaboratorsDetails
-                  :show="
-                    !!toggles['dashboard.attention-collaborators.view'] &&
-                    calculatedMetrics['collaborators'].length > 0
-                  "
-                  :collaborators="calculatedMetrics['collaborators']"
-                  :limit="5"
+                  :show="!!toggles['dashboard.attention-collaborators.view']"
+                  :collaborators="getCollaboratorsList()"
+                  :limit="10"
                 >
                 </AttentionCollaboratorsDetails>
               </template>
@@ -2171,4 +2321,290 @@ export default {
   color: var(--verde-tu) !important;
   transform: scale(1.15);
 }
+
+/* Dashboard Metric Card Wrapper for AI Badge */
+.dashboard-metric-card-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.ai-badge-dashboard {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-block;
+  color: #ffc107;
+  font-size: 1rem;
+  cursor: help;
+  z-index: 10;
+  animation: sparkle 2s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ai-badge-dashboard i {
+  filter: drop-shadow(0 0 2px rgba(255, 193, 7, 0.5));
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Queue Details Section */
+.queue-details-section {
+  margin: 2rem 0;
+}
+
+.queue-details-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.queue-details-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.queue-details-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.15) 0%, rgba(0, 194, 203, 0.15) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #004aad;
+  font-size: 1.5rem;
+}
+
+.queue-details-title-section {
+  flex: 1;
+}
+
+.queue-details-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 0 0 0.25rem 0;
+}
+
+.queue-details-subtitle {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.queue-details-toggle-btn {
+  background: transparent;
+  border: none;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.queue-details-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Front Card - Max Queue */
+.queue-details-front {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid rgba(0, 74, 173, 0.2);
+}
+
+.queue-details-front-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.queue-details-front-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.queue-details-front-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.queue-details-front-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.queue-details-front-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.queue-details-front-stat-label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+}
+
+.queue-details-front-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Queue List */
+.queue-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.queue-details-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  transition: all 0.2s ease;
+}
+
+.queue-details-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.queue-details-item-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+  flex: 1;
+}
+
+.queue-details-item-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.queue-details-item-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.queue-details-item-stat i {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 1rem;
+}
+
+/* Duration Color Classes */
+.duration-excellent {
+  color: #28a745;
+}
+
+.duration-good {
+  color: #ffc107;
+}
+
+.duration-warning {
+  color: #ff9800;
+}
+
+.duration-poor {
+  color: #dc3545;
+}
+
+.duration-neutral {
+  color: #a9a9a9;
+}
+
+.duration-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+}
+
+.duration-indicator-small {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+}
+
+.duration-excellent .duration-indicator,
+.duration-excellent .duration-indicator-small {
+  background: #28a745;
+  box-shadow: 0 0 4px rgba(40, 167, 69, 0.4);
+}
+
+.duration-good .duration-indicator,
+.duration-good .duration-indicator-small {
+  background: #ffc107;
+  box-shadow: 0 0 4px rgba(255, 193, 7, 0.4);
+}
+
+.duration-warning .duration-indicator,
+.duration-warning .duration-indicator-small {
+  background: #ff9800;
+  box-shadow: 0 0 4px rgba(255, 152, 0, 0.4);
+}
+
+.duration-poor .duration-indicator,
+.duration-poor .duration-indicator-small {
+  background: #dc3545;
+  box-shadow: 0 0 4px rgba(220, 53, 69, 0.4);
+}
+
+.duration-neutral .duration-indicator,
+.duration-neutral .duration-indicator-small {
+  background: #a9a9a9;
+}
+
 </style>

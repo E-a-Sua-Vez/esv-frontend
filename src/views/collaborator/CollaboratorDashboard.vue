@@ -156,7 +156,6 @@ export default {
           }
         }
       } catch (error) {
-        console.error('Error loading queues:', error);
       }
     };
 
@@ -235,7 +234,6 @@ export default {
           await refresh();
           loading.value = false;
         } catch (error) {
-          console.error('Error handling commerce change:', error);
           loading.value = false;
         }
       },
@@ -267,7 +265,6 @@ export default {
           await refresh();
           loading.value = false;
         } catch (error) {
-          console.error('Error handling module change:', error);
           loading.value = false;
         }
       },

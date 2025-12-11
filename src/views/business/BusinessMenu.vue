@@ -113,7 +113,6 @@ export default {
               await router.push({ path: `/interno/negocio/${option}` });
               loading.value = false;
             } catch (routeError) {
-              console.error('Navigation error:', routeError);
               loading.value = false;
               alertError.value = routeError?.message || 'Error navigating to route';
             }
@@ -122,7 +121,6 @@ export default {
       } catch (error) {
         loading.value = false;
         alertError.value = error?.message || 'An unexpected error occurred';
-        console.error('goToOption error:', error);
       }
     };
 

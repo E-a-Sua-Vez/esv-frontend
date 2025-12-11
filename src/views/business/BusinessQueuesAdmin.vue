@@ -128,7 +128,6 @@ export default {
         state.collaborators = await getCollaboratorsByCommerceId(commerceId);
         state.filtered = state.queues;
       } catch (error) {
-        console.error('Error loading commerce data:', error);
         state.queues = [];
         state.services = {};
         state.collaborators = {};
@@ -151,7 +150,6 @@ export default {
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
-            console.error('Error loading commerce data on commerce change:', error);
             loading.value = false;
           }
         }

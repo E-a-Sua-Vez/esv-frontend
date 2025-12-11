@@ -90,7 +90,6 @@ export default {
         state.queues = selectedCommerce.queues || [];
         state.queue = {};
       } catch (error) {
-        console.error('Error loading queues:', error);
         state.queues = [];
         state.queue = {};
       }
@@ -120,7 +119,6 @@ export default {
               await loadDashboardStats();
               loading.value = false;
             } catch (error) {
-              console.error('Error loading data on commerce change:', error);
               loading.value = false;
             }
           }
@@ -217,7 +215,6 @@ export default {
 
         state.loadingStats = false;
       } catch (error) {
-        console.error('Error loading dashboard stats:', error);
         state.loadingStats = false;
       }
     };

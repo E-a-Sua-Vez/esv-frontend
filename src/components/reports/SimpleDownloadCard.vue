@@ -21,7 +21,6 @@ export default {
       try {
         this.$emit('download');
       } catch (error) {
-        console.error('Error in executeDownload:', error);
       }
     },
   },
