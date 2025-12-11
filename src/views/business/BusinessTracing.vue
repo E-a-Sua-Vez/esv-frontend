@@ -402,16 +402,10 @@ export default {
             nextTick(() => {
               nextTick(() => {
                 if (contentInstance && contentInstance.refresh) {
-                  // Double-check the value is still there
-                  if (contentInstance.daysSinceType) {
-                  } else {
-                  }
                   contentInstance.refresh(1);
-                } else {
                 }
               });
             });
-          } else {
           }
         });
       });
@@ -587,11 +581,9 @@ export default {
               nextTick(() => {
                 if (contentInstance && contentInstance.refresh) {
                   contentInstance.refresh(1);
-                } else {
                 }
               });
             });
-          } else {
           }
         });
       });
@@ -670,7 +662,6 @@ export default {
               const componentName =
                 contentInstance.$options?.name || contentInstance.$options?.__name;
               if (componentName !== 'DashboardBookingsManagement') {
-                );
                 return;
               }
             }
@@ -691,7 +682,6 @@ export default {
             }
 
             if (!contentInstance) {
-              );
               return;
             }
 
@@ -810,9 +800,7 @@ export default {
                     contentInstance.$options?.name || contentInstance.$options?.__name;
                   if (verifyName === 'DashboardBookingsManagement') {
                     contentInstance.refresh(1);
-                  } else {
                   }
-                } else {
                 }
 
                 // CRITICAL: Clear the refreshing flag after refresh is complete
@@ -890,11 +878,9 @@ export default {
               nextTick(() => {
                 if (contentInstance && contentInstance.refresh) {
                   contentInstance.refresh(1);
-                } else {
                 }
               });
             });
-          } else {
           }
         });
       });
@@ -2033,11 +2019,9 @@ export default {
                     filters-location="slot"
                   >
                     <template #filters-exposed="filterProps">
-                      {{
-                      }}
+                      {{}}
                       <template v-if="filterProps.filterType === 'attentions'">
-                        {{
-                        }}
+                        {{}}
                         <div class="filters-content-wrapper" key="attentions-filters">
                           <!-- Date quick buttons -->
                           <div class="row my-2">
@@ -3063,9 +3047,6 @@ export default {
                         </div>
                       </template>
                       <template v-else-if="filterProps.filterType === 'bookings'">
-                        {{
-                          )
-                        }}
                         <div class="filters-content-wrapper" key="bookings-filters">
                           <!-- Date quick buttons -->
                           <div class="row my-2">
