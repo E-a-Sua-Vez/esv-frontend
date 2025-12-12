@@ -223,6 +223,12 @@ export default {
       store.setCurrentBusiness({});
     };
 
+    const receiveFilteredItems = items => {
+      // This function is called by SearchBar component when items are filtered
+      // For BusinessAdmin, we don't need to do anything special with filtered items
+      // as the SearchBar handles the filtering internally
+    };
+
     const dayChecked = (serviceInfo, day) => {
       if (serviceInfo && serviceInfo.attentionDays) {
         return serviceInfo.attentionDays.includes(day);
@@ -282,6 +288,7 @@ export default {
       selectBusiness,
       closeBusiness,
       initializedParsonalizedHours,
+      receiveFilteredItems,
     };
   },
 };
@@ -1596,10 +1603,9 @@ export default {
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business?.logo || $t('hubLogoBlanco')"
+                  :src="$t('logo')"
                   loading="lazy"
                 />
               </div>

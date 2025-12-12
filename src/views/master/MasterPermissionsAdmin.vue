@@ -55,7 +55,8 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('Error loading permissions:', error);
+        alertError.value = error?.response?.status || error?.message || 'Error loading permissions';
         loading.value = false;
       }
     });
@@ -97,22 +98,24 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessPermissionsAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessPermissionsAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="false" :stack="alertError"></Alert>
-      </div>
-      <div id="businessPermissionsAdmin" class="">
-        <div class="row m-3">
-          <div class="col">
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessPermissionsAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessPermissionsAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessPermissionsAdmin" class="">
+        <div class="row m-3 justify-content-center">
+          <div class="col-auto">
             <button
               class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
               @click="showRoles()"
@@ -122,7 +125,7 @@ export default {
               {{ $t('businessPermissionsAdmin.roles') }}
             </button>
           </div>
-          <div class="col">
+          <div class="col-auto">
             <button
               class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
               @click="showPlans()"
@@ -131,7 +134,7 @@ export default {
               <i class="bi bi-card-list"></i> {{ $t('businessPermissionsAdmin.plans') }}
             </button>
           </div>
-          <div class="col">
+          <div class="col-auto">
             <button
               class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
               @click="showUsers()"
@@ -161,6 +164,93 @@ export default {
           v-if="state.showUsers === true && state.toggles['permissions.admin.users']"
         >
           <UserPermissionsAdmin></UserPermissionsAdmin>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="$t('logo')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessPermissionsAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessPermissionsAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessPermissionsAdmin" class="">
+          <div class="row m-3 justify-content-center">
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showRoles()"
+                :disabled="!state.toggles['permissions.admin.roles']"
+              >
+                <i class="bi bi-file-earmark-person-fill"></i>
+                {{ $t('businessPermissionsAdmin.roles') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showPlans()"
+                :disabled="!state.toggles['permissions.admin.plans']"
+              >
+                <i class="bi bi-card-list"></i> {{ $t('businessPermissionsAdmin.plans') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showUsers()"
+                :disabled="!state.toggles['permissions.admin.users']"
+              >
+                <i class="bi bi-person-fill"></i> {{ $t('businessPermissionsAdmin.users') }}
+              </button>
+            </div>
+          </div>
+          <div
+            id="roles"
+            class="row"
+            v-if="state.showRoles === true && state.toggles['permissions.admin.roles']"
+          >
+            <RolPermissionsAdmin></RolPermissionsAdmin>
+          </div>
+          <div
+            id="plans"
+            class="row"
+            v-if="state.showPlans === true && state.toggles['permissions.admin.plans']"
+          >
+            <PlanPermissionsAdmin></PlanPermissionsAdmin>
+          </div>
+          <div
+            id="plans"
+            class="row"
+            v-if="state.showUsers === true && state.toggles['permissions.admin.users']"
+          >
+            <UserPermissionsAdmin></UserPermissionsAdmin>
+          </div>
         </div>
       </div>
     </div>
@@ -202,5 +292,48 @@ export default {
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
   align-items: left;
+}
+
+/* Desktop Layout Styles */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+  }
+
+  .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+  }
+
+  .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+  }
 }
 </style>

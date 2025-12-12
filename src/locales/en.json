@@ -650,7 +650,8 @@
   "contactResultTypes": {
     "INTERESTED": "Interested",
     "CONTACT_LATER": "Contact Later",
-    "REJECTED": "No more Contact"
+    "REJECTED": "No more Contact",
+    "WAITING_FOR_RESPONSE": "Waiting for Response"
   },
   "actions": {
     "title": "Actions",
@@ -4075,6 +4076,71 @@
     },
     "validate": {
       "type": "Should select the type"
+    }
+  },
+  "leadPipeline": {
+    "title": "Sales Pipeline - Leads Management",
+    "newLeads": "New Leads",
+    "inContact": "In Contact",
+    "closed": "Closed",
+    "noLeads": "No leads",
+    "noLeadsDesc": "No leads in this stage",
+    "addLead": "Add Lead",
+    "addNewLead": "Add New Lead",
+    "createLead": "Create Lead",
+    "cancel": "Cancel",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "company": "Company",
+    "message": "Message",
+    "namePlaceholder": "Enter lead name",
+    "emailPlaceholder": "Enter email address",
+    "phonePlaceholder": "Enter phone number",
+    "companyPlaceholder": "Enter company name",
+    "messagePlaceholder": "Enter any additional notes or message",
+    "leadDetails": "Lead Details",
+    "contactHistory": "Contact History",
+    "addContact": "Add Contact",
+    "saveContact": "Save Contact",
+    "contactType": "Contact Type",
+    "contactResult": "Contact Result",
+    "comment": "Comment",
+    "commentPlaceholder": "Enter contact details...",
+    "notes": "Notes",
+    "noContacts": "No contacts",
+    "noContactsDesc": "No contacts recorded yet.",
+    "moveToContact": "Move to Contact",
+    "moveToWaitlist": "Move to Waitlist",
+    "waitlist": "Waitlist",
+    "inDeal": "In Deal",
+    "archived": "Archived",
+    "archive": "Archive",
+    "archiveLead": "Archive Lead",
+    "archiveConfirm": "Are you sure you want to archive this lead? It will be removed from all lists.",
+    "successfulSale": "Successful Sale",
+    "lastContact": "Last contact",
+    "interested": "Interested",
+    "maybeLater": "Maybe Later",
+    "reject": "Reject",
+    "filterByStatus": "Filter by Status",
+    "filterByTime": "Filter by Time Since Creation",
+    "clearStatusFilter": "Clear Status Filter",
+    "clearTimeFilter": "Clear Time Filter",
+    "timeIndicator": {
+      "green": "Less than 1 month",
+      "yellow": "1-3 months",
+      "red": "More than 3 months"
+    },
+    "source": {
+      "label": "Source",
+      "publicSite": "Public Site",
+      "manual": "Manual"
+    },
+    "validate": {
+      "name": "Name is required",
+      "email": "Email is required",
+      "emailFormat": "Invalid email format"
     }
   },
   "permissions": {

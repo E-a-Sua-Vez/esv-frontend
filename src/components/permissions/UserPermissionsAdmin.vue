@@ -285,11 +285,11 @@ export default {
     <div id="businessPermissionsAdmin">
       <div v-if="state.toggles['roles.admin.view']">
         <div id="businessPermissionsAdmin-controls" class="control-box">
-          <div class="row">
+          <div class="row my-3">
             <div class="col" v-if="state.roles">
-              <span>{{ $t('businessPermissionsAdmin.commerce') }} </span>
+              <span class="me-3">{{ $t('businessPermissionsAdmin.commerce') }}</span>
               <select
-                class="btn btn-md fw-bold text-dark m-1 select"
+                class="btn btn-md fw-bold text-dark select"
                 v-model="state.rolSelected"
                 @change="selectRol($event.target.selectedIndex)"
                 id="roles"
@@ -527,5 +527,9 @@ export default {
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
   align-items: left;
+}
+
+#businessPermissionsAdmin-controls.control-box {
+  padding: 1.25rem !important;
 }
 </style>

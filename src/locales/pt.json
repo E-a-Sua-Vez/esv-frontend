@@ -645,7 +645,8 @@
   "contactResultTypes": {
     "INTERESTED": "Teve Interesse",
     "CONTACT_LATER": "Contate logo",
-    "REJECTED": "Não contate mais"
+    "REJECTED": "Não contate mais",
+    "WAITING_FOR_RESPONSE": "Aguardando Resposta"
   },
   "contactTypes": {
     "CALL": "Chamada",
@@ -2362,6 +2363,7 @@
     "plan-activations-admin": "Activação de Planos",
     "surveys-admin": "Gerenciar Pesquisas",
     "manage-master-admin": "Gerenciar",
+    "lead-pipeline": "Pipeline de Vendas",
     "control-master-admin": "Gestão",
     "go-minisite": "Minisite",
     "outcome-types-master-admin": "Tipos de Despesa",
@@ -4071,6 +4073,98 @@
     },
     "validate": {
       "type": "Você deve selecionar o tipo"
+    }
+  },
+  "leadPipeline": {
+    "title": "Pipeline de Vendas - Gestão de Leads",
+    "newLeads": "Novos Leads",
+    "inContact": "Em Contato",
+    "closed": "Finalizados",
+    "noLeads": "Sem leads",
+    "noLeadsDesc": "Não há leads neste estágio",
+    "addLead": "Adicionar Lead",
+    "addNewLead": "Adicionar Novo Lead",
+    "createLead": "Criar Lead",
+    "cancel": "Cancelar",
+    "name": "Nome",
+    "email": "Email",
+    "phone": "Telefone",
+    "company": "Empresa",
+    "message": "Mensagem",
+    "namePlaceholder": "Digite o nome do lead",
+    "emailPlaceholder": "Digite o endereço de email",
+    "phonePlaceholder": "Digite o número de telefone",
+    "companyPlaceholder": "Digite o nome da empresa",
+    "messagePlaceholder": "Digite notas adicionais ou mensagem",
+    "leadDetails": "Detalhes do Lead",
+    "contactHistory": "Histórico de Contatos",
+    "addContact": "Adicionar Contato",
+    "saveContact": "Salvar Contato",
+    "contactType": "Tipo de Contato",
+    "contactResult": "Resultado do Contato",
+    "comment": "Comentário",
+    "commentPlaceholder": "Digite detalhes do contato...",
+    "notes": "Notas",
+    "noContacts": "Sem contatos",
+    "noContactsDesc": "Ainda não foram registrados contatos.",
+    "moveToContact": "Mover para Contato",
+    "moveToWaitlist": "Mover para Lista de Espera",
+    "waitlist": "Lista de Espera",
+    "inDeal": "Em Negociação",
+    "archived": "Arquivado",
+    "archive": "Arquivar",
+    "archiveLead": "Arquivar Lead",
+    "archiveConfirm": "Tem certeza de que deseja arquivar este lead? Ele será removido de todas as listas.",
+    "successfulSale": "Venda Bem-Sucedida",
+    "lastContact": "Último contato",
+    "interested": "Interessado",
+    "maybeLater": "Talvez Mais Tarde",
+    "reject": "Rejeitar",
+    "filterByStatus": "Filtrar por Status",
+    "filterByTime": "Filtrar por Tempo desde Criação",
+    "clearStatusFilter": "Limpar Filtro de Status",
+    "clearTimeFilter": "Limpar Filtro de Tempo",
+    "timeIndicator": {
+      "green": "Menos de 1 mês",
+      "yellow": "1-3 meses",
+      "red": "Mais de 3 meses"
+    },
+    "leadInfo": "Informações do Lead",
+    "contacts": "Contatos",
+    "transitions": "Histórico",
+    "pipelineHistory": "Histórico do Pipeline",
+    "created": "Criado",
+    "movedFrom": "Movido de",
+    "to": "para",
+    "noTransitions": "Sem transições",
+    "noTransitionsDesc": "Ainda não foram registradas transições no pipeline.",
+    "rejected": "Rejeitado",
+    "success": "Sucesso",
+    "noResponse": "Sem Resposta",
+    "filterFromDate": "Data De",
+    "filterToDate": "Data Até",
+    "clearFilter": "Limpar Filtro",
+    "exportCSV": "Exportar para CSV",
+    "noLeadsToExport": "Não há leads para exportar",
+    "exportError": "Erro ao exportar leads",
+    "source": {
+      "label": "Origem",
+      "publicSite": "Site Público",
+      "manual": "Manual"
+    },
+    "validate": {
+      "name": "O nome é obrigatório",
+      "email": "O email é obrigatório",
+      "emailFormat": "Formato de email inválido"
+    },
+    "capacitiesList": {
+      "admin": {
+        "add": "Adicionar Lead",
+        "view": "Ver Leads",
+        "read": "Ler Leads",
+        "edit": "Editar Lead",
+        "update": "Atualizar Lead"
+      }
     }
   },
   "permissions": {

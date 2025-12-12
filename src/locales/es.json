@@ -651,7 +651,8 @@
   "contactResultTypes": {
     "INTERESTED": "Interesado",
     "CONTACT_LATER": "Contactar Después",
-    "REJECTED": "No contactar Más"
+    "REJECTED": "No contactar Más",
+    "WAITING_FOR_RESPONSE": "Esperando Respuesta"
   },
   "actions": {
     "title": "Acciones",
@@ -2368,6 +2369,7 @@
     "plan-activations-admin": "Activación de Planes",
     "manage-master-admin": "Administrar",
     "control-master-admin": "Gestión",
+    "lead-pipeline": "Pipeline de Ventas",
     "company-master-admin": "Compañías",
     "patient-history-item-master-admin": "Items Historia Médica",
     "bookings-master-admin": "Reservas Visión 360°",
@@ -4081,6 +4083,98 @@
     },
     "validate": {
       "type": "Debes ingresar el tipo"
+    }
+  },
+  "leadPipeline": {
+    "title": "Pipeline de Ventas - Gestión de Leads",
+    "newLeads": "Nuevos Leads",
+    "inContact": "En Contacto",
+    "closed": "Finalizados",
+    "noLeads": "Sin leads",
+    "noLeadsDesc": "No hay leads en esta etapa",
+    "addLead": "Agregar Lead",
+    "addNewLead": "Agregar Nuevo Lead",
+    "createLead": "Crear Lead",
+    "cancel": "Cancelar",
+    "name": "Nombre",
+    "email": "Email",
+    "phone": "Teléfono",
+    "company": "Empresa",
+    "message": "Mensaje",
+    "namePlaceholder": "Ingrese el nombre del lead",
+    "emailPlaceholder": "Ingrese la dirección de email",
+    "phonePlaceholder": "Ingrese el número de teléfono",
+    "companyPlaceholder": "Ingrese el nombre de la empresa",
+    "messagePlaceholder": "Ingrese notas adicionales o mensaje",
+    "leadDetails": "Detalles del Lead",
+    "contactHistory": "Historial de Contactos",
+    "addContact": "Agregar Contacto",
+    "saveContact": "Guardar Contacto",
+    "contactType": "Tipo de Contacto",
+    "contactResult": "Resultado del Contacto",
+    "comment": "Comentario",
+    "commentPlaceholder": "Ingrese detalles del contacto...",
+    "notes": "Notas",
+    "noContacts": "Sin contactos",
+    "noContactsDesc": "Aún no se han registrado contactos.",
+    "moveToContact": "Mover a Contacto",
+    "moveToWaitlist": "Mover a Lista de Espera",
+    "waitlist": "Lista de Espera",
+    "inDeal": "En Negociación",
+    "archived": "Archivado",
+    "archive": "Archivar",
+    "archiveLead": "Archivar Lead",
+    "archiveConfirm": "¿Estás seguro de que quieres archivar este lead? Se eliminará de todas las listas.",
+    "successfulSale": "Venta Exitosa",
+    "lastContact": "Último contacto",
+    "interested": "Interesado",
+    "maybeLater": "Tal Vez Más Tarde",
+    "reject": "Rechazar",
+    "filterByStatus": "Filtrar por Estado",
+    "filterByTime": "Filtrar por Tiempo desde Creación",
+    "clearStatusFilter": "Limpiar Filtro de Estado",
+    "clearTimeFilter": "Limpiar Filtro de Tiempo",
+    "timeIndicator": {
+      "green": "Menos de 1 mes",
+      "yellow": "1-3 meses",
+      "red": "Más de 3 meses"
+    },
+    "leadInfo": "Información del Lead",
+    "contacts": "Contactos",
+    "transitions": "Historial",
+    "pipelineHistory": "Historial del Pipeline",
+    "created": "Creado",
+    "movedFrom": "Movido de",
+    "to": "a",
+    "noTransitions": "Sin transiciones",
+    "noTransitionsDesc": "Aún no se han registrado transiciones en el pipeline.",
+    "rejected": "Rechazado",
+    "success": "Éxito",
+    "noResponse": "Sin Respuesta",
+    "filterFromDate": "Fecha Desde",
+    "filterToDate": "Fecha Hasta",
+    "clearFilter": "Limpiar Filtro",
+    "exportCSV": "Exportar a CSV",
+    "noLeadsToExport": "No hay leads para exportar",
+    "exportError": "Error al exportar leads",
+    "source": {
+      "label": "Origen",
+      "publicSite": "Sitio Público",
+      "manual": "Manual"
+    },
+    "validate": {
+      "name": "El nombre es requerido",
+      "email": "El email es requerido",
+      "emailFormat": "Formato de email inválido"
+    },
+    "capacitiesList": {
+      "admin": {
+        "add": "Agregar Lead",
+        "view": "Ver Leads",
+        "read": "Leer Leads",
+        "edit": "Editar Lead",
+        "update": "Actualizar Lead"
+      }
     }
   },
   "permissions": {

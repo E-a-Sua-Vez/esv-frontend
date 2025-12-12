@@ -28,6 +28,7 @@ const BusinessPatientHistoryItemAdmin = () =>
 const BusinessQueueBookings = () => import('@/views/business/BusinessQueueBookings.vue');
 const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 const BusinessPermissionsAdmin = () => import('@/views/business/BusinessPermissionsAdmin.vue');
+const MasterLeadPipeline = () => import('@/views/master/MasterLeadPipeline.vue');
 
 const PrivateMasterRoutes = [
   {
@@ -164,6 +165,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/permissions-master-admin',
     name: 'permissions-master-admin',
     component: BusinessPermissionsAdmin,
+  },
+  {
+    path: '/interno/master/lead-pipeline',
+    name: 'master-lead-pipeline',
+    component: MasterLeadPipeline,
   },
 ];
 

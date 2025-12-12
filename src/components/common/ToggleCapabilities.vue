@@ -22,9 +22,16 @@ export default {
     getCapacities() {
       const list = [];
       Object.entries(this.toggles).forEach(toggle => {
+        // If toggle key already starts with componentName, strip it to avoid duplication
+        let toggleKey = toggle[0];
+        if (this.componentName && toggleKey.startsWith(`${this.componentName}.`)) {
+          toggleKey = toggleKey.substring(this.componentName.length + 1);
+        }
+
+        const translationKey = `${this.componentName}.capacitiesList.${toggleKey}`;
         list.push(
           `${toggle[1] === true ? '✅ ' : toggle[1] === false ? '❌ ' : toggle[1] + ': '} ${this.$t(
-            `${this.componentName}.capacitiesList.${toggle[0]}`
+            translationKey
           )}`
         );
         if ((toggle[1] === false || this.amountUsed >= toggle[1]) && this.upgrade === false) {

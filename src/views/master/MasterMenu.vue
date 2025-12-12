@@ -31,6 +31,7 @@ export default {
         'plans-master-admin',
         'features-master-admin',
         'plan-activations-admin',
+        'lead-pipeline',
       ],
       businessMenuOptions: [
         'dashboard',
