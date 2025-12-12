@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -56,7 +56,7 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.currentUser = await store.getCurrentUser;
+        state.currentUser = store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.roles = await getRoles();
         await selectRol(state.rolSelectedIndex);
@@ -64,7 +64,8 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('Error loading roles permissions:', error);
+        alertError.value = error?.response?.status || error?.message || 'Error loading roles permissions';
         loading.value = false;
       }
     });
@@ -105,7 +106,8 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('Error selecting role:', error);
+        alertError.value = error?.response?.status || error?.message || 'Error selecting role';
         loading.value = false;
       }
     };
@@ -154,7 +156,8 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('Error adding permission:', error);
+        alertError.value = error?.response?.status || error?.message || 'Error adding permission';
         loading.value = false;
       }
     };
@@ -171,7 +174,8 @@ export default {
         state.newPermission = {};
         alertError.value = '';
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('Error updating permission:', error);
+        alertError.value = error?.response?.status || error?.message || 'Error updating permission';
         loading.value = false;
       }
     };
@@ -217,11 +221,11 @@ export default {
     <div id="businessPermissionsAdmin">
       <div v-if="state.toggles['roles.admin.view']">
         <div id="businessPermissionsAdmin-controls" class="control-box">
-          <div class="row">
+          <div class="row my-3">
             <div class="col" v-if="state.roles">
-              <span>{{ $t('businessPermissionsAdmin.commerce') }} </span>
+              <span class="me-3">{{ $t('businessPermissionsAdmin.commerce') }}</span>
               <select
-                class="btn btn-md fw-bold text-dark m-1 select"
+                class="btn btn-md fw-bold text-dark select"
                 v-model="state.rolSelected"
                 @change="selectRol($event.target.selectedIndex)"
                 id="roles"
@@ -232,15 +236,17 @@ export default {
               </select>
             </div>
           </div>
-          <div class="row mx-4">
-            <input
-              min="1"
-              max="50"
-              type="text"
-              class="form-control"
-              v-model="state.searchString"
-              :placeholder="$t('enterSearcher')"
-            />
+          <div class="row my-3">
+            <div class="col">
+              <input
+                min="1"
+                max="50"
+                type="text"
+                class="form-control"
+                v-model="state.searchString"
+                :placeholder="$t('enterSearcher')"
+              />
+            </div>
           </div>
         </div>
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">
@@ -403,5 +409,9 @@ export default {
   border-radius: 0.5rem;
   border: 0.5px solid var(--gris-default);
   align-items: left;
+}
+
+#businessPermissionsAdmin-controls.control-box {
+  padding: 1.25rem !important;
 }
 </style>

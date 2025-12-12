@@ -209,11 +209,11 @@ export default {
     <div id="businessPermissionsAdmin">
       <div v-if="state.toggles['plans.admin.view']">
         <div id="businessPermissionsAdmin-controls" class="control-box">
-          <div class="row">
+          <div class="row my-3">
             <div class="col" v-if="state.plans">
-              <span>{{ $t('businessPermissionsAdmin.plan') }} </span>
+              <span class="me-3">{{ $t('businessPermissionsAdmin.plan') }}</span>
               <select
-                class="btn btn-md fw-bold text-dark m-1 select px-1"
+                class="btn btn-md fw-bold text-dark select px-1"
                 v-model="state.planSelected"
                 @change="selectPlan($event.target.selectedIndex)"
                 id="plans"
@@ -224,15 +224,17 @@ export default {
               </select>
             </div>
           </div>
-          <div class="row mx-4">
-            <input
-              min="1"
-              max="50"
-              type="text"
-              class="form-control"
-              v-model="state.searchString"
-              :placeholder="$t('enterSearcher')"
-            />
+          <div class="row my-3">
+            <div class="col">
+              <input
+                min="1"
+                max="50"
+                type="text"
+                class="form-control"
+                v-model="state.searchString"
+                :placeholder="$t('enterSearcher')"
+              />
+            </div>
           </div>
         </div>
         <div v-if="!loading" id="businessPermissionsAdmin-result" class="mt-4">
@@ -364,6 +366,10 @@ export default {
 .select {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+}
+
+#businessPermissionsAdmin-controls.control-box {
+  padding: 1.25rem !important;
 }
 .module-card {
   background-color: var(--color-background);

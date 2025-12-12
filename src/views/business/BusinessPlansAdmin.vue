@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPlans, updatePlan, addPlan } from '../../application/services/plan';
@@ -35,10 +35,11 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      plans: ref({}),
+      plans: [],
       showAdd: false,
       periodicities: [],
       countries: [],
+      productTypes: [],
       newPlan: {},
       extendedEntity: undefined,
       errorsAdd: [],
@@ -58,18 +59,34 @@ export default {
 
     onBeforeMount(async () => {
       try {
+        console.log('[BusinessPlansAdmin] onBeforeMount - Starting...');
         loading.value = true;
         state.periodicities = getPeriodicities();
         state.countries = getCountries();
         state.productTypes = getProductTypes();
+        console.log('[BusinessPlansAdmin] Data loaded:', {
+          periodicities: state.periodicities?.length,
+          countries: state.countries?.length,
+          productTypes: state.productTypes?.length,
+        });
         state.currentUser = await store.getCurrentUser;
+        console.log('[BusinessPlansAdmin] Current user:', state.currentUser);
         const plans = await getPlans();
-        state.plans = plans;
+        console.log('[BusinessPlansAdmin] Plans received:', plans);
+        state.plans = Array.isArray(plans) ? plans : [];
+        console.log('[BusinessPlansAdmin] Plans array:', state.plans);
         state.toggles = await getPermissions('plans', 'admin');
+        console.log('[BusinessPlansAdmin] Toggles:', state.toggles);
         alertError.value = '';
         loading.value = false;
+        console.log('[BusinessPlansAdmin] Loading complete. State:', {
+          loading: loading.value,
+          plansCount: state.plans.length,
+          toggles: state.toggles,
+        });
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        console.error('[BusinessPlansAdmin] Error loading:', error);
+        alertError.value = error?.response?.status || error?.message || 500;
         loading.value = false;
       }
     });
@@ -166,7 +183,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error?.response?.status || error?.message || 500;
         loading.value = false;
       }
     };
@@ -194,7 +211,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error?.response?.status || error?.message || 500;
         loading.value = false;
       }
     };
@@ -202,6 +219,33 @@ export default {
     const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     };
+
+    const extend = plan => {
+      state.extendedEntity =
+        state.extendedEntity && state.extendedEntity.id === plan.id
+          ? undefined
+          : { ...plan };
+    };
+
+    console.log('[BusinessPlansAdmin] Setup return:', {
+      loading: loading.value,
+      plansCount: state.plans?.length,
+      toggles: state.toggles,
+      showAdd: state.showAdd,
+      hasViewToggle: state.toggles?.['plans.admin.view'],
+    });
+
+    // Computed para verificar toggles de forma reactiva
+    const hasViewPermission = computed(() => {
+      const hasView = !loading.value && state.toggles && state.toggles['plans.admin.view'];
+      console.log('[BusinessPlansAdmin] hasViewPermission computed:', {
+        loading: loading.value,
+        hasToggles: !!state.toggles,
+        viewToggle: state.toggles?.['plans.admin.view'],
+        result: hasView,
+      });
+      return hasView;
+    });
 
     return {
       state,
@@ -212,6 +256,8 @@ export default {
       showAdd,
       add,
       goBack,
+      extend,
+      hasViewPermission,
     };
   },
 };
@@ -219,24 +265,57 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessPlansAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessPlansAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="false" :stack="alertError"></Alert>
-      </div>
-      <div id="businessPlansAdmin">
-        <div v-if="state.toggles['plans.admin.view']">
-          <div v-if="!loading" id="businessPlansAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.plans.length === 0">
+    <!-- TEST: Always visible div -->
+    <div style="background: red; color: white; padding: 20px; font-size: 24px; font-weight: bold; text-align: center;">
+      TEST: SI VES ESTO, EL TEMPLATE SE ESTÁ RENDERIZANDO
+      <br>
+      Loading: {{ loading }}
+      <br>
+      Plans: {{ state.plans?.length || 0 }}
+      <br>
+      Has Toggles: {{ !!state.toggles }}
+      <br>
+      View Permission: {{ hasViewPermission }}
+    </div>
+
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessPlansAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessPlansAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessPlansAdmin" style="background: blue; color: white; padding: 20px; margin: 10px;">
+          <h2>BUSINESSPLANSADMIN DIV - SI VES ESTO, EL DIV SE ESTÁ RENDERIZANDO</h2>
+          <!-- Debug info -->
+          <div v-if="loading" class="text-center p-4">
+            <p>Loading plans admin...</p>
+          </div>
+          <div v-if="!loading" class="text-center p-4" style="background: yellow; padding: 10px; margin: 10px;">
+            <p><strong>DEBUG INFO (Mobile):</strong></p>
+            <p>Loading: {{ loading }}</p>
+            <p>Plans count: {{ state.plans?.length || 0 }}</p>
+            <p>Has toggles: {{ !!state.toggles }}</p>
+            <p>Toggle keys count: {{ state.toggles ? Object.keys(state.toggles).length : 0 }}</p>
+            <p>Toggles object: {{ JSON.stringify(state.toggles) }}</p>
+            <p>plans.admin.view: {{ state.toggles?.['plans.admin.view'] }}</p>
+            <p>plans.admin.read: {{ state.toggles?.['plans.admin.read'] }}</p>
+            <p>plans.admin.add: {{ state.toggles?.['plans.admin.add'] }}</p>
+            <p>hasViewPermission: {{ hasViewPermission }}</p>
+          </div>
+          <div v-if="hasViewPermission" style="background: orange; padding: 20px; margin: 10px;">
+            <h3>CONTENIDO PRINCIPAL (MOBILE) - SI VES ESTO, hasViewPermission ES TRUE</h3>
+            <div id="businessPlansAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.plans.length === 0">
                 <Message
                   :title="$t('businessPlansAdmin.message.2.title')"
                   :content="$t('businessPlansAdmin.message.2.content')"
@@ -250,7 +329,7 @@ export default {
                 <div class="col-4">
                   <button
                     class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd(plan)"
+                    @click="showAdd()"
                     :disabled="!state.toggles['plans.admin.add']"
                   >
                     <i class="bi bi-plus-lg"></i>
@@ -684,15 +763,432 @@ export default {
               </div>
             </div>
           </div>
-        </div>
-        <div v-if="!state.toggles['plans.admin.view'] && !loading">
-          <Message
-            :title="$t('businessPlansAdmin.message.1.title')"
-            :content="$t('businessPlansAdmin.message.1.content')"
-          />
+          <div v-if="!state.toggles['plans.admin.view'] && !loading">
+            <Message
+              :title="$t('businessPlansAdmin.message.1.title')"
+              :content="$t('businessPlansAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="$t('logo')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessPlansAdmin.title`)"
+              :toggles="state.toggles"
+              component-name="businessPlansAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessPlansAdmin" style="background: green; color: white; padding: 20px; margin: 10px;">
+          <h2>BUSINESSPLANSADMIN DIV (DESKTOP) - SI VES ESTO, EL DIV SE ESTÁ RENDERIZANDO</h2>
+          <!-- Debug info -->
+          <div v-if="loading" class="text-center p-4">
+            <p>Loading plans admin...</p>
+          </div>
+          <div v-if="!loading" class="text-center p-4" style="background: yellow; padding: 10px; margin: 10px;">
+            <p><strong>DEBUG INFO (Desktop):</strong></p>
+            <p>Loading: {{ loading }}</p>
+            <p>Plans count: {{ state.plans?.length || 0 }}</p>
+            <p>Has toggles: {{ !!state.toggles }}</p>
+            <p>Toggle keys count: {{ state.toggles ? Object.keys(state.toggles).length : 0 }}</p>
+            <p>Toggles object: {{ JSON.stringify(state.toggles) }}</p>
+            <p>plans.admin.view: {{ state.toggles?.['plans.admin.view'] }}</p>
+            <p>plans.admin.read: {{ state.toggles?.['plans.admin.read'] }}</p>
+            <p>plans.admin.add: {{ state.toggles?.['plans.admin.add'] }}</p>
+            <p>hasViewPermission: {{ hasViewPermission }}</p>
+          </div>
+          <div v-if="hasViewPermission" style="background: orange; padding: 20px; margin: 10px;">
+            <h3>CONTENIDO PRINCIPAL - SI VES ESTO, hasViewPermission ES TRUE</h3>
+            <div id="businessPlansAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.plans.length === 0">
+                  <Message
+                    :title="$t('businessPlansAdmin.message.2.title')"
+                    :content="$t('businessPlansAdmin.message.2.content')"
+                  />
+                </div>
+                <div class="row mb-2">
+                  <div class="col-8 text-label">
+                    <span>{{ $t('businessPlansAdmin.listResult') }}</span>
+                    <span class="fw-bold m-2">{{ state.plans.length }}</span>
+                  </div>
+                  <div class="col-4">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      :disabled="!state.toggles['plans.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="add-plan"
+                  class="plan-card mb-4"
+                  v-if="state.showAdd && state.toggles['plans.admin.add']"
+                >
+                  <div v-if="state.plans.length < state.toggles['plans.admin.limit']">
+                    <div class="row g-1">
+                      <div id="plan-name-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.name') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="state.newPlan.name"
+                            v-bind:class="{ 'is-invalid': state.nameAddError }"
+                            placeholder="Plan A"
+                          />
+                        </div>
+                      </div>
+                      <div id="plan-type-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.type') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.newPlan.productType"
+                            id="countries"
+                          >
+                            <option
+                              v-for="product in state.productTypes"
+                              :key="product"
+                              :value="product"
+                            >
+                              {{ $t(`products.types.${product}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-country-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.country') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.newPlan.country"
+                            id="countries"
+                          >
+                            <option
+                              v-for="country in state.countries"
+                              :key="country"
+                              :value="country"
+                            >
+                              {{ $t(`countries.${country}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-description-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.description') }}
+                        </div>
+                        <div class="col-6">
+                          <textarea
+                            class="form-control"
+                            v-model="state.newPlan.description"
+                            v-bind:class="{ 'is-invalid': state.descriptionAddError }"
+                            placeholder="Description"
+                          ></textarea>
+                        </div>
+                      </div>
+                      <div id="plan-order-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.order') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="1"
+                            type="number"
+                            class="form-control"
+                            v-model="state.newPlan.order"
+                            v-bind:class="{ 'is-invalid': state.orderAddError }"
+                            placeholder="1"
+                          />
+                        </div>
+                      </div>
+                      <div id="plan-periodicity-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.periodicity') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.newPlan.periodicity"
+                            id="periodicities"
+                          >
+                            <option
+                              v-for="periodicity in state.periodicities"
+                              :key="periodicity"
+                              :value="periodicity"
+                            >
+                              {{ $t(`periodicities.${periodicity}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-price-form-add" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.price') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="0"
+                            type="number"
+                            step="0.01"
+                            class="form-control"
+                            v-model="state.newPlan.price"
+                            v-bind:class="{ 'is-invalid': state.priceAddError }"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                      <div class="row g-1 mt-2">
+                        <div class="col-12 text-center">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                            @click="add()"
+                            :disabled="loading"
+                          >
+                            <i class="bi bi-save"></i> {{ $t('add') }}
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-secondary rounded-pill px-4 ms-2"
+                            @click="showAdd()"
+                          >
+                            <i class="bi bi-x-lg"></i> {{ $t('cancel') }}
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="state.errorsAdd.length > 0" class="row g-1 mt-2">
+                        <div class="col-12">
+                          <Warning
+                            v-for="(error, index) in state.errorsAdd"
+                            :key="index"
+                            :message="$t(error)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessPlansAdmin.message.3.title')"
+                      :content="$t('businessPlansAdmin.message.3.content')"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-for="plan in state.plans"
+                  :key="plan.id"
+                  class="plan-card mb-4"
+                  v-if="state.toggles['plans.admin.read']"
+                >
+                  <PlanName :plan="plan" :extended-entity="state.extendedEntity" @extend="extend">
+                  </PlanName>
+                  <div
+                    v-if="state.extendedEntity && state.extendedEntity.id === plan.id"
+                    class="plan-details-container"
+                  >
+                    <div class="row g-1">
+                      <div id="plan-name-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.name') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="1"
+                            max="50"
+                            type="text"
+                            class="form-control"
+                            v-model="state.extendedEntity.name"
+                            v-bind:class="{ 'is-invalid': state.nameUpdateError }"
+                            placeholder="Plan A"
+                          />
+                        </div>
+                      </div>
+                      <div id="plan-type-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.type') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.extendedEntity.productType"
+                            id="countries"
+                          >
+                            <option
+                              v-for="product in state.productTypes"
+                              :key="product"
+                              :value="product"
+                            >
+                              {{ $t(`products.types.${product}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-country-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.country') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.extendedEntity.country"
+                            id="countries"
+                          >
+                            <option
+                              v-for="country in state.countries"
+                              :key="country"
+                              :value="country"
+                            >
+                              {{ $t(`countries.${country}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-description-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.description') }}
+                        </div>
+                        <div class="col-6">
+                          <textarea
+                            class="form-control"
+                            v-model="state.extendedEntity.description"
+                            v-bind:class="{ 'is-invalid': state.descriptionUpdateError }"
+                            placeholder="Description"
+                          ></textarea>
+                        </div>
+                      </div>
+                      <div id="plan-order-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.order') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="1"
+                            type="number"
+                            class="form-control"
+                            v-model="state.extendedEntity.order"
+                            v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                            placeholder="1"
+                          />
+                        </div>
+                      </div>
+                      <div id="plan-periodicity-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.periodicity') }}
+                        </div>
+                        <div class="col-6">
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select px-1"
+                            v-model="state.extendedEntity.periodicity"
+                            id="periodicities"
+                          >
+                            <option
+                              v-for="periodicity in state.periodicities"
+                              :key="periodicity"
+                              :value="periodicity"
+                            >
+                              {{ $t(`periodicities.${periodicity}`) }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      <div id="plan-price-form-update" class="row g-1">
+                        <div class="col-6 text-label">
+                          {{ $t('businessPlansAdmin.price') }}
+                        </div>
+                        <div class="col-6">
+                          <input
+                            min="0"
+                            type="number"
+                            step="0.01"
+                            class="form-control"
+                            v-model="state.extendedEntity.price"
+                            v-bind:class="{ 'is-invalid': state.priceUpdateError }"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                      <div class="row g-1 mt-2">
+                        <div class="col-12 text-center">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                            @click="update(state.extendedEntity)"
+                            :disabled="loading"
+                          >
+                            <i class="bi bi-save"></i> {{ $t('update') }}
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-secondary rounded-pill px-4 ms-2"
+                            @click="extend(undefined)"
+                          >
+                            <i class="bi bi-x-lg"></i> {{ $t('cancel') }}
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="state.errorsUpdate.length > 0" class="row g-1 mt-2">
+                        <div class="col-12">
+                          <Warning
+                            v-for="(error, index) in state.errorsUpdate"
+                            :key="index"
+                            :message="$t(error)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="!state.toggles['plans.admin.read'] && !loading">
+                  <Message
+                    :title="$t('businessPlansAdmin.message.1.title')"
+                    :content="$t('businessPlansAdmin.message.1.content')"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!state.toggles['plans.admin.view'] && !loading">
+            <Message
+              :title="$t('businessPlansAdmin.message.1.title')"
+              :content="$t('businessPlansAdmin.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   </div>
 </template>
 
@@ -723,5 +1219,47 @@ export default {
   padding: 10px;
   max-height: 600px !important;
   overflow-y: auto;
+}
+
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+  }
+
+  .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+  }
+
+  .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+  }
 }
 </style>
