@@ -210,13 +210,13 @@ export default {
 <template>
   <div>
     <div id="queues" v-if="isActiveCommerce() && isActiveQueues() && !loading" class="mb-2">
-      <div class="choose-attention py-2">
-        <span v-if="queue && queue.id" class="fw-bold">{{
-          $t('commerceQueuesView.selectService')
-        }}</span>
-      </div>
       <div class="row g-1" v-if="state.services && state.services.length > 0">
         <div class="col col-md-10 offset-md-1 data-card">
+          <div class="choose-attention py-2">
+            <span v-if="queue && queue.id" class="fw-bold">{{
+              $t('commerceQueuesView.selectService')
+            }}</span>
+          </div>
           <div v-if="state.filteredServices">
             <div class="row col-md mb-2">
               <input
@@ -283,7 +283,7 @@ export default {
           <div
             v-for="service in state.filteredServices"
             :key="service.id"
-            class="d-grid btn-group btn-group-justified mt-2"
+            class="d-grid btn-group btn-group-justified mt-3"
           >
             <div class="btn-size btn-lg btn-block fw-bold queue-btn px-1">
               <div class="form-check form-switch">
@@ -321,14 +321,6 @@ export default {
                 </div>
               </div>
               <hr />
-            </div>
-          </div>
-          <div class="col">
-            <div class="badge rounded-pill bg-secondary py-2">
-              <span>
-                <i class="bi bi-stopwatch-fill"></i> {{ $t('commerceQueuesView.totalDuration') }}
-                {{ convertDuration(state.duration) }}
-              </span>
             </div>
           </div>
         </div>

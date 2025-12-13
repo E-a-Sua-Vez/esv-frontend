@@ -25,6 +25,7 @@ import ClientEmailNotifyData from '../components/domain/ClientEmailNotifyData.vu
 import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import AreYouSure from '../components/common/AreYouSure.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'UserQueueAttention',
@@ -40,6 +41,7 @@ export default {
     Message,
     Spinner,
     Alert,
+    Popper,
   },
   async setup() {
     const { t, locale } = useI18n();
@@ -338,6 +340,8 @@ export default {
         if (state.attention.status === ATTENTION_STATUS.PENDING) {
           await cancelAttention(state.attention.id);
           state.goToCancel = false;
+          // Refresh attention details to show canceled status
+          await getAttentionDetailsFromService(id);
         }
         alertError.value = '';
         loading.value = false;
@@ -643,7 +647,7 @@ export default {
                     class="col-12 attention-details-card"
                   >
                     <div class="attention-card-content">
-                      <div v-if="state.attention.block && state.attention.block.hourFrom">
+                      <div v-if="state.attention.block && state.attention.block.hourFrom" class="attention-block-info">
                         <span class="attention-details-title">
                           🚨 {{ $t('userQueueAttention.blockInfo') }}
                         </span>
@@ -651,7 +655,7 @@ export default {
                           {{ state.attention.block.hourFrom }} - {{ state.attention.block.hourTo }}
                         </span>
                       </div>
-                      <div v-else>
+                      <div v-else class="attention-block-info">
                         <span class="attention-details-content"> 🚨 </span>
                         <span class="attention-details-title">
                           {{ $t('userQueueAttention.willBeAttendedShortly') }}
@@ -687,14 +691,17 @@ export default {
                       <div class="attention-card-content">
                         <span class="attention-details-title">
                           {{ $t('userQueueAttention.estimatedTime') }}*
-                          <span
+                          <Popper
                             v-if="state.usingIntelligentEstimation"
-                            v-b-tooltip.hover
-                            :title="$t('userQueueAttention.intelligentEstimationTooltip')"
-                            class="ai-badge ms-1"
+                            :class="'dark'"
+                            arrow
+                            disable-click-away
+                            :content="$t('userQueueAttention.intelligentEstimationTooltip')"
                           >
-                            <i class="bi bi-stars"></i>
-                          </span>
+                            <span class="ai-badge ms-1">
+                              <i class="bi bi-stars"></i>
+                            </span>
+                          </Popper>
                         </span>
                         <span class="attention-details-content">
                           <i class="bi bi-stopwatch"></i> {{ state.estimatedTime }}
@@ -917,6 +924,16 @@ export default {
   justify-content: center;
   align-items: center;
   gap: 0.25rem;
+  width: 100%;
+}
+
+.attention-block-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
 }
 
 .attention-shortly-details-card {
@@ -958,6 +975,9 @@ export default {
   font-size: 0.75rem;
   line-height: 1rem !important;
   margin-bottom: 0;
+  display: block;
+  text-align: center;
+  width: 100%;
 }
 
 .ai-badge {
@@ -988,6 +1008,9 @@ export default {
   font-size: 1.5rem;
   line-height: 1.4rem;
   font-weight: 700;
+  display: block;
+  text-align: center;
+  width: 100%;
 }
 
 .attention-details-card strong {
@@ -1016,6 +1039,21 @@ export default {
   font-size: 0.9rem;
   line-height: 1.2rem;
   padding: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.attention-notification-title i {
+  font-size: 1.2rem;
+  margin-bottom: 0.1rem;
+}
+
+.attention-notification-title span {
+  display: block;
+  width: 100%;
 }
 
 .attention-notification-title.mb-2 {

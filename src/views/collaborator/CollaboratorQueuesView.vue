@@ -772,14 +772,17 @@ export default {
                           <div class="queue-metric-content">
                             <div class="queue-metric-label">
                               Tempo Médio
-                              <span
+                              <Popper
                                 v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                v-b-tooltip.hover
-                                :title="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                                class="ai-badge ms-1"
+                                :class="'dark'"
+                                arrow
+                                disable-click-away
+                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
                               >
-                                <i class="bi bi-stars"></i>
-                              </span>
+                                <span class="ai-badge ms-1">
+                                  <i class="bi bi-stars"></i>
+                                </span>
+                              </Popper>
                             </div>
                             <div class="queue-metric-value queue-metric-value-time">
                               {{ state.queueAverageDurations[queue.id] || 'N/A' }}
@@ -797,14 +800,17 @@ export default {
                           <div class="queue-metric-content">
                             <div class="queue-metric-label">
                               {{ $t('collaboratorQueuesView.estimatedWait') }}
-                              <span
+                              <Popper
                                 v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                                v-b-tooltip.hover
-                                :title="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                                class="ai-badge ms-1"
+                                :class="'dark'"
+                                arrow
+                                disable-click-away
+                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
                               >
-                                <i class="bi bi-stars"></i>
-                              </span>
+                                <span class="ai-badge ms-1">
+                                  <i class="bi bi-stars"></i>
+                                </span>
+                              </Popper>
                             </div>
                             <div class="queue-metric-value queue-metric-value-time">
                               {{ getQueueMetrics(queue.id).estimatedWaitTime }}
@@ -1054,14 +1060,17 @@ export default {
                           <div class="queue-metric-content">
                             <div class="queue-metric-label">
                               Tempo Médio
-                              <span
+                              <Popper
                                 v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                v-b-tooltip.hover
-                                :title="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                                class="ai-badge ms-1"
+                                :class="'dark'"
+                                arrow
+                                disable-click-away
+                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
                               >
-                                <i class="bi bi-stars"></i>
-                              </span>
+                                <span class="ai-badge ms-1">
+                                  <i class="bi bi-stars"></i>
+                                </span>
+                              </Popper>
                             </div>
                             <div class="queue-metric-value queue-metric-value-time">
                               {{ state.queueAverageDurations[queue.id] || 'N/A' }}
@@ -1079,14 +1088,17 @@ export default {
                           <div class="queue-metric-content">
                             <div class="queue-metric-label">
                               {{ $t('collaboratorQueuesView.estimatedWait') }}
-                              <span
+                              <Popper
                                 v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                                v-b-tooltip.hover
-                                :title="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                                class="ai-badge ms-1"
+                                :class="'dark'"
+                                arrow
+                                disable-click-away
+                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
                               >
-                                <i class="bi bi-stars"></i>
-                              </span>
+                                <span class="ai-badge ms-1">
+                                  <i class="bi bi-stars"></i>
+                                </span>
+                              </Popper>
                             </div>
                             <div class="queue-metric-value queue-metric-value-time">
                               {{ getQueueMetrics(queue.id).estimatedWaitTime }}

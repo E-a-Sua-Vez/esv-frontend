@@ -69,42 +69,43 @@ export default {
         <button
           v-if="queue.active"
           class="btn-size btn-sm btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
-          :class="queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
+          :class="selectedQueue && selectedQueue.id && queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
           @click="clickAction(queue)"
           :disabled="!accept"
         >
-          <div class="row mt-1">
-            <div class="col-2 text-right centered">
-              <h4><i :class="`bi ${queueIcon(queue.type)}`"></i></h4>
+          <div class="professional-card">
+            <div class="professional-avatar">
+              <div class="avatar-circle">
+                <i :class="`bi ${queueIcon(queue.type)}`"></i>
+              </div>
             </div>
-            <div class="col-10 text-right">
-              <div class="row queue-title">
-                <span>{{ queue.name }}</span>
+            <div class="professional-info">
+              <div class="professional-name">
+                {{ queue.name }}
               </div>
               <div
                 v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)"
-                class="row queue-time-title"
+                class="professional-services"
               >
-                <span
-                  ><i class="bi bi-tag-fill"></i>
+                <i class="bi bi-tag-fill service-icon"></i>
+                <span class="services-text">
                   {{
                     queue.services && queue.services.length > 0
                       ? queue.services.map(serv => serv.name).join(', ')
                       : queue.name
-                  }}</span
-                >
+                  }}
+                </span>
               </div>
               <div
-                class="row queue-time-title"
+                class="professional-duration"
                 v-if="
                   !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
                   (queue.blockTime || queue.estimatedTime)
                 "
               >
-                <span
-                  ><i class="bi bi-stopwatch-fill"></i> {{ $t('commerceQueuesView.duration') }}
-                  {{ queue.blockTime || queue.estimatedTime }}'</span
-                >
+                <i class="bi bi-stopwatch-fill"></i>
+                <span>{{ $t('commerceQueuesView.duration') }}
+                {{ queue.blockTime || queue.estimatedTime }}'</span>
               </div>
             </div>
           </div>
@@ -116,33 +117,35 @@ export default {
         v-if="queue.active"
         type="button"
         class="btn-size btn btn-sm btn-block col-12 fw-bold rounded-pill mt-2 queue-btn"
-        :class="queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
+        :class="selectedQueue && selectedQueue.id && queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
         @click="clickAction(queue)"
         :disabled="!accept"
       >
-        <div class="row mt-1">
-          <div class="col-2 text-right centered">
-            <h4><i :class="`bi ${queueIcon(queue.type)}`"></i></h4>
-          </div>
-          <div class="col-10 text-right">
-            <div class="row queue-title">
-              <span>{{ queue.name }}</span>
+        <div class="professional-card">
+          <div class="professional-avatar">
+            <div class="avatar-circle">
+              <i :class="`bi ${queueIcon(queue.type)}`"></i>
             </div>
-            <div v-if="['COLLABORATOR'].includes(queue.type)" class="row queue-time-title">
-              <span
-                ><i class="bi bi-tag-fill"></i>
+          </div>
+          <div class="professional-info">
+            <div class="professional-name">
+              {{ queue.name }}
+            </div>
+            <div v-if="['COLLABORATOR'].includes(queue.type)" class="professional-services">
+              <i class="bi bi-tag-fill service-icon"></i>
+              <span class="services-text">
                 {{
                   queue.services && queue.services.length > 0
                     ? queue.services.map(serv => serv.name).join(', ')
                     : queue.name
-                }}</span
-              >
+                }}
+              </span>
             </div>
             <div
               v-if="['SERVICE', 'MULTI_SERVICE'].includes(queue.type)"
-              class="row queue-time-title"
+              class="professional-services"
             >
-              <span>
+              <span class="services-text">
                 {{
                   queue.services && queue.services.length > 0
                     ? queue.services.map(serv => serv.name).join(', ')
@@ -150,20 +153,19 @@ export default {
                 }}</span
               >
             </div>
-            <div v-if="['SELECT_SERVICE'].includes(queue.type)" class="row queue-time-title">
-              <span> {{ $t('commerceQueuesView.selectTheService') }} </span>
+            <div v-if="['SELECT_SERVICE'].includes(queue.type)" class="professional-services">
+              <span class="services-text"> {{ $t('commerceQueuesView.selectTheService') }} </span>
             </div>
             <div
-              class="row queue-time-title"
+              class="professional-duration"
               v-if="
                 !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
                 (queue.blockTime || queue.estimatedTime)
               "
             >
-              <span
-                ><i class="bi bi-stopwatch-fill"></i> {{ $t('commerceQueuesView.duration') }}
-                {{ queue.blockTime || queue.estimatedTime }}'</span
-              >
+              <i class="bi bi-stopwatch-fill"></i>
+              <span>{{ $t('commerceQueuesView.duration') }}
+              {{ queue.blockTime || queue.estimatedTime }}'</span>
             </div>
           </div>
         </div>
@@ -204,28 +206,162 @@ export default {
   color: 0.5px solid var(--gris-default);
 }
 .queue-btn {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 0.5rem;
+  text-align: left;
+  margin-top: 1rem;
 }
 
 .queue-btn:hover:not(:disabled) {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 74, 173, 0.2);
 }
 
 .queue-btn.btn-primary {
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
   border-color: var(--azul-turno) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 74, 173, 0.35);
 }
 
 .queue-btn.btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.4);
-  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.45);
+  transform: translateY(-3px);
+}
+
+/* Professional Card Layout */
+.professional-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.professional-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.queue-btn.btn-primary .avatar-circle {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.avatar-circle i {
+  font-size: 1.2rem;
+  color: var(--azul-turno);
+  transition: all 0.3s ease;
+}
+
+.queue-btn.btn-primary .avatar-circle i {
+  color: white;
+}
+
+.queue-btn:hover:not(:disabled) .avatar-circle {
+  transform: scale(1.08);
+}
+
+.professional-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  min-width: 0;
+}
+
+.professional-name {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #000000;
+}
+
+.queue-btn.btn-primary .professional-name {
+  color: white;
+}
+
+.professional-services {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--gris-elite-1);
+  font-weight: 500;
+}
+
+.queue-btn.btn-primary .professional-services {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.service-icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+}
+
+.services-text {
+  flex: 1;
+  word-break: break-word;
+  font-weight: 400;
+}
+
+.professional-duration {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gris-elite-1);
+}
+
+.queue-btn.btn-primary .professional-duration {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.professional-duration i {
+  font-size: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .professional-card {
+    gap: 0.5rem;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatar-circle i {
+    font-size: 1rem;
+  }
+
+  .professional-name {
+    font-size: 0.95rem;
+  }
+
+  .professional-services,
+  .professional-duration {
+    font-size: 0.7rem;
+  }
 }
 
 .queue-title {
