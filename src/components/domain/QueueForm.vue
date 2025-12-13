@@ -253,6 +253,7 @@ export default {
         }}</span>
       </div>
       <div class="row g-1" v-if="isActiveQueues()">
+        <!-- Selection Buttons Card -->
         <div class="col col-md-10 offset-md-1 data-card">
           <div
             v-if="
@@ -263,12 +264,13 @@ export default {
             <div class="row">
               <div class="col-6">
                 <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 mb-1"
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
                   :class="state.showProfessional ? 'btn-selected' : ''"
                   @click="showByProfessional"
                   :disabled="!accept"
                 >
-                  {{ $t('commerceQueuesView.byCollaborator') }} <i class="bi bi-chevron-down"></i>
+                  <i class="bi bi-person-circle me-2"></i>
+                  {{ $t('commerceQueuesView.byCollaborator') }}
                 </button>
               </div>
               <div
@@ -276,30 +278,36 @@ export default {
                 class="col-6"
               >
                 <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 queue-btn"
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2 queue-btn"
                   :class="state.showSelectServices ? 'btn-selected' : ''"
                   @click="showServices"
                   :disabled="!accept"
                 >
+                  <i class="bi bi-hand-index-thumb-fill me-2"></i>
                   {{ $t('commerceQueuesView.byService') }}
                 </button>
               </div>
               <div v-else class="col-6">
                 <button
-                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-dark rounded-pill mt-1 queue-btn"
+                  class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2 queue-btn"
                   :class="state.showService ? 'btn-selected' : ''"
                   @click="showByService"
                   :disabled="!accept"
                 >
-                  {{ $t('commerceQueuesView.byService') }} <i class="bi bi-chevron-down"></i>
+                  <i class="bi bi-tag-fill me-2"></i>
+                  {{ $t('commerceQueuesView.byService') }}
                 </button>
               </div>
             </div>
-            <div
-              :class="'mx-2 my-2'"
-              id="attention-collaborator-queue"
-              v-if="state.showProfessional"
-            >
+          </div>
+        </div>
+
+        <!-- Professional Selection Content Card -->
+        <div class="col col-md-10 offset-md-1 data-card" v-if="state.showProfessional">
+          <div class="choose-attention py-2">
+            <span class="fw-bold">{{ $t('commerceQueuesView.byCollaboratorTitle') }}</span>
+          </div>
+          <div id="attention-collaborator-queue">
               <div v-if="state.filteredCollaboratorQueues">
                 <div class="row col-md mb-2">
                   <input
@@ -386,7 +394,11 @@ export default {
                 </Message>
               </div>
             </div>
-            <div :class="'mx-2 my-2'" id="attention-service-queue" v-if="state.showService">
+        </div>
+
+        <!-- Service Selection Content Card -->
+        <div class="col col-md-10 offset-md-1 data-card" v-if="state.showService">
+          <div id="attention-service-queue">
               <div
                 v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0"
               >
@@ -436,8 +448,11 @@ export default {
                 </div>
               </div>
             </div>
-          </div>
-          <div v-else>
+        </div>
+
+        <!-- Other queue types (not grouped) -->
+        <div class="col col-md-10 offset-md-1 data-card" v-if="!getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT') || (queueId && queueId !== 'undefined')">
+          <div>
             <div v-if="queues && queues.length === 1">
               <QueueButton
                 :queue="queues[0]"
@@ -530,5 +545,89 @@ export default {
 }
 .pagination-ul {
   margin-bottom: 0rem !important;
+}
+
+/* Step Action Buttons */
+.btn-step-action {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 15px rgba(0, 74, 173, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-step-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-step-action:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-step-action:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 74, 173, 0.5);
+}
+
+.btn-step-action:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 74, 173, 0.4);
+}
+
+.btn-step-action:disabled {
+  background: linear-gradient(135deg, #a9a9a9 0%, #808080 100%) !important;
+  box-shadow: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-step-action.btn-selected {
+  background: linear-gradient(135deg, var(--verde-tu) 0%, var(--azul-turno) 100%) !important;
+  box-shadow: 0 4px 20px rgba(0, 194, 203, 0.5);
+  animation: selectedPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0, 194, 203, 0.5);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(0, 194, 203, 0.7), 0 0 20px rgba(0, 194, 203, 0.4);
+  }
+}
+
+.btn-step-action i {
+  font-size: 1.1rem;
+  vertical-align: middle;
+  transition: transform 0.3s ease;
+}
+
+.btn-step-action:hover:not(:disabled) .bi-chevron-down {
+  animation: chevronBounce 0.6s ease-in-out infinite;
+}
+
+@keyframes chevronBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
 }
 </style>

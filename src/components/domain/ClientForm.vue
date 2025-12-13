@@ -85,6 +85,7 @@ export default {
       showOriginModal: false,
       showHealthAgreementModal: false,
       showPhoneCodeModal: false,
+      birthdayError: false,
     });
 
     onBeforeMount(async () => {
@@ -229,6 +230,130 @@ export default {
       return dateString;
     };
 
+    // Comprehensive date validation function
+    const validateDate = (dayStr, monthStr, yearStr) => {
+      // Convert strings to numbers
+      const day = parseInt(dayStr, 10);
+      const month = parseInt(monthStr, 10);
+      const year = parseInt(yearStr, 10);
+
+      // Get current year
+      const currentYear = new Date().getFullYear();
+
+      // Validate year: must be a valid number and not beyond current year
+      if (isNaN(year) || year > currentYear || year < 1900) {
+        return { valid: false, reason: 'year' };
+      }
+
+      // Validate month: must be between 01 and 12
+      if (isNaN(month) || month < 1 || month > 12) {
+        return { valid: false, reason: 'month' };
+      }
+
+      // Validate day: must be between 01 and 31
+      if (isNaN(day) || day < 1 || day > 31) {
+        return { valid: false, reason: 'day' };
+      }
+
+      // Check if day is valid for the specific month
+      const daysInMonth = new Date(year, month, 0).getDate();
+      if (day > daysInMonth) {
+        return { valid: false, reason: 'day' };
+      }
+
+      // Final validation: create a date object and verify it matches
+      const date = new Date(year, month - 1, day);
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() + 1 !== month ||
+        date.getDate() !== day
+      ) {
+        return { valid: false, reason: 'invalid' };
+      }
+
+      return { valid: true };
+    };
+
+    // Validate partial date as user types
+    const validatePartialDate = (formattedValue) => {
+      const numbers = formattedValue.replace(/\D/g, '');
+      const dayStr = numbers.slice(0, 2);
+      const monthStr = numbers.slice(2, 4);
+      const yearStr = numbers.slice(4, 8);
+
+      // Validate day as user types (first 2 digits)
+      if (dayStr.length === 2) {
+        const day = parseInt(dayStr, 10);
+        if (isNaN(day) || day < 1 || day > 31) {
+          return false;
+        }
+      } else if (dayStr.length === 1) {
+        // Single digit day: allow 0-3 (could be 01-09, 10-19, 20-29, 30-31)
+        const firstDigit = parseInt(dayStr, 10);
+        if (isNaN(firstDigit) || firstDigit < 0 || firstDigit > 3) {
+          return false;
+        }
+      }
+
+      // Validate month as user types (digits 3-4)
+      if (monthStr.length === 2) {
+        const month = parseInt(monthStr, 10);
+        if (isNaN(month) || month < 1 || month > 12) {
+          return false;
+        }
+        // If we have both day and month, validate day against month
+        if (dayStr.length === 2) {
+          const day = parseInt(dayStr, 10);
+          // Use a reasonable default year (current year) for validation
+          const currentYear = new Date().getFullYear();
+          const daysInMonth = new Date(currentYear, month, 0).getDate();
+          if (day > daysInMonth) {
+            return false;
+          }
+        }
+      } else if (monthStr.length === 1) {
+        // Single digit month: allow 0-1 (could be 01-09, 10-12)
+        const firstDigit = parseInt(monthStr, 10);
+        if (isNaN(firstDigit) || firstDigit < 0 || firstDigit > 1) {
+          return false;
+        }
+      }
+
+      // Validate year as user types (digits 5-8)
+      if (yearStr.length === 4) {
+        const currentYear = new Date().getFullYear();
+        const year = parseInt(yearStr, 10);
+        if (isNaN(year) || year > currentYear || year < 1900) {
+          return false;
+        }
+        // If we have complete date, validate it comprehensively
+        if (dayStr.length === 2 && monthStr.length === 2) {
+          const validation = validateDate(dayStr, monthStr, yearStr);
+          return validation.valid;
+        }
+      } else if (yearStr.length === 3) {
+        // Three digits: check if it's heading towards a valid year
+        const firstThree = parseInt(yearStr, 10);
+        if (isNaN(firstThree) || firstThree < 190 || firstThree > 202) {
+          return false;
+        }
+      } else if (yearStr.length === 2) {
+        // Two digits: check if it's heading towards a valid year (19xx or 20xx)
+        const firstTwo = parseInt(yearStr, 10);
+        if (isNaN(firstTwo) || firstTwo < 19 || firstTwo > 20) {
+          return false;
+        }
+      } else if (yearStr.length === 1) {
+        // Single digit year: allow 1 or 2 (could be 19xx or 20xx)
+        const firstDigit = parseInt(yearStr, 10);
+        if (isNaN(firstDigit) || firstDigit < 1 || firstDigit > 2) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
     const formatDateInput = value => {
       // Remove all non-numeric characters
       const numbers = value.replace(/\D/g, '');
@@ -253,10 +378,41 @@ export default {
       const input = event.target;
       const oldValue = input.value;
       const cursorPosition = input.selectionStart;
-      const formatted = formatDateInput(input.value);
+      const rawValue = input.value;
+
+      // Get the raw numbers before formatting
+      const numbersBefore = oldValue.replace(/\D/g, '');
+      const numbersAfter = rawValue.replace(/\D/g, '');
+
+      // If user is deleting, allow it
+      if (numbersAfter.length < numbersBefore.length) {
+        const formatted = formatDateInput(rawValue);
+        input.value = formatted;
+        state.birthdayError = false;
+        state.newUser.birthday = '';
+        return;
+      }
+
+      // Validate partial date as user types
+      const formatted = formatDateInput(rawValue);
+      const isValidPartial = validatePartialDate(formatted);
+
+      if (!isValidPartial && formatted.replace(/\D/g, '').length > 0) {
+        // Invalid input, revert to previous value
+        input.value = oldValue;
+        state.birthdayError = true;
+        state.newUser.birthday = '';
+
+        // Set cursor back to where it was
+        setTimeout(() => {
+          input.setSelectionRange(cursorPosition, cursorPosition);
+        }, 0);
+        return;
+      }
 
       // Update the input value
       input.value = formatted;
+      state.birthdayError = false;
 
       // Calculate new cursor position after formatting
       // Count how many digits were before the cursor
@@ -293,29 +449,29 @@ export default {
       if (formatted.length === 10) {
         const modelDate = formatDateForModel(formatted);
         if (modelDate && /^\d{4}-\d{2}-\d{2}$/.test(modelDate)) {
-          // Validate the date
-          const date = new Date(modelDate + 'T00:00:00');
-          if (!isNaN(date.getTime())) {
-            // Check if the date components match (to catch invalid dates like 31/02/2024)
-            const [year, month, day] = modelDate.split('-');
-            if (
-              date.getFullYear() == year &&
-              date.getMonth() + 1 == month &&
-              date.getDate() == day
-            ) {
-              state.newUser.birthday = modelDate;
-              sendData();
-            } else {
-              // Invalid date (e.g., 31/02/2024), clear it
-              state.newUser.birthday = '';
-            }
+          // Extract day, month, year from DD/MM/YYYY format
+          const [day, month, year] = formatted.split('/');
+
+          // Comprehensive validation
+          const validation = validateDate(day, month, year);
+
+          if (validation.valid) {
+            state.newUser.birthday = modelDate;
+            state.birthdayError = false;
+            sendData();
           } else {
+            // Invalid date (e.g., 31/02/2024, 30/02/2026, etc.), show error
             state.newUser.birthday = '';
+            state.birthdayError = true;
           }
+        } else {
+          state.newUser.birthday = '';
+          state.birthdayError = true;
         }
       } else if (formatted.length < 10) {
-        // Partial date, clear model value
+        // Partial date, clear model value but don't show error yet
         state.newUser.birthday = '';
+        state.birthdayError = false;
       }
     };
 
@@ -383,16 +539,64 @@ export default {
       }
 
       if (dateValue) {
-        state.newUser.birthday = dateValue;
-        // Update the text input display
-        if (typeof document !== 'undefined') {
-          const textInput = document.getElementById('attention-birthday-input-add');
-          if (textInput) {
-            textInput.value = formatDateForDisplay(dateValue);
+        // Validate the date from picker (should already be valid, but double-check)
+        const [year, month, day] = dateValue.split('-');
+        const validation = validateDate(day, month, year);
+
+        if (validation.valid) {
+          state.newUser.birthday = dateValue;
+          state.birthdayError = false;
+          // Update the text input display
+          if (typeof document !== 'undefined') {
+            const textInput = document.getElementById('attention-birthday-input-add');
+            if (textInput) {
+              textInput.value = formatDateForDisplay(dateValue);
+            }
           }
+          sendData();
+        } else {
+          state.birthdayError = true;
+          state.newUser.birthday = '';
         }
-        sendData();
       }
+    };
+
+    const handleDateBlur = event => {
+      const input = event.target;
+      const formatted = input.value;
+
+      // If field is empty, clear error
+      if (!formatted || formatted.trim() === '') {
+        state.birthdayError = false;
+        state.newUser.birthday = '';
+        sendData();
+        return;
+      }
+
+      // If we have a complete date, validate it
+      if (formatted.length === 10) {
+        const [day, month, year] = formatted.split('/');
+        if (day && month && year) {
+          const validation = validateDate(day, month, year);
+          if (validation.valid) {
+            const modelDate = formatDateForModel(formatted);
+            state.newUser.birthday = modelDate;
+            state.birthdayError = false;
+          } else {
+            state.birthdayError = true;
+            state.newUser.birthday = '';
+          }
+        } else {
+          state.birthdayError = true;
+          state.newUser.birthday = '';
+        }
+      } else {
+        // Incomplete date, show error
+        state.birthdayError = true;
+        state.newUser.birthday = '';
+      }
+
+      sendData();
     };
 
     const handleDatePickerBlur = () => {
@@ -434,9 +638,26 @@ export default {
       }
 
       if (parsedDate) {
-        const input = event.target;
-        input.value = parsedDate;
-        handleDateInput({ target: input });
+        // Validate the pasted date
+        const [day, month, year] = parsedDate.split('/');
+        if (day && month && year) {
+          const validation = validateDate(day, month, year);
+          if (validation.valid) {
+            const input = event.target;
+            input.value = parsedDate;
+            handleDateInput({ target: input });
+          } else {
+            // Invalid date, show error
+            state.birthdayError = true;
+            const input = event.target;
+            input.value = '';
+            state.newUser.birthday = '';
+          }
+        } else {
+          const input = event.target;
+          input.value = parsedDate;
+          handleDateInput({ target: input });
+        }
       }
     };
 
@@ -771,6 +992,7 @@ export default {
       openDatePicker,
       handleDatePickerChange,
       handleDatePickerBlur,
+      handleDateBlur,
       handleDatePaste,
       isMobileDevice,
       openOriginModal,
@@ -1138,11 +1360,12 @@ export default {
               <input
                 id="attention-birthday-input-add"
                 class="form-control form-control-solid"
+                :class="{ 'is-invalid': state.birthdayError }"
                 type="text"
                 :value="formatDateForDisplay(state.newUser.birthday)"
                 @input="handleDateInput"
                 @paste="handleDatePaste"
-                @blur="sendData"
+                @blur="handleDateBlur"
                 placeholder="DD/MM/YYYY"
                 maxlength="10"
                 inputmode="numeric"
@@ -1164,6 +1387,7 @@ export default {
                 type="date"
                 class="position-absolute"
                 :value="state.newUser.birthday"
+                :max="new Date().toISOString().split('T')[0]"
                 @change="handleDatePickerChange"
                 @blur="handleDatePickerBlur"
                 style="
@@ -1591,10 +1815,29 @@ export default {
   cursor: pointer;
   position: relative;
   padding-right: 2.5rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  height: auto !important;
+  min-height: 58px;
+  line-height: 1.2 !important;
+}
+
+/* Hide label when using custom mobile button */
+.origin-select-button + label {
+  display: none;
+}
+
+/* Style for placeholder text in origin button */
+.origin-select-button .text-muted {
+  font-weight: 600 !important;
+  color: #495057 !important;
+  line-height: 1.2 !important;
 }
 
 .origin-selected-text {
   color: inherit;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .origin-chevron {
@@ -1721,10 +1964,29 @@ export default {
   cursor: pointer;
   position: relative;
   padding-right: 2.5rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  height: auto !important;
+  min-height: 58px;
+  line-height: 1.2 !important;
+}
+
+/* Hide label when using custom mobile button */
+.phone-code-select-button + label {
+  display: none;
+}
+
+/* Style for placeholder text in phone code button */
+.phone-code-select-button .text-muted {
+  font-weight: 600 !important;
+  color: #495057 !important;
+  line-height: 1.2 !important;
 }
 
 .phone-code-selected-text {
   color: inherit;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .phone-code-chevron {
@@ -1850,10 +2112,29 @@ export default {
   cursor: pointer;
   position: relative;
   padding-right: 2.5rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  height: auto !important;
+  min-height: 58px;
+  line-height: 1.2 !important;
+}
+
+/* Hide label when using custom mobile button */
+.health-agreement-select-button + label {
+  display: none;
+}
+
+/* Style for placeholder text in health agreement button */
+.health-agreement-select-button .text-muted {
+  font-weight: 600 !important;
+  color: #495057 !important;
+  line-height: 1.2 !important;
 }
 
 .health-agreement-selected-text {
   color: inherit;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .health-agreement-chevron {

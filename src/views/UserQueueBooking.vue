@@ -25,6 +25,7 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import CommerceContactInfo from '../components/domain/CommerceContactInfo.vue';
 import AreYouSure from '../components/common/AreYouSure.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'UserQueueBooking',
@@ -40,6 +41,7 @@ export default {
     Alert,
     CommerceContactInfo,
     AreYouSure,
+    Popper,
   },
   async setup() {
     const route = useRoute();
@@ -432,14 +434,17 @@ export default {
                       <div class="booking-card-content">
                         <span class="booking-details-title">
                           {{ $t('userQueueBooking.estimatedTime') }}*
-                          <span
+                          <Popper
                             v-if="state.usingIntelligentEstimation"
-                            v-b-tooltip.hover
-                            :title="$t('userQueueBooking.intelligentEstimationTooltip')"
-                            class="ai-badge ms-1"
+                            :class="'dark'"
+                            arrow
+                            disable-click-away
+                            :content="$t('userQueueBooking.intelligentEstimationTooltip')"
                           >
-                            <i class="bi bi-stars"></i>
-                          </span>
+                            <span class="ai-badge ms-1">
+                              <i class="bi bi-stars"></i>
+                            </span>
+                          </Popper>
                         </span>
                         <span class="booking-details-content">
                           <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
@@ -452,14 +457,17 @@ export default {
                     >
                       <span class="booking-details-title">
                         {{ $t('userQueueBooking.estimatedTime') }}*
-                        <span
+                        <Popper
                           v-if="state.usingIntelligentEstimation"
-                          v-b-tooltip.hover
-                          :title="$t('userQueueBooking.intelligentEstimationTooltip')"
-                          class="ai-badge ms-1"
+                          :class="'dark'"
+                          arrow
+                          disable-click-away
+                          :content="$t('userQueueBooking.intelligentEstimationTooltip')"
                         >
-                          <i class="bi bi-stars"></i>
-                        </span>
+                          <span class="ai-badge ms-1">
+                            <i class="bi bi-stars"></i>
+                          </span>
+                        </Popper>
                       </span><br />
                       <span class="booking-details-content">
                         <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
