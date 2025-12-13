@@ -155,6 +155,15 @@ const setupResponseInterceptor = (instance, apiName) => {
         }
       }
 
+      // Suppress 404 errors from Event API - these are expected when resources don't exist yet
+      // Event API is used for optional features like lead transitions/history
+      // Check this BEFORE calling handleApiError to prevent logging
+      if (apiName === 'Event API' && error.response?.status === 404) {
+        // Silently fail - don't log or reject, just return empty response
+        // This prevents console errors for expected 404s
+        return Promise.resolve({ data: { data: [] } });
+      }
+
       // Handle other errors
       const errorInfo = handleApiError(error, apiName);
 

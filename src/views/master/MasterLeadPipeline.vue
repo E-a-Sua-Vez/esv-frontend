@@ -23,6 +23,7 @@ import Message from '../../components/common/Message.vue';
 import Warning from '../../components/common/Warning.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SimpleCard from '../../components/dashboard/common/SimpleCard.vue';
 import Popper from 'vue3-popper';
 import { Modal } from 'bootstrap';
 
@@ -58,6 +59,104 @@ const CONTACT_RESULTS = {
   WAITING_FOR_RESPONSE: 'WAITING_FOR_RESPONSE',
 };
 
+// Pipeline Rules Configuration - Extensible system for stage transitions
+// This configuration defines:
+// - Which stages can be dragged/dropped
+// - Which transitions are allowed
+// - Which stages are read-only
+// - Special rules for specific stages
+const PIPELINE_RULES = {
+  // Stages that cannot be moved via drag and drop (must use other methods like contacts)
+  noDragDrop: [PIPELINE_STAGES.NEW, PIPELINE_STAGES.ARCHIVED],
+
+  // Stages that are read-only (cannot be moved or updated)
+  readOnly: [PIPELINE_STAGES.CLOSED, PIPELINE_STAGES.ARCHIVED],
+
+  // Allowed transitions from each stage (empty array means all transitions are allowed)
+  // If a stage is not listed, all transitions are allowed (except those blocked by other rules)
+  allowedTransitions: {
+    [PIPELINE_STAGES.NEW]: [], // NEW can only move via contact creation
+    [PIPELINE_STAGES.IN_CONTACT]: [], // All transitions allowed
+    [PIPELINE_STAGES.WAITLIST]: [], // All transitions allowed
+    [PIPELINE_STAGES.IN_DEAL]: [], // All transitions allowed
+    [PIPELINE_STAGES.CLOSED]: [], // CLOSED is read-only, so this doesn't matter
+    [PIPELINE_STAGES.ARCHIVED]: [], // ARCHIVED is read-only
+  },
+
+  // Stages order (for visual positioning and validation)
+  stageOrder: [
+    PIPELINE_STAGES.NEW,
+    PIPELINE_STAGES.IN_CONTACT,
+    PIPELINE_STAGES.WAITLIST,
+    PIPELINE_STAGES.IN_DEAL,
+    PIPELINE_STAGES.CLOSED,
+  ],
+
+    // Check if a transition is allowed
+  canTransition: (fromStage, toStage) => {
+    // Read-only stages cannot be moved
+    if (PIPELINE_RULES.readOnly.includes(fromStage)) {
+      return { allowed: false, reason: 'Stage is read-only' };
+    }
+
+    // Cannot move to read-only stages (except via special methods)
+    // CLOSED can only be reached via drag and drop from IN_DEAL (with SUCCESS status)
+    // or via contact creation with REJECTED result in IN_CONTACT stage
+    if (PIPELINE_RULES.readOnly.includes(toStage)) {
+      // Only allow drag and drop to CLOSED from IN_DEAL
+      if (toStage === PIPELINE_STAGES.CLOSED && fromStage !== PIPELINE_STAGES.IN_DEAL) {
+        return { allowed: false, reason: 'CLOSED stage can only be reached from IN_DEAL via drag and drop, or from IN_CONTACT via contact with REJECTED result' };
+      }
+      // For other read-only stages, block
+      if (toStage !== PIPELINE_STAGES.CLOSED) {
+        return { allowed: false, reason: 'Target stage is read-only' };
+      }
+    }
+
+    // NEW can only move FROM via contact creation, not drag and drop
+    if (fromStage === PIPELINE_STAGES.NEW) {
+      return { allowed: false, reason: 'NEW stage can only be moved via contact creation' };
+    }
+
+    // CRITICAL: Once a lead leaves NEW, it can NEVER return to NEW
+    // This is a one-way transition - NEW is only for new leads
+    if (toStage === PIPELINE_STAGES.NEW && fromStage !== PIPELINE_STAGES.NEW) {
+      return { allowed: false, reason: 'Leads cannot return to NEW stage once they have moved forward' };
+    }
+
+    // Check if drag and drop is allowed for this stage (only blocks FROM, not TO)
+    if (PIPELINE_RULES.noDragDrop.includes(fromStage)) {
+      return { allowed: false, reason: 'This stage cannot be moved via drag and drop' };
+    }
+
+    // Check specific allowed transitions if defined
+    const allowed = PIPELINE_RULES.allowedTransitions[fromStage];
+    if (allowed && allowed.length > 0 && !allowed.includes(toStage)) {
+      return { allowed: false, reason: 'Transition not allowed' };
+    }
+
+    return { allowed: true };
+  },
+
+  // Check if a lead can be dragged
+  canDrag: (lead) => {
+    const stage = lead.pipelineStage || lead.stage;
+    if (PIPELINE_RULES.readOnly.includes(stage)) {
+      return false;
+    }
+    if (PIPELINE_RULES.noDragDrop.includes(stage)) {
+      return false;
+    }
+    return true;
+  },
+
+  // Check if a lead can receive new contacts
+  canAddContact: (lead) => {
+    const stage = lead.pipelineStage || lead.stage;
+    return !PIPELINE_RULES.readOnly.includes(stage);
+  },
+};
+
 export default {
   name: 'MasterLeadPipeline',
   components: {
@@ -68,6 +167,7 @@ export default {
     Message,
     Warning,
     Popper,
+    SimpleCard,
   },
   setup() {
     const router = useRouter();
@@ -99,6 +199,7 @@ export default {
 
     // Time indicator filter - array of selected indicators ('green', 'yellow', 'red') - empty means show all
     const timeIndicatorFilter = ref([]);
+    const showAnalytics = ref(false);
 
     const isMaster = computed(() => {
       const userType = store.getCurrentUserType;
@@ -212,7 +313,99 @@ export default {
       }
     };
 
-    const moveLead = async (lead, newStage, status) => {
+    // Refresh function
+    const refreshLeads = async () => {
+      await loadLeads(true);
+    };
+
+    // Drag and drop state
+    const draggedLead = ref(null);
+    const dragOverStage = ref(null);
+
+    // Drag start handler
+    const handleDragStart = (event, lead) => {
+      // Track drag start time to distinguish from clicks
+      window.lastDragStartTime = Date.now();
+
+      // Check if lead can be dragged
+      if (!PIPELINE_RULES.canDrag(lead)) {
+        event.preventDefault();
+        event.stopPropagation();
+        // Don't show error - just silently prevent drag
+        return false;
+      }
+      draggedLead.value = lead;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', lead.id);
+      // Add visual feedback
+      event.target.style.opacity = '0.5';
+    };
+
+    // Drag end handler
+    const handleDragEnd = (event) => {
+      event.target.style.opacity = '1';
+      draggedLead.value = null;
+      dragOverStage.value = null;
+    };
+
+    // Drag over handler for drop zones
+    const handleDragOver = (event, stage) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+
+      // Check if transition is allowed
+      if (draggedLead.value) {
+        const fromStage = draggedLead.value.pipelineStage || draggedLead.value.stage;
+        const transition = PIPELINE_RULES.canTransition(fromStage, stage);
+        if (transition.allowed) {
+          dragOverStage.value = stage;
+          event.dataTransfer.dropEffect = 'move';
+        } else {
+          dragOverStage.value = null;
+          event.dataTransfer.dropEffect = 'none';
+        }
+      }
+    };
+
+    // Drag leave handler
+    const handleDragLeave = (event) => {
+      // Only clear if we're actually leaving the drop zone (not just moving to a child element)
+      if (!event.currentTarget.contains(event.relatedTarget)) {
+        dragOverStage.value = null;
+      }
+    };
+
+    // Drop handler
+    const handleDrop = async (event, targetStage) => {
+      event.preventDefault();
+      dragOverStage.value = null;
+
+      if (!draggedLead.value) {
+        return;
+      }
+
+      const lead = draggedLead.value;
+      const fromStage = lead.pipelineStage || lead.stage;
+
+      // Validate transition
+      const transition = PIPELINE_RULES.canTransition(fromStage, targetStage);
+      if (!transition.allowed) {
+        alertError.value = transition.reason || 'This transition is not allowed';
+        draggedLead.value = null;
+        return;
+      }
+
+      // Move the lead
+      try {
+        await moveLead(lead, targetStage, undefined);
+      } catch (error) {
+        console.error('Error moving lead:', error);
+      } finally {
+        draggedLead.value = null;
+      }
+    };
+
+    const moveLead = async (lead, newStage, status, skipValidation = false) => {
       try {
         loading.value = true;
 
@@ -239,6 +432,20 @@ export default {
 
         const oldStage = leadObj.pipelineStage || leadObj.stage;
 
+        // Special handling: If moving to CLOSED from IN_DEAL via drag and drop, set status to SUCCESS
+        if (newStage === PIPELINE_STAGES.CLOSED && oldStage === PIPELINE_STAGES.IN_DEAL && !status) {
+          status = LEAD_STATUS.SUCCESS;
+          console.log('Moving lead from IN_DEAL to CLOSED - setting status to SUCCESS');
+        }
+
+        // Validate transition unless explicitly skipped (for contact-based moves)
+        if (!skipValidation) {
+          const transition = PIPELINE_RULES.canTransition(oldStage, newStage);
+          if (!transition.allowed) {
+            throw new Error(transition.reason || 'This transition is not allowed');
+          }
+        }
+
         // Optimistic UI update - move lead immediately in local state
         if (oldStage && leads[oldStage]) {
           const leadIndex = leads[oldStage].findIndex(l => l.id === leadId);
@@ -261,6 +468,84 @@ export default {
         // Update backend - only send status if it's defined
         const statusToSend = status || undefined;
         await updateLeadStage(leadId, newStage, statusToSend);
+
+        // If this lead is currently selected in the modal, refresh its details and transitions
+        if (selectedLead.value && selectedLead.value.id === leadId) {
+          try {
+            // Always get from Firebase (backend) - source of truth for immediate data
+            let refreshedLead;
+            try {
+              refreshedLead = await getLeadByIdFromBackend(leadId);
+            } catch (leadError) {
+              console.warn('Failed to refresh lead from backend, trying query stack:', leadError);
+              // Fallback to query stack only for lead details
+              try {
+                refreshedLead = await getLeadById(leadId);
+              } catch (queryError) {
+                console.warn('Failed to refresh lead from query stack:', queryError);
+                refreshedLead = selectedLead.value;
+              }
+            }
+
+            // Always get contacts from Firebase (backend) - never use query stack for contacts
+            let refreshedContacts = [];
+            try {
+              refreshedContacts = await getLeadContactsFromBackend(leadId);
+            } catch (contactsError) {
+              console.warn('Failed to refresh contacts from Firebase:', contactsError);
+              // Keep existing contacts if Firebase fails - don't use query stack (it's async)
+              refreshedContacts = selectedLead.value.contacts || [];
+            }
+
+            // Refresh transitions to show the new stage change
+            const transitions = await getLeadTransitions(leadId);
+            let finalTransitions = [...transitions];
+
+            // Add initial transition if not present
+            const hasInitialTransition = finalTransitions.some(t => t.isInitial);
+            if (!hasInitialTransition && (refreshedLead?.createdAt || selectedLead.value?.createdAt)) {
+              finalTransitions.push({
+                id: 'initial',
+                oldStage: null,
+                newStage: PIPELINE_STAGES.NEW,
+                status: null,
+                userId: null,
+                occurredOn: refreshedLead?.createdAt || selectedLead.value.createdAt,
+                createdAt: refreshedLead?.createdAt || selectedLead.value.createdAt,
+                isInitial: true,
+              });
+            }
+
+            // Sort transitions
+            finalTransitions.sort((a, b) => {
+              const dateA = new Date(a.occurredOn || a.createdAt);
+              const dateB = new Date(b.occurredOn || b.createdAt);
+              return dateA - dateB;
+            });
+
+            // Update selected lead with fresh data
+            selectedLead.value = {
+              ...(refreshedLead || selectedLead.value),
+              contacts: refreshedContacts || selectedLead.value.contacts || [],
+              pipelineStage: newStage,
+              stage: newStage,
+            };
+            if (status) {
+              selectedLead.value.status = status;
+            }
+            leadTransitions.value = finalTransitions;
+          } catch (refreshError) {
+            // If refresh fails, just update the stage locally
+            console.warn('Failed to refresh lead details after move:', refreshError);
+            if (selectedLead.value) {
+              selectedLead.value.pipelineStage = newStage;
+              selectedLead.value.stage = newStage;
+              if (status) {
+                selectedLead.value.status = status;
+              }
+            }
+          }
+        }
 
         // Reload from backend (Firebase) to ensure consistency
         await loadLeads(true);
@@ -324,31 +609,51 @@ export default {
 
         const openLeadDetails = async (lead, event) => {
           // Prevent event propagation if event is provided
+          // Also prevent if this was triggered by a drag operation
           if (event) {
+            // If this is a click event and there was a recent drag, ignore it
+            if (draggedLead.value && event.type === 'click') {
+              // Check if mouse actually moved (real click vs drag end)
+              const timeSinceDrag = Date.now() - (window.lastDragStartTime || 0);
+              if (timeSinceDrag < 200) {
+                // This was likely a drag operation, not a click
+                return;
+              }
+            }
+            event.preventDefault();
             event.stopPropagation();
+          }
+
+          // Clear any drag state to ensure clean modal opening
+          if (draggedLead.value) {
+            draggedLead.value = null;
           }
 
           try {
             loading.value = true;
 
-            // Try to get from query stack first (PostgreSQL), fallback to backend (Firebase)
+            // Always get from Firebase (backend) for immediate, consistent data
             let leadDetails = null;
             let contacts = [];
 
             try {
+              // Try backend (Firebase) first - this is the source of truth
               [leadDetails, contacts] = await Promise.all([
-                getLeadById(lead.id),
-                getLeadContacts(lead.id),
+                getLeadByIdFromBackend(lead.id),
+                getLeadContactsFromBackend(lead.id),
               ]);
-            } catch (queryError) {
-              // If not in PostgreSQL yet, get from backend (Firebase)
-              console.log('Lead not in PostgreSQL yet, fetching from Firebase');
-              try {
-                leadDetails = await getLeadByIdFromBackend(lead.id);
-                contacts = []; // Contacts might not be in Firebase yet
               } catch (backendError) {
-                // If not found in backend either, use the lead data we have
+              console.warn('Failed to get lead from backend, trying query stack:', backendError);
+              // Fallback to query stack only if backend fails
+              try {
+                leadDetails = await getLeadById(lead.id);
+                // Don't get contacts from query stack - it's async and may be stale
+                contacts = [];
+              } catch (queryError) {
+                // If both fail, use the lead data we have
+                console.warn('Failed to get lead from both sources, using local data');
                 leadDetails = lead;
+                contacts = [];
               }
             }
 
@@ -530,6 +835,39 @@ export default {
           throw new Error('Lead ID is missing');
         }
 
+        // If lead is in WAITLIST, move it to IN_CONTACT first before saving the contact
+        const leadCurrentStage = selectedLead.value.pipelineStage || selectedLead.value.stage;
+        if (leadCurrentStage === PIPELINE_STAGES.WAITLIST) {
+          console.log('Lead is in WAITLIST - moving to IN_CONTACT before saving contact...');
+          try {
+            await updateLeadStage(selectedLead.value.id, PIPELINE_STAGES.IN_CONTACT, undefined);
+            // Update local state
+            selectedLead.value.pipelineStage = PIPELINE_STAGES.IN_CONTACT;
+            selectedLead.value.stage = PIPELINE_STAGES.IN_CONTACT;
+
+            // Update in leads array
+            if (leads.WAITLIST && Array.isArray(leads.WAITLIST)) {
+              const waitlistIndex = leads.WAITLIST.findIndex(l => l.id === selectedLead.value.id);
+              if (waitlistIndex !== -1) {
+                const foundLead = leads.WAITLIST.splice(waitlistIndex, 1)[0];
+                foundLead.pipelineStage = PIPELINE_STAGES.IN_CONTACT;
+                foundLead.stage = PIPELINE_STAGES.IN_CONTACT;
+                if (!leads.IN_CONTACT) {
+                  leads.IN_CONTACT = [];
+                }
+                const alreadyInContact = leads.IN_CONTACT.some(l => l.id === foundLead.id);
+                if (!alreadyInContact) {
+                  leads.IN_CONTACT.unshift(foundLead);
+                }
+              }
+            }
+            console.log('Lead moved to IN_CONTACT successfully');
+          } catch (stageError) {
+            console.error('Error moving lead from WAITLIST to IN_CONTACT:', stageError);
+            // Continue with contact save even if stage update fails
+          }
+        }
+
         console.log('Saving contact:', {
           leadId: selectedLead.value.id,
           contact: newContact
@@ -554,14 +892,99 @@ export default {
 
         if (!savedContact || !savedContact.id) {
           console.warn('Contact saved but response is missing ID:', savedContact);
-          throw new Error('Contact was not saved properly - missing ID in response');
+          // Don't throw error - continue with refresh attempt
+          // The contact might have been saved even if response is incomplete
         }
 
-        // Optimistically add the contact to the list immediately for faster UI update
-        if (savedContact && selectedLead.value.contacts) {
+        // Refresh lead details and contacts from Firebase (backend) - source of truth
+        // Firebase has immediate data, query stack is async and may be stale
+        try {
+          // Try to get lead from backend first
+          let refreshedLead;
+          try {
+            refreshedLead = await getLeadByIdFromBackend(selectedLead.value.id);
+          } catch (leadError) {
+            console.warn('Failed to refresh lead from backend, trying query stack:', leadError);
+            // Fallback to query stack only for lead details
+            try {
+              refreshedLead = await getLeadById(selectedLead.value.id);
+            } catch (queryError) {
+              console.warn('Failed to refresh lead from query stack:', queryError);
+              refreshedLead = selectedLead.value;
+            }
+          }
+
+          // Always get contacts from Firebase (backend) - never use query stack
+          // Query stack is async and may not have the contact yet
+          let refreshedContacts = [];
+          try {
+            refreshedContacts = await getLeadContactsFromBackend(selectedLead.value.id);
+          } catch (contactsError) {
+            console.warn('Failed to refresh contacts from Firebase:', contactsError);
+            // If Firebase fails, use optimistic update - don't use query stack (it's async)
+            if (savedContact) {
+              refreshedContacts = selectedLead.value.contacts || [];
+              // Only add if not already present
+              if (!refreshedContacts.find(c => c.id === savedContact.id)) {
+                refreshedContacts.unshift(savedContact);
+              }
+            } else {
+              refreshedContacts = selectedLead.value.contacts || [];
+            }
+          }
+
+          // Update selected lead with fresh data from Firebase
+          selectedLead.value = {
+            ...(refreshedLead || selectedLead.value),
+            contacts: refreshedContacts || [],
+          };
+        } catch (refreshError) {
+          console.warn('Failed to refresh lead details after contact save:', refreshError);
+          // Fallback: optimistically add the contact to the list
+          if (savedContact) {
+            if (selectedLead.value.contacts) {
+              // Only add if not already present
+              const contactExists = selectedLead.value.contacts.some(c => c.id === savedContact.id);
+              if (!contactExists) {
           selectedLead.value.contacts.unshift(savedContact);
-        } else if (savedContact) {
+              }
+            } else {
           selectedLead.value.contacts = [savedContact];
+            }
+          }
+        }
+
+        // Refresh transitions to show any new events
+        try {
+          const transitions = await getLeadTransitions(selectedLead.value.id);
+          let finalTransitions = [...transitions];
+
+          // Add initial transition if not present
+          const hasInitialTransition = finalTransitions.some(t => t.isInitial);
+          if (!hasInitialTransition && selectedLead.value?.createdAt) {
+            finalTransitions.push({
+              id: 'initial',
+              oldStage: null,
+              newStage: PIPELINE_STAGES.NEW,
+              status: null,
+              userId: null,
+              occurredOn: selectedLead.value.createdAt,
+              createdAt: selectedLead.value.createdAt,
+              isInitial: true,
+            });
+          }
+
+          // Sort transitions
+          finalTransitions.sort((a, b) => {
+            const dateA = new Date(a.occurredOn || a.createdAt);
+            const dateB = new Date(b.occurredOn || b.createdAt);
+            return dateA - dateB;
+          });
+
+          leadTransitions.value = finalTransitions;
+        } catch (transitionError) {
+          // Fail silently - transitions are optional
+          console.debug('Failed to refresh transitions:', transitionError);
         }
 
         // Check contact result and move lead accordingly
@@ -634,6 +1057,42 @@ export default {
                 if (!alreadyClosed) {
                   leads.CLOSED.unshift(foundLead);
                 }
+              }
+
+              // Refresh lead details and transitions after stage change
+              try {
+                const [refreshedLead, refreshedContacts] = await Promise.all([
+                  getLeadByIdFromBackend(selectedLead.value.id),
+                  getLeadContactsFromBackend(selectedLead.value.id),
+                ]);
+
+                const transitions = await getLeadTransitions(selectedLead.value.id);
+                let finalTransitions = [...transitions];
+
+                const hasInitialTransition = finalTransitions.some(t => t.isInitial);
+                if (!hasInitialTransition && refreshedLead?.createdAt) {
+                  finalTransitions.push({
+                    id: 'initial',
+                    oldStage: null,
+                    newStage: PIPELINE_STAGES.NEW,
+                    status: null,
+                    userId: null,
+                    occurredOn: refreshedLead.createdAt,
+                    createdAt: refreshedLead.createdAt,
+                    isInitial: true,
+                  });
+                }
+
+                finalTransitions.sort((a, b) => {
+                  const dateA = new Date(a.occurredOn || a.createdAt);
+                  const dateB = new Date(b.occurredOn || b.createdAt);
+                  return dateA - dateB;
+                });
+
+                selectedLead.value = { ...refreshedLead, contacts: refreshedContacts || [] };
+                leadTransitions.value = finalTransitions;
+              } catch (refreshError) {
+                console.warn('Failed to refresh lead details after stage change:', refreshError);
               }
 
               // Reload leads to ensure UI is in sync with database
@@ -873,6 +1332,124 @@ export default {
               }
             })(); // Execute immediately but don't await (non-blocking)
           }
+          // If contact result is NO_RESPONSE, move lead to WAITLIST stage
+          else if (newContact.result === CONTACT_RESULTS.NO_RESPONSE) {
+            // Update immediately but catch errors so contact save still succeeds
+            (async () => {
+              try {
+                console.log('Contact marked as no response, moving lead to WAITLIST stage...', {
+                  leadId: selectedLead.value.id,
+                  currentStage: currentStage,
+                  targetStage: PIPELINE_STAGES.WAITLIST
+                });
+
+                // updateLeadStage signature: (id, stage, status)
+                const updatedLead = await updateLeadStage(
+                  selectedLead.value.id,
+                  PIPELINE_STAGES.WAITLIST,
+                  undefined
+                );
+
+                console.log('Lead moved to WAITLIST stage successfully:', updatedLead);
+
+                // Update local state
+                if (updatedLead) {
+                  selectedLead.value.pipelineStage = PIPELINE_STAGES.WAITLIST;
+                  selectedLead.value.stage = PIPELINE_STAGES.WAITLIST;
+                }
+
+                // Update the lead in the leads array - remove from current stage and add to WAITLIST
+                let foundLead = null;
+                let sourceStage = null;
+
+                // Check all stages to find the lead (except CLOSED and WAITLIST)
+                const stagesToCheck = [
+                  PIPELINE_STAGES.NEW,
+                  PIPELINE_STAGES.IN_CONTACT,
+                  PIPELINE_STAGES.IN_DEAL
+                ];
+
+                for (const stage of stagesToCheck) {
+                  if (leads[stage] && Array.isArray(leads[stage])) {
+                    const index = leads[stage].findIndex(l => l.id === selectedLead.value.id);
+                    if (index !== -1) {
+                      foundLead = leads[stage].splice(index, 1)[0];
+                      sourceStage = stage;
+                      break;
+                    }
+                  }
+                }
+
+                // Update the lead and move to WAITLIST
+                if (foundLead && sourceStage !== PIPELINE_STAGES.WAITLIST) {
+                  foundLead.pipelineStage = PIPELINE_STAGES.WAITLIST;
+                  foundLead.stage = PIPELINE_STAGES.WAITLIST;
+                  if (!leads.WAITLIST) {
+                    leads.WAITLIST = [];
+                  }
+                  // Only add if not already in WAITLIST array
+                  const alreadyInWaitlist = leads.WAITLIST.some(l => l.id === foundLead.id);
+                  if (!alreadyInWaitlist) {
+                    leads.WAITLIST.unshift(foundLead);
+                  }
+                }
+
+                // Refresh lead details and transitions after stage change
+                try {
+                  const [refreshedLead, refreshedContacts] = await Promise.all([
+                    getLeadByIdFromBackend(selectedLead.value.id),
+                    getLeadContactsFromBackend(selectedLead.value.id),
+                  ]);
+
+                  const transitions = await getLeadTransitions(selectedLead.value.id);
+                  let finalTransitions = [...transitions];
+
+                  const hasInitialTransition = finalTransitions.some(t => t.isInitial);
+                  if (!hasInitialTransition && refreshedLead?.createdAt) {
+                    finalTransitions.push({
+                      id: 'initial',
+                      oldStage: null,
+                      newStage: PIPELINE_STAGES.NEW,
+                      status: null,
+                      userId: null,
+                      occurredOn: refreshedLead.createdAt,
+                      createdAt: refreshedLead.createdAt,
+                      isInitial: true,
+                    });
+                  }
+
+                  finalTransitions.sort((a, b) => {
+                    const dateA = new Date(a.occurredOn || a.createdAt);
+                    const dateB = new Date(b.occurredOn || b.createdAt);
+                    return dateA - dateB;
+                  });
+
+                  selectedLead.value = { ...refreshedLead, contacts: refreshedContacts || [] };
+                  leadTransitions.value = finalTransitions;
+                } catch (refreshError) {
+                  console.warn('Failed to refresh lead details after stage change:', refreshError);
+                }
+
+                // Reload leads to ensure UI is in sync with database
+                setTimeout(async () => {
+                  try {
+                    await loadLeads(true); // Use backend for immediate update
+                  } catch (reloadError) {
+                    // Silently ignore - UI was already updated optimistically
+                  }
+                }, 1500);
+              } catch (stageError) {
+                console.error('Error moving lead to WAITLIST stage:', stageError);
+                // Don't fail the whole operation if stage update fails
+                // The contact was already saved successfully
+              }
+            })(); // Execute immediately but don't await (non-blocking)
+          }
+          // For any other contact result, lead stays in NEW stage
+          // No automatic transition - user must explicitly move the lead or create another contact
+          else {
+            console.log('Contact saved in NEW stage with result:', newContact.result, '- Lead remains in NEW stage');
+          }
         }
         // Automatically move lead to IN_CONTACT stage when a contact is added (for non-NEW stages)
         // Only move if not already IN_CONTACT or CLOSED
@@ -961,28 +1538,6 @@ export default {
           console.log('Lead already in IN_CONTACT or CLOSED stage, skipping move');
         }
 
-        // Reload contacts from query stack after a delay (non-blocking, silent failures)
-        // The contact was already added optimistically, so this is just for refresh
-        // Query stack needs time to process the event, so we wait a bit
-        setTimeout(async () => {
-          try {
-            const contacts = await getLeadContacts(selectedLead.value.id);
-            if (contacts && contacts.length > 0) {
-              selectedLead.value.contacts = contacts;
-            }
-          } catch (error) {
-            // Silently ignore - contact was already added optimistically
-            // Query stack might not have processed the event yet (this is normal)
-            // Don't log errors to avoid cluttering console with expected failures
-          }
-        }, 3000); // Wait 3 seconds for query stack to process
-
-        // Reset form
-        newContact.comment = '';
-        newContact.type = CONTACT_TYPES.CALL;
-        newContact.result = CONTACT_RESULTS.NO_RESPONSE;
-        newContact.scheduledAt = undefined;
-        showAddContact.value = false;
 
         loading.value = false;
       } catch (error) {
@@ -1140,6 +1695,25 @@ export default {
       return labels[indicator] || indicator;
     };
 
+    // Helper function to get source label
+    const getSourceLabel = (source) => {
+      if (!source) return '';
+      // Map source values to translation keys
+      const sourceMap = {
+        'manual': 'leadPipeline.source.manual',
+        'contact-form': 'leadPipeline.source.contact-form',
+        'exit-intent': 'leadPipeline.source.exit-intent',
+        'publicSite': 'leadPipeline.source.publicSite',
+      };
+      const translationKey = sourceMap[source] || `leadPipeline.source.${source}`;
+      const translated = $t(translationKey);
+      // If translation doesn't exist, return a formatted version of the source
+      if (translated === translationKey) {
+        return source.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+      return translated;
+    };
+
     // Toggle status filter
     const toggleStatusFilter = (status) => {
       const index = statusFilter.value.indexOf(status);
@@ -1201,15 +1775,14 @@ export default {
             let transitions = [];
 
             try {
-              // Get contacts
-              try {
-                contacts = await getLeadContacts(lead.id);
-              } catch (e) {
+              // Always get contacts from Firebase (backend) - source of truth
                 try {
                   contacts = await getLeadContactsFromBackend(lead.id);
-                } catch (e2) {
-                  // Fail silently
-                }
+              } catch (e) {
+                // If Firebase fails, contacts will be empty array
+                // Don't use query stack - it's async and may be stale
+                console.warn('Failed to get contacts from Firebase:', e);
+                contacts = [];
               }
 
               // Get transitions
@@ -1511,6 +2084,208 @@ export default {
       });
     };
 
+    // Pipeline Statistics - Computed values for dashboard
+    const pipelineStats = computed(() => {
+      const allLeads = [
+        ...(leads.NEW || []),
+        ...(leads.IN_CONTACT || []),
+        ...(leads.WAITLIST || []),
+        ...(leads.IN_DEAL || []),
+        ...(leads.CLOSED || []),
+      ];
+
+      const totalLeads = allLeads.length;
+      const activeLeads = totalLeads - (leads.CLOSED?.length || 0);
+      const closedLeads = leads.CLOSED?.length || 0;
+      const successLeads = allLeads.filter(l => l.status === LEAD_STATUS.SUCCESS).length;
+      const rejectedLeads = allLeads.filter(l => l.status === LEAD_STATUS.REJECTED).length;
+
+      // Conversion rate: (SUCCESS / total that reached IN_DEAL or CLOSED) * 100
+      const reachedDealOrClosed = (leads.IN_DEAL?.length || 0) + closedLeads;
+      const conversionRate = reachedDealOrClosed > 0
+        ? ((successLeads / reachedDealOrClosed) * 100).toFixed(1)
+        : 0;
+
+      // Overall conversion: SUCCESS / total leads
+      const overallConversion = totalLeads > 0
+        ? ((successLeads / totalLeads) * 100).toFixed(1)
+        : 0;
+
+      // Distribution by stage
+      const stageDistribution = {
+        NEW: leads.NEW?.length || 0,
+        IN_CONTACT: leads.IN_CONTACT?.length || 0,
+        WAITLIST: leads.WAITLIST?.length || 0,
+        IN_DEAL: leads.IN_DEAL?.length || 0,
+        CLOSED: closedLeads,
+      };
+
+      // Distribution by source
+      const sourceDistribution = {};
+      allLeads.forEach(lead => {
+        const source = lead.source || 'manual';
+        sourceDistribution[source] = (sourceDistribution[source] || 0) + 1;
+      });
+
+      // Distribution by time indicator
+      const timeDistribution = {
+        green: 0,
+        yellow: 0,
+        red: 0,
+      };
+      allLeads.forEach(lead => {
+        const indicator = getTimeIndicator(lead);
+        if (indicator && timeDistribution.hasOwnProperty(indicator)) {
+          timeDistribution[indicator]++;
+        }
+      });
+
+      // Average age of leads (in days)
+      const now = new Date();
+      const totalAge = allLeads.reduce((sum, lead) => {
+        if (!lead.createdAt) return sum;
+        const age = (now - new Date(lead.createdAt)) / (1000 * 60 * 60 * 24); // days
+        return sum + age;
+      }, 0);
+      const avgAge = totalLeads > 0 ? (totalAge / totalLeads).toFixed(1) : 0;
+
+      // Stage transition rates
+      const newToContact = stageDistribution.IN_CONTACT + stageDistribution.WAITLIST +
+                          stageDistribution.IN_DEAL + stageDistribution.CLOSED;
+      const newToContactRate = stageDistribution.NEW > 0
+        ? ((newToContact / (stageDistribution.NEW + newToContact)) * 100).toFixed(1)
+        : 0;
+
+      const contactToDeal = stageDistribution.IN_DEAL + stageDistribution.CLOSED;
+      const contactToDealRate = stageDistribution.IN_CONTACT > 0
+        ? ((contactToDeal / (stageDistribution.IN_CONTACT + contactToDeal)) * 100).toFixed(1)
+        : 0;
+
+      // Success vs Rejected ratio
+      const successRejectedRatio = rejectedLeads > 0
+        ? (successLeads / rejectedLeads).toFixed(2)
+        : successLeads > 0 ? '∞' : '0';
+
+      return {
+        totalLeads,
+        activeLeads,
+        closedLeads,
+        successLeads,
+        rejectedLeads,
+        conversionRate,
+        overallConversion,
+        stageDistribution,
+        sourceDistribution,
+        timeDistribution,
+        avgAge,
+        newToContactRate,
+        contactToDealRate,
+        successRejectedRatio,
+      };
+    });
+
+    // Intelligent Insights - Automatically generated recommendations
+    const pipelineInsights = computed(() => {
+      const insights = [];
+      const stats = pipelineStats.value;
+
+      // Critical Alerts (Urgent issues)
+      if (stats.timeDistribution.red > 0) {
+        const percentOld = ((stats.timeDistribution.red / stats.activeLeads) * 100).toFixed(1);
+        insights.push({
+          type: 'critical',
+          category: 'urgency',
+          icon: 'bi-exclamation-triangle-fill',
+          title: 'Stale Leads Detected',
+          message: `📊 ${stats.timeDistribution.red} leads (${percentOld}% of active) are older than 3 months. Average age: ${stats.avgAge} days. These leads are at high risk of becoming cold.`,
+          action: 'Prioritize contact or archive them',
+        });
+      }
+
+      if (stats.stageDistribution.NEW > stats.stageDistribution.IN_CONTACT * 2) {
+        const ratio = (stats.stageDistribution.NEW / (stats.stageDistribution.IN_CONTACT || 1)).toFixed(1);
+        const percentNew = ((stats.stageDistribution.NEW / stats.totalLeads) * 100).toFixed(1);
+        insights.push({
+          type: 'warning',
+          category: 'bottleneck',
+          icon: 'bi-funnel',
+          title: 'Bottleneck at NEW Stage',
+          message: `📊 ${stats.stageDistribution.NEW} leads (${percentNew}% of total) are waiting for first contact. Ratio NEW:IN_CONTACT is ${ratio}:1. This may indicate a capacity issue.`,
+          action: 'Increase contact velocity',
+        });
+      }
+
+      // Conversion Opportunities
+      if (parseFloat(stats.conversionRate) < 20 && stats.stageDistribution.IN_DEAL > 0) {
+        const dealsToWin = stats.stageDistribution.IN_DEAL + stats.stageDistribution.CLOSED;
+        insights.push({
+          type: 'warning',
+          category: 'conversion',
+          icon: 'bi-graph-down',
+          title: 'Low Conversion Rate',
+          message: `📊 Conversion rate: ${stats.conversionRate}% (${stats.successLeads} wins / ${dealsToWin} closed). Industry average: 20-30%. Gap: ${(20 - parseFloat(stats.conversionRate)).toFixed(1)}%`,
+          action: 'Review qualification criteria and sales process',
+        });
+      }
+
+      // Positive Signals
+      if (parseFloat(stats.conversionRate) > 30) {
+        const aboveAvg = (parseFloat(stats.conversionRate) - 25).toFixed(1);
+        insights.push({
+          type: 'success',
+          category: 'performance',
+          icon: 'bi-trophy-fill',
+          title: 'Excellent Conversion Rate',
+          message: `📊 Your conversion rate is ${stats.conversionRate}% (${stats.successLeads} wins) — ${aboveAvg}% above industry average (25%)!`,
+          action: 'Document what\'s working for consistency',
+        });
+      }
+
+      // Lead Velocity
+      if (stats.stageDistribution.IN_CONTACT > 0 && stats.stageDistribution.IN_DEAL === 0) {
+        const contactToDealRate = stats.contactToDealRate;
+        insights.push({
+          type: 'info',
+          category: 'progression',
+          icon: 'bi-arrow-right-circle',
+          title: 'No Active Deals',
+          message: `📊 You have ${stats.stageDistribution.IN_CONTACT} leads in contact but 0 in negotiation. Contact→Deal rate: ${contactToDealRate}%. Potential opportunity: Convert at least 1-2 leads.`,
+          action: 'Focus on qualifying and moving interested leads forward',
+        });
+      }
+
+      // Waitlist Management
+      if (stats.stageDistribution.WAITLIST > stats.stageDistribution.IN_CONTACT) {
+        const ratio = (stats.stageDistribution.WAITLIST / (stats.stageDistribution.IN_CONTACT || 1)).toFixed(1);
+        const percentWaitlist = ((stats.stageDistribution.WAITLIST / stats.activeLeads) * 100).toFixed(1);
+        insights.push({
+          type: 'info',
+          category: 'nurturing',
+          icon: 'bi-pause-circle-fill',
+          title: 'Large Waitlist',
+          message: `📊 ${stats.stageDistribution.WAITLIST} leads (${percentWaitlist}% of active) are in waitlist. Ratio WAITLIST:IN_CONTACT is ${ratio}:1. Don't let them go cold.`,
+          action: 'Set up automated nurturing campaign',
+        });
+      }
+
+      // Success Ratio
+      if (stats.successLeads > 0 && stats.rejectedLeads > 0) {
+        const winRate = (stats.successLeads / (stats.successLeads + stats.rejectedLeads) * 100).toFixed(1);
+        if (parseFloat(winRate) < 50) {
+          insights.push({
+            type: 'warning',
+            category: 'winrate',
+            icon: 'bi-pie-chart',
+            title: 'Low Win Rate',
+            message: `📊 Win rate: ${winRate}% (${stats.successLeads} wins vs ${stats.rejectedLeads} losses). Target: 50%+. Gap: ${(50 - parseFloat(winRate)).toFixed(1)}%`,
+            action: 'Focus on higher quality leads',
+          });
+        }
+      }
+
+      return insights;
+    });
+
     const showAdd = () => {
       showAddLead.value = true;
       // Ensure toggles are set if not loaded yet (for master users)
@@ -1715,6 +2490,15 @@ export default {
           newLead,
           toggles,
           errorsAdd,
+          refreshLeads,
+          handleDragStart,
+          handleDragEnd,
+          handleDragOver,
+          handleDragLeave,
+          handleDrop,
+          draggedLead,
+          dragOverStage,
+          PIPELINE_RULES,
           nameError,
           emailError,
           isMaster,
@@ -1760,10 +2544,14 @@ export default {
       timeIndicatorFilter,
       getTimeIndicator,
       getTimeIndicatorLabel,
+      getSourceLabel,
       toggleStatusFilter,
       toggleTimeIndicatorFilter,
       resetStatusFilters,
       resetTimeIndicatorFilters,
+      pipelineStats,
+      pipelineInsights,
+      showAnalytics,
     };
   },
 };
@@ -1883,10 +2671,26 @@ export default {
             </button>
             <button
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+              @click="showAnalytics = true"
+              :disabled="loading"
+            >
+              <i class="bi bi-graph-up-arrow me-1"></i>{{ $t('leadPipeline.analytics.title') || 'Analytics & Insights' }}
+            </button>
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
               @click="exportLeadsToCSV"
               :disabled="loading"
             >
               <i class="bi bi-download me-1"></i>{{ $t('leadPipeline.exportCSV') || 'Export to CSV' }}
+            </button>
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+              @click="refreshLeads"
+              :disabled="loading"
+            >
+              <i class="bi bi-arrow-clockwise me-1" :class="{ 'spinning': loading }"></i>
+              <span v-if="!loading">{{ $t('leadPipeline.refresh') || 'Refresh' }}</span>
+              <span v-else>{{ $t('leadPipeline.refreshing') || 'Refreshing...' }}</span>
             </button>
           </div>
         </div>
@@ -1914,12 +2718,22 @@ export default {
                 <span class="badge bg-primary">{{ leads.NEW.length }}</span>
               </h5>
             </div>
-            <div class="pipeline-body">
+            <div
+              class="pipeline-body"
+              @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.NEW)"
+              @dragleave="handleDragLeave"
+              @drop.prevent="handleDrop($event, PIPELINE_STAGES.NEW)"
+              :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.NEW }"
+            >
               <div
                 v-for="lead in leads.NEW"
                 :key="lead.id"
                 class="modern-lead-card metric-type-info"
-                @click="openLeadDetails(lead)"
+                :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                :draggable="PIPELINE_RULES.canDrag(lead)"
+                @dragstart="handleDragStart($event, lead)"
+                @dragend="handleDragEnd"
+                @click.stop="openLeadDetails(lead, $event)"
               >
                 <div class="lead-card-header">
                   <div class="lead-icon-container icon-info">
@@ -1964,9 +2778,10 @@ export default {
                         'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent',
                         'bg-secondary': lead.source === 'manual',
                       }"
-                      :title="lead.source === 'manual' ? $t('leadPipeline.source.manual') : $t('leadPipeline.source.publicSite')"
+                      :title="getSourceLabel(lead.source)"
                     >
                       <i :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"></i>
+                      {{ getSourceLabel(lead.source) }}
                     </span>
                   </div>
                   <div class="lead-info-row" v-if="lead.phone || lead.company">
@@ -2001,12 +2816,22 @@ export default {
                 <span class="badge bg-warning">{{ leads.IN_CONTACT.length }}</span>
               </h5>
             </div>
-            <div class="pipeline-body">
+            <div
+              class="pipeline-body"
+              @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.IN_CONTACT)"
+              @dragleave="handleDragLeave"
+              @drop.prevent="handleDrop($event, PIPELINE_STAGES.IN_CONTACT)"
+              :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_CONTACT }"
+            >
               <div
                 v-for="lead in leads.IN_CONTACT"
                 :key="lead.id"
                 class="modern-lead-card metric-type-warning"
-                @click="openLeadDetails(lead)"
+                :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                :draggable="PIPELINE_RULES.canDrag(lead)"
+                @dragstart="handleDragStart($event, lead)"
+                @dragend="handleDragEnd"
+                @click.stop="openLeadDetails(lead, $event)"
               >
                 <div class="lead-card-header">
                   <div class="lead-icon-container icon-warning">
@@ -2071,9 +2896,10 @@ export default {
                         'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent',
                         'bg-secondary': lead.source === 'manual',
                       }"
-                      :title="lead.source === 'manual' ? $t('leadPipeline.source.manual') : $t('leadPipeline.source.publicSite')"
+                      :title="getSourceLabel(lead.source)"
                     >
                       <i :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"></i>
+                      {{ getSourceLabel(lead.source) }}
                     </span>
                   </div>
                   <div class="lead-info-row" v-if="lead.phone || lead.company">
@@ -2108,12 +2934,22 @@ export default {
                 <span class="badge bg-info">{{ leads.WAITLIST.length }}</span>
               </h5>
             </div>
-            <div class="pipeline-body">
+            <div
+              class="pipeline-body"
+              @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.WAITLIST)"
+              @dragleave="handleDragLeave"
+              @drop.prevent="handleDrop($event, PIPELINE_STAGES.WAITLIST)"
+              :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.WAITLIST }"
+            >
               <div
                 v-for="lead in leads.WAITLIST"
                 :key="lead.id"
                 class="modern-lead-card metric-type-info"
-                @click="openLeadDetails(lead)"
+                :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                :draggable="PIPELINE_RULES.canDrag(lead)"
+                @dragstart="handleDragStart($event, lead)"
+                @dragend="handleDragEnd"
+                @click.stop="openLeadDetails(lead, $event)"
               >
                 <div class="lead-card-header">
                   <div class="lead-icon-container icon-info">
@@ -2182,12 +3018,22 @@ export default {
                 <span class="badge bg-success">{{ leads.IN_DEAL.length }}</span>
               </h5>
             </div>
-            <div class="pipeline-body">
+            <div
+              class="pipeline-body"
+              @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.IN_DEAL)"
+              @dragleave="handleDragLeave"
+              @drop.prevent="handleDrop($event, PIPELINE_STAGES.IN_DEAL)"
+              :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_DEAL }"
+            >
               <div
                 v-for="lead in leads.IN_DEAL"
                 :key="lead.id"
                 class="modern-lead-card metric-type-success"
-                @click="openLeadDetails(lead)"
+                :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                :draggable="PIPELINE_RULES.canDrag(lead)"
+                @dragstart="handleDragStart($event, lead)"
+                @dragend="handleDragEnd"
+                @click.stop="openLeadDetails(lead, $event)"
               >
                 <div class="lead-card-header">
                   <div class="lead-icon-container icon-success">
@@ -2272,7 +3118,13 @@ export default {
                 <span class="badge bg-secondary">{{ leads.CLOSED.length }}</span>
               </h5>
             </div>
-            <div class="pipeline-body">
+            <div
+              class="pipeline-body"
+              @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.CLOSED)"
+              @dragleave="handleDragLeave"
+              @drop.prevent="handleDrop($event, PIPELINE_STAGES.CLOSED)"
+              :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.CLOSED }"
+            >
               <div
                 v-for="lead in leads.CLOSED"
                 :key="lead.id"
@@ -2281,8 +3133,10 @@ export default {
                   'metric-type-success': lead.status === LEAD_STATUS.INTERESTED || lead.status === LEAD_STATUS.SUCCESS,
                   'metric-type-error': lead.status === LEAD_STATUS.REJECTED,
                   'metric-type-warning': lead.status === LEAD_STATUS.MAYBE_LATER,
+                  'not-draggable': true, // CLOSED is always read-only
                 }"
-                @click="openLeadDetails(lead)"
+                :draggable="false"
+                @click.stop="openLeadDetails(lead, $event)"
               >
                 <div class="lead-card-header">
                   <div
@@ -2331,9 +3185,10 @@ export default {
                         'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent',
                         'bg-secondary': lead.source === 'manual',
                       }"
-                      :title="lead.source === 'manual' ? $t('leadPipeline.source.manual') : $t('leadPipeline.source.publicSite')"
+                      :title="getSourceLabel(lead.source)"
                     >
                       <i :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"></i>
+                      {{ getSourceLabel(lead.source) }}
                     </span>
                   </div>
                   <div class="lead-info-row" v-if="lead.phone || lead.company">
@@ -2501,10 +3356,26 @@ export default {
               </button>
               <button
                 class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                @click="showAnalytics = true"
+                :disabled="loading"
+              >
+                <i class="bi bi-graph-up-arrow me-1"></i>{{ $t('leadPipeline.analytics.title') || 'Analytics & Insights' }}
+              </button>
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
                 @click="exportLeadsToCSV"
                 :disabled="loading"
               >
                 <i class="bi bi-download me-1"></i>{{ $t('leadPipeline.exportCSV') || 'Export to CSV' }}
+              </button>
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                @click="refreshLeads"
+                :disabled="loading"
+              >
+                <i class="bi bi-arrow-clockwise me-1" :class="{ 'spinning': loading }"></i>
+                <span v-if="!loading">{{ $t('leadPipeline.refresh') || 'Refresh' }}</span>
+                <span v-else>{{ $t('leadPipeline.refreshing') || 'Refreshing...' }}</span>
               </button>
             </div>
           </div>
@@ -2528,12 +3399,22 @@ export default {
                     <span class="badge bg-primary">{{ leads.NEW?.length || 0 }}</span>
                   </h5>
                 </div>
-                <div class="pipeline-body">
+                <div
+                  class="pipeline-body"
+                  @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.NEW)"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop($event, PIPELINE_STAGES.NEW)"
+                  :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.NEW }"
+                >
                   <div
                     v-for="lead in leads.NEW"
                     :key="lead.id"
                     class="modern-lead-card metric-type-primary"
-                    @click="openLeadDetails(lead)"
+                    :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                    :draggable="PIPELINE_RULES.canDrag(lead)"
+                    @dragstart="handleDragStart($event, lead)"
+                    @dragend="handleDragEnd"
+                    @click.stop="openLeadDetails(lead, $event)"
                   >
                     <div class="lead-card-header">
                       <div class="lead-icon-container icon-primary">
@@ -2576,12 +3457,17 @@ export default {
                           <span class="lead-info-text">{{ lead.email }}</span>
                         </div>
                         <span
-                          class="badge lead-source-badge-mini bg-secondary"
-                          :title="lead.source === 'publicSite' ? 'Sitio Público' : 'Manual'"
+                          class="badge lead-source-badge-mini"
+                          :class="{
+                            'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent' || lead.source === 'publicSite',
+                            'bg-secondary': lead.source === 'manual',
+                          }"
+                          :title="getSourceLabel(lead.source)"
                         >
                           <i
-                            :class="lead.source === 'publicSite' ? 'bi bi-globe' : 'bi bi-person-plus'"
+                            :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"
                           ></i>
+                          {{ getSourceLabel(lead.source) }}
                         </span>
                       </div>
                       <div class="lead-info-row">
@@ -2615,12 +3501,22 @@ export default {
                     <span class="badge bg-warning">{{ leads.IN_CONTACT?.length || 0 }}</span>
                   </h5>
                 </div>
-                <div class="pipeline-body">
+                <div
+                  class="pipeline-body"
+                  @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.IN_CONTACT)"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop($event, PIPELINE_STAGES.IN_CONTACT)"
+                  :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_CONTACT }"
+                >
                   <div
                     v-for="lead in leads.IN_CONTACT"
                     :key="lead.id"
                     class="modern-lead-card metric-type-warning"
-                    @click="openLeadDetails(lead)"
+                    :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                    :draggable="PIPELINE_RULES.canDrag(lead)"
+                    @dragstart="handleDragStart($event, lead)"
+                    @dragend="handleDragEnd"
+                    @click.stop="openLeadDetails(lead, $event)"
                   >
                     <div class="lead-card-header">
                       <div class="lead-icon-container icon-warning">
@@ -2677,12 +3573,17 @@ export default {
                           <span class="lead-info-text">{{ lead.email }}</span>
                         </div>
                         <span
-                          class="badge lead-source-badge-mini bg-secondary"
-                          :title="lead.source === 'publicSite' ? 'Sitio Público' : 'Manual'"
+                          class="badge lead-source-badge-mini"
+                          :class="{
+                            'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent' || lead.source === 'publicSite',
+                            'bg-secondary': lead.source === 'manual',
+                          }"
+                          :title="getSourceLabel(lead.source)"
                         >
                           <i
-                            :class="lead.source === 'publicSite' ? 'bi bi-globe' : 'bi bi-person-plus'"
+                            :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"
                           ></i>
+                          {{ getSourceLabel(lead.source) }}
                         </span>
                       </div>
                       <div class="lead-info-row">
@@ -2716,12 +3617,22 @@ export default {
                     <span class="badge bg-info">{{ leads.WAITLIST?.length || 0 }}</span>
                   </h5>
                 </div>
-                <div class="pipeline-body">
+                <div
+                  class="pipeline-body"
+                  @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.WAITLIST)"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop($event, PIPELINE_STAGES.WAITLIST)"
+                  :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.WAITLIST }"
+                >
                   <div
                     v-for="lead in leads.WAITLIST"
                     :key="lead.id"
                     class="modern-lead-card metric-type-info"
-                    @click="openLeadDetails(lead)"
+                    :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                    :draggable="PIPELINE_RULES.canDrag(lead)"
+                    @dragstart="handleDragStart($event, lead)"
+                    @dragend="handleDragEnd"
+                    @click.stop="openLeadDetails(lead, $event)"
                   >
                     <div class="lead-card-header">
                       <div class="lead-icon-container icon-info">
@@ -2764,12 +3675,17 @@ export default {
                           <span class="lead-info-text">{{ lead.email }}</span>
                         </div>
                         <span
-                          class="badge lead-source-badge-mini bg-secondary"
-                          :title="lead.source === 'publicSite' ? 'Sitio Público' : 'Manual'"
+                          class="badge lead-source-badge-mini"
+                          :class="{
+                            'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent' || lead.source === 'publicSite',
+                            'bg-secondary': lead.source === 'manual',
+                          }"
+                          :title="getSourceLabel(lead.source)"
                         >
                           <i
-                            :class="lead.source === 'publicSite' ? 'bi bi-globe' : 'bi bi-person-plus'"
+                            :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"
                           ></i>
+                          {{ getSourceLabel(lead.source) }}
                         </span>
                       </div>
                       <div class="lead-info-row">
@@ -2803,12 +3719,22 @@ export default {
                     <span class="badge bg-success">{{ leads.IN_DEAL?.length || 0 }}</span>
                   </h5>
                 </div>
-                <div class="pipeline-body">
+                <div
+                  class="pipeline-body"
+                  @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.IN_DEAL)"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop($event, PIPELINE_STAGES.IN_DEAL)"
+                  :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_DEAL }"
+                >
                   <div
                     v-for="lead in leads.IN_DEAL"
                     :key="lead.id"
                     class="modern-lead-card metric-type-success"
-                    @click="openLeadDetails(lead)"
+                    :class="{ 'draggable': PIPELINE_RULES.canDrag(lead), 'not-draggable': !PIPELINE_RULES.canDrag(lead) }"
+                    :draggable="PIPELINE_RULES.canDrag(lead)"
+                    @dragstart="handleDragStart($event, lead)"
+                    @dragend="handleDragEnd"
+                    @click.stop="openLeadDetails(lead, $event)"
                   >
                     <div class="lead-card-header">
                       <div class="lead-icon-container icon-success">
@@ -2865,12 +3791,17 @@ export default {
                           <span class="lead-info-text">{{ lead.email }}</span>
                         </div>
                         <span
-                          class="badge lead-source-badge-mini bg-secondary"
-                          :title="lead.source === 'publicSite' ? 'Sitio Público' : 'Manual'"
+                          class="badge lead-source-badge-mini"
+                          :class="{
+                            'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent' || lead.source === 'publicSite',
+                            'bg-secondary': lead.source === 'manual',
+                          }"
+                          :title="getSourceLabel(lead.source)"
                         >
                           <i
-                            :class="lead.source === 'publicSite' ? 'bi bi-globe' : 'bi bi-person-plus'"
+                            :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"
                           ></i>
+                          {{ getSourceLabel(lead.source) }}
                         </span>
                       </div>
                       <div class="lead-info-row">
@@ -2904,12 +3835,19 @@ export default {
                     <span class="badge bg-secondary">{{ leads.CLOSED?.length || 0 }}</span>
                   </h5>
                 </div>
-                <div class="pipeline-body">
+                <div
+                  class="pipeline-body"
+                  @dragover.prevent="handleDragOver($event, PIPELINE_STAGES.CLOSED)"
+                  @dragleave="handleDragLeave"
+                  @drop.prevent="handleDrop($event, PIPELINE_STAGES.CLOSED)"
+                  :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.CLOSED }"
+                >
                   <div
                     v-for="lead in leads.CLOSED"
                     :key="lead.id"
-                    :class="`modern-lead-card metric-type-${lead.status === LEAD_STATUS.SUCCESS ? 'success' : 'danger'}`"
-                    @click="openLeadDetails(lead)"
+                    :class="`modern-lead-card metric-type-${lead.status === LEAD_STATUS.SUCCESS ? 'success' : 'danger'} not-draggable`"
+                    :draggable="false"
+                    @click.stop="openLeadDetails(lead, $event)"
                   >
                     <div class="lead-card-header">
                       <div
@@ -2947,12 +3885,17 @@ export default {
                           <span class="lead-info-text">{{ lead.email }}</span>
                         </div>
                         <span
-                          class="badge lead-source-badge-mini bg-secondary"
-                          :title="lead.source === 'publicSite' ? 'Sitio Público' : 'Manual'"
+                          class="badge lead-source-badge-mini"
+                          :class="{
+                            'bg-info': lead.source === 'contact-form' || lead.source === 'exit-intent' || lead.source === 'publicSite',
+                            'bg-secondary': lead.source === 'manual',
+                          }"
+                          :title="getSourceLabel(lead.source)"
                         >
                           <i
-                            :class="lead.source === 'publicSite' ? 'bi bi-globe' : 'bi bi-person-plus'"
+                            :class="lead.source === 'manual' ? 'bi bi-person-plus' : 'bi bi-globe'"
                           ></i>
+                          {{ getSourceLabel(lead.source) }}
                         </span>
                       </div>
                       <div class="lead-info-row">
@@ -3215,15 +4158,11 @@ export default {
                         <span
                           class="badge"
                           :class="{
-                            'bg-info': selectedLead.source === 'contact-form' || selectedLead.source === 'exit-intent',
+                            'bg-info': selectedLead.source === 'contact-form' || selectedLead.source === 'exit-intent' || selectedLead.source === 'publicSite',
                             'bg-secondary': selectedLead.source === 'manual',
                           }"
                         >
-                          {{
-                            selectedLead.source === 'manual'
-                              ? $t('leadPipeline.source.manual')
-                              : $t('leadPipeline.source.publicSite')
-                          }}
+                          {{ getSourceLabel(selectedLead.source) }}
                         </span>
                       </div>
                     </div>
@@ -3253,6 +4192,8 @@ export default {
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
                       @click="showAddContact = !showAddContact"
+                      :disabled="selectedLead && !PIPELINE_RULES.canAddContact(selectedLead)"
+                      :title="selectedLead && !PIPELINE_RULES.canAddContact(selectedLead) ? 'Cannot add contacts to closed leads' : ''"
                     >
                       <i class="bi bi-plus-lg"></i> {{ $t('leadPipeline.addContact') || 'Add Contact' }}
                     </button>
@@ -3299,7 +4240,7 @@ export default {
                           type="button"
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click.stop="saveContact"
-                          :disabled="loading"
+                          :disabled="loading || (selectedLead && !PIPELINE_RULES.canAddContact(selectedLead))"
                         >
                           <i class="bi bi-save"></i> {{ $t('leadPipeline.saveContact') || 'Save Contact' }}
                         </button>
@@ -3462,6 +4403,306 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Analytics & Insights Modal -->
+  <div
+    v-if="showAnalytics"
+    class="modal fade show analytics-modal"
+    style="display: block; background: rgba(0, 0, 0, 0.5);"
+    tabindex="-1"
+    @click.self="showAnalytics = false"
+  >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 centered active-name">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-graph-up-arrow me-2"></i>
+            {{ $t('leadPipeline.analytics.title') || 'Pipeline Analytics & Insights' }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="showAnalytics = false"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- AI-Powered Insights Section -->
+          <div v-if="pipelineInsights.length > 0" class="insights-section mb-4">
+            <h6 class="section-title mb-3">
+              <i class="bi bi-lightbulb-fill me-2"></i>
+              {{ $t('leadPipeline.analytics.insights') || 'Smart Insights & Recommendations' }}
+            </h6>
+            <div class="row g-3">
+              <div
+                v-for="(insight, index) in pipelineInsights"
+                :key="index"
+                class="col-12 col-md-6"
+              >
+                <div
+                  class="insight-card"
+                  :class="`insight-${insight.type}`"
+                >
+                  <div class="insight-header">
+                    <i :class="`bi ${insight.icon} insight-icon`"></i>
+                    <span class="insight-title">{{ insight.title }}</span>
+                  </div>
+                  <p class="insight-message">{{ insight.message }}</p>
+                  <div class="insight-action">
+                    <i class="bi bi-arrow-right-circle me-1"></i>
+                    {{ insight.action }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversion Funnel -->
+          <div class="analytics-section mb-4">
+            <h6 class="section-title mb-3">
+              <i class="bi bi-funnel-fill me-2"></i>
+              {{ $t('leadPipeline.analytics.funnel') || 'Conversion Funnel' }}
+            </h6>
+            <div class="funnel-container">
+              <div class="funnel-stage" :style="{ width: '100%' }">
+                <div class="funnel-bar funnel-new">
+                  <span class="funnel-label">{{ $t('leadPipeline.newLeads') }} ({{ pipelineStats.totalLeads }})</span>
+                  <span class="funnel-percentage">100%</span>
+                </div>
+              </div>
+              <div class="funnel-stage" :style="{ width: pipelineStats.totalLeads > 0 ? Math.max(((pipelineStats.totalLeads - pipelineStats.stageDistribution.NEW) / pipelineStats.totalLeads * 100), 30) + '%' : '30%' }">
+                <div class="funnel-bar funnel-contact">
+                  <span class="funnel-label">{{ $t('leadPipeline.analytics.contacted') || 'Contacted' }} ({{ pipelineStats.totalLeads - pipelineStats.stageDistribution.NEW }})</span>
+                  <span class="funnel-percentage">{{ pipelineStats.newToContactRate }}%</span>
+                </div>
+              </div>
+              <div class="funnel-stage" :style="{ width: pipelineStats.totalLeads > 0 ? Math.max(((pipelineStats.stageDistribution.IN_DEAL + pipelineStats.stageDistribution.CLOSED) / pipelineStats.totalLeads * 100), 25) + '%' : '25%' }">
+                <div class="funnel-bar funnel-deal">
+                  <span class="funnel-label">{{ $t('leadPipeline.inDeal') }} ({{ pipelineStats.stageDistribution.IN_DEAL + pipelineStats.stageDistribution.CLOSED }})</span>
+                  <span class="funnel-percentage">{{ ((pipelineStats.stageDistribution.IN_DEAL + pipelineStats.stageDistribution.CLOSED) / pipelineStats.totalLeads * 100).toFixed(1) }}%</span>
+                </div>
+              </div>
+              <div class="funnel-stage" :style="{ width: pipelineStats.totalLeads > 0 ? Math.max((pipelineStats.successLeads / pipelineStats.totalLeads * 100), 20) + '%' : '20%' }">
+                <div class="funnel-bar funnel-success">
+                  <span class="funnel-label">{{ $t('leadPipeline.analytics.won') || 'Won' }} ({{ pipelineStats.successLeads }})</span>
+                  <span class="funnel-percentage">{{ pipelineStats.conversionRate }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Key Metrics Grid -->
+          <div class="analytics-section mb-4">
+            <h6 class="section-title mb-3">
+              <i class="bi bi-speedometer2 me-2"></i>
+              {{ $t('leadPipeline.analytics.keyMetrics') || 'Key Performance Indicators' }}
+            </h6>
+            <div class="row g-3">
+              <!-- Total Pipeline Value -->
+              <div class="col-6 col-md-3">
+                <div class="metric-gauge">
+                  <div class="gauge-container">
+                    <svg class="gauge-svg" viewBox="0 0 100 50">
+                      <path
+                        class="gauge-bg"
+                        d="M 10 45 A 40 40 0 0 1 90 45"
+                        fill="none"
+                        stroke="#e0e0e0"
+                        stroke-width="8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        class="gauge-fill"
+                        d="M 10 45 A 40 40 0 0 1 90 45"
+                        fill="none"
+                        stroke="#00c2cb"
+                        stroke-width="8"
+                        stroke-linecap="round"
+                        :stroke-dasharray="`${(pipelineStats.activeLeads / pipelineStats.totalLeads * 126)} 126`"
+                      />
+                    </svg>
+                    <div class="gauge-value">{{ pipelineStats.activeLeads }}</div>
+                  </div>
+                  <div class="gauge-label">{{ $t('leadPipeline.dashboard.activeLeads') }}</div>
+                </div>
+              </div>
+
+              <!-- Conversion Rate -->
+              <div class="col-6 col-md-3">
+                <div class="metric-gauge">
+                  <div class="circular-progress" :style="{ '--progress': pipelineStats.conversionRate }">
+                    <div class="progress-value">{{ pipelineStats.conversionRate }}%</div>
+                  </div>
+                  <div class="gauge-label">{{ $t('leadPipeline.analytics.conversionRate') }}</div>
+                </div>
+              </div>
+
+              <!-- Average Age -->
+              <div class="col-6 col-md-3">
+                <div class="metric-gauge">
+                  <div class="gauge-container">
+                    <div class="gauge-icon">
+                      <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="gauge-value-large">{{ pipelineStats.avgAge }}</div>
+                  </div>
+                  <div class="gauge-label">{{ $t('leadPipeline.analytics.avgDays') || 'Avg Days' }}</div>
+                </div>
+              </div>
+
+              <!-- Success Leads -->
+              <div class="col-6 col-md-3">
+                <div class="metric-gauge">
+                  <div class="gauge-container">
+                    <div class="gauge-icon success">
+                      <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="gauge-value-large">{{ pipelineStats.successLeads }}</div>
+                  </div>
+                  <div class="gauge-label">{{ $t('leadPipeline.analytics.successfulSales') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage Distribution Bars -->
+          <div class="analytics-section mb-4">
+            <h6 class="section-title mb-3">
+              <i class="bi bi-bar-chart-fill me-2"></i>
+              {{ $t('leadPipeline.analytics.stageDistribution') || 'Stage Distribution' }}
+            </h6>
+            <div class="distribution-bars">
+              <div class="distribution-item">
+                <div class="distribution-header">
+                  <span class="distribution-label">
+                    <i class="bi bi-inbox-fill me-2 text-primary"></i>
+                    {{ $t('leadPipeline.newLeads') }}
+                  </span>
+                  <span class="distribution-value">{{ pipelineStats.stageDistribution.NEW }}</span>
+                </div>
+                <div class="distribution-bar-container">
+                  <div
+                    class="distribution-bar bg-primary"
+                    :style="{ width: pipelineStats.totalLeads > 0 ? (pipelineStats.stageDistribution.NEW / pipelineStats.totalLeads * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="distribution-item">
+                <div class="distribution-header">
+                  <span class="distribution-label">
+                    <i class="bi bi-chat-dots-fill me-2 text-warning"></i>
+                    {{ $t('leadPipeline.inContact') }}
+                  </span>
+                  <span class="distribution-value">{{ pipelineStats.stageDistribution.IN_CONTACT }}</span>
+                </div>
+                <div class="distribution-bar-container">
+                  <div
+                    class="distribution-bar bg-warning"
+                    :style="{ width: pipelineStats.totalLeads > 0 ? (pipelineStats.stageDistribution.IN_CONTACT / pipelineStats.totalLeads * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="distribution-item">
+                <div class="distribution-header">
+                  <span class="distribution-label">
+                    <i class="bi bi-pause-circle-fill me-2 text-info"></i>
+                    {{ $t('leadPipeline.waitlist') }}
+                  </span>
+                  <span class="distribution-value">{{ pipelineStats.stageDistribution.WAITLIST }}</span>
+                </div>
+                <div class="distribution-bar-container">
+                  <div
+                    class="distribution-bar bg-info"
+                    :style="{ width: pipelineStats.totalLeads > 0 ? (pipelineStats.stageDistribution.WAITLIST / pipelineStats.totalLeads * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="distribution-item">
+                <div class="distribution-header">
+                  <span class="distribution-label">
+                    <i class="bi bi-handshake-fill me-2 text-success"></i>
+                    {{ $t('leadPipeline.inDeal') }}
+                  </span>
+                  <span class="distribution-value">{{ pipelineStats.stageDistribution.IN_DEAL }}</span>
+                </div>
+                <div class="distribution-bar-container">
+                  <div
+                    class="distribution-bar bg-success"
+                    :style="{ width: pipelineStats.totalLeads > 0 ? (pipelineStats.stageDistribution.IN_DEAL / pipelineStats.totalLeads * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="distribution-item">
+                <div class="distribution-header">
+                  <span class="distribution-label">
+                    <i class="bi bi-check-circle-fill me-2 text-secondary"></i>
+                    {{ $t('leadPipeline.closed') }}
+                  </span>
+                  <span class="distribution-value">{{ pipelineStats.stageDistribution.CLOSED }}</span>
+                </div>
+                <div class="distribution-bar-container">
+                  <div
+                    class="distribution-bar bg-secondary"
+                    :style="{ width: pipelineStats.totalLeads > 0 ? (pipelineStats.stageDistribution.CLOSED / pipelineStats.totalLeads * 100) + '%' : '0%' }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lead Age Distribution -->
+          <div class="analytics-section">
+            <h6 class="section-title mb-3">
+              <i class="bi bi-hourglass-split me-2"></i>
+              {{ $t('leadPipeline.analytics.ageDistribution') || 'Lead Age Distribution' }}
+            </h6>
+            <div class="row g-3">
+              <div class="col-4">
+                <div class="age-card age-green">
+                  <div class="age-icon">
+                    <i class="bi bi-circle-fill"></i>
+                  </div>
+                  <div class="age-value">{{ pipelineStats.timeDistribution.green }}</div>
+                  <div class="age-label">{{ $t('leadPipeline.timeIndicator.green') }}</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="age-card age-yellow">
+                  <div class="age-icon">
+                    <i class="bi bi-circle-fill"></i>
+                  </div>
+                  <div class="age-value">{{ pipelineStats.timeDistribution.yellow }}</div>
+                  <div class="age-label">{{ $t('leadPipeline.timeIndicator.yellow') }}</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="age-card age-red">
+                  <div class="age-icon">
+                    <i class="bi bi-circle-fill"></i>
+                  </div>
+                  <div class="age-value">{{ pipelineStats.timeDistribution.red }}</div>
+                  <div class="age-label">{{ $t('leadPipeline.timeIndicator.red') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="showAnalytics = false"
+          >
+            {{ $t('close') }}
+          </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -3469,6 +4710,477 @@ export default {
 .lead-pipeline-container {
   padding: 1rem;
   position: relative;
+}
+
+.pipeline-dashboard-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 251, 252, 0.95) 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  margin-bottom: 2rem;
+}
+
+.pipeline-dashboard-section h4 {
+  color: #004aad;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pipeline-dashboard-section h4 i {
+  color: #00c2cb;
+}
+
+/* Analytics Modal Styles */
+.analytics-modal .modal-dialog {
+  max-width: 1200px;
+}
+
+.analytics-modal .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.analytics-modal .modal-header {
+  background: linear-gradient(135deg, #004aad 0%, #00c2cb 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1rem 1.25rem;
+  border-bottom: none;
+}
+
+.analytics-modal .modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.analytics-modal .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.analytics-modal .modal-body {
+  padding: 1.5rem 1.25rem;
+}
+
+.analytics-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #004aad;
+  border-bottom: 2px solid #00c2cb;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Insights Cards */
+.insights-section {
+  background: linear-gradient(135deg, rgba(0, 194, 203, 0.05) 0%, rgba(0, 74, 173, 0.05) 100%);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.insight-card {
+  background: white;
+  border-radius: 10px;
+  padding: 0.875rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-left: 3px solid;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.insight-critical {
+  border-left-color: #dc3545;
+}
+
+.insight-warning {
+  border-left-color: #ffc107;
+}
+
+.insight-success {
+  border-left-color: #28a745;
+}
+
+.insight-info {
+  border-left-color: #17a2b8;
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.insight-icon {
+  font-size: 1.25rem;
+}
+
+.insight-critical .insight-icon {
+  color: #dc3545;
+}
+
+.insight-warning .insight-icon {
+  color: #ffc107;
+}
+
+.insight-success .insight-icon {
+  color: #28a745;
+}
+
+.insight-info .insight-icon {
+  color: #17a2b8;
+}
+
+.insight-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #212529;
+}
+
+.insight-message {
+  margin: 0.4rem 0;
+  color: #6c757d;
+  line-height: 1.5;
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.insight-action {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #004aad;
+}
+
+/* Funnel Chart */
+.funnel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.05) 0%, rgba(0, 194, 203, 0.05) 100%);
+  border-radius: 10px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.funnel-stage {
+  transition: all 0.3s ease;
+  min-width: 40%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.funnel-bar {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  width: 100%;
+  min-height: 48px;
+}
+
+.funnel-bar:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.funnel-new {
+  background: linear-gradient(135deg, #004aad 0%, #0066cc 100%);
+}
+
+.funnel-contact {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+}
+
+.funnel-deal {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.funnel-success {
+  background: linear-gradient(135deg, #00c2cb 0%, #00d4dd 100%);
+}
+
+.funnel-label {
+  font-size: 0.9rem;
+}
+
+.funnel-percentage {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Metric Gauges */
+.metric-gauge {
+  text-align: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-gauge:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.gauge-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-svg {
+  width: 100%;
+  height: auto;
+  max-width: 120px;
+  margin: 0 auto;
+  display: block;
+}
+
+.gauge-fill {
+  transition: stroke-dasharray 1s ease;
+}
+
+.gauge-value {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #004aad;
+}
+
+.gauge-value-large {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #004aad;
+  margin-top: 0.4rem;
+}
+
+.gauge-icon {
+  font-size: 2rem;
+  color: #00c2cb;
+  margin-bottom: 0.4rem;
+}
+
+.gauge-icon.success {
+  color: #28a745;
+}
+
+.gauge-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* Circular Progress */
+.circular-progress {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #00c2cb calc(var(--progress) * 1%),
+    #e0e0e0 0
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  position: relative;
+}
+
+.circular-progress::before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+}
+
+.progress-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #004aad;
+}
+
+/* Distribution Bars */
+.distribution-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.distribution-item {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.distribution-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.distribution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.distribution-label {
+  font-weight: 600;
+  color: #212529;
+  display: flex;
+  align-items: center;
+}
+
+.distribution-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #004aad;
+}
+
+.distribution-bar-container {
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.distribution-bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Age Cards */
+.age-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-top: 3px solid;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.age-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.age-green {
+  border-top-color: #28a745;
+}
+
+.age-yellow {
+  border-top-color: #ffc107;
+}
+
+.age-red {
+  border-top-color: #dc3545;
+}
+
+.age-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.age-green .age-icon {
+  color: #28a745;
+}
+
+.age-yellow .age-icon {
+  color: #ffc107;
+}
+
+.age-red .age-icon {
+  color: #dc3545;
+}
+
+.age-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #212529;
+  margin: 0.4rem 0;
+}
+
+.age-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .analytics-modal .modal-dialog {
+    max-width: 95%;
+    margin: 0.5rem;
+  }
+
+  .funnel-bar {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .funnel-label {
+    font-size: 0.8rem;
+  }
+
+  .gauge-value-large {
+    font-size: 1.5rem;
+  }
+
+  .age-value {
+    font-size: 2rem;
+  }
 }
 
 .pipeline-carousel-wrapper {
@@ -3643,6 +5355,46 @@ export default {
 
 .pipeline-body::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* Drag and Drop Styles */
+.pipeline-body.drag-over {
+  background-color: rgba(0, 194, 203, 0.1);
+  border: 2px dashed rgba(0, 194, 203, 0.5);
+  border-radius: 0.5rem;
+}
+
+.modern-lead-card.draggable {
+  cursor: grab;
+}
+
+.modern-lead-card.draggable:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+
+.modern-lead-card.not-draggable {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.modern-lead-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+/* Spinning refresh icon */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bi-arrow-clockwise.spinning {
+  animation: spin 1s linear infinite;
 }
 
 /* Ensure all pipeline columns have equal height */
