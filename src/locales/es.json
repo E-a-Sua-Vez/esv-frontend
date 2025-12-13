@@ -130,7 +130,10 @@
   "services": {
     "types": {
       "STANDARD": "Standard",
-      "SELECTABLE": "Seleccionable"
+      "SELECTABLE": "Seleccionable",
+      "SERVICE": "Servicio",
+      "SUPPLIER": "Proveedor",
+      "HEALTH_AGREEMENT": "Convenio Salud"
     }
   },
   "products": {
@@ -4157,10 +4160,14 @@
     "exportCSV": "Exportar a CSV",
     "noLeadsToExport": "No hay leads para exportar",
     "exportError": "Error al exportar leads",
+    "refresh": "Actualizar",
+    "refreshing": "Actualizando...",
     "source": {
       "label": "Origen",
       "publicSite": "Sitio Público",
-      "manual": "Manual"
+      "manual": "Manual",
+      "contact-form": "Formulario de Contacto",
+      "exit-intent": "Exit Intent"
     },
     "validate": {
       "name": "El nombre es requerido",
@@ -4174,6 +4181,69 @@
         "read": "Leer Leads",
         "edit": "Editar Lead",
         "update": "Actualizar Lead"
+      }
+    },
+    "dashboard": {
+      "title": "Estadísticas del Pipeline",
+      "totalLeads": "Total de Leads",
+      "activeLeads": "Leads Activos",
+      "successLeads": "Ventas Exitosas",
+      "conversionRate": "Tasa de Conversión",
+      "overallConversion": "Conversión General",
+      "newToContact": "Nuevo → Contacto",
+      "contactToDeal": "Contacto → Negocio",
+      "avgAge": "Edad Promedio",
+      "days": "días",
+      "rejected": "Rechazados"
+    },
+    "analytics": {
+      "title": "Analítica e Insights",
+      "insights": "Insights Inteligentes y Recomendaciones",
+      "funnel": "Embudo de Conversión",
+      "keyMetrics": "Indicadores Clave de Rendimiento",
+      "stageDistribution": "Distribución por Etapa",
+      "ageDistribution": "Distribución por Antigüedad",
+      "conversionRate": "Tasa de Conversión",
+      "avgDays": "Días Promedio",
+      "successfulSales": "Ventas Exitosas",
+      "won": "Ganados",
+      "contacted": "Contactados"
+    },
+    "insights": {
+      "staleLead": {
+        "title": "Leads Antiguos Detectados",
+        "message": "Tienes {count} leads con más de 3 meses. Estos leads tienen alto riesgo de enfriarse.",
+        "action": "Prioriza el contacto o archívalos"
+      },
+      "bottleneck": {
+        "title": "Cuello de Botella en Etapa NUEVO",
+        "message": "{count} leads esperan primer contacto. Esto puede indicar un problema de capacidad.",
+        "action": "Aumenta la velocidad de contacto"
+      },
+      "lowConversion": {
+        "title": "Tasa de Conversión Baja",
+        "message": "Tu tasa de conversión es {rate}%. El promedio de la industria es 20-30%.",
+        "action": "Revisa criterios de calificación y proceso de ventas"
+      },
+      "highConversion": {
+        "title": "Excelente Tasa de Conversión",
+        "message": "Tu tasa de conversión de {rate}% está por encima del promedio de la industria!",
+        "action": "Documenta lo que está funcionando para mantener consistencia"
+      },
+      "noDeals": {
+        "title": "Sin Negocios Activos",
+        "message": "Tienes {count} leads en contacto pero ninguno en negociación.",
+        "action": "Enfócate en calificar y mover leads interesados hacia adelante"
+      },
+      "waitlist": {
+        "title": "Lista de Espera Grande",
+        "message": "{count} leads están en lista de espera. No dejes que se enfríen.",
+        "action": "Configura una campaña de nutrición automatizada"
+      },
+      "lowWinRate": {
+        "title": "Tasa de Cierre Baja",
+        "message": "Tu tasa de cierre es {rate}%. Considera mejorar la calificación de leads.",
+        "action": "Enfócate en leads de mayor calidad"
       }
     }
   },

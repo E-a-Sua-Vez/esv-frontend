@@ -130,7 +130,10 @@
   "services": {
     "types": {
       "STANDARD": "Standard",
-      "SELECTABLE": "Selectable"
+      "SELECTABLE": "Selectable",
+      "SERVICE": "Service",
+      "SUPPLIER": "Supplier",
+      "HEALTH_AGREEMENT": "Health Agreement"
     }
   },
   "products": {
@@ -4135,12 +4138,79 @@
     "source": {
       "label": "Source",
       "publicSite": "Public Site",
-      "manual": "Manual"
+      "manual": "Manual",
+      "contact-form": "Contact Form",
+      "exit-intent": "Exit Intent"
     },
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
     "validate": {
       "name": "Name is required",
       "email": "Email is required",
       "emailFormat": "Invalid email format"
+    },
+    "dashboard": {
+      "title": "Pipeline Statistics",
+      "totalLeads": "Total Leads",
+      "activeLeads": "Active Leads",
+      "successLeads": "Successful Sales",
+      "conversionRate": "Conversion Rate",
+      "overallConversion": "Overall Conversion",
+      "newToContact": "New → Contact",
+      "contactToDeal": "Contact → Deal",
+      "avgAge": "Average Age",
+      "days": "days",
+      "rejected": "Rejected"
+    },
+    "analytics": {
+      "title": "Analytics & Insights",
+      "insights": "Smart Insights & Recommendations",
+      "funnel": "Conversion Funnel",
+      "keyMetrics": "Key Performance Indicators",
+      "stageDistribution": "Stage Distribution",
+      "ageDistribution": "Lead Age Distribution",
+      "conversionRate": "Conversion Rate",
+      "avgDays": "Avg Days",
+      "successfulSales": "Successful Sales",
+      "won": "Won",
+      "contacted": "Contacted"
+    },
+    "insights": {
+      "staleLead": {
+        "title": "Stale Leads Detected",
+        "message": "You have {count} leads older than 3 months. These leads are at high risk of becoming cold.",
+        "action": "Prioritize contact or archive them"
+      },
+      "bottleneck": {
+        "title": "Bottleneck at NEW Stage",
+        "message": "{count} leads are waiting for first contact. This may indicate a capacity issue.",
+        "action": "Increase contact velocity"
+      },
+      "lowConversion": {
+        "title": "Low Conversion Rate",
+        "message": "Your conversion rate is {rate}%. Industry average is 20-30%.",
+        "action": "Review qualification criteria and sales process"
+      },
+      "highConversion": {
+        "title": "Excellent Conversion Rate",
+        "message": "Your {rate}% conversion rate is above industry average!",
+        "action": "Document what's working for consistency"
+      },
+      "noDeals": {
+        "title": "No Active Deals",
+        "message": "You have {count} leads in contact but none in negotiation.",
+        "action": "Focus on qualifying and moving interested leads forward"
+      },
+      "waitlist": {
+        "title": "Large Waitlist",
+        "message": "{count} leads are in waitlist. Don't let them go cold.",
+        "action": "Set up automated nurturing campaign"
+      },
+      "lowWinRate": {
+        "title": "Low Win Rate",
+        "message": "Your win rate is {rate}%. Consider improving lead qualification.",
+        "action": "Focus on higher quality leads"
+      }
     }
   },
   "permissions": {

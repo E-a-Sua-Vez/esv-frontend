@@ -157,13 +157,16 @@ export const getLeadTransitions = async leadId => {
       );
       allEvents = allEventsResponse.data?.data || [];
     } catch (allEventsError) {
-      // Network errors or timeouts - fail silently, don't try fallback
-      if (allEventsError.code === 'ERR_NETWORK' || allEventsError.code === 'ECONNABORTED') {
-        // Event store not available - return empty array silently
+      // Check if it's a 404 (resource not found) - this is expected for leads without events
+      const is404 = allEventsError.response?.status === 404 || allEventsError.status === 404;
+
+      // Network errors, timeouts, or 404s - fail silently, don't try fallback
+      if (allEventsError.code === 'ERR_NETWORK' || allEventsError.code === 'ECONNABORTED' || is404) {
+        // Event store not available or no events found - return empty array silently
         return [];
       }
 
-      // For other errors, try fallback
+      // For other errors (like 500), try fallback
       try {
         const statusChangedResponse = await requestEvent.get(
           `/events/aggregate/${leadId}?type=ett.lead.1.event.lead.status-changed`,
@@ -171,7 +174,13 @@ export const getLeadTransitions = async leadId => {
         );
         allEvents = statusChangedResponse.data?.data || [];
       } catch (statusError) {
-        // Fail silently - event store not available
+        // Check if fallback also returns 404
+        const isFallback404 = statusError.response?.status === 404 || statusError.status === 404;
+        if (isFallback404 || statusError.code === 'ERR_NETWORK' || statusError.code === 'ECONNABORTED') {
+          // Fail silently - event store not available or no events found
+          return [];
+        }
+        // For other errors, also fail silently (transitions are optional)
         return [];
       }
     }
@@ -255,8 +264,21 @@ export const getLeadTransitions = async leadId => {
 
     return transitions;
   } catch (error) {
-    // Fail silently - transitions are a nice-to-have feature
-    // Don't log errors or break the UI if event store is unavailable
+    // Check if it's a 404 (resource not found) - this is expected for leads without events
+    const is404 = error.response?.status === 404 || error.status === 404;
+    const isNetworkError = error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED';
+
+    // Fail silently for 404s and network errors - transitions are a nice-to-have feature
+    // Don't log errors or break the UI if event store is unavailable or lead has no events
+    if (is404 || isNetworkError) {
+      return [];
+    }
+
+    // For other unexpected errors, also fail silently (transitions are optional)
+    // Only log in development mode for debugging
+    if (import.meta.env.DEV) {
+      console.debug('getLeadTransitions: Error fetching transitions (non-critical):', error.message);
+    }
     return [];
   }
 };

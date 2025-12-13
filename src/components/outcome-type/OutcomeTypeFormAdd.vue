@@ -70,3 +70,4 @@ export default {
   color: var(--rojo-warning);
 }
 </style>
+
