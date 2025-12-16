@@ -156,6 +156,7 @@ export default {
           }
         }
       } catch (error) {
+        console.error(error);
       }
     };
 
@@ -466,6 +467,7 @@ export default {
 
     const handleFiltersToggle = collapsed => {
       // Filters toggle handled by DesktopContentLayout
+      return;
     };
 
     const handleQuickDateSelect = async ({ type, startDate, endDate }) => {
@@ -577,6 +579,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: attentionNumberEvolutionProps } = useBarChart({
       chartData: attentionNumberEvolution,
@@ -614,6 +617,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: attentionDurationEvolutionProps } = useBarChart({
       chartData: attentionDurationEvolution,
@@ -642,6 +646,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: attentionHourDistributionProps } = useBarChart({
       chartData: attentionHourDistribution,
@@ -670,6 +675,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: attentionDayDistributionProps } = useBarChart({
       chartData: attentionDayDistribution,
@@ -688,6 +694,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: attentionQueuesProps } = useBarChart({ chartData: attentionQueues });
 
@@ -706,6 +713,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: attentionFlowProps } = useBarChart({ chartData: attentionFlow });
 
@@ -726,6 +734,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: surveyFlowProps } = useBarChart({ chartData: surveyFlow });
 
@@ -761,6 +770,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({
       chartData: attentionRateDurationEvolution,
@@ -783,6 +793,7 @@ export default {
           ],
         };
       }
+      return null;
     });
     const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
 
@@ -825,6 +836,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: bookingNumberEvolutionProps } = useBarChart({
       chartData: bookingNumberEvolution,
@@ -855,6 +867,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: bookingHourDistributionProps } = useBarChart({
       chartData: bookingHourDistribution,
@@ -885,6 +898,7 @@ export default {
           },
         };
       }
+      return null;
     });
     const { barChartProps: bookingDayDistributionProps } = useBarChart({
       chartData: bookingDayDistribution,

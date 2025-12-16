@@ -3,15 +3,21 @@ import { ref, reactive, onBeforeMount, watch, computed, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router';
 import { getCommerceById } from '../../application/services/commerce';
 import { getActiveModulesByCommerceId } from '../../application/services/module';
-import { getGroupedQueueByCommerceId, getEstimatedWaitTime, getAverageAttentionDuration } from '../../application/services/queue';
+import {
+  getGroupedQueueByCommerceId,
+  getEstimatedWaitTime,
+  getAverageAttentionDuration,
+} from '../../application/services/queue';
 import { getCollaboratorById, updateModule } from '../../application/services/collaborator';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
-import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
+import {
+  updatedAvailableAttentionsByCommerce,
+  updatedProcessingAttentionsByCommerce,
+} from '../../application/firebase';
 import { getQueueByCommerce } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
-import { getProcessingAttentionDetailsByQueue } from '../../application/services/attention';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -214,39 +220,37 @@ export default {
         if (newLength > 0 && newLength !== oldLength) {
           initializeQueueStatus();
           // If listener is already initialized, check status
-          if (attentionsWrapper.value && attentionsWrapper.value.value) {
-            await checkQueueStatus(attentionsWrapper.value);
+          if (attentionsWrapper.value && processingAttentionsWrapper.value) {
+            await checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
           }
         }
       }
     );
 
-    const checkQueueStatus = async attentionsRef => {
+    const checkQueueStatus = async (attentionsRef, processingAttentionsRef) => {
       // Ensure we have queues loaded first
       if (!state.queues || state.queues.length === 0) {
         return;
       }
 
-      // Ensure we have a valid ref with a value
-      if (!attentionsRef) {
-        initializeQueueStatus();
-        return;
-      }
-
-      // Get the value from ref, ensuring it's an array
-      const attentionsArray =
-        attentionsRef.value && Array.isArray(attentionsRef.value) ? attentionsRef.value : [];
-
       // Always initialize all queues to 0 first
       initializeQueueStatus();
 
-      // If no attentions, all queues are already set to 0
-      if (attentionsArray.length === 0) {
-        return;
-      }
+      // Get the value from refs, ensuring they're arrays
+      const attentionsArray =
+        attentionsRef && attentionsRef.value && Array.isArray(attentionsRef.value)
+          ? attentionsRef.value
+          : [];
+      const processingAttentionsArray =
+        processingAttentionsRef &&
+        processingAttentionsRef.value &&
+        Array.isArray(processingAttentionsRef.value)
+          ? processingAttentionsRef.value
+          : [];
 
       try {
-        const filteredAttentionsByQueue = attentionsArray.reduce((acc, attention) => {
+        // Group pending attentions by queue
+        const filteredPendingByQueue = attentionsArray.reduce((acc, attention) => {
           if (attention && attention.queueId) {
             const queueId = attention.queueId;
             if (!acc[queueId]) {
@@ -257,71 +261,95 @@ export default {
           return acc;
         }, {});
 
-        // Update only queues that have attentions
+        // Group processing attentions by queue
+        const filteredProcessingByQueue = processingAttentionsArray.reduce((acc, attention) => {
+          if (attention && attention.queueId) {
+            const queueId = attention.queueId;
+            if (!acc[queueId]) {
+              acc[queueId] = [];
+            }
+            acc[queueId].push(attention);
+          }
+          return acc;
+        }, {});
+
+        // Update all queues
         state.queues.forEach(queue => {
           if (queue && queue.id) {
             // Always update average duration (independent of pending count)
             updateQueueAverageDuration(queue.id);
 
-            if (filteredAttentionsByQueue[queue.id]) {
-              const attentionsCount = filteredAttentionsByQueue[queue.id].length;
-              state.queueStatus[queue.id] = attentionsCount;
+            // Update pending count
+            if (filteredPendingByQueue[queue.id]) {
+              const pendingCount = filteredPendingByQueue[queue.id].length;
+              state.queueStatus[queue.id] = pendingCount;
               // Update estimated time with intelligent estimation
-              updateQueueEstimatedTime(queue.id, attentionsCount);
+              updateQueueEstimatedTime(queue.id, pendingCount);
             } else {
-              // Explicitly set to 0 if no attentions for this queue
+              // Explicitly set to 0 if no pending attentions for this queue
               state.queueStatus[queue.id] = 0;
               updateQueueEstimatedTime(queue.id, 0);
             }
-            // Load processing attentions count for each queue (async, but don't await)
-            getProcessingAttentionDetailsByQueue(queue.id)
-              .then(processingAttentions => {
-                state.queueProcessingStatus[queue.id] = processingAttentions?.length || 0;
-              })
-              .catch(() => {
-                state.queueProcessingStatus[queue.id] = 0;
-              });
+
+            // Update processing count from Firebase
+            if (filteredProcessingByQueue[queue.id]) {
+              state.queueProcessingStatus[queue.id] = filteredProcessingByQueue[queue.id].length;
+            } else {
+              // Explicitly set to 0 if no processing attentions for this queue
+              state.queueProcessingStatus[queue.id] = 0;
+            }
           }
         });
       } catch (error) {
+        console.error('Error checking queue status:', error);
         initializeQueueStatus();
       }
     };
 
-    // Get attentions ref - this is a reactive ref that Firebase will update
-    // It always starts as an empty array and gets populated by Firebase snapshot
-    // Use a wrapper ref so we can update it when commerce changes
+    // Get attentions refs - these are reactive refs that Firebase will update
+    // They always start as empty arrays and get populated by Firebase snapshots
+    // Use wrapper refs so we can update them when commerce changes
     const attentionsWrapper = ref(null);
+    const processingAttentionsWrapper = ref(null);
     let attentions = null;
+    let processingAttentions = null;
     const attentionsUnsubscribe = null;
 
-    // Initialize attentions listener with commerce from store or route
+    // Initialize attentions listeners with commerce from store or route
     const initializeAttentionsListener = commerceId => {
       if (!commerceId) {
         // If no commerce, clear attentions and reset status
         attentionsWrapper.value = null;
+        processingAttentionsWrapper.value = null;
         initializeQueueStatus();
         return;
       }
 
-      // Clean up previous listener if exists
+      // Clean up previous listeners if exist
       if (attentions && attentions._unsubscribe) {
         attentions._unsubscribe();
         attentions = null;
       }
+      if (processingAttentions && processingAttentions._unsubscribe) {
+        processingAttentions._unsubscribe();
+        processingAttentions = null;
+      }
 
-      // Reset queue status before creating new listener
+      // Reset queue status before creating new listeners
       initializeQueueStatus();
 
-      // Create new listener
+      // Create new listeners for both pending and processing attentions
       attentions = updatedAvailableAttentionsByCommerce(commerceId);
       attentionsWrapper.value = attentions;
+
+      processingAttentions = updatedProcessingAttentionsByCommerce(commerceId);
+      processingAttentionsWrapper.value = processingAttentions;
 
       // Force initial check after a brief moment to allow Firebase to initialize
       // The watch will handle updates, but we ensure initial state is correct
       setTimeout(() => {
-        if (attentionsWrapper.value && attentionsWrapper.value.value) {
-          checkQueueStatus(attentionsWrapper.value);
+        if (attentionsWrapper.value && processingAttentionsWrapper.value) {
+          checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
         }
       }, 100);
     };
@@ -352,8 +380,8 @@ export default {
       // Initialize queue status after queues are loaded
       initializeQueueStatus();
       // Trigger checkQueueStatus if listener is already initialized
-      if (attentionsWrapper.value && attentionsWrapper.value.value) {
-        await checkQueueStatus(attentionsWrapper.value);
+      if (attentionsWrapper.value && processingAttentionsWrapper.value) {
+        await checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
       }
     };
 
@@ -431,7 +459,7 @@ export default {
     };
 
     // Function to update average attention duration for a queue
-    const updateQueueAverageDuration = async (queueId) => {
+    const updateQueueAverageDuration = async queueId => {
       if (!queueId) return;
 
       try {
@@ -549,7 +577,7 @@ export default {
     };
 
     // Function to get queue metrics - accessing reactive state directly
-    const getQueueMetrics = (queueId) => {
+    const getQueueMetrics = queueId => {
       // Safety check: if queueId is not provided or invalid, return default values
       if (!queueId) {
         return {
@@ -593,29 +621,37 @@ export default {
       };
     };
 
-    // Watch attentions ref value for changes
-    // Watch the wrapper so we can track when the ref itself changes
+    // Watch attentions ref values for changes (both pending and processing)
+    // Watch the wrappers so we can track when the refs themselves change
     watch(
       () => {
-        // Safely access the current attentions ref via wrapper
+        // Safely access both attentions refs via wrappers
         try {
           const currentAttentionsRef = attentionsWrapper.value;
-          if (
+          const currentProcessingAttentionsRef = processingAttentionsWrapper.value;
+          const pendingArray =
             currentAttentionsRef &&
             currentAttentionsRef.value !== undefined &&
-            currentAttentionsRef.value !== null
-          ) {
-            // Ensure it's always an array and return a serializable value for comparison
-            const array = Array.isArray(currentAttentionsRef.value)
+            currentAttentionsRef.value !== null &&
+            Array.isArray(currentAttentionsRef.value)
               ? currentAttentionsRef.value
               : [];
-            // Return a string representation for deep comparison
-            return JSON.stringify(array.map(a => ({ id: a.id, queueId: a.queueId })));
-          }
+          const processingArray =
+            currentProcessingAttentionsRef &&
+            currentProcessingAttentionsRef.value !== undefined &&
+            currentProcessingAttentionsRef.value !== null &&
+            Array.isArray(currentProcessingAttentionsRef.value)
+              ? currentProcessingAttentionsRef.value
+              : [];
+          // Return a string representation for deep comparison (combine both)
+          return JSON.stringify({
+            pending: pendingArray.map(a => ({ id: a.id, queueId: a.queueId })),
+            processing: processingArray.map(a => ({ id: a.id, queueId: a.queueId })),
+          });
         } catch (error) {
           // Error accessing attentions.value
         }
-        return '[]';
+        return JSON.stringify({ pending: [], processing: [] });
       },
       async (newValue, oldValue) => {
         // Only process if value actually changed
@@ -623,23 +659,27 @@ export default {
           return;
         }
 
-        // Get the actual array from the ref
+        // Get the actual arrays from the refs
         const currentAttentionsRef = attentionsWrapper.value;
-        if (!currentAttentionsRef) {
+        const currentProcessingAttentionsRef = processingAttentionsWrapper.value;
+        if (!currentAttentionsRef || !currentProcessingAttentionsRef) {
           initializeQueueStatus();
           return;
         }
 
         // Always call checkQueueStatus - it will handle empty arrays correctly
-        await checkQueueStatus(currentAttentionsRef);
+        await checkQueueStatus(currentAttentionsRef, currentProcessingAttentionsRef);
       },
       { immediate: true }
     );
 
-    // Cleanup listener on component unmount
+    // Cleanup listeners on component unmount
     onUnmounted(() => {
       if (attentions && attentions._unsubscribe) {
         attentions._unsubscribe();
+      }
+      if (processingAttentions && processingAttentions._unsubscribe) {
+        processingAttentions._unsubscribe();
       }
     });
 
@@ -704,226 +744,185 @@ export default {
                   v-if="queue && queue.active && queue.id"
                   :key="queue.id"
                   class="queue-card-modern"
-                :class="{
-                  'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
-                  'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
-                  'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
-                }"
-              >
-                <div v-if="captchaEnabled === true">
-                  <VueRecaptcha
-                    :sitekey="siteKey"
-                    @verify="validateCaptchaOk"
-                    @error="validateCaptchaError"
-                  >
-                    <div class="queue-card-content" @click="getQueue(queue)">
-                      <div class="queue-card-header">
-                        <div class="queue-card-icon-wrapper">
-                          <i
-                            v-if="queue.type === 'COLLABORATOR'"
-                            class="bi bi-person-fill queue-card-icon"
-                          ></i>
-                          <i v-else class="bi bi-people-fill queue-card-icon"></i>
-                        </div>
-                        <div class="queue-card-title-section">
-                          <h5 class="queue-card-title">{{ queue.name }}</h5>
-                          <span
-                            v-if="queue.type === 'COLLABORATOR'"
-                            class="queue-card-badge queue-card-badge-collaborator"
-                          >
-                            <i class="bi bi-person-badge"></i>
-                            {{ $t('collaboratorQueuesView.dedicated') }}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="queue-card-metrics">
-                        <div class="queue-metric-item">
-                          <div class="queue-metric-icon queue-metric-pending">
-                            <i class="bi bi-clock-history"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              {{ $t('collaboratorQueuesView.pending') }}
-                              <span class="spy-live-indicator" title="Actualización en tiempo real">
-                                <span class="spy-live-dot"></span>
-                              </span>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-pending">
-                              {{ getQueueMetrics(queue.id).pending }}
-                            </div>
-                          </div>
-                        </div>
-                        <div class="queue-metric-item">
-                          <div class="queue-metric-icon queue-metric-processing">
-                            <i class="bi bi-play-circle-fill"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">{{ $t('collaboratorQueuesView.processing') }}</div>
-                            <div class="queue-metric-value queue-metric-value-processing">
-                              {{ getQueueMetrics(queue.id).processing }}
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Average Attention Duration - Always shown -->
-                        <div class="queue-metric-item queue-metric-estimated">
-                          <div class="queue-metric-icon queue-metric-time">
-                            <i class="bi bi-clock-history"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              Tempo Médio
-                              <Popper
-                                v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                :class="'dark'"
-                                arrow
-                                disable-click-away
-                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                              >
-                                <span class="ai-badge ms-1">
-                                  <i class="bi bi-stars"></i>
-                                </span>
-                              </Popper>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-time">
-                              {{ state.queueAverageDurations[queue.id] || 'N/A' }}
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Estimated Wait Time - Only shown when there are pending attentions -->
-                        <div
-                          v-if="getQueueMetrics(queue.id).pending > 0"
-                          class="queue-metric-item queue-metric-estimated"
-                        >
-                          <div class="queue-metric-icon queue-metric-time">
-                            <i class="bi bi-stopwatch"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              {{ $t('collaboratorQueuesView.estimatedWait') }}
-                              <Popper
-                                v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                                :class="'dark'"
-                                arrow
-                                disable-click-away
-                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                              >
-                                <span class="ai-badge ms-1">
-                                  <i class="bi bi-stars"></i>
-                                </span>
-                              </Popper>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-time">
-                              {{ getQueueMetrics(queue.id).estimatedWaitTime }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="queue-card-footer">
-                        <div class="queue-card-status">
-                          <span
-                            :class="`queue-status-indicator queue-status-${
-                              queue.active ? 'active' : 'inactive'
-                            }`"
-                          ></span>
-                          <span class="queue-status-text">{{
-                            queue.active ? $t('collaboratorQueuesView.active') : $t('collaboratorQueuesView.inactive')
-                          }}</span>
-                        </div>
-                        <div class="queue-card-action">
-                          <i class="bi bi-arrow-right-circle"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </VueRecaptcha>
-                </div>
-                <div v-else class="queue-card-content" @click="getQueue(queue)">
-                  <div class="queue-card-header">
-                    <div class="queue-card-icon-wrapper">
-                      <i
-                        v-if="queue.type === 'COLLABORATOR'"
-                        class="bi bi-person-fill queue-card-icon"
-                      ></i>
-                      <i v-else class="bi bi-people-fill queue-card-icon"></i>
-                    </div>
-                    <div class="queue-card-title-section">
-                      <h5 class="queue-card-title">{{ queue.name }}</h5>
-                      <span
-                        v-if="queue.type === 'COLLABORATOR'"
-                        class="queue-card-badge queue-card-badge-collaborator"
-                      >
-                        <i class="bi bi-person-badge"></i>
-                        {{ $t('collaboratorQueuesView.dedicated') }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="queue-card-metrics">
-                    <div class="queue-metric-item">
-                      <div class="queue-metric-icon queue-metric-pending">
-                        <i class="bi bi-clock-history"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">{{ $t('collaboratorQueuesView.pending') }}</div>
-                        <div class="queue-metric-value queue-metric-value-pending">
-                          {{ getQueueMetrics(queue.id).pending }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="queue-metric-item">
-                      <div class="queue-metric-icon queue-metric-processing">
-                        <i class="bi bi-play-circle-fill"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">{{ $t('collaboratorQueuesView.processing') }}</div>
-                        <div class="queue-metric-value queue-metric-value-processing">
-                          {{ getQueueMetrics(queue.id).processing }}
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="getQueueMetrics(queue.id).pending > 0"
-                      class="queue-metric-item queue-metric-estimated"
+                  :class="{
+                    'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
+                    'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
+                    'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
+                  }"
+                >
+                  <div v-if="captchaEnabled === true">
+                    <VueRecaptcha
+                      :sitekey="siteKey"
+                      @verify="validateCaptchaOk"
+                      @error="validateCaptchaError"
                     >
-                      <div class="queue-metric-icon queue-metric-time">
-                        <i class="bi bi-stopwatch"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">
-                          {{ $t('collaboratorQueuesView.estimatedWait') }}
-                          <Popper
-                            v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                            :class="'dark'"
-                            arrow
-                            hover
-                            disable-click-away
-                            :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                          >
-                            <span class="ai-badge ms-1">
-                              <i class="bi bi-stars"></i>
+                      <div class="queue-card-content" @click="getQueue(queue)">
+                        <div class="queue-card-header">
+                          <div class="queue-card-icon-wrapper">
+                            <i
+                              v-if="queue.type === 'COLLABORATOR'"
+                              class="bi bi-person-fill queue-card-icon"
+                            ></i>
+                            <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                          </div>
+                          <div class="queue-card-title-section">
+                            <h5 class="queue-card-title">{{ queue.name }}</h5>
+                            <span
+                              v-if="queue.type === 'COLLABORATOR'"
+                              class="queue-card-badge queue-card-badge-collaborator"
+                            >
+                              <i class="bi bi-person-badge"></i>
+                              {{ $t('collaboratorQueuesView.dedicated') }}
                             </span>
-                          </Popper>
+                          </div>
                         </div>
-                        <div class="queue-metric-value queue-metric-value-time">
-                          {{ getQueueMetrics(queue.id).estimatedWaitTime }}
+                        <div class="queue-card-metrics">
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-pending">
+                              <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                {{ $t('collaboratorQueuesView.pending') }}
+                                <span
+                                  class="spy-live-indicator"
+                                  title="Actualización en tiempo real"
+                                >
+                                  <span class="spy-live-dot"></span>
+                                </span>
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-pending">
+                                {{ getQueueMetrics(queue.id).pending }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-processing">
+                              <i class="bi bi-play-circle-fill"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                {{ $t('collaboratorQueuesView.processing') }}
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-processing">
+                                {{ getQueueMetrics(queue.id).processing }}
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Average Attention Duration - Always shown -->
+                          <div class="queue-metric-item queue-metric-estimated">
+                            <div class="queue-metric-icon queue-metric-time">
+                              <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                Tempo Médio
+                                <Popper
+                                  v-if="state.queueAverageDurationsIntelligent[queue.id]"
+                                  :class="'dark'"
+                                  arrow
+                                  disable-click-away
+                                  :content="
+                                    $t('collaboratorQueuesView.intelligentEstimationTooltip')
+                                  "
+                                >
+                                  <span class="ai-badge ms-1">
+                                    <i class="bi bi-stars"></i>
+                                  </span>
+                                </Popper>
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-time">
+                                {{ state.queueAverageDurations[queue.id] || 'N/A' }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="queue-card-footer">
+                          <div class="queue-card-status">
+                            <span
+                              :class="`queue-status-indicator queue-status-${
+                                queue.active ? 'active' : 'inactive'
+                              }`"
+                            ></span>
+                            <span class="queue-status-text">{{
+                              queue.active
+                                ? $t('collaboratorQueuesView.active')
+                                : $t('collaboratorQueuesView.inactive')
+                            }}</span>
+                          </div>
+                          <div class="queue-card-action">
+                            <i class="bi bi-arrow-right-circle"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </VueRecaptcha>
+                  </div>
+                  <div v-else class="queue-card-content" @click="getQueue(queue)">
+                    <div class="queue-card-header">
+                      <div class="queue-card-icon-wrapper">
+                        <i
+                          v-if="queue.type === 'COLLABORATOR'"
+                          class="bi bi-person-fill queue-card-icon"
+                        ></i>
+                        <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                      </div>
+                      <div class="queue-card-title-section">
+                        <h5 class="queue-card-title">{{ queue.name }}</h5>
+                        <span
+                          v-if="queue.type === 'COLLABORATOR'"
+                          class="queue-card-badge queue-card-badge-collaborator"
+                        >
+                          <i class="bi bi-person-badge"></i>
+                          {{ $t('collaboratorQueuesView.dedicated') }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="queue-card-metrics">
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-pending">
+                          <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">
+                            {{ $t('collaboratorQueuesView.pending') }}
+                          </div>
+                          <div class="queue-metric-value queue-metric-value-pending">
+                            {{ getQueueMetrics(queue.id).pending }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-processing">
+                          <i class="bi bi-play-circle-fill"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">
+                            {{ $t('collaboratorQueuesView.processing') }}
+                          </div>
+                          <div class="queue-metric-value queue-metric-value-processing">
+                            {{ getQueueMetrics(queue.id).processing }}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="queue-card-footer">
-                    <div class="queue-card-status">
-                      <span
-                        :class="`queue-status-indicator queue-status-${
-                          queue.active ? 'active' : 'inactive'
-                        }`"
-                      ></span>
-                      <span class="queue-status-text">{{
-                        queue.active ? $t('collaboratorQueuesView.active') : $t('collaboratorQueuesView.inactive')
-                      }}</span>
+                    <div class="queue-card-footer">
+                      <div class="queue-card-status">
+                        <span
+                          :class="`queue-status-indicator queue-status-${
+                            queue.active ? 'active' : 'inactive'
+                          }`"
+                        ></span>
+                        <span class="queue-status-text">{{
+                          queue.active
+                            ? $t('collaboratorQueuesView.active')
+                            : $t('collaboratorQueuesView.inactive')
+                        }}</span>
+                      </div>
+                      <div class="queue-card-action">
+                        <i class="bi bi-arrow-right-circle"></i>
+                      </div>
                     </div>
-                    <div class="queue-card-action">
-                      <i class="bi bi-arrow-right-circle"></i>
-                    </div>
                   </div>
-                </div>
                 </div>
               </template>
             </div>
@@ -992,226 +991,185 @@ export default {
                   v-if="queue && queue.active && queue.id"
                   :key="queue.id"
                   class="queue-card-modern"
-                :class="{
-                  'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
-                  'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
-                  'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
-                }"
-              >
-                <div v-if="captchaEnabled === true">
-                  <VueRecaptcha
-                    :sitekey="siteKey"
-                    @verify="validateCaptchaOk"
-                    @error="validateCaptchaError"
-                  >
-                    <div class="queue-card-content" @click="getQueue(queue)">
-                      <div class="queue-card-header">
-                        <div class="queue-card-icon-wrapper">
-                          <i
-                            v-if="queue.type === 'COLLABORATOR'"
-                            class="bi bi-person-fill queue-card-icon"
-                          ></i>
-                          <i v-else class="bi bi-people-fill queue-card-icon"></i>
-                        </div>
-                        <div class="queue-card-title-section">
-                          <h5 class="queue-card-title">{{ queue.name }}</h5>
-                          <span
-                            v-if="queue.type === 'COLLABORATOR'"
-                            class="queue-card-badge queue-card-badge-collaborator"
-                          >
-                            <i class="bi bi-person-badge"></i>
-                            {{ $t('collaboratorQueuesView.dedicated') }}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="queue-card-metrics">
-                        <div class="queue-metric-item">
-                          <div class="queue-metric-icon queue-metric-pending">
-                            <i class="bi bi-clock-history"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              {{ $t('collaboratorQueuesView.pending') }}
-                              <span class="spy-live-indicator" title="Actualización en tiempo real">
-                                <span class="spy-live-dot"></span>
-                              </span>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-pending">
-                              {{ getQueueMetrics(queue.id).pending }}
-                            </div>
-                          </div>
-                        </div>
-                        <div class="queue-metric-item">
-                          <div class="queue-metric-icon queue-metric-processing">
-                            <i class="bi bi-play-circle-fill"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">{{ $t('collaboratorQueuesView.processing') }}</div>
-                            <div class="queue-metric-value queue-metric-value-processing">
-                              {{ getQueueMetrics(queue.id).processing }}
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Average Attention Duration - Always shown -->
-                        <div class="queue-metric-item queue-metric-estimated">
-                          <div class="queue-metric-icon queue-metric-time">
-                            <i class="bi bi-clock-history"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              Tempo Médio
-                              <Popper
-                                v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                :class="'dark'"
-                                arrow
-                                disable-click-away
-                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                              >
-                                <span class="ai-badge ms-1">
-                                  <i class="bi bi-stars"></i>
-                                </span>
-                              </Popper>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-time">
-                              {{ state.queueAverageDurations[queue.id] || 'N/A' }}
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Estimated Wait Time - Only shown when there are pending attentions -->
-                        <div
-                          v-if="getQueueMetrics(queue.id).pending > 0"
-                          class="queue-metric-item queue-metric-estimated"
-                        >
-                          <div class="queue-metric-icon queue-metric-time">
-                            <i class="bi bi-stopwatch"></i>
-                          </div>
-                          <div class="queue-metric-content">
-                            <div class="queue-metric-label">
-                              {{ $t('collaboratorQueuesView.estimatedWait') }}
-                              <Popper
-                                v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                                :class="'dark'"
-                                arrow
-                                disable-click-away
-                                :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                              >
-                                <span class="ai-badge ms-1">
-                                  <i class="bi bi-stars"></i>
-                                </span>
-                              </Popper>
-                            </div>
-                            <div class="queue-metric-value queue-metric-value-time">
-                              {{ getQueueMetrics(queue.id).estimatedWaitTime }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="queue-card-footer">
-                        <div class="queue-card-status">
-                          <span
-                            :class="`queue-status-indicator queue-status-${
-                              queue.active ? 'active' : 'inactive'
-                            }`"
-                          ></span>
-                          <span class="queue-status-text">{{
-                            queue.active ? $t('collaboratorQueuesView.active') : $t('collaboratorQueuesView.inactive')
-                          }}</span>
-                        </div>
-                        <div class="queue-card-action">
-                          <i class="bi bi-arrow-right-circle"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </VueRecaptcha>
-                </div>
-                <div v-else class="queue-card-content" @click="getQueue(queue)">
-                  <div class="queue-card-header">
-                    <div class="queue-card-icon-wrapper">
-                      <i
-                        v-if="queue.type === 'COLLABORATOR'"
-                        class="bi bi-person-fill queue-card-icon"
-                      ></i>
-                      <i v-else class="bi bi-people-fill queue-card-icon"></i>
-                    </div>
-                    <div class="queue-card-title-section">
-                      <h5 class="queue-card-title">{{ queue.name }}</h5>
-                      <span
-                        v-if="queue.type === 'COLLABORATOR'"
-                        class="queue-card-badge queue-card-badge-collaborator"
-                      >
-                        <i class="bi bi-person-badge"></i>
-                        {{ $t('collaboratorQueuesView.dedicated') }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="queue-card-metrics">
-                    <div class="queue-metric-item">
-                      <div class="queue-metric-icon queue-metric-pending">
-                        <i class="bi bi-clock-history"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">{{ $t('collaboratorQueuesView.pending') }}</div>
-                        <div class="queue-metric-value queue-metric-value-pending">
-                          {{ getQueueMetrics(queue.id).pending }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="queue-metric-item">
-                      <div class="queue-metric-icon queue-metric-processing">
-                        <i class="bi bi-play-circle-fill"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">{{ $t('collaboratorQueuesView.processing') }}</div>
-                        <div class="queue-metric-value queue-metric-value-processing">
-                          {{ getQueueMetrics(queue.id).processing }}
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="getQueueMetrics(queue.id).pending > 0"
-                      class="queue-metric-item queue-metric-estimated"
+                  :class="{
+                    'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
+                    'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
+                    'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
+                  }"
+                >
+                  <div v-if="captchaEnabled === true">
+                    <VueRecaptcha
+                      :sitekey="siteKey"
+                      @verify="validateCaptchaOk"
+                      @error="validateCaptchaError"
                     >
-                      <div class="queue-metric-icon queue-metric-time">
-                        <i class="bi bi-stopwatch"></i>
-                      </div>
-                      <div class="queue-metric-content">
-                        <div class="queue-metric-label">
-                          {{ $t('collaboratorQueuesView.estimatedWait') }}
-                          <Popper
-                            v-if="getQueueMetrics(queue.id).usingIntelligentEstimation"
-                            :class="'dark'"
-                            arrow
-                            hover
-                            disable-click-away
-                            :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                          >
-                            <span class="ai-badge ms-1">
-                              <i class="bi bi-stars"></i>
+                      <div class="queue-card-content" @click="getQueue(queue)">
+                        <div class="queue-card-header">
+                          <div class="queue-card-icon-wrapper">
+                            <i
+                              v-if="queue.type === 'COLLABORATOR'"
+                              class="bi bi-person-fill queue-card-icon"
+                            ></i>
+                            <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                          </div>
+                          <div class="queue-card-title-section">
+                            <h5 class="queue-card-title">{{ queue.name }}</h5>
+                            <span
+                              v-if="queue.type === 'COLLABORATOR'"
+                              class="queue-card-badge queue-card-badge-collaborator"
+                            >
+                              <i class="bi bi-person-badge"></i>
+                              {{ $t('collaboratorQueuesView.dedicated') }}
                             </span>
-                          </Popper>
+                          </div>
                         </div>
-                        <div class="queue-metric-value queue-metric-value-time">
-                          {{ getQueueMetrics(queue.id).estimatedWaitTime }}
+                        <div class="queue-card-metrics">
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-pending">
+                              <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                {{ $t('collaboratorQueuesView.pending') }}
+                                <span
+                                  class="spy-live-indicator"
+                                  title="Actualización en tiempo real"
+                                >
+                                  <span class="spy-live-dot"></span>
+                                </span>
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-pending">
+                                {{ getQueueMetrics(queue.id).pending }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-processing">
+                              <i class="bi bi-play-circle-fill"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                {{ $t('collaboratorQueuesView.processing') }}
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-processing">
+                                {{ getQueueMetrics(queue.id).processing }}
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Average Attention Duration - Always shown -->
+                          <div class="queue-metric-item queue-metric-estimated">
+                            <div class="queue-metric-icon queue-metric-time">
+                              <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="queue-metric-content">
+                              <div class="queue-metric-label">
+                                Tempo Médio
+                                <Popper
+                                  v-if="state.queueAverageDurationsIntelligent[queue.id]"
+                                  :class="'dark'"
+                                  arrow
+                                  disable-click-away
+                                  :content="
+                                    $t('collaboratorQueuesView.intelligentEstimationTooltip')
+                                  "
+                                >
+                                  <span class="ai-badge ms-1">
+                                    <i class="bi bi-stars"></i>
+                                  </span>
+                                </Popper>
+                              </div>
+                              <div class="queue-metric-value queue-metric-value-time">
+                                {{ state.queueAverageDurations[queue.id] || 'N/A' }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="queue-card-footer">
+                          <div class="queue-card-status">
+                            <span
+                              :class="`queue-status-indicator queue-status-${
+                                queue.active ? 'active' : 'inactive'
+                              }`"
+                            ></span>
+                            <span class="queue-status-text">{{
+                              queue.active
+                                ? $t('collaboratorQueuesView.active')
+                                : $t('collaboratorQueuesView.inactive')
+                            }}</span>
+                          </div>
+                          <div class="queue-card-action">
+                            <i class="bi bi-arrow-right-circle"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </VueRecaptcha>
+                  </div>
+                  <div v-else class="queue-card-content" @click="getQueue(queue)">
+                    <div class="queue-card-header">
+                      <div class="queue-card-icon-wrapper">
+                        <i
+                          v-if="queue.type === 'COLLABORATOR'"
+                          class="bi bi-person-fill queue-card-icon"
+                        ></i>
+                        <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                      </div>
+                      <div class="queue-card-title-section">
+                        <h5 class="queue-card-title">{{ queue.name }}</h5>
+                        <span
+                          v-if="queue.type === 'COLLABORATOR'"
+                          class="queue-card-badge queue-card-badge-collaborator"
+                        >
+                          <i class="bi bi-person-badge"></i>
+                          {{ $t('collaboratorQueuesView.dedicated') }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="queue-card-metrics">
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-pending">
+                          <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">
+                            {{ $t('collaboratorQueuesView.pending') }}
+                          </div>
+                          <div class="queue-metric-value queue-metric-value-pending">
+                            {{ getQueueMetrics(queue.id).pending }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-processing">
+                          <i class="bi bi-play-circle-fill"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">
+                            {{ $t('collaboratorQueuesView.processing') }}
+                          </div>
+                          <div class="queue-metric-value queue-metric-value-processing">
+                            {{ getQueueMetrics(queue.id).processing }}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="queue-card-footer">
-                    <div class="queue-card-status">
-                      <span
-                        :class="`queue-status-indicator queue-status-${
-                          queue.active ? 'active' : 'inactive'
-                        }`"
-                      ></span>
-                      <span class="queue-status-text">{{
-                        queue.active ? $t('collaboratorQueuesView.active') : $t('collaboratorQueuesView.inactive')
-                      }}</span>
+                    <div class="queue-card-footer">
+                      <div class="queue-card-status">
+                        <span
+                          :class="`queue-status-indicator queue-status-${
+                            queue.active ? 'active' : 'inactive'
+                          }`"
+                        ></span>
+                        <span class="queue-status-text">{{
+                          queue.active
+                            ? $t('collaboratorQueuesView.active')
+                            : $t('collaboratorQueuesView.inactive')
+                        }}</span>
+                      </div>
+                      <div class="queue-card-action">
+                        <i class="bi bi-arrow-right-circle"></i>
+                      </div>
                     </div>
-                    <div class="queue-card-action">
-                      <i class="bi bi-arrow-right-circle"></i>
-                    </div>
                   </div>
-                </div>
                 </div>
               </template>
             </div>
@@ -1401,7 +1359,8 @@ export default {
 
 .queue-card-metrics {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.6rem;
   border-top: 1px solid rgba(169, 169, 169, 0.1);
@@ -1419,6 +1378,12 @@ export default {
   border-radius: 7px;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.6);
+  flex: 1 1 calc(50% - 0.25rem);
+  min-width: 0;
+}
+
+.queue-metric-item.queue-metric-estimated {
+  flex: 1 1 100%;
 }
 
 .queue-metric-item:hover {
@@ -1466,19 +1431,23 @@ export default {
 .queue-metric-content {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .queue-metric-label {
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   font-weight: 700;
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   margin-bottom: 0.15rem;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  flex-wrap: wrap;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  line-height: 1.2;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ai-badge {
@@ -1495,7 +1464,8 @@ export default {
 }
 
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1571,7 +1541,8 @@ export default {
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
   }

@@ -56,10 +56,14 @@ export const addLeadContact = async (id, body) => {
   try {
     console.log('addLeadContact - Request:', {
       url: `/${entity}/${id}/contact`,
-      body: body
+      body,
     });
 
-    const response = await requestBackend.post(`/${entity}/${id}/contact`, body, await getHeaders());
+    const response = await requestBackend.post(
+      `/${entity}/${id}/contact`,
+      body,
+      await getHeaders()
+    );
 
     console.log('addLeadContact - Response:', response.data);
     return response.data;
@@ -69,7 +73,7 @@ export const addLeadContact = async (id, body) => {
       message: error.message,
       response: error.response,
       request: error.request,
-      config: error.config
+      config: error.config,
     });
     throw error;
   }
@@ -161,7 +165,11 @@ export const getLeadTransitions = async leadId => {
       const is404 = allEventsError.response?.status === 404 || allEventsError.status === 404;
 
       // Network errors, timeouts, or 404s - fail silently, don't try fallback
-      if (allEventsError.code === 'ERR_NETWORK' || allEventsError.code === 'ECONNABORTED' || is404) {
+      if (
+        allEventsError.code === 'ERR_NETWORK' ||
+        allEventsError.code === 'ECONNABORTED' ||
+        is404
+      ) {
         // Event store not available or no events found - return empty array silently
         return [];
       }
@@ -176,7 +184,11 @@ export const getLeadTransitions = async leadId => {
       } catch (statusError) {
         // Check if fallback also returns 404
         const isFallback404 = statusError.response?.status === 404 || statusError.status === 404;
-        if (isFallback404 || statusError.code === 'ERR_NETWORK' || statusError.code === 'ECONNABORTED') {
+        if (
+          isFallback404 ||
+          statusError.code === 'ERR_NETWORK' ||
+          statusError.code === 'ECONNABORTED'
+        ) {
           // Fail silently - event store not available or no events found
           return [];
         }
@@ -246,8 +258,8 @@ export const getLeadTransitions = async leadId => {
             createdAt: eventData.createdAt || new Date(),
             isInitial: false,
             isContact: true,
-            contactType: contactType,
-            contactComment: contactComment,
+            contactType,
+            contactComment,
             eventType: 'contact-added',
           };
         }
@@ -277,9 +289,11 @@ export const getLeadTransitions = async leadId => {
     // For other unexpected errors, also fail silently (transitions are optional)
     // Only log in development mode for debugging
     if (import.meta.env.DEV) {
-      console.debug('getLeadTransitions: Error fetching transitions (non-critical):', error.message);
+      console.debug(
+        'getLeadTransitions: Error fetching transitions (non-critical):',
+        error.message
+      );
     }
     return [];
   }
 };
-

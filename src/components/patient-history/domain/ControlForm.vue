@@ -43,6 +43,7 @@ export default {
       result: undefined,
       errorsAddControl: [],
       asc: true,
+      showHistory: false,
     });
 
     onBeforeMount(async () => {
@@ -54,7 +55,8 @@ export default {
           state.oldControl = patientHistoryData.value.control;
           state.clientId = patientHistoryData.value.clientId;
         }
-        if (cacheData.value) {
+        // Only use cacheData if no saved data exists in patientHistoryData
+        if (!state.oldControl && cacheData.value) {
           state.newControl = cacheData.value;
         }
         loading.value = false;
@@ -186,192 +188,759 @@ export default {
 };
 </script>
 <template>
-  <div>
-    <div id="form">
-      <div class="row">
-        <div class="col-12 col-md-6 mt-2">
-          <div id="patient-name-form-add" class="row m-1">
-            <div class="col-12 text-label">
-              {{ $t('patientHistoryView.control') }}
-              <i class="bi bi-file-earmark-medical-fill mx-1"></i>
-            </div>
-            <div class="row mt-2">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                @click="showAdd()"
-                :disabled="!toggles['patient.history.control-edit']"
-              >
-                <i class="bi bi-plus-lg"></i> {{ $t('patientHistoryView.addControl') }}
-              </button>
-            </div>
-            <div id="add-control" v-if="state.showAdd" class="metric-card">
-              <div class="mt-2">
-                <div class="row">
-                  <div class="col-12 col-md my-1 lefted">
-                    <label class="metric-card-subtitle mx-2 habit-title" for="select-reason">
-                      {{ $t('patientHistoryView.controlReason') }}
-                    </label>
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="state.reason"
-                    >
-                      <option
-                        v-for="reason in state.reasons"
-                        :key="reason.name"
-                        :value="reason.id"
-                        id="select-queue"
-                      >
-                        {{ $t(`controlReasonTypes.${reason.id}`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md my-1 lefted">
-                    <label class="metric-card-subtitle mx-2 habit-title" for="select-status">
-                      {{ $t('patientHistoryView.controlStatus') }}
-                    </label>
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="state.status"
-                    >
-                      <option
-                        v-for="status in state.statuses"
-                        :key="status.name"
-                        :value="status.id"
-                        id="select-queue"
-                      >
-                        {{ $t(`controlStatusTypes.${status.id}`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md my-1 lefted habit-title">
-                    <label class="metric-card-subtitle mx-2">
-                      {{ $t('patientHistoryView.controlDate') }}
-                    </label>
-                    <input
-                      id="endDate"
-                      class="form-control form-control-sm"
-                      type="date"
-                      v-model="state.date"
-                    />
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md my-1 lefted">
-                    <textarea
-                      :disabled="!toggles['patient.history.control-edit']"
-                      class="form-control form-control-sm"
-                      id="commennt"
-                      rows="5"
-                      :max="500"
-                      :value="state.result"
-                      :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                    >
-                    </textarea>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-12 col-md my-1">
-                    <button
-                      class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2"
-                      @click="addControl()"
-                      :disabled="!toggles['patient.history.control-edit']"
-                    >
-                      <i class="bi bi-person-check-fill"> </i> {{ $t('patientHistoryView.add') }}
-                    </button>
-                  </div>
-                </div>
-                <div
-                  class="row g-1 errors"
-                  id="feedback"
-                  v-if="state.errorsAddControl && state.errorsAddControl.length > 0"
+  <div class="patient-form-modern">
+    <div class="form-header-modern">
+      <div class="form-header-icon">
+        <i class="bi bi-calendar-event"></i>
+      </div>
+      <div class="form-header-content">
+        <h3 class="form-header-title">{{ $t('patientHistoryView.control') }}</h3>
+        <p class="form-header-subtitle">Gerencie os controles e retornos do paciente</p>
+      </div>
+    </div>
+    <div class="form-layout-modern">
+      <!-- Form Input Section -->
+      <div class="form-input-section">
+        <div class="form-actions-modern">
+          <button
+            class="btn-add-control"
+            @click="showAdd()"
+            :disabled="!toggles['patient.history.control-edit']"
+          >
+            <i class="bi bi-plus-circle-fill me-2"></i>
+            {{ $t('patientHistoryView.addControl') }}
+          </button>
+        </div>
+
+        <!-- Add Control Form -->
+        <div v-if="state.showAdd" class="add-control-form">
+          <div class="add-control-header">
+            <h5 class="add-control-title">
+              <i class="bi bi-plus-square me-2"></i>
+              Novo Controle
+            </h5>
+            <button class="btn-close-form" @click="showAdd()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <div class="form-group-content">
+            <div class="form-row-modern">
+              <div class="form-field-modern">
+                <label class="form-label-modern" for="select-reason">
+                  <i class="bi bi-question-circle me-1"></i>
+                  {{ $t('patientHistoryView.controlReason') }}
+                </label>
+                <select
+                  id="select-reason"
+                  class="form-control-modern form-select-modern"
+                  v-model="state.reason"
+                  :class="{ 'form-control-invalid': state.reasonError }"
                 >
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAddControl" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
+                  <option value="">{{ $t('patientHistoryView.select') || 'Selecione...' }}</option>
+                  <option v-for="reason in state.reasons" :key="reason.name" :value="reason.id">
+                    {{ $t(`controlReasonTypes.${reason.id}`) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-field-modern">
+                <label class="form-label-modern" for="select-status">
+                  <i class="bi bi-info-circle me-1"></i>
+                  {{ $t('patientHistoryView.controlStatus') }}
+                </label>
+                <select
+                  id="select-status"
+                  class="form-control-modern form-select-modern"
+                  v-model="state.status"
+                  :class="{ 'form-control-invalid': state.statusError }"
+                >
+                  <option v-for="status in state.statuses" :key="status.name" :value="status.id">
+                    {{ $t(`controlStatusTypes.${status.id}`) }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-modern">
+              <div class="form-field-modern">
+                <label class="form-label-modern" for="control-date">
+                  <i class="bi bi-calendar3 me-1"></i>
+                  {{ $t('patientHistoryView.controlDate') }}
+                </label>
+                <input
+                  id="control-date"
+                  class="form-control-modern"
+                  type="date"
+                  v-model="state.date"
+                  :class="{ 'form-control-invalid': state.scheduledDateError }"
+                />
+              </div>
+            </div>
+
+            <div class="form-row-modern">
+              <div class="form-field-modern">
+                <label class="form-label-modern" for="control-result">
+                  <i class="bi bi-file-text me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.comment') || 'Resultado/Comentário' }}
+                </label>
+                <textarea
+                  id="control-result"
+                  class="form-control-modern"
+                  rows="4"
+                  :max="500"
+                  v-model="state.result"
+                ></textarea>
+                <div class="form-field-hint" v-if="state.result">
+                  <span class="character-count">{{ (state.result || '').length }}/500</span>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="row g-1 errors" id="feedback" v-if="errorsAdd && errorsAdd.length > 0">
-            <Warning>
-              <template v-slot:message>
-                <li v-for="(error, index) in errorsAdd" :key="index">
-                  {{ $t(error) }}
-                </li>
-              </template>
-            </Warning>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 mt-2 blocks-section">
-          <div class="col-12 text-label fw-bold">
-            {{ $t('patientHistoryView.history') }} <i class="bi bi-clock-fill mx-1"></i>
-            <div class="form-check form-switch centered">
-              <input
-                class="form-check-input m-1"
-                :class="state.asc === false ? 'bg-danger' : ''"
-                type="checkbox"
-                name="asc"
-                id="asc"
-                v-model="state.asc"
-                @click="checkAsc($event)"
-              />
-              <label class="form-check-label metric-card-subtitle" for="asc">{{
-                state.asc ? $t('dashboard.asc') : $t('dashboard.desc')
-              }}</label>
-            </div>
-          </div>
-          <div v-if="state.oldControl && state.oldControl.length > 0 && state.oldControl[0]">
-            <div v-for="(element, index) in state.oldControl" :key="`control-${index}`">
-              <HistoryControlDetailsCard
-                :show="toggles['patient.history.view']"
-                :date="element.scheduledDate"
-                :commerce="commerce"
-                :client-id="state.clientId"
-                :content="element.controlResult"
-                :status="element.status"
-                :reason="element.reason"
-                :toggles="toggles"
-                :index="index"
-                @onSave="updateControl"
+
+            <div class="form-actions-inline">
+              <button
+                class="btn-save-control"
+                @click="addControl()"
+                :disabled="!toggles['patient.history.control-edit']"
               >
-              </HistoryControlDetailsCard>
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ $t('patientHistoryView.add') }}
+              </button>
+              <button class="btn-cancel-control" @click="showAdd()">
+                <i class="bi bi-x-circle me-2"></i>
+                Cancelar
+              </button>
+            </div>
+
+            <div
+              class="form-errors-modern"
+              v-if="state.errorsAddControl && state.errorsAddControl.length > 0"
+            >
+              <Warning>
+                <template v-slot:message>
+                  <li v-for="(error, index) in state.errorsAddControl" :key="index">
+                    {{ $t(error) }}
+                  </li>
+                </template>
+              </Warning>
             </div>
           </div>
-          <div v-else>
-            <Message
-              :title="$t('patientHistoryView.message.1.title')"
-              :content="$t('patientHistoryView.message.1.content')"
-            />
-          </div>
         </div>
+
+        <div class="form-errors-modern" v-if="errorsAdd && errorsAdd.length > 0">
+          <Warning>
+            <template v-slot:message>
+              <li v-for="(error, index) in errorsAdd" :key="index">
+                {{ $t(error) }}
+              </li>
+            </template>
+          </Warning>
+        </div>
+      </div>
+
+      <!-- Collapsed Indicator (visible when collapsed) - Outside the section -->
+      <button
+        v-if="!state.showHistory"
+        class="history-collapsed-indicator"
+        @click="state.showHistory = !state.showHistory"
+        :title="$t('patientHistoryView.showMenu')"
+      >
+        <i class="bi bi-clock-history"></i>
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <!-- History Timeline Section -->
+      <div :class="['form-history-section', { collapsed: !state.showHistory }]">
+        <!-- Full History Section (visible when expanded) -->
+        <template v-if="state.showHistory">
+          <div class="history-section-header">
+            <div class="history-header-content">
+              <button
+                class="history-toggle-btn"
+                @click="state.showHistory = !state.showHistory"
+                :title="$t('patientHistoryView.hideMenu')"
+              >
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <i class="bi bi-clock-history history-header-icon"></i>
+              <h4 class="history-header-title">{{ $t('patientHistoryView.history') }}</h4>
+            </div>
+            <div class="history-sort-control">
+              <label class="sort-toggle-label" for="asc-control">
+                <input
+                  class="form-check-input sort-toggle-input"
+                  :class="state.asc === false ? 'sort-desc' : 'sort-asc'"
+                  type="checkbox"
+                  name="asc"
+                  id="asc-control"
+                  v-model="state.asc"
+                  @click="checkAsc($event)"
+                />
+                <span class="sort-toggle-text">
+                  <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
+                  {{ state.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="history-timeline">
+            <div
+              v-if="state.oldControl && state.oldControl.length > 0 && state.oldControl[0]"
+              class="history-timeline-content"
+            >
+              <div
+                v-for="(element, index) in state.oldControl"
+                :key="`control-${index}`"
+                class="history-timeline-item"
+              >
+                <HistoryControlDetailsCard
+                  :show="toggles['patient.history.view']"
+                  :date="element.scheduledDate"
+                  :commerce="commerce"
+                  :client-id="state.clientId"
+                  :content="element.controlResult"
+                  :status="element.status"
+                  :reason="element.reason"
+                  :toggles="toggles"
+                  :index="index"
+                  @onSave="updateControl"
+                >
+                </HistoryControlDetailsCard>
+              </div>
+            </div>
+            <div v-else class="history-empty-state">
+              <Message
+                :title="$t('patientHistoryView.message.1.title')"
+                :content="$t('patientHistoryView.message.1.content')"
+              />
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
 </template>
+
 <style scoped>
-.blocks-section {
-  overflow-y: scroll;
-  max-height: 800px;
-  font-size: small;
-  margin-bottom: 2rem;
-  padding: 0.5rem;
+@import '../../../shared/styles/prontuario-common.css';
+
+.patient-form-modern {
+  width: 100%;
+  height: 100%;
+}
+
+.form-layout-modern {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  height: 100%;
+  position: relative;
+  overflow: visible;
+}
+
+/* Ensure the collapsed indicator container has space */
+.form-layout-modern:has(.history-collapsed-indicator) {
+  position: relative;
+}
+
+.form-layout-modern:has(.form-history-section.collapsed) .form-input-section {
+  grid-column: 1 / -1;
+}
+
+.form-input-section,
+.form-history-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: all 0.3s ease;
+}
+
+.form-history-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-history-section.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  overflow: visible;
+  position: relative;
+}
+
+/* Collapsed Indicator - Always visible on the right edge, similar to sidebar toggle */
+.history-collapsed-indicator {
+  position: absolute;
+  right: -12px;
+  top: 0.25rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 36px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  padding: 0.5rem 0.3rem;
+  pointer-events: auto;
+}
+
+.history-collapsed-indicator:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.history-collapsed-indicator i {
+  font-size: 1rem;
+}
+
+.history-collapsed-indicator i:first-child {
+  font-size: 1.1rem;
+}
+
+/* Form Section Header */
+.form-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.form-section-title {
+  flex: 1;
+}
+
+.form-title-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.15rem 0;
+  line-height: 1.3;
+}
+
+.form-title-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Add Button */
+.form-actions-modern {
+  margin-bottom: 0.75rem;
+}
+
+.btn-add-control {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-add-control:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-add-control:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Add Control Form */
+.add-control-form {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.add-control-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.btn-close-form {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.btn-close-form:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Form Fields */
+.form-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.form-field-modern {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label-modern {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background: white;
+}
+
+.form-control-modern:disabled {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-control-invalid {
+  border-color: #dc3545 !important;
+}
+
+.form-control-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+.form-select-modern {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.form-field-hint {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.character-count {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+/* Form Actions */
+.form-actions-inline {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-save-control {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-save-control:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-save-control:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel-control {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.25rem;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel-control:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.form-errors-modern {
+  margin-top: 1rem;
+}
+
+/* History Section */
+.history-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.history-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.history-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.history-header-icon {
+  font-size: 1.1rem;
+  color: var(--azul-turno);
+}
+
+.history-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.history-sort-control {
+  display: flex;
+  align-items: center;
+}
+
+.sort-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  background-color: var(--color-background);
+  background: rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  margin: 0;
 }
-.show {
-  max-height: 2000px !important;
-  overflow-y: visible;
+
+.sort-toggle-label:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
-.habit-title {
-  text-align: left;
+
+.sort-toggle-input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.sort-toggle-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sort-asc {
+  background-color: #28a745;
+}
+
+.sort-desc {
+  background-color: #dc3545;
+}
+
+.history-timeline {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+}
+
+.history-timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-timeline-item {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.history-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 2rem;
+}
+
+/* Scrollbar Styling */
+.history-timeline::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-timeline::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.history-timeline::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.history-timeline::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+  .form-layout-modern {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-section-header {
+    margin-bottom: 1rem;
+  }
+
+  .history-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .form-row-modern {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

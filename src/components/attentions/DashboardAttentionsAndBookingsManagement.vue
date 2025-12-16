@@ -346,8 +346,7 @@ export default {
   <div>
     <!-- Expose filters slot from DashboardAttentionsManagement for desktop when Atendimentos is active -->
     <template v-if="filtersLocation === 'slot'">
-      {{
-      }}
+      {{}}
       <!-- SIMPLE: Show attentions filters when attentions tab is active -->
       <div>
         <KeepAlive>
@@ -364,8 +363,7 @@ export default {
             filters-location="slot"
           >
             <template #filters-exposed="filterProps">
-              {{
-              }}
+              {{}}
               <slot
                 name="filters-exposed"
                 v-bind="{ ...filterProps, filterType: 'attentions' }"
@@ -388,8 +386,7 @@ export default {
             filters-location="slot"
           >
             <template #filters-exposed="filterProps">
-              {{
-              }}
+              {{}}
               <slot
                 name="filters-exposed"
                 v-bind="{ ...filterProps, filterType: 'bookings' }"

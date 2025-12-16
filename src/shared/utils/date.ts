@@ -57,3 +57,10 @@ export const addPeriodToDate = (
   new_date.setSeconds(new_date.getSeconds() + seconds);
   return new_date;
 };
+
+export const getDateFormatted = date => {
+  if (date && date !== undefined && date.toString() !== '' && date.toString() !== 'Invalid Date') {
+    return new Date(date).toISOString().slice(0, 10);
+  }
+  return '';
+};

@@ -13,10 +13,19 @@ import Spinner from '../../common/Spinner.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../common/Message.vue';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
+import DragDropFileUpload from '../../common/DragDropFileUpload.vue';
 
 export default {
   name: 'DocumentsForm',
-  components: { Warning, Spinner, VueRecaptcha, Toggle, Message, HistoryDetailsCard },
+  components: {
+    Warning,
+    Spinner,
+    VueRecaptcha,
+    Toggle,
+    Message,
+    HistoryDetailsCard,
+    DragDropFileUpload,
+  },
   props: {
     commerce: { type: Object, default: {} },
     cacheData: { type: Object, default: undefined },
@@ -52,6 +61,7 @@ export default {
       captcha: false,
       documentsError: false,
       asc: true,
+      showHistory: false,
       errorsAdd: [],
       togglesDocuments: [],
       newDocument: {},
@@ -74,7 +84,8 @@ export default {
             doc => doc.available
           );
         }
-        if (cacheData.value) {
+        // Only use cacheData if no saved data exists in patientHistoryData
+        if (!state.oldDocuments && cacheData.value) {
           state.newDocuments = cacheData.value;
         }
         loading.value = false;
@@ -151,6 +162,26 @@ export default {
         alertError.value = error.response.status || 500;
         loading.value = false;
       }
+    };
+
+    const handleFileSelected = selectedFile => {
+      if (selectedFile && validateDocument(selectedFile)) {
+        file.value = selectedFile;
+        state.newDocument.file = selectedFile;
+        state.newDocument.format = selectedFile.type;
+        state.errorsAdd = [];
+      }
+    };
+
+    const handleFileRemoved = () => {
+      file.value = {};
+      state.newDocument.file = null;
+      state.newDocument.format = null;
+      state.errorsAdd = [];
+    };
+
+    const handleFileError = error => {
+      state.errorsAdd = [error];
     };
 
     const validateAdd = () => {
@@ -281,199 +312,783 @@ export default {
       executeDownload,
       executeDelete,
       documentIcon,
+      handleFileSelected,
+      handleFileRemoved,
+      handleFileError,
     };
   },
 };
 </script>
 <template>
-  <div>
-    <div id="form">
-      <div class="row">
-        <div class="col-12 mt-2">
-          <div id="patient-name-form-add" class="row m-1">
-            <div class="col-12 text-label">
-              {{ $t('patientHistoryView.documents') }}
-              <i class="bi bi-file-earmark-medical-fill mx-1"></i>
+  <div class="patient-form-modern documents-form">
+    <div class="form-header-modern">
+      <div class="form-header-icon">
+        <i class="bi bi-folder-fill"></i>
+      </div>
+      <div class="form-header-content">
+        <h3 class="form-header-title">{{ $t('patientHistoryView.documents') }}</h3>
+        <p class="form-header-subtitle">Gerencie os documentos do paciente</p>
+      </div>
+    </div>
+
+    <Spinner :show="loading"></Spinner>
+
+    <div class="form-layout-modern">
+      <!-- Upload Section -->
+      <div class="form-input-section">
+        <div
+          v-if="state.documentList && state.documentList.length > 0"
+          class="upload-section-modern"
+        >
+          <div class="upload-section-header">
+            <i class="bi bi-cloud-upload upload-icon"></i>
+            <h4 class="upload-title">{{ $t('businessDocument.uploadNewDocument') }}</h4>
+          </div>
+
+          <div class="upload-form-modern">
+            <div class="form-field-modern">
+              <label class="form-label-modern" for="document-type-select">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                {{ $t('businessDocument.feature') }}
+              </label>
+              <select
+                id="document-type-select"
+                class="form-control-modern form-select-modern"
+                v-model="state.optionSelected"
+                v-bind:class="{ 'form-control-invalid': state.moduleError }"
+              >
+                <option :value="null">
+                  {{ $t('patientHistoryView.select') || 'Selecione o tipo de documento...' }}
+                </option>
+                <option v-for="item in state.documentList" :key="item.name" :value="item">
+                  {{ item.name }}
+                </option>
+              </select>
             </div>
-            <Spinner :show="loading"></Spinner>
-            <div class="col-12 mt-2">
-              <div class="document-card" v-if="state.documentList && state.documentList.length > 0">
-                <div class="col text-label mb-2">
-                  {{ $t('businessDocument.uploadNewDocument') }}
-                  <i class="bi bi-cloud-upload-fill mx-1"></i>
-                </div>
-                <div id="document-feature-form-add" class="row g-1">
-                  <div class="col-3">
-                    {{ $t('businessDocument.feature') }}
-                  </div>
-                  <div class="col-9">
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select mx-2"
-                      v-model="state.optionSelected"
-                      id="features"
-                      v-bind:class="{ 'is-invalid': state.moduleError }"
-                    >
-                      <option v-for="item in state.documentList" :key="item.name" :value="item">
-                        {{ item.name }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div
-                  class="row mt-2"
-                  v-if="
-                    state.optionSelected &&
-                    state.optionSelected.characteristics &&
-                    state.optionSelected.characteristics.document &&
-                    state.optionSelected.characteristics.document === true
-                  "
-                >
-                  <div class="col centered">
-                    <input
-                      id="document-fileUpload"
-                      ref="file"
-                      :data-cy="`document-fileUpload-${state.optionSelected.name}`"
-                      type="file"
-                      hidden
-                      @change="getFile($event)"
-                    />
-                    <button
-                      id="document-upload-button"
-                      :disabled="!state.togglesDocuments['document-client.admin.edit']"
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action py-2"
-                      @click="showPopUpFile()"
-                    >
-                      {{ $t('businessDocument.upload') }} <i class="bi bi-cloud-upload-fill"></i>
-                    </button>
-                    <button
-                      id="document-add-button"
-                      v-if="state.newDocument.file"
-                      :disabled="!state.togglesDocuments['document-client.admin.edit']"
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill card-action py-2 bg-primary"
-                      @click="add()"
-                    >
-                      {{ $t('businessDocument.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1" v-if="state.newDocument.file">
-                  <div class="col-12 examples">
-                    <span class="">
-                      <span class="fw-bold"> File: </span>{{ state.newDocument.file.name }} ({{
-                        (state.newDocument.file.size / 1000000).toFixed(2)
-                      }}
-                      MB)
-                    </span>
-                  </div>
-                </div>
-                <div class="" id="feedback" v-if="state.errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('patientHistoryView.message.2.title')"
-                  :content="$t('patientHistoryView.message.2.content')"
+
+            <div
+              v-if="
+                state.optionSelected &&
+                state.optionSelected.characteristics &&
+                state.optionSelected.characteristics.document &&
+                state.optionSelected.characteristics.document === true
+              "
+              class="upload-actions-modern"
+            >
+              <DragDropFileUpload
+                :model-value="state.newDocument.file"
+                :disabled="!state.togglesDocuments['document-client.admin.edit']"
+                :loading="loading"
+                :accept="'.pdf,.jpg,.jpeg,.png'"
+                :max-size="5000000"
+                :title="$t('businessDocument.uploadNewDocument')"
+                :subtitle="
+                  $t('businessDocument.dragDropOrClick') ||
+                  'Arraste e solte o arquivo aqui ou clique para selecionar'
+                "
+                :accepted-formats="'PDF, JPG, PNG (máx. 5MB)'"
+                @file-selected="handleFileSelected"
+                @file-removed="handleFileRemoved"
+                @error="handleFileError"
+              />
+
+              <button
+                id="document-add-button"
+                v-if="state.newDocument.file"
+                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading"
+                class="btn-save-file-modern"
+                @click="add()"
+              >
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ $t('businessDocument.add') }}
+              </button>
+            </div>
+
+            <div class="form-errors-modern" v-if="state.errorsAdd.length > 0">
+              <Warning>
+                <template v-slot:message>
+                  <li v-for="(error, index) in state.errorsAdd" :key="index">
+                    {{ $t(error) }}
+                  </li>
+                </template>
+              </Warning>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="empty-state-modern">
+          <Message
+            :title="$t('patientHistoryView.message.2.title')"
+            :content="$t('patientHistoryView.message.2.content')"
+          />
+        </div>
+      </div>
+
+      <!-- Collapsed Indicator (visible when collapsed) - Outside the section -->
+      <button
+        v-if="state.oldDocuments && state.oldDocuments.length > 0 && !state.showHistory"
+        class="history-collapsed-indicator"
+        @click="state.showHistory = !state.showHistory"
+        :title="$t('patientHistoryView.showMenu')"
+      >
+        <i class="bi bi-clock-history"></i>
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <!-- Documents History -->
+      <div
+        v-if="state.oldDocuments && state.oldDocuments.length > 0"
+        :class="['form-history-section', { collapsed: !state.showHistory }]"
+      >
+        <!-- Full History Section (visible when expanded) -->
+        <template v-if="state.showHistory">
+          <div class="history-section-header">
+            <div class="history-header-content">
+              <button
+                class="history-toggle-btn"
+                @click="state.showHistory = !state.showHistory"
+                :title="$t('patientHistoryView.hideMenu')"
+              >
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <i class="bi bi-clock-history history-header-icon"></i>
+              <h4 class="history-header-title">{{ $t('patientHistoryView.history') }}</h4>
+            </div>
+            <div class="history-sort-control">
+              <label class="sort-toggle-label" for="asc-documents">
+                <input
+                  class="form-check-input sort-toggle-input"
+                  :class="state.asc === false ? 'sort-desc' : 'sort-asc'"
+                  type="checkbox"
+                  name="asc"
+                  id="asc-documents"
+                  v-model="state.asc"
+                  @click="checkAsc($event)"
                 />
-              </div>
-              <div v-if="state.oldDocuments && state.oldDocuments.length > 0">
-                <div class="col-12 text-label fw-bold mt-4">
-                  {{ $t('patientHistoryView.history') }} <i class="bi bi-clock-fill mx-1"></i>
-                  <div class="form-check form-switch centered">
-                    <input
-                      class="form-check-input m-1"
-                      :class="state.asc === false ? 'bg-danger' : ''"
-                      type="checkbox"
-                      name="asc"
-                      id="asc"
-                      v-model="state.asc"
-                      @click="checkAsc($event)"
-                    />
-                    <label class="form-check-label metric-card-subtitle" for="asc">{{
-                      state.asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                    }}</label>
-                  </div>
-                </div>
-                <div v-for="item in state.oldDocuments.filter(doc => doc.available)" :key="item.id">
-                  <div v-if="item.active === true" class="document-card">
-                    <div
-                      class="row"
-                      v-if="
-                        item.details &&
-                        item.details.characteristics &&
-                        item.details.characteristics.document &&
-                        item.details.characteristics.document === true
-                      "
-                    >
-                      <div class="col-8">
-                        <div class="lefted">
-                          <span class="badge bg-primary"> {{ item.details.tag }} </span>
-                          <span class="badge bg-secondary mx-1"> {{ item.details.name }} </span>
-                        </div>
-                        <div class="lefted">
-                          <div>
-                            <i :class="`bi ${documentIcon(item.format)} mx-1`"></i>
-                            <label class="form-check-label metric-card-subtitle mt-1">{{
-                              getDateAndHour(item.createdAt)
-                            }}</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-4 righted">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2"
-                          @click="executeDownload(item)"
-                        >
-                          <i class="bi bi-download"></i>
-                        </button>
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2"
-                          @click="executeDelete(item)"
-                        >
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                      </div>
+                <span class="sort-toggle-text">
+                  <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
+                  {{ state.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="history-timeline">
+            <div class="documents-list">
+              <div
+                v-for="item in state.oldDocuments.filter(
+                  doc =>
+                    doc.available &&
+                    doc.active === true &&
+                    doc.details &&
+                    doc.details.characteristics &&
+                    doc.details.characteristics.document === true
+                )"
+                :key="item.id"
+                class="document-card-modern"
+              >
+                <div class="document-card-content">
+                  <div class="document-card-main">
+                    <div class="document-badges">
+                      <span class="badge badge-primary" v-if="item.details?.tag">{{
+                        item.details.tag
+                      }}</span>
+                      <span class="badge badge-secondary" v-if="item.details?.name">{{
+                        item.details.name
+                      }}</span>
                     </div>
+                    <div class="document-meta">
+                      <i :class="`bi ${documentIcon(item.format)} document-type-icon`"></i>
+                      <span class="document-date" v-if="item.createdAt">{{
+                        getDateAndHour(item.createdAt)
+                      }}</span>
+                    </div>
+                  </div>
+                  <div class="document-actions">
+                    <button
+                      class="btn-document-action btn-download"
+                      @click="executeDownload(item)"
+                      title="Download"
+                    >
+                      <i class="bi bi-download"></i>
+                    </button>
+                    <button
+                      class="btn-document-action btn-delete"
+                      @click="executeDelete(item)"
+                      title="Excluir"
+                    >
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
     </div>
   </div>
 </template>
+
 <style scoped>
-.blocks-section {
-  overflow-y: scroll;
-  max-height: 800px;
-  font-size: small;
+@import '../../../shared/styles/prontuario-common.css';
+
+.patient-form-modern.documents-form {
+  width: 100%;
+  padding: 0;
+}
+
+/* Upload Section */
+.upload-section-modern {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
   margin-bottom: 2rem;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  background-color: var(--color-background);
 }
-.document-card {
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  margin: 0.2rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
+
+.upload-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
-.download {
-  padding: 0.1rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+
+.upload-icon {
+  font-size: 1.5rem;
+  color: var(--azul-turno);
+}
+
+.upload-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.upload-form-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field-modern {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label-modern {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background: white;
+}
+
+.form-control-invalid {
+  border-color: #dc3545 !important;
+}
+
+.form-select-modern {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.upload-actions-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.btn-upload-file,
+.btn-save-file {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-upload-file {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+.btn-upload-file:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-save-file {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-save-file:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-upload-file:disabled,
+.btn-save-file:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-save-file-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.btn-save-file-modern:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-save-file-modern:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* File Preview */
+.file-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.625rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.file-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+  color: var(--azul-turno);
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+.btn-remove-file {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-file:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.form-errors-modern {
+  margin-top: 1rem;
+}
+
+.empty-state-modern {
+  margin: 2rem 0;
+}
+
+/* Form Layout */
+.form-layout-modern {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  height: 100%;
+  position: relative;
+  overflow: visible;
+}
+
+/* Ensure the collapsed indicator container has space */
+.form-layout-modern:has(.history-collapsed-indicator) {
+  position: relative;
+}
+
+.form-layout-modern:has(.form-history-section.collapsed) .form-input-section {
+  grid-column: 1 / -1;
+}
+
+.form-input-section,
+.form-history-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  transition: all 0.3s ease;
+}
+
+.form-history-section {
+  position: relative;
+  overflow: visible;
+}
+
+.form-history-section.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  overflow: visible;
+  position: relative;
+}
+
+/* Collapsed Indicator - Always visible on the right edge, similar to sidebar toggle */
+.history-collapsed-indicator {
+  position: absolute;
+  right: -12px;
+  top: 0.25rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 36px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  padding: 0.5rem 0.3rem;
+  pointer-events: auto;
+}
+
+.history-collapsed-indicator:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.history-collapsed-indicator i {
   font-size: 1rem;
-  border: 1.2px solid var(--gris-default);
+}
+
+.history-collapsed-indicator i:first-child {
+  font-size: 1.1rem;
+}
+
+/* Documents History */
+.history-timeline {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+}
+
+.history-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.history-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.history-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.history-header-icon {
+  font-size: 1.1rem;
+  color: var(--azul-turno);
+}
+
+.history-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.history-sort-control {
+  display: flex;
+  align-items: center;
+}
+
+.sort-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
   border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  margin: 0;
+}
+
+.sort-toggle-label:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sort-toggle-input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.sort-toggle-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sort-asc {
+  background-color: #28a745;
+}
+
+.sort-desc {
+  background-color: #dc3545;
+}
+
+/* Documents List */
+.documents-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.5rem;
+}
+
+.document-card-modern {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.document-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.document-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.document-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.document-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+}
+
+.badge-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+.document-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.document-type-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+}
+
+.document-date {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+.document-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-document-action {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-download {
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--azul-turno);
+}
+
+.btn-download:hover {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.btn-delete {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.btn-delete:hover {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+  .form-layout-modern {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .form-section-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .history-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .documents-list {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-actions {
+    flex-direction: column;
+  }
+
+  .btn-upload-file,
+  .btn-save-file {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 </style>

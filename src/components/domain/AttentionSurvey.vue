@@ -85,10 +85,10 @@ export default {
     showSurvey() {
       if (
         this.commerce &&
-        this.commerce.serviceInfo &&
         this.attention.status === 'TERMINATED' &&
         (this.attention.surveyPostAttentionDateScheduled === undefined ||
           new DateModel().toString() >= this.attention.surveyPostAttentionDateScheduled) &&
+        this.surveyPersonalized &&
         this.surveyPersonalized.id
       ) {
         return true;

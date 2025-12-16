@@ -1157,6 +1157,80 @@ export default {
                       :content="$t('dashboard.message.2.content')"
                     />
                   </div>
+                  <!-- telemedicine-evolution -->
+                  <div
+                    v-if="graphs['telemedicine-evolution'] && commerce?.telemedicineEnabled"
+                    class="row row-cols-1 row-cols-md-1 g-2 mx-2"
+                  >
+                    <div
+                      v-if="toggles['dashboard.telemedicine-evolution.view']"
+                      class="col d-flex align-items-stretch"
+                    >
+                      <div class="card col metric-card-graph centered">
+                        <div class="metric-card-title">
+                          <span
+                            ><strong>
+                              {{
+                                $t('dashboard.telemedicine.evolution.title') ||
+                                'Evolución de Sesiones de Telemedicina'
+                              }}
+                            </strong></span
+                          >
+                        </div>
+                        <div class="row">
+                          <LineChart
+                            class="centered"
+                            v-bind="calculatedMetrics.telemedicineEvolutionProps"
+                          />
+                          <div class="metric-conclusion mt-3">
+                            <div class="row centered">
+                              <div class="col-12 col-md-2 m-1 centered">
+                                <i class="bi bi-graph-up-arrow blue-icon">
+                                  <span>
+                                    {{
+                                      $t('dashboard.telemedicine.evolution.trend') || 'Tendencia'
+                                    }}
+                                  </span>
+                                </i>
+                              </div>
+                              <div class="col-12 col-md-4 m-1 centered">
+                                <span>
+                                  {{
+                                    $t('dashboard.telemedicine.evolution.total') ||
+                                    'Total de sesiones:'
+                                  }}
+                                  <span class="fw-bold">
+                                    {{ calculatedMetrics['telemedicine.created']?.total || 0 }}
+                                  </span>
+                                  {{
+                                    $t('dashboard.telemedicine.evolution.period') || 'en el período'
+                                  }}
+                                </span>
+                              </div>
+                              <div class="col-12 col-md-4 m-1 centered">
+                                <span>
+                                  {{
+                                    $t('dashboard.telemedicine.evolution.completed') ||
+                                    'Completadas:'
+                                  }}
+                                  <span class="fw-bold">
+                                    {{ calculatedMetrics['telemedicine.created']?.completed || 0 }}
+                                  </span>
+                                  {{
+                                    $t('dashboard.telemedicine.evolution.cancelled') ||
+                                    'Canceladas:'
+                                  }}
+                                  <span class="fw-bold">
+                                    {{ calculatedMetrics['telemedicine.created']?.cancelled || 0 }}
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <!-- booking-day-distribution -->
                   <div
                     v-if="graphs['booking-day-distribution']"

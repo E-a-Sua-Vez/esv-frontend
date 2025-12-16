@@ -28,6 +28,7 @@ import AttentionNumber from '../../common/AttentionNumber.vue';
 import Warning from '../../common/Warning.vue';
 import ClientDetailsCard from '../../clients/common/ClientDetailsCard.vue';
 import AttentionDetailsCard from '../../attentions/common/AttentionDetailsCard.vue';
+import AttentionCreationModal from '../../attentions/domain/AttentionCreationDrawer.vue';
 
 export default {
   name: 'BookingCalendar',
@@ -44,6 +45,7 @@ export default {
     Warning,
     ClientDetailsCard,
     AttentionDetailsCard,
+    AttentionCreationModal,
   },
   props: {
     show: { type: Boolean, default: false },
@@ -98,6 +100,8 @@ export default {
       showBooking: false,
       showWaitlist: false,
       showAllQueues: false,
+      showAttentionDrawer: false,
+      selectedBlockForDrawer: null,
       extendedBookingsEntity: false,
       clientBookings: [],
       showBookings360: true,
@@ -867,17 +871,61 @@ export default {
       }
     };
 
-    const selectDay = async queue => {
-      if (queue && queue.id) {
-        state.selectedQueue = queue;
-      }
-      getBlocks();
-      showBookings360();
-      const today = getDate(new Date());
-      if (getDate(state.selectedDate) !== today) {
-        showBookings();
-      } else {
-        showAttentions();
+    const selectDay = async (date, queue) => {
+      try {
+        // VDatePicker @dayclick passes date as first param, queue is passed via closure
+        // If first param is a queue object (from old code), handle it
+        if (date && date.id && !queue) {
+          // First param is actually the queue (backward compatibility)
+          queue = date;
+          date = null;
+        }
+
+        // If queue is provided, set it as selected
+        if (queue && queue.id) {
+          state.selectedQueue = queue;
+        }
+
+        // If date is provided, update selectedDate
+        if (date) {
+          let dateValue = date;
+          if (date instanceof Date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const day = date.getDate();
+            dateValue = new Date(year, month, day);
+          } else if (typeof date === 'string') {
+            const parsed = new Date(date);
+            const year = parsed.getFullYear();
+            const month = parsed.getMonth();
+            const day = parsed.getDate();
+            dateValue = new Date(year, month, day);
+          }
+
+          if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+            const year = dateValue.getFullYear();
+            const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+            const day = String(dateValue.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            state.selectedDate = dateString;
+
+            // Update selectedDates for the queue
+            if (state.selectedQueue && state.selectedQueue.id) {
+              state.selectedDates[state.selectedQueue.id] = dateValue;
+            }
+          }
+        }
+
+        getBlocks();
+        showBookings360();
+        const today = getDate(new Date());
+        if (getDate(state.selectedDate) !== today) {
+          showBookings();
+        } else {
+          showAttentions();
+        }
+      } catch (error) {
+        console.error('Error in selectDay:', error);
       }
     };
 
@@ -961,6 +1009,26 @@ export default {
           }
           if (!state.client || !state.client.id) {
             state.client = undefined;
+          } else {
+            // Client found - scroll to client details after rendering
+            nextTick(() => {
+              setTimeout(() => {
+                // Find the client details wrapper within the client search section
+                const clientSearchSection = document.querySelector('.client-search-section');
+                if (clientSearchSection) {
+                  const clientDetailsWrapper =
+                    clientSearchSection.querySelector('.client-details-wrapper');
+                  if (clientDetailsWrapper) {
+                    // Scroll the wrapper into view with smooth behavior
+                    clientDetailsWrapper.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                      inline: 'nearest',
+                    });
+                  }
+                }
+              }, 150); // Small delay to ensure DOM is fully rendered
+            });
           }
           state.errorsSearch = [];
           state.searchTextError = false;
@@ -1045,65 +1113,71 @@ export default {
       }
     };
 
-    const selectDate = async () => {
-      if (!state.selectedQueue || !state.selectedQueue.id || !state.tempSelectedDate) return;
+    const selectDate = async date => {
+      try {
+        // VDatePicker @dayclick passes date as first param
+        // Use provided date or fall back to tempSelectedDate
+        let dateValue = date || state.tempSelectedDate;
 
-      // Get the date from tempSelectedDate (bound to VDatePicker v-model)
-      let dateValue = state.tempSelectedDate;
-      if (dateValue instanceof Date) {
-        // Date is already a Date object - use local date to avoid timezone issues
-        // Create a new date using local timezone to avoid UTC conversion issues
+        if (!state.selectedQueue || !state.selectedQueue.id || !dateValue) return;
+
+        if (dateValue instanceof Date) {
+          // Date is already a Date object - use local date to avoid timezone issues
+          // Create a new date using local timezone to avoid UTC conversion issues
+          const year = dateValue.getFullYear();
+          const month = dateValue.getMonth();
+          const day = dateValue.getDate();
+          dateValue = new Date(year, month, day);
+        } else if (typeof dateValue === 'string') {
+          // Parse string date and create in local timezone
+          const parsed = new Date(dateValue);
+          const year = parsed.getFullYear();
+          const month = parsed.getMonth();
+          const day = parsed.getDate();
+          dateValue = new Date(year, month, day);
+        } else if (dateValue && typeof dateValue === 'object' && dateValue.getTime) {
+          // Date-like object - convert to local date
+          const temp = new Date(dateValue);
+          const year = temp.getFullYear();
+          const month = temp.getMonth();
+          const day = temp.getDate();
+          dateValue = new Date(year, month, day);
+        }
+
+        // Ensure we have a valid date
+        if (!dateValue || !(dateValue instanceof Date) || isNaN(dateValue.getTime())) {
+          return;
+        }
+
+        // Convert to YYYY-MM-DD format using local timezone (not UTC)
         const year = dateValue.getFullYear();
-        const month = dateValue.getMonth();
-        const day = dateValue.getDate();
-        dateValue = new Date(year, month, day);
-      } else if (typeof dateValue === 'string') {
-        // Parse string date and create in local timezone
-        const parsed = new Date(dateValue);
-        const year = parsed.getFullYear();
-        const month = parsed.getMonth();
-        const day = parsed.getDate();
-        dateValue = new Date(year, month, day);
-      } else if (dateValue && typeof dateValue === 'object' && dateValue.getTime) {
-        // Date-like object - convert to local date
-        const temp = new Date(dateValue);
-        const year = temp.getFullYear();
-        const month = temp.getMonth();
-        const day = temp.getDate();
-        dateValue = new Date(year, month, day);
+        const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+        const day = String(dateValue.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        // Update both selectedDate and selectedDates for the queue
+        state.selectedDate = dateString;
+        state.selectedDates[state.selectedQueue.id] = dateValue;
+
+        // Close the date selector
+        state.showDateSelector = false;
+        dateSelectorPositioned.value = false;
+
+        // Update blocks and agenda
+        getBlocks();
+        showBookings360();
+        const today = getDate(new Date());
+        if (getDate(state.selectedDate) !== today) {
+          showBookings();
+        } else {
+          showAttentions();
+        }
+
+        // Scroll to the calendar
+        await scrollToQueueCalendar(state.selectedQueue.id);
+      } catch (error) {
+        console.error('Error in selectDate:', error);
       }
-
-      // Ensure we have a valid date
-      if (!dateValue || !(dateValue instanceof Date) || isNaN(dateValue.getTime())) {
-        return;
-      }
-
-      // Convert to YYYY-MM-DD format using local timezone (not UTC)
-      const year = dateValue.getFullYear();
-      const month = String(dateValue.getMonth() + 1).padStart(2, '0');
-      const day = String(dateValue.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-
-      // Update both selectedDate and selectedDates for the queue
-      state.selectedDate = dateString;
-      state.selectedDates[state.selectedQueue.id] = dateValue;
-
-      // Close the date selector
-      state.showDateSelector = false;
-      dateSelectorPositioned.value = false;
-
-      // Update blocks and agenda
-      getBlocks();
-      showBookings360();
-      const today = getDate(new Date());
-      if (getDate(state.selectedDate) !== today) {
-        showBookings();
-      } else {
-        showAttentions();
-      }
-
-      // Scroll to the calendar
-      await scrollToQueueCalendar(state.selectedQueue.id);
     };
 
     const startResize = e => {
@@ -1436,6 +1510,47 @@ export default {
       state.selectedBooking = null;
     };
 
+    const openAttentionDrawer = block => {
+      console.log('openAttentionDrawer called with block:', block);
+      console.log('selectedQueue:', state.selectedQueue);
+      console.log('selectedDate:', state.selectedDate);
+
+      if (!state.selectedQueue || !state.selectedQueue.id) {
+        alertError.value = 'Please select a queue first';
+        console.warn('Cannot open drawer: queue not selected');
+        return;
+      }
+      if (!state.selectedDate) {
+        alertError.value = 'Please select a date first';
+        console.warn('Cannot open drawer: date not selected');
+        return;
+      }
+
+      // Check if hour is already booked
+      if (block && block.hourFrom && state.bookingsActiveBlocks.includes(block.hourFrom)) {
+        console.log('Hour is already booked, cannot create attention');
+        return;
+      }
+
+      console.log('Opening attention drawer');
+      state.selectedBlockForDrawer = block;
+      state.showAttentionDrawer = true;
+    };
+
+    const closeAttentionDrawer = () => {
+      state.showAttentionDrawer = false;
+      state.selectedBlockForDrawer = null;
+    };
+
+    const handleAttentionCreated = async attention => {
+      // Refresh bookings/attentions after creation
+      closeAttentionDrawer();
+      // Trigger refresh - this will depend on your refresh logic
+      if (state.selectedQueue && state.selectedQueue.id) {
+        await getBookings();
+      }
+    };
+
     const changeDate = computed(() => {
       const { selectedDate, selectedQueue, selectedDates } = state;
       return {
@@ -1469,7 +1584,11 @@ export default {
       if (state.selectedQueue && state.selectedQueue.id) {
         if (state.selectedQueue.serviceInfo && state.selectedQueue.serviceInfo.specificCalendar) {
           state.specificCalendar = true;
-        } else if (commerce.value && commerce.value.serviceInfo && commerce.value.serviceInfo.specificCalendar) {
+        } else if (
+          commerce.value &&
+          commerce.value.serviceInfo &&
+          commerce.value.serviceInfo.specificCalendar
+        ) {
           state.specificCalendar = true;
         } else {
           state.specificCalendar = false;
@@ -1498,7 +1617,12 @@ export default {
             state.specificCalendarDates =
               Object.keys(commerce.value.serviceInfo.specificCalendarDays) || [];
           }
-          if (newData.selectedQueue && newData.selectedQueue.id && oldData.selectedQueue && newData.selectedQueue.id !== oldData.selectedQueue.id) {
+          if (
+            newData.selectedQueue &&
+            newData.selectedQueue.id &&
+            oldData.selectedQueue &&
+            newData.selectedQueue.id !== oldData.selectedQueue.id
+          ) {
             state.blocksBySpecificCalendarDate =
               await getQueueBlockDetailsBySpecificDayByCommerceId(
                 commerce.value.id,
@@ -1614,6 +1738,9 @@ export default {
       getBookingsActiveBlocks,
       openBookingDrawer,
       closeBookingDrawer,
+      openAttentionDrawer,
+      closeAttentionDrawer,
+      handleAttentionCreated,
       getDate,
       selectDate,
       openDateSelector,
@@ -1684,7 +1811,9 @@ export default {
           </div>
           <div class="row g-1 mx-0 my-0" v-if="state.showQueues && queues && queues.length > 0">
             <div
-              v-for="(queue, index) in queues.filter(queue => queue && queue.type && queue.type !== 'COLLABORATOR')"
+              v-for="(queue, index) in queues.filter(
+                queue => queue && queue.type && queue.type !== 'COLLABORATOR'
+              )"
               :key="queue.id"
               :data-queue-id="queue.id"
               :ref="index === 0 ? 'firstCalendarRef' : null"
@@ -1721,7 +1850,7 @@ export default {
                     :max-date="state.maxDate"
                     :disabled-dates="disabledDates[queue.id]"
                     :attributes="calendarAttributes[queue.id]"
-                    @dayclick="selectDay(queue)"
+                    @dayclick="date => selectDay(date, queue)"
                     @transition-start="selectQueue(queue)"
                     @did-move="getAvailableDatesByCalendarMonth"
                   />
@@ -1734,7 +1863,9 @@ export default {
             v-if="state.showCollaboratorQueues && queues && queues.length > 0"
           >
             <div
-              v-for="(queue, index) in queues.filter(queue => queue && queue.type && queue.type === 'COLLABORATOR')"
+              v-for="(queue, index) in queues.filter(
+                queue => queue && queue.type && queue.type === 'COLLABORATOR'
+              )"
               :key="queue.id"
               :data-queue-id="queue.id"
               :ref="index === 0 ? 'firstCalendarRef' : null"
@@ -1771,7 +1902,7 @@ export default {
                     :max-date="state.maxDate"
                     :disabled-dates="disabledDates[queue.id]"
                     :attributes="calendarAttributes[queue.id]"
-                    @dayclick="selectDay(queue)"
+                    @dayclick="date => selectDay(date, queue)"
                     @transition-start="selectQueue(queue)"
                     @did-move="getAvailableDatesByCalendarMonth"
                   />
@@ -1818,7 +1949,7 @@ export default {
                     :max-date="state.maxDate"
                     :disabled-dates="disabledDates[queue.id]"
                     :attributes="calendarAttributes[queue.id]"
-                    @dayclick="selectDay(queue)"
+                    @dayclick="date => selectDay(date, queue)"
                     @transition-start="selectQueue(queue)"
                     @did-move="getAvailableDatesByCalendarMonth"
                   />
@@ -1942,8 +2073,8 @@ export default {
                             :max-date="state.maxDate"
                             :disabled-dates="disabledDates[state.selectedQueue.id]"
                             :attributes="calendarAttributes[state.selectedQueue.id]"
-                            @dayclick="selectDate"
-                            @update:model-value="selectDate"
+                            @dayclick="date => selectDate(date)"
+                            @update:model-value="date => selectDate(date)"
                           />
                         </div>
                       </div>
@@ -2013,7 +2144,12 @@ export default {
                         :toggles="toggles"
                         :commerce="commerce"
                         :queues="queues"
-                        :disable-click="attention.status === 'TERMINATED' || attention.status === 'CANCELLED' || attention.status === 'USER_CANCELLED' || attention.status === 'RATED'"
+                        :disable-click="
+                          attention.status === 'TERMINATED' ||
+                          attention.status === 'CANCELLED' ||
+                          attention.status === 'USER_CANCELLED' ||
+                          attention.status === 'RATED'
+                        "
                         @updatedAttentions="updatedAttentions"
                       >
                       </AttentionDetailsCard>
@@ -2048,6 +2184,12 @@ export default {
                               ? 'bg-primary'
                               : 'bg-success'
                           "
+                          @click="openAttentionDrawer(block)"
+                          :style="
+                            !state.bookingsActiveBlocks.includes(block.hourFrom)
+                              ? 'cursor: pointer;'
+                              : 'cursor: default;'
+                          "
                         >
                           {{ block.hourFrom }}
                         </span>
@@ -2067,7 +2209,9 @@ export default {
                             :calendar-attributes="calendarAttributes"
                             :grouped-queues="state.groupedQueues"
                             :drawer-mode="true"
-                            :disable-click="booking.status === 'CANCELLED' || booking.processed === true"
+                            :disable-click="
+                              booking.status === 'CANCELLED' || booking.processed === true
+                            "
                             @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
                             @open-drawer="openBookingDrawer"
                           >
@@ -2084,7 +2228,11 @@ export default {
                   >
                     <div v-for="block in state.blocks" :key="block.number">
                       <div class="metric-card">
-                        <span class="lefted badge hour-title bg-success">
+                        <span
+                          class="lefted badge hour-title bg-success"
+                          @click="openAttentionDrawer(block)"
+                          style="cursor: pointer"
+                        >
                           {{ block.hourFrom }}</span
                         >
                       </div>
@@ -2321,6 +2469,21 @@ export default {
         </div>
       </div>
     </Teleport>
+
+    <!-- Attention Creation Modal -->
+    <AttentionCreationModal
+      :show="state.showAttentionDrawer"
+      :commerce="commerce"
+      :queues="queues"
+      :grouped-queues="state.groupedQueues"
+      :collaborators="[]"
+      :preselected-queue="state.selectedQueue"
+      :preselected-date="state.selectedDate"
+      :preselected-block="state.selectedBlockForDrawer"
+      :toggles="toggles"
+      @close="closeAttentionDrawer"
+      @attention-created="handleAttentionCreated"
+    />
   </div>
 </template>
 

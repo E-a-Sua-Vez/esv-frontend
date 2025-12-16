@@ -20,3 +20,32 @@ export const getActiveFeature = (commerce, name, type) => {
   }
   return active;
 };
+
+/**
+ * Check if telemedicine is enabled for a queue
+ * Requires both:
+ * 1. Commerce has 'telemedicine-active' feature toggle enabled (PRODUCT type)
+ * 2. Queue has telemedicineEnabled set to true (defaults to false for backward compatibility)
+ *
+ * @param {Object} commerce - Commerce object with features array
+ * @param {Object} queue - Queue object with telemedicineEnabled field
+ * @returns {boolean} true if both commerce feature and queue field are enabled
+ */
+export const isTelemedicineEnabled = (commerce, queue) => {
+  // Early return if commerce or queue is missing
+  if (!commerce || !queue) {
+    return false;
+  }
+
+  // Check commerce feature toggle - must be active
+  const commerceTelemedicineActive = getActiveFeature(commerce, 'telemedicine-active', 'PRODUCT');
+  if (!commerceTelemedicineActive) {
+    return false;
+  }
+
+  // Check queue telemedicineEnabled field
+  // Explicitly check for true (undefined/null/false all return false for backward compatibility)
+  const queueTelemedicineEnabled = queue.telemedicineEnabled === true;
+
+  return queueTelemedicineEnabled;
+};

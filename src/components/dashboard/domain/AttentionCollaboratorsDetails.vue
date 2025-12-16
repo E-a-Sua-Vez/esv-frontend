@@ -33,7 +33,10 @@ export default {
         return { attentions: 0, duration: 0, rating: 0 };
       }
 
-      const totalAttentions = this.collaborators.reduce((sum, c) => sum + (c.attention_counter || 0), 0);
+      const totalAttentions = this.collaborators.reduce(
+        (sum, c) => sum + (c.attention_counter || 0),
+        0
+      );
       const totalDuration = this.collaborators.reduce((sum, c) => sum + (c.avg_duration || 0), 0);
       const totalRating = this.collaborators.reduce((sum, c) => sum + (c.avg_rating || 0), 0);
       const count = this.collaborators.length;
@@ -100,19 +103,27 @@ export default {
       <!-- Summary Stats -->
       <div class="collaborators-summary">
         <div class="summary-stat">
-          <div class="summary-stat-label">{{ $t('dashboard.collaborators.total') || 'Total Colaboradores' }}</div>
+          <div class="summary-stat-label">
+            {{ $t('dashboard.collaborators.total') || 'Total Colaboradores' }}
+          </div>
           <div class="summary-stat-value">{{ collaborators.length }}</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-stat-label">{{ $t('dashboard.collaborators.avgAttentions') || 'Promedio Atenciones' }}</div>
+          <div class="summary-stat-label">
+            {{ $t('dashboard.collaborators.avgAttentions') || 'Promedio Atenciones' }}
+          </div>
           <div class="summary-stat-value">{{ averageMetrics.attentions }}</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-stat-label">{{ $t('dashboard.collaborators.avgDuration') || 'Tiempo Promedio' }}</div>
+          <div class="summary-stat-label">
+            {{ $t('dashboard.collaborators.avgDuration') || 'Tiempo Promedio' }}
+          </div>
           <div class="summary-stat-value">{{ formatDuration(averageMetrics.duration) }}</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-stat-label">{{ $t('dashboard.collaborators.avgRating') || 'Rating Promedio' }}</div>
+          <div class="summary-stat-label">
+            {{ $t('dashboard.collaborators.avgRating') || 'Rating Promedio' }}
+          </div>
           <div class="summary-stat-value">{{ formatRating(averageMetrics.rating) }}</div>
         </div>
       </div>
@@ -167,7 +178,9 @@ export default {
               <i :class="`bi bi-${index + 1}-circle-fill`"></i>
             </div>
             <div class="collaborator-info">
-              <div class="collaborator-name">{{ collaborator.name || collaborator.alias || 'Sin nombre' }}</div>
+              <div class="collaborator-name">
+                {{ collaborator.name || collaborator.alias || 'Sin nombre' }}
+              </div>
               <div class="collaborator-alias" v-if="collaborator.alias && collaborator.name">
                 {{ collaborator.alias }}
               </div>
@@ -185,7 +198,9 @@ export default {
                   <i class="bi bi-qr-code"></i>
                 </div>
                 <div class="metric-content">
-                  <div class="metric-label">{{ $t('dashboard.collaborators.attentions') || 'Atenciones' }}</div>
+                  <div class="metric-label">
+                    {{ $t('dashboard.collaborators.attentions') || 'Atenciones' }}
+                  </div>
                   <div class="metric-value">{{ collaborator.attention_counter || 0 }}</div>
                   <div
                     v-if="collaborator.vs_average_attentions !== undefined"
@@ -204,7 +219,9 @@ export default {
                   <i class="bi bi-clock-history"></i>
                 </div>
                 <div class="metric-content">
-                  <div class="metric-label">{{ $t('dashboard.collaborators.avgDuration') || 'Tiempo Medio' }}</div>
+                  <div class="metric-label">
+                    {{ $t('dashboard.collaborators.avgDuration') || 'Tiempo Medio' }}
+                  </div>
                   <div class="metric-value">{{ formatDuration(collaborator.avg_duration) }}</div>
                   <div
                     v-if="collaborator.vs_average_duration !== undefined"
@@ -225,7 +242,9 @@ export default {
                   <i class="bi bi-star-fill"></i>
                 </div>
                 <div class="metric-content">
-                  <div class="metric-label">{{ $t('dashboard.collaborators.rating') || 'Rating' }}</div>
+                  <div class="metric-label">
+                    {{ $t('dashboard.collaborators.rating') || 'Rating' }}
+                  </div>
                   <div class="metric-value" :class="getRatingClass(collaborator.avg_rating)">
                     {{ formatRating(collaborator.avg_rating) }}
                   </div>
@@ -238,7 +257,10 @@ export default {
                     ></i>
                   </div>
                   <div
-                    v-if="collaborator.vs_average_rating !== undefined && collaborator.vs_average_rating !== 0"
+                    v-if="
+                      collaborator.vs_average_rating !== undefined &&
+                      collaborator.vs_average_rating !== 0
+                    "
                     class="metric-comparison"
                     :class="getPerformanceClass(collaborator.vs_average_rating)"
                   >
@@ -254,7 +276,9 @@ export default {
                   <i class="bi bi-speedometer2"></i>
                 </div>
                 <div class="metric-content">
-                  <div class="metric-label">{{ $t('dashboard.collaborators.efficiency') || 'Eficiencia' }}</div>
+                  <div class="metric-label">
+                    {{ $t('dashboard.collaborators.efficiency') || 'Eficiencia' }}
+                  </div>
                   <div class="metric-value">{{ collaborator.efficiency_score.toFixed(1) }}</div>
                   <div class="metric-subtext">
                     {{ $t('dashboard.collaborators.efficiencyDesc') || 'atenciones/hora' }}
@@ -267,10 +291,16 @@ export default {
                   <i class="bi bi-chat-heart"></i>
                 </div>
                 <div class="metric-content">
-                  <div class="metric-label">{{ $t('dashboard.collaborators.surveys') || 'Encuestas' }}</div>
+                  <div class="metric-label">
+                    {{ $t('dashboard.collaborators.surveys') || 'Encuestas' }}
+                  </div>
                   <div class="metric-value">{{ collaborator.surveys_count }}</div>
-                  <div class="metric-subtext" v-if="collaborator.nps_score !== undefined && collaborator.nps_score !== 0">
-                    NPS: {{ collaborator.nps_score > 0 ? '+' : '' }}{{ collaborator.nps_score.toFixed(1) }}
+                  <div
+                    class="metric-subtext"
+                    v-if="collaborator.nps_score !== undefined && collaborator.nps_score !== 0"
+                  >
+                    NPS: {{ collaborator.nps_score > 0 ? '+' : ''
+                    }}{{ collaborator.nps_score.toFixed(1) }}
                   </div>
                 </div>
               </div>
@@ -281,7 +311,9 @@ export default {
     </div>
     <div v-else class="no-data">
       <i class="bi bi-info-circle"></i>
-      <span>{{ $t('dashboard.collaborators.noData') || 'No hay datos de colaboradores disponibles' }}</span>
+      <span>{{
+        $t('dashboard.collaborators.noData') || 'No hay datos de colaboradores disponibles'
+      }}</span>
     </div>
   </div>
 </template>

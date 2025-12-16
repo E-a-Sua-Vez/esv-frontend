@@ -1,6 +1,7 @@
 const CommerceQueuesView = () => import('@/views/CommerceQueuesView.vue');
 const CommerceQRSetup = () => import('@/views/CommerceQRSetup.vue');
 const BusinessQRSetup = () => import('@/views/business/BusinessQRSetup.vue');
+const TelemedicineSessionAccess = () => import('@/views/TelemedicineSessionAccess.vue');
 
 const PublicCommerceRoutes = [
   {
@@ -32,6 +33,11 @@ const PublicCommerceRoutes = [
     path: '/publico/comercio/:keyName/filas/:queueId/user/:name/:lastName/:idNumber/:phone/:email/:birthday/:addressCode/:addressText/:addressComplement',
     name: 'commerce-queues-user',
     component: CommerceQueuesView,
+  },
+  {
+    path: '/publico/telemedicina/:id',
+    name: 'telemedicine-session-access',
+    component: TelemedicineSessionAccess,
   },
 ];
 

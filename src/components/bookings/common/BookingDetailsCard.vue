@@ -619,7 +619,137 @@ export default {
               {{ booking.services.map(s => s.name).join(', ') }}
             </span>
           </div>
+          <!-- Telemedicine Info -->
+          <div v-if="booking.type === 'TELEMEDICINE'" class="booking-context-item-inline">
+            <i class="bi bi-camera-video"></i>
+            <span class="booking-context-label-inline">Telemedicina</span>
+            <span class="booking-context-value-inline">
+              <span v-if="booking.telemedicineConfig && booking.telemedicineConfig.type === 'VIDEO'"
+                >Video</span
+              >
+              <span
+                v-else-if="booking.telemedicineConfig && booking.telemedicineConfig.type === 'CHAT'"
+                >Chat</span
+              >
+              <span
+                v-else-if="booking.telemedicineConfig && booking.telemedicineConfig.type === 'BOTH'"
+                >Video y Chat</span
+              >
+              <span
+                v-if="booking.telemedicineConfig && booking.telemedicineConfig.recordingEnabled"
+                class="ms-2"
+              >
+                <i class="bi bi-record-circle text-danger"></i>
+              </span>
+            </span>
+          </div>
+          <div
+            v-if="
+              booking.type === 'TELEMEDICINE' &&
+              booking.telemedicineConfig &&
+              booking.telemedicineConfig.scheduledAt
+            "
+            class="booking-context-item-inline"
+          >
+            <i class="bi bi-calendar-event"></i>
+            <span class="booking-context-label-inline">Sesión Programada</span>
+            <span class="booking-context-value-inline">
+              {{ new Date(booking.telemedicineConfig.scheduledAt).toLocaleString() }}
+            </span>
+          </div>
         </div>
+
+        <!-- Telemedicine Client Instructions -->
+        <div
+          v-if="booking.type === 'TELEMEDICINE'"
+          class="telemedicine-instructions mt-3 p-3 border rounded bg-info bg-opacity-10"
+        >
+          <h6 class="mb-3 fw-bold">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ $t('collaboratorBookingsView.telemedicineInstructions.title') }}
+          </h6>
+          <div class="telemedicine-instructions-content">
+            <div class="mb-2">
+              <strong
+                ><i class="bi bi-1-circle me-2"></i
+                >{{
+                  $t('collaboratorBookingsView.telemedicineInstructions.preparation.title')
+                }}</strong
+              >
+              <ul class="mb-0 mt-1 small">
+                <li>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.preparation.internet') }}
+                </li>
+                <li>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.preparation.camera') }}
+                </li>
+                <li>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.preparation.location') }}
+                </li>
+                <li
+                  v-if="
+                    booking.telemedicineConfig.type === 'VIDEO' ||
+                    booking.telemedicineConfig.type === 'BOTH'
+                  "
+                >
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.preparation.device') }}
+                </li>
+              </ul>
+            </div>
+            <div class="mb-2">
+              <strong
+                ><i class="bi bi-2-circle me-2"></i
+                >{{ $t('collaboratorBookingsView.telemedicineInstructions.access.title') }}</strong
+              >
+              <ul class="mb-0 mt-1 small">
+                <li>{{ $t('collaboratorBookingsView.telemedicineInstructions.access.link') }}</li>
+                <li>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.access.activation') }}
+                </li>
+                <li>{{ $t('collaboratorBookingsView.telemedicineInstructions.access.code') }}</li>
+                <li>{{ $t('collaboratorBookingsView.telemedicineInstructions.access.doctor') }}</li>
+              </ul>
+            </div>
+            <div class="mb-2">
+              <strong
+                ><i class="bi bi-3-circle me-2"></i
+                >{{ $t('collaboratorBookingsView.telemedicineInstructions.during.title') }}</strong
+              >
+              <ul class="mb-0 mt-1 small">
+                <li
+                  v-if="
+                    booking.telemedicineConfig.type === 'VIDEO' ||
+                    booking.telemedicineConfig.type === 'BOTH'
+                  "
+                >
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.during.camera') }}
+                </li>
+                <li
+                  v-if="
+                    booking.telemedicineConfig.type === 'CHAT' ||
+                    booking.telemedicineConfig.type === 'BOTH'
+                  "
+                >
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.during.chat') }}
+                </li>
+                <li>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.during.documents') }}
+                </li>
+                <li v-if="booking.telemedicineConfig.recordingEnabled">
+                  <i class="bi bi-record-circle text-danger me-1"></i>
+                  {{ $t('collaboratorBookingsView.telemedicineInstructions.during.recording') }}
+                </li>
+              </ul>
+            </div>
+            <div class="alert alert-warning mb-0 mt-2 small">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>{{
+                $t('collaboratorBookingsView.telemedicineInstructions.important')
+              }}</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="booking-divider"></div>
         <!-- CONFIRMATION DETAILS -->
         <div

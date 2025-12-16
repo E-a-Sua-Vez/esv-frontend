@@ -70,31 +70,19 @@ export default {
     </div>
 
     <div class="plan-status-row">
-      <span
-        v-if="activation.active"
-        class="status-badge status-active"
-      >
+      <span v-if="activation.active" class="status-badge status-active">
         <i class="bi bi-check-circle-fill"></i>
         <span>{{ $t('businessPlan.planActive') }}</span>
       </span>
-      <span
-        v-else
-        class="status-badge status-inactive"
-      >
+      <span v-else class="status-badge status-inactive">
         <i class="bi bi-x-circle-fill"></i>
         <span>{{ $t('businessPlan.planInactive') }}</span>
       </span>
-      <span
-        v-if="activation.validated"
-        class="status-badge status-validated"
-      >
+      <span v-if="activation.validated" class="status-badge status-validated">
         <i class="bi bi-shield-check"></i>
         <span>{{ $t('businessPlan.planValidated') }}</span>
       </span>
-      <span
-        v-else
-        class="status-badge status-pending"
-      >
+      <span v-else class="status-badge status-pending">
         <i class="bi bi-clock-history"></i>
         <span>{{ $t('businessPlan.planPending') }}</span>
       </span>

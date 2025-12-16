@@ -10,6 +10,7 @@ import AttentionNPSDetails from './domain/AttentionNPSDetails.vue';
 import AttentionCommentsDetails from './domain/AttentionCommentsDetails.vue';
 import AttentionCollaboratorsDetails from './domain/AttentionCollaboratorsDetails.vue';
 import AttentionNotificationDetails from './domain/AttentionNotificationDetails.vue';
+import TelemedicineDetails from './domain/TelemedicineDetails.vue';
 import PDFHeader from '../reports/PDFHeader.vue';
 import PDFFooter from '../reports/PDFFooter.vue';
 import AttentionOriginDetails from './domain/AttentionOriginDetails.vue';
@@ -33,6 +34,7 @@ export default {
     AttentionCommentsDetails,
     AttentionCollaboratorsDetails,
     AttentionNotificationDetails,
+    TelemedicineDetails,
     PDFHeader,
     PDFFooter,
     Spinner,
@@ -310,9 +312,10 @@ export default {
       const details = this.getQueueDetails();
       if (details.length === 0) return null;
       // Find queue with most attentions
-      const maxQueue = details.reduce((max, queue) => {
-        return queue.attentionCount > max.attentionCount ? queue : max;
-      }, details[0]);
+      const maxQueue = details.reduce(
+        (max, queue) => (queue.attentionCount > max.attentionCount ? queue : max),
+        details[0]
+      );
       return maxQueue;
     },
     formatDuration(minutes) {
@@ -982,7 +985,10 @@ export default {
             </DetailsCard>
           </div>
           <!-- Queue Details Card -->
-          <div class="queue-details-section" v-if="!detailsOpened && !hideSummary && getQueueDetails().length > 0">
+          <div
+            class="queue-details-section"
+            v-if="!detailsOpened && !hideSummary && getQueueDetails().length > 0"
+          >
             <div class="queue-details-card">
               <div class="queue-details-header">
                 <div class="queue-details-icon">
@@ -993,7 +999,10 @@ export default {
                     {{ $t('dashboard.queueDetails.title') || 'Detalles por Cola' }}
                   </h3>
                   <p class="queue-details-subtitle">
-                    {{ $t('dashboard.queueDetails.subtitle') || 'Atenciones, reservas y tiempo medio por cola' }}
+                    {{
+                      $t('dashboard.queueDetails.subtitle') ||
+                      'Atenciones, reservas y tiempo medio por cola'
+                    }}
                   </p>
                 </div>
                 <button
@@ -1015,11 +1024,15 @@ export default {
                   <div class="queue-details-front-stats">
                     <div class="queue-details-front-stat">
                       <span class="queue-details-front-stat-label">Atenciones:</span>
-                      <span class="queue-details-front-stat-value">{{ getMaxQueue().attentionCount }}</span>
+                      <span class="queue-details-front-stat-value">{{
+                        getMaxQueue().attentionCount
+                      }}</span>
                     </div>
                     <div class="queue-details-front-stat">
                       <span class="queue-details-front-stat-label">Reservas:</span>
-                      <span class="queue-details-front-stat-value">{{ getMaxQueue().bookingCount || 0 }}</span>
+                      <span class="queue-details-front-stat-value">{{
+                        getMaxQueue().bookingCount || 0
+                      }}</span>
                     </div>
                     <div class="queue-details-front-stat">
                       <span class="queue-details-front-stat-label">Tempo Médio:</span>
@@ -1038,7 +1051,10 @@ export default {
                 </div>
               </div>
               <!-- Queue List -->
-              <div class="queue-details-list" v-if="queueDetailsExpanded && getQueueDetails().length > 1">
+              <div
+                class="queue-details-list"
+                v-if="queueDetailsExpanded && getQueueDetails().length > 1"
+              >
                 <div
                   v-for="queue in getQueueDetails()"
                   :key="queue.queueId"
@@ -1056,9 +1072,7 @@ export default {
                     </div>
                     <div class="queue-details-item-stat">
                       <i class="bi bi-clock-history"></i>
-                      <span
-                        :class="getDurationColorClass(queue.medianDuration)"
-                      >
+                      <span :class="getDurationColorClass(queue.medianDuration)">
                         {{ formatDuration(queue.medianDuration) }}
                         <span
                           class="duration-indicator-small"
@@ -1075,16 +1089,16 @@ export default {
             <div class="row">
               <div id="attention-time-avg" class="col">
                 <div class="dashboard-metric-card-wrapper">
-                <SimpleCard
-                  :show="!!toggles['dashboard.attention-time-avg.view']"
+                  <SimpleCard
+                    :show="!!toggles['dashboard.attention-time-avg.view']"
                     :data="getMedianDuration()"
-                  :title="$t('dashboard.items.attentions.2')"
-                  :show-tooltip="true"
-                  :description="$t('dashboard.seconds')"
-                  :icon="'bi-clock-history'"
-                  :icon-style-class="'green-icon'"
-                >
-                </SimpleCard>
+                    :title="$t('dashboard.items.attentions.2')"
+                    :show-tooltip="true"
+                    :description="$t('dashboard.seconds')"
+                    :icon="'bi-clock-history'"
+                    :icon-style-class="'green-icon'"
+                  >
+                  </SimpleCard>
                   <Popper
                     v-if="isUsingIntelligentEstimation()"
                     :class="'dark'"
@@ -1204,7 +1218,10 @@ export default {
               "
               :title="$t('dashboard.items.attentions.20') || 'Rendimiento de Colaboradores'"
               :show-tooltip="true"
-              :description="$t('dashboard.collaborators.tooltip') || 'Métricas de productividad, eficiencia y calidad de servicio por colaborador'"
+              :description="
+                $t('dashboard.collaborators.tooltip') ||
+                'Métricas de productividad, eficiencia y calidad de servicio por colaborador'
+              "
               :icon="'bi-people-fill'"
               :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
@@ -1313,6 +1330,69 @@ export default {
                   :types="calculatedMetrics['notification.created'].typesFlow"
                 >
                 </AttentionNotificationDetails>
+              </template>
+            </DetailsCard>
+          </div>
+          <div id="telemedicine-sessions" v-if="commerce?.telemedicineEnabled">
+            <DetailsCard
+              :show="!!toggles['dashboard.telemedicine.view']"
+              :data="calculatedMetrics['telemedicine.created']?.total || 0"
+              :title="$t('dashboard.telemedicine.title') || 'Sesiones de Telemedicina'"
+              :show-tooltip="true"
+              :description="
+                $t('dashboard.telemedicine.description') || 'Métricas de sesiones de telemedicina'
+              "
+              :icon="'bi-camera-video-fill'"
+              :icon-style-class="'blue-icon'"
+              :details-opened="detailsOpened"
+            >
+              <template v-slot:details>
+                <TelemedicineDetails
+                  :show="!!toggles['dashboard.telemedicine.view']"
+                  :total="calculatedMetrics['telemedicine.created']?.total || 0"
+                  :completed="calculatedMetrics['telemedicine.created']?.completed || 0"
+                  :cancelled="calculatedMetrics['telemedicine.created']?.cancelled || 0"
+                  :scheduled="calculatedMetrics['telemedicine.created']?.scheduled || 0"
+                  :active="calculatedMetrics['telemedicine.created']?.active || 0"
+                  :average-duration="
+                    calculatedMetrics['telemedicine.created']?.averageDuration || 0
+                  "
+                  :access-keys-sent="
+                    calculatedMetrics['telemedicine.created']?.totalAccessKeysSent || 0
+                  "
+                  :access-keys-validated="
+                    calculatedMetrics['telemedicine.created']?.totalAccessKeysValidated || 0
+                  "
+                  :doctors-connected="
+                    calculatedMetrics['telemedicine.created']?.totalDoctorsConnected || 0
+                  "
+                  :patients-connected="
+                    calculatedMetrics['telemedicine.created']?.totalPatientsConnected || 0
+                  "
+                  :sessions-started="
+                    calculatedMetrics['telemedicine.created']?.totalSessionsStarted || 0
+                  "
+                  :sessions-ended="
+                    calculatedMetrics['telemedicine.created']?.totalSessionsEnded || 0
+                  "
+                  :status-flow="calculatedMetrics['telemedicine.created']?.statusFlow || {}"
+                  :access-key-flow="
+                    calculatedMetrics['telemedicine.created']?.accessKeyFlow || {
+                      sent: 0,
+                      validated: 0,
+                      pending: 0,
+                    }
+                  "
+                  :connection-flow="
+                    calculatedMetrics['telemedicine.created']?.connectionFlow || {
+                      doctors: 0,
+                      patients: 0,
+                      both: 0,
+                      none: 0,
+                    }
+                  "
+                >
+                </TelemedicineDetails>
               </template>
             </DetailsCard>
           </div>
@@ -2354,7 +2434,8 @@ export default {
 }
 
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -2606,5 +2687,4 @@ export default {
 .duration-neutral .duration-indicator-small {
   background: #a9a9a9;
 }
-
 </style>

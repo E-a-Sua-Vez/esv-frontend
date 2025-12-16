@@ -8,6 +8,7 @@ import {
   addQueue,
   getQueuesByCommerceId,
 } from '../../application/services/queue';
+import { getFeatureToggleByCommerceId } from '../../application/services/feature-toggle';
 import {
   getActiveServicesByCommerceId,
   getServiceByCommerce,
@@ -110,8 +111,35 @@ export default {
       filtered: [],
     });
 
-    // Use global commerce from store
-    const commerce = computed(() => store.getCurrentCommerce);
+    // Use global commerce from store and ensure it has features loaded
+    const commerce = computed(() => {
+      const currentCommerce = store.getCurrentCommerce;
+      return currentCommerce;
+    });
+
+    // Load features for commerce when it changes
+    const loadCommerceFeatures = async commerceObj => {
+      if (!commerceObj || !commerceObj.id) return;
+      try {
+        const features = await getFeatureToggleByCommerceId(commerceObj.id);
+        if (features && Array.isArray(features)) {
+          // Update commerce object with features
+          commerceObj.features = features;
+          // Update store to ensure reactivity - create new object to trigger reactivity
+          const updatedCommerce = { ...commerceObj, features };
+          await store.setCurrentCommerce(updatedCommerce);
+        } else if (!features || features.length === 0) {
+          // Ensure features is an empty array if no features exist
+          commerceObj.features = [];
+          const updatedCommerce = { ...commerceObj, features: [] };
+          await store.setCurrentCommerce(updatedCommerce);
+        }
+      } catch (error) {
+        console.error('Error loading commerce features:', error);
+        // Set empty features array on error
+        commerceObj.features = [];
+      }
+    };
 
     // Load queues, services, and collaborators when commerce changes
     const loadCommerceData = async commerceId => {
@@ -147,6 +175,8 @@ export default {
             state.filtered = [];
             state.services = {};
             state.collaborators = {};
+            // Load features for commerce
+            await loadCommerceFeatures(newCommerce);
             await loadCommerceData(newCommerce.id);
             loading.value = false;
           } catch (error) {
@@ -177,6 +207,8 @@ export default {
         // Load data for current commerce
         const commerceToUse = store.getCurrentCommerce;
         if (commerceToUse && commerceToUse.id) {
+          // Load features for commerce
+          await loadCommerceFeatures(commerceToUse);
           await loadCommerceData(commerceToUse.id);
         }
 
@@ -307,6 +339,7 @@ export default {
         blockTime: 0,
         active: true,
         online: true,
+        telemedicineEnabled: false, // Default to false for backward compatibility
         serviceInfo: {
           sameCommeceHours: true,
           break: false,
@@ -689,6 +722,7 @@ export default {
         blockTime: 0,
         active: true,
         online: true,
+        telemedicineEnabled: false, // Default to false for backward compatibility
         serviceInfo: {
           sameCommeceHours: true,
           break: false,
@@ -902,6 +936,7 @@ export default {
                       :queue="queue"
                       :types="state.types"
                       :toggles="state.toggles"
+                      :commerce="commerce"
                       :errors="{
                         nameError: state.nameUpdateError,
                         limitError: state.limitUpdateError,
@@ -1419,6 +1454,7 @@ export default {
                       :queue="queue"
                       :types="state.types"
                       :toggles="state.toggles"
+                      :commerce="commerce"
                       :errors="{
                         nameError: state.nameUpdateError,
                         limitError: state.limitUpdateError,
@@ -1871,6 +1907,7 @@ export default {
                     v-model="state.newQueue"
                     :types="state.types"
                     :toggles="state.toggles"
+                    :commerce="commerce"
                     :errors="{
                       nameError: state.nameAddError,
                       typeError: state.typeError,

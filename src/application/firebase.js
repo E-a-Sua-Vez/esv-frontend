@@ -155,6 +155,35 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
   return attentions;
 }
 
+export function updatedProcessingAttentionsByCommerce(commerceId) {
+  const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
+  const attentionQuery = query(
+    attentionCollection,
+    where('commerceId', '==', commerceId),
+    where('status', 'in', ['PROCESSING']),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate().toString(),
+    }));
+  });
+  // Register cleanup on unmount, but also return unsubscribe for manual cleanup
+  safeOnUnmounted(unsubscribe);
+  // Return both the ref and the unsubscribe function
+  attentions.value._unsubscribe = unsubscribe;
+  return attentions;
+}
+
 export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
   const attentions = ref([]);
   const date = new Date(
@@ -176,6 +205,53 @@ export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
     }));
   });
   safeOnUnmounted(unsubscribe);
+  return attentions;
+}
+
+export function updatedTodayAttentionsByCommerce(commerceId) {
+  const attentions = ref([]);
+
+  // Query only by commerceId to avoid requiring a composite index
+  // We'll filter by date on the client side
+  // Note: This is less efficient for large datasets but avoids index requirements
+  // For better performance, create a composite index: commerceId (asc) + createdAt (asc)
+  const attentionQuery = query(attentionCollection, where('commerceId', '==', commerceId));
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    // Calculate today's date range for filtering
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayTimestamp = Timestamp.fromDate(today);
+    const tomorrowTimestamp = Timestamp.fromDate(tomorrow);
+
+    // Filter to only include attentions from today (client-side)
+    attentions.value = snapshot.docs
+      .filter(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt;
+        if (!createdAt) return false;
+
+        // createdAt is already a Firestore Timestamp
+        if (createdAt instanceof Timestamp) {
+          return createdAt >= todayTimestamp && createdAt < tomorrowTimestamp;
+        }
+
+        return false;
+      })
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt ? data.createdAt.toDate().toString() : null,
+        };
+      });
+  });
+  // Register cleanup on unmount, but also return unsubscribe for manual cleanup
+  safeOnUnmounted(unsubscribe);
+  // Return both the ref and the unsubscribe function
+  attentions.value._unsubscribe = unsubscribe;
   return attentions;
 }
 

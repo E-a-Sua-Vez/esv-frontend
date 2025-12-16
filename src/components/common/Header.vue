@@ -562,6 +562,17 @@ export default {
 
     const shouldShowMobileModuleSelector = computed(() => shouldShowDesktopModuleSelector.value);
 
+    // Check if current route is a public commerce queue route
+    const isPublicCommerceQueueRoute = () => {
+      const path = router.currentRoute.value.path;
+      // Hide menu for public queue routes and attention routes
+      return (
+        (path.startsWith('/publico/') && path.includes('/comercio/') && path.includes('/filas')) ||
+        (path.startsWith('/interno/fila/') && path.includes('/atencion/')) ||
+        (path.startsWith('/interno/colaborador/fila/') && path.includes('/atencion/'))
+      );
+    };
+
     // Removed duplicate watchers - using store watchers above instead
 
     const toggleMobileMenu = () => {
@@ -698,8 +709,7 @@ export default {
           closeMobileMenu();
           closeDesktopMenu();
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     };
 
     const getMenuTranslationKey = () => {
@@ -749,6 +759,7 @@ export default {
       shouldShowMobileCollaboratorCommerceSelector,
       shouldShowDesktopModuleSelector,
       shouldShowMobileModuleSelector,
+      isPublicCommerceQueueRoute,
     };
   },
 };
@@ -777,7 +788,8 @@ export default {
                 state.currentUser.name !== 'invitado' &&
                 (state.currentUserType === USER_TYPES.COLLABORATOR ||
                   state.currentUserType === USER_TYPES.BUSINESS ||
-                  state.currentUserType === USER_TYPES.MASTER)
+                  state.currentUserType === USER_TYPES.MASTER) &&
+                !isPublicCommerceQueueRoute()
               "
               class="user-info"
             >
@@ -828,13 +840,16 @@ export default {
               </button>
             </div>
           </div>
-          <div v-else class="navbar-user-section d-none d-lg-flex">
+          <div
+            v-else-if="!isPublicCommerceQueueRoute()"
+            class="navbar-user-section d-none d-lg-flex"
+          >
             <Spinner :show="!loading" :ligth="true"></Spinner>
           </div>
 
           <!-- Mobile Menu Button -->
           <button
-            v-if="!loading"
+            v-if="!loading && !isPublicCommerceQueueRoute()"
             class="mobile-menu-toggle d-lg-none"
             @click="toggleMobileMenu"
             :aria-expanded="mobileMenuOpen"
@@ -846,8 +861,12 @@ export default {
               <span></span>
             </span>
           </button>
-          <div v-else class="d-lg-none">
+          <div v-else-if="!isPublicCommerceQueueRoute()" class="d-lg-none">
             <Spinner :show="!loading" :ligth="true"></Spinner>
+          </div>
+          <!-- Language Selector for Public Routes (Mobile) -->
+          <div v-if="isPublicCommerceQueueRoute()" class="d-lg-none">
+            <LocaleSelector></LocaleSelector>
           </div>
         </div>
       </nav>

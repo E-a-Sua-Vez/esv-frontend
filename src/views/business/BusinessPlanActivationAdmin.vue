@@ -91,9 +91,13 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         const activationsData = await getValidatedPlanActivation(false);
-        state.activations = Array.isArray(activationsData) ? activationsData : (activationsData?.data || activationsData || []);
+        state.activations = Array.isArray(activationsData)
+          ? activationsData
+          : activationsData?.data || activationsData || [];
         const oldActivationsData = await getValidatedPlanActivation(true);
-        state.oldActivations = Array.isArray(oldActivationsData) ? oldActivationsData : (oldActivationsData?.data || oldActivationsData || []);
+        state.oldActivations = Array.isArray(oldActivationsData)
+          ? oldActivationsData
+          : oldActivationsData?.data || oldActivationsData || [];
         state.oldActivationsList = state.oldActivations;
         state.toggles = await getPermissions('activations', 'admin');
 
@@ -104,7 +108,7 @@ export default {
           isArray: Array.isArray(state.activations),
           activationsLength: Array.isArray(state.activations) ? state.activations.length : 'N/A',
           toggles: state.toggles,
-          viewPermission: state.toggles['activations.admin.view']
+          viewPermission: state.toggles['activations.admin.view'],
         });
         alertError.value = '';
         loading.value = false;
@@ -265,340 +269,346 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessPlanActivationAdmin">
-        <!-- DEBUG INFO -->
-        <div style="background: yellow; padding: 10px; margin: 10px; border: 2px solid red;">
-          <strong>DEBUG INFO:</strong><br>
-          Loading: {{ loading }}<br>
-          Activations: {{ Array.isArray(state.activations) ? state.activations.length : 'NOT ARRAY: ' + typeof state.activations }}<br>
-          Activations Type: {{ typeof state.activations }}<br>
-          Has Toggles: {{ !!state.toggles && Object.keys(state.toggles).length > 0 }}<br>
-          View Permission: {{ state.toggles['activations.admin.view'] }}<br>
-          Toggles Keys: {{ state.toggles ? Object.keys(state.toggles).join(', ') : 'NO TOGGLES' }}<br>
-          Activations Value: {{ JSON.stringify(state.activations).substring(0, 200) }}
-        </div>
-        <div v-if="state.toggles['activations.admin.view']">
-          <div v-if="!loading" id="businessPlanActivationAdmin-result" class="mt-4">
-            <div>
-              <div v-if="state.activations.length === 0">
-                <Message
-                  :title="$t('businessPlanActivationAdmin.message.2.title')"
-                  :content="$t('businessPlanActivationAdmin.message.2.content')"
-                />
-              </div>
-              <div class="row mb-2">
-                <div class="col text-label">
-                  <span>{{ $t('businessPlanActivationAdmin.listResult') }}</span>
-                  <span class="fw-bold m-2">{{ state.activations.length }}</span>
-                </div>
-              </div>
-              <div
-                v-for="(activation, index) in state.activations"
-                :key="index"
-                class="result-card"
-              >
-                <div class="row">
-                  <div class="col-10">
-                    <PlanActivationName :activation="activation"></PlanActivationName>
-                  </div>
-                  <div class="col-2">
-                    <a href="#" @click.prevent="showForm(index)">
-                      <i
-                        :id="index"
-                        :class="`bi ${
-                          state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                    </a>
-                  </div>
-                </div>
-                <div
-                  v-if="state.toggles['activations.admin.read']"
-                  :class="{ show: state.extendedEntity === index }"
-                  class="detailed-data transition-slow"
-                >
-                  <div class="form-fields-container">
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessPlanActivationAdmin.number') }}
-                      </label>
-                      <input
-                        id="activation-payment-id-form-add"
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control-modern"
-                        :disabled="!state.toggles['activations.admin.add']"
-                        v-model="state.newPaymentData.paymentNumber"
-                        :class="{ 'is-invalid': state.paymentNumberAddError }"
-                        placeholder="Ex: 0055433221"
-                      />
-                    </div>
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessPlanActivationAdmin.amount') }}
-                      </label>
-                      <input
-                        id="activation-payment-amount-form-add"
-                        min="1"
-                        type="number"
-                        class="form-control-modern"
-                        :disabled="!state.toggles['activations.admin.add']"
-                        v-model="state.newPaymentData.paymentAmount"
-                        :class="{ 'is-invalid': state.paymentAmountAddError }"
-                        placeholder="Ex: 69"
-                      />
-                    </div>
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessPlanActivationAdmin.paymentMethod') }}
-                      </label>
-                      <select
-                        id="activation-payment-method-form-update"
-                        class="form-control-modern form-select-modern"
-                        v-model="state.newPaymentData.method"
-                        :disabled="!state.toggles['activations.admin.add']"
-                      >
-                        <option
-                          v-for="met in state.paymentMethods"
-                          :key="met.name"
-                          :value="met.id"
-                        >
-                          {{ met.name }}
-                        </option>
-                      </select>
-                    </div>
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessPlanActivationAdmin.bank') }}
-                      </label>
-                      <select
-                        id="activation-payment-bank-form-update"
-                        class="form-control-modern form-select-modern"
-                        v-model="state.newPaymentData.bank"
-                        :disabled="!state.toggles['activations.admin.add']"
-                      >
-                        <option v-for="bank in state.bankAccounts" :key="bank.name" :value="bank.id">
-                          {{ bank.name }}
-                        </option>
-                      </select>
-                    </div>
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessPlanActivationAdmin.paymentDate') }}
-                      </label>
-                      <input
-                        id="paymentDate"
-                        class="form-control-modern"
-                        type="date"
-                        :disabled="!state.toggles['activations.admin.add']"
-                        :class="{ 'is-invalid': state.paymentDateError }"
-                        v-model="state.newPaymentData.paymentDate"
-                      />
-                    </div>
-                    <div id="activation-id-form" class="activation-details-container">
-                      <span><strong>Id:</strong> {{ activation.id }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="col" v-if="state.extendedEntity === index">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="validate(activation)"
-                    :disabled="!state.toggles['activations.admin.validate']"
-                  >
-                    <i class="bi bi-plugin"></i>
-                    {{ $t('businessPlanActivationAdmin.validated') }}
-                  </button>
-                </div>
-                <div
-                  class="row g-1 errors"
-                  id="feedback"
-                  v-if="state.errorsValidate.length > 0"
-                >
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsValidate" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-                <div v-if="!state.toggles['activations.admin.read'] && !loading">
+          <!-- DEBUG INFO -->
+          <div style="background: yellow; padding: 10px; margin: 10px; border: 2px solid red">
+            <strong>DEBUG INFO:</strong><br />
+            Loading: {{ loading }}<br />
+            Activations:
+            {{
+              Array.isArray(state.activations)
+                ? state.activations.length
+                : 'NOT ARRAY: ' + typeof state.activations
+            }}<br />
+            Activations Type: {{ typeof state.activations }}<br />
+            Has Toggles: {{ !!state.toggles && Object.keys(state.toggles).length > 0 }}<br />
+            View Permission: {{ state.toggles['activations.admin.view'] }}<br />
+            Toggles Keys: {{ state.toggles ? Object.keys(state.toggles).join(', ') : 'NO TOGGLES'
+            }}<br />
+            Activations Value: {{ JSON.stringify(state.activations).substring(0, 200) }}
+          </div>
+          <div v-if="state.toggles['activations.admin.view']">
+            <div v-if="!loading" id="businessPlanActivationAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.activations.length === 0">
                   <Message
-                    :title="$t('businessPlanActivationAdmin.message.1.title')"
-                    :content="$t('businessPlanActivationAdmin.message.1.content')"
+                    :title="$t('businessPlanActivationAdmin.message.2.title')"
+                    :content="$t('businessPlanActivationAdmin.message.2.content')"
                   />
                 </div>
-              </div>
-              <div id="activation-history">
-                <span class="fw-bold"> {{ $t('businessPlanActivationAdmin.historic') }} </span>
-                <div class="row mx-4 mb-3">
-                  <input
-                    min="1"
-                    max="50"
-                    type="text"
-                    class="form-control"
-                    v-model="state.searchString"
-                    :placeholder="$t('enterSearcher')"
-                  />
+                <div class="row mb-2">
+                  <div class="col text-label">
+                    <span>{{ $t('businessPlanActivationAdmin.listResult') }}</span>
+                    <span class="fw-bold m-2">{{ state.activations.length }}</span>
+                  </div>
                 </div>
-                <div v-if="state.oldActivations.length > 0">
+                <div
+                  v-for="(activation, index) in state.activations"
+                  :key="index"
+                  class="result-card"
+                >
+                  <div class="row">
+                    <div class="col-10">
+                      <PlanActivationName :activation="activation"></PlanActivationName>
+                    </div>
+                    <div class="col-2">
+                      <a href="#" @click.prevent="showForm(index)">
+                        <i
+                          :id="index"
+                          :class="`bi ${
+                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </a>
+                    </div>
+                  </div>
                   <div
-                    v-for="(activation, index) in state.oldActivations.slice(0, 10)"
-                    :key="index"
-                    class="result-card"
+                    v-if="state.toggles['activations.admin.read']"
+                    :class="{ show: state.extendedEntity === index }"
+                    class="detailed-data transition-slow"
                   >
-                    <div class="row">
-                      <div class="col-10">
-                        <PlanActivationName :activation="activation"></PlanActivationName>
+                    <div class="form-fields-container">
+                      <div class="form-group-modern">
+                        <label class="form-label-modern">
+                          {{ $t('businessPlanActivationAdmin.number') }}
+                        </label>
+                        <input
+                          id="activation-payment-id-form-add"
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control-modern"
+                          :disabled="!state.toggles['activations.admin.add']"
+                          v-model="state.newPaymentData.paymentNumber"
+                          :class="{ 'is-invalid': state.paymentNumberAddError }"
+                          placeholder="Ex: 0055433221"
+                        />
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showOldForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedOldEntity === index
-                                ? 'bi-chevron-up'
-                                : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
+                      <div class="form-group-modern">
+                        <label class="form-label-modern">
+                          {{ $t('businessPlanActivationAdmin.amount') }}
+                        </label>
+                        <input
+                          id="activation-payment-amount-form-add"
+                          min="1"
+                          type="number"
+                          class="form-control-modern"
+                          :disabled="!state.toggles['activations.admin.add']"
+                          v-model="state.newPaymentData.paymentAmount"
+                          :class="{ 'is-invalid': state.paymentAmountAddError }"
+                          placeholder="Ex: 69"
+                        />
                       </div>
-                    </div>
-                    <div
-                      v-if="state.toggles['activations.admin.read']"
-                      :class="{ show: state.extendedOldEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <div class="form-fields-container">
-                        <div class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessPlanActivationAdmin.number') }}
-                          </label>
-                          <input
-                            id="activation-payment-id-form-add"
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control-modern"
-                            :disabled="true"
-                            v-model="activation.payment.paymentNumber"
-                            placeholder="Ex: 0055433221"
-                          />
-                        </div>
-                        <div class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessPlanActivationAdmin.amount') }}
-                          </label>
-                          <input
-                            id="activation-payment-amount-form-add"
-                            min="1"
-                            type="number"
-                            class="form-control-modern"
-                            :disabled="true"
-                            v-model="activation.payment.amount"
-                            placeholder="Ex: 69"
-                          />
-                        </div>
-                        <div class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessPlanActivationAdmin.paymentMethod') }}
-                          </label>
-                          <select
-                            id="activation-payment-method-form-update"
-                            class="form-control-modern form-select-modern"
-                            v-model="activation.payment.method"
-                            :disabled="true"
+                      <div class="form-group-modern">
+                        <label class="form-label-modern">
+                          {{ $t('businessPlanActivationAdmin.paymentMethod') }}
+                        </label>
+                        <select
+                          id="activation-payment-method-form-update"
+                          class="form-control-modern form-select-modern"
+                          v-model="state.newPaymentData.method"
+                          :disabled="!state.toggles['activations.admin.add']"
+                        >
+                          <option
+                            v-for="met in state.paymentMethods"
+                            :key="met.name"
+                            :value="met.id"
                           >
-                            <option
-                              v-for="met in state.paymentMethods"
-                              :key="met.name"
-                              :value="met.id"
-                            >
-                              {{ met.name }}
-                            </option>
-                          </select>
-                        </div>
-                        <div class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessPlanActivationAdmin.bank') }}
-                          </label>
-                          <select
-                            id="activation-payment-bank-form-update"
-                            class="form-control-modern form-select-modern"
-                            v-model="activation.payment.bank"
-                            :disabled="true"
-                          >
-                            <option
-                              v-for="bank in state.bankAccounts"
-                              :key="bank.name"
-                              :value="bank.id"
-                            >
-                              {{ bank.name }}
-                            </option>
-                          </select>
-                        </div>
-                        <div class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessPlanActivationAdmin.paymentDate') }}
-                          </label>
-                          <input
-                            id="paymentDate"
-                            class="form-control-modern"
-                            type="date"
-                            :disabled="true"
-                            v-model="activation.payment.paymentDate"
-                          />
-                        </div>
-                        <div id="activation-id-form" class="activation-details-container">
-                          <span><strong>Id:</strong> {{ activation.id }}</span>
-                        </div>
+                            {{ met.name }}
+                          </option>
+                        </select>
                       </div>
-                    </div>
-                    <div class="col" v-if="state.extendedOldEntity === index">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="goToDesactivate()"
-                        :disabled="
-                          !state.toggles['activations.admin.desactivate'] || !activation.active
-                        "
-                      >
-                        <i class="bi bi-scissors"></i>
-                        {{ $t('businessPlanActivationAdmin.desactivate') }}
-                      </button>
-                      <AreYouSure
-                        :show="state.goToDesactivate"
-                        :yes-disabled="state.toggles['activations.admin.desactivate']"
-                        :no-disabled="state.toggles['activations.admin.desactivate']"
-                        @actionYes="desactivate(activation)"
-                        @actionNo="cancelDesactivate()"
-                      >
-                      </AreYouSure>
-                    </div>
-                    <div v-if="!state.toggles['activations.admin.read'] && !loading">
-                      <Message
-                        :title="$t('businessPlanActivationAdmin.message.1.title')"
-                        :content="$t('businessPlanActivationAdmin.message.1.content')"
-                      />
+                      <div class="form-group-modern">
+                        <label class="form-label-modern">
+                          {{ $t('businessPlanActivationAdmin.bank') }}
+                        </label>
+                        <select
+                          id="activation-payment-bank-form-update"
+                          class="form-control-modern form-select-modern"
+                          v-model="state.newPaymentData.bank"
+                          :disabled="!state.toggles['activations.admin.add']"
+                        >
+                          <option
+                            v-for="bank in state.bankAccounts"
+                            :key="bank.name"
+                            :value="bank.id"
+                          >
+                            {{ bank.name }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="form-group-modern">
+                        <label class="form-label-modern">
+                          {{ $t('businessPlanActivationAdmin.paymentDate') }}
+                        </label>
+                        <input
+                          id="paymentDate"
+                          class="form-control-modern"
+                          type="date"
+                          :disabled="!state.toggles['activations.admin.add']"
+                          :class="{ 'is-invalid': state.paymentDateError }"
+                          v-model="state.newPaymentData.paymentDate"
+                        />
+                      </div>
+                      <div id="activation-id-form" class="activation-details-container">
+                        <span><strong>Id:</strong> {{ activation.id }}</span>
+                      </div>
                     </div>
                   </div>
+                  <div class="col" v-if="state.extendedEntity === index">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="validate(activation)"
+                      :disabled="!state.toggles['activations.admin.validate']"
+                    >
+                      <i class="bi bi-plugin"></i>
+                      {{ $t('businessPlanActivationAdmin.validated') }}
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsValidate.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsValidate" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                  <div v-if="!state.toggles['activations.admin.read'] && !loading">
+                    <Message
+                      :title="$t('businessPlanActivationAdmin.message.1.title')"
+                      :content="$t('businessPlanActivationAdmin.message.1.content')"
+                    />
+                  </div>
                 </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessPlanActivationAdmin.message.3.title')"
-                    :content="$t('businessPlanActivationAdmin.message.3.content')"
-                  />
+                <div id="activation-history">
+                  <span class="fw-bold"> {{ $t('businessPlanActivationAdmin.historic') }} </span>
+                  <div class="row mx-4 mb-3">
+                    <input
+                      min="1"
+                      max="50"
+                      type="text"
+                      class="form-control"
+                      v-model="state.searchString"
+                      :placeholder="$t('enterSearcher')"
+                    />
+                  </div>
+                  <div v-if="state.oldActivations.length > 0">
+                    <div
+                      v-for="(activation, index) in state.oldActivations.slice(0, 10)"
+                      :key="index"
+                      class="result-card"
+                    >
+                      <div class="row">
+                        <div class="col-10">
+                          <PlanActivationName :activation="activation"></PlanActivationName>
+                        </div>
+                        <div class="col-2">
+                          <a href="#" @click.prevent="showOldForm(index)">
+                            <i
+                              :id="index"
+                              :class="`bi ${
+                                state.extendedOldEntity === index
+                                  ? 'bi-chevron-up'
+                                  : 'bi-chevron-down'
+                              }`"
+                            ></i>
+                          </a>
+                        </div>
+                      </div>
+                      <div
+                        v-if="state.toggles['activations.admin.read']"
+                        :class="{ show: state.extendedOldEntity === index }"
+                        class="detailed-data transition-slow"
+                      >
+                        <div class="form-fields-container">
+                          <div class="form-group-modern">
+                            <label class="form-label-modern">
+                              {{ $t('businessPlanActivationAdmin.number') }}
+                            </label>
+                            <input
+                              id="activation-payment-id-form-add"
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control-modern"
+                              :disabled="true"
+                              v-model="activation.payment.paymentNumber"
+                              placeholder="Ex: 0055433221"
+                            />
+                          </div>
+                          <div class="form-group-modern">
+                            <label class="form-label-modern">
+                              {{ $t('businessPlanActivationAdmin.amount') }}
+                            </label>
+                            <input
+                              id="activation-payment-amount-form-add"
+                              min="1"
+                              type="number"
+                              class="form-control-modern"
+                              :disabled="true"
+                              v-model="activation.payment.amount"
+                              placeholder="Ex: 69"
+                            />
+                          </div>
+                          <div class="form-group-modern">
+                            <label class="form-label-modern">
+                              {{ $t('businessPlanActivationAdmin.paymentMethod') }}
+                            </label>
+                            <select
+                              id="activation-payment-method-form-update"
+                              class="form-control-modern form-select-modern"
+                              v-model="activation.payment.method"
+                              :disabled="true"
+                            >
+                              <option
+                                v-for="met in state.paymentMethods"
+                                :key="met.name"
+                                :value="met.id"
+                              >
+                                {{ met.name }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="form-group-modern">
+                            <label class="form-label-modern">
+                              {{ $t('businessPlanActivationAdmin.bank') }}
+                            </label>
+                            <select
+                              id="activation-payment-bank-form-update"
+                              class="form-control-modern form-select-modern"
+                              v-model="activation.payment.bank"
+                              :disabled="true"
+                            >
+                              <option
+                                v-for="bank in state.bankAccounts"
+                                :key="bank.name"
+                                :value="bank.id"
+                              >
+                                {{ bank.name }}
+                              </option>
+                            </select>
+                          </div>
+                          <div class="form-group-modern">
+                            <label class="form-label-modern">
+                              {{ $t('businessPlanActivationAdmin.paymentDate') }}
+                            </label>
+                            <input
+                              id="paymentDate"
+                              class="form-control-modern"
+                              type="date"
+                              :disabled="true"
+                              v-model="activation.payment.paymentDate"
+                            />
+                          </div>
+                          <div id="activation-id-form" class="activation-details-container">
+                            <span><strong>Id:</strong> {{ activation.id }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col" v-if="state.extendedOldEntity === index">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="goToDesactivate()"
+                          :disabled="
+                            !state.toggles['activations.admin.desactivate'] || !activation.active
+                          "
+                        >
+                          <i class="bi bi-scissors"></i>
+                          {{ $t('businessPlanActivationAdmin.desactivate') }}
+                        </button>
+                        <AreYouSure
+                          :show="state.goToDesactivate"
+                          :yes-disabled="state.toggles['activations.admin.desactivate']"
+                          :no-disabled="state.toggles['activations.admin.desactivate']"
+                          @actionYes="desactivate(activation)"
+                          @actionNo="cancelDesactivate()"
+                        >
+                        </AreYouSure>
+                      </div>
+                      <div v-if="!state.toggles['activations.admin.read'] && !loading">
+                        <Message
+                          :title="$t('businessPlanActivationAdmin.message.1.title')"
+                          :content="$t('businessPlanActivationAdmin.message.1.content')"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessPlanActivationAdmin.message.3.title')"
+                      :content="$t('businessPlanActivationAdmin.message.3.content')"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div v-if="!state.toggles['activations.admin.view'] && !loading">
-          <Message
-            :title="$t('businessPlanActivationAdmin.message.1.title')"
-            :content="$t('businessPlanActivationAdmin.message.1.content')"
-          />
-        </div>
+          <div v-if="!state.toggles['activations.admin.view'] && !loading">
+            <Message
+              :title="$t('businessPlanActivationAdmin.message.1.title')"
+              :content="$t('businessPlanActivationAdmin.message.1.content')"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -735,7 +745,11 @@ export default {
                           v-model="state.newPaymentData.bank"
                           :disabled="!state.toggles['activations.admin.add']"
                         >
-                          <option v-for="bank in state.bankAccounts" :key="bank.name" :value="bank.id">
+                          <option
+                            v-for="bank in state.bankAccounts"
+                            :key="bank.name"
+                            :value="bank.id"
+                          >
                             {{ bank.name }}
                           </option>
                         </select>
@@ -768,11 +782,7 @@ export default {
                       {{ $t('businessPlanActivationAdmin.validated') }}
                     </button>
                   </div>
-                  <div
-                    class="row g-1 errors"
-                    id="feedback"
-                    v-if="state.errorsValidate.length > 0"
-                  >
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsValidate.length > 0">
                     <Warning>
                       <template v-slot:message>
                         <li v-for="(error, index) in state.errorsValidate" :key="index">

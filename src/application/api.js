@@ -2,6 +2,8 @@ import axios from 'axios';
 import { globalStore } from '../stores';
 import { getCurrentUser } from './firebase';
 import { handleApiError } from './errorHandler';
+import { signOut } from './services/auth';
+import { USER_TYPES } from '../shared/constants';
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 const eventURL = import.meta.env.VITE_EVENT_URL;
@@ -86,6 +88,7 @@ const getHeaders = async () => ({ headers: await authHeader() });
 // Token refresh mechanism
 let isRefreshing = false;
 let failedQueue = [];
+let isLoggingOut = false; // Prevent multiple logout attempts
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
@@ -145,11 +148,58 @@ const setupResponseInterceptor = (instance, apiName) => {
           }
         } catch (refreshError) {
           isRefreshing = false;
-          // If refresh fails, handle as normal error
+          // If refresh fails, trigger automatic logout
           const errorInfo = handleApiError(error, apiName);
-          if (errorInfo.shouldLogout) {
-            // Could trigger logout here if needed
-            console.warn('[API] Token refresh failed, user may need to re-authenticate');
+          if (errorInfo.shouldLogout && !isLoggingOut) {
+            isLoggingOut = true;
+            console.warn('[API] Token refresh failed, automatically logging out user');
+
+            // Trigger logout asynchronously to avoid blocking the error response
+            const store = globalStore();
+            const currentUser = store.getCurrentUser;
+            const currentUserType = store.getCurrentUserType;
+
+            // Use setTimeout to avoid blocking the current error handling
+            setTimeout(async () => {
+              try {
+                await signOut(currentUser?.email, currentUserType);
+                await store.resetSession();
+
+                // Redirect to appropriate login page based on user type
+                // Use dynamic import to avoid circular dependencies
+                try {
+                  const routerModule = await import('../router');
+                  const router = routerModule.default;
+                  if (currentUserType === USER_TYPES.MASTER) {
+                    router.push({ name: 'master-login', replace: true });
+                  } else if (currentUserType === USER_TYPES.BUSINESS) {
+                    router.push({ name: 'business-login', replace: true });
+                  } else if (currentUserType === USER_TYPES.COLLABORATOR) {
+                    // For collaborators, redirect to root or specific login
+                    router.push({ name: 'root', replace: true });
+                  } else {
+                    // Default: redirect to root
+                    router.push({ name: 'root', replace: true });
+                  }
+                } catch (routerError) {
+                  // Fallback: use window.location if router import fails
+                  console.warn('[API] Router import failed, using window.location:', routerError);
+                  if (currentUserType === USER_TYPES.MASTER) {
+                    window.location.href = '/interno/master/login';
+                  } else if (currentUserType === USER_TYPES.BUSINESS) {
+                    window.location.href = '/interno/business/login';
+                  } else {
+                    window.location.href = '/';
+                  }
+                }
+              } catch (logoutError) {
+                console.error('[API] Error during automatic logout:', logoutError);
+                // Fallback: force page reload to login
+                window.location.href = '/';
+              } finally {
+                isLoggingOut = false;
+              }
+            }, 100);
           }
           return Promise.reject(error);
         }
@@ -162,6 +212,16 @@ const setupResponseInterceptor = (instance, apiName) => {
         // Silently fail - don't log or reject, just return empty response
         // This prevents console errors for expected 404s
         return Promise.resolve({ data: { data: [] } });
+      }
+
+      // Suppress network errors for silent requests (e.g., pre-validation commerce loading)
+      // These are expected when backend is not available and will be handled gracefully
+      if (
+        originalRequest?._silent &&
+        (error.code === 'ERR_NETWORK' || error.message === 'Network Error')
+      ) {
+        // Silently fail - don't log, just reject so caller can handle it
+        return Promise.reject(error);
       }
 
       // Handle other errors

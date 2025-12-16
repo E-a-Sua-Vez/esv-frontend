@@ -43,6 +43,19 @@
   "welcomeMenu": {
     "youAreIn": "Estás en:"
   },
+  "common": {
+    "loading": "Cargando...",
+    "close": "Cerrar",
+    "filterByType": "Filtrar por tipo:",
+    "all": "Todos",
+    "search": "Buscar:",
+    "searchPlaceholder": "Buscar...",
+    "reset": "Restablecer",
+    "error": "Error",
+    "retry": "Reintentar",
+    "pending": "Pendiente",
+    "viewDetails": "Ver Detalles"
+  },
   "yes": "Sí",
   "YES": "Sí",
   "NO": "No",
@@ -511,6 +524,10 @@
       "title": "Reserva Editar",
       "description": "Editar reserva a otra fecha y/u hora"
     },
+    "telemedicine-active": {
+      "title": "Telemedicina Activa",
+      "description": "Activa la funcionalidad de telemedicina para reservas y atenciones"
+    },
     "attention-stock-register": {
       "title": "Registrar Stock",
       "description": "Permite al colaborador registrar stock antes de finalizar la atención"
@@ -671,6 +688,7 @@
   },
   "notificationConditions": {
     "title": "Política de Datos",
+    "content": "Acepto los términos y condiciones",
     "subtitle": {
       "1": "Lee atentamente",
       "2": "nuestra política de datos y comunicaciones.",
@@ -768,6 +786,8 @@
     }
   },
   "attentionNumber": {
+    "waitingTime": "Tiempo de espera:",
+    "processingTime": "En atención:",
     "details": {
       "title": "Datos del Usuario",
       "name": "Nombre:",
@@ -949,6 +969,49 @@
       "7": {
         "action": "Quiero recibir mi turno vía Email"
       }
+    },
+    "telemedicine": {
+      "title": "Consulta por Telemedicina",
+      "subtitle": "Esta es una consulta por telemedicina. No necesitas asistir presencialmente.",
+      "typeVideo": "Video",
+      "typeChat": "Chat",
+      "typeBoth": "Video y Chat",
+      "recording": "Grabación activa",
+      "scheduledFor": "Programada para",
+      "scheduledAt": "Programada para",
+      "notes": "Notas",
+      "connectionAvailable": "Conexión disponible",
+      "connectionWillBeAvailable": "La conexión estará disponible",
+      "waitingForQueue": "Esperando posición en la fila",
+      "connectionWhenLessThan2": "La conexión estará disponible cuando haya menos de 2 personas antes de ti",
+      "joinSession": "Unirse a la Sesión",
+      "in": "en",
+      "statusScheduled": "Programada",
+      "instructions": {
+        "title": "Instrucciones para tu Consulta",
+        "preparation": {
+          "title": "Preparación",
+          "internet": "Asegúrate de tener una conexión a internet estable",
+          "camera": "Verifica que tu cámara y micrófono funcionen correctamente",
+          "location": "Busca un lugar tranquilo y privado para la consulta",
+          "device": "Usa un dispositivo con cámara (computadora, tablet o smartphone)"
+        },
+        "access": {
+          "title": "Acceso a la Sesión",
+          "link": "Recibirás un enlace de acceso por WhatsApp o Email",
+          "activation": "El enlace se activará 10 minutos antes de tu consulta programada",
+          "code": "Necesitarás una clave de acceso de 6 dígitos que recibirás por WhatsApp o Email",
+          "doctor": "El doctor se conectará en el horario programado"
+        },
+        "during": {
+          "title": "Durante la Consulta",
+          "camera": "Mantén tu cámara encendida durante la consulta",
+          "chat": "Puedes usar el chat para comunicarte con el doctor",
+          "documents": "Ten a mano cualquier documento médico relevante",
+          "recording": "Esta sesión será grabada"
+        },
+        "important": "Si tienes problemas técnicos, contacta al comercio inmediatamente"
+      }
     }
   },
   "userQueueWaitlist": {
@@ -1095,7 +1158,8 @@
           "tracing": "Gestión de Clientes",
           "permissions-admin": "Permisos",
           "queue-manage": "Administrar Filas",
-          "booking-manage": "Reservas Visión 360°"
+          "booking-manage": "Reservas Visión 360°",
+          "product-stock": "Control de Stock"
         }
       }
     }
@@ -1232,6 +1296,31 @@
     "gerencial": "Gerencial",
     "automatic": "Automatic",
     "manual": "Manual",
+    "telemedicineInstructions": {
+      "title": "Instrucciones para Consulta de Telemedicina",
+      "preparation": {
+        "title": "Preparación:",
+        "internet": "Asegúrate de tener una conexión a internet estable",
+        "camera": "Verifica que tu cámara y micrófono funcionen correctamente",
+        "location": "Encuentra un lugar tranquilo y bien iluminado",
+        "device": "Ten tu dispositivo listo con la cámara habilitada"
+      },
+      "access": {
+        "title": "Acceso a la sesión:",
+        "link": "Recibirás un enlace de acceso y un código de seguridad por WhatsApp o Email",
+        "activation": "El enlace se activará 10 minutos antes de la hora programada",
+        "code": "Ingresa el código de seguridad cuando se te solicite",
+        "doctor": "El médico iniciará la sesión cuando esté listo"
+      },
+      "during": {
+        "title": "Durante la consulta:",
+        "camera": "Mantén la cámara encendida durante toda la consulta",
+        "chat": "Puedes comunicarte por chat si lo prefieres",
+        "documents": "Ten a mano cualquier documento médico relevante",
+        "recording": "Esta consulta será grabada para fines médicos"
+      },
+      "important": "Importante: Si tienes problemas técnicos, contacta al establecimiento antes de la hora programada."
+    },
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -1320,6 +1409,68 @@
       "paymentMethod": "Debe seleccionar el método de pago",
       "paymentAmount": "Debe ingresar el monto"
     }
+  },
+  "telemedicineSession": {
+    "patientWelcome": "Acceso a Consulta Telemedicina",
+    "sessionStatus": "Estado de la Sesión",
+    "status": "Estado:",
+    "scheduledFor": "Programada para:",
+    "accessKey": "Clave de acceso:",
+    "accessKeySent": "Enviada",
+    "accessKeyAvailable": "Disponible (se enviará automáticamente)",
+    "accessKeySentViaWhatsAppEmail": "La clave de acceso se enviará automáticamente por WhatsApp o Email 10 minutos antes de la sesión",
+    "accessKeyActivation": "Se activará en",
+    "accessKeyActivationNote": "(10 minutos antes de la sesión)",
+    "accessKeyValidated": "Clave validada:",
+    "clientConnected": "Cliente conectado",
+    "started": "Iniciada:",
+    "ended": "Finalizada:",
+    "duration": "Duración:",
+    "recording": "Grabación:",
+    "viewRecording": "Ver grabación",
+    "activeSession": "Sesión activa",
+    "activeSessionNote": "El paciente puede conectarse ahora",
+    "clientAccessLink": "Enlace de Acceso para Cliente",
+    "copyLink": "Copiar enlace",
+    "linkActivationNote": "El enlace se activará 10 minutos antes de la sesión programada",
+    "linkShareNote": "Comparta este enlace con el cliente. El cliente necesitará la clave de acceso enviada por WhatsApp/Email.",
+    "statusScheduled": "Programada",
+    "statusActive": "Activa",
+    "statusCompleted": "Completada",
+    "statusCancelled": "Cancelada",
+    "verifyingAccess": "Verificando acceso...",
+    "sessionNotAvailable": "Sesión No Disponible",
+    "sessionEndedMessage": "Esta sesión de telemedicina ya ha finalizado y no está disponible para acceso.",
+    "sessionCompletedMessage": "La consulta fue completada exitosamente.",
+    "sessionCancelledMessage": "La sesión fue cancelada.",
+    "enterAccessKey": "Ingrese su Clave de Acceso",
+    "enterAccessKeyDescription": "Por favor, ingrese la clave de acceso que recibió por WhatsApp o Email",
+    "accessKeyLabel": "Clave de Acceso",
+    "accessKeyPlaceholder": "XXXX-XXXX",
+    "accessKeyHint": "Ingrese el código alfanumérico de 4 a 8 caracteres que recibió por WhatsApp o Email",
+    "validateAndAccess": "Validar y Acceder",
+    "tryAgain": "Intentar de Nuevo",
+    "welcomeUser": "Bienvenido {name}!",
+    "accessValidated": "Acceso Validado",
+    "sessionInfo": "Información de la Sesión",
+    "sessionType": "Tipo de Consulta:",
+    "sessionDate": "Fecha y Hora:",
+    "sessionWillStart": "La sesión comenzará en breve. Por favor, espere a que el doctor se conecte.",
+    "waitingForSession": "Esperando inicio de sesión...",
+    "waitingForDoctor": "La sesión comenzará cuando el doctor se conecte",
+    "waitingForDoctorDescription": "Por favor, espere a que el doctor se conecte para iniciar la consulta",
+    "sessionActiveWindowClosed": "Sesión activa - Ventana cerrada",
+    "reopenSession": "Reabrir Sesión de Telemedicina",
+    "sessionCompleted": "Sesión Finalizada",
+    "invalidKeyLength": "Por favor, ingrese un código de 4 a 8 caracteres alfanuméricos",
+    "invalidAccessKey": "Clave de acceso inválida",
+    "incorrectAccessKey": "Clave de acceso incorrecta. Por favor, verifique e intente nuevamente.",
+    "sessionNotFound": "Sesión no encontrada",
+    "validationError": "Error al validar la clave de acceso",
+    "email": "Email:",
+    "video": "Video",
+    "chat": "Chat",
+    "both": "Video y Chat"
   },
   "queueAttentionDetails": {
     "requested": "Atenciones generadas",
@@ -1658,7 +1809,41 @@
     "date": "Fecha",
     "contactMethod": "Medio de Contacto",
     "outcomes": "Egresos",
-    "patientHistory": "Historia",
+    "patientHistory": "Historial Médico",
+    "patientHistoryData": {
+      "patientJourney": "Historial del Paciente",
+      "patientJourneyDescription": "Línea de tiempo completa de todas las interacciones del paciente",
+      "consultationTimeline": "Historial de Consultas",
+      "consultationTimelineDescription": "Línea de tiempo de todas las consultas del paciente",
+      "bookings": "Reservas",
+      "attentions": "Atenciones",
+      "consultations": "Consultas",
+      "controls": "Controles",
+      "prescriptions": "Recetas",
+      "examOrders": "Órdenes de Examen",
+      "booking": "Reserva",
+      "attention": "Atención",
+      "consultation": "Consulta",
+      "control": "Control",
+      "prescription": "Receta",
+      "examOrder": "Orden de Examen",
+      "fromBooking": "Desde Reserva",
+      "fromControl": "Desde Control",
+      "comeback": "Retorno",
+      "comebackFrom": "Retorno desde",
+      "diagnostics": "Diagnósticos",
+      "consultationReason": "Motivo de Consulta",
+      "scheduled": "Programado",
+      "visit": "Visita",
+      "consultationDetails": "Detalles de consulta",
+      "scheduledFor": "Programado para",
+      "medications": "medicamentos",
+      "exams": "exámenes",
+      "noConsultations": "No hay consultas",
+      "noConsultationsDescription": "Este paciente aún no tiene consultas registradas",
+      "noJourneyItems": "No se encontraron elementos",
+      "noJourneyItemsDescription": "Intenta ajustar tus filtros"
+    },
     "patientHistoryOf": "Historial Médico de",
     "pendingControls": "Controles",
     "pendingBookings": "Reservas",
@@ -2466,6 +2651,8 @@
     "order": "Orden:",
     "active": "Activo:",
     "online": "Online:",
+    "telemedicine": "Telemedicina:",
+    "telemedicineHelp": "Habilita la opción de telemedicina para esta fila",
     "estimated": "Tiempo estimado (min):",
     "update": "Actualizar",
     "unavailable": "Eliminar",
@@ -2831,6 +3018,8 @@
     "addReplacement": "Nueva Reposición",
     "addConsuption": "Agregar Consumo",
     "commerces": "Comercio:",
+    "prescriptionSuggestions": "💊 Productos Prescritos",
+    "quickConsume": "Consumir Rápido",
     "amount": "Cantidad:",
     "code": "Código/Lote:",
     "date": "Fecha Reposición:",
@@ -3235,6 +3424,8 @@
     "category": "Categoría:",
     "add": "Agregar",
     "logo": "Logo",
+    "telemedicineRecordingEnabled": "Grabación de Sesiones de Telemedicina",
+    "telemedicineRecordingEnabledDescription": "Habilitar grabación automática de sesiones de telemedicina (configuración a nivel de comercio)",
     "link": "URL Web:",
     "go": "Minisite",
     "break": "Descanso:",
@@ -3294,6 +3485,45 @@
       "hours": "Hora 'Desde' debe ser menor a hora 'Hasta'"
     }
   },
+  "patientHistory": {
+    "patientJourney": "Historial del Paciente",
+    "patientJourneyDescription": "Línea de tiempo completa de todas las interacciones del paciente",
+    "consultationTimeline": "Historial de Consultas",
+    "consultationTimelineDescription": "Línea de tiempo de todas las consultas del paciente",
+    "bookings": "Reservas",
+    "attentions": "Atenciones",
+    "consultations": "Consultas",
+    "controls": "Controles",
+    "prescriptions": "Recetas",
+    "examOrders": "Órdenes de Examen",
+    "booking": "Reserva",
+    "attention": "Atención",
+    "consultation": "Consulta",
+    "control": "Control",
+    "prescription": "Receta",
+    "examOrder": "Orden de Examen",
+    "fromBooking": "Desde Reserva",
+    "fromControl": "Desde Control",
+    "comeback": "Retorno",
+    "comebackFrom": "Retorno desde",
+    "diagnostics": "Diagnósticos",
+    "consultationReason": "Motivo de Consulta",
+    "scheduled": "Programado",
+    "visit": "Visita",
+    "consultationDetails": "Detalles de consulta",
+    "scheduledFor": "Programado para",
+    "medications": "medicamentos",
+    "exams": "exámenes",
+    "noConsultations": "No hay consultas",
+    "noConsultationsDescription": "Este paciente aún no tiene consultas registradas",
+    "noJourneyItems": "No se encontraron elementos",
+    "noJourneyItemsDescription": "Intenta ajustar tus filtros",
+    "journeyServerError": "Error del servidor al cargar el historial del paciente. Por favor, intente nuevamente más tarde.",
+    "journeyNotFound": "Historial del paciente no encontrado.",
+    "journeyAccessDenied": "No tiene permiso para ver este historial del paciente.",
+    "journeyLoadError": "Error al cargar el historial del paciente. Por favor, intente nuevamente.",
+    "missingParameters": "Faltan parámetros obligatorios"
+  },
   "patientHistoryView": {
     "showPersonalData": "Datos Personales",
     "showConsultationReason": "Motivo de la Consulta",
@@ -3308,6 +3538,7 @@
     "showControl": "Controles",
     "showItensMedicalHistory": "Admin Items Historia",
     "showDocuments": "Documentos",
+    "consultationTimeline": "Historial de Consultas",
     "menu": "Detalles Historia",
     "name": "Nombre:",
     "lastName": "Apellido:",
@@ -3321,6 +3552,7 @@
     "addressCode": "Dirección (Zip):",
     "addressComplement": "Dirección (Complemento):",
     "phone": "Teléfono:",
+    "email": "Email:",
     "font": "Fuente de Confiabilidad:",
     "save": "Guardar",
     "consultationReason": "Motivo de la Consulta",
@@ -3347,6 +3579,16 @@
     "update": "Actualizar",
     "autoSaving": "Autoguardado",
     "clickSave": "Haga click en Salvar",
+    "patientInfo": "Información del Paciente",
+    "consultation": "Consulta",
+    "examination": "Examen",
+    "clinical": "Clínico",
+    "management": "Gestión",
+    "saved": "Guardado",
+    "saving": "Guardando",
+    "showMenu": "Mostrar Menú",
+    "hideMenu": "Ocultar Menú",
+    "select": "Seleccione...",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3485,6 +3727,8 @@
     "collaborators": "Colaboradores",
     "resumeByCommerce": "Resumen por Comercio",
     "whatsapp": "Conexión Whatsapp",
+    "telemedicine": "Telemedicina",
+    "telemedicineConnections": "Conexiones WebSocket",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3666,6 +3910,7 @@
     "file": "Archivo:",
     "upload": "Subir",
     "uploadNewDocument": "Subir Nuevo Documento",
+    "dragDropOrClick": "Arrastra y suelta el archivo aquí o haz clic para seleccionar",
     "message": {
       "1": {
         "title": "¡Ups!",

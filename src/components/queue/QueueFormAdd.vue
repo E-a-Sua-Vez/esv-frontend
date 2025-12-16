@@ -15,6 +15,7 @@ export default {
     types: { type: Array, default: () => [] },
     toggles: { type: Object, default: () => ({}) },
     errors: { type: Object, default: () => ({}) },
+    commerce: { type: Object, default: null },
   },
   emits: ['update:modelValue'],
   computed: {
@@ -37,6 +38,7 @@ export default {
       :types="types"
       :toggles="toggles"
       :is-add="true"
+      :commerce="commerce"
       :errors="{
         nameError: errors.nameError,
         typeError: errors.typeError,

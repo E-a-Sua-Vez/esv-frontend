@@ -1,15 +1,19 @@
 <script>
-import { ref, watch, reactive, onBeforeMount } from 'vue';
+import { ref, watch, reactive, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getAttentionDetails, cancelAttention } from '../application/services/attention';
 import { getFormsByClient } from '../application/services/form';
 import { getFormPersonalizedByCommerceId } from '../application/services/form-personalized';
+import { getSurveyPersonalizedByCommerceId } from '../application/services/survey-personalized';
 import { getCommerceById } from '../application/services/commerce';
 import { getQueueById, getEstimatedWaitTime } from '../application/services/queue';
 import { getUserById } from '../application/services/user';
 import { getCollaboratorById } from '../application/services/collaborator';
 import { getModuleById } from '../application/services/module';
-import { updatedAvailableAttentionsByCommerceAndQueue } from '../application/firebase';
+import {
+  updatedAvailableAttentionsByCommerceAndQueue,
+  updatedQueues,
+} from '../application/firebase';
 import { getPermissions } from '../application/services/permissions';
 import { useI18n } from 'vue-i18n';
 import { getActiveFeature } from '../shared/features';
@@ -26,6 +30,14 @@ import Spinner from '../components/common/Spinner.vue';
 import Alert from '../components/common/Alert.vue';
 import AreYouSure from '../components/common/AreYouSure.vue';
 import Popper from 'vue3-popper';
+import TelemedicineSessionStarter from '../components/telemedicine/domain/TelemedicineSessionStarter.vue';
+import TelemedicineVideoCall from '../components/telemedicine/domain/TelemedicineVideoCall.vue';
+import TelemedicineChat from '../components/telemedicine/domain/TelemedicineChat.vue';
+import TelemedicineFloatingWindow from '../components/telemedicine/domain/TelemedicineFloatingWindow.vue';
+import {
+  getTelemedicineSession,
+  sendTelemedicineAccessKey,
+} from '../application/services/telemedicine';
 
 export default {
   name: 'UserQueueAttention',
@@ -42,6 +54,10 @@ export default {
     Spinner,
     Alert,
     Popper,
+    TelemedicineSessionStarter,
+    TelemedicineVideoCall,
+    TelemedicineChat,
+    TelemedicineFloatingWindow,
   },
   async setup() {
     const { t, locale } = useI18n();
@@ -73,6 +89,13 @@ export default {
       formPreAttentionCompleted: false,
       form: undefined,
       toggles: {},
+      telemedicineSession: null,
+      showTelemedicineVideo: false,
+      showTelemedicineChat: false,
+      telemedicineSessionType: null,
+      clientConnected: false,
+      connectionStatusInterval: null,
+      showTelemedicineInstructions: false,
     });
 
     onBeforeMount(async () => {
@@ -84,6 +107,15 @@ export default {
         state.queue = state.attention.queue;
         state.commerce = state.attention.commerce;
         state.toggles = await getPermissions('user');
+
+        // Load surveys for the commerce
+        await loadSurveys();
+
+        // Load telemedicine session if available
+        if (state.attention?.telemedicineSessionId) {
+          await loadTelemedicineSessionDetails();
+        }
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -92,6 +124,9 @@ export default {
 
     const attentions = ref([]);
     attentions.value = updatedAvailableAttentionsByCommerceAndQueue(queueId);
+
+    // Watch queue reactively to get currentAttentionId and currentAttentionNumber updates
+    const queues = updatedQueues(queueId);
 
     const getEstimatedTime = totalMinutes => {
       const hours = Math.floor(totalMinutes / 60);
@@ -132,7 +167,8 @@ export default {
 
               if (intelligentEstimation && intelligentEstimation.estimatedTime) {
                 state.estimatedTime = intelligentEstimation.estimatedTime;
-                state.usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
+                state.usingIntelligentEstimation =
+                  intelligentEstimation.usingIntelligentEstimation || false;
               } else {
                 // Fallback to hardcoded calculation
                 const totalMinutes = state.beforeYou * state.queue.estimatedTime;
@@ -202,9 +238,18 @@ export default {
       state.attention.status === ATTENTION_STATUS.PENDING ||
       state.attention.status === ATTENTION_STATUS.REACTIVATED;
 
-    const itsYourTurn = () =>
-      (state.beforeYou === 0 && state.attention.status === ATTENTION_STATUS.PROCESSING) ||
-      state.attention.status === ATTENTION_STATUS.REACTIVATED;
+    const itsYourTurn = () => {
+      // Check if this attention is the current one being processed
+      const isCurrentAttention =
+        state.queue?.currentAttentionId === state.attention?.id ||
+        state.queue?.currentAttentionNumber === state.attention?.number;
+
+      return (
+        (state.beforeYou === 0 && state.attention.status === ATTENTION_STATUS.PROCESSING) ||
+        state.attention.status === ATTENTION_STATUS.REACTIVATED ||
+        (isCurrentAttention && state.attention.status === ATTENTION_STATUS.PROCESSING)
+      );
+    };
 
     const youWereAttended = () =>
       state.attention.status === ATTENTION_STATUS.TERMINATED &&
@@ -426,6 +471,244 @@ export default {
       }
     };
 
+    const loadSurveys = async () => {
+      if (!state.commerce || !state.commerce.id) return;
+
+      try {
+        // Try to get surveys from commerce first (if already loaded)
+        if (state.commerce.surveys && state.commerce.surveys.length > 0) {
+          const surveyQueue = state.commerce.surveys.filter(sv => sv.queueId === state.queue.id);
+          if (surveyQueue.length > 0) {
+            state.survey = surveyQueue[0];
+            return;
+          } else {
+            const surveys = state.commerce.surveys.filter(sv => sv.attentionDefault === true);
+            if (surveys.length > 0) {
+              state.survey = surveys[0];
+              return;
+            }
+          }
+        }
+
+        // If surveys not in commerce, load them separately
+        const surveys = await getSurveyPersonalizedByCommerceId(state.commerce.id);
+        if (surveys && surveys.length > 0) {
+          // Filter by queueId first
+          const surveyQueue = surveys.filter(sv => sv.queueId === state.queue.id);
+          if (surveyQueue.length > 0) {
+            state.survey = surveyQueue[0];
+          } else {
+            // Fallback to attentionDefault surveys
+            const defaultSurveys = surveys.filter(sv => sv.attentionDefault === true);
+            if (defaultSurveys.length > 0) {
+              state.survey = defaultSurveys[0];
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading surveys:', error);
+      }
+    };
+
+    const loadTelemedicineSessionDetails = async () => {
+      if (!state.attention?.telemedicineSessionId) return;
+      try {
+        state.telemedicineSession = await getTelemedicineSession(
+          state.attention.telemedicineSessionId
+        );
+        // Start polling for connection status if session is active
+        if (
+          state.telemedicineSession?.status === 'active' ||
+          state.telemedicineSession?.status === 'ACTIVE'
+        ) {
+          startConnectionStatusPolling();
+        }
+      } catch (err) {
+        console.error('Error loading telemedicine session:', err);
+      }
+    };
+
+    const startConnectionStatusPolling = () => {
+      // Poll every 3 seconds for connection status
+      if (state.connectionStatusInterval) {
+        clearInterval(state.connectionStatusInterval);
+      }
+      state.connectionStatusInterval = setInterval(async () => {
+        if (state.attention?.telemedicineSessionId) {
+          try {
+            const session = await getTelemedicineSession(state.attention.telemedicineSessionId);
+            state.telemedicineSession = session;
+            // Check if client has validated access key (indicates they're likely connected)
+            state.clientConnected = session.accessKeyValidated || false;
+          } catch (err) {
+            console.error('Error polling connection status:', err);
+          }
+        }
+      }, 3000);
+    };
+
+    const stopConnectionStatusPolling = () => {
+      if (state.connectionStatusInterval) {
+        clearInterval(state.connectionStatusInterval);
+        state.connectionStatusInterval = null;
+      }
+    };
+
+    const toggleTelemedicineInstructions = () => {
+      state.showTelemedicineInstructions = !state.showTelemedicineInstructions;
+    };
+
+    const handleTelemedicineSessionStarted = data => {
+      // Abrir componente de video o chat según el tipo
+      state.telemedicineSessionType = data.type;
+
+      // Load session details to get recording status and connection info
+      loadTelemedicineSessionDetails();
+
+      if (
+        data.type === 'video' ||
+        data.type === 'both' ||
+        data.type === 'VIDEO' ||
+        data.type === 'BOTH'
+      ) {
+        state.showTelemedicineVideo = true;
+      }
+      if (
+        data.type === 'chat' ||
+        data.type === 'both' ||
+        data.type === 'CHAT' ||
+        data.type === 'BOTH'
+      ) {
+        state.showTelemedicineChat = true;
+      }
+    };
+
+    const closeTelemedicineVideo = () => {
+      state.showTelemedicineVideo = false;
+      state.telemedicineSessionType = null;
+      stopConnectionStatusPolling();
+    };
+
+    const closeTelemedicineChat = () => {
+      state.showTelemedicineChat = false;
+      state.telemedicineSessionType = null;
+      stopConnectionStatusPolling();
+    };
+
+    // Check if telemedicine connection should be available
+    const isTelemedicineConnectionAvailable = () => {
+      if (!state.attention?.telemedicineConfig || !state.attention?.telemedicineSessionId) {
+        return false;
+      }
+
+      // For booking-based attentions: 10 minutes before scheduledAt
+      if (state.attention.telemedicineConfig?.scheduledAt) {
+        const scheduledTime = new Date(state.attention.telemedicineConfig.scheduledAt);
+        const activationTime = new Date(scheduledTime.getTime() - 10 * 60 * 1000); // 10 minutes before
+        return new Date() >= activationTime;
+      }
+
+      // For walk-in attentions: less than 2 people in queue
+      if (state.beforeYou !== undefined && state.beforeYou < 2) {
+        return true;
+      }
+
+      return false;
+    };
+
+    const getTimeUntilTelemedicineActivation = () => {
+      if (!state.attention?.telemedicineConfig?.scheduledAt) return null;
+      const scheduledTime = new Date(state.attention.telemedicineConfig.scheduledAt);
+      const activationTime = new Date(scheduledTime.getTime() - 10 * 60 * 1000); // 10 minutes before
+      const now = new Date();
+      const diff = activationTime.getTime() - now.getTime();
+      if (diff <= 0) return null;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      if (days > 0) return `${days} día${days > 1 ? 's' : ''}`;
+      if (hours > 0) return `${hours} hora${hours > 1 ? 's' : ''}`;
+      return `${minutes} minuto${minutes > 1 ? 's' : ''}`;
+    };
+
+    const formatTelemedicineDate = dateString => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleString('es-ES', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      });
+    };
+
+    const getTelemedicineStatusText = status => {
+      const statusMap = {
+        scheduled: 'Programada',
+        SCHEDULED: 'Programada',
+        active: 'En curso',
+        ACTIVE: 'En curso',
+        completed: 'Completada',
+        COMPLETED: 'Completada',
+        cancelled: 'Cancelada',
+        CANCELLED: 'Cancelada',
+      };
+      return statusMap[status] || status;
+    };
+
+    const getTelemedicineStatusClass = status => {
+      const classMap = {
+        scheduled: 'text-info',
+        SCHEDULED: 'text-info',
+        active: 'text-success',
+        ACTIVE: 'text-success',
+        completed: 'text-secondary',
+        COMPLETED: 'text-secondary',
+        cancelled: 'text-danger',
+        CANCELLED: 'text-danger',
+      };
+      return classMap[status] || '';
+    };
+
+    const getClientAccessLink = () => {
+      if (!state.attention || !state.attention.telemedicineSessionId) return '';
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/publico/telemedicina/${state.attention.telemedicineSessionId}`;
+    };
+
+    const copyClientAccessLink = () => {
+      const link = getClientAccessLink();
+      if (link) {
+        navigator.clipboard
+          .writeText(link)
+          .then(() => {
+            alert('Enlace copiado al portapapeles');
+          })
+          .catch(err => {
+            console.error('Error copying link:', err);
+          });
+      }
+    };
+
+    const handleJoinTelemedicineSession = async () => {
+      if (!state.attention?.telemedicineSessionId) return;
+
+      try {
+        // Send access key via WhatsApp/Email when user clicks join
+        await sendTelemedicineAccessKey(state.attention.telemedicineSessionId);
+        // Optionally show a success message
+        console.log('Access key sent successfully');
+      } catch (error) {
+        console.error('Error sending access key:', error);
+        // Don't block navigation, just log the error
+      }
+    };
+
+    const isTelemedicineSessionActive = () => {
+      // Check if telemedicine session is active
+      if (!state.telemedicineSession) return false;
+      const status = state.telemedicineSession.status;
+      return status === 'ACTIVE' || status === 'active' || status === 'ACTIVE';
+    };
+
     watch(attentions, async () => {
       try {
         if (attentions.value && attentions.value && attentions.value.length >= 0) {
@@ -433,10 +716,44 @@ export default {
           getBeforeYou(attentions);
           await getQueueAttentionValues(newAttention, state.attention);
           await itsYourTurnPlay();
+
+          // Reload telemedicine session if attention has telemedicine
+          if (state.attention?.telemedicineSessionId) {
+            await loadTelemedicineSessionDetails();
+          }
         }
         loading.value = false;
       } catch (error) {
         loading.value = false;
+      }
+    });
+
+    // Watch for telemedicine connection availability
+    watch(
+      () => [state.beforeYou, state.attention?.telemedicineConfig?.scheduledAt],
+      async () => {
+        // Check if connection should be available and reload session
+        if (isTelemedicineConnectionAvailable() && state.attention?.telemedicineSessionId) {
+          await loadTelemedicineSessionDetails();
+        }
+      },
+      { deep: true }
+    );
+
+    // Watch queue changes to reactively update when currentAttentionId/currentAttentionNumber changes
+    watch(queues, async () => {
+      try {
+        if (queues.value && queues.value.length > 0) {
+          const updatedQueue = queues.value[0];
+          if (updatedQueue && updatedQueue.id === queueId) {
+            // Update queue state with latest data
+            state.queue = { ...state.queue, ...updatedQueue };
+            // Trigger itsYourTurn check when queue updates
+            await itsYourTurnPlay();
+          }
+        }
+      } catch (error) {
+        console.error('Error watching queue updates:', error);
       }
     });
 
@@ -468,7 +785,27 @@ export default {
       goToForm,
       getActiveFeature,
       ATTENTION_STATUS,
+      loadTelemedicineSessionDetails,
+      toggleTelemedicineInstructions,
+      handleTelemedicineSessionStarted,
+      closeTelemedicineVideo,
+      closeTelemedicineChat,
+      isTelemedicineConnectionAvailable,
+      getTimeUntilTelemedicineActivation,
+      formatTelemedicineDate,
+      getTelemedicineStatusText,
+      getTelemedicineStatusClass,
+      getClientAccessLink,
+      copyClientAccessLink,
+      stopConnectionStatusPolling,
+      handleJoinTelemedicineSession,
+      isTelemedicineSessionActive,
     };
+
+    // Clean up on unmount
+    onBeforeUnmount(() => {
+      stopConnectionStatusPolling();
+    });
   },
 };
 </script>
@@ -647,7 +984,10 @@ export default {
                     class="col-12 attention-details-card"
                   >
                     <div class="attention-card-content">
-                      <div v-if="state.attention.block && state.attention.block.hourFrom" class="attention-block-info">
+                      <div
+                        v-if="state.attention.block && state.attention.block.hourFrom"
+                        class="attention-block-info"
+                      >
                         <span class="attention-details-title">
                           🚨 {{ $t('userQueueAttention.blockInfo') }}
                         </span>
@@ -846,7 +1186,334 @@ export default {
                   </div>
                 </div>
               </div>
-              <div id="cancel-process" class="mb-3" v-if="!itsYourTurn()">
+
+              <!-- Telemedicine Information -->
+              <div
+                v-if="state.attention.type === 'TELEMEDICINE' || state.attention.telemedicineConfig"
+                class="to-goal mt-3"
+              >
+                <div class="attention-details-card">
+                  <div class="attention-card-content">
+                    <div class="mb-2">
+                      <span class="attention-details-title">
+                        <i class="bi bi-camera-video me-1"></i>
+                        {{ $t('userQueueBooking.telemedicine.title') }}
+                      </span>
+                    </div>
+                    <div class="mb-2 d-flex flex-wrap gap-1 justify-content-center">
+                      <span
+                        v-if="state.attention.telemedicineConfig"
+                        class="badge bg-primary"
+                        style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                      >
+                        <span
+                          v-if="
+                            state.attention.telemedicineConfig.type === 'VIDEO' ||
+                            state.attention.telemedicineConfig.type === 'video'
+                          "
+                        >
+                          {{ $t('userQueueBooking.telemedicine.typeVideo') }}
+                        </span>
+                        <span
+                          v-else-if="
+                            state.attention.telemedicineConfig.type === 'CHAT' ||
+                            state.attention.telemedicineConfig.type === 'chat'
+                          "
+                        >
+                          {{ $t('userQueueBooking.telemedicine.typeChat') }}
+                        </span>
+                        <span
+                          v-else-if="
+                            state.attention.telemedicineConfig.type === 'BOTH' ||
+                            state.attention.telemedicineConfig.type === 'both'
+                          "
+                        >
+                          {{ $t('userQueueBooking.telemedicine.typeBoth') }}
+                        </span>
+                      </span>
+                      <span
+                        v-if="
+                          state.attention.telemedicineConfig &&
+                          state.attention.telemedicineConfig.recordingEnabled
+                        "
+                        class="badge bg-danger"
+                        style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                      >
+                        <i class="bi bi-record-circle me-1"></i>
+                        {{ $t('userQueueBooking.telemedicine.recording') }}
+                      </span>
+                      <span
+                        v-if="state.telemedicineSession"
+                        :class="`badge ${getTelemedicineStatusClass(
+                          state.telemedicineSession.status
+                        )}`"
+                        style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                      >
+                        {{ getTelemedicineStatusText(state.telemedicineSession.status) }}
+                      </span>
+                      <span
+                        v-else-if="state.attention.telemedicineConfig"
+                        class="badge bg-info"
+                        style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                      >
+                        {{ $t('userQueueBooking.telemedicine.statusScheduled') }}
+                      </span>
+                    </div>
+                    <div v-if="state.attention.telemedicineConfig?.notes" class="mb-2">
+                      <span class="attention-details-title" style="font-size: 0.75rem">
+                        <i class="bi bi-sticky me-1"></i>
+                        {{ state.attention.telemedicineConfig.notes }}
+                      </span>
+                    </div>
+
+                    <!-- Connection Available -->
+                    <div
+                      v-if="
+                        isTelemedicineConnectionAvailable() && state.attention.telemedicineSessionId
+                      "
+                      class="mt-2"
+                    >
+                      <div
+                        class="attention-details-content"
+                        style="font-size: 0.9rem; color: var(--verde-tu)"
+                      >
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ $t('userQueueBooking.telemedicine.connectionAvailable') }}
+                      </div>
+                      <a
+                        :href="getClientAccessLink()"
+                        target="_blank"
+                        class="btn btn-md btn-block btn-size fw-bold btn-success rounded-pill mt-2"
+                        style="font-size: 0.9rem"
+                        @click="handleJoinTelemedicineSession"
+                      >
+                        <i class="bi bi-camera-video me-2"></i>
+                        {{ $t('userQueueBooking.telemedicine.joinSession') }}
+                      </a>
+                    </div>
+
+                    <!-- Waiting for Activation -->
+                    <div
+                      v-else-if="
+                        state.attention.telemedicineConfig?.scheduledAt &&
+                        !isTelemedicineConnectionAvailable()
+                      "
+                      class="mt-2"
+                    >
+                      <span
+                        class="attention-details-content"
+                        style="font-size: 0.9rem; color: var(--azul-turno)"
+                      >
+                        <i class="bi bi-clock me-1"></i>
+                        {{ $t('userQueueBooking.telemedicine.connectionWillBeAvailable') }}
+                        <span v-if="getTimeUntilTelemedicineActivation()">
+                          {{ $t('userQueueBooking.telemedicine.in') }}
+                          {{ getTimeUntilTelemedicineActivation() }}
+                        </span>
+                      </span>
+                    </div>
+
+                    <!-- Walk-in: Waiting for queue position -->
+                    <div
+                      v-else-if="
+                        !state.attention.telemedicineConfig?.scheduledAt && state.beforeYou >= 2
+                      "
+                      class="mt-2"
+                    >
+                      <span
+                        class="attention-details-content"
+                        style="font-size: 0.9rem; color: var(--azul-turno)"
+                      >
+                        <i class="bi bi-people me-1"></i>
+                        {{ $t('userQueueBooking.telemedicine.waitingForQueue') }}
+                        {{ $t('userQueueBooking.telemedicine.connectionWhenLessThan2') }}
+                      </span>
+                    </div>
+
+                    <!-- Instructions Toggle -->
+                    <div class="mt-2">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary w-100"
+                        @click="toggleTelemedicineInstructions"
+                      >
+                        <i
+                          :class="
+                            state.showTelemedicineInstructions
+                              ? 'bi bi-chevron-up'
+                              : 'bi bi-chevron-down'
+                          "
+                        ></i>
+                        {{ $t('userQueueBooking.telemedicine.instructions.title') }}
+                      </button>
+                    </div>
+                    <div
+                      v-show="state.showTelemedicineInstructions"
+                      class="telemedicine-instructions mt-3 pt-3 border-top"
+                    >
+                      <div class="mb-3">
+                        <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                          <i class="bi bi-1-circle me-2"></i>
+                          {{ $t('userQueueBooking.telemedicine.instructions.preparation.title') }}
+                        </div>
+                        <ul
+                          class="mb-0 ps-0"
+                          style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                        >
+                          <li>
+                            {{
+                              $t('userQueueBooking.telemedicine.instructions.preparation.internet')
+                            }}
+                          </li>
+                          <li>
+                            {{
+                              $t('userQueueBooking.telemedicine.instructions.preparation.camera')
+                            }}
+                          </li>
+                          <li>
+                            {{
+                              $t('userQueueBooking.telemedicine.instructions.preparation.location')
+                            }}
+                          </li>
+                          <li
+                            v-if="
+                              state.attention.telemedicineConfig &&
+                              (state.attention.telemedicineConfig.type === 'VIDEO' ||
+                                state.attention.telemedicineConfig.type === 'video' ||
+                                state.attention.telemedicineConfig.type === 'BOTH' ||
+                                state.attention.telemedicineConfig.type === 'both')
+                            "
+                          >
+                            {{
+                              $t('userQueueBooking.telemedicine.instructions.preparation.device')
+                            }}
+                          </li>
+                        </ul>
+                      </div>
+                      <div class="mb-3">
+                        <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                          <i class="bi bi-2-circle me-2"></i>
+                          {{ $t('userQueueBooking.telemedicine.instructions.access.title') }}
+                        </div>
+                        <ul
+                          class="mb-0 ps-0"
+                          style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                        >
+                          <li>
+                            {{ $t('userQueueBooking.telemedicine.instructions.access.link') }}
+                          </li>
+                          <li>
+                            {{ $t('userQueueBooking.telemedicine.instructions.access.activation') }}
+                          </li>
+                          <li>
+                            {{ $t('userQueueBooking.telemedicine.instructions.access.code') }}
+                          </li>
+                          <li>
+                            {{ $t('userQueueBooking.telemedicine.instructions.access.doctor') }}
+                          </li>
+                        </ul>
+                      </div>
+                      <div class="mb-3">
+                        <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                          <i class="bi bi-3-circle me-2"></i>
+                          {{ $t('userQueueBooking.telemedicine.instructions.during.title') }}
+                        </div>
+                        <ul
+                          class="mb-0 ps-0"
+                          style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                        >
+                          <li
+                            v-if="
+                              state.attention.telemedicineConfig &&
+                              (state.attention.telemedicineConfig.type === 'VIDEO' ||
+                                state.attention.telemedicineConfig.type === 'video' ||
+                                state.attention.telemedicineConfig.type === 'BOTH' ||
+                                state.attention.telemedicineConfig.type === 'both')
+                            "
+                          >
+                            {{ $t('userQueueBooking.telemedicine.instructions.during.camera') }}
+                          </li>
+                          <li
+                            v-if="
+                              state.attention.telemedicineConfig &&
+                              (state.attention.telemedicineConfig.type === 'CHAT' ||
+                                state.attention.telemedicineConfig.type === 'chat' ||
+                                state.attention.telemedicineConfig.type === 'BOTH' ||
+                                state.attention.telemedicineConfig.type === 'both')
+                            "
+                          >
+                            {{ $t('userQueueBooking.telemedicine.instructions.during.chat') }}
+                          </li>
+                          <li>
+                            {{ $t('userQueueBooking.telemedicine.instructions.during.documents') }}
+                          </li>
+                          <li
+                            v-if="
+                              state.attention.telemedicineConfig &&
+                              state.attention.telemedicineConfig.recordingEnabled
+                            "
+                          >
+                            <i class="bi bi-record-circle text-danger me-1"></i>
+                            {{ $t('userQueueBooking.telemedicine.instructions.during.recording') }}
+                          </li>
+                        </ul>
+                      </div>
+                      <div
+                        class="alert alert-warning mb-0 mt-2"
+                        style="font-size: 0.75rem; padding: 0.4rem; line-height: 1.4"
+                      >
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ $t('userQueueBooking.telemedicine.instructions.important') }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Telemedicine Video/Chat Components -->
+              <div
+                v-if="state.showTelemedicineVideo || state.showTelemedicineChat"
+                class="telemedicine-components-container"
+              >
+                <TelemedicineFloatingWindow
+                  v-if="state.showTelemedicineVideo"
+                  :show="state.showTelemedicineVideo"
+                  title="Consulta por Video"
+                  icon-class="bi-camera-video"
+                  :is-connected="state.clientConnected"
+                  @close="closeTelemedicineVideo"
+                >
+                  <TelemedicineVideoCall
+                    :session-id="state.attention.telemedicineSessionId"
+                    :current-user-id="state.user?.id || state.attention.userId"
+                    user-type="patient"
+                    :show-close="false"
+                    @call-ended="closeTelemedicineVideo"
+                  />
+                </TelemedicineFloatingWindow>
+                <TelemedicineFloatingWindow
+                  v-if="state.showTelemedicineChat"
+                  :show="state.showTelemedicineChat"
+                  title="Consulta por Chat"
+                  icon-class="bi-chat-dots"
+                  :is-connected="state.clientConnected"
+                  @close="closeTelemedicineChat"
+                >
+                  <TelemedicineChat
+                    :session-id="state.attention.telemedicineSessionId"
+                    :current-user-id="state.user?.id || state.attention.userId"
+                    user-type="patient"
+                    :show-close="false"
+                    @message-sent="() => {}"
+                  />
+                </TelemedicineFloatingWindow>
+              </div>
+
+              <div
+                id="cancel-process"
+                class="mb-3"
+                v-if="!itsYourTurn() && !isTelemedicineSessionActive()"
+              >
                 <button
                   type="button"
                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-danger rounded-pill mb-1"
@@ -994,7 +1661,8 @@ export default {
 }
 
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

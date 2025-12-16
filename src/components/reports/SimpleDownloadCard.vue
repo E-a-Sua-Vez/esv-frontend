@@ -20,8 +20,7 @@ export default {
     executeDownload() {
       try {
         this.$emit('download');
-      } catch (error) {
-      }
+      } catch (error) {}
     },
   },
 };

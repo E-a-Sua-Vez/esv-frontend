@@ -258,6 +258,3 @@ export default {
   --toggle-height: 1rem;
 }
 </style>
-
-
-

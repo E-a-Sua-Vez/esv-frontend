@@ -13,7 +13,7 @@ import {
 import { createWaitlist } from '../application/services/waitlist';
 import { globalStore } from '../stores';
 import { validateEmail } from '../shared/utils/email';
-import { getActiveFeature } from '../shared/features';
+import { getActiveFeature, isTelemedicineEnabled } from '../shared/features';
 import {
   bookingCollection,
   attentionCollection,
@@ -187,6 +187,12 @@ export default {
       showPickQueue: false,
       showPickHours: false,
       summaryExpanded: true,
+      isTelemedicine: false,
+      telemedicineConfig: {
+        type: 'VIDEO',
+        scheduledAt: null,
+        notes: '',
+      },
     });
 
     onBeforeMount(async () => {
@@ -221,8 +227,11 @@ export default {
               const collaborator = await getCollaboratorDetailsById(state.queue.collaboratorId);
               if (collaborator && collaborator.id) {
                 state.queue.collaborator = collaborator;
-                state.queue.services = collaborator.services;
-                state.queue.servicesName = state.queue.services.map(serv => serv.name);
+                state.queue.services = collaborator.services || [];
+                state.queue.servicesName =
+                  collaborator.services && collaborator.services.length > 0
+                    ? collaborator.services.map(serv => serv.name)
+                    : [];
                 state.queues = [state.queue];
                 state.groupedQueues[queueType] = [state.queue];
                 state.queueId = state.queue.id;
@@ -258,8 +267,11 @@ export default {
                     collaborator => collaborator.id === queue.collaboratorId
                   );
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
-                    queue.services = collaboratorsAux[0].services;
-                    queue.servicesName = queue.services.map(serv => serv.name);
+                    queue.services = collaboratorsAux[0].services || [];
+                    queue.servicesName =
+                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
+                        ? collaboratorsAux[0].services.map(serv => serv.name)
+                        : [];
                   }
                   queueAux.push(queue);
                 }
@@ -369,17 +381,7 @@ export default {
       state.amountofBlocksNeeded = 0;
       setCanBook();
 
-      // Scroll to services card when a queue/professional is selected
-      setTimeout(() => {
-        const servicesElement = document.getElementById('queues');
-        if (servicesElement) {
-          servicesElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'nearest'
-          });
-        }
-      }, 300); // Small delay to ensure DOM is updated
+      // Removed scroll behavior - it was causing weird delays
     };
 
     const receiveServices = async services => {
@@ -763,8 +765,10 @@ export default {
             user: newUser,
             clientId: state.newUser.clientId,
           };
-          if (block && block.number) {
-            body = { ...body, block: convertBlockToPlainObject(block) };
+          // Use state.attentionBlock if block parameter is not provided (for TODAY bookings)
+          const selectedBlock = state.attentionBlock || block;
+          if (selectedBlock && selectedBlock.number) {
+            body = { ...body, block: convertBlockToPlainObject(selectedBlock) };
           }
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
@@ -778,6 +782,42 @@ export default {
               ...body,
               servicesId,
               servicesDetails,
+            };
+          }
+          // Add telemedicine config if enabled for walkin queues
+          if (state.isTelemedicine && state.telemedicineConfig) {
+            const selectedDate = state.date || state.specificCalendarDate || 'TODAY';
+            const selectedBlock = state.attentionBlock || block;
+
+            // Compute scheduledAt from the selected block's date and time
+            let scheduledAt = new Date().toISOString(); // fallback
+            if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+              try {
+                let dateStr;
+                if (selectedDate === 'TODAY') {
+                  dateStr = new DateModel().toString();
+                } else {
+                  dateStr =
+                    typeof selectedDate === 'string'
+                      ? selectedDate
+                      : new DateModel(selectedDate).toString();
+                }
+                scheduledAt = new Date(
+                  dateStr + 'T' + selectedBlock.hourFrom + ':00'
+                ).toISOString();
+              } catch (error) {
+                console.error('Error computing scheduledAt from block:', error);
+              }
+            } else {
+              // For walkin without block, schedule for now or next available time
+              scheduledAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes from now
+            }
+
+            body.type = 'TELEMEDICINE';
+            body.telemedicineConfig = {
+              type: 'VIDEO', // Always VIDEO for telemedicine
+              scheduledAt,
+              recordingEnabled: state.commerce?.telemedicineRecordingEnabled || false,
             };
           }
           state.date = undefined;
@@ -839,6 +879,39 @@ export default {
               procedures: serv.serviceInfo.procedures || 1,
             }));
             body = { ...body, servicesId, servicesDetails };
+          }
+          // Add telemedicine config if enabled - use the booking/attention block date and time
+          if (state.isTelemedicine && state.telemedicineConfig) {
+            const selectedDate = state.date || state.specificCalendarDate;
+            const selectedBlock = state.attentionBlock || state.block;
+
+            // Compute scheduledAt from the selected block's date and time
+            let scheduledAt = new Date().toISOString(); // fallback
+            if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+              try {
+                let dateStr;
+                if (selectedDate === 'TODAY') {
+                  dateStr = new DateModel().toString();
+                } else {
+                  dateStr =
+                    typeof selectedDate === 'string'
+                      ? selectedDate
+                      : new DateModel(selectedDate).toString();
+                }
+                scheduledAt = new Date(
+                  dateStr + 'T' + selectedBlock.hourFrom + ':00'
+                ).toISOString();
+              } catch (error) {
+                console.error('Error computing scheduledAt from block:', error);
+              }
+            }
+
+            body.type = 'TELEMEDICINE';
+            body.telemedicineConfig = {
+              type: 'VIDEO', // Always VIDEO for telemedicine
+              scheduledAt,
+              recordingEnabled: state.commerce?.telemedicineRecordingEnabled || false,
+            };
           }
           await addBookingNumberUsed(
             state.sessionId,
@@ -1102,7 +1175,11 @@ export default {
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
           console.log('🔵 blocksByDay is empty, loading...');
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log('🔵 blocksByDay loaded:', Object.keys(state.blocksByDay || {}).length, 'days');
+          console.log(
+            '🔵 blocksByDay loaded:',
+            Object.keys(state.blocksByDay || {}).length,
+            'days'
+          );
         }
 
         state.blocks = getBlocksByDay();
@@ -1114,11 +1191,20 @@ export default {
         // Load blocks immediately if attentions are already available
         console.log('🔵 Current attentions:', state.attentions?.length || 0);
         if (state.attentions && state.attentions.length >= 0) {
-          console.log('🔵 Calling getAvailableAttentionBlocks with attentions:', state.attentions.length);
+          console.log(
+            '🔵 Calling getAvailableAttentionBlocks with attentions:',
+            state.attentions.length
+          );
           await getAvailableAttentionBlocks(state.attentions);
-          console.log('🔵 Available attention blocks:', state.availableAttentionBlocks?.length || 0);
+          console.log(
+            '🔵 Available attention blocks:',
+            state.availableAttentionBlocks?.length || 0
+          );
           getAvailableAttentionSuperBlocks();
-          console.log('🔵 Available super blocks:', state.availableAttentionSuperBlocks?.length || 0);
+          console.log(
+            '🔵 Available super blocks:',
+            state.availableAttentionSuperBlocks?.length || 0
+          );
           loadingHours.value = false;
           console.log('🔵 Loading hours set to false');
         } else {
@@ -1129,7 +1215,7 @@ export default {
       }
     };
 
-    const selectAttentionBlock = (block) => {
+    const selectAttentionBlock = block => {
       console.log('🟨 selectAttentionBlock called with:', block);
       // Ensure reactivity by creating a new object
       state.attentionBlock = {
@@ -1137,9 +1223,31 @@ export default {
         hourFrom: block.hourFrom,
         hourTo: block.hourTo,
         ...(block.blocks && { blocks: block.blocks }),
-        ...(block.blockNumbers && { blockNumbers: block.blockNumbers })
+        ...(block.blockNumbers && { blockNumbers: block.blockNumbers }),
       };
       console.log('🟨 state.attentionBlock after assignment:', state.attentionBlock);
+
+      // Update telemedicine scheduledAt if telemedicine is enabled and we have date and block
+      if (
+        state.isTelemedicine &&
+        state.telemedicineConfig &&
+        state.attentionBlock &&
+        state.attentionBlock.hourFrom
+      ) {
+        const selectedDate = state.date || state.specificCalendarDate;
+        if (selectedDate && selectedDate !== 'TODAY') {
+          const dateStr =
+            typeof selectedDate === 'string'
+              ? selectedDate
+              : new DateModel(selectedDate).toString();
+          const scheduledDateTime = new Date(dateStr + 'T' + state.attentionBlock.hourFrom + ':00');
+          state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+        } else if (selectedDate === 'TODAY') {
+          const today = new DateModel().toString();
+          const scheduledDateTime = new Date(today + 'T' + state.attentionBlock.hourFrom + ':00');
+          state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+        }
+      }
     };
 
     const showReserve = () => {
@@ -1153,7 +1261,22 @@ export default {
     const validateCaptchaOk = async response => {
       if (response) {
         captcha = true;
-        if (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') || isQueueWalkin()) {
+        // For COLLABORATOR queues, check if they have services that need to be selected
+        const isCollaboratorWithServices =
+          state.queue &&
+          state.queue.type === 'COLLABORATOR' &&
+          ((state.queue.services && state.queue.services.length > 0) ||
+            (state.queue.servicesId && state.queue.servicesId.length > 0) ||
+            (state.queue.collaborator &&
+              state.queue.collaborator.services &&
+              state.queue.collaborator.services.length > 0));
+
+        // Don't auto-create attention for COLLABORATOR queues that have services - user must select services first
+        // Only auto-create if it's not a COLLABORATOR queue with services, and booking is disabled or it's a walkin queue
+        if (
+          !isCollaboratorWithServices &&
+          (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') || isQueueWalkin())
+        ) {
           await getAttention(undefined);
         }
       }
@@ -1295,7 +1418,11 @@ export default {
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
           console.log('🟣 blocksByDay is empty, loading...');
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log('🟣 blocksByDay loaded:', Object.keys(state.blocksByDay || {}).length, 'days');
+          console.log(
+            '🟣 blocksByDay loaded:',
+            Object.keys(state.blocksByDay || {}).length,
+            'days'
+          );
         }
         state.blocks = getBlocksByDay();
         console.log('🟣 Blocks reloaded:', state.blocks?.length || 0);
@@ -1440,7 +1567,10 @@ export default {
         }
       }
       state.availableAttentionBlocks = availableBlocks;
-      console.log('🟣 getAvailableAttentionBlocks() completed. Available blocks:', availableBlocks.length);
+      console.log(
+        '🟣 getAvailableAttentionBlocks() completed. Available blocks:',
+        availableBlocks.length
+      );
       console.log('🟣 Available blocks details:', availableBlocks);
     };
 
@@ -1649,7 +1779,10 @@ export default {
         }
       }
       loadingHours.value = false;
-      console.log('🟪 getAvailableAttentionSuperBlocks() completed. Super blocks:', state.availableAttentionSuperBlocks?.length || 0);
+      console.log(
+        '🟪 getAvailableAttentionSuperBlocks() completed. Super blocks:',
+        state.availableAttentionSuperBlocks?.length || 0
+      );
     };
 
     const getAvailableSpecificDatesByMonth = async date => {
@@ -1872,22 +2005,17 @@ export default {
         } else {
           console.log('🟦 Loading blocksByDay for queue:', state.queue.id);
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log('🟦 blocksByDay loaded:', Object.keys(state.blocksByDay || {}).length, 'days');
+          console.log(
+            '🟦 blocksByDay loaded:',
+            Object.keys(state.blocksByDay || {}).length,
+            'days'
+          );
           console.log('🟦 blocksByDay content:', state.blocksByDay);
           state.blocks = getBlocksByDay();
           console.log('🟦 Initial blocks:', state.blocks?.length || 0);
         }
 
-        // Scroll to services selection after queue is selected
-        setTimeout(() => {
-          const queueForm = document.getElementById('queue-form-container');
-          if (queueForm) {
-            const servicesSection = queueForm.querySelector('.service-selection, .services-grid, [class*="service"]');
-            if (servicesSection) {
-              servicesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        }, 300);
+        // Removed scroll behavior - it was causing weird delays
       }
       state.block = {};
       let currentDate;
@@ -1938,11 +2066,21 @@ export default {
             console.log('🟡 Filtered attentions for queue:', state.attentions?.length || 0);
           }
         }
-        console.log('🟡 Calling getAvailableAttentionBlocks with:', state.attentions?.length || 0, 'attentions');
+        console.log(
+          '🟡 Calling getAvailableAttentionBlocks with:',
+          state.attentions?.length || 0,
+          'attentions'
+        );
         await getAvailableAttentionBlocks(state.attentions);
-        console.log('🟡 Available attention blocks after calculation:', state.availableAttentionBlocks?.length || 0);
+        console.log(
+          '🟡 Available attention blocks after calculation:',
+          state.availableAttentionBlocks?.length || 0
+        );
         getAvailableAttentionSuperBlocks();
-        console.log('🟡 Available super blocks after calculation:', state.availableAttentionSuperBlocks?.length || 0);
+        console.log(
+          '🟡 Available super blocks after calculation:',
+          state.availableAttentionSuperBlocks?.length || 0
+        );
         attentionsAvailables();
         loadingHours.value = false;
         console.log('🟡 Loading hours set to false in watcher');
@@ -1951,7 +2089,34 @@ export default {
       }
     });
 
-    watch(changeAttentionBlock, async () => {
+    watch(changeAttentionBlock, async newData => {
+      // Update telemedicine scheduledAt when block is selected
+      if (
+        state.isTelemedicine &&
+        state.telemedicineConfig &&
+        newData.attentionBlock &&
+        newData.attentionBlock.hourFrom
+      ) {
+        const selectedDate = state.date || state.specificCalendarDate;
+        if (selectedDate) {
+          if (selectedDate === 'TODAY') {
+            const today = new DateModel().toString();
+            const scheduledDateTime = new Date(
+              today + 'T' + newData.attentionBlock.hourFrom + ':00'
+            );
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          } else {
+            const dateStr =
+              typeof selectedDate === 'string'
+                ? selectedDate
+                : new DateModel(selectedDate).toString();
+            const scheduledDateTime = new Date(
+              dateStr + 'T' + newData.attentionBlock.hourFrom + ':00'
+            );
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          }
+        }
+      }
       if (state.attentionBlock) {
         console.log('🟦 changeAttentionBlock watcher triggered');
         console.log('🟦 attentionBlock:', state.attentionBlock);
@@ -1962,7 +2127,30 @@ export default {
       }
     });
 
-    watch(changeBlock, async () => {
+    watch(changeBlock, async newData => {
+      // Update telemedicine scheduledAt when block is selected
+      if (
+        state.isTelemedicine &&
+        state.telemedicineConfig &&
+        newData.block &&
+        newData.block.hourFrom
+      ) {
+        const selectedDate = state.date || state.specificCalendarDate;
+        if (selectedDate) {
+          if (selectedDate === 'TODAY') {
+            const today = new DateModel().toString();
+            const scheduledDateTime = new Date(today + 'T' + newData.block.hourFrom + ':00');
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          } else {
+            const dateStr =
+              typeof selectedDate === 'string'
+                ? selectedDate
+                : new DateModel(selectedDate).toString();
+            const scheduledDateTime = new Date(dateStr + 'T' + newData.block.hourFrom + ':00');
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          }
+        }
+      }
       if (state.attentionBlock) {
         getAvailableBookingBlocks(state.bookings);
         getAvailableBookingSuperBlocks();
@@ -2037,7 +2225,11 @@ export default {
           if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
             console.log('🟠 blocksByDay is empty in watcher, loading...');
             state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-            console.log('🟠 blocksByDay loaded in watcher:', Object.keys(state.blocksByDay || {}).length, 'days');
+            console.log(
+              '🟠 blocksByDay loaded in watcher:',
+              Object.keys(state.blocksByDay || {}).length,
+              'days'
+            );
           }
 
           state.blocks = getBlocksByDay();
@@ -2076,7 +2268,11 @@ export default {
         getAvailableBookingSuperBlocks();
       }
       // If showToday is active, ensure blocks are loaded
-      if (state.showToday && state.date === 'TODAY' && (!state.blocks || state.blocks.length === 0)) {
+      if (
+        state.showToday &&
+        state.date === 'TODAY' &&
+        (!state.blocks || state.blocks.length === 0)
+      ) {
         console.log('🟠 showToday is active but blocks are missing, reloading...');
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
@@ -2131,7 +2327,10 @@ export default {
       attentionsAvailables();
 
       // Scroll to time selection card after date is selected
-      if (newData.specificCalendarDate && newData.specificCalendarDate !== oldData.specificCalendarDate) {
+      if (
+        newData.specificCalendarDate &&
+        newData.specificCalendarDate !== oldData.specificCalendarDate
+      ) {
         nextTick(() => {
           setTimeout(() => {
             const timeCard = document.querySelector('.time-slot-grid');
@@ -2160,6 +2359,122 @@ export default {
       }
       return '';
     };
+
+    // Telemedicine toggle handler
+    const handleTelemedicineToggle = () => {
+      if (state.isTelemedicine) {
+        // Initialize telemedicine config with default values
+        if (!state.telemedicineConfig) {
+          state.telemedicineConfig = {
+            type: 'VIDEO', // Always VIDEO for telemedicine
+            scheduledAt: null,
+            notes: '',
+          };
+        } else {
+          // Ensure type is always VIDEO
+          state.telemedicineConfig.type = 'VIDEO';
+        }
+
+        // Use selected block's date and time if available
+        const selectedDate = state.date || state.specificCalendarDate;
+        const selectedBlock = state.attentionBlock || state.block;
+
+        if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+          if (selectedDate === 'TODAY') {
+            const today = new DateModel().toString();
+            const scheduledDateTime = new Date(today + 'T' + selectedBlock.hourFrom + ':00');
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          } else {
+            const dateStr =
+              typeof selectedDate === 'string'
+                ? selectedDate
+                : new DateModel(selectedDate).toString();
+            const scheduledDateTime = new Date(dateStr + 'T' + selectedBlock.hourFrom + ':00');
+            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          }
+        } else if (selectedDate && selectedDate !== 'TODAY') {
+          // Use selected date with default time if no block selected yet
+          const dateStr =
+            typeof selectedDate === 'string'
+              ? selectedDate
+              : new DateModel(selectedDate).toString();
+          state.telemedicineConfig.scheduledAt = new Date(dateStr + 'T10:00:00')
+            .toISOString()
+            .slice(0, 16);
+        } else if (!state.telemedicineConfig.scheduledAt) {
+          // Fallback to tomorrow if no date selected
+          state.telemedicineConfig.scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 16);
+        }
+      } else {
+        // Reset config when disabled but keep it as an object
+        if (!state.telemedicineConfig) {
+          state.telemedicineConfig = {
+            type: 'VIDEO',
+            scheduledAt: null,
+          };
+        } else {
+          state.telemedicineConfig.scheduledAt = null;
+        }
+      }
+    };
+
+    // Format selected block date/time for telemedicine display - uses the booking/attention block directly
+    const formatSelectedBlockDateTime = computed(() => {
+      const selectedDate = state.date || state.specificCalendarDate;
+      const selectedBlock = state.attentionBlock || state.block;
+
+      // Check if we have the required data
+      if (!selectedDate || !selectedBlock) {
+        return '';
+      }
+
+      // Handle both single block and multiple blocks cases
+      let hourFrom = '';
+      let hourTo = '';
+
+      if (selectedBlock.blocks && selectedBlock.blocks.length > 0) {
+        // Multiple blocks case - use first and last block for time range
+        const firstBlock = selectedBlock.blocks[0];
+        const lastBlock = selectedBlock.blocks[selectedBlock.blocks.length - 1];
+        hourFrom = firstBlock?.hourFrom || '';
+        hourTo = lastBlock?.hourTo || '';
+      } else if (selectedBlock.hourFrom) {
+        // Single block case
+        hourFrom = selectedBlock.hourFrom;
+        hourTo = selectedBlock.hourTo || '';
+      }
+
+      if (!hourFrom) {
+        return '';
+      }
+
+      try {
+        let dateStr;
+        if (selectedDate === 'TODAY') {
+          dateStr = new DateModel().toString();
+        } else {
+          dateStr =
+            typeof selectedDate === 'string'
+              ? selectedDate
+              : new DateModel(selectedDate).toString();
+        }
+
+        const [year, month, day] = dateStr.split('-');
+
+        if (hourFrom && hourTo) {
+          return `${day}/${month}/${year}, ${hourFrom} - ${hourTo}`;
+        } else if (hourFrom) {
+          return `${day}/${month}/${year}, ${hourFrom}`;
+        } else {
+          return `${day}/${month}/${year}`;
+        }
+      } catch (error) {
+        console.error('Error formatting block date/time:', error, { selectedDate, selectedBlock });
+        return '';
+      }
+    });
 
     // Computed property to validate if form fields are complete
     const isFormValid = computed(() => {
@@ -2193,7 +2508,10 @@ export default {
 
         // Last Name validation
         if (isValid && getActiveFeature(state.commerce, 'attention-user-lastName', 'USER')) {
-          if (!user.lastName || (typeof user.lastName === 'string' && user.lastName.trim().length === 0)) {
+          if (
+            !user.lastName ||
+            (typeof user.lastName === 'string' && user.lastName.trim().length === 0)
+          ) {
             isValid = false;
           }
         }
@@ -2210,7 +2528,12 @@ export default {
 
         // Phone validation
         if (isValid && getActiveFeature(state.commerce, 'attention-user-phone', 'USER')) {
-          if (!state.phoneCode || state.phoneCode.length === 0 || !state.phone || state.phone.length === 0) {
+          if (
+            !state.phoneCode ||
+            state.phoneCode.length === 0 ||
+            !state.phone ||
+            state.phone.length === 0
+          ) {
             isValid = false;
           }
         }
@@ -2227,9 +2550,14 @@ export default {
 
         // Address validation
         if (isValid && getActiveFeature(state.commerce, 'attention-user-address', 'USER')) {
-          if (!user.addressText || user.addressText.length === 0 ||
-              !user.addressCode || user.addressCode.length === 0 ||
-              !user.addressComplement || user.addressComplement.length === 0) {
+          if (
+            !user.addressText ||
+            user.addressText.length === 0 ||
+            !user.addressCode ||
+            user.addressCode.length === 0 ||
+            !user.addressComplement ||
+            user.addressComplement.length === 0
+          ) {
             isValid = false;
           }
         }
@@ -2270,7 +2598,10 @@ export default {
         }
 
         // Health Agreement validation
-        if (isValid && getActiveFeature(state.commerce, 'attention-user-health-agreement', 'USER')) {
+        if (
+          isValid &&
+          getActiveFeature(state.commerce, 'attention-user-health-agreement', 'USER')
+        ) {
           if (!user.healthAgreementId || user.healthAgreementId.length === 0) {
             isValid = false;
           }
@@ -2323,6 +2654,7 @@ export default {
       formattedDate,
       isDataActive,
       getActiveFeature,
+      isTelemedicineEnabled,
       isActiveCommerce,
       isAvailableCommerce,
       goBack,
@@ -2349,6 +2681,7 @@ export default {
       isFormValid,
       convertDuration,
       selectAttentionBlock,
+      formatSelectedBlockDateTime,
     };
   },
 };
@@ -2373,8 +2706,7 @@ export default {
                   :style="`width: ${showFormStep()}%`"
                   aria-valuemin="0"
                   aria-valuemax="100"
-                >
-                </div>
+                ></div>
               </div>
             </div>
           </div>
@@ -2429,6 +2761,39 @@ export default {
                 :receive-selected-services="receiveSelectedServices"
               >
               </ServiceForm>
+
+              <!-- Telemedicine Option for Walkin Queues (shown when queue is selected and telemedicine is enabled) -->
+              <div
+                v-if="
+                  state.queue &&
+                  state.queue.id &&
+                  state.queue.type !== 'NODEVICE' &&
+                  isQueueWalkin() &&
+                  isTelemedicineEnabled(state.commerce, state.queue)
+                "
+                class="row g-1 mt-3"
+              >
+                <div class="col col-md-10 offset-md-1 data-card">
+                  <div class="telemedicine-option mb-3">
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id="`telemedicine-walkin-${state.queue.id}`"
+                        v-model="state.isTelemedicine"
+                        @change="handleTelemedicineToggle"
+                      />
+                      <label
+                        class="form-check-label"
+                        :for="`telemedicine-walkin-${state.queue.id}`"
+                      >
+                        <i class="bi bi-camera-video me-2"></i>
+                        <strong>Consulta por Telemedicina</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </Transition>
           <Transition name="slide-fade" mode="out-in">
@@ -2451,96 +2816,320 @@ export default {
                   <div class="col col-md-10 offset-md-1 data-card">
                     <div>
                       <div class="row">
-                      <!-- ATTENTION TODAY HOUR -->
-                      <div
-                        v-if="
-                          !getActiveFeature(
-                            state.commerce,
-                            'attention-today-desactivated',
-                            'PRODUCT'
-                          ) &&
-                          getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
-                          state.queue.id &&
-                          !isQueueWalkin()
-                        "
-                        class="col"
-                        id="booking-today-hour"
-                      >
-                        <button
-                          class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
-                          :class="state.showToday ? 'btn-selected' : ''"
-                          @click="
-                            setDate('TODAY');
-                            showToday();
+                        <!-- ATTENTION TODAY HOUR -->
+                        <div
+                          v-if="
+                            !getActiveFeature(
+                              state.commerce,
+                              'attention-today-desactivated',
+                              'PRODUCT'
+                            ) &&
+                            getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT') &&
+                            state.queue.id &&
+                            !isQueueWalkin()
                           "
-                          :disabled="!state.accept || !state.queue.id"
+                          class="col"
+                          id="booking-today-hour"
                         >
-                          <i class="bi bi-calendar-check-fill me-2"></i>
-                          {{ $t('commerceQueuesView.today') }}
-                        </button>
-                      </div>
-                      <!-- ATTENTION TODAY -->
-                      <div
-                        v-else-if="
-                          !getActiveFeature(
-                            state.commerce,
-                            'attention-today-desactivated',
-                            'PRODUCT'
-                          )
-                        "
-                        class="col"
-                        id="booking-today"
-                      >
-                        <button
-                          type="button"
-                          v-if="!isQueueWalkin()"
-                          class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
-                          @click="setDate('TODAY')"
-                          :class="state.date === 'TODAY' ? 'btn-selected' : ''"
-                          :disabled="!state.accept || !state.queue.id"
+                          <button
+                            class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
+                            :class="state.showToday ? 'btn-selected' : ''"
+                            @click="
+                              setDate('TODAY');
+                              showToday();
+                            "
+                            :disabled="!state.accept || !state.queue.id"
+                          >
+                            <i class="bi bi-calendar-check-fill me-2"></i>
+                            {{ $t('commerceQueuesView.today') }}
+                          </button>
+                        </div>
+                        <!-- ATTENTION TODAY -->
+                        <div
+                          v-else-if="
+                            !getActiveFeature(
+                              state.commerce,
+                              'attention-today-desactivated',
+                              'PRODUCT'
+                            )
+                          "
+                          class="col"
+                          id="booking-today"
                         >
-                          <i class="bi bi-calendar-check-fill me-2"></i>
-                          {{ $t('commerceQueuesView.today') }}
-                        </button>
+                          <button
+                            type="button"
+                            v-if="!isQueueWalkin()"
+                            class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
+                            @click="setDate('TODAY')"
+                            :class="state.date === 'TODAY' ? 'btn-selected' : ''"
+                            :disabled="!state.accept || !state.queue.id"
+                          >
+                            <i class="bi bi-calendar-check-fill me-2"></i>
+                            {{ $t('commerceQueuesView.today') }}
+                          </button>
+                        </div>
+                        <!-- BOOKING -->
+                        <div class="col">
+                          <button
+                            class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
+                            v-if="!isQueueWalkin()"
+                            @click="showReserve()"
+                            :class="state.showReserve ? 'btn-selected' : ''"
+                            :disabled="!state.accept || !state.queue.id"
+                          >
+                            <i class="bi bi-calendar-event-fill me-2"></i>
+                            {{ $t('commerceQueuesView.booking') }}
+                          </button>
+                        </div>
                       </div>
-                      <!-- BOOKING -->
-                      <div class="col">
-                        <button
-                          class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
-                          v-if="!isQueueWalkin()"
-                          @click="showReserve()"
-                          :class="state.showReserve ? 'btn-selected' : ''"
-                          :disabled="!state.accept || !state.queue.id"
-                        >
-                          <i class="bi bi-calendar-event-fill me-2"></i>
-                          {{ $t('commerceQueuesView.booking') }}
-                        </button>
-                      </div>
-                    </div>
                     </div>
                   </div>
+                  <div v-show="state.showToday" class="mx-2" id="booking-hour">
+                    <!-- TIME SELECTION CARD FOR TODAY -->
+                    <div class="row g-1">
+                      <div class="col col-md-10 offset-md-1 data-card">
+                        <div class="choose-attention py-2">
+                          <i class="bi bi-clock-fill h5 m-1"></i>
+                          <span class="fw-bold h6">{{ $t('commerceQueuesView.selectBlock') }}</span>
+                        </div>
+                        <Spinner :show="loadingHours"></Spinner>
+                        <div v-if="!loadingHours">
+                          <div v-if="state.amountofBlocksNeeded > 1">
+                            <div
+                              v-if="
+                                state.availableAttentionSuperBlocks &&
+                                state.availableAttentionSuperBlocks.length > 0 &&
+                                state.date
+                              "
+                              class="mb-2"
+                            >
+                              <div class="time-slot-grid">
+                                <button
+                                  v-for="block in state.availableAttentionSuperBlocks"
+                                  :key="block.number"
+                                  type="button"
+                                  class="time-slot-button"
+                                  :class="{
+                                    'time-slot-selected':
+                                      (state.attentionBlock &&
+                                        state.attentionBlock.number === block.number) ||
+                                      (state.block && state.block.number === block.number),
+                                  }"
+                                  @click="selectAttentionBlock(block)"
+                                >
+                                  <div class="time-start">{{ block.hourFrom }}</div>
+                                  <div class="time-end">{{ block.hourTo }}</div>
+                                </button>
+                              </div>
+                            </div>
+                            <!-- Fallback to individual blocks if no super blocks available but individual blocks exist -->
+                            <div
+                              v-else-if="
+                                state.availableAttentionBlocks &&
+                                state.availableAttentionBlocks.length > 0 &&
+                                state.date
+                              "
+                              class="mb-2"
+                            >
+                              <div class="time-slot-grid">
+                                <button
+                                  v-for="block in state.availableAttentionBlocks"
+                                  :key="block.number"
+                                  type="button"
+                                  class="time-slot-button"
+                                  :class="{
+                                    'time-slot-selected':
+                                      (state.attentionBlock &&
+                                        state.attentionBlock.number === block.number) ||
+                                      (state.block && state.block.number === block.number),
+                                  }"
+                                  @click="selectAttentionBlock(block)"
+                                >
+                                  <div class="time-start">{{ block.hourFrom }}</div>
+                                  <div class="time-end">{{ block.hourTo }}</div>
+                                </button>
+                              </div>
+                            </div>
+                            <div v-else>
+                              <Message
+                                :title="$t('commerceQueuesView.message3.title')"
+                                :content="$t('commerceQueuesView.message3.content')"
+                              >
+                              </Message>
+                              <div
+                                v-if="
+                                  getActiveFeature(
+                                    state.commerce,
+                                    'booking-block-walkin',
+                                    'PRODUCT'
+                                  ) && state.queue.id
+                                "
+                              >
+                                <div class="choose-attention py-1 pt-2">
+                                  <span> {{ $t('commerceQueuesView.walkin') }} </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                                  @click="getAttention(undefined)"
+                                  :disabled="!state.accept || !state.queue.id"
+                                >
+                                  {{ $t('commerceQueuesView.confirm') }}
+                                  <i class="bi bi-check-lg"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div v-else>
+                            <div
+                              v-if="
+                                state.availableAttentionBlocks &&
+                                state.availableAttentionBlocks.length > 0
+                              "
+                              class="mb-2"
+                            >
+                              <div class="time-slot-grid">
+                                <button
+                                  v-for="block in state.availableAttentionBlocks"
+                                  :key="block.number"
+                                  type="button"
+                                  class="time-slot-button"
+                                  :class="{
+                                    'time-slot-selected':
+                                      (state.attentionBlock &&
+                                        state.attentionBlock.number === block.number) ||
+                                      (state.block && state.block.number === block.number),
+                                  }"
+                                  @click="selectAttentionBlock(block)"
+                                >
+                                  <div class="time-start">{{ block.hourFrom }}</div>
+                                  <div class="time-end">{{ block.hourTo }}</div>
+                                </button>
+                              </div>
+                            </div>
+                            <div v-else>
+                              <Message
+                                :title="$t('commerceQueuesView.message3.title')"
+                                :content="$t('commerceQueuesView.message3.content')"
+                              >
+                              </Message>
+                              <div
+                                v-if="
+                                  getActiveFeature(
+                                    state.commerce,
+                                    'booking-block-walkin',
+                                    'PRODUCT'
+                                  ) && state.queue.id
+                                "
+                              >
+                                <div class="choose-attention py-1 pt-2">
+                                  <span> {{ $t('commerceQueuesView.walkin') }} </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
+                                  @click="getAttention(undefined)"
+                                  :disabled="!state.accept || !state.queue.id"
+                                >
+                                  {{ $t('commerceQueuesView.confirm') }}
+                                  <i class="bi bi-check-lg"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Telemedicine Option for TODAY booking (shown when block is selected) -->
                     <div
-                      v-show="state.showToday"
-                      class="mx-2"
-                      id="booking-hour"
+                      v-if="
+                        state.queue &&
+                        state.queue.type !== 'NODEVICE' &&
+                        isTelemedicineEnabled(state.commerce, state.queue) &&
+                        (state.block?.number || state.attentionBlock?.number)
+                      "
+                      class="row g-1 mt-3"
                     >
-                      <!-- TIME SELECTION CARD FOR TODAY -->
+                      <div class="col col-md-10 offset-md-1 data-card">
+                        <div class="telemedicine-option mb-3">
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="`telemedicine-today-${Date.now()}`"
+                              v-model="state.isTelemedicine"
+                              @change="handleTelemedicineToggle"
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="`telemedicine-today-${Date.now()}`"
+                            >
+                              <i class="bi bi-camera-video me-2"></i>
+                              <strong>Consulta por Telemedicina</strong>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-show="state.showReserve" class="mx-2" id="booking-date">
+                    <!-- SPECIFIC CALENDAR-->
+                    <div v-if="state.specificCalendar">
+                      <!-- DATE SELECTION CARD -->
                       <div class="row g-1">
                         <div class="col col-md-10 offset-md-1 data-card">
                           <div class="choose-attention py-2">
+                            <i class="bi bi-3-circle-fill h5 m-1"></i>
+                            <span class="fw-bold h6">{{ $t('commerceQueuesView.selectDay') }}</span>
+                          </div>
+                          <div v-if="!loadingCalendar">
+                            <VDatePicker
+                              :locale="state.locale"
+                              v-model="state.specificCalendarDate"
+                              :mask="dateMask"
+                              :min-date="state.minDate"
+                              :max-date="state.maxDate"
+                              :disabled-dates="disabledDates"
+                              :attributes="specificCalendarAttributes"
+                              @did-move="getAvailableDatesByCalendarMonth"
+                            />
+                          </div>
+                          <div v-if="loadingCalendar">
+                            <Spinner :show="loadingCalendar"></Spinner>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- TIME SELECTION CARD -->
+                      <div
+                        v-if="
+                          state.specificCalendarDate &&
+                          getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')
+                        "
+                        class="row g-1 mt-2"
+                      >
+                        <div class="col col-md-10 offset-md-1 data-card">
+                          <div class="choose-attention py-2">
                             <i class="bi bi-clock-fill h5 m-1"></i>
-                            <span class="fw-bold h6">{{ $t('commerceQueuesView.selectBlock') }}</span>
+                            <span class="fw-bold h6">{{
+                              $t('commerceQueuesView.selectBlock')
+                            }}</span>
                           </div>
                           <Spinner :show="loadingHours"></Spinner>
                           <div v-if="!loadingHours">
-                            <div v-if="state.amountofBlocksNeeded > 1">
-                              <div
-                                v-if="
-                                  state.availableAttentionSuperBlocks &&
-                                  state.availableAttentionSuperBlocks.length > 0 &&
-                                  state.date
-                                "
-                                class="mb-2"
+                            <!-- ATTENTION BLOCKS FOR TODAY -->
+                            <template v-if="state.specificCalendarDate === 'TODAY'">
+                              <!-- NECESITA MAS DE UN BLOQUE -->
+                              <div v-if="state.amountofBlocksNeeded > 1">
+                                <!-- HAY BLOQUES DISPONIBLES -->
+                                <div
+                                  v-if="
+                                    state.availableAttentionSuperBlocks &&
+                                    state.availableAttentionSuperBlocks.length > 0 &&
+                                    state.specificCalendarDate
+                                  "
+                                  class="mb-2"
                                 >
                                   <div class="time-slot-grid">
                                     <button
@@ -2548,7 +3137,12 @@ export default {
                                       :key="block.number"
                                       type="button"
                                       class="time-slot-button"
-                                      :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
                                       @click="selectAttentionBlock(block)"
                                     >
                                       <div class="time-start">{{ block.hourFrom }}</div>
@@ -2556,280 +3150,112 @@ export default {
                                     </button>
                                   </div>
                                 </div>
-                              <!-- Fallback to individual blocks if no super blocks available but individual blocks exist -->
-                              <div
-                                v-else-if="
-                                  state.availableAttentionBlocks &&
-                                  state.availableAttentionBlocks.length > 0 &&
-                                  state.date
-                                "
-                                class="mb-2"
-                              >
-                                <div class="time-slot-grid">
-                                  <button
-                                    v-for="block in state.availableAttentionBlocks"
-                                    :key="block.number"
-                                    type="button"
-                                    class="time-slot-button"
-                                    :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
-                                    @click="selectAttentionBlock(block)"
-                                  >
-                                    <div class="time-start">{{ block.hourFrom }}</div>
-                                    <div class="time-end">{{ block.hourTo }}</div>
-                                  </button>
-                                </div>
-                              </div>
-                              <div v-else>
-                                <Message
-                                  :title="$t('commerceQueuesView.message3.title')"
-                                  :content="$t('commerceQueuesView.message3.content')"
-                                >
-                                </Message>
+                                <!-- Fallback to individual blocks if no super blocks available but individual blocks exist -->
                                 <div
-                                  v-if="
-                                    getActiveFeature(
-                                      state.commerce,
-                                      'booking-block-walkin',
-                                      'PRODUCT'
-                                    ) && state.queue.id
+                                  v-else-if="
+                                    state.availableAttentionBlocks &&
+                                    state.availableAttentionBlocks.length > 0 &&
+                                    state.specificCalendarDate
                                   "
+                                  class="mb-2"
                                 >
-                                  <div class="choose-attention py-1 pt-2">
-                                    <span> {{ $t('commerceQueuesView.walkin') }} </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                                    @click="getAttention(undefined)"
-                                    :disabled="!state.accept || !state.queue.id"
-                                  >
-                                    {{ $t('commerceQueuesView.confirm') }}
-                                    <i class="bi bi-check-lg"></i>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div v-else>
-                              <div
-                                v-if="
-                                  state.availableAttentionBlocks &&
-                                  state.availableAttentionBlocks.length > 0
-                                "
-                                class="mb-2"
-                              >
-                                <div class="time-slot-grid">
-                                  <button
-                                    v-for="block in state.availableAttentionBlocks"
-                                    :key="block.number"
-                                    type="button"
-                                    class="time-slot-button"
-                                    :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
-                                    @click="selectAttentionBlock(block)"
-                                  >
-                                    <div class="time-start">{{ block.hourFrom }}</div>
-                                    <div class="time-end">{{ block.hourTo }}</div>
-                                  </button>
-                                </div>
-                              </div>
-                              <div v-else>
-                                <Message
-                                  :title="$t('commerceQueuesView.message3.title')"
-                                  :content="$t('commerceQueuesView.message3.content')"
-                                >
-                                </Message>
-                                <div
-                                  v-if="
-                                    getActiveFeature(
-                                      state.commerce,
-                                      'booking-block-walkin',
-                                      'PRODUCT'
-                                    ) && state.queue.id
-                                  "
-                                >
-                                  <div class="choose-attention py-1 pt-2">
-                                    <span> {{ $t('commerceQueuesView.walkin') }} </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                                    @click="getAttention(undefined)"
-                                    :disabled="!state.accept || !state.queue.id"
-                                  >
-                                    {{ $t('commerceQueuesView.confirm') }}
-                                    <i class="bi bi-check-lg"></i>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-show="state.showReserve"
-                      class="mx-2"
-                      id="booking-date"
-                    >
-                      <!-- SPECIFIC CALENDAR-->
-                      <div v-if="state.specificCalendar">
-                        <!-- DATE SELECTION CARD -->
-                        <div class="row g-1">
-                          <div class="col col-md-10 offset-md-1 data-card">
-                            <div class="choose-attention py-2">
-                              <i class="bi bi-3-circle-fill h5 m-1"></i>
-                              <span class="fw-bold h6">{{ $t('commerceQueuesView.selectDay') }}</span>
-                            </div>
-                            <div v-if="!loadingCalendar">
-                              <VDatePicker
-                                :locale="state.locale"
-                                v-model="state.specificCalendarDate"
-                                :mask="dateMask"
-                                :min-date="state.minDate"
-                                :max-date="state.maxDate"
-                                :disabled-dates="disabledDates"
-                                :attributes="specificCalendarAttributes"
-                                @did-move="getAvailableDatesByCalendarMonth"
-                              />
-                            </div>
-                            <div v-if="loadingCalendar">
-                              <Spinner :show="loadingCalendar"></Spinner>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- TIME SELECTION CARD -->
-                        <div
-                          v-if="
-                            state.specificCalendarDate &&
-                            getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')
-                          "
-                          class="row g-1 mt-2"
-                        >
-                          <div class="col col-md-10 offset-md-1 data-card">
-                            <div class="choose-attention py-2">
-                              <i class="bi bi-clock-fill h5 m-1"></i>
-                              <span class="fw-bold h6">{{ $t('commerceQueuesView.selectBlock') }}</span>
-                            </div>
-                            <Spinner :show="loadingHours"></Spinner>
-                            <div v-if="!loadingHours">
-                              <!-- ATTENTION BLOCKS FOR TODAY -->
-                              <template v-if="state.specificCalendarDate === 'TODAY'">
-                                <!-- NECESITA MAS DE UN BLOQUE -->
-                                <div v-if="state.amountofBlocksNeeded > 1">
-                                  <!-- HAY BLOQUES DISPONIBLES -->
-                                  <div
-                                    v-if="
-                                      state.availableAttentionSuperBlocks &&
-                                      state.availableAttentionSuperBlocks.length > 0 &&
-                                      state.specificCalendarDate
-                                    "
-                                    class="mb-2"
-                                  >
-                                    <div class="time-slot-grid">
-                                      <button
-                                        v-for="block in state.availableAttentionSuperBlocks"
-                                        :key="block.number"
-                                        type="button"
-                                        class="time-slot-button"
-                                        :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
-                                        @click="selectAttentionBlock(block)"
-                                      >
-                                        <div class="time-start">{{ block.hourFrom }}</div>
-                                        <div class="time-end">{{ block.hourTo }}</div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <!-- Fallback to individual blocks if no super blocks available but individual blocks exist -->
-                                  <div
-                                    v-else-if="
-                                      state.availableAttentionBlocks &&
-                                      state.availableAttentionBlocks.length > 0 &&
-                                      state.specificCalendarDate
-                                    "
-                                    class="mb-2"
-                                  >
-                                    <div class="time-slot-grid">
-                                      <button
-                                        v-for="block in state.availableAttentionBlocks"
-                                        :key="block.number"
-                                        type="button"
-                                        class="time-slot-button"
-                                        :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
-                                        @click="selectAttentionBlock(block)"
-                                      >
-                                        <div class="time-start">{{ block.hourFrom }}</div>
-                                        <div class="time-end">{{ block.hourTo }}</div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div v-else>
-                                    <Message
-                                      :title="$t('commerceQueuesView.message3.title')"
-                                      :content="$t('commerceQueuesView.message3.content')"
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in state.availableAttentionBlocks"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="selectAttentionBlock(block)"
                                     >
-                                    </Message>
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
                                   </div>
                                 </div>
-                                <!-- NECESITA UN SOLO BLOQUE -->
                                 <div v-else>
-                                  <!-- HAY BLOQUES DISPONIBLES -->
-                                  <div
-                                    v-if="
-                                      state.availableAttentionBlocks &&
-                                      state.availableAttentionBlocks.length > 0
-                                    "
-                                    class="mb-2"
+                                  <Message
+                                    :title="$t('commerceQueuesView.message3.title')"
+                                    :content="$t('commerceQueuesView.message3.content')"
                                   >
-                                    <div class="time-slot-grid">
-                                      <button
-                                        v-for="block in state.availableAttentionBlocks"
-                                        :key="block.number"
-                                        type="button"
-                                        class="time-slot-button"
-                                        :class="{ 'time-slot-selected': state.attentionBlock && state.attentionBlock.number === block.number }"
-                                        @click="selectAttentionBlock(block)"
-                                      >
-                                        <div class="time-start">{{ block.hourFrom }}</div>
-                                        <div class="time-end">{{ block.hourTo }}</div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div v-else>
-                                    <Message
-                                      :title="$t('commerceQueuesView.message3.title')"
-                                      :content="$t('commerceQueuesView.message3.content')"
+                                  </Message>
+                                </div>
+                              </div>
+                              <!-- NECESITA UN SOLO BLOQUE -->
+                              <div v-else>
+                                <!-- HAY BLOQUES DISPONIBLES -->
+                                <div
+                                  v-if="
+                                    state.availableAttentionBlocks &&
+                                    state.availableAttentionBlocks.length > 0
+                                  "
+                                  class="mb-2"
+                                >
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in state.availableAttentionBlocks"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="selectAttentionBlock(block)"
                                     >
-                                    </Message>
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
                                   </div>
                                 </div>
-                              </template>
-                              <!-- BOOKING BLOCKS FOR FUTURE DATES -->
-                              <template v-else>
-                                <!-- NECESITA MAS DE UN BLOQUE -->
-                                <div v-if="state.amountofBlocksNeeded > 1">
-                                  <!-- HAY BLOQUES DISPONIBLES -->
-                                  <div
-                                    v-if="
-                                      state.availableBookingSuperBlocks &&
-                                      state.availableBookingSuperBlocks.length > 0 &&
-                                      state.specificCalendarDate
-                                    "
-                                    class="mb-2"
+                                <div v-else>
+                                  <Message
+                                    :title="$t('commerceQueuesView.message3.title')"
+                                    :content="$t('commerceQueuesView.message3.content')"
                                   >
-                                    <div class="time-slot-grid">
-                                      <button
-                                        v-for="block in state.availableBookingSuperBlocks"
-                                        :key="block.number"
-                                        type="button"
-                                        class="time-slot-button"
-                                        :class="{ 'time-slot-selected': state.block && state.block.number === block.number }"
-                                        @click="state.block = block"
-                                      >
-                                        <div class="time-start">{{ block.hourFrom }}</div>
-                                        <div class="time-end">{{ block.hourTo }}</div>
-                                      </button>
-                                    </div>
+                                  </Message>
+                                </div>
+                              </div>
+                            </template>
+                            <!-- BOOKING BLOCKS FOR FUTURE DATES -->
+                            <template v-else>
+                              <!-- NECESITA MAS DE UN BLOQUE -->
+                              <div v-if="state.amountofBlocksNeeded > 1">
+                                <!-- HAY BLOQUES DISPONIBLES -->
+                                <div
+                                  v-if="
+                                    state.availableBookingSuperBlocks &&
+                                    state.availableBookingSuperBlocks.length > 0 &&
+                                    state.specificCalendarDate
+                                  "
+                                  class="mb-2"
+                                >
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in state.availableBookingSuperBlocks"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
                                   </div>
+                                </div>
                                 <!-- LISTA DE ESPERA -->
                                 <div
                                   v-if="
@@ -2902,7 +3328,12 @@ export default {
                                       :key="block.number"
                                       type="button"
                                       class="time-slot-button"
-                                      :class="{ 'time-slot-selected': state.block && state.block.number === block.number }"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
                                       @click="state.block = block"
                                     >
                                       <div class="time-start">{{ block.hourFrom }}</div>
@@ -2966,208 +3397,253 @@ export default {
                                 </div>
                               </div>
                             </template>
-                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- NORMAL CALENDAR-->
+                    <div v-else>
+                      <!-- DATE SELECTION CARD -->
+                      <div class="row g-1">
+                        <div class="col col-md-10 offset-md-1 data-card">
+                          <div class="choose-attention py-2">
+                            <i class="bi bi-3-circle-fill h5 m-1"></i>
+                            <span class="fw-bold h6">{{ $t('commerceQueuesView.selectDay') }}</span>
+                          </div>
+                          <div v-if="!loadingCalendar">
+                            <VDatePicker
+                              :locale="state.locale"
+                              v-model="state.date"
+                              :mask="dateMask"
+                              :min-date="state.minDate"
+                              :max-date="state.maxDate"
+                              :disabled-dates="disabledDates"
+                              :attributes="calendarAttributes"
+                              @did-move="getAvailableDatesByCalendarMonth"
+                            />
+                          </div>
+                          <div v-if="loadingCalendar">
+                            <Spinner :show="loadingCalendar"></Spinner>
                           </div>
                         </div>
                       </div>
 
-                      <!-- NORMAL CALENDAR-->
-                      <div v-else>
-                        <!-- DATE SELECTION CARD -->
-                        <div class="row g-1">
-                          <div class="col col-md-10 offset-md-1 data-card">
-                            <div class="choose-attention py-2">
-                              <i class="bi bi-3-circle-fill h5 m-1"></i>
-                              <span class="fw-bold h6">{{ $t('commerceQueuesView.selectDay') }}</span>
+                      <!-- TIME SELECTION CARD -->
+                      <div
+                        v-if="
+                          state.date &&
+                          getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')
+                        "
+                        class="row g-1 mt-2"
+                      >
+                        <div class="col col-md-10 offset-md-1 data-card">
+                          <div class="choose-attention py-2">
+                            <i class="bi bi-clock-fill h5 m-1"></i>
+                            <span class="fw-bold h6">{{
+                              $t('commerceQueuesView.selectBlock')
+                            }}</span>
+                          </div>
+                          <Spinner :show="loadingHours"></Spinner>
+                          <div v-if="!loadingHours">
+                            <!-- NECESITA MAS DE UN BLOQUE -->
+                            <div v-if="state.amountofBlocksNeeded > 1">
+                              <div
+                                v-if="
+                                  state.availableBookingSuperBlocks &&
+                                  state.availableBookingSuperBlocks.length > 0 &&
+                                  state.date
+                                "
+                                class="mb-2"
+                              >
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in state.availableBookingSuperBlocks"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="state.block = block"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                v-if="
+                                  state.availableBookingSuperBlocks &&
+                                  state.availableBookingSuperBlocks.length === 0 &&
+                                  state.date
+                                "
+                                class="mb-2"
+                              >
+                                <div
+                                  id="waitlist"
+                                  class="d-grid gap-2 mb-2 waitlist-box mt-3"
+                                  v-if="
+                                    getActiveFeature(
+                                      state.commerce,
+                                      'booking-waitlist-active',
+                                      'PRODUCT'
+                                    )
+                                  "
+                                >
+                                  <div class="choose-attention">
+                                    <i class="bi bi-bell-fill"></i>
+                                    <span class="fw-bold">
+                                      {{ $t('commerceQueuesView.waitlist.title') }}
+                                    </span>
+                                    <span> {{ $t('commerceQueuesView.waitlist.content') }} </span>
+                                  </div>
+                                  <button
+                                    v-if="state.queue.active && !state.waitlistCreated"
+                                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                                    @click="getWaitList()"
+                                  >
+                                    {{ $t('commerceQueuesView.waitlist.action') }}
+                                    <i class="bi bi-check-lg"></i>
+                                  </button>
+                                  <div v-else>
+                                    <Message
+                                      :title="$t('commerceQueuesView.message4.title')"
+                                      :content="$t('commerceQueuesView.message4.content')"
+                                    >
+                                    </Message>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <Message
+                                    :title="$t('commerceQueuesView.message3.title')"
+                                    :content="$t('commerceQueuesView.message3.content')"
+                                  >
+                                  </Message>
+                                </div>
+                              </div>
                             </div>
-                            <div v-if="!loadingCalendar">
-                              <VDatePicker
-                                :locale="state.locale"
-                                v-model="state.date"
-                                :mask="dateMask"
-                                :min-date="state.minDate"
-                                :max-date="state.maxDate"
-                                :disabled-dates="disabledDates"
-                                :attributes="calendarAttributes"
-                                @did-move="getAvailableDatesByCalendarMonth"
-                              />
-                            </div>
-                            <div v-if="loadingCalendar">
-                              <Spinner :show="loadingCalendar"></Spinner>
+                            <!-- NECESITA SOLO UN BLOQUE -->
+                            <div v-else>
+                              <div
+                                v-if="
+                                  state.availableBookingBlocks &&
+                                  state.availableBookingBlocks.length > 0 &&
+                                  state.date
+                                "
+                                class="mb-2"
+                              >
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in state.availableBookingBlocks"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="state.block = block"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                v-if="
+                                  state.availableBookingBlocks &&
+                                  state.availableBookingBlocks.length === 0 &&
+                                  state.date
+                                "
+                                class="mb-1"
+                              >
+                                <div
+                                  id="waitlist"
+                                  class="d-grid gap-2 mb-1 waitlist-box mt-3"
+                                  v-if="
+                                    getActiveFeature(
+                                      state.commerce,
+                                      'booking-waitlist-active',
+                                      'PRODUCT'
+                                    )
+                                  "
+                                >
+                                  <div class="choose-attention">
+                                    <i class="bi bi-bell-fill"></i>
+                                    <span class="fw-bold">
+                                      {{ $t('commerceQueuesView.waitlist.title') }}
+                                    </span>
+                                    <span> {{ $t('commerceQueuesView.waitlist.content') }} </span>
+                                  </div>
+                                  <button
+                                    v-if="state.queue.active && !state.waitlistCreated"
+                                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                                    @click="getWaitList()"
+                                  >
+                                    {{ $t('commerceQueuesView.waitlist.action') }}
+                                    <i class="bi bi-check-lg"></i>
+                                  </button>
+                                  <div v-else>
+                                    <Message
+                                      :title="$t('commerceQueuesView.message4.title')"
+                                      :content="$t('commerceQueuesView.message4.content')"
+                                    >
+                                    </Message>
+                                  </div>
+                                </div>
+                                <div v-else>
+                                  <Message
+                                    :title="$t('commerceQueuesView.message3.title')"
+                                    :content="$t('commerceQueuesView.message3.content')"
+                                  >
+                                  </Message>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        <!-- TIME SELECTION CARD -->
+                        <!-- Telemedicine Option (shown when date and block are selected, and telemedicine is enabled for commerce and queue) -->
                         <div
                           v-if="
+                            state.queue &&
+                            state.queue.type !== 'NODEVICE' &&
+                            isTelemedicineEnabled(state.commerce, state.queue) &&
                             state.date &&
-                            getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')
+                            (state.block?.number || state.attentionBlock?.number)
                           "
                           class="row g-1 mt-2"
                         >
                           <div class="col col-md-10 offset-md-1 data-card">
-                            <div class="choose-attention py-2">
-                              <i class="bi bi-clock-fill h5 m-1"></i>
-                              <span class="fw-bold h6">{{ $t('commerceQueuesView.selectBlock') }}</span>
-                            </div>
-                            <Spinner :show="loadingHours"></Spinner>
-                            <div v-if="!loadingHours">
-                              <!-- NECESITA MAS DE UN BLOQUE -->
-                              <div v-if="state.amountofBlocksNeeded > 1">
-                                <div
-                                  v-if="
-                                    state.availableBookingSuperBlocks &&
-                                    state.availableBookingSuperBlocks.length > 0 &&
-                                    state.date
-                                  "
-                                  class="mb-2"
+                            <div class="telemedicine-option mb-3">
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  :id="`telemedicine-booking-${Date.now()}`"
+                                  v-model="state.isTelemedicine"
+                                  @change="handleTelemedicineToggle"
+                                />
+                                <label
+                                  class="form-check-label"
+                                  :for="`telemedicine-booking-${Date.now()}`"
                                 >
-                                  <div class="time-slot-grid">
-                                    <button
-                                      v-for="block in state.availableBookingSuperBlocks"
-                                      :key="block.number"
-                                      type="button"
-                                      class="time-slot-button"
-                                      :class="{ 'time-slot-selected': state.block && state.block.number === block.number }"
-                                      @click="state.block = block"
-                                    >
-                                      <div class="time-start">{{ block.hourFrom }}</div>
-                                      <div class="time-end">{{ block.hourTo }}</div>
-                                    </button>
-                                  </div>
-                                </div>
-                                <div
-                                  v-if="
-                                    state.availableBookingSuperBlocks &&
-                                    state.availableBookingSuperBlocks.length === 0 &&
-                                    state.date
-                                  "
-                                  class="mb-2"
-                                >
-                                  <div
-                                    id="waitlist"
-                                    class="d-grid gap-2 mb-2 waitlist-box mt-3"
-                                    v-if="
-                                      getActiveFeature(
-                                        state.commerce,
-                                        'booking-waitlist-active',
-                                        'PRODUCT'
-                                      )
-                                    "
-                                  >
-                                    <div class="choose-attention">
-                                      <i class="bi bi-bell-fill"></i>
-                                      <span class="fw-bold">
-                                        {{ $t('commerceQueuesView.waitlist.title') }}
-                                      </span>
-                                      <span> {{ $t('commerceQueuesView.waitlist.content') }} </span>
-                                    </div>
-                                    <button
-                                      v-if="state.queue.active && !state.waitlistCreated"
-                                      class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                                      @click="getWaitList()"
-                                    >
-                                      {{ $t('commerceQueuesView.waitlist.action') }}
-                                      <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <div v-else>
-                                      <Message
-                                        :title="$t('commerceQueuesView.message4.title')"
-                                        :content="$t('commerceQueuesView.message4.content')"
-                                      >
-                                      </Message>
-                                    </div>
-                                  </div>
-                                  <div v-else>
-                                    <Message
-                                      :title="$t('commerceQueuesView.message3.title')"
-                                      :content="$t('commerceQueuesView.message3.content')"
-                                    >
-                                    </Message>
-                                  </div>
-                                </div>
-                              </div>
-                              <!-- NECESITA SOLO UN BLOQUE -->
-                              <div v-else>
-                                <div
-                                  v-if="
-                                    state.availableBookingBlocks &&
-                                    state.availableBookingBlocks.length > 0 &&
-                                    state.date
-                                  "
-                                  class="mb-2"
-                                >
-                                  <div class="time-slot-grid">
-                                    <button
-                                      v-for="block in state.availableBookingBlocks"
-                                      :key="block.number"
-                                      type="button"
-                                      class="time-slot-button"
-                                      :class="{ 'time-slot-selected': state.block && state.block.number === block.number }"
-                                      @click="state.block = block"
-                                    >
-                                      <div class="time-start">{{ block.hourFrom }}</div>
-                                      <div class="time-end">{{ block.hourTo }}</div>
-                                    </button>
-                                  </div>
-                                </div>
-                                <div
-                                  v-if="
-                                    state.availableBookingBlocks &&
-                                    state.availableBookingBlocks.length === 0 &&
-                                    state.date
-                                  "
-                                  class="mb-1"
-                                >
-                                  <div
-                                    id="waitlist"
-                                    class="d-grid gap-2 mb-1 waitlist-box mt-3"
-                                    v-if="
-                                      getActiveFeature(
-                                        state.commerce,
-                                        'booking-waitlist-active',
-                                        'PRODUCT'
-                                      )
-                                    "
-                                  >
-                                    <div class="choose-attention">
-                                      <i class="bi bi-bell-fill"></i>
-                                      <span class="fw-bold">
-                                        {{ $t('commerceQueuesView.waitlist.title') }}
-                                      </span>
-                                      <span> {{ $t('commerceQueuesView.waitlist.content') }} </span>
-                                    </div>
-                                    <button
-                                      v-if="state.queue.active && !state.waitlistCreated"
-                                      class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                                      @click="getWaitList()"
-                                    >
-                                      {{ $t('commerceQueuesView.waitlist.action') }}
-                                      <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <div v-else>
-                                      <Message
-                                        :title="$t('commerceQueuesView.message4.title')"
-                                        :content="$t('commerceQueuesView.message4.content')"
-                                      >
-                                      </Message>
-                                    </div>
-                                  </div>
-                                  <div v-else>
-                                    <Message
-                                      :title="$t('commerceQueuesView.message3.title')"
-                                      :content="$t('commerceQueuesView.message3.content')"
-                                    >
-                                    </Message>
-                                  </div>
-                                </div>
+                                  <i class="bi bi-camera-video me-2"></i>
+                                  <strong>Consulta por Telemedicina</strong>
+                                </label>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3215,75 +3691,129 @@ export default {
                       @click="state.summaryExpanded = !state.summaryExpanded"
                       type="button"
                     >
-                      <i :class="state.summaryExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+                      <i
+                        :class="state.summaryExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
+                      ></i>
                     </button>
                   </div>
 
                   <!-- Collapsible Content -->
                   <Transition name="expand">
                     <div v-show="state.summaryExpanded" class="summary-content">
-                    <!-- Professional/Queue Info -->
-                    <div class="summary-item" v-if="state.queue.name">
-                      <i class="bi bi-person-circle summary-icon"></i>
-                      <div class="summary-details">
-                        <span class="summary-label">{{ $t('commerceQueuesView.queue') }}:</span>
-                        <span class="summary-value">{{ state.queue.name }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Services Info -->
-                    <div class="summary-item" v-if="state.selectedServices && state.selectedServices.length > 0">
-                      <i class="bi bi-tags-fill summary-icon"></i>
-                      <div class="summary-details">
-                        <span class="summary-label">{{ $t('commerceQueuesView.services') }}:</span>
-                        <span class="summary-value">{{ state.selectedServices.map(s => s.name).join(', ') }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Duration Info -->
-                    <div class="summary-item" v-if="state.totalDurationRequested > 0">
-                      <i class="bi bi-stopwatch-fill summary-icon"></i>
-                      <div class="summary-details">
-                        <span class="summary-label">{{ $t('commerceQueuesView.totalDuration') }}</span>
-                        <span class="summary-value">{{ convertDuration(state.totalDurationRequested) }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Date & Time Group (only in step 3) -->
-                    <div class="summary-datetime-group" v-if="state.showPickHours && (state.date || state.specificCalendarDate)">
-                      <!-- Date Info -->
-                      <div class="summary-item" v-if="formattedDate(state.date || state.specificCalendarDate) || state.date === 'TODAY' || state.specificCalendarDate === 'TODAY'">
-                        <i class="bi bi-calendar-event summary-icon"></i>
+                      <!-- Professional/Queue Info -->
+                      <div class="summary-item" v-if="state.queue.name">
+                        <i class="bi bi-person-circle summary-icon"></i>
                         <div class="summary-details">
-                          <span class="summary-label">{{ $t('commerceQueuesView.date') }}:</span>
-                          <span class="summary-value">
-                            <template v-if="state.date === 'TODAY' || state.specificCalendarDate === 'TODAY'">
-                              {{ $t('commerceQueuesView.today') }}
-                            </template>
-                            <template v-else>
-                              {{ formattedDate(state.date || state.specificCalendarDate) }}
-                            </template>
-                          </span>
+                          <span class="summary-label">{{ $t('commerceQueuesView.queue') }}:</span>
+                          <span class="summary-value">{{ state.queue.name }}</span>
                         </div>
                       </div>
 
-                      <!-- Time Info -->
-                      <div class="summary-item" v-if="(state.block && state.block.hourFrom) || (state.attentionBlock && state.attentionBlock.hourFrom && state.attentionBlock.hourTo)">
-                        <i class="bi bi-clock-fill summary-icon"></i>
+                      <!-- Services Info -->
+                      <div
+                        class="summary-item"
+                        v-if="state.selectedServices && state.selectedServices.length > 0"
+                      >
+                        <i class="bi bi-tags-fill summary-icon"></i>
                         <div class="summary-details">
-                          <span class="summary-label">{{ $t('commerceQueuesView.time') }}:</span>
-                          <span class="summary-value">
-                            <template v-if="state.block && state.block.hourFrom">
-                              {{ state.block.hourFrom }} - {{ state.block.hourTo }}
-                            </template>
-                            <template v-else-if="state.attentionBlock && state.attentionBlock.hourFrom && state.attentionBlock.hourTo">
-                              {{ state.attentionBlock.hourFrom }} - {{ state.attentionBlock.hourTo }}
-                            </template>
-                          </span>
+                          <span class="summary-label"
+                            >{{ $t('commerceQueuesView.services') }}:</span
+                          >
+                          <span class="summary-value">{{
+                            state.selectedServices.map(s => s.name).join(', ')
+                          }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Duration Info -->
+                      <div class="summary-item" v-if="state.totalDurationRequested > 0">
+                        <i class="bi bi-stopwatch-fill summary-icon"></i>
+                        <div class="summary-details">
+                          <span class="summary-label">{{
+                            $t('commerceQueuesView.totalDuration')
+                          }}</span>
+                          <span class="summary-value">{{
+                            convertDuration(state.totalDurationRequested)
+                          }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Date & Time Group (only in step 3) -->
+                      <div
+                        class="summary-datetime-group"
+                        v-if="state.showPickHours && (state.date || state.specificCalendarDate)"
+                      >
+                        <!-- Date Info -->
+                        <div
+                          class="summary-item"
+                          v-if="
+                            formattedDate(state.date || state.specificCalendarDate) ||
+                            state.date === 'TODAY' ||
+                            state.specificCalendarDate === 'TODAY'
+                          "
+                        >
+                          <i class="bi bi-calendar-event summary-icon"></i>
+                          <div class="summary-details">
+                            <span class="summary-label">{{ $t('commerceQueuesView.date') }}:</span>
+                            <span class="summary-value">
+                              <template
+                                v-if="
+                                  state.date === 'TODAY' || state.specificCalendarDate === 'TODAY'
+                                "
+                              >
+                                {{ $t('commerceQueuesView.today') }}
+                              </template>
+                              <template v-else>
+                                {{ formattedDate(state.date || state.specificCalendarDate) }}
+                              </template>
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Time Info -->
+                        <div
+                          class="summary-item"
+                          v-if="
+                            (state.block && state.block.hourFrom) ||
+                            (state.attentionBlock &&
+                              state.attentionBlock.hourFrom &&
+                              state.attentionBlock.hourTo)
+                          "
+                        >
+                          <i class="bi bi-clock-fill summary-icon"></i>
+                          <div class="summary-details">
+                            <span class="summary-label">{{ $t('commerceQueuesView.time') }}:</span>
+                            <span class="summary-value">
+                              <template v-if="state.block && state.block.hourFrom">
+                                {{ state.block.hourFrom }} - {{ state.block.hourTo }}
+                              </template>
+                              <template
+                                v-else-if="
+                                  state.attentionBlock &&
+                                  state.attentionBlock.hourFrom &&
+                                  state.attentionBlock.hourTo
+                                "
+                              >
+                                {{ state.attentionBlock.hourFrom }} -
+                                {{ state.attentionBlock.hourTo }}
+                              </template>
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Telemedicine Info -->
+                        <div
+                          class="summary-item"
+                          v-if="state.isTelemedicine && state.telemedicineConfig"
+                        >
+                          <i class="bi bi-camera-video summary-icon"></i>
+                          <div class="summary-details">
+                            <span class="summary-label">Tipo de Consulta:</span>
+                            <span class="summary-value">Video</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   </Transition>
                 </div>
 
@@ -3309,6 +3839,23 @@ export default {
                     <i class="bi bi-arrow-right-circle-fill ms-2"></i>
                   </button>
 
+                  <!-- For walkin COLLABORATOR queues with services selected, show Confirm button -->
+                  <button
+                    v-else-if="
+                      state.showPickQueue &&
+                      state.queue.type === 'COLLABORATOR' &&
+                      isQueueWalkin() &&
+                      state.canBook
+                    "
+                    class="btn btn-lg flex-grow-1 btn-size fw-bold btn-confirm-sticky rounded-pill px-5 py-3"
+                    @click="getAttention(undefined)"
+                    :disabled="!state.accept || !state.queue.id"
+                  >
+                    {{ $t('commerceQueuesView.confirm') }}
+                    <i class="bi bi-check-circle-fill ms-2"></i>
+                  </button>
+
+                  <!-- For non-walkin queues or walkin queues without services, show Continue button -->
                   <button
                     v-else-if="state.showPickQueue"
                     class="btn btn-lg flex-grow-1 btn-size fw-bold btn-next-sticky rounded-pill px-5 py-3"
@@ -3323,12 +3870,25 @@ export default {
                   <button
                     v-else-if="
                       state.showPickHours &&
-                      ((state.block && state.block.hourFrom && (state.date || state.specificCalendarDate)) ||
-                       (state.attentionBlock && (state.attentionBlock.number || state.attentionBlock.hourFrom) && (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')))
+                      ((state.block &&
+                        state.block.hourFrom &&
+                        (state.date || state.specificCalendarDate)) ||
+                        (state.attentionBlock &&
+                          (state.attentionBlock.number || state.attentionBlock.hourFrom) &&
+                          (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')))
                     "
                     class="btn btn-lg flex-grow-1 btn-size fw-bold btn-confirm-sticky rounded-pill px-5 py-3"
-                    @click="(state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') ? getAttention(state.attentionBlock) : getBooking()"
-                    :disabled="!state.accept || !state.queue.id || ((state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') && !state.attentionBlock)"
+                    @click="
+                      state.date === 'TODAY' || state.specificCalendarDate === 'TODAY'
+                        ? getAttention(state.attentionBlock)
+                        : getBooking()
+                    "
+                    :disabled="
+                      !state.accept ||
+                      !state.queue.id ||
+                      ((state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
+                        !state.attentionBlock)
+                    "
                   >
                     {{ $t('commerceQueuesView.confirm') }}
                     <i class="bi bi-check-circle-fill ms-2"></i>
@@ -3507,7 +4067,8 @@ export default {
 }
 
 @keyframes pulseRing {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.5;
   }
@@ -3990,7 +4551,8 @@ export default {
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 15px rgba(0, 74, 173, 0.4);
   }
   50% {
@@ -4010,7 +4572,8 @@ export default {
 }
 
 @keyframes arrowBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(5px);
   }
   50% {
@@ -4069,7 +4632,8 @@ export default {
 }
 
 @keyframes pulseGlowGreen {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
   }
   50% {
@@ -4088,7 +4652,8 @@ export default {
 }
 
 @keyframes checkBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -4179,7 +4744,8 @@ export default {
 }
 
 @keyframes timeSlotPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 20px rgba(0, 74, 173, 0.4);
   }
   50% {
@@ -4189,6 +4755,76 @@ export default {
 
 .time-slot-button:active {
   transform: translateY(-1px);
+}
+
+/* Telemedicine Styles */
+.telemedicine-option {
+  padding: 1rem;
+  background: rgba(68, 111, 252, 0.05);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(68, 111, 252, 0.2);
+}
+
+.telemedicine-option .form-check-label {
+  font-size: 1rem;
+  color: var(--azul-turno);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.telemedicine-option .form-check-label i {
+  font-size: 1.2rem;
+}
+
+.telemedicine-config {
+  background: white;
+  border: 1px solid rgba(68, 111, 252, 0.3) !important;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(68, 111, 252, 0.1);
+}
+
+.telemedicine-config .form-label {
+  color: var(--azul-turno);
+  margin-bottom: 0.75rem;
+}
+
+.telemedicine-config .btn-group .btn-outline-primary {
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+  transition: all 0.2s ease;
+}
+
+.telemedicine-config .btn-group .btn-check:checked + .btn-outline-primary {
+  background: var(--azul-turno);
+  color: white;
+  border-color: var(--azul-turno);
+}
+
+.telemedicine-config .form-control {
+  border-color: rgba(68, 111, 252, 0.3);
+  transition: border-color 0.2s ease;
+}
+
+.telemedicine-config .form-control:focus {
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 0.2rem rgba(68, 111, 252, 0.25);
+}
+
+.telemedicine-config .form-check-label {
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.telemedicine-scheduled-info {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.05) 0%, rgba(0, 194, 203, 0.05) 100%);
+  border: 1.5px solid var(--azul-turno, #004aad) !important;
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.1);
+}
+
+.telemedicine-scheduled-info strong {
+  color: var(--azul-turno, #004aad);
+  font-size: 1rem;
 }
 
 .btn-back-sticky {
@@ -4268,7 +4904,8 @@ export default {
 }
 
 @keyframes selectedPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 20px rgba(0, 194, 203, 0.5);
   }
   50% {
@@ -4287,7 +4924,8 @@ export default {
 }
 
 @keyframes chevronBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

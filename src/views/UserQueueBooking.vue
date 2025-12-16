@@ -86,9 +86,7 @@ export default {
       }
     });
 
-    const getEstimatedTime = () => {
-      return state.estimatedTime;
-    };
+    const getEstimatedTime = () => state.estimatedTime;
 
     const getBeforeYou = () => {
       const beforeYou = state.booking.beforeYou;
@@ -135,7 +133,8 @@ export default {
 
           if (intelligentEstimation && intelligentEstimation.estimatedTime) {
             state.estimatedTime = intelligentEstimation.estimatedTime;
-            state.usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
+            state.usingIntelligentEstimation =
+              intelligentEstimation.usingIntelligentEstimation || false;
             return;
           }
         } catch (error) {
@@ -323,6 +322,12 @@ export default {
       }
     };
 
+    const showTelemedicineInstructions = ref(false);
+
+    const toggleTelemedicineInstructions = () => {
+      showTelemedicineInstructions.value = !showTelemedicineInstructions.value;
+    };
+
     return {
       id,
       state,
@@ -340,6 +345,8 @@ export default {
       getEstimatedTime,
       getBeforeYou,
       goToForm,
+      showTelemedicineInstructions,
+      toggleTelemedicineInstructions,
     };
   },
 };
@@ -467,14 +474,217 @@ export default {
                           <span class="ai-badge ms-1">
                             <i class="bi bi-stars"></i>
                           </span>
-                        </Popper>
-                      </span><br />
+                        </Popper> </span
+                      ><br />
                       <span class="booking-details-content">
                         <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
                       </span>
                     </div>
                   </div>
                 </div>
+
+                <!-- Telemedicine Information -->
+                <div v-if="state.booking.type === 'TELEMEDICINE'" class="to-goal mt-3">
+                  <div class="booking-details-card">
+                    <div class="booking-card-content">
+                      <div class="mb-0">
+                        <strong style="font-size: 1rem; font-weight: 600">
+                          <i class="bi bi-camera-video me-2"></i>
+                          {{ $t('userQueueBooking.telemedicine.title') }}
+                        </strong>
+                      </div>
+                      <div class="mb-2 mt-0">
+                        <span
+                          v-if="state.booking.telemedicineConfig"
+                          class="badge bg-primary me-1"
+                          style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                        >
+                          <span
+                            v-if="
+                              state.booking.telemedicineConfig.type === 'VIDEO' ||
+                              state.booking.telemedicineConfig.type === 'video'
+                            "
+                          >
+                            {{ $t('userQueueBooking.telemedicine.typeVideo') }}
+                          </span>
+                          <span
+                            v-else-if="
+                              state.booking.telemedicineConfig.type === 'CHAT' ||
+                              state.booking.telemedicineConfig.type === 'chat'
+                            "
+                          >
+                            {{ $t('userQueueBooking.telemedicine.typeChat') }}
+                          </span>
+                          <span
+                            v-else-if="
+                              state.booking.telemedicineConfig.type === 'BOTH' ||
+                              state.booking.telemedicineConfig.type === 'both'
+                            "
+                          >
+                            {{ $t('userQueueBooking.telemedicine.typeBoth') }}
+                          </span>
+                        </span>
+                        <span
+                          v-if="
+                            state.booking.telemedicineConfig &&
+                            state.booking.telemedicineConfig.recordingEnabled
+                          "
+                          class="badge bg-danger"
+                          style="font-size: 0.65rem; padding: 0.25rem 0.5rem"
+                        >
+                          <i class="bi bi-record-circle me-1"></i>
+                          {{ $t('userQueueBooking.telemedicine.recording') }}
+                        </span>
+                      </div>
+                      <div class="mt-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary w-100"
+                          @click="toggleTelemedicineInstructions"
+                        >
+                          <i
+                            :class="
+                              showTelemedicineInstructions
+                                ? 'bi bi-chevron-up'
+                                : 'bi bi-chevron-down'
+                            "
+                          ></i>
+                          {{ $t('userQueueBooking.telemedicine.instructions.title') }}
+                        </button>
+                      </div>
+                      <div
+                        v-show="showTelemedicineInstructions"
+                        class="telemedicine-instructions mt-3 pt-3 border-top"
+                      >
+                        <div class="mb-3">
+                          <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                            <i class="bi bi-1-circle me-2"></i>
+                            {{ $t('userQueueBooking.telemedicine.instructions.preparation.title') }}
+                          </div>
+                          <ul
+                            class="mb-0 ps-0"
+                            style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                          >
+                            <li>
+                              {{
+                                $t(
+                                  'userQueueBooking.telemedicine.instructions.preparation.internet'
+                                )
+                              }}
+                            </li>
+                            <li>
+                              {{
+                                $t('userQueueBooking.telemedicine.instructions.preparation.camera')
+                              }}
+                            </li>
+                            <li>
+                              {{
+                                $t(
+                                  'userQueueBooking.telemedicine.instructions.preparation.location'
+                                )
+                              }}
+                            </li>
+                            <li
+                              v-if="
+                                state.booking.telemedicineConfig &&
+                                (state.booking.telemedicineConfig.type === 'VIDEO' ||
+                                  state.booking.telemedicineConfig.type === 'video' ||
+                                  state.booking.telemedicineConfig.type === 'BOTH' ||
+                                  state.booking.telemedicineConfig.type === 'both')
+                              "
+                            >
+                              {{
+                                $t('userQueueBooking.telemedicine.instructions.preparation.device')
+                              }}
+                            </li>
+                          </ul>
+                        </div>
+                        <div class="mb-3">
+                          <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                            <i class="bi bi-2-circle me-2"></i>
+                            {{ $t('userQueueBooking.telemedicine.instructions.access.title') }}
+                          </div>
+                          <ul
+                            class="mb-0 ps-0"
+                            style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                          >
+                            <li>
+                              {{ $t('userQueueBooking.telemedicine.instructions.access.link') }}
+                            </li>
+                            <li>
+                              {{
+                                $t('userQueueBooking.telemedicine.instructions.access.activation')
+                              }}
+                            </li>
+                            <li>
+                              {{ $t('userQueueBooking.telemedicine.instructions.access.code') }}
+                            </li>
+                            <li>
+                              {{ $t('userQueueBooking.telemedicine.instructions.access.doctor') }}
+                            </li>
+                          </ul>
+                        </div>
+                        <div class="mb-3">
+                          <div class="mb-2" style="font-size: 0.85rem; font-weight: 600">
+                            <i class="bi bi-3-circle me-2"></i>
+                            {{ $t('userQueueBooking.telemedicine.instructions.during.title') }}
+                          </div>
+                          <ul
+                            class="mb-0 ps-0"
+                            style="font-size: 0.75rem; line-height: 1.5; list-style: none"
+                          >
+                            <li
+                              v-if="
+                                state.booking.telemedicineConfig &&
+                                (state.booking.telemedicineConfig.type === 'VIDEO' ||
+                                  state.booking.telemedicineConfig.type === 'video' ||
+                                  state.booking.telemedicineConfig.type === 'BOTH' ||
+                                  state.booking.telemedicineConfig.type === 'both')
+                              "
+                            >
+                              {{ $t('userQueueBooking.telemedicine.instructions.during.camera') }}
+                            </li>
+                            <li
+                              v-if="
+                                state.booking.telemedicineConfig &&
+                                (state.booking.telemedicineConfig.type === 'CHAT' ||
+                                  state.booking.telemedicineConfig.type === 'chat' ||
+                                  state.booking.telemedicineConfig.type === 'BOTH' ||
+                                  state.booking.telemedicineConfig.type === 'both')
+                              "
+                            >
+                              {{ $t('userQueueBooking.telemedicine.instructions.during.chat') }}
+                            </li>
+                            <li>
+                              {{
+                                $t('userQueueBooking.telemedicine.instructions.during.documents')
+                              }}
+                            </li>
+                            <li
+                              v-if="
+                                state.booking.telemedicineConfig &&
+                                state.booking.telemedicineConfig.recordingEnabled
+                              "
+                            >
+                              <i class="bi bi-record-circle text-danger me-1"></i>
+                              {{
+                                $t('userQueueBooking.telemedicine.instructions.during.recording')
+                              }}
+                            </li>
+                          </ul>
+                        </div>
+                        <div
+                          class="alert alert-warning mb-0 mt-2"
+                          style="font-size: 0.75rem; padding: 0.4rem; line-height: 1.4"
+                        >
+                          <i class="bi bi-exclamation-triangle me-2"></i>
+                          {{ $t('userQueueBooking.telemedicine.instructions.important') }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div id="booking-important" class="to-goal">
                   <div class="booking-details-sound mt-2">
                     <div class="">
@@ -657,7 +867,8 @@ export default {
 }
 
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

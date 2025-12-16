@@ -27,6 +27,17 @@ export default {
         });
       },
     },
+    telemedicineRecordingEnabled: {
+      get() {
+        return this.modelValue.telemedicineRecordingEnabled || false;
+      },
+      set(value) {
+        this.$emit('update:modelValue', {
+          ...this.modelValue,
+          telemedicineRecordingEnabled: value,
+        });
+      },
+    },
   },
   methods: {
     handleSpecificCalendarClick() {
@@ -314,6 +325,27 @@ export default {
             :locale="locale"
             :structure="modelValue"
           />
+        </div>
+        <!-- Telemedicine Recording Configuration -->
+        <div class="form-group-modern">
+          <label class="form-label-modern">
+            {{ $t('businessCommercesAdmin.telemedicineRecordingEnabled') }}
+          </label>
+          <div class="form-check form-switch">
+            <input
+              :id="`${prefix}commerce-telemedicineRecordingEnabled-form`"
+              class="form-check-input"
+              type="checkbox"
+              :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
+              v-model="telemedicineRecordingEnabled"
+            />
+            <label
+              class="form-check-label"
+              :for="`${prefix}commerce-telemedicineRecordingEnabled-form`"
+            >
+              {{ $t('businessCommercesAdmin.telemedicineRecordingEnabledDescription') }}
+            </label>
+          </div>
         </div>
       </div>
     </div>

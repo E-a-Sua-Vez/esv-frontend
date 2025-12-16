@@ -69,7 +69,11 @@ export default {
         <button
           v-if="queue.active"
           class="btn-size btn-sm btn-block fw-bold col-12 rounded-pill mt-1 queue-btn"
-          :class="selectedQueue && selectedQueue.id && queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
+          :class="
+            selectedQueue && selectedQueue.id && queue.id === selectedQueue.id
+              ? 'btn-primary'
+              : `${queueStyle(queue.type)}`
+          "
           @click="clickAction(queue)"
           :disabled="!accept"
         >
@@ -104,8 +108,10 @@ export default {
                 "
               >
                 <i class="bi bi-stopwatch-fill"></i>
-                <span>{{ $t('commerceQueuesView.duration') }}
-                {{ queue.blockTime || queue.estimatedTime }}'</span>
+                <span
+                  >{{ $t('commerceQueuesView.duration') }}
+                  {{ queue.blockTime || queue.estimatedTime }}'</span
+                >
               </div>
             </div>
           </div>
@@ -117,7 +123,11 @@ export default {
         v-if="queue.active"
         type="button"
         class="btn-size btn btn-sm btn-block col-12 fw-bold rounded-pill mt-2 queue-btn"
-        :class="selectedQueue && selectedQueue.id && queue.id === selectedQueue.id ? 'btn-primary' : `${queueStyle(queue.type)}`"
+        :class="
+          selectedQueue && selectedQueue.id && queue.id === selectedQueue.id
+            ? 'btn-primary'
+            : `${queueStyle(queue.type)}`
+        "
         @click="clickAction(queue)"
         :disabled="!accept"
       >
@@ -164,8 +174,10 @@ export default {
               "
             >
               <i class="bi bi-stopwatch-fill"></i>
-              <span>{{ $t('commerceQueuesView.duration') }}
-              {{ queue.blockTime || queue.estimatedTime }}'</span>
+              <span
+                >{{ $t('commerceQueuesView.duration') }}
+                {{ queue.blockTime || queue.estimatedTime }}'</span
+              >
             </div>
           </div>
         </div>
