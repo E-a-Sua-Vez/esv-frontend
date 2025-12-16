@@ -1033,168 +1033,169 @@ export default {
                       />
                     </div>
                   </div>
-                  <div
-                    v-for="plan in state.plans"
-                    :key="plan.id"
-                    class="plan-card mb-4"
-                    v-if="state.toggles['plans.admin.read']"
-                  >
-                    <PlanName :plan="plan" :extended-entity="state.extendedEntity" @extend="extend">
-                    </PlanName>
-                    <div
-                      v-if="state.extendedEntity && state.extendedEntity.id === plan.id"
-                      class="plan-details-container"
-                    >
-                      <div class="row g-1">
-                        <div id="plan-name-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.name') }}
+                  <template v-if="state.toggles['plans.admin.read']">
+                    <div v-for="plan in state.plans" :key="plan.id" class="plan-card mb-4">
+                      <PlanName
+                        :plan="plan"
+                        :extended-entity="state.extendedEntity"
+                        @extend="extend"
+                      >
+                      </PlanName>
+                      <div
+                        v-if="state.extendedEntity && state.extendedEntity.id === plan.id"
+                        class="plan-details-container"
+                      >
+                        <div class="row g-1">
+                          <div id="plan-name-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.name') }}
+                            </div>
+                            <div class="col-6">
+                              <input
+                                min="1"
+                                max="50"
+                                type="text"
+                                class="form-control"
+                                v-model="state.extendedEntity.name"
+                                v-bind:class="{ 'is-invalid': state.nameUpdateError }"
+                                placeholder="Plan A"
+                              />
+                            </div>
                           </div>
-                          <div class="col-6">
-                            <input
-                              min="1"
-                              max="50"
-                              type="text"
-                              class="form-control"
-                              v-model="state.extendedEntity.name"
-                              v-bind:class="{ 'is-invalid': state.nameUpdateError }"
-                              placeholder="Plan A"
-                            />
-                          </div>
-                        </div>
-                        <div id="plan-type-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.type') }}
-                          </div>
-                          <div class="col-6">
-                            <select
-                              class="btn btn-md btn-light fw-bold text-dark select px-1"
-                              v-model="state.extendedEntity.productType"
-                              id="countries"
-                            >
-                              <option
-                                v-for="product in state.productTypes"
-                                :key="product"
-                                :value="product"
+                          <div id="plan-type-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.type') }}
+                            </div>
+                            <div class="col-6">
+                              <select
+                                class="btn btn-md btn-light fw-bold text-dark select px-1"
+                                v-model="state.extendedEntity.productType"
+                                id="countries"
                               >
-                                {{ $t(`products.types.${product}`) }}
-                              </option>
-                            </select>
+                                <option
+                                  v-for="product in state.productTypes"
+                                  :key="product"
+                                  :value="product"
+                                >
+                                  {{ $t(`products.types.${product}`) }}
+                                </option>
+                              </select>
+                            </div>
                           </div>
-                        </div>
-                        <div id="plan-country-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.country') }}
-                          </div>
-                          <div class="col-6">
-                            <select
-                              class="btn btn-md btn-light fw-bold text-dark select px-1"
-                              v-model="state.extendedEntity.country"
-                              id="countries"
-                            >
-                              <option
-                                v-for="country in state.countries"
-                                :key="country"
-                                :value="country"
+                          <div id="plan-country-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.country') }}
+                            </div>
+                            <div class="col-6">
+                              <select
+                                class="btn btn-md btn-light fw-bold text-dark select px-1"
+                                v-model="state.extendedEntity.country"
+                                id="countries"
                               >
-                                {{ $t(`countries.${country}`) }}
-                              </option>
-                            </select>
+                                <option
+                                  v-for="country in state.countries"
+                                  :key="country"
+                                  :value="country"
+                                >
+                                  {{ $t(`countries.${country}`) }}
+                                </option>
+                              </select>
+                            </div>
                           </div>
-                        </div>
-                        <div id="plan-description-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.description') }}
+                          <div id="plan-description-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.description') }}
+                            </div>
+                            <div class="col-6">
+                              <textarea
+                                class="form-control"
+                                v-model="state.extendedEntity.description"
+                                v-bind:class="{ 'is-invalid': state.descriptionUpdateError }"
+                                placeholder="Description"
+                              ></textarea>
+                            </div>
                           </div>
-                          <div class="col-6">
-                            <textarea
-                              class="form-control"
-                              v-model="state.extendedEntity.description"
-                              v-bind:class="{ 'is-invalid': state.descriptionUpdateError }"
-                              placeholder="Description"
-                            ></textarea>
+                          <div id="plan-order-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.order') }}
+                            </div>
+                            <div class="col-6">
+                              <input
+                                min="1"
+                                type="number"
+                                class="form-control"
+                                v-model="state.extendedEntity.order"
+                                v-bind:class="{ 'is-invalid': state.orderUpdateError }"
+                                placeholder="1"
+                              />
+                            </div>
                           </div>
-                        </div>
-                        <div id="plan-order-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.order') }}
-                          </div>
-                          <div class="col-6">
-                            <input
-                              min="1"
-                              type="number"
-                              class="form-control"
-                              v-model="state.extendedEntity.order"
-                              v-bind:class="{ 'is-invalid': state.orderUpdateError }"
-                              placeholder="1"
-                            />
-                          </div>
-                        </div>
-                        <div id="plan-periodicity-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.periodicity') }}
-                          </div>
-                          <div class="col-6">
-                            <select
-                              class="btn btn-md btn-light fw-bold text-dark select px-1"
-                              v-model="state.extendedEntity.periodicity"
-                              id="periodicities"
-                            >
-                              <option
-                                v-for="periodicity in state.periodicities"
-                                :key="periodicity"
-                                :value="periodicity"
+                          <div id="plan-periodicity-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.periodicity') }}
+                            </div>
+                            <div class="col-6">
+                              <select
+                                class="btn btn-md btn-light fw-bold text-dark select px-1"
+                                v-model="state.extendedEntity.periodicity"
+                                id="periodicities"
                               >
-                                {{ $t(`periodicities.${periodicity}`) }}
-                              </option>
-                            </select>
+                                <option
+                                  v-for="periodicity in state.periodicities"
+                                  :key="periodicity"
+                                  :value="periodicity"
+                                >
+                                  {{ $t(`periodicities.${periodicity}`) }}
+                                </option>
+                              </select>
+                            </div>
                           </div>
-                        </div>
-                        <div id="plan-price-form-update" class="row g-1">
-                          <div class="col-6 text-label">
-                            {{ $t('businessPlansAdmin.price') }}
+                          <div id="plan-price-form-update" class="row g-1">
+                            <div class="col-6 text-label">
+                              {{ $t('businessPlansAdmin.price') }}
+                            </div>
+                            <div class="col-6">
+                              <input
+                                min="0"
+                                type="number"
+                                step="0.01"
+                                class="form-control"
+                                v-model="state.extendedEntity.price"
+                                v-bind:class="{ 'is-invalid': state.priceUpdateError }"
+                                placeholder="0.00"
+                              />
+                            </div>
                           </div>
-                          <div class="col-6">
-                            <input
-                              min="0"
-                              type="number"
-                              step="0.01"
-                              class="form-control"
-                              v-model="state.extendedEntity.price"
-                              v-bind:class="{ 'is-invalid': state.priceUpdateError }"
-                              placeholder="0.00"
-                            />
+                          <div class="row g-1 mt-2">
+                            <div class="col-12 text-center">
+                              <button
+                                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                                @click="update(state.extendedEntity)"
+                                :disabled="loading"
+                              >
+                                <i class="bi bi-save"></i> {{ $t('update') }}
+                              </button>
+                              <button
+                                class="btn btn-lg btn-size fw-bold btn-secondary rounded-pill px-4 ms-2"
+                                @click="extend(undefined)"
+                              >
+                                <i class="bi bi-x-lg"></i> {{ $t('cancel') }}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div class="row g-1 mt-2">
-                          <div class="col-12 text-center">
-                            <button
-                              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
-                              @click="update(state.extendedEntity)"
-                              :disabled="loading"
-                            >
-                              <i class="bi bi-save"></i> {{ $t('update') }}
-                            </button>
-                            <button
-                              class="btn btn-lg btn-size fw-bold btn-secondary rounded-pill px-4 ms-2"
-                              @click="extend(undefined)"
-                            >
-                              <i class="bi bi-x-lg"></i> {{ $t('cancel') }}
-                            </button>
-                          </div>
-                        </div>
-                        <div v-if="state.errorsUpdate.length > 0" class="row g-1 mt-2">
-                          <div class="col-12">
-                            <Warning
-                              v-for="(error, index) in state.errorsUpdate"
-                              :key="index"
-                              :message="$t(error)"
-                            />
+                          <div v-if="state.errorsUpdate.length > 0" class="row g-1 mt-2">
+                            <div class="col-12">
+                              <Warning
+                                v-for="(error, index) in state.errorsUpdate"
+                                :key="index"
+                                :message="$t(error)"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </template>
                   <div v-if="!state.toggles['plans.admin.read'] && !loading">
                     <Message
                       :title="$t('businessPlansAdmin.message.1.title')"

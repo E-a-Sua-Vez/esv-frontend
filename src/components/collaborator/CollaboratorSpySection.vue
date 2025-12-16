@@ -491,7 +491,7 @@ export default {
             queueId: att.queueId,
             createdAt: createdAt || att.createdAt || att.createdDate || null,
           };
-        }),
+        })
       );
 
       // Sort by number (ascending) to show next attention first
@@ -574,13 +574,13 @@ export default {
           if (Object.keys(groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
             const collaboratorQueues = groupedQueues['COLLABORATOR'] || [];
             queues = collaboratorQueues.filter(
-              queue => queue.collaboratorId === state.collaborator.id,
+              queue => queue.collaboratorId === state.collaborator.id
             );
           }
         } else {
           // Filter queues where type is COLLABORATOR and collaboratorId matches
           queues = queues.filter(
-            queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id,
+            queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
           );
         }
 
@@ -619,12 +619,12 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined,
+          undefined
         );
 
         // Filter by queue IDs and status PENDING (only pending attentions should be shown)
         const todayAttentions = (attentions || []).filter(
-          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING',
+          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING'
         );
 
         // Format attentions
@@ -699,7 +699,7 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined,
+          undefined
         );
 
         // Get month bookings
@@ -714,18 +714,18 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined,
+          undefined
         );
 
         // Filter by queue IDs and status (not cancelled)
         const filteredWeekBookings = (weekBookings || []).filter(
           booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED',
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
         );
 
         const filteredMonthBookings = (monthBookings || []).filter(
           booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED',
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
         );
 
         // Format bookings
@@ -799,7 +799,7 @@ export default {
         // We'll filter by queueId, status, and date range in the callback
         const attentionsQuery = query(
           attentionCollection,
-          where('commerceId', '==', state.commerce.id),
+          where('commerceId', '==', state.commerce.id)
         );
 
         unsubscribeCalendarAttentions = onSnapshot(attentionsQuery, snapshot => {
@@ -893,7 +893,7 @@ export default {
         const bookingsQuery = query(
           bookingCollection,
           where('commerceId', '==', state.commerce.id),
-          where('status', 'in', ['PENDING', 'CONFIRMED']),
+          where('status', 'in', ['PENDING', 'CONFIRMED'])
         );
 
         unsubscribeCalendarBookings = onSnapshot(bookingsQuery, snapshot => {
@@ -1243,7 +1243,7 @@ export default {
       bookings.filter(b => b.status === 'PENDING' && !b.attentionId).length;
 
     // Watch attentions wrapper itself - fires when it's initialized
-    watch(attentionsWrapper, async (newWrapper, oldWrapper) => {
+    async function handleAttentionsWrapperInit(newWrapper, oldWrapper) {
       // When wrapper is first initialized, process it immediately
       if (newWrapper && newWrapper !== oldWrapper) {
         // Handle both ref and direct array cases
@@ -1257,76 +1257,79 @@ export default {
           checkQueueStatus(newWrapper);
           await updateTodayAttentionsFromFirebase(attentionsArray);
         }
-      },
-    );
+      }
+    }
+
+    watch(attentionsWrapper, handleAttentionsWrapperInit);
 
     // Watch attentions wrapper value for changes (same as CollaboratorQueuesView)
-    watch(
-      () => {
-        // Watch the value inside the wrapper
-        const wrapper = attentionsWrapper.value;
-        if (!wrapper) {
-          return null; // Not initialized yet
+    function attentionsWrapperValueGetter() {
+      // Watch the value inside the wrapper
+      const wrapper = attentionsWrapper.value;
+      if (!wrapper) {
+        return null; // Not initialized yet
+      }
+
+      try {
+        // Handle both ref and direct array cases
+        let array = null;
+        if (Array.isArray(wrapper)) {
+          array = wrapper;
+        } else if (wrapper.value !== undefined && wrapper.value !== null) {
+          array = Array.isArray(wrapper.value) ? wrapper.value : [];
         }
 
-        try {
-          // Handle both ref and direct array cases
-          let array = null;
-          if (Array.isArray(wrapper)) {
-            array = wrapper;
-          } else if (wrapper.value !== undefined && wrapper.value !== null) {
-            array = Array.isArray(wrapper.value) ? wrapper.value : [];
-          }
+        if (array) {
+          // Return a string representation for deep comparison
+          // Include length and all IDs to better detect changes
+          return JSON.stringify({
+            length: array.length,
+            ids: array.map(a => a.id).sort(),
+          });
+        }
+      } catch (error) {
+        // Error accessing attentions.value
+      }
+      return JSON.stringify({ length: 0, ids: [] });
+    }
 
-          if (array) {
-            // Return a string representation for deep comparison
-            // Include length and all IDs to better detect changes
-            return JSON.stringify({
-              length: array.length,
-              ids: array.map(a => a.id).sort(),
-            });
-          }
-        } catch (error) {
-          // Error accessing attentions.value
-        }
-        return JSON.stringify({ length: 0, ids: [] });
-      },
-      async (newValue, oldValue) => {
-        // Skip if wrapper is not initialized yet
-        if (newValue === null) {
-          initializeQueueStatus();
-          return;
-        }
-        // Get the actual array from the ref
-        const currentAttentionsRef = attentionsWrapper.value;
-        if (!currentAttentionsRef) {
-          initializeQueueStatus();
-          return;
-        }
-        // Get the actual array - handle both ref and direct array cases
-        let attentionsArray = null;
-        if (Array.isArray(currentAttentionsRef)) {
-          // Already an array (unwrapped by Vue reactivity)
-          attentionsArray = currentAttentionsRef;
-        } else if (currentAttentionsRef && currentAttentionsRef.value !== undefined) {
-          // It's a ref, get the value
-          attentionsArray = currentAttentionsRef.value;
-        }
+    async function handleAttentionsWrapperValueChange(newValue, oldValue) {
+      // Skip if wrapper is not initialized yet
+      if (newValue === null) {
+        initializeQueueStatus();
+        return;
+      }
+      // Get the actual array from the ref
+      const currentAttentionsRef = attentionsWrapper.value;
+      if (!currentAttentionsRef) {
+        initializeQueueStatus();
+        return;
+      }
+      // Get the actual array - handle both ref and direct array cases
+      let attentionsArray = null;
+      if (Array.isArray(currentAttentionsRef)) {
+        // Already an array (unwrapped by Vue reactivity)
+        attentionsArray = currentAttentionsRef;
+      } else if (currentAttentionsRef && currentAttentionsRef.value !== undefined) {
+        // It's a ref, get the value
+        attentionsArray = currentAttentionsRef.value;
+      }
 
-        // Always call checkQueueStatus - it will handle empty arrays correctly
-        await checkQueueStatus(currentAttentionsRef);
+      // Always call checkQueueStatus - it will handle empty arrays correctly
+      await checkQueueStatus(currentAttentionsRef);
 
-        // Always update today's attentions list from Firebase in real-time
-        // We always update because even if the summary looks the same, the data might have changed
-        // (e.g., user details, timestamps, etc.) and we need to refresh the formatted list
-        if (attentionsArray && Array.isArray(attentionsArray)) {
-          await updateTodayAttentionsFromFirebase(attentionsArray);
-        } else {
-          // If no attentions, clear the list
-          state.todayAttentions = [];
-        }
-      },
-    );
+      // Always update today's attentions list from Firebase in real-time
+      // We always update because even if the summary looks the same, the data might have changed
+      // (e.g., user details, timestamps, etc.) and we need to refresh the formatted list
+      if (attentionsArray && Array.isArray(attentionsArray)) {
+        await updateTodayAttentionsFromFirebase(attentionsArray);
+      } else {
+        // If no attentions, clear the list
+        state.todayAttentions = [];
+      }
+    }
+
+    watch(attentionsWrapperValueGetter, handleAttentionsWrapperValueChange);
 
     watch(show, async () => {
       if (show.value === true) {
