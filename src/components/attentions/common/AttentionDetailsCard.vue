@@ -100,6 +100,20 @@ export default {
       },
       immediate: false,
     },
+    detailsOpened: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.extendedEntity = this.detailsOpened;
+      },
+    },
+    extendedEntity: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.extendedEntity = this.extendedEntity;
+      },
+    },
   },
   beforeUnmount() {
     // Clean up polling interval
@@ -518,22 +532,6 @@ export default {
             console.error('Error copying link:', err);
           });
       }
-    },
-  },
-  watch: {
-    detailsOpened: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.extendedEntity = this.detailsOpened;
-      },
-    },
-    extendedEntity: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.extendedEntity = this.extendedEntity;
-      },
     },
   },
 };
