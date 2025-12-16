@@ -1,4 +1,4 @@
-import { requestBackend, getHeaders } from '../api';
+import { requestBackend, requestQuery, getHeaders } from '../api';
 
 const entity = 'queue';
 
@@ -35,10 +35,10 @@ export const getEstimatedWaitTime = async (queueId, position, method = 'p75') =>
 
 export const getAverageAttentionDuration = async (queueId, method = 'median') => {
   try {
-    const response = await requestBackend.get(
-      `/attention/queue/${queueId}/estimated-duration?method=${method}`,
-      await getHeaders()
-    );
+    // Call query-stack directly for estimated duration
+    const { headers } = await getHeaders();
+    const url = `attention/queue/${queueId}/estimated-duration?method=${method}&days=30&limit=30`;
+    const response = await requestQuery.get(url, { headers });
     return response.data;
   } catch (error) {
     console.warn('Failed to get average attention duration, will use fallback', error);

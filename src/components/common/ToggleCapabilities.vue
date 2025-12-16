@@ -32,7 +32,7 @@ export default {
         list.push(
           `${toggle[1] === true ? '✅ ' : toggle[1] === false ? '❌ ' : toggle[1] + ': '} ${this.$t(
             translationKey
-          )}`
+          )}`,
         );
         if ((toggle[1] === false || this.amountUsed >= toggle[1]) && this.upgrade === false) {
           this.upgrade = true;

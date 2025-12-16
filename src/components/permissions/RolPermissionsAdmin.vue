@@ -65,7 +65,8 @@ export default {
         loading.value = false;
       } catch (error) {
         console.error('Error loading roles permissions:', error);
-        alertError.value = error?.response?.status || error?.message || 'Error loading roles permissions';
+        alertError.value =
+          error?.response?.status || error?.message || 'Error loading roles permissions';
         loading.value = false;
       }
     });

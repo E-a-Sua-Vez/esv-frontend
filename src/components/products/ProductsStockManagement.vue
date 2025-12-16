@@ -234,6 +234,12 @@ export default {
         this.$router.push({ path: '/interno/negocio/product-admin' });
       }
     },
+    handleQuickRecharge(productId) {
+      // Emitir evento al componente padre para manejar la recarga
+      this.$emit('quick-recharge', productId);
+      // Alternativamente, podríamos abrir el modal de recarga directamente
+      // Por ahora, solo emitimos el evento
+    },
   },
   computed: {
     changeData() {
@@ -602,6 +608,7 @@ export default {
                     :toggles="this.toggles"
                     :queues="this.queues"
                     :commerces="this.commerces"
+                    @quick-recharge="handleQuickRecharge"
                   >
                   </ProductDetailsCard>
                 </div>

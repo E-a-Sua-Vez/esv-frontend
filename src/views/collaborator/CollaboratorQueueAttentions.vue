@@ -1,5 +1,14 @@
 <script>
-import { ref, watch, reactive, onBeforeMount, onMounted, onUnmounted, nextTick, computed } from 'vue';
+import {
+  ref,
+  watch,
+  reactive,
+  onBeforeMount,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  computed,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   getNextAvailableAttentionDetails,
@@ -169,7 +178,10 @@ export default {
             try {
               // Get full details using the specific attention number (this ensures we get the correct one)
               // Note: function signature is (queueId, number)
-              state.attention = await getAvailableAttentionDetailsByNumber(queue.id, nextAttentionNumber);
+              state.attention = await getAvailableAttentionDetailsByNumber(
+                queue.id,
+                nextAttentionNumber
+              );
 
               // Verify it's the correct attention
               const attentionId = state.attention?.attentionId || state.attention?.id;
@@ -256,7 +268,8 @@ export default {
 
         if (intelligentEstimation && intelligentEstimation.estimatedTime) {
           state.intelligentEstimatedTime = intelligentEstimation.estimatedTime;
-          state.usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
+          state.usingIntelligentEstimation =
+            intelligentEstimation.usingIntelligentEstimation || false;
         } else {
           state.usingIntelligentEstimation = false;
           state.intelligentEstimatedTime = null;
@@ -349,14 +362,18 @@ export default {
             const nextAttentionId = nextAttention.attentionId || nextAttention.id;
 
             // Check if current attention is still valid (exists and is still pending)
-            const currentAttentionStillValid = state.attention.id &&
-              state.queuePendingDetails.some(att =>
-                (att.attentionId || att.id) === state.attention.id && att.status === 'PENDING'
+            const currentAttentionStillValid =
+              state.attention.id &&
+              state.queuePendingDetails.some(
+                att =>
+                  (att.attentionId || att.id) === state.attention.id && att.status === 'PENDING'
               );
 
             // Update if: current attention is invalid OR next attention is different
-            if (!currentAttentionStillValid ||
-                (nextAttentionId && state.attention.id !== nextAttentionId)) {
+            if (
+              !currentAttentionStillValid ||
+              (nextAttentionId && state.attention.id !== nextAttentionId)
+            ) {
               try {
                 // Use the first attention from sorted list (lowest number)
                 const correctAttention = state.queuePendingDetails[0];
@@ -366,7 +383,11 @@ export default {
                 const attentionDetails = await getNextAvailableAttentionDetails(state.queue.id);
                 const apiAttentionId = attentionDetails?.attentionId || attentionDetails?.id;
 
-                if (attentionDetails && attentionDetails.id && apiAttentionId === correctAttentionId) {
+                if (
+                  attentionDetails &&
+                  attentionDetails.id &&
+                  apiAttentionId === correctAttentionId
+                ) {
                   // API returned the correct attention
                   state.attention = attentionDetails;
                   if (attentionDetails.user) {
@@ -479,8 +500,14 @@ export default {
         elapsedDisplay = `${days}d ${hours % 24}h`;
       }
 
-      const creationTime = created.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      const creationDate = created.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const creationTime = created.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const creationDate = created.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+      });
 
       let timeStatus = 'neutral';
       let timeColor = '#a9a9a9';
@@ -505,7 +532,8 @@ export default {
         estimatedDisplay = state.intelligentEstimatedTime;
       } else {
         // Fallback to simple calculation
-        const estimatedMinutes = state.queuePendingDetails.length * (state.queue?.estimatedTime || 5);
+        const estimatedMinutes =
+          state.queuePendingDetails.length * (state.queue?.estimatedTime || 5);
         const estimatedHours = Math.floor(estimatedMinutes / 60);
         const estimatedMins = estimatedMinutes % 60;
         if (estimatedHours > 0) {
@@ -619,9 +647,15 @@ export default {
                   <i class="bi bi-people-fill"></i>
                 </div>
                 <div class="waiting-people-text-modern">
-                  <span class="waiting-people-label-modern">{{ $t('collaboratorQueueAttentions.toGoal.1') }}</span>
-                  <span class="waiting-people-value-modern">{{ state.queuePendingDetails.length }}</span>
-                  <span class="waiting-people-label-modern">{{ $t('collaboratorQueueAttentions.toGoal.2') }}</span>
+                  <span class="waiting-people-label-modern">{{
+                    $t('collaboratorQueueAttentions.toGoal.1')
+                  }}</span>
+                  <span class="waiting-people-value-modern">{{
+                    state.queuePendingDetails.length
+                  }}</span>
+                  <span class="waiting-people-label-modern">{{
+                    $t('collaboratorQueueAttentions.toGoal.2')
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -725,7 +759,10 @@ export default {
             <!-- Attention Statistics Cards -->
             <div v-if="attentionStats" class="attention-stats-grid mt-3">
               <!-- Elapsed Time Card -->
-              <div class="stat-card stat-card-time" :class="`stat-card-${attentionStats.timeStatus}`">
+              <div
+                class="stat-card stat-card-time"
+                :class="`stat-card-${attentionStats.timeStatus}`"
+              >
                 <div class="stat-card-icon stat-card-icon-with-popper">
                   <i class="bi bi-hourglass-split"></i>
                   <Popper :class="'dark'" arrow hover placement="top" :z-index="10001">
@@ -733,19 +770,19 @@ export default {
                       <div class="popper-content">
                         <div class="popper-title">Tempo de Espera - Indicadores de Cor</div>
                         <div class="popper-item">
-                          <span class="popper-color" style="background: #00c2cb;"></span>
+                          <span class="popper-color" style="background: #00c2cb"></span>
                           <span><strong>Verde:</strong> Menos de 10 minutos - Excelente</span>
                         </div>
                         <div class="popper-item">
-                          <span class="popper-color" style="background: #f9c322;"></span>
+                          <span class="popper-color" style="background: #f9c322"></span>
                           <span><strong>Amarelo:</strong> Menos de 1 hora - Bom</span>
                         </div>
                         <div class="popper-item">
-                          <span class="popper-color" style="background: #ff9800;"></span>
+                          <span class="popper-color" style="background: #ff9800"></span>
                           <span><strong>Laranja:</strong> Menos de 3 horas - Atenção</span>
                         </div>
                         <div class="popper-item">
-                          <span class="popper-color" style="background: #a52a2a;"></span>
+                          <span class="popper-color" style="background: #a52a2a"></span>
                           <span><strong>Vermelho:</strong> Mais de 3 horas - Urgente</span>
                         </div>
                       </div>
@@ -1061,17 +1098,17 @@ export default {
   border-radius: 4px;
 }
 
-  .queue-drawer-body::-webkit-scrollbar-thumb:hover {
-    background: rgba(169, 169, 169, 0.5);
-  }
+.queue-drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(169, 169, 169, 0.5);
+}
 
 /* Modern Waiting People Card */
 .waiting-people-modern-card {
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.08) 0%, rgba(0, 194, 203, 0.08) 100%);
   border-radius: 12px;
   padding: 1rem 1.25rem;
-  margin: 1rem auto;
-  max-width: 400px;
+  margin: 1rem 0;
+  width: 100%;
   border: 1px solid rgba(0, 74, 173, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
@@ -1411,7 +1448,8 @@ export default {
 }
 
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

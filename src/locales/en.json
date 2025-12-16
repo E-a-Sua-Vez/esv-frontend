@@ -41,6 +41,19 @@
   "welcomeMenu": {
     "youAreIn": "You are in:"
   },
+  "common": {
+    "loading": "Loading...",
+    "close": "Close",
+    "filterByType": "Filter by Type:",
+    "all": "All",
+    "search": "Search:",
+    "searchPlaceholder": "Search...",
+    "reset": "Reset",
+    "error": "Error",
+    "retry": "Retry",
+    "pending": "Pending",
+    "viewDetails": "View Details"
+  },
   "noResults": "😓 No Results",
   "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
   "refresh": "Reload",
@@ -510,6 +523,10 @@
       "title": "Booking Edit",
       "description": "Let edit the date and hour of a booking"
     },
+    "telemedicine-active": {
+      "title": "Telemedicine Active",
+      "description": "Activates telemedicine functionality for bookings and attentions"
+    },
     "attention-stock-register": {
       "title": "Register Stock",
       "description": "Let the collaborator to register the stock before the attention ends"
@@ -760,6 +777,8 @@
     }
   },
   "attentionNumber": {
+    "waitingTime": "Waiting time:",
+    "processingTime": "In service:",
     "details": {
       "title": "User Data",
       "name": "Name:",
@@ -949,6 +968,40 @@
       },
       "7": {
         "action": "I want to receive my turn via Email"
+      }
+    },
+    "telemedicine": {
+      "title": "Telemedicine Consultation",
+      "subtitle": "This is a telemedicine consultation. You do not need to attend in person.",
+      "typeVideo": "Video",
+      "typeChat": "Chat",
+      "typeBoth": "Video and Chat",
+      "recording": "Recording active",
+      "scheduledFor": "Scheduled for",
+      "instructions": {
+        "title": "Instructions for Your Consultation",
+        "preparation": {
+          "title": "Preparation",
+          "internet": "Make sure you have a stable internet connection",
+          "camera": "Verify that your camera and microphone work correctly",
+          "location": "Find a quiet and private place for the consultation",
+          "device": "Use a device with a camera (computer, tablet or smartphone)"
+        },
+        "access": {
+          "title": "Session Access",
+          "link": "You will receive an access link via WhatsApp or Email",
+          "activation": "The link will be activated 10 minutes before your scheduled consultation",
+          "code": "You will need a 6-digit access code that you will receive via WhatsApp or Email",
+          "doctor": "The doctor will connect at the scheduled time"
+        },
+        "during": {
+          "title": "During the Consultation",
+          "camera": "Keep your camera on during the consultation",
+          "chat": "You can use the chat to communicate with the doctor",
+          "documents": "Have any relevant medical documents on hand",
+          "recording": "This session will be recorded"
+        },
+        "important": "If you have technical problems, contact the commerce immediately"
       }
     }
   },
@@ -1321,6 +1374,68 @@
       "paymentAmount": "Should enter the amount"
     }
   },
+  "telemedicineSession": {
+    "patientWelcome": "Telemedicine Consultation Access",
+    "sessionStatus": "Session Status",
+    "status": "Status:",
+    "scheduledFor": "Scheduled for:",
+    "accessKey": "Access key:",
+    "accessKeySent": "Sent",
+    "accessKeyAvailable": "Available (will be sent automatically)",
+    "accessKeySentViaWhatsAppEmail": "The access key will be automatically sent via WhatsApp or Email 10 minutes before the session",
+    "accessKeyActivation": "Will be activated in",
+    "accessKeyActivationNote": "(10 minutes before the session)",
+    "accessKeyValidated": "Key validated:",
+    "clientConnected": "Client connected",
+    "started": "Started:",
+    "ended": "Ended:",
+    "duration": "Duration:",
+    "recording": "Recording:",
+    "viewRecording": "View recording",
+    "activeSession": "Active session",
+    "activeSessionNote": "The patient can connect now",
+    "clientAccessLink": "Client Access Link",
+    "copyLink": "Copy link",
+    "linkActivationNote": "The link will be activated 10 minutes before the scheduled session",
+    "linkShareNote": "Share this link with the client. The client will need the access key sent via WhatsApp/Email.",
+    "statusScheduled": "Scheduled",
+    "statusActive": "Active",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "verifyingAccess": "Verifying access...",
+    "sessionNotAvailable": "Session Not Available",
+    "sessionEndedMessage": "This telemedicine session has already ended and is not available for access.",
+    "sessionCompletedMessage": "The consultation was completed successfully.",
+    "sessionCancelledMessage": "The session was cancelled.",
+    "enterAccessKey": "Enter Your Access Key",
+    "enterAccessKeyDescription": "Please enter the access key you received via WhatsApp or Email",
+    "accessKeyLabel": "Access Key",
+    "accessKeyPlaceholder": "XXXX-XXXX",
+    "accessKeyHint": "Enter the 4 to 8 character alphanumeric code you received via WhatsApp or Email",
+    "validateAndAccess": "Validate and Access",
+    "tryAgain": "Try Again",
+    "welcomeUser": "Welcome {name}!",
+    "accessValidated": "Access Validated",
+    "sessionInfo": "Session Information",
+    "sessionType": "Consultation Type:",
+    "sessionDate": "Date and Time:",
+    "sessionWillStart": "The session will begin shortly. Please wait for the doctor to connect.",
+    "waitingForSession": "Waiting for session to start...",
+    "waitingForDoctor": "The session will begin when the doctor connects",
+    "waitingForDoctorDescription": "Please wait for the doctor to connect to start the consultation",
+    "sessionActiveWindowClosed": "Active session - Window closed",
+    "reopenSession": "Reopen Telemedicine Session",
+    "sessionCompleted": "Session Completed",
+    "invalidKeyLength": "Please enter a 4 to 8 character alphanumeric code",
+    "invalidAccessKey": "Invalid access key",
+    "incorrectAccessKey": "Incorrect access key. Please verify and try again.",
+    "sessionNotFound": "Session not found",
+    "validationError": "Error validating access key",
+    "email": "Email:",
+    "video": "Video",
+    "chat": "Chat",
+    "both": "Video and Chat"
+  },
   "queueAttentionDetails": {
     "requested": "Attentions requested",
     "pending": "Attentions pending",
@@ -1530,6 +1645,9 @@
       },
       "2": {
         "action": "Back to the Booking"
+      },
+      "3": {
+        "action": "Back to the Attention"
       }
     },
     "validate": {
@@ -1653,7 +1771,41 @@
     "contactMethod": "Contact Method:",
     "outcomes": "Outcomes",
     "paymentStatus": "Payment Status",
-    "patientHistory": "History",
+    "patientHistory": "Medical History",
+    "patientHistoryData": {
+      "patientJourney": "Patient Journey",
+      "patientJourneyDescription": "Complete timeline of all patient interactions",
+      "consultationTimeline": "Consultation Timeline",
+      "consultationTimelineDescription": "Timeline of all patient consultations",
+      "bookings": "Bookings",
+      "attentions": "Attentions",
+      "consultations": "Consultations",
+      "controls": "Controls",
+      "prescriptions": "Prescriptions",
+      "examOrders": "Exam Orders",
+      "booking": "Booking",
+      "attention": "Attention",
+      "consultation": "Consultation",
+      "control": "Control",
+      "prescription": "Prescription",
+      "examOrder": "Exam Order",
+      "fromBooking": "From Booking",
+      "fromControl": "From Control",
+      "comeback": "Comeback",
+      "comebackFrom": "Comeback from",
+      "diagnostics": "Diagnostics",
+      "consultationReason": "Consultation Reason",
+      "scheduled": "Scheduled",
+      "visit": "Visit",
+      "consultationDetails": "Consultation details",
+      "scheduledFor": "Scheduled for",
+      "medications": "medications",
+      "exams": "exams",
+      "noConsultations": "No consultations",
+      "noConsultationsDescription": "This patient has no consultations registered yet",
+      "noJourneyItems": "No items found",
+      "noJourneyItemsDescription": "Try adjusting your filters"
+    },
     "patientHistoryOf": "Medical History of",
     "pendingControls": "Controls",
     "pendingBookings": "Bookings",
@@ -2453,6 +2605,8 @@
     "type": "Type:",
     "active": "Active:",
     "online": "Online:",
+    "telemedicine": "Telemedicine:",
+    "telemedicineHelp": "Enables telemedicine option for this queue",
     "estimated": "Estimated time (min):",
     "listResult": "Results:",
     "update": "Update",
@@ -3286,6 +3440,45 @@
       "hours": "Hour 'From' should be minor than hour 'To'"
     }
   },
+  "patientHistory": {
+    "patientJourney": "Patient Journey",
+    "patientJourneyDescription": "Complete timeline of all patient interactions",
+    "consultationTimeline": "Consultation Timeline",
+    "consultationTimelineDescription": "Timeline of all patient consultations",
+    "bookings": "Bookings",
+    "attentions": "Attentions",
+    "consultations": "Consultations",
+    "controls": "Controls",
+    "prescriptions": "Prescriptions",
+    "examOrders": "Exam Orders",
+    "booking": "Booking",
+    "attention": "Attention",
+    "consultation": "Consultation",
+    "control": "Control",
+    "prescription": "Prescription",
+    "examOrder": "Exam Order",
+    "fromBooking": "From Booking",
+    "fromControl": "From Control",
+    "comeback": "Comeback",
+    "comebackFrom": "Comeback from",
+    "diagnostics": "Diagnostics",
+    "consultationReason": "Consultation Reason",
+    "scheduled": "Scheduled",
+    "visit": "Visit",
+    "consultationDetails": "Consultation details",
+    "scheduledFor": "Scheduled for",
+    "medications": "medications",
+    "exams": "exams",
+    "noConsultations": "No consultations",
+    "noConsultationsDescription": "This patient has no consultations registered yet",
+    "noJourneyItems": "No items found",
+    "noJourneyItemsDescription": "Try adjusting your filters",
+    "journeyServerError": "Server error while loading patient journey. Please try again later.",
+    "journeyNotFound": "Patient journey not found.",
+    "journeyAccessDenied": "You do not have permission to view this patient journey.",
+    "journeyLoadError": "Error loading patient journey. Please try again.",
+    "missingParameters": "Missing required parameters"
+  },
   "patientHistoryView": {
     "showPersonalData": "Personal Data",
     "showConsultationReason": "Consultation Reason",
@@ -3300,6 +3493,7 @@
     "showControl": "Controls",
     "showDocuments": "Documents",
     "showItensMedicalHistory": "Admin History Items",
+    "consultationTimeline": "Consultation Timeline",
     "menu": "History Details",
     "name": "Name:",
     "lastName": "LastName:",
@@ -3313,6 +3507,7 @@
     "addressCode": "Address (Zip):",
     "addressComplement": "Address (Complement):",
     "phone": "Phone:",
+    "email": "Email:",
     "font": "Patient is Direct Font of Data:",
     "save": "Save",
     "consultationReason": "Consultation Reason",
@@ -3339,6 +3534,16 @@
     "update": "Update",
     "autoSaving": "Autosaving",
     "clickSave": "Click on Save Button",
+    "patientInfo": "Patient Information",
+    "consultation": "Consultation",
+    "examination": "Examination",
+    "clinical": "Clinical",
+    "management": "Management",
+    "saved": "Saved",
+    "saving": "Saving",
+    "showMenu": "Show Menu",
+    "hideMenu": "Hide Menu",
+    "select": "Select...",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3477,6 +3682,8 @@
     "collaborators": "Collaborators",
     "resumeByCommerce": "Resume by Commerce",
     "whatsapp": "Whatsapp Connection",
+    "telemedicine": "Telemedicine",
+    "telemedicineConnections": "WebSocket Connections",
     "message": {
       "1": {
         "title": "Ups!",
@@ -3658,6 +3865,7 @@
     "file": "File:",
     "upload": "Upload",
     "uploadNewDocument": "Upload New Document",
+    "dragDropOrClick": "Drag and drop the file here or click to select",
     "message": {
       "1": {
         "title": "Ups!",

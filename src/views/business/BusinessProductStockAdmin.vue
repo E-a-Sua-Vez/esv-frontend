@@ -13,6 +13,7 @@ import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductsStockManagement from '../../components/products/ProductsStockManagement.vue';
 import ProductsAttentionManagement from '../../components/products/ProductsAttentionManagement.vue';
+import InventoryDashboard from '../../components/products/InventoryDashboard.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
@@ -28,6 +29,7 @@ export default {
     ComponentMenu,
     ProductsStockManagement,
     ProductsAttentionManagement,
+    InventoryDashboard,
     DesktopContentLayout,
     DesktopFiltersPanel,
     DateRangeFilters,
@@ -47,7 +49,8 @@ export default {
       services: ref([]),
       queue: {},
       dateType: 'month',
-      showProducts: true,
+      showDashboard: true,
+      showProducts: false,
       showAttentions: false,
       toggles: {},
     });
@@ -129,14 +132,29 @@ export default {
       router.back();
     };
 
+    const showDashboard = () => {
+      state.showDashboard = true;
+      state.showProducts = false;
+      state.showAttentions = false;
+    };
+
     const showProducts = () => {
+      state.showDashboard = false;
       state.showProducts = true;
       state.showAttentions = false;
     };
 
     const showAttentions = () => {
+      state.showDashboard = false;
       state.showProducts = false;
       state.showAttentions = true;
+    };
+
+    const handleQuickRecharge = productId => {
+      // Cambiar a vista de productos y abrir modal de recarga
+      showProducts();
+      // El componente ProductsStockManagement puede manejar esto
+      // Emitir evento o usar router
     };
 
     const handleFiltersToggle = collapsed => {
@@ -156,10 +174,12 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
+      showDashboard,
       showProducts,
       showAttentions,
       handleFiltersToggle,
       handleCommerceChanged,
+      handleQuickRecharge,
       commerce,
       selectedCommerces,
     };
@@ -191,7 +211,17 @@ export default {
           <div v-if="isActiveBusiness()">
             <div v-if="!loading" id="product-stock-result" class="mt-2">
               <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
-                <div class="col-6 centered">
+                <div class="col-4 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showDashboard ? 'btn-selected' : ''"
+                    @click="showDashboard()"
+                  >
+                    {{ $t('businessProductStockAdmin.dashboard') || 'Dashboard' }} <br />
+                    <i class="bi bi-bar-chart-fill"></i>
+                  </button>
+                </div>
+                <div class="col-4 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showProducts ? 'btn-selected' : ''"
@@ -202,7 +232,7 @@ export default {
                     <i class="bi bi-eyedropper"></i>
                   </button>
                 </div>
-                <div class="col-6 centered">
+                <div class="col-4 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showAttentions ? 'btn-selected' : ''"
@@ -213,6 +243,15 @@ export default {
                     <i class="bi bi-qr-code"></i>
                   </button>
                 </div>
+              </div>
+              <div>
+                <InventoryDashboard
+                  v-if="state.showDashboard"
+                  :show="state.showDashboard"
+                  :commerce="commerce"
+                  :commerces="selectedCommerces"
+                  @quick-recharge="handleQuickRecharge"
+                ></InventoryDashboard>
               </div>
               <div>
                 <ProductsStockManagement
@@ -778,7 +817,17 @@ export default {
               <template #content>
                 <!-- Header with tabs -->
                 <div class="row col mx-1 mt-3 mb-3 tabs-header-divider">
-                  <div class="col-6 centered">
+                  <div class="col-4 centered">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                      :class="state.showDashboard ? 'btn-selected' : ''"
+                      @click="showDashboard()"
+                    >
+                      {{ $t('businessProductStockAdmin.dashboard') || 'Dashboard' }} <br />
+                      <i class="bi bi-bar-chart-fill"></i>
+                    </button>
+                  </div>
+                  <div class="col-4 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showProducts ? 'btn-selected' : ''"
@@ -789,7 +838,7 @@ export default {
                       <i class="bi bi-eyedropper"></i>
                     </button>
                   </div>
-                  <div class="col-6 centered">
+                  <div class="col-4 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showAttentions ? 'btn-selected' : ''"
@@ -802,6 +851,13 @@ export default {
                   </div>
                 </div>
                 <!-- Main content components -->
+                <InventoryDashboard
+                  v-if="state.showDashboard"
+                  :show="state.showDashboard"
+                  :commerce="commerce"
+                  :commerces="selectedCommerces"
+                  @quick-recharge="handleQuickRecharge"
+                ></InventoryDashboard>
                 <ProductsStockManagement
                   :show-product-stock-management="state.showProducts"
                   :toggles="state.toggles"
@@ -810,6 +866,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
+                  @quick-recharge="handleQuickRecharge"
                 >
                 </ProductsStockManagement>
                 <ProductsAttentionManagement

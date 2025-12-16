@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
+import { ref, reactive, onBeforeMount, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueuesByCommerceId } from '../../application/services/queue';
@@ -8,8 +8,13 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
-import { getBookingsDetails, getPendingAttentionsDetails, getAttentionsDetails } from '../../application/services/query-stack';
+import {
+  getBookingsDetails,
+  getPendingAttentionsDetails,
+  getAttentionsDetails,
+} from '../../application/services/query-stack';
 import { DateModel } from '../../shared/utils/date.model';
+import { updatedTodayAttentionsByCommerce } from '../../application/firebase';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -73,8 +78,12 @@ export default {
         totalActiveCount: 0,
       },
       recentBookings: [],
+      recentAttentions: [],
+      showAttentions: false,
       loadingStats: false,
       collaboratorQueues: [], // Queues specific to this collaborator
+      todayAttentionsSubscription: null, // Firebase subscription for today's attentions
+      todayAttentionsWatcher: null, // Watcher stop function for today's attentions
     });
 
     const loadCommerceData = async () => {
@@ -132,6 +141,8 @@ export default {
         await loadCommerceData();
         store.setCurrentQueue(undefined);
         state.toggles = await getPermissions('collaborator');
+        // Set up Firebase subscription for today's attentions
+        setupTodayAttentionsSubscription();
         // Load dashboard stats after queues are loaded
         if (commerce.value && commerce.value.id && state.collaborator && state.collaborator.id) {
           await loadDashboardStats();
@@ -171,6 +182,8 @@ export default {
             totalActiveCount: 0,
           };
           await loadCommerceData();
+          // Set up Firebase subscription for today's attentions
+          setupTodayAttentionsSubscription();
           // Reload dashboard stats after queues are loaded
           if (newCommerce && newCommerce.id && state.collaborator && state.collaborator.id) {
             await loadDashboardStats();
@@ -195,6 +208,8 @@ export default {
           try {
             loading.value = true;
             await initQueues();
+            // Set up Firebase subscription for today's attentions (queues might have changed)
+            setupTodayAttentionsSubscription();
             // Reload dashboard stats after queues are reloaded
             if (
               commerce.value &&
@@ -212,6 +227,20 @@ export default {
       },
       { deep: true }
     );
+
+    // Clean up Firebase subscription and watcher when component unmounts
+    onUnmounted(() => {
+      // Clean up watcher
+      if (state.todayAttentionsWatcher) {
+        state.todayAttentionsWatcher();
+        state.todayAttentionsWatcher = null;
+      }
+      // Clean up Firebase subscription
+      if (state.todayAttentionsSubscription && state.todayAttentionsSubscription._unsubscribe) {
+        state.todayAttentionsSubscription._unsubscribe();
+        state.todayAttentionsSubscription = null;
+      }
+    });
 
     const initQueues = async () => {
       if (
@@ -259,6 +288,103 @@ export default {
       router.push({ path: '/interno/colaborador/menu' });
     };
 
+    // Set up Firebase real-time subscription for today's attentions
+    const setupTodayAttentionsSubscription = () => {
+      // Clean up existing watcher if any
+      if (state.todayAttentionsWatcher) {
+        state.todayAttentionsWatcher();
+        state.todayAttentionsWatcher = null;
+      }
+
+      // Clean up existing subscription if any
+      if (state.todayAttentionsSubscription && state.todayAttentionsSubscription._unsubscribe) {
+        state.todayAttentionsSubscription._unsubscribe();
+        state.todayAttentionsSubscription = null;
+      }
+
+      if (!commerce.value || !commerce.value.id) {
+        state.stats.todayCount = 0;
+        return;
+      }
+
+      const collaboratorQueueIds = getCollaboratorQueueIds();
+      if (collaboratorQueueIds.length === 0) {
+        state.stats.todayCount = 0;
+        return;
+      }
+
+      // Subscribe to all today's attentions for this commerce
+      const todayAttentionsRef = updatedTodayAttentionsByCommerce(commerce.value.id);
+      state.todayAttentionsSubscription = todayAttentionsRef;
+
+      // Watch for changes and update the count
+      state.todayAttentionsWatcher = watch(
+        todayAttentionsRef,
+        attentions => {
+          if (!attentions || !Array.isArray(attentions)) {
+            state.stats.todayCount = 0;
+            return;
+          }
+
+          // Filter by collaborator queue IDs and today's date
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const todayStr = new DateModel().toString(); // Format: YYYY-MM-DD
+
+          const filteredAttentions = attentions.filter(attention => {
+            // Filter by queue ID
+            if (!collaboratorQueueIds.includes(attention.queueId)) {
+              return false;
+            }
+
+            // Filter by today's date
+            const dateValue = attention.date || attention.createdAt || attention.createdDate;
+            if (!dateValue) return false;
+
+            // Handle different date formats
+            try {
+              let attentionDate;
+              if (dateValue instanceof Date) {
+                attentionDate = dateValue;
+              } else if (typeof dateValue === 'string') {
+                // If it's already in YYYY-MM-DD format, compare directly
+                if (dateValue.length === 10 && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                  return dateValue === todayStr;
+                }
+                attentionDate = new Date(dateValue);
+              } else if (dateValue && dateValue.toDate && typeof dateValue.toDate === 'function') {
+                // Firebase Timestamp
+                attentionDate = dateValue.toDate();
+              } else if (dateValue && dateValue.seconds) {
+                // Firebase Timestamp as object with seconds
+                attentionDate = new Date(dateValue.seconds * 1000);
+              } else {
+                return false;
+              }
+
+              // Check if date is valid
+              if (isNaN(attentionDate.getTime())) {
+                return false;
+              }
+
+              // Compare dates (only date, not time)
+              const attentionDateOnly = new Date(attentionDate);
+              attentionDateOnly.setHours(0, 0, 0, 0);
+
+              return attentionDateOnly.getTime() === today.getTime();
+            } catch (error) {
+              // If date parsing fails, include it if createdAt is today (from Firebase query)
+              // This handles edge cases where date parsing might fail
+              return true;
+            }
+          });
+
+          state.stats.todayCount = filteredAttentions.length;
+        },
+        { immediate: true }
+      );
+    };
+
     // Load dashboard stats filtered by collaborator queues
     const loadDashboardStats = async () => {
       if (!commerce.value || !commerce.value.id) return;
@@ -285,26 +411,8 @@ export default {
         const endOfWeek = new DateModel().addDays(7).toString();
         const endOfMonth = new DateModel().endOfMonth().toString();
 
-        // Fetch stats for all collaborator queues - combine all queue IDs in a single query
-        // Since getBookingsDetails accepts only one queueId, we need to query each queue separately
-        // But we can parallelize the queries
-
-        // Get today's bookings for all collaborator queues
-        const todayBookingsPromises = collaboratorQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value.id,
-            today,
-            today,
-            [commerce.value.id],
-            1,
-            100,
-            undefined,
-            queueId
-          )
-        );
-        const todayBookingsArrays = await Promise.all(todayBookingsPromises);
-        const allTodayBookings = todayBookingsArrays.flat().filter(Boolean);
-        state.stats.todayCount = allTodayBookings.length;
+        // Note: todayCount is now updated by Firebase subscription, so we don't need to fetch it here
+        // But we still fetch other stats
 
         // Get pending bookings for all collaborator queues
         const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
@@ -397,7 +505,12 @@ export default {
     const viewTodayBookings = async () => {
       if (!commerce.value || !commerce.value.id) return;
       const collaboratorQueueIds = getCollaboratorQueueIds();
-      if (collaboratorQueueIds.length === 0) return;
+      if (collaboratorQueueIds.length === 0) {
+        state.recentAttentions = [];
+        state.recentBookings = [];
+        state.showAttentions = true;
+        return;
+      }
 
       try {
         loading.value = true;
@@ -413,16 +526,20 @@ export default {
               today,
               [commerce.value.id],
               1,
-              100, // Increase limit to get more results
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              queueId
+              1000, // Increased limit to get more results
+              undefined, // daysSinceType
+              undefined, // daysSinceContacted
+              undefined, // contactable
+              undefined, // contacted
+              undefined, // searchText
+              queueId,
+              undefined, // survey
+              true // asc
             );
-            return attentions || [];
+            // API returns an array directly
+            return Array.isArray(attentions) ? attentions : [];
           } catch (error) {
+            console.error('Error fetching attentions for queue:', queueId, error);
             return [];
           }
         });
@@ -430,72 +547,178 @@ export default {
         const attentionsArrays = await Promise.all(todayAttentionsPromises);
         const allAttentions = attentionsArrays.flat().filter(Boolean);
 
-        // Filter by today's date - handle different date formats
-        const todayDate = new Date();
-        todayDate.setHours(0, 0, 0, 0);
+        console.log("📊 Today's attentions from API:", {
+          collaboratorQueueIds,
+          today,
+          totalFromAPI: allAttentions.length,
+          attentionsByQueue: attentionsArrays.map((arr, idx) => ({
+            queueId: collaboratorQueueIds[idx],
+            count: arr.length,
+          })),
+        });
 
-        const filterAttentionsByToday = (attentions) => {
-          if (!attentions || !Array.isArray(attentions)) return [];
+        // The API already filters by date range (today to today), so we trust it
+        // Only do minimal validation - ensure we have attentions with valid IDs
+        const validAttentions = allAttentions.filter(attention => attention && attention.id);
 
-          return attentions.filter(attention => {
-            if (!attention.createdDate && !attention.createdAt) return false;
+        console.log('✅ Valid attentions after filtering:', validAttentions.length);
 
-            // Handle different date formats
-            let attentionDate;
-            try {
-              const dateValue = attention.createdDate || attention.createdAt;
-
-              if (dateValue instanceof Date) {
-                attentionDate = new Date(dateValue);
-              } else if (typeof dateValue === 'string') {
-                attentionDate = new Date(dateValue);
-              } else if (dateValue && dateValue.toDate && typeof dateValue.toDate === 'function') {
-                // Firebase Timestamp
-                attentionDate = dateValue.toDate();
-              } else if (dateValue && dateValue.seconds) {
-                // Firebase Timestamp as object with seconds
-                attentionDate = new Date(dateValue.seconds * 1000);
-              } else {
-                return false;
-              }
-
-              // Check if date is valid
-              if (isNaN(attentionDate.getTime())) {
-                return false;
-              }
-
-              // Compare dates (only date, not time)
-              const attentionDateOnly = new Date(attentionDate);
-              attentionDateOnly.setHours(0, 0, 0, 0);
-
-              return attentionDateOnly.getTime() === todayDate.getTime();
-            } catch (error) {
-              return false;
-            }
-          });
-        };
-
-        const todayAttentions = filterAttentionsByToday(allAttentions);
-
-        // Sort by number (ascending) to show in order
-        todayAttentions.sort((a, b) => {
+        // Sort by number (ascending) to show in order, then by creation date
+        validAttentions.sort((a, b) => {
           const numA = a.number || 0;
           const numB = b.number || 0;
           if (numA !== numB) {
             return numA - numB;
           }
           // If same number, sort by date
-          const dateA = new Date(a.createdDate || a.createdAt || 0);
-          const dateB = new Date(b.createdDate || b.createdAt || 0);
+          const dateA = a.date
+            ? new Date(a.date)
+            : a.createdDate
+            ? new Date(a.createdDate)
+            : new Date(0);
+          const dateB = b.date
+            ? new Date(b.date)
+            : b.createdDate
+            ? new Date(b.createdDate)
+            : new Date(0);
           return dateA - dateB;
         });
 
-        state.recentAttentions = todayAttentions.slice(0, 50);
+        // If API returned attentions, use them; otherwise try to use Firebase subscription data as fallback
+        if (validAttentions.length > 0) {
+          state.recentAttentions = validAttentions.slice(0, 100); // Show up to 100 attentions
+        } else {
+          // Fallback to Firebase subscription data if API returns empty
+          console.log('⚠️ API returned empty, trying Firebase subscription data as fallback');
+          console.log('🔍 Checking Firebase subscription:', {
+            hasSubscription: !!state.todayAttentionsSubscription,
+            subscriptionType: typeof state.todayAttentionsSubscription,
+            hasValue: state.todayAttentionsSubscription
+              ? 'value' in state.todayAttentionsSubscription
+              : false,
+            isArray:
+              state.todayAttentionsSubscription &&
+              Array.isArray(state.todayAttentionsSubscription.value),
+            subscriptionValue: state.todayAttentionsSubscription
+              ? state.todayAttentionsSubscription.value
+              : null,
+          });
+
+          if (
+            state.todayAttentionsSubscription &&
+            Array.isArray(state.todayAttentionsSubscription.value)
+          ) {
+            const firebaseAttentions = state.todayAttentionsSubscription.value;
+            const collaboratorQueueIds = getCollaboratorQueueIds();
+            const today = new DateModel().toString();
+
+            console.log('📊 Firebase subscription data:', {
+              totalInFirebase: firebaseAttentions.length,
+              collaboratorQueueIds,
+              today,
+              firstAttention: firebaseAttentions[0]
+                ? {
+                    id: firebaseAttentions[0].id,
+                    queueId: firebaseAttentions[0].queueId,
+                    date: firebaseAttentions[0].date,
+                    createdAt: firebaseAttentions[0].createdAt,
+                    createdDate: firebaseAttentions[0].createdDate,
+                  }
+                : null,
+            });
+
+            // Filter by collaborator queue IDs
+            // Note: Firebase already filters by createdAt >= today, so we mainly need to filter by queueId
+            const filteredFirebaseAttentions = firebaseAttentions
+              .filter(attention => {
+                // Filter by queue ID
+                if (!attention.queueId || !collaboratorQueueIds.includes(attention.queueId)) {
+                  return false;
+                }
+
+                // Firebase query already filters by createdAt >= today, but let's verify date as well
+                const dateValue = attention.date || attention.createdAt || attention.createdDate;
+                if (!dateValue) return false;
+
+                // Handle different date formats - Firebase subscription already has createdAt as string
+                try {
+                  let dateStr;
+                  if (typeof dateValue === 'string') {
+                    // If it's already in YYYY-MM-DD format, compare directly
+                    if (dateValue.length >= 10) {
+                      dateStr = dateValue.substring(0, 10);
+                      if (dateStr === today) return true;
+                    }
+                    // Try parsing as date string
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                      dateStr = date.toISOString().substring(0, 10);
+                      return dateStr === today;
+                    }
+                  } else if (dateValue instanceof Date) {
+                    dateStr = dateValue.toISOString().substring(0, 10);
+                    return dateStr === today;
+                  }
+
+                  // If date parsing fails, but we have queueId match and createdAt from today (Firebase filtered),
+                  // include it (Firebase query already ensures createdAt >= today)
+                  return true;
+                } catch (error) {
+                  // If date parsing fails, but queueId matches, include it (Firebase already filtered by date)
+                  return true;
+                }
+              })
+              .map(attention => ({
+                ...attention,
+                id: attention.id || attention._id || attention.docId,
+              }))
+              .filter(attention => attention.id); // Only include attentions with IDs
+
+            // Sort by number
+            filteredFirebaseAttentions.sort((a, b) => {
+              const numA = a.number || 0;
+              const numB = b.number || 0;
+              if (numA !== numB) {
+                return numA - numB;
+              }
+              // If same number, sort by date
+              const dateA = a.date
+                ? new Date(a.date)
+                : a.createdDate
+                ? new Date(a.createdDate)
+                : new Date(0);
+              const dateB = b.date
+                ? new Date(b.date)
+                : b.createdDate
+                ? new Date(b.createdDate)
+                : new Date(0);
+              return dateA - dateB;
+            });
+
+            console.log('✅ Filtered Firebase attentions:', filteredFirebaseAttentions.length);
+            if (filteredFirebaseAttentions.length > 0) {
+              state.recentAttentions = filteredFirebaseAttentions.slice(0, 100);
+            } else {
+              console.log(
+                '⚠️ Firebase subscription has data but no attentions match queueId filter'
+              );
+              state.recentAttentions = [];
+            }
+          } else {
+            console.log('❌ No attentions found from API or Firebase subscription available');
+            state.recentAttentions = [];
+          }
+        }
+
         state.recentBookings = [];
         state.showAttentions = true;
         loading.value = false;
       } catch (error) {
+        console.error('Error in viewTodayBookings:', error);
         alertError.value = error.response?.status || error.status || 500;
+        state.recentAttentions = [];
+        state.recentBookings = [];
+        state.showAttentions = true;
         loading.value = false;
       }
     };
@@ -670,7 +893,10 @@ export default {
             </div>
           </div>
           <!-- Recent Attentions (when clicking Hoje) -->
-          <div class="recent-bookings-container mt-4" v-if="state.showAttentions && state.recentAttentions.length > 0">
+          <div
+            class="recent-bookings-container mt-4"
+            v-if="state.showAttentions && state.recentAttentions.length > 0"
+          >
             <div class="section-header">
               <h5 class="section-title">
                 <i class="bi bi-clock-history"></i>
@@ -688,7 +914,16 @@ export default {
             </div>
           </div>
           <!-- No Attentions Message -->
-          <div v-else-if="state.showAttentions && state.recentAttentions.length === 0 && !loading && commerce && commerce.id" class="mt-4">
+          <div
+            v-else-if="
+              state.showAttentions &&
+              state.recentAttentions.length === 0 &&
+              !loading &&
+              commerce &&
+              commerce.id
+            "
+            class="mt-4"
+          >
             <Message
               :icon="'bi-clock'"
               :title="$t('collaboratorBookingsView.noAttentions.title')"
@@ -696,7 +931,10 @@ export default {
             />
           </div>
           <!-- Recent Bookings -->
-          <div class="recent-bookings-container mt-4" v-else-if="!state.showAttentions && state.recentBookings.length > 0">
+          <div
+            class="recent-bookings-container mt-4"
+            v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+          >
             <div class="section-header">
               <h5 class="section-title">
                 <i class="bi bi-clock-history"></i>
@@ -713,7 +951,12 @@ export default {
               </div>
             </div>
           </div>
-          <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions" class="mt-4">
+          <div
+            v-else-if="
+              !loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions
+            "
+            class="mt-4"
+          >
             <Message
               :icon="'bi-calendar-x'"
               :title="$t('collaboratorBookingsView.noBookings.title')"
@@ -849,7 +1092,10 @@ export default {
           </div>
         </div>
         <!-- Recent Attentions (when clicking Hoje) -->
-        <div class="recent-bookings-container mt-4" v-if="state.showAttentions && state.recentAttentions.length > 0">
+        <div
+          class="recent-bookings-container mt-4"
+          v-if="state.showAttentions && state.recentAttentions.length > 0"
+        >
           <div class="section-header">
             <h5 class="section-title">
               <i class="bi bi-clock-history"></i>
@@ -867,7 +1113,16 @@ export default {
           </div>
         </div>
         <!-- No Attentions Message -->
-        <div v-else-if="state.showAttentions && state.recentAttentions.length === 0 && !loading && commerce && commerce.id" class="mt-4">
+        <div
+          v-else-if="
+            state.showAttentions &&
+            state.recentAttentions.length === 0 &&
+            !loading &&
+            commerce &&
+            commerce.id
+          "
+          class="mt-4"
+        >
           <Message
             :icon="'bi-clock'"
             :title="$t('collaboratorBookingsView.noAttentions.title')"
@@ -875,7 +1130,10 @@ export default {
           />
         </div>
         <!-- Recent Bookings -->
-        <div class="recent-bookings-container mt-4" v-else-if="!state.showAttentions && state.recentBookings.length > 0">
+        <div
+          class="recent-bookings-container mt-4"
+          v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+        >
           <div class="section-header">
             <h5 class="section-title">
               <i class="bi bi-clock-history"></i>
@@ -892,7 +1150,12 @@ export default {
             </div>
           </div>
         </div>
-        <div v-else-if="!loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions" class="mt-4">
+        <div
+          v-else-if="
+            !loading && commerce && commerce.id && !state.loadingStats && !state.showAttentions
+          "
+          class="mt-4"
+        >
           <Message
             :icon="'bi-calendar-x'"
             :title="$t('collaboratorBookingsView.noBookings.title')"

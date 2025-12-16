@@ -18,11 +18,30 @@ import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 import Message from '../../common/Message.vue';
+import TelemedicineSessionStarter from '../../telemedicine/domain/TelemedicineSessionStarter.vue';
+import TelemedicineVideoCall from '../../telemedicine/domain/TelemedicineVideoCall.vue';
+import TelemedicineChat from '../../telemedicine/domain/TelemedicineChat.vue';
+import TelemedicineFloatingWindow from '../../telemedicine/domain/TelemedicineFloatingWindow.vue';
+import {
+  getTelemedicineSession,
+  getTelemedicineSessionById,
+} from '../../../application/services/telemedicine';
 import { globalStore } from '../../../stores';
 
 export default {
   name: 'AttentionDetailsCard',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message },
+  components: {
+    Popper,
+    Spinner,
+    Warning,
+    AreYouSure,
+    PaymentForm,
+    Message,
+    TelemedicineSessionStarter,
+    TelemedicineVideoCall,
+    TelemedicineChat,
+    TelemedicineFloatingWindow,
+  },
   props: {
     show: { type: Boolean, default: true },
     attention: { type: Object, default: undefined },
@@ -54,11 +73,37 @@ export default {
       queueToTransfer: {},
       queue: {},
       store,
+      ATTENTION_STATUS, // Expose ATTENTION_STATUS to template
+      showTelemedicineVideo: false,
+      showTelemedicineChat: false,
+      telemedicineSessionType: null,
+      clientConnected: false,
+      telemedicineSession: null,
+      connectionStatusInterval: null,
     };
   },
   beforeMount() {
     this.paymentTypes = getPaymentTypes();
     this.paymentMethods = getPaymentMethods();
+    if (this.attention?.telemedicineSessionId) {
+      this.loadTelemedicineSessionDetails();
+    }
+  },
+  watch: {
+    'attention.telemedicineSessionId': {
+      handler(newVal) {
+        if (newVal) {
+          this.loadTelemedicineSessionDetails();
+        } else {
+          this.telemedicineSession = null;
+        }
+      },
+      immediate: false,
+    },
+  },
+  beforeUnmount() {
+    // Clean up polling interval
+    this.stopConnectionStatusPolling();
   },
   methods: {
     showDetails() {
@@ -334,6 +379,144 @@ export default {
       } catch (error) {
         this.alertError = error.response.status || 500;
         this.loading = false;
+      }
+    },
+    async handleTelemedicineSessionStarted(data) {
+      // Abrir componente de video o chat según el tipo
+      this.telemedicineSessionType = data.type;
+
+      // Load session details to get recording status and connection info
+      try {
+        if (this.attention.telemedicineSessionId) {
+          this.telemedicineSession = await getTelemedicineSession(
+            this.attention.telemedicineSessionId
+          );
+          // Start polling for connection status
+          this.startConnectionStatusPolling();
+        }
+      } catch (err) {
+        console.error('Error loading telemedicine session:', err);
+      }
+
+      if (data.type === 'video' || data.type === 'both') {
+        this.showTelemedicineVideo = true;
+      }
+      if (data.type === 'chat' || data.type === 'both') {
+        this.showTelemedicineChat = true;
+      }
+      this.$emit('updatedAttentions');
+    },
+    startConnectionStatusPolling() {
+      // Poll every 3 seconds for connection status
+      if (this.connectionStatusInterval) {
+        clearInterval(this.connectionStatusInterval);
+      }
+      this.connectionStatusInterval = setInterval(async () => {
+        if (this.attention?.telemedicineSessionId) {
+          try {
+            const session = await getTelemedicineSession(this.attention.telemedicineSessionId);
+            this.telemedicineSession = session;
+            // Check if client has validated access key (indicates they're likely connected)
+            this.clientConnected = session.accessKeyValidated || false;
+          } catch (err) {
+            console.error('Error polling connection status:', err);
+          }
+        }
+      }, 3000);
+    },
+    stopConnectionStatusPolling() {
+      if (this.connectionStatusInterval) {
+        clearInterval(this.connectionStatusInterval);
+        this.connectionStatusInterval = null;
+      }
+    },
+    handleTelemedicineError(error) {
+      console.error('Telemedicine error:', error);
+      this.alertError = error.message || 'Error en telemedicina';
+    },
+    closeTelemedicineVideo() {
+      this.showTelemedicineVideo = false;
+      this.telemedicineSessionType = null;
+      this.stopConnectionStatusPolling();
+    },
+    closeTelemedicineChat() {
+      this.showTelemedicineChat = false;
+      this.telemedicineSessionType = null;
+      this.stopConnectionStatusPolling();
+    },
+    formatTelemedicineDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleString('es-ES', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      });
+    },
+    getTelemedicineStatusText(status) {
+      const statusMap = {
+        scheduled: this.$t('telemedicineSession.statusScheduled'),
+        active: this.$t('telemedicineSession.statusActive'),
+        completed: this.$t('telemedicineSession.statusCompleted'),
+        cancelled: this.$t('telemedicineSession.statusCancelled'),
+      };
+      return statusMap[status] || status;
+    },
+    getTelemedicineStatusClass(status) {
+      const classMap = {
+        scheduled: 'text-info',
+        active: 'text-success',
+        completed: 'text-secondary',
+        cancelled: 'text-danger',
+      };
+      return classMap[status] || '';
+    },
+    formatTelemedicineTime(date) {
+      if (!date) return 'N/A';
+      return new Date(date).toLocaleString('es-ES');
+    },
+    getAccessKeyActivationTime() {
+      if (!this.telemedicineSession?.scheduledAt) return null;
+      const scheduledTime = new Date(this.telemedicineSession.scheduledAt);
+      const activationTime = new Date(scheduledTime.getTime() - 10 * 60 * 1000); // 10 minutes before
+      return activationTime;
+    },
+    isAccessKeyActivated() {
+      const activationTime = this.getAccessKeyActivationTime();
+      if (!activationTime) return false;
+      return new Date() >= activationTime;
+    },
+    getTimeUntilActivation() {
+      const activationTime = this.getAccessKeyActivationTime();
+      if (!activationTime) return null;
+      const now = new Date();
+      const diff = activationTime.getTime() - now.getTime();
+      if (diff <= 0) return null;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      if (days > 0) return `${days} día${days > 1 ? 's' : ''}`;
+      if (hours > 0) return `${hours} hora${hours > 1 ? 's' : ''}`;
+      return `${minutes} minuto${minutes > 1 ? 's' : ''}`;
+    },
+    getClientAccessLink() {
+      if (!this.attention || !this.attention.telemedicineSessionId) return '';
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/publico/telemedicina/${this.attention.telemedicineSessionId}`;
+    },
+    copyClientAccessLink(attentionId) {
+      const input = document.getElementById(`telemedicine-link-${attentionId}`);
+      if (input) {
+        input.select();
+        input.setSelectionRange(0, 99999); // For mobile devices
+        navigator.clipboard
+          .writeText(input.value)
+          .then(() => {
+            // Show success message (you can use a toast library here)
+            alert('Enlace copiado al portapapeles');
+          })
+          .catch(err => {
+            console.error('Error copying link:', err);
+          });
       }
     },
   },
@@ -716,6 +899,201 @@ export default {
             <hr />
           </div>
         </div>
+        <!-- Botón de Telemedicina (si aplica) -->
+        <div v-if="attention.telemedicineSessionId && !loading" class="row mt-2 mb-2">
+          <div class="col-12">
+            <!-- Telemedicine Info Display -->
+            <div
+              v-if="attention.telemedicineConfig"
+              class="telemedicine-info-card p-3 bg-light rounded mb-3"
+            >
+              <h6 class="fw-bold mb-2">
+                <i class="bi bi-camera-video me-2"></i>
+                Información de Telemedicina
+              </h6>
+              <div class="row g-2 small">
+                <div class="col-12">
+                  <strong>Tipo:</strong>
+                  <span class="ms-2">
+                    <span
+                      v-if="
+                        attention.telemedicineConfig.type === 'VIDEO' ||
+                        attention.telemedicineConfig.type === 'video'
+                      "
+                      >Video</span
+                    >
+                    <span
+                      v-else-if="
+                        attention.telemedicineConfig.type === 'CHAT' ||
+                        attention.telemedicineConfig.type === 'chat'
+                      "
+                      >Chat</span
+                    >
+                    <span
+                      v-else-if="
+                        attention.telemedicineConfig.type === 'BOTH' ||
+                        attention.telemedicineConfig.type === 'both'
+                      "
+                      >Video y Chat</span
+                    >
+                  </span>
+                </div>
+                <div class="col-12" v-if="attention.telemedicineConfig.scheduledAt">
+                  <strong>Fecha y Hora:</strong>
+                  <span class="ms-2">
+                    {{ formatTelemedicineDate(attention.telemedicineConfig.scheduledAt) }}
+                  </span>
+                </div>
+                <div class="col-12" v-if="attention.telemedicineConfig.recordingEnabled">
+                  <span class="badge bg-info">
+                    <i class="bi bi-record-circle me-1"></i>
+                    Grabación Habilitada
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemedicine Session Status & Details -->
+            <div
+              v-if="telemedicineSession"
+              class="telemedicine-session-status p-3 bg-light rounded mb-3"
+            >
+              <h6 class="fw-bold mb-3">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ $t('telemedicineSession.sessionStatus') }}
+              </h6>
+
+              <!-- Session Status -->
+              <div class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.status') }}</span>
+                <span :class="getTelemedicineStatusClass(telemedicineSession.status)">
+                  <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>
+                  {{ getTelemedicineStatusText(telemedicineSession.status) }}
+                </span>
+              </div>
+
+              <!-- Scheduled Time -->
+              <div v-if="telemedicineSession.scheduledAt" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.scheduledFor') }}</span>
+                <span>{{ formatTelemedicineTime(telemedicineSession.scheduledAt) }}</span>
+              </div>
+
+              <!-- Access Key Status (only show that it was sent, not the actual key) -->
+              <div v-if="telemedicineSession.status === 'scheduled'" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.accessKey') }}</span>
+                <span v-if="isAccessKeyActivated()" class="text-success">
+                  <i class="bi bi-check-circle-fill me-1"></i>
+                  <span v-if="telemedicineSession.accessKeySent">{{
+                    $t('telemedicineSession.accessKeySent')
+                  }}</span>
+                  <span v-else>{{ $t('telemedicineSession.accessKeyAvailable') }}</span>
+                  <small class="d-block text-muted mt-1">
+                    {{ $t('telemedicineSession.accessKeySentViaWhatsAppEmail') }}
+                  </small>
+                </span>
+                <span v-else class="text-muted">
+                  <i class="bi bi-clock me-1"></i>
+                  {{ $t('telemedicineSession.accessKeyActivation') }} {{ getTimeUntilActivation() }}
+                  <small class="d-block text-muted mt-1">
+                    {{ $t('telemedicineSession.accessKeyActivationNote') }}
+                  </small>
+                </span>
+              </div>
+
+              <!-- Access Key Validated (only show status, not the key) -->
+              <div v-if="telemedicineSession.accessKeyValidated" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.accessKeyValidated') }}</span>
+                <span class="text-success">
+                  <i class="bi bi-check-circle-fill me-1"></i>
+                  {{ formatTelemedicineTime(telemedicineSession.accessKeyValidatedAt) }}
+                </span>
+                <span class="ms-2 text-success">
+                  <i class="bi bi-person-check-fill"></i>
+                  {{ $t('telemedicineSession.clientConnected') }}
+                </span>
+              </div>
+
+              <!-- Session Started -->
+              <div v-if="telemedicineSession.startedAt" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.started') }}</span>
+                <span>{{ formatTelemedicineTime(telemedicineSession.startedAt) }}</span>
+              </div>
+
+              <!-- Session Ended -->
+              <div v-if="telemedicineSession.endedAt" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.ended') }}</span>
+                <span>{{ formatTelemedicineTime(telemedicineSession.endedAt) }}</span>
+                <span v-if="telemedicineSession.duration" class="ms-2 text-muted">
+                  ({{ $t('telemedicineSession.duration') }}
+                  {{ Math.floor(telemedicineSession.duration / 60) }} min)
+                </span>
+              </div>
+
+              <!-- Recording -->
+              <div v-if="telemedicineSession.recordingUrl" class="mb-2">
+                <span class="fw-bold me-2">{{ $t('telemedicineSession.recording') }}</span>
+                <a :href="telemedicineSession.recordingUrl" target="_blank" class="text-primary">
+                  <i class="bi bi-play-circle me-1"></i>
+                  {{ $t('telemedicineSession.viewRecording') }}
+                </a>
+              </div>
+
+              <!-- Active Session Indicator -->
+              <div
+                v-if="telemedicineSession.status === 'active'"
+                class="alert alert-success mb-0 mt-2"
+              >
+                <i class="bi bi-broadcast me-2"></i>
+                <strong>{{ $t('telemedicineSession.activeSession') }}</strong> -
+                {{ $t('telemedicineSession.activeSessionNote') }}
+              </div>
+            </div>
+
+            <!-- Client Access Link -->
+            <div class="telemedicine-client-access p-3 bg-primary bg-opacity-10 rounded mb-3">
+              <h6 class="fw-bold mb-2">
+                <i class="bi bi-link-45deg me-2"></i>
+                {{ $t('telemedicineSession.clientAccessLink') }}
+              </h6>
+              <div class="input-group">
+                <input
+                  :id="`telemedicine-link-${attention.id}`"
+                  type="text"
+                  class="form-control form-control-sm"
+                  :value="getClientAccessLink()"
+                  readonly
+                />
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  type="button"
+                  @click="copyClientAccessLink(attention.id)"
+                  :title="$t('telemedicineSession.copyLink')"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div
+                v-if="telemedicineSession && !isAccessKeyActivated()"
+                class="mt-2 small text-muted"
+              >
+                <i class="bi bi-info-circle me-1"></i>
+                {{ $t('telemedicineSession.linkActivationNote') }}
+              </div>
+              <div v-else class="mt-2 small text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                {{ $t('telemedicineSession.linkShareNote') }}
+              </div>
+            </div>
+
+            <TelemedicineSessionStarter
+              :session-id="attention.telemedicineSessionId"
+              :attention-id="attention.id"
+              :user-type="'doctor'"
+              @session-started="handleTelemedicineSessionStarted"
+              @error="handleTelemedicineError"
+            />
+          </div>
+        </div>
         <div class="row mt-2" v-if="!loading">
           <div class="col-6">
             <button
@@ -762,6 +1140,53 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Floating Telemedicine Windows (for doctor to work while video is active) -->
+    <TelemedicineFloatingWindow
+      v-if="showTelemedicineVideo && attention.telemedicineSessionId"
+      :show="showTelemedicineVideo"
+      title="Consulta Virtual - Video"
+      icon-class="bi-camera-video"
+      :is-connected="true"
+      :is-connecting="false"
+      :client-connected="clientConnected"
+      @close="closeTelemedicineVideo"
+    >
+      <TelemedicineVideoCall
+        :session-id="attention.telemedicineSessionId"
+        :current-user-id="store.getCurrentUser?.id || ''"
+        :user-type="'doctor'"
+        :show-close="false"
+        :recording-enabled="
+          telemedicineSession?.recordingEnabled ||
+          attention.telemedicineConfig?.recordingEnabled ||
+          false
+        "
+        :client-connected="clientConnected"
+        @close="closeTelemedicineVideo"
+        @call-ended="closeTelemedicineVideo"
+      />
+    </TelemedicineFloatingWindow>
+
+    <TelemedicineFloatingWindow
+      v-if="showTelemedicineChat && attention.telemedicineSessionId"
+      :show="showTelemedicineChat"
+      title="Consulta Virtual - Chat"
+      icon-class="bi-chat-dots"
+      :is-connected="true"
+      :is-connecting="false"
+      :client-connected="clientConnected"
+      :initial-position="{ x: 520, y: 20 }"
+      @close="closeTelemedicineChat"
+    >
+      <TelemedicineChat
+        :session-id="attention.telemedicineSessionId"
+        :current-user-id="store.getCurrentUser?.id || ''"
+        :user-type="'doctor'"
+        :show-close="false"
+        @close="closeTelemedicineChat"
+      />
+    </TelemedicineFloatingWindow>
   </div>
 </template>
 

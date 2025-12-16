@@ -97,7 +97,12 @@ export default {
 <template>
   <div v-if="show && booking">
     <!-- Ultra Compact Booking Row - Clickable -->
-    <div class="client-row-card" :class="getCardTypeClass()" :style="disableClick ? 'cursor: default;' : ''" @click="disableClick ? null : showDetails()">
+    <div
+      class="client-row-card"
+      :class="getCardTypeClass()"
+      :style="disableClick ? 'cursor: default;' : ''"
+      @click="disableClick ? null : showDetails()"
+    >
       <div class="client-row-content">
         <!-- Status Icon -->
         <Popper :class="'dark'" arrow disable-click-away hover>

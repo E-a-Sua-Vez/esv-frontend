@@ -304,7 +304,6 @@ export default {
       }, 100);
     };
 
-
     const checkQueueStatus = async attentionsRef => {
       // Ensure we have queues loaded first (same as CollaboratorQueuesView)
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
@@ -358,7 +357,7 @@ export default {
       }
     };
 
-    const updateTodayAttentionsFromFirebase = async (firebaseAttentions) => {
+    const updateTodayAttentionsFromFirebase = async firebaseAttentions => {
       // Format Firebase attentions to match the same structure as getTodayAttentions
       // Ensure we have dedicated queues before filtering
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
@@ -375,47 +374,47 @@ export default {
       todayEnd.setHours(23, 59, 59, 999);
 
       const filteredAttentions = firebaseAttentions.filter(att => {
-          // Filter by queue
-          if (!att.queueId || !queueIds.includes(att.queueId)) {
+        // Filter by queue
+        if (!att.queueId || !queueIds.includes(att.queueId)) {
+          return false;
+        }
+
+        // Filter by status - only PENDING attentions
+        if (att.status !== 'PENDING') {
+          return false;
+        }
+
+        // Filter by today's date
+        if (!att.createdAt) {
+          return false;
+        }
+
+        try {
+          let attentionDate;
+          if (att.createdAt instanceof Date) {
+            attentionDate = new Date(att.createdAt);
+          } else if (typeof att.createdAt === 'string') {
+            attentionDate = new Date(att.createdAt);
+          } else if (att.createdAt.toDate && typeof att.createdAt.toDate === 'function') {
+            attentionDate = att.createdAt.toDate();
+          } else if (att.createdAt.seconds) {
+            attentionDate = new Date(att.createdAt.seconds * 1000);
+          } else {
             return false;
           }
 
-          // Filter by status - only PENDING attentions
-          if (att.status !== 'PENDING') {
+          if (isNaN(attentionDate.getTime())) {
             return false;
           }
 
-          // Filter by today's date
-          if (!att.createdAt) {
-            return false;
-          }
+          const attentionDateOnly = new Date(attentionDate);
+          attentionDateOnly.setHours(0, 0, 0, 0);
 
-          try {
-            let attentionDate;
-            if (att.createdAt instanceof Date) {
-              attentionDate = new Date(att.createdAt);
-            } else if (typeof att.createdAt === 'string') {
-              attentionDate = new Date(att.createdAt);
-            } else if (att.createdAt.toDate && typeof att.createdAt.toDate === 'function') {
-              attentionDate = att.createdAt.toDate();
-            } else if (att.createdAt.seconds) {
-              attentionDate = new Date(att.createdAt.seconds * 1000);
-            } else {
-              return false;
-            }
-
-            if (isNaN(attentionDate.getTime())) {
-              return false;
-            }
-
-            const attentionDateOnly = new Date(attentionDate);
-            attentionDateOnly.setHours(0, 0, 0, 0);
-
-            return attentionDateOnly.getTime() === today.getTime();
-          } catch (e) {
-            return false;
-          }
-        });
+          return attentionDateOnly.getTime() === today.getTime();
+        } catch (e) {
+          return false;
+        }
+      });
 
       // Map and fetch user data in parallel
       const formattedAttentions = await Promise.all(
@@ -492,15 +491,15 @@ export default {
             queueId: att.queueId,
             createdAt: createdAt || att.createdAt || att.createdDate || null,
           };
-        })
+        }),
       );
 
-          // Sort by number (ascending) to show next attention first
+      // Sort by number (ascending) to show next attention first
       formattedAttentions.sort((a, b) => {
-          const numA = a.number || 0;
-          const numB = b.number || 0;
-          return numA - numB;
-        });
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
 
       // Create a new array to ensure Vue reactivity
       state.todayAttentions.splice(0, state.todayAttentions.length, ...formattedAttentions);
@@ -575,13 +574,13 @@ export default {
           if (Object.keys(groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
             const collaboratorQueues = groupedQueues['COLLABORATOR'] || [];
             queues = collaboratorQueues.filter(
-              queue => queue.collaboratorId === state.collaborator.id
+              queue => queue.collaboratorId === state.collaborator.id,
             );
           }
         } else {
           // Filter queues where type is COLLABORATOR and collaboratorId matches
           queues = queues.filter(
-            queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
+            queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id,
           );
         }
 
@@ -620,12 +619,12 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined
+          undefined,
         );
 
         // Filter by queue IDs and status PENDING (only pending attentions should be shown)
         const todayAttentions = (attentions || []).filter(
-          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING'
+          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING',
         );
 
         // Format attentions
@@ -700,7 +699,7 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined
+          undefined,
         );
 
         // Get month bookings
@@ -715,18 +714,18 @@ export default {
           undefined,
           undefined,
           undefined,
-          undefined
+          undefined,
         );
 
         // Filter by queue IDs and status (not cancelled)
         const filteredWeekBookings = (weekBookings || []).filter(
           booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED',
         );
 
         const filteredMonthBookings = (monthBookings || []).filter(
           booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED',
         );
 
         // Format bookings
@@ -800,14 +799,16 @@ export default {
         // We'll filter by queueId, status, and date range in the callback
         const attentionsQuery = query(
           attentionCollection,
-          where('commerceId', '==', state.commerce.id)
+          where('commerceId', '==', state.commerce.id),
         );
 
         unsubscribeCalendarAttentions = onSnapshot(attentionsQuery, snapshot => {
           const attentions = snapshot.docs
             .map(doc => {
               const data = doc.data();
-              const createdAtDate = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
+              const createdAtDate = data.createdAt?.toDate
+                ? data.createdAt.toDate()
+                : data.createdAt;
               return {
                 id: doc.id,
                 ...data,
@@ -824,7 +825,8 @@ export default {
 
               // Check date range (today to next 30 days - no past dates)
               if (!att.createdAt) return false;
-              const attDate = att.createdAt instanceof Date ? att.createdAt : new Date(att.createdAt);
+              const attDate =
+                att.createdAt instanceof Date ? att.createdAt : new Date(att.createdAt);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const endDate = new Date();
@@ -835,9 +837,9 @@ export default {
             });
 
           // Group by date (use local date to avoid timezone issues)
-        const attentionsByDate = {};
+          const attentionsByDate = {};
           attentions.forEach(att => {
-          let date = null;
+            let date = null;
             const dateField = att.createdAt || att.createdDate || att.date;
             if (dateField) {
               try {
@@ -859,18 +861,21 @@ export default {
                 }
               } catch (e) {
                 // Error parsing attention date
+              }
             }
-          }
-          if (date) {
-            if (!attentionsByDate[date]) {
-              attentionsByDate[date] = [];
+            if (date) {
+              if (!attentionsByDate[date]) {
+                attentionsByDate[date] = [];
+              }
+              attentionsByDate[date].push(att);
             }
-            attentionsByDate[date].push(att);
-          }
-        });
+          });
 
           state.calendarDates = { ...state.calendarDates, attentionsByDate };
-          updateCalendarAttributes(state.calendarDates.attentionsByDate || {}, state.calendarDates.bookingsByDate || {});
+          updateCalendarAttributes(
+            state.calendarDates.attentionsByDate || {},
+            state.calendarDates.bookingsByDate || {}
+          );
         });
 
         // Set up Firebase real-time listeners for bookings
@@ -888,7 +893,7 @@ export default {
         const bookingsQuery = query(
           bookingCollection,
           where('commerceId', '==', state.commerce.id),
-          where('status', 'in', ['PENDING', 'CONFIRMED'])
+          where('status', 'in', ['PENDING', 'CONFIRMED']),
         );
 
         unsubscribeCalendarBookings = onSnapshot(bookingsQuery, snapshot => {
@@ -918,17 +923,20 @@ export default {
           // Group by date
           const bookingsByDate = {};
           bookings.forEach(booking => {
-          const date = booking.date ? booking.date.slice(0, 10) : null;
-          if (date) {
-            if (!bookingsByDate[date]) {
-              bookingsByDate[date] = [];
+            const date = booking.date ? booking.date.slice(0, 10) : null;
+            if (date) {
+              if (!bookingsByDate[date]) {
+                bookingsByDate[date] = [];
+              }
+              bookingsByDate[date].push(booking);
             }
-            bookingsByDate[date].push(booking);
-          }
-        });
+          });
 
           state.calendarDates = { ...state.calendarDates, bookingsByDate };
-          updateCalendarAttributes(state.calendarDates.attentionsByDate || {}, state.calendarDates.bookingsByDate || {});
+          updateCalendarAttributes(
+            state.calendarDates.attentionsByDate || {},
+            state.calendarDates.bookingsByDate || {}
+          );
         });
 
         loadingCalendar.value = false;
@@ -1013,8 +1021,8 @@ export default {
           state.calendarDates.bookingsByDate = {};
         }
 
-        const attentions = (state.calendarDates.attentionsByDate[dateStr] || []);
-        const bookings = (state.calendarDates.bookingsByDate[dateStr] || []);
+        const attentions = state.calendarDates.attentionsByDate[dateStr] || [];
+        const bookings = state.calendarDates.bookingsByDate[dateStr] || [];
 
         // Check if dateStr exists in the keys
         const attentionDates = Object.keys(state.calendarDates.attentionsByDate || {});
@@ -1022,15 +1030,28 @@ export default {
         const foundInAttentions = attentionDates.includes(dateStr);
         const foundInBookings = bookingDates.includes(dateStr);
 
-        if (!foundInAttentions && !foundInBookings && (attentionDates.length > 0 || bookingDates.length > 0)) {
+        if (
+          !foundInAttentions &&
+          !foundInBookings &&
+          (attentionDates.length > 0 || bookingDates.length > 0)
+        ) {
           // Try to find the date with a different format (timezone issue)
           const dateObj = new Date(dateStr + 'T00:00:00');
-          const altDateStr1 = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+          const altDateStr1 = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(
+            2,
+            '0'
+          )}-${String(dateObj.getDate()).padStart(2, '0')}`;
           const altDateStr2 = dateObj.toISOString().slice(0, 10);
 
           // Try alternative formats
-          const altAttentions = state.calendarDates.attentionsByDate[altDateStr1] || state.calendarDates.attentionsByDate[altDateStr2] || [];
-          const altBookings = state.calendarDates.bookingsByDate[altDateStr1] || state.calendarDates.bookingsByDate[altDateStr2] || [];
+          const altAttentions =
+            state.calendarDates.attentionsByDate[altDateStr1] ||
+            state.calendarDates.attentionsByDate[altDateStr2] ||
+            [];
+          const altBookings =
+            state.calendarDates.bookingsByDate[altDateStr1] ||
+            state.calendarDates.bookingsByDate[altDateStr2] ||
+            [];
 
           if (altAttentions.length > 0 || altBookings.length > 0) {
             attentions.push(...altAttentions);
@@ -1056,12 +1077,16 @@ export default {
                 att.userIdNumber ||
                 'N/A',
               clientId: att.userIdNumber || att.userId || 'N/A',
-              hour: (att.createdDate || att.createdAt || att.date)
-                ? new Date(att.createdDate || att.createdAt || att.date).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                : 'N/A',
+              hour:
+                att.createdDate || att.createdAt || att.date
+                  ? new Date(att.createdDate || att.createdAt || att.date).toLocaleTimeString(
+                      'es-ES',
+                      {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }
+                    )
+                  : 'N/A',
               service: serviceName,
               number: att.number,
               status: att.status,
@@ -1130,11 +1155,11 @@ export default {
         const dateObj = new Date(date);
         if (!isNaN(dateObj.getTime())) {
           return dateObj.toLocaleDateString('es-ES');
-      }
+        }
         return date;
       }
       if (date instanceof Date) {
-      return date.toLocaleDateString('es-ES');
+        return date.toLocaleDateString('es-ES');
       }
       return String(date);
     };
@@ -1148,7 +1173,7 @@ export default {
     };
 
     // Calculate elapsed time and status for attention
-    const getAttentionElapsedTime = (attention) => {
+    const getAttentionElapsedTime = attention => {
       if (!attention) return null;
       const createdDate = attention.createdDate || attention.createdAt;
       if (!createdDate) return null;
@@ -1203,7 +1228,7 @@ export default {
       };
     };
 
-    const getAttentionStatusMessage = (timeStatus) => {
+    const getAttentionStatusMessage = timeStatus => {
       const messages = {
         excellent: 'Excelente: Menos de 10 minutos de espera',
         good: 'Bom: Menos de 1 hora de espera',
@@ -1218,24 +1243,21 @@ export default {
       bookings.filter(b => b.status === 'PENDING' && !b.attentionId).length;
 
     // Watch attentions wrapper itself - fires when it's initialized
-    watch(
-      attentionsWrapper,
-      async (newWrapper, oldWrapper) => {
-        // When wrapper is first initialized, process it immediately
-        if (newWrapper && newWrapper !== oldWrapper) {
-          // Handle both ref and direct array cases
-          let attentionsArray = null;
-          if (Array.isArray(newWrapper)) {
-            attentionsArray = newWrapper;
-          } else if (newWrapper.value && Array.isArray(newWrapper.value)) {
-            attentionsArray = newWrapper.value;
-          }
-          if (attentionsArray) {
-            checkQueueStatus(newWrapper);
-            await updateTodayAttentionsFromFirebase(attentionsArray);
-          }
+    watch(attentionsWrapper, async (newWrapper, oldWrapper) => {
+      // When wrapper is first initialized, process it immediately
+      if (newWrapper && newWrapper !== oldWrapper) {
+        // Handle both ref and direct array cases
+        let attentionsArray = null;
+        if (Array.isArray(newWrapper)) {
+          attentionsArray = newWrapper;
+        } else if (newWrapper.value && Array.isArray(newWrapper.value)) {
+          attentionsArray = newWrapper.value;
         }
-      }
+        if (attentionsArray) {
+          checkQueueStatus(newWrapper);
+          await updateTodayAttentionsFromFirebase(attentionsArray);
+        }
+      },
     );
 
     // Watch attentions wrapper value for changes (same as CollaboratorQueuesView)
@@ -1303,7 +1325,7 @@ export default {
           // If no attentions, clear the list
           state.todayAttentions = [];
         }
-      }
+      },
     );
 
     watch(show, async () => {
@@ -1478,20 +1500,43 @@ export default {
                   <div
                     v-for="(attention, index) in state.todayAttentions"
                     :key="`today-att-${index}`"
-                    :class="['spy-attention-item', { 'clickable': index === 0, 'reference-only': index > 0 }]"
+                    :class="[
+                      'spy-attention-item',
+                      { clickable: index === 0, 'reference-only': index > 0 },
+                    ]"
                     @click="index === 0 ? goToAttention(attention.id) : null"
                   >
                     <div class="spy-attention-status-indicator">
-                      <Popper v-if="getAttentionElapsedTime(attention)" :class="'dark'" arrow hover disable-click-away placement="left" :z-index="10001">
+                      <Popper
+                        v-if="getAttentionElapsedTime(attention)"
+                        :class="'dark'"
+                        arrow
+                        hover
+                        disable-click-away
+                        placement="left"
+                        :z-index="10001"
+                      >
                         <template #content>
                           <div class="popper-content">
                             <div class="popper-title">Status de Espera</div>
                             <div class="popper-item">
-                              <span class="popper-color" :style="{ background: getAttentionElapsedTime(attention).timeColor }"></span>
-                              <span>{{ getAttentionStatusMessage(getAttentionElapsedTime(attention).timeStatus) }}</span>
+                              <span
+                                class="popper-color"
+                                :style="{
+                                  background: getAttentionElapsedTime(attention).timeColor,
+                                }"
+                              ></span>
+                              <span>{{
+                                getAttentionStatusMessage(
+                                  getAttentionElapsedTime(attention).timeStatus
+                                )
+                              }}</span>
                             </div>
                             <div class="popper-item">
-                              <span><strong>Tempo:</strong> {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                              <span
+                                ><strong>Tempo:</strong>
+                                {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
+                              >
                             </div>
                           </div>
                         </template>
@@ -1510,16 +1555,24 @@ export default {
                     <div class="spy-attention-info">
                       <div class="spy-attention-header">
                         <div v-if="attention.number" class="spy-attention-number-large">
-                          {{ $t('collaboratorSpySection.number') }}: <strong>{{ attention.number }}</strong>
+                          {{ $t('collaboratorSpySection.number') }}:
+                          <strong>{{ attention.number }}</strong>
                         </div>
-                        <div v-if="attention.clientName && attention.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                        <div
+                          v-if="attention.clientName && attention.clientName !== 'N/A'"
+                          class="spy-attention-name-secondary"
+                        >
                           {{ attention.clientName }}
                         </div>
                       </div>
                       <div class="spy-attention-meta">
-                        <span v-if="attention.clientId && attention.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                        <span v-if="attention.clientId && attention.clientId !== 'N/A'"
+                          ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
+                        >
                         <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                        <span v-if="attention.service && attention.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
+                        <span v-if="attention.service && attention.service !== 'N/A'"
+                          ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
+                        >
                       </div>
                     </div>
                     <div v-if="index === 0" class="spy-attention-action">
@@ -1637,17 +1690,37 @@ export default {
                   :key="`att-${index}`"
                   :class="['spy-attention-item', { 'reference-only': index > 0 }]"
                 >
-                  <div class="spy-attention-status-indicator" v-if="getAttentionElapsedTime(attention)">
-                    <Popper :class="'dark'" arrow hover disable-click-away placement="left" :z-index="10001">
+                  <div
+                    class="spy-attention-status-indicator"
+                    v-if="getAttentionElapsedTime(attention)"
+                  >
+                    <Popper
+                      :class="'dark'"
+                      arrow
+                      hover
+                      disable-click-away
+                      placement="left"
+                      :z-index="10001"
+                    >
                       <template #content>
                         <div class="popper-content">
                           <div class="popper-title">Status de Espera</div>
                           <div class="popper-item">
-                            <span class="popper-color" :style="{ background: getAttentionElapsedTime(attention).timeColor }"></span>
-                            <span>{{ getAttentionStatusMessage(getAttentionElapsedTime(attention).timeStatus) }}</span>
+                            <span
+                              class="popper-color"
+                              :style="{ background: getAttentionElapsedTime(attention).timeColor }"
+                            ></span>
+                            <span>{{
+                              getAttentionStatusMessage(
+                                getAttentionElapsedTime(attention).timeStatus
+                              )
+                            }}</span>
                           </div>
                           <div class="popper-item">
-                            <span><strong>Tempo:</strong> {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                            <span
+                              ><strong>Tempo:</strong>
+                              {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
+                            >
                           </div>
                         </div>
                       </template>
@@ -1661,16 +1734,24 @@ export default {
                   <div class="spy-attention-info">
                     <div class="spy-attention-header">
                       <div v-if="attention.number" class="spy-attention-number-large">
-                        {{ $t('collaboratorSpySection.number') }}: <strong>{{ attention.number }}</strong>
+                        {{ $t('collaboratorSpySection.number') }}:
+                        <strong>{{ attention.number }}</strong>
                       </div>
-                      <div v-if="attention.clientName && attention.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                      <div
+                        v-if="attention.clientName && attention.clientName !== 'N/A'"
+                        class="spy-attention-name-secondary"
+                      >
                         {{ attention.clientName }}
                       </div>
                     </div>
                     <div class="spy-attention-meta">
-                      <span v-if="attention.clientId && attention.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                      <span v-if="attention.clientId && attention.clientId !== 'N/A'"
+                        ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
+                      >
                       <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                      <span v-if="attention.service && attention.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
+                      <span v-if="attention.service && attention.service !== 'N/A'"
+                        ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -1691,21 +1772,32 @@ export default {
                 <div
                   v-for="(booking, index) in state.dateDetails.bookings"
                   :key="`book-${index}`"
-                  :class="['spy-attention-item', { 'clickable': index === 0, 'reference-only': index > 0 }]"
+                  :class="[
+                    'spy-attention-item',
+                    { clickable: index === 0, 'reference-only': index > 0 },
+                  ]"
                 >
                   <div class="spy-attention-info">
                     <div class="spy-attention-header">
                       <div class="spy-attention-number-large">
-                        <i class="bi bi-calendar-check-fill"></i> {{ $t('collaboratorSpySection.bookings') }}
+                        <i class="bi bi-calendar-check-fill"></i>
+                        {{ $t('collaboratorSpySection.bookings') }}
                       </div>
-                      <div v-if="booking.clientName && booking.clientName !== 'N/A'" class="spy-attention-name-secondary">
+                      <div
+                        v-if="booking.clientName && booking.clientName !== 'N/A'"
+                        class="spy-attention-name-secondary"
+                      >
                         {{ booking.clientName }}
                       </div>
                     </div>
                     <div class="spy-attention-meta">
-                      <span v-if="booking.clientId && booking.clientId !== 'N/A'"><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span>
+                      <span v-if="booking.clientId && booking.clientId !== 'N/A'"
+                        ><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span
+                      >
                       <span><i class="bi bi-clock"></i> {{ formattedTime(booking.hour) }}</span>
-                      <span v-if="booking.service && booking.service !== 'N/A'"><i class="bi bi-briefcase"></i> {{ booking.service }}</span>
+                      <span v-if="booking.service && booking.service !== 'N/A'"
+                        ><i class="bi bi-briefcase"></i> {{ booking.service }}</span
+                      >
                     </div>
                   </div>
                 </div>

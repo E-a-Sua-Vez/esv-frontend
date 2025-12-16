@@ -109,6 +109,44 @@ export default {
     scorePercentage(total, score) {
       return parseFloat(((score * 100) / total).toFixed(2), 2) || 0;
     },
+    calculateDaysUntilStockout() {
+      if (!this.product || !this.product.actualLevel || this.product.actualLevel <= 0) {
+        return null;
+      }
+      // Calcular basado en último consumo
+      if (this.product.lastComsumptionDate && this.product.lastComsumptionAmount) {
+        const lastConsumptionDate = new Date(this.product.lastComsumptionDate);
+        const daysSinceLastConsumption = Math.floor(
+          (new Date().getTime() - lastConsumptionDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysSinceLastConsumption > 0 && this.product.lastComsumptionAmount > 0) {
+          const avgDailyConsumption = this.product.lastComsumptionAmount / daysSinceLastConsumption;
+          if (avgDailyConsumption > 0) {
+            return Math.floor(this.product.actualLevel / avgDailyConsumption);
+          }
+        }
+      }
+      return null;
+    },
+    getTrendIndicator() {
+      // Calcular tendencia basada en días desde último consumo vs días desde última recarga
+      if (!this.product) return null;
+      const daysSinceConsumption = this.product.daysSinceLastConsumption || 0;
+      const daysSinceReplacement = this.product.daysSinceLastReplacement || 0;
+
+      // Si no hay consumo reciente pero hay recarga reciente, tendencia positiva
+      if (daysSinceConsumption > 7 && daysSinceReplacement < 7) {
+        return { direction: 'up', text: '+', class: 'text-success' };
+      }
+      // Si hay consumo reciente pero no hay recarga, tendencia negativa
+      if (daysSinceConsumption < 7 && daysSinceReplacement > 14) {
+        return { direction: 'down', text: '-', class: 'text-danger' };
+      }
+      return null;
+    },
+    handleQuickRecharge() {
+      this.$emit('quick-recharge', this.product.productId);
+    },
     productScoreBarStyle(product) {
       const level = this.scorePercentage(
         product.maximumLevel,
@@ -374,6 +412,37 @@ export default {
               >
             </div>
           </Popper>
+
+          <!-- NUEVO: Indicador de Tendencia -->
+          <div
+            v-if="getTrendIndicator()"
+            class="trend-indicator-mini"
+            :class="getTrendIndicator().class"
+            @click.stop
+          >
+            <i :class="`bi bi-arrow-${getTrendIndicator().direction}`"></i>
+          </div>
+
+          <!-- NUEVO: Predicción de días hasta agotarse -->
+          <div
+            v-if="calculateDaysUntilStockout() !== null"
+            class="prediction-badge-mini"
+            @click.stop
+          >
+            <i class="bi bi-clock"></i>
+            <span class="prediction-text">{{ calculateDaysUntilStockout() }}d</span>
+          </div>
+        </div>
+
+        <!-- NUEVO: Botón de Acción Rápida (solo si es crítico) -->
+        <div v-if="product?.productStatus === 'LOW'" class="quick-action-inline" @click.stop>
+          <button
+            class="btn-quick-recharge"
+            @click="handleQuickRecharge()"
+            :title="$t('dashboard.productCard.quickRecharge') || 'Recargar ahora'"
+          >
+            <i class="bi bi-lightning-charge"></i>
+          </button>
         </div>
 
         <!-- Progress Bar - Inline -->
@@ -442,6 +511,63 @@ export default {
                   <span>{{ $t('businessProductStockAdmin.replacements') }}</span>
                 </button>
               </Popper>
+            </div>
+          </div>
+
+          <!-- NUEVO: Sección de Predicción y Recomendaciones -->
+          <div
+            v-if="calculateDaysUntilStockout() !== null || getTrendIndicator()"
+            class="info-section prediction-section"
+          >
+            <div class="info-section-header">
+              <i class="bi bi-graph-up-arrow"></i>
+              <span class="info-section-title">{{
+                $t('dashboard.productCard.prediction') || 'Predicción y Análisis'
+              }}</span>
+            </div>
+            <div class="prediction-content">
+              <div v-if="calculateDaysUntilStockout() !== null" class="prediction-item">
+                <i class="bi bi-clock-history"></i>
+                <div class="prediction-text-content">
+                  <span class="prediction-label"
+                    >{{ $t('dashboard.productCard.stockoutIn') || 'Se agotará en' }}:</span
+                  >
+                  <span
+                    class="prediction-value"
+                    :class="{
+                      'text-danger': calculateDaysUntilStockout() <= 7,
+                      'text-warning':
+                        calculateDaysUntilStockout() > 7 && calculateDaysUntilStockout() <= 15,
+                      'text-success': calculateDaysUntilStockout() > 15,
+                    }"
+                  >
+                    <strong>{{ calculateDaysUntilStockout() }}</strong>
+                    {{ $t('dashboard.productCard.days') || 'días' }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="getTrendIndicator()" class="prediction-item">
+                <i :class="`bi bi-arrow-${getTrendIndicator().direction}-circle`"></i>
+                <div class="prediction-text-content">
+                  <span class="prediction-label"
+                    >{{ $t('dashboard.productCard.trend') || 'Tendencia' }}:</span
+                  >
+                  <span class="prediction-value" :class="getTrendIndicator().class">
+                    <strong>{{
+                      getTrendIndicator().direction === 'up'
+                        ? $t('dashboard.productCard.increasing') || 'Aumentando'
+                        : $t('dashboard.productCard.decreasing') || 'Disminuyendo'
+                    }}</strong>
+                  </span>
+                </div>
+              </div>
+              <div v-if="product?.productStatus === 'LOW'" class="prediction-recommendation">
+                <i class="bi bi-lightbulb-fill"></i>
+                <span>{{
+                  $t('dashboard.productCard.recommendation') ||
+                  'Se recomienda recargar urgentemente'
+                }}</span>
+              </div>
             </div>
           </div>
 
@@ -994,6 +1120,157 @@ export default {
   font-weight: 700;
   color: #000000;
   line-height: 1;
+}
+
+/* NUEVO: Indicador de Tendencia */
+.trend-indicator-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 0.75rem;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.trend-indicator-mini:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+/* NUEVO: Badge de Predicción */
+.prediction-badge-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.4375rem;
+  background: rgba(0, 74, 173, 0.1);
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  cursor: help;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 74, 173, 0.2);
+}
+
+.prediction-badge-mini:hover {
+  background: rgba(0, 74, 173, 0.15);
+  border-color: rgba(0, 74, 173, 0.3);
+}
+
+.prediction-badge-mini i {
+  font-size: 0.6875rem;
+  color: var(--azul-turno);
+}
+
+.prediction-text {
+  font-weight: 600;
+  color: var(--azul-turno);
+  font-size: 0.6875rem;
+}
+
+/* NUEVO: Botón de Acción Rápida */
+.quick-action-inline {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+.btn-quick-recharge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.btn-quick-recharge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.btn-quick-recharge:active {
+  transform: scale(0.95);
+}
+
+/* NUEVO: Sección de Predicción en Vista Expandida */
+.prediction-section {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
+  border-left: 3px solid var(--azul-turno);
+}
+
+.prediction-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prediction-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.prediction-item:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateX(4px);
+}
+
+.prediction-item i {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  flex-shrink: 0;
+}
+
+.prediction-text-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.prediction-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.prediction-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.prediction-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: 0.5rem;
+  border-left: 3px solid #ffc107;
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.prediction-recommendation i {
+  color: #ffc107;
+  font-size: 1rem;
 }
 
 /* Progress Bar Inline */

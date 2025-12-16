@@ -1,4 +1,6 @@
 <script>
+import { getBookingDetails } from '../../application/services/booking';
+
 export default {
   name: 'AttentionNumber',
   props: {
@@ -13,21 +15,97 @@ export default {
     return {
       extendedEntity: false,
       elapsedTime: null,
+      processingTime: null,
       elapsedInterval: null,
+      bookingServices: null,
+      loadingBooking: false,
     };
   },
   mounted() {
-    if (this.attention && this.attention.createdDate) {
-      this.updateElapsedTime();
-      this.elapsedInterval = setInterval(() => {
+    if (this.attention) {
+      if (this.attention.createdDate || this.attention.createdAt) {
         this.updateElapsedTime();
-      }, 60000); // Update every minute
+      }
+      // Check if status is PROCESSING (case-insensitive)
+      const isProcessing =
+        this.attention.status === 'PROCESSING' ||
+        (typeof this.attention.status === 'string' &&
+          this.attention.status.toUpperCase() === 'PROCESSING');
+      if (this.attention.processedAt && isProcessing) {
+        this.updateProcessingTime();
+      }
+      this.elapsedInterval = setInterval(() => {
+        if (this.attention.createdDate || this.attention.createdAt) {
+          this.updateElapsedTime();
+        }
+        const isProcessingInterval =
+          this.attention.status === 'PROCESSING' ||
+          (typeof this.attention.status === 'string' &&
+            this.attention.status.toUpperCase() === 'PROCESSING');
+        if (this.attention.processedAt && isProcessingInterval) {
+          this.updateProcessingTime();
+        }
+      }, 30000); // Update every 30 seconds for more live updates
+
+      // Fetch booking services if attention doesn't have services but has bookingId
+      this.fetchBookingServicesIfNeeded();
     }
   },
   beforeUnmount() {
     if (this.elapsedInterval) {
       clearInterval(this.elapsedInterval);
     }
+  },
+  watch: {
+    attention: {
+      immediate: true,
+      deep: true,
+      handler(newAttention) {
+        if (newAttention) {
+          // Reset booking services when attention changes
+          this.bookingServices = null;
+
+          if (newAttention.createdDate || newAttention.createdAt) {
+            this.updateElapsedTime();
+          }
+          // Check if status is PROCESSING (case-insensitive)
+          const isProcessing =
+            newAttention.status === 'PROCESSING' ||
+            (typeof newAttention.status === 'string' &&
+              newAttention.status.toUpperCase() === 'PROCESSING');
+          if (newAttention.processedAt && isProcessing) {
+            this.updateProcessingTime();
+          }
+          // Clear existing interval and restart
+          if (this.elapsedInterval) {
+            clearInterval(this.elapsedInterval);
+          }
+          this.elapsedInterval = setInterval(() => {
+            if (newAttention.createdDate || newAttention.createdAt) {
+              this.updateElapsedTime();
+            }
+            const isProcessingInterval =
+              newAttention.status === 'PROCESSING' ||
+              (typeof newAttention.status === 'string' &&
+                newAttention.status.toUpperCase() === 'PROCESSING');
+            if (newAttention.processedAt && isProcessingInterval) {
+              this.updateProcessingTime();
+            }
+          }, 30000); // Update every 30 seconds for more live updates
+
+          // Fetch booking services if attention doesn't have services but has bookingId
+          this.fetchBookingServicesIfNeeded();
+        } else {
+          this.elapsedTime = null;
+          this.processingTime = null;
+          this.bookingServices = null;
+          if (this.elapsedInterval) {
+            clearInterval(this.elapsedInterval);
+            this.elapsedInterval = null;
+          }
+        }
+      },
+    },
   },
   methods: {
     hasData() {
@@ -68,24 +146,51 @@ export default {
         this.elapsedTime = null;
         return;
       }
-      const created = new Date(createdDate);
-      const now = new Date();
-      const diffMs = now - created;
-      this.elapsedTime = diffMs;
+
+      let created;
+      try {
+        if (createdDate instanceof Date) {
+          created = createdDate;
+        } else if (createdDate.toDate && typeof createdDate.toDate === 'function') {
+          // Firebase Timestamp
+          created = createdDate.toDate();
+        } else if (createdDate.seconds) {
+          // Firebase Timestamp as object with seconds
+          created = new Date(createdDate.seconds * 1000);
+        } else if (typeof createdDate === 'string') {
+          created = new Date(createdDate);
+        } else {
+          created = new Date(createdDate);
+        }
+
+        // Validate date
+        if (isNaN(created.getTime())) {
+          this.elapsedTime = null;
+          return;
+        }
+
+        const now = new Date();
+        const diffMs = now - created;
+        this.elapsedTime = diffMs;
+      } catch (error) {
+        this.elapsedTime = null;
+      }
     },
     getElapsedTimeMinutes() {
-      if (!this.elapsedTime) return 0;
+      if (this.elapsedTime === null || this.elapsedTime === undefined) return 0;
       return Math.floor(this.elapsedTime / (1000 * 60));
     },
     getElapsedTimeHours() {
-      if (!this.elapsedTime) return 0;
+      if (this.elapsedTime === null || this.elapsedTime === undefined) return 0;
       return Math.floor(this.elapsedTime / (1000 * 60 * 60));
     },
     getElapsedTimeDisplay() {
-      if (!this.elapsedTime) return '';
+      if (this.elapsedTime === null || this.elapsedTime === undefined) return '';
       const minutes = this.getElapsedTimeMinutes();
       const hours = this.getElapsedTimeHours();
-      if (minutes < 60) {
+      if (minutes < 1) {
+        return 'Agora';
+      } else if (minutes < 60) {
         return `${minutes} min`;
       } else if (hours < 24) {
         return `${hours}h ${minutes % 60}min`;
@@ -95,20 +200,142 @@ export default {
       }
     },
     getTimeStatusClass() {
-      if (!this.elapsedTime) return 'time-status-neutral';
+      if (this.elapsedTime === null || this.elapsedTime === undefined) return 'time-status-neutral';
       const minutes = this.getElapsedTimeMinutes();
+      if (minutes < 1) return 'time-status-excellent';
       if (minutes < 10) return 'time-status-excellent';
       if (minutes < 60) return 'time-status-good';
       if (minutes < 180) return 'time-status-warning';
       return 'time-status-poor';
     },
     getTimeStatusColor() {
-      if (!this.elapsedTime) return '#a9a9a9';
+      if (this.elapsedTime === null || this.elapsedTime === undefined) return '#a9a9a9';
       const minutes = this.getElapsedTimeMinutes();
+      if (minutes < 1) return '#00c2cb';
       if (minutes < 10) return '#00c2cb';
       if (minutes < 60) return '#f9c322';
       if (minutes < 180) return '#ff9800';
       return '#a52a2a';
+    },
+    updateProcessingTime() {
+      if (!this.attention) {
+        this.processingTime = null;
+        return;
+      }
+      // Only update if status is PROCESSING (case-insensitive)
+      const status = this.attention.status;
+      const isProcessing =
+        status === 'PROCESSING' ||
+        (typeof status === 'string' && status.toUpperCase() === 'PROCESSING');
+      if (!isProcessing) {
+        this.processingTime = null;
+        return;
+      }
+      const processedDate = this.attention.processedAt;
+      if (!processedDate) {
+        this.processingTime = null;
+        return;
+      }
+
+      let processed;
+      try {
+        if (processedDate instanceof Date) {
+          processed = processedDate;
+        } else if (processedDate.toDate && typeof processedDate.toDate === 'function') {
+          // Firebase Timestamp
+          processed = processedDate.toDate();
+        } else if (processedDate.seconds !== undefined) {
+          // Firebase Timestamp as object with seconds
+          processed = new Date(processedDate.seconds * 1000);
+        } else if (processedDate._seconds !== undefined) {
+          // Alternative Firebase Timestamp format
+          processed = new Date(processedDate._seconds * 1000);
+        } else if (typeof processedDate === 'string') {
+          processed = new Date(processedDate);
+        } else if (processedDate.toMillis && typeof processedDate.toMillis === 'function') {
+          // Firestore Timestamp with toMillis method
+          processed = new Date(processedDate.toMillis());
+        } else {
+          processed = new Date(processedDate);
+        }
+
+        // Validate date
+        if (isNaN(processed.getTime())) {
+          this.processingTime = null;
+          return;
+        }
+
+        const now = new Date();
+        const diffMs = now - processed;
+        this.processingTime = diffMs;
+      } catch (error) {
+        console.error('Error updating processing time:', error, processedDate);
+        this.processingTime = null;
+      }
+    },
+    getProcessingTimeMinutes() {
+      if (this.processingTime === null || this.processingTime === undefined) return 0;
+      return Math.floor(this.processingTime / (1000 * 60));
+    },
+    getProcessingTimeHours() {
+      if (this.processingTime === null || this.processingTime === undefined) return 0;
+      return Math.floor(this.processingTime / (1000 * 60 * 60));
+    },
+    getProcessingTimeDisplay() {
+      if (this.processingTime === null || this.processingTime === undefined) return '';
+      const minutes = this.getProcessingTimeMinutes();
+      const hours = this.getProcessingTimeHours();
+      if (minutes < 1) {
+        return 'Agora';
+      } else if (minutes < 60) {
+        return `${minutes} min`;
+      } else if (hours < 24) {
+        return `${hours}h ${minutes % 60}min`;
+      } else {
+        const days = Math.floor(hours / 24);
+        return `${days}d ${hours % 24}h`;
+      }
+    },
+    hasProcessingTime() {
+      if (!this.attention) {
+        return false;
+      }
+      // Check if status is PROCESSING (case-insensitive check for robustness)
+      const status = this.attention.status;
+      const isProcessing =
+        status === 'PROCESSING' ||
+        (typeof status === 'string' && status.toUpperCase() === 'PROCESSING');
+      if (!isProcessing) {
+        return false;
+      }
+      // Check if processedAt exists in any format
+      const processedAt = this.attention.processedAt;
+      if (!processedAt) {
+        return false;
+      }
+      // Try to validate that processedAt is a valid date
+      // It could be a Date object, Firestore Timestamp, or string
+      try {
+        let date;
+        if (processedAt instanceof Date) {
+          date = processedAt;
+        } else if (processedAt.toDate && typeof processedAt.toDate === 'function') {
+          date = processedAt.toDate();
+        } else if (processedAt.seconds !== undefined) {
+          date = new Date(processedAt.seconds * 1000);
+        } else if (processedAt._seconds !== undefined) {
+          date = new Date(processedAt._seconds * 1000);
+        } else if (typeof processedAt === 'string') {
+          date = new Date(processedAt);
+        } else {
+          date = new Date(processedAt);
+        }
+        // If we can parse it as a valid date, return true
+        return !isNaN(date.getTime());
+      } catch (e) {
+        // If it exists but we can't parse it, still return true (let updateProcessingTime handle the error)
+        return true;
+      }
     },
     getCreationTime() {
       if (!this.attention) return '';
@@ -121,6 +348,291 @@ export default {
       if (!this.attention) return false;
       return !!(this.attention.createdDate || this.attention.createdAt);
     },
+    hasServices() {
+      if (!this.attention) return false;
+
+      // Check servicesDetails (array of service objects)
+      if (this.attention.servicesDetails) {
+        if (
+          Array.isArray(this.attention.servicesDetails) &&
+          this.attention.servicesDetails.length > 0
+        ) {
+          return true;
+        }
+        // Handle case where servicesDetails might be a string or object
+        if (
+          typeof this.attention.servicesDetails === 'object' &&
+          Object.keys(this.attention.servicesDetails).length > 0
+        ) {
+          return true;
+        }
+      }
+
+      // Check servicesId (array of service IDs)
+      if (this.attention.servicesId) {
+        if (Array.isArray(this.attention.servicesId) && this.attention.servicesId.length > 0) {
+          return true;
+        }
+        // Handle case where servicesId might be a string or object
+        if (
+          typeof this.attention.servicesId === 'object' &&
+          Object.keys(this.attention.servicesId).length > 0
+        ) {
+          return true;
+        }
+      }
+
+      // Check serviceId (singular - single service)
+      if (this.attention.serviceId) {
+        return true;
+      }
+
+      // Check if services is an array (alternative property name)
+      if (
+        this.attention.services &&
+        Array.isArray(this.attention.services) &&
+        this.attention.services.length > 0
+      ) {
+        return true;
+      }
+
+      // Check booking services if available
+      if (this.bookingServices) {
+        if (Array.isArray(this.bookingServices) && this.bookingServices.length > 0) {
+          return true;
+        }
+        if (
+          typeof this.bookingServices === 'object' &&
+          Object.keys(this.bookingServices).length > 0
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+    async fetchBookingServicesIfNeeded() {
+      if (!this.attention || this.loadingBooking) return;
+
+      // Check if attention has services
+      const hasAttentionServices =
+        (this.attention.servicesDetails &&
+          ((Array.isArray(this.attention.servicesDetails) &&
+            this.attention.servicesDetails.length > 0) ||
+            (typeof this.attention.servicesDetails === 'object' &&
+              Object.keys(this.attention.servicesDetails).length > 0))) ||
+        (this.attention.servicesId &&
+          ((Array.isArray(this.attention.servicesId) && this.attention.servicesId.length > 0) ||
+            (typeof this.attention.servicesId === 'object' &&
+              Object.keys(this.attention.servicesId).length > 0))) ||
+        this.attention.serviceId;
+
+      // Only fetch if attention doesn't have services but has bookingId
+      if (!hasAttentionServices && this.attention.bookingId) {
+        try {
+          this.loadingBooking = true;
+          const booking = await getBookingDetails(this.attention.bookingId);
+          if (booking && booking.servicesDetails) {
+            this.bookingServices = booking.servicesDetails;
+          } else if (booking && booking.servicesId) {
+            // If booking has servicesId but no servicesDetails, store the IDs
+            this.bookingServices = booking.servicesId;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch booking services:', error);
+          this.bookingServices = null;
+        } finally {
+          this.loadingBooking = false;
+        }
+      }
+    },
+    getServiceNames() {
+      if (!this.attention) return '';
+
+      // Try servicesDetails first (has full service objects with names)
+      if (this.attention.servicesDetails) {
+        if (
+          Array.isArray(this.attention.servicesDetails) &&
+          this.attention.servicesDetails.length > 0
+        ) {
+          const names = this.attention.servicesDetails
+            .map(service => {
+              if (typeof service === 'string') return service;
+              return service.name || service.tag || service.id || service;
+            })
+            .filter(Boolean);
+          if (names.length > 0) {
+            return names.join(', ');
+          }
+        }
+        // Handle object format
+        if (
+          typeof this.attention.servicesDetails === 'object' &&
+          !Array.isArray(this.attention.servicesDetails)
+        ) {
+          const servicesArray = Object.values(this.attention.servicesDetails);
+          if (servicesArray.length > 0) {
+            const names = servicesArray
+              .map(service => {
+                if (typeof service === 'string') return service;
+                return service.name || service.tag || service.id || service;
+              })
+              .filter(Boolean);
+            if (names.length > 0) {
+              return names.join(', ');
+            }
+          }
+        }
+      }
+
+      // Try services array (alternative property)
+      if (
+        this.attention.services &&
+        Array.isArray(this.attention.services) &&
+        this.attention.services.length > 0
+      ) {
+        const names = this.attention.services
+          .map(service => {
+            if (typeof service === 'string') return service;
+            return service.name || service.tag || service.id || service;
+          })
+          .filter(Boolean);
+        if (names.length > 0) {
+          return names.join(', ');
+        }
+      }
+
+      // Try booking services if attention doesn't have services
+      if (this.bookingServices) {
+        if (Array.isArray(this.bookingServices) && this.bookingServices.length > 0) {
+          const names = this.bookingServices
+            .map(service => {
+              if (typeof service === 'string') return service;
+              return service.name || service.tag || service.id || service;
+            })
+            .filter(Boolean);
+          if (names.length > 0) {
+            return names.join(', ');
+          }
+        }
+        // Handle object format
+        if (typeof this.bookingServices === 'object' && !Array.isArray(this.bookingServices)) {
+          const servicesArray = Object.values(this.bookingServices);
+          if (servicesArray.length > 0) {
+            const names = servicesArray
+              .map(service => {
+                if (typeof service === 'string') return service;
+                return service.name || service.tag || service.id || service;
+              })
+              .filter(Boolean);
+            if (names.length > 0) {
+              return names.join(', ');
+            }
+          }
+        }
+      }
+
+      // Try servicesId (array of IDs - show count)
+      if (this.attention.servicesId) {
+        if (Array.isArray(this.attention.servicesId) && this.attention.servicesId.length > 0) {
+          return this.attention.servicesId.length === 1
+            ? `${this.attention.servicesId.length} serviço`
+            : `${this.attention.servicesId.length} serviços`;
+        }
+        // Handle object format
+        if (
+          typeof this.attention.servicesId === 'object' &&
+          !Array.isArray(this.attention.servicesId)
+        ) {
+          const idsArray = Object.values(this.attention.servicesId);
+          if (idsArray.length > 0) {
+            return idsArray.length === 1
+              ? `${idsArray.length} serviço`
+              : `${idsArray.length} serviços`;
+          }
+        }
+      }
+
+      // Try serviceId (singular - single service)
+      if (this.attention.serviceId) {
+        return '1 serviço';
+      }
+
+      return '';
+    },
+    hasBooking() {
+      if (!this.attention) return false;
+      return !!(this.attention.bookingId || (this.attention.booking && this.attention.booking.id));
+    },
+    getBookingInfo() {
+      if (!this.attention) return '';
+      const booking = this.attention.booking;
+      const block = this.attention.block;
+
+      // Check if this is a booking-based attention
+      if (!booking && !this.attention.bookingId && !block) return '';
+
+      const parts = [];
+
+      // Booking number
+      if (booking && booking.number) {
+        parts.push(`Reserva #${booking.number}`);
+      } else if (this.attention.bookingId) {
+        parts.push('Reserva');
+      } else if (block) {
+        parts.push('Reserva');
+      }
+
+      // Date from booking or block
+      if (booking && booking.date) {
+        try {
+          const bookingDate = new Date(booking.date);
+          const dateStr = bookingDate.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+          parts.push(dateStr);
+        } catch (e) {
+          // Invalid date, skip
+        }
+      } else if (block && block.date) {
+        try {
+          const blockDate = new Date(block.date);
+          const dateStr = blockDate.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+          parts.push(dateStr);
+        } catch (e) {
+          // Invalid date, skip
+        }
+      }
+
+      // Hour/Time from booking block or attention block
+      if (booking && booking.block && booking.block.hourFrom) {
+        parts.push(booking.block.hourFrom);
+      } else if (block && block.hourFrom) {
+        parts.push(block.hourFrom);
+      }
+
+      // Created date (when reserved) - from booking
+      if (booking && booking.createdAt) {
+        try {
+          const createdDate = new Date(booking.createdAt);
+          const createdStr = createdDate.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          });
+          parts.push(`Reservado: ${createdStr}`);
+        } catch (e) {
+          // Invalid date, skip
+        }
+      }
+
+      return parts.length > 0 ? parts.join(' • ') : '';
+    },
   },
 };
 </script>
@@ -130,20 +642,13 @@ export default {
     <div class="attention-card-main">
       <div class="attention-card-content">
         <div class="attention-number-section">
-          <div
-            v-if="identifier() !== undefined"
-            class="attention-name-badge-overlay"
-          >
+          <div v-if="identifier() !== undefined" class="attention-name-badge-overlay">
             <div class="attention-name-icon">
               <i class="bi bi-person-circle"></i>
             </div>
             <span class="attention-name-text">{{ identifier() }}</span>
           </div>
-          <div
-            v-if="number"
-            class="attention-number-modern"
-            :class="colorNumberToShow()"
-          >
+          <div v-if="number" class="attention-number-modern" :class="colorNumberToShow()">
             {{ number }}
           </div>
           <div
@@ -154,10 +659,53 @@ export default {
             :href="`#user-data-${number}`"
             @click.prevent="showDetails()"
           >
-            <i
-              class="bi"
-              :class="`${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-            ></i>
+            <i class="bi" :class="`${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+          </div>
+        </div>
+        <!-- Service badge - directly under attention number in main view (not modal) -->
+        <div v-if="!toList && hasServices()" class="attention-service-under-number">
+          <div class="attention-service-badge">
+            <i class="bi bi-briefcase-fill"></i>
+            <span class="attention-service-text">{{ getServiceNames() }}</span>
+          </div>
+        </div>
+        <!-- Compact info section: waiting time, processing time, services, and booking info -->
+        <div
+          v-if="
+            toList && (hasAttentionDate() || hasProcessingTime() || hasServices() || hasBooking())
+          "
+          class="attention-info-compact"
+        >
+          <!-- For PROCESSING attentions, show processing time; for others, show waiting time -->
+          <div v-if="hasProcessingTime()" class="attention-stat-item time-status-processing">
+            <i class="bi bi-clock-history"></i>
+            <span class="attention-stat-label">{{
+              $t('attentionNumber.processingTime') || 'Em atendimento:'
+            }}</span>
+            <span class="attention-stat-value" style="color: #004aad">
+              {{ getProcessingTimeDisplay() }}
+            </span>
+          </div>
+          <div
+            v-else-if="hasAttentionDate()"
+            class="attention-stat-item"
+            :class="getTimeStatusClass()"
+          >
+            <i class="bi bi-hourglass-split"></i>
+            <span class="attention-stat-label">{{
+              $t('attentionNumber.waitingTime') || 'Espera:'
+            }}</span>
+            <span class="attention-stat-value" :style="{ color: getTimeStatusColor() }">
+              {{ getElapsedTimeDisplay() }}
+            </span>
+          </div>
+          <div v-if="hasServices()" class="attention-service-badge">
+            <i class="bi bi-briefcase-fill"></i>
+            <span class="attention-service-text">{{ getServiceNames() }}</span>
+          </div>
+          <div v-if="hasBooking()" class="attention-booking-badge">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span class="attention-booking-text">{{ getBookingInfo() }}</span>
           </div>
         </div>
       </div>
@@ -166,10 +714,10 @@ export default {
       :id="`#user-data-${number}`"
       :class="`collapse ${extendedEntity ? 'show' : ''} attention-card-details`"
     >
-        <div class="user-details-compact">
-          <div class="user-details-header">
-            <span class="user-details-title">{{ $t('attentionNumber.details.title') }}</span>
-          </div>
+      <div class="user-details-compact">
+        <div class="user-details-header">
+          <span class="user-details-title">{{ $t('attentionNumber.details.title') }}</span>
+        </div>
         <div class="user-details-items">
           <div class="user-detail-row" v-if="data.name || data.lastName">
             <div class="user-detail-item" v-if="data.name">
@@ -200,22 +748,29 @@ export default {
               <span class="user-detail-value">{{ data.idNumber }}</span>
             </div>
           </div>
-            <div class="user-detail-item" v-if="data.phone">
-              <div class="user-detail-icon-wrapper user-detail-icon-phone">
-                <i class="bi bi-whatsapp"></i>
-              </div>
-              <div class="user-detail-content">
-                <span class="user-detail-label">{{ $t('attentionNumber.details.phone') }}</span>
-                <a :href="`https://wa.me/${data.phone.replace(/\D/g, '')}`" target="_blank" class="user-detail-value user-detail-link">{{ data.phone }}</a>
-              </div>
+          <div class="user-detail-item" v-if="data.phone">
+            <div class="user-detail-icon-wrapper user-detail-icon-phone">
+              <i class="bi bi-whatsapp"></i>
             </div>
+            <div class="user-detail-content">
+              <span class="user-detail-label">{{ $t('attentionNumber.details.phone') }}</span>
+              <a
+                :href="`https://wa.me/${data.phone.replace(/\D/g, '')}`"
+                target="_blank"
+                class="user-detail-value user-detail-link"
+                >{{ data.phone }}</a
+              >
+            </div>
+          </div>
           <div class="user-detail-item" v-if="data.email">
             <div class="user-detail-icon-wrapper user-detail-icon-email">
               <i class="bi bi-envelope"></i>
             </div>
             <div class="user-detail-content">
               <span class="user-detail-label">{{ $t('attentionNumber.details.email') }}</span>
-              <a :href="`mailto:${data.email}`" class="user-detail-value user-detail-link">{{ data.email }}</a>
+              <a :href="`mailto:${data.email}`" class="user-detail-value user-detail-link">{{
+                data.email
+              }}</a>
             </div>
           </div>
         </div>
@@ -229,13 +784,13 @@ export default {
 .attention-card-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(169, 169, 169, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  margin: 0.5rem 0;
+  margin: 0.2rem 0;
   width: 100%;
 }
 
@@ -282,7 +837,7 @@ export default {
 }
 
 .attention-card-main {
-  padding: 0.75rem 1rem;
+  padding: 0.4rem 0.6rem;
 }
 
 .attention-card-content {
@@ -302,18 +857,18 @@ export default {
 
 .attention-name-badge-overlay {
   position: absolute;
-  left: 8px;
+  left: 6px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.95) 0%, rgba(0, 194, 203, 0.95) 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.95);
   border: 1.5px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 0 0 1.5px rgba(255, 255, 255, 0.3);
@@ -339,20 +894,20 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 100px;
   color: rgba(255, 255, 255, 0.95);
 }
 
 .attention-number-modern {
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   font-weight: 900;
-  font-size: 2.75rem;
+  font-size: 2rem;
   line-height: 1;
   text-align: center;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  min-width: 100px;
+  min-width: 70px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -407,16 +962,115 @@ export default {
   justify-content: center;
 }
 
+.attention-info-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 .attention-stat-item {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.6rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0.4rem;
   background: rgba(0, 0, 0, 0.03);
-  border-radius: 12px;
-  font-size: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 600;
   transition: all 0.2s ease;
+}
+
+.attention-service-under-number {
+  margin-top: 0.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.attention-service-main {
+  margin-top: 0.3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.attention-service-badge-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 74, 173, 0.08);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 74, 173, 0.9);
+}
+
+.attention-service-badge-main i {
+  font-size: 0.8rem;
+  color: rgba(0, 74, 173, 0.85);
+  flex-shrink: 0;
+}
+
+.attention-service-text-main {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.attention-service-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  background: rgba(0, 74, 173, 0.08);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(0, 74, 173, 0.9);
+}
+
+.attention-service-badge i {
+  font-size: 0.75rem;
+  color: rgba(0, 74, 173, 0.8);
+}
+
+.attention-service-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.attention-booking-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  background: rgba(40, 167, 69, 0.08);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(40, 167, 69, 0.9);
+}
+
+.attention-booking-badge i {
+  font-size: 0.75rem;
+  color: rgba(40, 167, 69, 0.8);
+}
+
+.attention-booking-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  font-size: 0.65rem;
 }
 
 .attention-stat-item i {
@@ -467,6 +1121,15 @@ export default {
 
 .time-status-poor .attention-stat-value {
   color: #a52a2a;
+}
+
+.time-status-processing {
+  background: rgba(0, 74, 173, 0.1);
+  border: 1px solid rgba(0, 74, 173, 0.2);
+}
+
+.time-status-processing .attention-stat-value {
+  color: #004aad;
 }
 
 .attention-card-details {
@@ -625,6 +1288,11 @@ export default {
 .user-detail-icon-email {
   background: rgba(249, 195, 34, 0.1);
   color: #f9c322;
+}
+
+.user-detail-icon-service {
+  background: rgba(0, 74, 173, 0.1);
+  color: #004aad;
 }
 
 .user-detail-content {

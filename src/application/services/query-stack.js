@@ -694,6 +694,19 @@ export const getProductsConsumptionsDetails = async (
   return (await requestQuery.get('product/consumptions', options)).data;
 };
 
+export const getProductsKpis = async (commerceId = undefined, commerceIds = undefined) => {
+  const options = {};
+  options.params = {
+    commerceId,
+    commerceIds,
+    _t: Date.now(), // Prevent cache
+  };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('product/kpis', options)).data;
+};
+
 export const getIncomesDetails = async (
   businessId = undefined,
   commerceId,

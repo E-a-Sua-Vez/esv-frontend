@@ -32,3 +32,6 @@ export const addProductConsumption = async product =>
 export const getActiveReplacementsByProductId = async productId =>
   (await requestBackend.get(`/${entity}/replacement/available/${productId}`, await getHeaders()))
     .data;
+
+export const getProductAlerts = async commerceId =>
+  (await requestBackend.get(`/${entity}/alerts/${commerceId}`, await getHeaders())).data;

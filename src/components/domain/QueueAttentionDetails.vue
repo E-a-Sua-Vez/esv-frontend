@@ -27,9 +27,19 @@ export default {
   },
   methods: {
     async getQueueDetails(queue) {
+      if (!queue || !queue.id) {
+        this.status = {
+          TOTAL: 0,
+          PENDING: 0,
+          TERMINATED: 0,
+        };
+        this.loading = false;
+        return;
+      }
       try {
+        this.loading = true;
         const attentions = await getAttentionByDate(queue.id, this.date);
-        if (attentions && attentions.length > 0) {
+        if (attentions && Array.isArray(attentions) && attentions.length > 0) {
           const total = attentions.length || 0;
           const pending = attentions.filter(att => att.status === 'PENDING').length || 0;
           const terminated =
@@ -40,8 +50,17 @@ export default {
             PENDING: pending || 0,
             TERMINATED: terminated || 0,
           };
+        } else {
+          // No attentions found, reset to 0
+          this.status = {
+            TOTAL: 0,
+            PENDING: 0,
+            TERMINATED: 0,
+          };
         }
+        this.loading = false;
       } catch (error) {
+        console.error('Error fetching queue details:', error);
         this.status = {
           TOTAL: 0,
           PENDING: 0,
@@ -73,13 +92,27 @@ export default {
       this.$router.push({ path: `/interno/colaborador/atencion/${attention.id}/validar` });
     },
   },
+  mounted() {
+    // Ensure we fetch data on initial mount if queue is already available
+    if (this.queue && this.queue.id) {
+      this.getQueueDetails(this.queue);
+    }
+  },
   watch: {
     queue: {
       immediate: true,
       deep: true,
-      async handler(newQueue, oldQueue) {
-        if (newQueue && oldQueue && newQueue.id) {
+      async handler(newQueue) {
+        if (newQueue && newQueue.id) {
           await this.getQueueDetails(newQueue);
+        } else {
+          // Reset status if queue is not available
+          this.status = {
+            TOTAL: 0,
+            PENDING: 0,
+            TERMINATED: 0,
+          };
+          this.loading = false;
         }
       },
     },
@@ -159,6 +192,7 @@ export default {
               "
               :number="attention.number"
               :data="attention.user"
+              :attention="attention"
               :show-data="false"
               :to-list="true"
               @click="goToProcessingAttention(attention)"
@@ -273,7 +307,7 @@ export default {
 
 .attentions-card {
   background-color: var(--color-background);
-  padding: 0.75rem;
+  padding: 0.4rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(169, 169, 169, 0.2);
   overflow-y: auto;
@@ -291,8 +325,8 @@ export default {
 }
 
 .attention-item {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding: 0.2rem;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease;
 }

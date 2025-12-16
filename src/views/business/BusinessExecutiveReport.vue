@@ -5,6 +5,10 @@ import { globalStore } from '../../stores';
 import { getBusinessExecutiveReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import { statusWhatsappConnectionById } from '../../application/services/business';
+import {
+  getTelemedicineStatistics,
+  getTelemedicineHealthMetrics,
+} from '../../application/services/telemedicine';
 import { getDate } from '../../shared/utils/date';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -43,6 +47,8 @@ export default {
       reports: {},
       extendedEntity: undefined,
       whatsappConnectionStatus: {},
+      telemedicineStats: null,
+      telemedicineHealth: null,
       toggles: {},
     });
 
@@ -58,6 +64,7 @@ export default {
         );
         state.reports = calculatedReports;
         await getWhatsappStatus();
+        await getTelemedicineMonitoring();
         state.toggles = await getPermissions('executive', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -83,6 +90,7 @@ export default {
         );
         state.reports = calculatedReports;
         await getWhatsappStatus();
+        await getTelemedicineMonitoring();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -105,6 +113,21 @@ export default {
         loading.value = false;
       } catch (error) {
         loading.value = false;
+      }
+    };
+
+    const getTelemedicineMonitoring = async () => {
+      try {
+        const [stats, health] = await Promise.all([
+          getTelemedicineStatistics(),
+          getTelemedicineHealthMetrics(),
+        ]);
+        state.telemedicineStats = stats?.sessions || null;
+        state.telemedicineHealth = health || null;
+      } catch (error) {
+        // Silently fail - telemedicine monitoring is optional
+        state.telemedicineStats = null;
+        state.telemedicineHealth = null;
       }
     };
 
@@ -142,6 +165,7 @@ export default {
       isActiveBusiness,
       showUpdateForm,
       getWhatsappStatus,
+      getTelemedicineMonitoring,
       calculateHealthPercentage,
       getStatusClass,
       getStatusIcon,

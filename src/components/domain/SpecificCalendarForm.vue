@@ -134,34 +134,40 @@ export default {
     };
 
     const deleteSpecificDate = (index, date) => {
-      const selectedDates = structure.value.serviceInfo.specificCalendarDays;
-      if (selectedDates) {
+      let selectedDates = structure.value?.serviceInfo?.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates && typeof selectedDates === 'object') {
         if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
           delete selectedDates[date];
         }
       }
       structure.value.serviceInfo.specificCalendarDays = selectedDates;
-      const days = Object.keys(selectedDates);
+      const days = Object.keys(selectedDates || {});
       calendarAttributes.value[0].dates = [];
       calendarAttributes.value[0].dates.push(...days);
     };
 
     const updateDeleteSpecificDate = date => {
-      const selectedDates = structure.value.serviceInfo.specificCalendarDays;
-      if (selectedDates) {
+      let selectedDates = structure.value?.serviceInfo?.specificCalendarDays;
+      if (!selectedDates) {
+        selectedDates = {};
+      }
+      if (selectedDates && typeof selectedDates === 'object') {
         if (Object.keys(selectedDates).length >= 0 && Object.keys(selectedDates).includes(date)) {
           delete selectedDates[date];
         }
       }
       structure.value.serviceInfo.specificCalendarDays = selectedDates;
-      const days = Object.keys(selectedDates);
+      const days = Object.keys(selectedDates || {});
       calendarAttributes.value[0].dates = [];
       calendarAttributes.value[0].dates.push(...days);
     };
 
     const setPage = pageIn => {
       state.page = pageIn;
-      const selectedDates = structure.value.serviceInfo.specificCalendarDays;
+      const selectedDates = structure.value?.serviceInfo?.specificCalendarDays || {};
       const days = Object.keys(selectedDates).sort(
         (a, b) => new Date(b).getTime() - new Date(a).getTime()
       );
@@ -203,7 +209,11 @@ export default {
         const nextMonth = +month;
         const dateFrom = new DateModel(new Date(+year, thisMonth, 1)).toString();
         const dateTo = new DateModel(new Date(+year, nextMonth, 0)).toString();
-        const selectedDates = structure.value.serviceInfo.specificCalendarDays;
+        const selectedDates = structure.value?.serviceInfo?.specificCalendarDays;
+        if (!selectedDates || typeof selectedDates !== 'object') {
+          state.filteredDates = [];
+          return;
+        }
         const days = Object.keys(selectedDates)
           .filter(date => date >= dateFrom && date <= dateTo)
           .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());

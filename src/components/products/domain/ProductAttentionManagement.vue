@@ -13,6 +13,7 @@ import {
   getActiveReplacementsByProductId,
   getProductByCommerce,
 } from '../../../application/services/product';
+import { getPrescriptionSuggestionsForAttention } from '../../../application/services/prescription';
 import { getDate } from '../../../shared/utils/date';
 import ProductReplacementDetailsCard from '../common/ProductReplacementDetailsCard.vue';
 import ProductConsumptionDetailsCard from '../common/ProductConsumptionDetailsCard.vue';
@@ -77,9 +78,13 @@ export default {
       selectedProduct: {},
       startDate: undefined,
       endDate: undefined,
+      prescriptionSuggestions: [],
+      loadingSuggestions: false,
     };
   },
-  async beforeMount() {},
+  async beforeMount() {
+    await this.loadPrescriptionSuggestions();
+  },
   methods: {
     async setPage(pageIn) {
       this.page = pageIn;
@@ -283,6 +288,85 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh();
     },
+    async loadPrescriptionSuggestions() {
+      const attentionId = this.attention?.attentionId || this.attention?.id;
+      if (
+        !this.commerce ||
+        !this.commerce.id ||
+        !this.attention ||
+        !this.attention.clientId ||
+        !attentionId
+      ) {
+        return;
+      }
+      try {
+        this.loadingSuggestions = true;
+        this.prescriptionSuggestions = await getPrescriptionSuggestionsForAttention(
+          this.commerce.id,
+          this.attention.clientId,
+          attentionId
+        );
+        this.loadingSuggestions = false;
+      } catch (error) {
+        console.error('Error loading prescription suggestions:', error);
+        this.loadingSuggestions = false;
+      }
+    },
+    async quickConsumeFromPrescription(suggestion, matchingProduct) {
+      try {
+        this.loading = true;
+        // Buscar el producto completo
+        const product = this.products.find(p => p.id === matchingProduct.productId);
+        if (!product) {
+          // Si no está en la lista, cargarlo
+          if (this.commerce && this.commerce.id) {
+            this.products = await getProductByCommerce(this.commerce.id);
+            const foundProduct = this.products.find(p => p.id === matchingProduct.productId);
+            if (!foundProduct) {
+              this.alertError = 'Producto no encontrado';
+              this.loading = false;
+              return;
+            }
+            this.selectedProduct = foundProduct;
+          } else {
+            this.alertError = 'Comercio no disponible';
+            this.loading = false;
+            return;
+          }
+        } else {
+          this.selectedProduct = product;
+        }
+
+        // Obtener reemplazos activos
+        this.productReplacements = await getActiveReplacementsByProductId(this.selectedProduct.id);
+        if (!this.productReplacements || this.productReplacements.length === 0) {
+          this.alertError = 'No hay reemplazos disponibles para este producto';
+          this.loading = false;
+          return;
+        }
+
+        // Seleccionar el primer reemplazo disponible
+        this.selectedProductReplacement = this.productReplacements[0];
+
+        // Configurar el consumo
+        this.newProductConsumption = {
+          consumptionAmount: suggestion.medication.quantity,
+          consumptionDate: new Date().toISOString().slice(0, 10),
+        };
+
+        // Validar y agregar
+        if (this.validateAdd(this.newProductConsumption)) {
+          await this.add(this.newProductConsumption);
+          // Recargar sugerencias después del consumo
+          await this.loadPrescriptionSuggestions();
+        }
+        this.loading = false;
+      } catch (error) {
+        console.error('Error in quick consume:', error);
+        this.alertError = error.response?.status || 500;
+        this.loading = false;
+      }
+    },
   },
   computed: {
     changeData() {
@@ -359,6 +443,21 @@ export default {
         }
       },
     },
+    attention: {
+      immediate: false,
+      deep: true,
+      async handler(newVal, oldVal) {
+        // Recargar sugerencias cuando cambie la atención o el cliente
+        if (
+          newVal &&
+          (newVal.clientId !== oldVal?.clientId ||
+            newVal.attentionId !== oldVal?.attentionId ||
+            newVal.id !== oldVal?.id)
+        ) {
+          await this.loadPrescriptionSuggestions();
+        }
+      },
+    },
   },
 };
 </script>
@@ -373,9 +472,69 @@ export default {
   >
     <div class="col">
       <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
+        <Spinner :show="loading || loadingSuggestions"></Spinner>
         <Alert :show="loading" :stack="alertError"></Alert>
         <div v-if="!loading">
+          <!-- Prescription Suggestions Section -->
+          <div
+            v-if="
+              !loadingSuggestions && prescriptionSuggestions && prescriptionSuggestions.length > 0
+            "
+            class="my-2 row prescription-suggestions-card"
+          >
+            <div class="col-12">
+              <h5 class="prescription-suggestions-title">
+                <i class="bi bi-prescription2"></i>
+                {{ $t('businessProductStockAdmin.prescriptionSuggestions') }}
+              </h5>
+              <div
+                v-for="(suggestion, suggestionIndex) in prescriptionSuggestions"
+                :key="`suggestion-${suggestionIndex}`"
+                class="prescription-suggestion-item"
+              >
+                <div class="prescription-medication-info">
+                  <strong>{{ suggestion.medication.medicationName }}</strong>
+                  <span class="badge bg-info ms-2"
+                    >{{ suggestion.medication.quantity }} unidades</span
+                  >
+                  <span v-if="suggestion.medication.dosage" class="text-muted ms-2">
+                    {{ suggestion.medication.dosage }}
+                  </span>
+                </div>
+                <div class="prescription-products-list">
+                  <div
+                    v-for="(product, productIndex) in suggestion.matchingProducts"
+                    :key="`product-${productIndex}`"
+                    class="prescription-product-item"
+                    :class="{ 'product-unavailable': !product.available }"
+                  >
+                    <div class="product-info">
+                      <span class="product-name">{{ product.productName }}</span>
+                      <span class="product-stock" :class="{ 'stock-low': !product.available }">
+                        Stock: {{ product.actualLevel }}
+                      </span>
+                      <span v-if="product.available" class="badge bg-success ms-2">
+                        <i class="bi bi-check-circle"></i> Disponible
+                      </span>
+                      <span v-else class="badge bg-danger ms-2">
+                        <i class="bi bi-x-circle"></i> Stock insuficiente
+                      </span>
+                    </div>
+                    <button
+                      v-if="product.canConsume"
+                      class="btn btn-sm btn-primary quick-consume-btn"
+                      @click="quickConsumeFromPrescription(suggestion, product)"
+                      :disabled="loading"
+                    >
+                      <i class="bi bi-lightning-fill"></i>
+                      {{ $t('businessProductStockAdmin.quickConsume') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
             <div class="my-2 row metric-card">
               <div class="col-12">
@@ -942,6 +1101,105 @@ export default {
   transform: translateY(0);
 }
 
+/* Prescription Suggestions Styles */
+.prescription-suggestions-card {
+  background: linear-gradient(135deg, rgba(240, 248, 255, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(0, 74, 173, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.prescription-suggestions-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--azul-turno);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prescription-suggestion-item {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.prescription-medication-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.prescription-products-list {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--azul-turno);
+}
+
+.prescription-product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.prescription-product-item:hover {
+  background: rgba(240, 248, 255, 0.8);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.prescription-product-item.product-unavailable {
+  background: rgba(255, 245, 245, 0.5);
+  border-left: 3px solid var(--rojo-warning);
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-grow: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.product-stock {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+}
+
+.product-stock.stock-low {
+  color: var(--rojo-warning);
+  font-weight: 600;
+}
+
+.quick-consume-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.quick-consume-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 74, 173, 0.2);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .metric-card {
@@ -964,6 +1222,17 @@ export default {
 
   .metric-keyword-subtitle {
     font-size: 0.75rem;
+  }
+
+  .prescription-product-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .quick-consume-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

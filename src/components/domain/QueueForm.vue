@@ -57,8 +57,11 @@ export default {
                   );
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    queue.services = collaboratorsAux[0].services;
-                    queue.servicesName = queue.services.map(serv => serv.name);
+                    queue.services = collaboratorsAux[0].services || [];
+                    queue.servicesName =
+                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
+                        ? collaboratorsAux[0].services.map(serv => serv.name)
+                        : [];
                   }
                   queueAux.push(queue);
                 }
@@ -73,8 +76,11 @@ export default {
                   );
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    queue.services = collaboratorsAux[0].services;
-                    queue.servicesName = queue.services.map(serv => serv.name);
+                    queue.services = collaboratorsAux[0].services || [];
+                    queue.servicesName =
+                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
+                        ? collaboratorsAux[0].services.map(serv => serv.name)
+                        : [];
                   }
                   queue.services = services;
                 }
@@ -308,150 +314,152 @@ export default {
             <span class="fw-bold">{{ $t('commerceQueuesView.byCollaboratorTitle') }}</span>
           </div>
           <div id="attention-collaborator-queue">
-              <div v-if="state.filteredCollaboratorQueues">
-                <div class="row col-md mb-2">
-                  <input
-                    min="1"
-                    max="50"
-                    type="text"
-                    class="col form-control mx-2"
-                    v-model="state.searchCollaboratorText"
-                    :placeholder="$t('commerceQueuesView.searchCollaboratorQueue')"
-                  />
-                  <button
-                    class="col-2 btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
-                    @click="clearSearchCollaborator()"
-                  >
-                    <span><i class="bi bi-eraser-fill"></i></span>
-                  </button>
-                </div>
-              </div>
-              <div
-                class="centered mt-1"
-                v-if="state.filteredCollaboratorQueues && collaborators.length > state.limit"
-              >
-                <nav>
-                  <ul class="pagination pagination-ul">
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
-                        aria-label="Previous"
-                        @click="setPage(state.page - 1)"
-                        :disabled="state.page === 1 || state.totalPages === 0"
-                      >
-                        <span aria-hidden="true">&laquo;</span>
-                      </button>
-                    </li>
-                    <li>
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
-                        v-model="state.page"
-                        :disabled="state.totalPages === 0"
-                      >
-                        <option
-                          v-for="pag in state.totalPages"
-                          :key="pag"
-                          :value="pag"
-                          id="select-queue"
-                        >
-                          {{ pag }}
-                        </option>
-                      </select>
-                    </li>
-                    <li class="page-item">
-                      <button
-                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
-                        aria-label="Next"
-                        @click="setPage(state.page + 1)"
-                        :disabled="state.page === state.totalPages || state.totalPages === 0"
-                      >
-                        <span aria-hidden="true">&raquo;</span>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-              <div
-                v-if="
-                  state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length > 0
-                "
-              >
-                <div v-for="(queue, index) in state.filteredCollaboratorQueues" :key="index">
-                  <QueueButton
-                    :queue="queue"
-                    :selected-queue="state.queue"
-                    :get-queue="getQueue"
-                    :accept="accept"
-                  >
-                  </QueueButton>
-                </div>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('commerceQueuesView.message.title')"
-                  :content="$t('commerceQueuesView.message.content')"
+            <div v-if="state.filteredCollaboratorQueues">
+              <div class="row col-md mb-2">
+                <input
+                  min="1"
+                  max="50"
+                  type="text"
+                  class="col form-control mx-2"
+                  v-model="state.searchCollaboratorText"
+                  :placeholder="$t('commerceQueuesView.searchCollaboratorQueue')"
+                />
+                <button
+                  class="col-2 btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 mx-2"
+                  @click="clearSearchCollaborator()"
                 >
-                </Message>
+                  <span><i class="bi bi-eraser-fill"></i></span>
+                </button>
               </div>
             </div>
+            <div
+              class="centered mt-1"
+              v-if="state.filteredCollaboratorQueues && collaborators.length > state.limit"
+            >
+              <nav>
+                <ul class="pagination pagination-ul">
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
+                      aria-label="Previous"
+                      @click="setPage(state.page - 1)"
+                      :disabled="state.page === 1 || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  <li>
+                    <select
+                      class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
+                      v-model="state.page"
+                      :disabled="state.totalPages === 0"
+                    >
+                      <option
+                        v-for="pag in state.totalPages"
+                        :key="pag"
+                        :value="pag"
+                        id="select-queue"
+                      >
+                        {{ pag }}
+                      </option>
+                    </select>
+                  </li>
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3 py-1"
+                      aria-label="Next"
+                      @click="setPage(state.page + 1)"
+                      :disabled="state.page === state.totalPages || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+            <div
+              v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length > 0"
+            >
+              <div v-for="(queue, index) in state.filteredCollaboratorQueues" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
+              </div>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('commerceQueuesView.message.title')"
+                :content="$t('commerceQueuesView.message.content')"
+              >
+              </Message>
+            </div>
+          </div>
         </div>
 
         <!-- Service Selection Content Card -->
         <div class="col col-md-10 offset-md-1 data-card" v-if="state.showService">
           <div id="attention-service-queue">
-              <div
-                v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0"
-              >
-                <div v-for="(queue, index) in groupedQueues['SELECT_SERVICE']" :key="index">
-                  <QueueButton
-                    :queue="queue"
-                    :selected-queue="state.queue"
-                    :get-queue="getQueue"
-                    :accept="accept"
-                  >
-                  </QueueButton>
-                </div>
-              </div>
-              <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
-                <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
-                  <QueueButton
-                    :queue="queue"
-                    :selected-queue="state.queue"
-                    :get-queue="getQueue"
-                    :accept="accept"
-                  >
-                  </QueueButton>
-                </div>
-              </div>
-              <div
-                v-if="groupedQueues['MULTI_SERVICE'] && groupedQueues['MULTI_SERVICE'].length > 0"
-              >
-                <div v-for="(queue, index) in groupedQueues['MULTI_SERVICE']" :key="index">
-                  <QueueButton
-                    :queue="queue"
-                    :selected-queue="state.queue"
-                    :get-queue="getQueue"
-                    :accept="accept"
-                  >
-                  </QueueButton>
-                </div>
-              </div>
-              <div v-if="groupedQueues['STANDARD'] && groupedQueues['STANDARD'].length > 0">
-                <div v-for="(queue, index) in groupedQueues['STANDARD']" :key="index">
-                  <QueueButton
-                    :queue="queue"
-                    :selected-queue="state.queue"
-                    :get-queue="getQueue"
-                    :accept="accept"
-                  >
-                  </QueueButton>
-                </div>
+            <div
+              v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0"
+            >
+              <div v-for="(queue, index) in groupedQueues['SELECT_SERVICE']" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
               </div>
             </div>
+            <div v-if="groupedQueues['SERVICE'] && groupedQueues['SERVICE'].length > 0">
+              <div v-for="(queue, index) in groupedQueues['SERVICE']" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
+              </div>
+            </div>
+            <div v-if="groupedQueues['MULTI_SERVICE'] && groupedQueues['MULTI_SERVICE'].length > 0">
+              <div v-for="(queue, index) in groupedQueues['MULTI_SERVICE']" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
+              </div>
+            </div>
+            <div v-if="groupedQueues['STANDARD'] && groupedQueues['STANDARD'].length > 0">
+              <div v-for="(queue, index) in groupedQueues['STANDARD']" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                >
+                </QueueButton>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Other queue types (not grouped) -->
-        <div class="col col-md-10 offset-md-1 data-card" v-if="!getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT') || (queueId && queueId !== 'undefined')">
+        <div
+          class="col col-md-10 offset-md-1 data-card"
+          v-if="
+            !getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT') ||
+            (queueId && queueId !== 'undefined')
+          "
+        >
           <div>
             <div v-if="queues && queues.length === 1">
               <QueueButton
@@ -604,7 +612,8 @@ export default {
 }
 
 @keyframes selectedPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 4px 20px rgba(0, 194, 203, 0.5);
   }
   50% {
@@ -623,7 +632,8 @@ export default {
 }
 
 @keyframes chevronBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

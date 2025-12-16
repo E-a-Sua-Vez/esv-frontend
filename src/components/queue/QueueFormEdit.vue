@@ -15,6 +15,7 @@ export default {
     types: { type: Array, default: () => [] },
     toggles: { type: Object, default: () => ({}) },
     errors: { type: Object, default: () => ({}) },
+    commerce: { type: Object, default: null },
   },
 };
 </script>
@@ -27,6 +28,7 @@ export default {
       :toggles="toggles"
       :errors="errors"
       :is-add="false"
+      :commerce="commerce"
       prefix="update-"
     />
     <div

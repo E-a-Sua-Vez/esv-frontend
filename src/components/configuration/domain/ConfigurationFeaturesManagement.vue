@@ -50,7 +50,7 @@ export default {
       groupedConfigurations: {},
       types: [],
       typeSelected: undefined,
-      options: {},
+      options: [],
       allOptions: [],
       optionSelected: undefined,
       commerce: {},
@@ -118,6 +118,10 @@ export default {
       state.newConfiguration = {
         commerceId: state.commerce.id,
       };
+      // Reset selections when opening modal
+      state.typeSelected = undefined;
+      state.optionSelected = undefined;
+      state.options = [];
     };
 
     const validateAdd = () => {
@@ -171,7 +175,18 @@ export default {
 
     const selectType = () => {
       if (state.typeSelected) {
-        state.options = state.allOptions.filter(element => element.type === state.typeSelected);
+        // Get names of already configured features for this commerce
+        const existingFeatureNames = state.configurations.map(conf => conf.name);
+        // Filter options by type and exclude already added features
+        state.options = state.allOptions.filter(
+          element =>
+            element.type === state.typeSelected && !existingFeatureNames.includes(element.name)
+        );
+        // Reset selected option when type changes
+        state.optionSelected = undefined;
+      } else {
+        state.options = [];
+        state.optionSelected = undefined;
       }
     };
 

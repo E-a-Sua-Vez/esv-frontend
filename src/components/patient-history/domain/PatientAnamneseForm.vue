@@ -6,11 +6,22 @@ import Spinner from '../../common/Spinner.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../common/Message.vue';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
+import TemplatePicker from '../../medical-templates/domain/TemplatePicker.vue';
 import { getPatientHistoryItemFrequenciesTypes } from '../../../shared/utils/data';
+import { useSpeechRecognition } from '../composables/useSpeechRecognition';
+import { globalStore } from '../../../stores';
 
 export default {
   name: 'PatientAnamneseForm',
-  components: { Warning, Spinner, VueRecaptcha, Toggle, Message, HistoryDetailsCard },
+  components: {
+    Warning,
+    Spinner,
+    VueRecaptcha,
+    Toggle,
+    Message,
+    HistoryDetailsCard,
+    TemplatePicker,
+  },
   props: {
     commerce: { type: Object, default: {} },
     cacheData: { type: Object, default: undefined },
@@ -23,6 +34,7 @@ export default {
   },
   async setup(props) {
     const loading = ref(false);
+    const store = globalStore();
 
     const {
       commerce,
@@ -46,6 +58,7 @@ export default {
       captcha: false,
       habitsError: false,
       asc: true,
+      showHistory: false,
     });
 
     onBeforeMount(async () => {
@@ -83,7 +96,8 @@ export default {
             }
           }
         }
-        if (cacheData.value) {
+        // Only use cacheData if no saved data exists in patientHistoryData
+        if ((!state.newPatientAnamnese || !state.newPatientAnamnese.id) && cacheData.value) {
           state.newPatientAnamnese = cacheData.value;
           state.habitsAux = state.newPatientAnamnese.habitsDetails;
         }
@@ -95,6 +109,93 @@ export default {
 
     const sendData = () => {
       receiveData(state.newPatientAnamnese);
+    };
+
+    // Speech recognition - single instance that tracks active field
+    const {
+      isListening: isListeningSpeech,
+      isSupported: isSpeechSupported,
+      error: speechError,
+      startListening: startSpeechListening,
+      stopListening: stopSpeechListening,
+    } = useSpeechRecognition();
+
+    const activeSpeechField = ref(null); // Track which field is being edited: 'general' or {itemId, fieldName}
+
+    const handleSpeechResult = interimText => {
+      // Show interim results (optional)
+    };
+
+    const handleSpeechFinalResult = finalText => {
+      if (!activeSpeechField.value) return;
+
+      // Format timestamp
+      const now = new Date();
+      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+        2,
+        '0'
+      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
+        2,
+        '0'
+      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
+        2,
+        '0'
+      )}]`;
+      const timestampedText = `${timestamp} ${finalText}`;
+
+      if (activeSpeechField.value === 'general') {
+        const currentText = state.newPatientAnamnese.habits || '';
+        const newText =
+          currentText && currentText.trim() !== ''
+            ? `${currentText}\n\n${timestampedText}`
+            : timestampedText;
+        state.newPatientAnamnese.habits = newText;
+      } else {
+        const { itemId, fieldName } = activeSpeechField.value;
+        if (!state.habitsAux[itemId]) {
+          state.habitsAux[itemId] = { id: itemId };
+        }
+        const currentText = state.habitsAux[itemId][fieldName] || '';
+        const newText =
+          currentText && currentText.trim() !== ''
+            ? `${currentText}\n\n${timestampedText}`
+            : timestampedText;
+        state.habitsAux[itemId][fieldName] = newText;
+        state.newPatientAnamnese.habitsDetails = state.habitsAux;
+      }
+      sendData();
+    };
+
+    const toggleSpeechRecognition = (itemId = null, fieldName = 'comment') => {
+      if (isListeningSpeech.value) {
+        stopSpeechListening();
+        activeSpeechField.value = null;
+      } else {
+        activeSpeechField.value = itemId ? { itemId, fieldName } : 'general';
+        const language = commerce.value?.localeInfo?.language || 'pt-BR';
+        startSpeechListening(handleSpeechResult, handleSpeechFinalResult, language);
+      }
+    };
+
+    const isListeningForField = (itemId = null) => {
+      if (!isListeningSpeech.value) return false;
+      if (itemId === null) {
+        return activeSpeechField.value === 'general';
+      }
+      return activeSpeechField.value?.itemId === itemId;
+    };
+
+    const clearCommentField = itemId => {
+      if (itemId && state.habitsAux[itemId]) {
+        state.habitsAux[itemId].comment = '';
+        state.newPatientAnamnese.habitsDetails = state.habitsAux;
+        sendData();
+      }
+    };
+
+    const clearGeneralField = () => {
+      state.newPatientAnamnese.anamnese = '';
+      sendData();
     };
 
     const checkAsc = event => {
@@ -407,6 +508,7 @@ export default {
       commerce,
       toggles,
       errorsAdd,
+      store,
       sendData,
       checkAsc,
       checkItem,
@@ -417,6 +519,13 @@ export default {
       sendFrequency,
       sendSelectedOption,
       sendOptionYesNo,
+      isListeningSpeech,
+      isSpeechSupported,
+      speechError,
+      toggleSpeechRecognition,
+      isListeningForField,
+      clearCommentField,
+      clearGeneralField,
       sendOtherOption,
       sendResult,
       sendCheckOption,
@@ -426,451 +535,965 @@ export default {
 };
 </script>
 <template>
-  <div>
-    <div id="form">
-      <div class="row">
-        <div class="col-12">
-          <div id="patient-name-form-add" class="row m-1">
-            <div class="col-12 text-label">
-              {{ $t('patientHistoryView.patientAnamnese') }} <i class="bi bi-capsule-pill mx-1"></i>
+  <div class="patient-form-modern anamnese-form">
+    <div class="form-header-modern">
+      <div class="form-header-icon">
+        <i class="bi bi-clipboard-heart-fill"></i>
+      </div>
+      <div class="form-header-content">
+        <h3 class="form-header-title">{{ $t('patientHistoryView.patientAnamnese') }}</h3>
+        <p class="form-header-subtitle">História pessoal e anamnese do paciente</p>
+      </div>
+    </div>
+
+    <!-- Dynamic Items Container -->
+    <div class="anamnese-items-container">
+      <div v-for="item in state.habitsList" :key="item.id">
+        <div v-if="item.active === true && item.online === true">
+          <!-- SELECT 1 (Radio) -->
+          <div
+            v-if="item.characteristics && item.characteristics.select1"
+            class="anamnese-item-card"
+          >
+            <div class="anamnese-item-header">
+              <span class="badge badge-primary">{{ item.tag }}</span>
+              <h5 class="anamnese-item-title">{{ item.name }}</h5>
             </div>
-            <div class="col-12">
-              <div v-for="item in state.habitsList" :key="item.id">
-                <div v-if="item.active === true && item.online === true">
-                  <!-- SELECT 1 -->
-                  <div
-                    class="row item-card"
-                    v-if="item.characteristics && item.characteristics.select1"
+            <div class="anamnese-item-content">
+              <div class="options-group">
+                <div
+                  v-for="(option, index) in item.characteristics.options.split(',')"
+                  :key="`option-${index}`"
+                  class="option-item"
+                >
+                  <input
+                    class="form-check-input option-radio"
+                    type="radio"
+                    :name="`check-${item.id}-${index}`"
+                    :id="`option-${item.id}-${index}`"
+                    :checked="state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())"
+                    @click="sendCheckOption(item, $event, option)"
+                  />
+                  <label class="option-label" :for="`option-${item.id}-${index}`">
+                    {{ option.toUpperCase().trim() }}
+                  </label>
+                </div>
+              </div>
+              <div class="form-field-modern">
+                <input
+                  class="form-control-modern"
+                  type="text"
+                  maxlength="50"
+                  placeholder="Outro..."
+                  :value="
+                    state.habitsAux[item.id]?.answer?.filter(
+                      ans =>
+                        !item.characteristics.options
+                          .toUpperCase()
+                          .split(',')
+                          .includes(ans.toUpperCase())
+                    )?.[0] || ''
+                  "
+                  @blur="sendCheckOtherOption(item, $event)"
+                />
+              </div>
+              <div
+                v-if="item.characteristics.comment && item.characteristics.comment === true"
+                class="form-field-modern"
+              >
+                <label class="form-label-modern" :for="`comment-select1-${item.id}`">
+                  <i class="bi bi-chat-text me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    :class="{ 'btn-danger': isListeningForField(item.id) }"
+                    @click="toggleSpeechRecognition(item.id, 'comment')"
+                    :title="
+                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                    "
                   >
-                    <div class="col m-1">
-                      <div class="lefted">
-                        <span class="badge bg-primary"> {{ item.tag }} </span>
-                      </div>
-                      <div class="lefted">
-                        <label class="fw-bold">{{ item.name }}</label>
-                      </div>
-                    </div>
-                    <div :id="`details-${item.id}`">
-                      <div
-                        class="form-check form-switch check-option lefted"
-                        v-for="(option, index) in item.characteristics.options.split(',')"
-                        :key="`option-${index}`"
-                      >
-                        <input
-                          class="form-check-input"
-                          type="radio"
-                          :name="`check-${option.title}-${index}`"
-                          :checked="state.habitsAux[item.id]?.answer.includes(option.toUpperCase())"
-                          @click="sendCheckOption(item, $event, option)"
-                        />
-                        <label class="form-check-label mx-2" for="option">{{
-                          option.toUpperCase().trim()
-                        }}</label>
-                      </div>
-                      <div class="col mb-1">
-                        <input
-                          maxlength="50"
-                          type="text"
-                          class="form-control form-control-sm"
-                          placeholder="Other"
-                          :value="
-                            state.habitsAux[item.id]?.answer.filter(
-                              ans =>
-                                !item.characteristics.options
-                                  .toUpperCase()
-                                  .split(',')
-                                  .includes(ans.toUpperCase())
-                            )
-                          "
-                          @blur="sendCheckOtherOption(item, $event)"
-                        />
-                      </div>
-                      <div
-                        class="row centered"
-                        v-if="item.characteristics.comment && item.characteristics.comment === true"
-                      >
-                        <div class="row mt-1">
-                          <label class="form-check-label metric-card-subtitle">{{
-                            $t('businessPatientHistoryItemAdmin.comment')
-                          }}</label>
-                          <textarea
-                            :disabled="!toggles['patient.history.edit']"
-                            class="form-control form-control-sm"
-                            rows="2"
-                            :max="200"
-                            :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                            :value="state.habitsAux[item.id]?.comment"
-                            @keyup="sendComment(item, $event)"
-                          >
-                          </textarea>
-                        </div>
-                      </div>
-                    </div>
+                    <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                    <span class="ms-1 d-inline">{{
+                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
+                    }}</span>
+                  </button>
+                  <button
+                    v-if="toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+                    @click="clearCommentField(item.id)"
+                    title="Limpar campo"
+                  >
+                    <i class="bi bi-eraser"></i>
+                  </button>
+                </label>
+                <div class="position-relative">
+                  <textarea
+                    :id="`comment-select1-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    class="form-control-modern"
+                    rows="3"
+                    :max="200"
+                    :value="state.habitsAux[item.id]?.comment"
+                    @keyup="sendComment(item, $event)"
+                  ></textarea>
+                  <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
+                    <span class="recording-dot"></span>
+                    <span class="ms-2">Gravando... Fale agora</span>
                   </div>
-                  <!-- SELECT N -->
-                  <div
-                    class="row item-card"
-                    v-else-if="item.characteristics && item.characteristics.selectN"
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SELECT N (Checkboxes) -->
+          <div
+            v-else-if="item.characteristics && item.characteristics.selectN"
+            class="anamnese-item-card"
+          >
+            <div class="anamnese-item-header">
+              <span class="badge badge-primary">{{ item.tag }}</span>
+              <h5 class="anamnese-item-title">{{ item.name }}</h5>
+            </div>
+            <div class="anamnese-item-content">
+              <div class="options-group">
+                <div
+                  v-for="(option, index) in item.characteristics.options.split(',')"
+                  :key="`option-${index}`"
+                  class="option-item"
+                >
+                  <input
+                    class="form-check-input option-checkbox"
+                    type="checkbox"
+                    :name="`option-${item.id}-${index}`"
+                    :id="`option-${item.id}-${index}`"
+                    :checked="state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())"
+                    @click="sendSelectedOption(item, $event, option)"
+                  />
+                  <label class="option-label" :for="`option-${item.id}-${index}`">
+                    {{ option.toUpperCase().trim() }}
+                  </label>
+                </div>
+              </div>
+              <div class="form-field-modern">
+                <input
+                  class="form-control-modern"
+                  type="text"
+                  maxlength="50"
+                  placeholder="Outro..."
+                  :value="
+                    state.habitsAux[item.id]?.answer?.filter(
+                      ans =>
+                        !item.characteristics.options
+                          .toUpperCase()
+                          .split(',')
+                          .includes(ans.toUpperCase())
+                    )?.[0] || ''
+                  "
+                  @blur="sendOtherOption(item, $event)"
+                />
+              </div>
+              <div
+                v-if="item.characteristics.comment && item.characteristics.comment === true"
+                class="form-field-modern"
+              >
+                <label class="form-label-modern" :for="`comment-selectN-${item.id}`">
+                  <i class="bi bi-chat-text me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    :class="{ 'btn-danger': isListeningForField(item.id) }"
+                    @click="toggleSpeechRecognition(item.id, 'comment')"
+                    :title="
+                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                    "
                   >
-                    <div class="col-12">
-                      <div class="col m-1">
-                        <div class="lefted">
-                          <span class="badge bg-primary"> {{ item.tag }} </span>
-                        </div>
-                        <div class="lefted">
-                          <label class="fw-bold">{{ item.name }}</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div :id="`details-${item.id}`">
-                      <div
-                        class="form-check form-switch check-option lefted"
-                        v-for="(option, index) in item.characteristics.options.split(',')"
-                        :key="`option-${index}`"
-                      >
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          :name="`option-${option.title}`"
-                          :checked="
-                            state.habitsAux[item.id]?.answer?.includes(option.toUpperCase())
-                          "
-                          @click="sendSelectedOption(item, $event, option)"
-                        />
-                        <label class="form-check-label mx-2" for="option">{{
-                          option.toUpperCase().trim()
-                        }}</label>
-                      </div>
-                      <div class="col mb-1">
-                        <input
-                          maxlength="50"
-                          type="text"
-                          class="form-control form-control-sm"
-                          placeholder="Other"
-                          :value="
-                            state.habitsAux[item.id]?.answer.filter(
-                              ans =>
-                                !item.characteristics.options
-                                  .toUpperCase()
-                                  .split(',')
-                                  .includes(ans.toUpperCase())
-                            )
-                          "
-                          @blur="sendOtherOption(item, $event)"
-                        />
-                      </div>
-                      <div
-                        class="row centered"
-                        v-if="item.characteristics.comment && item.characteristics.comment === true"
-                      >
-                        <div class="row mt-1">
-                          <label class="form-check-label metric-card-subtitle">{{
-                            $t('businessPatientHistoryItemAdmin.comment')
-                          }}</label>
-                          <textarea
-                            :disabled="!toggles['patient.history.edit']"
-                            class="form-control form-control-sm"
-                            rows="2"
-                            :max="200"
-                            :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                            :value="state.habitsAux[item.id]?.comment"
-                            @keyup="sendComment(item, $event)"
-                          >
-                          </textarea>
-                        </div>
-                      </div>
-                    </div>
+                    <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                    <span class="ms-1 d-inline">{{
+                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
+                    }}</span>
+                  </button>
+                </label>
+                <div class="position-relative">
+                  <textarea
+                    :id="`comment-selectN-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    class="form-control-modern"
+                    rows="3"
+                    :max="200"
+                    :value="state.habitsAux[item.id]?.comment"
+                    @keyup="sendComment(item, $event)"
+                  ></textarea>
+                  <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
+                    <span class="recording-dot"></span>
+                    <span class="ms-2">Gravando... Fale agora</span>
                   </div>
-                  <!-- SELECT YES NO -->
-                  <div
-                    class="row item-card"
-                    v-else-if="item.characteristics && item.characteristics.yesNo"
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- YES/NO -->
+          <div
+            v-else-if="item.characteristics && item.characteristics.yesNo"
+            class="anamnese-item-card"
+          >
+            <div class="anamnese-item-header">
+              <span class="badge badge-primary">{{ item.tag }}</span>
+              <h5 class="anamnese-item-title">{{ item.name }}</h5>
+            </div>
+            <div class="anamnese-item-content">
+              <div class="yesno-toggle-wrapper">
+                <label class="yesno-toggle-label">
+                  <input
+                    class="form-check-input yesno-checkbox"
+                    type="checkbox"
+                    :checked="state.habitsAux[item.id]?.answer?.answer === 'YES'"
+                    @click="sendOptionYesNo(item, $event)"
+                  />
+                  <span class="yesno-indicator">
+                    <i
+                      :class="
+                        state.habitsAux[item.id]?.answer?.answer === 'YES'
+                          ? 'bi bi-check-circle-fill text-success'
+                          : 'bi bi-x-circle-fill text-danger'
+                      "
+                    ></i>
+                    <span class="yesno-text">
+                      {{ state.habitsAux[item.id]?.answer?.answer === 'YES' ? 'Sim' : 'Não' }}
+                    </span>
+                  </span>
+                </label>
+              </div>
+              <div
+                v-if="item.characteristics && item.characteristics.result"
+                class="form-field-modern"
+              >
+                <input
+                  class="form-control-modern"
+                  type="text"
+                  maxlength="50"
+                  placeholder="Resultado..."
+                  :value="state.habitsAux[item.id]?.result"
+                  @blur="sendResult(item, $event)"
+                />
+              </div>
+              <div
+                v-if="item.characteristics && item.characteristics.comment"
+                class="form-field-modern"
+              >
+                <input
+                  class="form-control-modern"
+                  type="text"
+                  maxlength="50"
+                  :placeholder="$t('businessPatientHistoryItemAdmin.write')"
+                  :value="state.habitsAux[item.id]?.comment"
+                  @blur="sendComment(item, $event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- CHECK (Checkbox with additional fields) -->
+          <div
+            v-else-if="item.characteristics && item.characteristics.check"
+            class="anamnese-item-card"
+          >
+            <div class="anamnese-item-header">
+              <span class="badge badge-primary">{{ item.tag }}</span>
+              <div class="anamnese-item-toggle">
+                <input
+                  class="form-check-input anamnese-checkbox"
+                  type="checkbox"
+                  :name="item.name"
+                  :id="`check-${item.id}`"
+                  :checked="state.habitsAux[item.id] && state.habitsAux[item.id].check"
+                  @click="checkItem(item, $event)"
+                />
+                <label class="anamnese-item-title" :for="`check-${item.id}`">
+                  {{ item.name }}
+                </label>
+              </div>
+            </div>
+            <div
+              v-if="state.habitsAux[item.id] && state.habitsAux[item.id].check"
+              class="anamnese-item-content"
+            >
+              <div
+                v-if="item.characteristics.actual && item.characteristics.actual === true"
+                class="form-field-modern"
+              >
+                <label class="toggle-label-modern">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :id="`actual-${item.id}`"
+                    @click="checkActual(item, $event)"
+                    :checked="state.habitsAux[item.id] && state.habitsAux[item.id].actual"
+                  />
+                  <span class="toggle-text">
+                    <i class="bi bi-check-circle me-1"></i>
+                    {{ $t('businessPatientHistoryItemAdmin.actual') }}
+                  </span>
+                </label>
+              </div>
+              <div class="form-row-modern">
+                <div class="form-field-modern">
+                  <label class="form-label-modern" :for="`ageFrom-${item.id}`">
+                    <i class="bi bi-calendar-range me-1"></i>
+                    {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
+                  </label>
+                  <input
+                    :id="`ageFrom-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    min="1"
+                    max="100"
+                    type="number"
+                    :value="state.habitsAux[item.id]?.ageFrom"
+                    @keyup="sendAgeFrom(item, $event)"
+                    class="form-control-modern"
+                  />
+                </div>
+                <div
+                  v-if="
+                    item.characteristics.ageFrom &&
+                    item.characteristics.ageFrom === true &&
+                    !state.habitsAux[item.id]?.actual
+                  "
+                  class="form-field-modern"
+                >
+                  <label class="form-label-modern" :for="`ageTo-${item.id}`">
+                    <i class="bi bi-calendar-range me-1"></i>
+                    {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
+                  </label>
+                  <input
+                    :id="`ageTo-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    min="1"
+                    max="100"
+                    type="number"
+                    :value="state.habitsAux[item.id]?.ageTo"
+                    @keyup="sendAgeTo(item, $event)"
+                    class="form-control-modern"
+                  />
+                </div>
+              </div>
+              <div
+                v-if="item.characteristics.frequency && item.characteristics.frequency === true"
+                class="form-field-modern"
+              >
+                <label class="form-label-modern" :for="`frequency-${item.id}`">
+                  <i class="bi bi-arrow-repeat me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.frequency') }}
+                </label>
+                <select
+                  :id="`frequency-${item.id}`"
+                  class="form-control-modern form-select-modern"
+                  @change="sendFrequency(item, $event)"
+                >
+                  <option value="">{{ $t('patientHistoryView.select') || 'Selecione...' }}</option>
+                  <option
+                    v-for="value in state.patientHistoryItemFrequenciesTypes"
+                    :key="value.id"
+                    :value="value.id"
+                    :selected="state.habitsAux[item.id]?.frequency === value.id"
                   >
-                    <div class="col-12">
-                      <div class="col m-1">
-                        <div class="lefted">
-                          <span class="badge bg-primary"> {{ item.tag }} </span>
-                        </div>
-                        <div class="lefted">
-                          <label class="fw-bold">{{ item.name }}</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div :id="`details-${item.id}`">
-                      <div class="form-check form-switch check-option lefted">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          :checked="
-                            state.habitsAux[item.id]?.answer.answer === 'YES' ? true : false
-                          "
-                          @click="sendOptionYesNo(item, $event)"
-                        />
-                        <label class="form-check-label mx-2" for="option">{{
-                          state.habitsAux[item.id]?.answer.answer === 'YES' ? '✅' : '🚫'
-                        }}</label>
-                      </div>
-                      <div
-                        class="col mb-1"
-                        v-if="item.characteristics && item.characteristics.result"
-                      >
-                        <input
-                          maxlength="50"
-                          type="text"
-                          class="form-control form-control-sm"
-                          placeholder="Other"
-                          :value="state.habitsAux[item.id]?.result"
-                          @blur="sendResult(item, $event)"
-                        />
-                      </div>
-                      <div
-                        class="col mb-1"
-                        v-if="item.characteristics && item.characteristics.comment"
-                      >
-                        <input
-                          maxlength="50"
-                          type="text"
-                          class="form-control form-control-sm"
-                          :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                          :value="state.habitsAux[item.id]?.comment"
-                          @blur="sendComment(item, $event)"
-                        />
-                      </div>
-                    </div>
+                    {{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}
+                  </option>
+                </select>
+              </div>
+              <div
+                v-if="item.characteristics.comment && item.characteristics.comment === true"
+                class="form-field-modern"
+              >
+                <label class="form-label-modern" :for="`comment-check-${item.id}`">
+                  <i class="bi bi-chat-text me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    :class="{ 'btn-danger': isListeningForField(item.id) }"
+                    @click="toggleSpeechRecognition(item.id, 'comment')"
+                    :title="
+                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                    "
+                  >
+                    <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                    <span class="ms-1 d-inline">{{
+                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
+                    }}</span>
+                  </button>
+                </label>
+                <div class="position-relative">
+                  <textarea
+                    :id="`comment-check-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    class="form-control-modern"
+                    rows="3"
+                    :max="200"
+                    :value="state.habitsAux[item.id]?.comment || ''"
+                    @keyup="sendComment(item, $event)"
+                  ></textarea>
+                  <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
+                    <span class="recording-dot"></span>
+                    <span class="ms-2">Gravando... Fale agora</span>
                   </div>
-                  <!-- SELECT CHECK -->
-                  <div
-                    class="row item-card"
-                    v-else-if="item.characteristics && item.characteristics.check"
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMENT ONLY -->
+          <div
+            v-else-if="item.characteristics && item.characteristics.comment"
+            class="anamnese-item-card"
+          >
+            <div class="anamnese-item-header">
+              <span class="badge badge-primary">{{ item.tag }}</span>
+              <h5 class="anamnese-item-title">{{ item.name }}</h5>
+            </div>
+            <div class="anamnese-item-content">
+              <div class="form-field-modern">
+                <label class="form-label-modern" :for="`comment-only-${item.id}`">
+                  <i class="bi bi-chat-text me-1"></i>
+                  {{ $t('businessPatientHistoryItemAdmin.comment') }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    :class="{ 'btn-danger': isListeningForField(item.id) }"
+                    @click="toggleSpeechRecognition(item.id, 'comment')"
+                    :title="
+                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                    "
                   >
-                    <div class="col-12">
-                      <div class="col m-1">
-                        <div class="lefted">
-                          <span class="badge bg-primary"> {{ item.tag }} </span>
-                        </div>
-                        <div class="lefted">
-                          <div class="form-check form-switch">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              :name="item.name"
-                              id="item.id"
-                              :checked="state.habitsAux[item.id] && state.habitsAux[item.id].check"
-                              @click="checkItem(item, $event)"
-                            />
-                            <label class="form-check-label metric-card-subtitle fw-bold">{{
-                              item.name
-                            }}</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div :id="`details-${item.id}`">
-                      <div
-                        v-if="item.characteristics.actual && item.characteristics.actual === true"
-                      >
-                        <div class="form-check form-switch centered">
-                          <label class="form-check-label metric-card-subtitle">{{
-                            $t('businessPatientHistoryItemAdmin.actual')
-                          }}</label>
-                          <input
-                            class="form-check-input m-1"
-                            type="checkbox"
-                            :id="`actual-${item.id}`"
-                            @click="checkActual(item, $event)"
-                            :checked="state.habitsAux[item.id] && state.habitsAux[item.id].actual"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div class="row centered">
-                          <div class="col-6">
-                            <div class="row">
-                              <div class="col">
-                                <label class="form-check-label metric-card-subtitle">{{
-                                  $t('businessPatientHistoryItemAdmin.ageFrom')
-                                }}</label>
-                              </div>
-                              <div class="col">
-                                <input
-                                  :disabled="!toggles['patient.history.edit']"
-                                  min="1"
-                                  max="100"
-                                  type="number"
-                                  :value="state.habitsAux[item.id]?.ageFrom"
-                                  @keyup="sendAgeFrom(item, $event)"
-                                  class="form-control form-control-sm"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            class="col-6"
-                            v-if="
-                              item.characteristics.ageFrom &&
-                              item.characteristics.ageFrom === true &&
-                              !state.habitsAux[item.id]?.actual
-                            "
-                          >
-                            <div class="row">
-                              <div class="col">
-                                <label class="form-check-label metric-card-subtitle">{{
-                                  $t('businessPatientHistoryItemAdmin.ageTo')
-                                }}</label>
-                              </div>
-                              <div class="col">
-                                <input
-                                  :disabled="!toggles['patient.history.edit']"
-                                  min="1"
-                                  max="100"
-                                  type="number"
-                                  :value="state.habitsAux[item.id]?.ageTo"
-                                  @keyup="sendAgeTo(item, $event)"
-                                  class="form-control form-control-sm"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          class="row centered"
-                          v-if="
-                            item.characteristics.frequency &&
-                            item.characteristics.frequency === true
-                          "
-                        >
-                          <div class="row mt-1">
-                            <div class="col">
-                              <label class="form-check-label metric-card-subtitle">{{
-                                $t('businessPatientHistoryItemAdmin.frequency')
-                              }}</label>
-                            </div>
-                            <div class="col">
-                              <select
-                                class="btn btn-sm btn-light fw-bold text-dark select"
-                                @change="sendFrequency(item, $event)"
-                              >
-                                <option
-                                  v-for="value in state.patientHistoryItemFrequenciesTypes"
-                                  :key="value.id"
-                                  :value="value.id"
-                                  id="select-block"
-                                  :selected="state.habitsAux[item.id]?.frequency === value.id"
-                                >
-                                  {{ $t(`patientHistoryItemFrequenciesTypes.${value.name}`) }}
-                                </option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          class="row centered"
-                          v-if="
-                            item.characteristics.comment && item.characteristics.comment === true
-                          "
-                        >
-                          <div class="row mt-1">
-                            <label class="form-check-label metric-card-subtitle">{{
-                              $t('businessPatientHistoryItemAdmin.comment')
-                            }}</label>
-                            <textarea
-                              :disabled="!toggles['patient.history.edit']"
-                              class="form-control form-control-sm"
-                              rows="2"
-                              :max="200"
-                              :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                              :value="state.habitsAux[item.id]?.comment"
-                              @keyup="sendComment(item, $event)"
-                            >
-                            </textarea>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- SELECT COMMENT -->
-                  <div
-                    class="row item-card"
-                    v-else-if="item.characteristics && item.characteristics.comment"
-                  >
-                    <div class="col-12">
-                      <div class="col m-1">
-                        <div class="lefted">
-                          <span class="badge bg-primary"> {{ item.tag }} </span>
-                        </div>
-                        <div class="lefted">
-                          <label class="fw-bold">{{ item.name }}</label>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="col mb-1"
-                      v-if="item.characteristics && item.characteristics.comment"
-                    >
-                      <textarea
-                        :disabled="!toggles['patient.history.edit']"
-                        class="form-control form-control-sm"
-                        rows="2"
-                        :max="200"
-                        :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-                        :value="state.habitsAux[item.id]?.comment"
-                        @keyup="sendComment(item, $event)"
-                      >
-                      </textarea>
-                    </div>
+                    <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                    <span class="ms-1 d-inline">{{
+                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
+                    }}</span>
+                  </button>
+                </label>
+                <div class="position-relative">
+                  <textarea
+                    :id="`comment-only-${item.id}`"
+                    :disabled="!toggles['patient.history.edit']"
+                    class="form-control-modern"
+                    rows="4"
+                    :max="200"
+                    :value="state.habitsAux[item.id]?.comment"
+                    @keyup="sendComment(item, $event)"
+                  ></textarea>
+                  <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
+                    <span class="recording-dot"></span>
+                    <span class="ms-2">Gravando... Fale agora</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-12">
-          <div class="row mt-2 mx-3">
-            <label class="form-check-label metric-card-subtitle mt-2">{{
-              $t('businessPatientHistoryItemAdmin.comment')
-            }}</label>
-            <textarea
-              :disabled="!toggles['patient.history.edit']"
-              class="form-control form-control-sm"
-              rows="10"
-              :max="500"
-              @keyup="sendData"
-              v-bind:class="{ 'is-invalid': state.habitsError }"
-              :placeholder="$t('businessPatientHistoryItemAdmin.write')"
-              v-model="state.newPatientAnamnese.habits"
-            >
-            </textarea>
+      </div>
+    </div>
+
+    <div class="general-comment-section">
+      <div class="form-section-header">
+        <div class="form-section-icon">
+          <i class="bi bi-file-text"></i>
+        </div>
+        <div class="form-section-title">
+          <h4 class="form-title-text">{{ $t('businessPatientHistoryItemAdmin.comment') }}</h4>
+          <p class="form-title-subtitle">Comentários gerais sobre a anamnese</p>
+          <button
+            v-if="isSpeechSupported && toggles['patient.history.edit']"
+            type="button"
+            class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+            :class="{ 'btn-danger': isListeningForField(null) }"
+            @click="toggleSpeechRecognition()"
+            :title="isListeningForField(null) ? 'Parar gravação' : 'Iniciar gravação de voz'"
+          >
+            <i :class="isListeningForField(null) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+            <span class="ms-1 d-inline">{{
+              isListeningForField(null) ? 'Gravando...' : 'Voz'
+            }}</span>
+          </button>
+          <button
+            v-if="toggles['patient.history.edit']"
+            type="button"
+            class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+            @click="clearGeneralField"
+            title="Limpar campo"
+          >
+            <i class="bi bi-eraser"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Template Picker -->
+      <div class="form-field-modern" v-if="store.commerce && store.user">
+        <TemplatePicker
+          :commerce-id="store.commerce.id"
+          :doctor-id="store.user.id"
+          template-type="anamnesis"
+          :toggles="toggles"
+          @template-selected="handleTemplateSelected"
+        />
+      </div>
+
+      <div class="form-field-modern">
+        <div class="position-relative">
+          <textarea
+            :disabled="!toggles['patient.history.edit']"
+            class="form-control-modern"
+            rows="8"
+            :max="500"
+            @keyup="sendData"
+            v-bind:class="{ 'form-control-invalid': state.habitsError }"
+            v-model="state.newPatientAnamnese.habits"
+          ></textarea>
+          <div v-if="isListeningForField(null)" class="speech-recording-indicator">
+            <span class="recording-dot"></span>
+            <span class="ms-2">Gravando... Fale agora</span>
           </div>
-          <div class="row g-1 errors" id="feedback" v-if="errorsAdd && errorsAdd.length > 0">
-            <Warning>
-              <template v-slot:message>
-                <li v-for="(error, index) in errorsAdd" :key="index">
-                  {{ $t(error) }}
-                </li>
-              </template>
-            </Warning>
+          <div
+            v-if="speechError && isListeningForField(null)"
+            class="speech-error-message text-danger small mt-1"
+          >
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {{ speechError }}
           </div>
+        </div>
+        <div class="form-field-hint" v-if="state.newPatientAnamnese.habits">
+          <span class="character-count"
+            >{{ (state.newPatientAnamnese.habits || '').length }}/500</span
+          >
         </div>
       </div>
     </div>
+
+    <div class="form-errors-modern" v-if="errorsAdd && errorsAdd.length > 0">
+      <Warning>
+        <template v-slot:message>
+          <li v-for="(error, index) in errorsAdd" :key="index">
+            {{ $t(error) }}
+          </li>
+        </template>
+      </Warning>
+    </div>
   </div>
 </template>
+
 <style scoped>
-.blocks-section {
-  overflow-y: scroll;
-  max-height: 800px;
-  font-size: small;
-  margin-bottom: 2rem;
-  padding: 0.5rem;
+@import '../../../shared/styles/prontuario-common.css';
+
+.patient-form-modern.anamnese-form {
+  width: 100%;
+  padding: 0;
+}
+
+/* Anamnese Items Container */
+.anamnese-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.anamnese-item-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  background-color: var(--color-habits);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 0.75rem;
+  transition: all 0.3s ease;
 }
-.show {
-  max-height: 2000px !important;
-  overflow-y: visible;
+
+.anamnese-item-card:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
-.habit-title {
-  text-align: left;
+
+.anamnese-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.badge-primary {
+  padding: 0.35rem 0.75rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.anamnese-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  flex: 1;
+}
+
+.anamnese-item-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.anamnese-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.anamnese-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Options Group */
+.options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.option-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--azul-turno);
+}
+
+.option-radio,
+.option-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.option-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Yes/No Toggle */
+.yesno-toggle-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.yesno-toggle-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.625rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.yesno-toggle-label:hover {
+  border-color: var(--azul-turno);
+  background: rgba(0, 123, 255, 0.05);
+}
+
+.yesno-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0 0.75rem 0 0;
+  cursor: pointer;
+}
+
+.yesno-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.yesno-text {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Form Fields */
+.form-field-modern {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label-modern {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background: white;
+}
+
+.form-control-modern:disabled {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-control-invalid {
+  border-color: #dc3545 !important;
+}
+
+.form-control-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+.form-select-modern {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.form-row-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.toggle-label-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.5rem;
+}
+
+.toggle-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+}
+
+.general-comment-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.form-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-section-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.form-section-title {
+  flex: 1;
+}
+
+.form-title-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+.form-title-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.form-field-hint {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.character-count {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+.form-errors-modern {
+  margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-row-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .options-group {
+    flex-direction: column;
+  }
+
+  .option-item {
+    width: 100%;
+  }
+}
+
+/* Speech Recognition Styles */
+.speech-recognition-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.speech-recognition-btn span {
+  display: inline !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.speech-recognition-btn:hover {
+  transform: scale(1.05);
+}
+
+.speech-recognition-btn.btn-danger {
+  animation: pulse-recording 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+  }
+}
+
+.position-relative {
+  position: relative;
+}
+
+.speech-recording-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  background: rgba(220, 53, 69, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  color: #dc3545;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: #dc3545;
+  border-radius: 50%;
+  animation: blink-recording 1s ease-in-out infinite;
+}
+
+@keyframes blink-recording {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.speech-error-message {
+  padding: 0.25rem 0.5rem;
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 0.375rem;
+  margin-top: 0.25rem;
 }
 </style>

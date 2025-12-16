@@ -1,6 +1,7 @@
 <script>
 import Toggle from '@vueform/toggle';
 import Popper from 'vue3-popper';
+import { getActiveFeature } from '../../shared/features';
 
 export default {
   name: 'QueueFormBasicFields',
@@ -12,6 +13,7 @@ export default {
     errors: { type: Object, default: () => ({}) },
     prefix: { type: String, default: '' },
     isAdd: { type: Boolean, default: false },
+    commerce: { type: Object, default: null },
   },
   emits: ['update:modelValue'],
   computed: {
@@ -23,6 +25,15 @@ export default {
         this.$emit('update:modelValue', value);
       },
     },
+    showTelemedicineToggle() {
+      if (!this.commerce || !this.commerce.features || !Array.isArray(this.commerce.features)) {
+        return false;
+      }
+      return this.getActiveFeature(this.commerce, 'telemedicine-active', 'PRODUCT');
+    },
+  },
+  methods: {
+    getActiveFeature,
   },
 };
 </script>
@@ -151,6 +162,27 @@ export default {
       </label>
       <Toggle v-model="queue.online" :disabled="isAdd ? false : !toggles['queues.admin.edit']" />
     </div>
+    <div v-if="showTelemedicineToggle" class="form-group-modern form-group-toggle">
+      <label class="form-label-modern">
+        <i class="bi bi-camera-video me-2"></i>
+        {{ $t('businessQueuesAdmin.telemedicine') || 'Telemedicina' }}
+        <Popper :class="'dark p-1'" arrow disable-click-away>
+          <template #content>
+            <div>
+              {{
+                $t('businessQueuesAdmin.telemedicineHelp') ||
+                'Habilita la opción de telemedicina para esta fila'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <Toggle
+        v-model="queue.telemedicineEnabled"
+        :disabled="isAdd ? false : !toggles['queues.admin.edit']"
+      />
+    </div>
   </div>
 </template>
 
@@ -234,6 +266,3 @@ export default {
   padding-right: 2.5rem;
 }
 </style>
-
-
-

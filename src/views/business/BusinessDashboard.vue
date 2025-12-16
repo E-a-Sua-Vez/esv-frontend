@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getMetrics } from '../../application/services/query-stack';
 import { getQueueByCommerce } from '../../application/services/queue';
+import { getTelemedicineDashboardStats } from '../../application/services/telemedicine';
 import { Chart, registerables } from 'chart.js';
 import { LineChart, DoughnutChart, BarChart, useBarChart } from 'vue-chart-3';
 import { getPermissions } from '../../application/services/permissions';
@@ -74,6 +75,24 @@ export default {
       typesFlow: {},
     };
 
+    const telemedicineCreated = {
+      total: 0,
+      scheduled: 0,
+      active: 0,
+      completed: 0,
+      cancelled: 0,
+      averageDuration: 0,
+      totalAccessKeysSent: 0,
+      totalAccessKeysValidated: 0,
+      totalDoctorsConnected: 0,
+      totalPatientsConnected: 0,
+      totalSessionsStarted: 0,
+      totalSessionsEnded: 0,
+      statusFlow: {},
+      accessKeyFlow: { sent: 0, validated: 0, pending: 0 },
+      connectionFlow: { doctors: 0, patients: 0, both: 0, none: 0 },
+    };
+
     const state = reactive({
       currentUser: {},
       business: {},
@@ -96,6 +115,7 @@ export default {
             labels: [],
           },
         },
+        'telemedicine.created': telemedicineCreated,
         collaborators: {},
         clients: {},
       },
@@ -201,6 +221,7 @@ export default {
         'attention-day-distribution': false,
         'booking-day-distribution': false,
         'booking-hour-distribution': false,
+        'telemedicine-evolution': false,
       };
     };
 
@@ -302,6 +323,24 @@ export default {
         state.startDate,
         state.endDate
       );
+
+      // Get telemedicine metrics if telemedicine is enabled
+      if (commerce.value?.telemedicineEnabled) {
+        try {
+          const telemedicineStats = await getTelemedicineDashboardStats(
+            commerce.value.id,
+            state.startDate,
+            state.endDate
+          );
+          calculatedMetrics['telemedicine.created'] = telemedicineStats;
+        } catch (error) {
+          console.error('Error fetching telemedicine stats:', error);
+          calculatedMetrics['telemedicine.created'] = telemedicineCreated;
+        }
+      } else {
+        calculatedMetrics['telemedicine.created'] = telemedicineCreated;
+      }
+
       return calculatedMetrics;
     };
 
@@ -746,6 +785,50 @@ export default {
       chartData: bookingHourDistribution,
     });
 
+    // Telemedicine Evolution Chart
+    const telemedicineEvolution = computed(() => {
+      const data = state.calculatedMetrics['telemedicine.created']
+        ? state.calculatedMetrics['telemedicine.created'].evolution
+        : null;
+      if (data && data.labels && data.labels.length > 0) {
+        return {
+          labels: data.labels.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+          }),
+          datasets: [
+            {
+              label: 'Sesiones de Telemedicina',
+              borderColor: '#00c2cb',
+              backgroundColor: 'rgba(0, 194, 203, 0.7)',
+              data: data.datasets || [],
+              fill: false,
+              tension: 0.4,
+              type: 'line',
+            },
+          ],
+          options: {
+            fill: false,
+            radius: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                },
+              },
+            },
+          },
+        };
+      }
+      return undefined;
+    });
+    const { lineChartProps: telemedicineEvolutionProps } = useBarChart({
+      chartData: telemedicineEvolution,
+    });
+
     const bookingDayDistribution = computed(() => {
       const data = state.calculatedMetrics['booking.created']
         ? state.calculatedMetrics['booking.created'].dayDistribution
@@ -823,6 +906,7 @@ export default {
       attentionDayDistributionProps,
       bookingDayDistributionProps,
       bookingHourDistributionProps,
+      telemedicineEvolutionProps,
       goBack,
       isActiveBusiness,
       refresh,
@@ -1015,6 +1099,7 @@ export default {
                     attentionDayDistributionProps,
                     bookingDayDistributionProps,
                     bookingHourDistributionProps,
+                    telemedicineEvolutionProps,
                     ...state.calculatedMetrics,
                   }"
                   :toggles="state.toggles"

@@ -114,57 +114,57 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessPermissionsAdmin" class="">
-        <div class="row m-3 justify-content-center">
-          <div class="col-auto">
-            <button
-              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
-              @click="showRoles()"
-              :disabled="!state.toggles['permissions.admin.roles']"
-            >
-              <i class="bi bi-file-earmark-person-fill"></i>
-              {{ $t('businessPermissionsAdmin.roles') }}
-            </button>
+          <div class="row m-3 justify-content-center">
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showRoles()"
+                :disabled="!state.toggles['permissions.admin.roles']"
+              >
+                <i class="bi bi-file-earmark-person-fill"></i>
+                {{ $t('businessPermissionsAdmin.roles') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showPlans()"
+                :disabled="!state.toggles['permissions.admin.plans']"
+              >
+                <i class="bi bi-card-list"></i> {{ $t('businessPermissionsAdmin.plans') }}
+              </button>
+            </div>
+            <div class="col-auto">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
+                @click="showUsers()"
+                :disabled="!state.toggles['permissions.admin.users']"
+              >
+                <i class="bi bi-person-fill"></i> {{ $t('businessPermissionsAdmin.users') }}
+              </button>
+            </div>
           </div>
-          <div class="col-auto">
-            <button
-              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
-              @click="showPlans()"
-              :disabled="!state.toggles['permissions.admin.plans']"
-            >
-              <i class="bi bi-card-list"></i> {{ $t('businessPermissionsAdmin.plans') }}
-            </button>
+          <div
+            id="roles"
+            class="row"
+            v-if="state.showRoles === true && state.toggles['permissions.admin.roles']"
+          >
+            <RolPermissionsAdmin></RolPermissionsAdmin>
           </div>
-          <div class="col-auto">
-            <button
-              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-2"
-              @click="showUsers()"
-              :disabled="!state.toggles['permissions.admin.users']"
-            >
-              <i class="bi bi-person-fill"></i> {{ $t('businessPermissionsAdmin.users') }}
-            </button>
+          <div
+            id="plans"
+            class="row"
+            v-if="state.showPlans === true && state.toggles['permissions.admin.plans']"
+          >
+            <PlanPermissionsAdmin></PlanPermissionsAdmin>
           </div>
-        </div>
-        <div
-          id="roles"
-          class="row"
-          v-if="state.showRoles === true && state.toggles['permissions.admin.roles']"
-        >
-          <RolPermissionsAdmin></RolPermissionsAdmin>
-        </div>
-        <div
-          id="plans"
-          class="row"
-          v-if="state.showPlans === true && state.toggles['permissions.admin.plans']"
-        >
-          <PlanPermissionsAdmin></PlanPermissionsAdmin>
-        </div>
-        <div
-          id="plans"
-          class="row"
-          v-if="state.showUsers === true && state.toggles['permissions.admin.users']"
-        >
-          <UserPermissionsAdmin></UserPermissionsAdmin>
-        </div>
+          <div
+            id="plans"
+            class="row"
+            v-if="state.showUsers === true && state.toggles['permissions.admin.users']"
+          >
+            <UserPermissionsAdmin></UserPermissionsAdmin>
+          </div>
         </div>
       </div>
     </div>

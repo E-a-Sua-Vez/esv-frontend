@@ -115,6 +115,8 @@ export default {
               (clientData.value.personalInfo && clientData.value.personalInfo.addressText) ||
               undefined;
             state.newPersonalData.addressText = addressText ? addressText : '';
+            const email = clientData.value.userEmail || clientData.value.email || undefined;
+            state.newPersonalData.email = email ? email : '';
             sendData();
           }
           if (patientForms.value && patientForms.value.length > 0) {
@@ -152,7 +154,16 @@ export default {
             }
           }
         }
-        if (cacheData.value) {
+        // Only use cacheData if no saved data exists in patientHistoryData
+        // (If patientHistoryData.personalData exists, it was already loaded above on line 70)
+        if (
+          !(
+            patientHistoryData.value &&
+            patientHistoryData.value.id &&
+            patientHistoryData.value.personalData
+          ) &&
+          cacheData.value
+        ) {
           state.newPersonalData = cacheData.value;
         }
         loading.value = false;
@@ -267,6 +278,8 @@ export default {
             (clientData.value.personalInfo && clientData.value.personalInfo.addressText) ||
             undefined;
           state.newPersonalData.addressText = addressText ? addressText : '';
+          const email = clientData.value.userEmail || clientData.value.email || undefined;
+          state.newPersonalData.email = email ? email : '';
           sendData();
         }
       }
@@ -356,279 +369,380 @@ export default {
 };
 </script>
 <template>
-  <div>
-    <div id="form">
-      <div class="row m-1 mb-2">
-        <div class="col-12 text-label">
-          {{ $t('patientHistoryView.showPersonalData') }} <i class="bi bi-person-fill mx-1"></i>
-        </div>
+  <div class="patient-form-modern">
+    <div class="form-header-modern">
+      <div class="form-header-icon">
+        <i class="bi bi-person-fill"></i>
       </div>
-      <div id="patient-name-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.name') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.name'),
-            }"
-            v-model.trim="state.newPersonalData.name"
-          />
-        </div>
+      <div class="form-header-content">
+        <h3 class="form-header-title">{{ $t('patientHistoryView.showPersonalData') }}</h3>
+        <p class="form-header-subtitle">Informações pessoais e de contato do paciente</p>
       </div>
-      <div id="patient-lastName-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.lastName') }}
+    </div>
+
+    <div class="form-content-modern">
+      <!-- Personal Information Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-person-badge form-group-icon"></i>
+          <h4 class="form-group-title">Informações Pessoais</h4>
         </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.lastName'),
-            }"
-            v-model.trim="state.newPersonalData.lastName"
-          />
-        </div>
-      </div>
-      <div id="patient-idNumber-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.idNumber') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            @keypress="onlyNumber"
-            @keyup="sendData"
-            class="form-control form-control-sm"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.idNumber'),
-            }"
-            v-model.trim="state.newPersonalData.idNumber"
-          />
-        </div>
-      </div>
-      <div id="patient-birthday-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.birthday') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            type="date"
-            class="form-control form-control-sm"
-            @blur="calculateAge"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.birthday'),
-            }"
-            v-model.trim="state.newPersonalData.birthday"
-          />
-        </div>
-      </div>
-      <div id="patient-age-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.age') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="18"
-            max="100"
-            type="number"
-            @keypress="onlyNumber"
-            @keyup="sendData"
-            class="form-control form-control-sm"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes('patientHistoryView.validate.personalData.age'),
-            }"
-            v-model.trim="state.newPersonalData.age"
-          />
-        </div>
-      </div>
-      <div id="patient-occupation-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.occupation') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes(
-                'patientHistoryView.validate.personalData.occupation'
-              ),
-            }"
-            v-model.trim="state.newPersonalData.occupation"
-          />
-        </div>
-      </div>
-      <div id="patient-civilStatus-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.civilStatus') }}
-        </div>
-        <div class="col-8">
-          <select
-            class="btn btn-sm btn-light fw-bold text-dark select"
-            @change="sendData"
-            v-model.trim="state.newPersonalData.civilStatus"
-            id="attention-phoneCode-input-add"
-          >
-            <option v-for="status in state.civilStatuses" :key="status.id" :value="status.id">
-              {{ $t(`civilStatuses.${status.name}`) }}
-            </option>
-          </select>
-        </div>
-      </div>
-      <div id="patient-sex-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.sex') }}
-        </div>
-        <div class="col-8">
-          <select
-            class="btn btn-sm btn-light fw-bold text-dark select"
-            @change="sendData"
-            v-model.trim="state.newPersonalData.sex"
-            id="attention-phoneCode-input-add"
-          >
-            <option v-for="status in state.sexs" :key="status.id" :value="status.id">
-              {{ $t(`sexs.${status.name}`) }}
-            </option>
-          </select>
-        </div>
-      </div>
-      <div id="patient-addressCode-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.addressCode') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @blur="getAddress"
-            @keypress="onlyNumber"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes(
-                'patientHistoryView.validate.personalData.addressCode'
-              ),
-            }"
-            v-model.trim="state.newPersonalData.addressCode"
-          />
-        </div>
-      </div>
-      <div id="patient-addressText-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.addressText') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes(
-                'patientHistoryView.validate.personalData.addressText'
-              ),
-            }"
-            v-model.trim="state.newPersonalData.addressText"
-          />
-        </div>
-      </div>
-      <div id="patient-addressComplement-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.addressComplement') }}
-        </div>
-        <div class="col-8">
-          <input
-            :disabled="!toggles['patient.history.edit']"
-            min="1"
-            max="50"
-            type="text"
-            class="form-control form-control-sm"
-            @keyup="sendData"
-            v-bind:class="{
-              'is-invalid': errorsAdd.includes(
-                'patientHistoryView.validate.personalData.addressComplement'
-              ),
-            }"
-            v-model.trim="state.newPersonalData.addressComplement"
-          />
-        </div>
-      </div>
-      <div id="patient-phone-form-add" class="row m-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.phone') }}
-        </div>
-        <div class="col-8">
-          <div class="row">
-            <div class="col-3">
-              <select
-                class="btn btn-sm btn-light fw-bold text-dark select"
-                @change="sendData"
-                v-model.trim="state.newPersonalData.phoneCode"
-                id="attention-phoneCode-input-add"
-              >
-                <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
-                  {{ code.label }}
-                </option>
-              </select>
-            </div>
-            <div class="col-9">
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-name">
+                <i class="bi bi-person me-1"></i>
+                {{ $t('patientHistoryView.name') }}
+              </label>
               <input
                 :disabled="!toggles['patient.history.edit']"
-                min="1"
-                max="50"
+                id="patient-name"
                 type="text"
-                class="form-control form-control-sm"
-                @keypress="onlyNumber"
+                class="form-control-modern"
                 @keyup="sendData"
                 v-bind:class="{
-                  'is-invalid': errorsAdd.includes(
-                    'patientHistoryView.validate.personalData.phone'
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.name'
                   ),
                 }"
-                v-model.trim="state.newPersonalData.phone"
+                v-model.trim="state.newPersonalData.name"
+              />
+            </div>
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-lastName">
+                <i class="bi bi-person-badge me-1"></i>
+                {{ $t('patientHistoryView.lastName') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-lastName"
+                type="text"
+                class="form-control-modern"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.lastName'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.lastName"
+              />
+            </div>
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-idNumber">
+                <i class="bi bi-card-text me-1"></i>
+                {{ $t('patientHistoryView.idNumber') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-idNumber"
+                type="text"
+                @keypress="onlyNumber"
+                @keyup="sendData"
+                class="form-control-modern"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.idNumber'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.idNumber"
               />
             </div>
           </div>
         </div>
       </div>
-      <div id="patient-font-form" class="row g-1">
-        <div class="col-4 text-label">
-          {{ $t('patientHistoryView.font') }}
+
+      <!-- Birth Information Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-calendar-event form-group-icon"></i>
+          <h4 class="form-group-title">Data de Nascimento</h4>
         </div>
-        <div class="col-8">
-          <Toggle
-            v-model="state.newPersonalData.font"
-            :disabled="!toggles['patient.history.edit']"
-          />
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-birthday">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ $t('patientHistoryView.birthday') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-birthday"
+                type="date"
+                class="form-control-modern"
+                @blur="calculateAge"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.birthday'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.birthday"
+              />
+            </div>
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-age">
+                <i class="bi bi-clock-history me-1"></i>
+                {{ $t('patientHistoryView.age') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-age"
+                min="18"
+                max="100"
+                type="number"
+                @keypress="onlyNumber"
+                @keyup="sendData"
+                class="form-control-modern"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.age'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.age"
+              />
+            </div>
+          </div>
         </div>
       </div>
-      <div class="row g-1 errors" id="feedback" v-if="errorsAdd && errorsAdd.length > 0">
+
+      <!-- Social Information Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-info-circle form-group-icon"></i>
+          <h4 class="form-group-title">Informações Sociais</h4>
+        </div>
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-occupation">
+                <i class="bi bi-briefcase me-1"></i>
+                {{ $t('patientHistoryView.occupation') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-occupation"
+                type="text"
+                class="form-control-modern"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.occupation'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.occupation"
+              />
+            </div>
+          </div>
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-civilStatus">
+                <i class="bi bi-heart me-1"></i>
+                {{ $t('patientHistoryView.civilStatus') }}
+              </label>
+              <select
+                id="patient-civilStatus"
+                class="form-control-modern form-select-modern"
+                @change="sendData"
+                v-model.trim="state.newPersonalData.civilStatus"
+              >
+                <option value="">{{ $t('patientHistoryView.select') || 'Selecione...' }}</option>
+                <option v-for="status in state.civilStatuses" :key="status.id" :value="status.id">
+                  {{ $t(`civilStatuses.${status.name}`) }}
+                </option>
+              </select>
+            </div>
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-sex">
+                <i class="bi bi-gender-ambiguous me-1"></i>
+                {{ $t('patientHistoryView.sex') }}
+              </label>
+              <select
+                id="patient-sex"
+                class="form-control-modern form-select-modern"
+                @change="sendData"
+                v-model.trim="state.newPersonalData.sex"
+              >
+                <option value="">{{ $t('patientHistoryView.select') || 'Selecione...' }}</option>
+                <option v-for="status in state.sexs" :key="status.id" :value="status.id">
+                  {{ $t(`sexs.${status.name}`) }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-geo-alt form-group-icon"></i>
+          <h4 class="form-group-title">Endereço</h4>
+        </div>
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-addressCode">
+                <i class="bi bi-postage me-1"></i>
+                {{ $t('patientHistoryView.addressCode') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-addressCode"
+                type="text"
+                class="form-control-modern"
+                @blur="getAddress"
+                @keypress="onlyNumber"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.addressCode'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.addressCode"
+                placeholder="00000-000"
+              />
+            </div>
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-addressComplement">
+                <i class="bi bi-house me-1"></i>
+                {{ $t('patientHistoryView.addressComplement') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-addressComplement"
+                type="text"
+                class="form-control-modern"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.addressComplement'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.addressComplement"
+              />
+            </div>
+          </div>
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-inline">
+              <label class="form-label-modern" for="patient-addressText">
+                <i class="bi bi-geo-alt-fill me-1"></i>
+                {{ $t('patientHistoryView.addressText') }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-addressText"
+                type="text"
+                class="form-control-modern"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.addressText'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.addressText"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-telephone form-group-icon"></i>
+          <h4 class="form-group-title">Contato</h4>
+        </div>
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-phone">
+              <label class="form-label-modern" for="patient-phone">
+                <i class="bi bi-phone me-1"></i>
+                {{ $t('patientHistoryView.phone') }}
+              </label>
+              <div class="phone-input-group">
+                <select
+                  class="form-control-modern form-select-modern phone-code-select"
+                  @change="sendData"
+                  v-model.trim="state.newPersonalData.phoneCode"
+                >
+                  <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
+                    {{ code.label }}
+                  </option>
+                </select>
+                <input
+                  :disabled="!toggles['patient.history.edit']"
+                  id="patient-phone"
+                  type="text"
+                  class="form-control-modern phone-number-input"
+                  @keypress="onlyNumber"
+                  @keyup="sendData"
+                  v-bind:class="{
+                    'form-control-invalid': errorsAdd.includes(
+                      'patientHistoryView.validate.personalData.phone'
+                    ),
+                  }"
+                  v-model.trim="state.newPersonalData.phone"
+                />
+              </div>
+            </div>
+            <div class="form-row-modern">
+              <div class="form-field-modern form-field-inline form-field-full-width">
+                <label class="form-label-modern" for="patient-email">
+                  <i class="bi bi-envelope me-1"></i>
+                  {{ $t('patientHistoryView.email') || 'Email' }}
+                </label>
+                <input
+                  :disabled="!toggles['patient.history.edit']"
+                  id="patient-email"
+                  type="email"
+                  class="form-control-modern"
+                  @keyup="sendData"
+                  v-bind:class="{
+                    'form-control-invalid': errorsAdd.includes(
+                      'patientHistoryView.validate.personalData.email'
+                    ),
+                  }"
+                  v-model.trim="state.newPersonalData.email"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Source Section -->
+      <div class="form-group-card">
+        <div class="form-group-header">
+          <i class="bi bi-database form-group-icon"></i>
+          <h4 class="form-group-title">Fonte dos Dados</h4>
+        </div>
+        <div class="form-group-content">
+          <div class="form-row-modern">
+            <div class="form-field-modern form-field-toggle">
+              <label class="form-label-modern" for="patient-font">
+                <i class="bi bi-person-check me-1"></i>
+                {{ $t('patientHistoryView.font') }}
+              </label>
+              <div class="toggle-wrapper">
+                <Toggle
+                  v-model="state.newPersonalData.font"
+                  :disabled="!toggles['patient.history.edit']"
+                />
+                <span class="toggle-label">
+                  {{
+                    state.newPersonalData.font
+                      ? 'Dados fornecidos pelo paciente'
+                      : 'Dados de outra fonte'
+                  }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Errors Section -->
+      <div class="form-errors-modern" v-if="errorsAdd && errorsAdd.length > 0">
         <Warning>
           <template v-slot:message>
             <li v-for="(error, index) in errorsAdd" :key="index">
@@ -640,4 +754,215 @@ export default {
     </div>
   </div>
 </template>
-<style scoped></style>
+<style scoped>
+@import '../../../shared/styles/prontuario-common.css';
+
+.patient-form-modern {
+  width: 100%;
+  padding: 0;
+}
+
+/* Form Header */
+
+/* Form Content */
+.form-content-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Form Group Card */
+.form-group-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.form-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-group-icon {
+  font-size: 1.1rem;
+  color: var(--azul-turno);
+}
+
+.form-group-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.form-group-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Form Rows and Fields */
+.form-row-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.form-field-modern {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.form-field-modern.form-field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.form-field-modern.form-field-inline .form-label-modern {
+  margin-bottom: 0;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.form-field-modern.form-field-inline .form-control-modern {
+  flex: 1;
+}
+
+.form-field-modern.form-field-full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label-modern {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.35rem;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.35rem 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.625rem;
+  font-size: 0.85rem;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background: white;
+}
+
+.form-control-modern:disabled {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-control-invalid {
+  border-color: #dc3545 !important;
+}
+
+.form-control-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+.form-select-modern {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+/* Phone Input Group */
+.form-field-phone {
+  grid-column: 1 / -1;
+}
+
+.phone-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.phone-code-select {
+  flex: 0 0 120px;
+  min-width: 120px;
+}
+
+.phone-number-input {
+  flex: 1;
+}
+
+/* Toggle Field */
+.form-field-toggle {
+  grid-column: 1 / -1;
+}
+
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.5rem;
+}
+
+.toggle-label {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+/* Errors */
+.form-errors-modern {
+  margin-top: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-row-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .form-header-modern {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .phone-input-group {
+    flex-direction: column;
+  }
+
+  .phone-code-select {
+    flex: 1;
+    width: 100%;
+  }
+}
+</style>

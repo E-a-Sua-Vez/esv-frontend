@@ -38,8 +38,7 @@ export default {
         setTimeout(() => {
           copySuccess.value[key] = false;
         }, 2000);
-      } catch (err) {
-      }
+      } catch (err) {}
     };
 
     onMounted(() => {
